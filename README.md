@@ -27,6 +27,9 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
     OS_PASSWORD - (RACKSPACE)
 
 ## Storage Drivers - Examples
+- AWS
+- RackSpace
+- ..more to come
 
 ### Get all block devices
 The following example assumes that you have passed proper environment variables based on the guest instance.

@@ -55,7 +55,7 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
 ### OpenStack
 
 ### RackSpace
-    OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password' ./rexray
+    OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password' ./rexray get-storage
 
     - providername: RackSpace
       instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7

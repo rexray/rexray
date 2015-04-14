@@ -26,9 +26,16 @@ type BlockDevice struct {
 	Status       string
 }
 
+type Instance struct {
+	ProviderName string
+	InstanceID string
+	Region string
+	Name string
+}
+
 type Driver interface {
 	GetBlockDeviceMapping() (interface{}, error)
-	// GetInstance() (interface{}, error)
+	GetInstance() (interface{}, error)
 }
 
 type InitFunc func() (Driver, error)

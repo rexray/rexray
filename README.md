@@ -32,8 +32,15 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
 - ..more to come
 
 ### Get all block devices
-The following example assumes that you have passed proper environment variables based on the guest instance.
+The following examples assumes that you have passed proper environment variables based on the guest instance.
 
+#### Get Local Instance
+    instance, err := driver.GetInstance()
+    if err != nil {
+      log.Fatalf("Error: %s", err)
+    }
+
+#### Get All Block Devices
     allBlockDevices, err := rexray.GetBlockDeviceMapping()
     if err != nil {
       log.Fatalf("Error: %s", err)

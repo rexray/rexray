@@ -87,13 +87,29 @@ func Init() (storagedriver.Driver, error) {
 	return driver, nil
 }
 
-func (driver *Driver) GetInstance() (interface{}, error) {
+func (driver *Driver) getInstance() (*servers.Server, error) {
 	server, err := servers.Get(driver.Client, driver.InstanceID).Extract()
 	if err != nil {
 		return nil, err
 	}
 
 	return server, nil
+}
+
+func (driver *Driver) GetInstance() (interface{}, error) {
+	server, err := driver.getInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	instance := &storagedriver.Instance{
+		ProviderName: providerName,
+		InstanceID:   driver.InstanceID,
+		Region:       driver.Region,
+		Name:         server.Name,
+	}
+
+	return instance, nil
 }
 
 func (driver *Driver) GetBlockDeviceMapping() (interface{}, error) {

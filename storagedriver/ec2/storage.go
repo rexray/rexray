@@ -118,11 +118,52 @@ func getInstanceIdendityDocument() (*instanceIdentityDocument, error) {
 
 func (driver *Driver) getBlockDevices(instanceID string) ([]ec2.BlockDevice, error) {
 
-	resp, err := driver.EC2Instance.DescribeInstances([]string{instanceID}, &ec2.Filter{})
+	instance, err := driver.getInstance()
 	if err != nil {
 		return []ec2.BlockDevice{}, err
 	}
 
-	return resp.Reservations[0].Instances[0].BlockDevices, nil
+	return instance.BlockDevices, nil
+
+}
+
+func getInstanceName(server ec2.Instance) string {
+	return getTag(server, "Name")
+}
+
+func getTag(server ec2.Instance, key string) string {
+	for _, tag := range server.Tags {
+		if tag.Key == key {
+			return tag.Value
+		}
+	}
+	return ""
+}
+
+func (driver *Driver) GetInstance() (interface{}, error) {
+
+	server, err := driver.getInstance()
+	if err != nil {
+		return storagedriver.Instance{}, err
+	}
+
+	instance := &storagedriver.Instance{
+		ProviderName: providerName,
+		InstanceID:   driver.InstanceDocument.InstanceID,
+		Region:       driver.InstanceDocument.Region,
+		Name:         getInstanceName(server),
+	}
+
+	return instance, nil
+}
+
+func (driver *Driver) getInstance() (ec2.Instance, error) {
+
+	resp, err := driver.EC2Instance.DescribeInstances([]string{driver.InstanceDocument.InstanceID}, &ec2.Filter{})
+	if err != nil {
+		return ec2.Instance{}, err
+	}
+
+	return resp.Reservations[0].Instances[0], nil
 
 }

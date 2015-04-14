@@ -31,7 +31,7 @@ func init() {
 func Init() (storagedriver.Driver, error) {
 	instanceDocument, err := getInstanceIdendityDocument()
 	if err != nil {
-		return nil, fmt.Errorf("Error: %v", err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	auth := aws.Auth{AccessKey: os.Getenv("AWS_ACCESS_KEY"), SecretKey: os.Getenv("AWS_SECRET_KEY")}
@@ -120,7 +120,7 @@ func (driver *Driver) getBlockDevices(instanceID string) ([]ec2.BlockDevice, err
 
 	resp, err := driver.EC2Instance.DescribeInstances([]string{instanceID}, &ec2.Filter{})
 	if err != nil {
-		return []ec2.BlockDevice{}, fmt.Errorf("Problem describing instances: %s", err)
+		return []ec2.BlockDevice{}, err
 	}
 
 	return resp.Reservations[0].Instances[0].BlockDevices, nil

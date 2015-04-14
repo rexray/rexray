@@ -1,16 +1,20 @@
 package storagedriver
 
-import "errors"
-
-import "strings"
+import (
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+)
 
 var (
 	driverInitFuncs map[string]InitFunc
 	drivers         map[string]Driver
+	debug           string
 )
 
 var (
-	ErrDriverInstanceIDDiscovery = errors.New("Driver InstanceID discovery failed")
+	ErrDriverInstanceDiscovery = errors.New("Driver Instance discovery failed")
 )
 
 type BlockDevice struct {
@@ -37,6 +41,7 @@ func Register(name string, initFunc InitFunc) error {
 func init() {
 	driverInitFuncs = make(map[string]InitFunc)
 	drivers = make(map[string]Driver)
+	debug = strings.ToUpper(os.Getenv("REXRAY_DEBUG"))
 }
 
 func GetDrivers(storageDrivers string) (map[string]Driver, error) {
@@ -46,24 +51,22 @@ func GetDrivers(storageDrivers string) (map[string]Driver, error) {
 		storageDriversArr = strings.Split(storageDrivers, ",")
 	}
 
+	if debug == "TRUE" {
+		fmt.Println(driverInitFuncs)
+	}
+
 	for name, initFunc := range driverInitFuncs {
 		if len(storageDriversArr) > 0 && !stringInSlice(name, storageDriversArr) {
 			continue
 		}
 		drivers[name], err = initFunc()
 		if err != nil {
+			if debug == "TRUE" {
+				fmt.Println(fmt.Sprintf("Info (%s): %s", name, err))
+			}
 			delete(drivers, name)
 		}
 	}
 
 	return drivers, nil
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }

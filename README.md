@@ -28,58 +28,14 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
 
 ## Storage Drivers - Examples
 
-### Azure
+### Get all block devices
+The following example assumes that you have passed proper environment variables based on the guest instance.
 
-### AWS
-    AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key" go run /usr/src/go/src/github.com/emccode/rexray/rexray.go
+    allBlockDevices, err := rexray.GetBlockDeviceMapping()
+    if err != nil {
+      log.Fatalf("Error: %s", err)
+    }
 
-    - providername: ec2
-      instanceid: i-695bb6ab
-      volumeid: vol-dedbadc3
-      devicename: /dev/sda1
-      region: us-west-1
-      status: attached
-    - providername: ec2
-      instanceid: i-695bb6ab
-      volumeid: vol-04c4b219
-      devicename: /dev/xvdb
-      region: us-west-1
-      status: attached
-
-
-### Ceph
-
-### CloudStack
-
-### GCE
-
-### KVM
-
-### OpenStack
-
-### RackSpace
-    OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password' go run /usr/src/go/src/github.com/emccode/rexray/rexray.go
-
-    - providername: RackSpace
-      instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7
-      volumeid: 738ea6b9-8c49-416c-97b7-a5264a799eb6
-      devicename: /dev/xvdb
-      region: DFW
-      status: ""
-    - providername: RackSpace
-      instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7
-      volumeid: 43de157d-3dfb-441f-b832-4d2d8cf457cc
-      devicename: /dev/xvdd
-      region: DFW
-      status: ""
-
-### ScaleIO
-
-### vSphere
-
-### vCloud Director
-
-### VIPR-C
 
 
 Licensing

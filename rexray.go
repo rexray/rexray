@@ -1,26 +1,30 @@
-package main
+package rexray
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/emccode/rexray/storagedriver"
-	_ "github.com/emccode/rexray/storagedriver/ec2"
-	_ "github.com/emccode/rexray/storagedriver/rackspace"
-	"gopkg.in/yaml.v2"
 )
 
-var debug string
-var storageDrivers string
+var (
+	debug          string
+	storageDrivers string
+)
+var (
+	ErrDriverBlockDeviceDiscovery = errors.New("Driver Block Device discovery failed")
+)
 
 func init() {
 	debug = strings.ToUpper(os.Getenv("REXRAY_DEBUG"))
 	storageDrivers = strings.ToLower(os.Getenv("REXRAY_STORAGEDRIVERS"))
 }
 
-func main() {
+// GetBlockDeviceMapping performs storage introspection and
+// returns a listing of block devices from the guest
+func GetBlockDeviceMapping() ([]*storagedriver.BlockDevice, error) {
 	drivers, err := storagedriver.GetDrivers(storageDrivers)
 	if err != nil && debug == "TRUE" {
 		fmt.Println(err)
@@ -30,7 +34,7 @@ func main() {
 	for _, driver := range drivers {
 		blockDevices, err := driver.GetBlockDeviceMapping()
 		if err != nil {
-			log.Fatalf("Error: %v", err)
+			return []*storagedriver.BlockDevice{}, fmt.Errorf("Error: %s: %s", ErrDriverBlockDeviceDiscovery, err)
 		}
 
 		if len(blockDevices.([]*storagedriver.BlockDevice)) > 0 {
@@ -40,12 +44,6 @@ func main() {
 		}
 	}
 
-	if len(allBlockDevices) > 0 {
-		yamlOutput, err := yaml.Marshal(&allBlockDevices)
-		if err != nil {
-			log.Fatalf("error: %v", err)
-		}
-		fmt.Printf(string(yamlOutput))
-	}
+	return allBlockDevices, nil
 
 }

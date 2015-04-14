@@ -32,7 +32,7 @@ func init() {
 func getInstanceID() (string, error) {
 	cmdOut, err := exec.Command("/usr/bin/xenstore-read", "name").Output()
 	if err != nil {
-		return "", fmt.Errorf("%s (%s): %s", storagedriver.ErrDriverInstanceIDDiscovery, providerName, err)
+		return "", fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	instanceID := strings.Replace(string(cmdOut), "\n", "", -1)
@@ -40,7 +40,7 @@ func getInstanceID() (string, error) {
 	validInstanceID := regexp.MustCompile(`^instance-`)
 	valid := validInstanceID.MatchString(instanceID)
 	if !valid {
-		return "", storagedriver.ErrDriverInstanceIDDiscovery
+		return "", storagedriver.ErrDriverInstanceDiscovery
 	}
 
 	instanceID = strings.Replace(instanceID, "instance-", "", 1)

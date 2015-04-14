@@ -2,7 +2,7 @@
 
 
 ## Overview
-```RexRay``` is a cross-platform storage introspection application that is meant to provide visibility and management of external/underlying storage that is attached via methods specified in drivers.  This storage can be from a specific storage platform in addition to being provided by virtual infrastructure.
+```RexRay``` is a Go package for guest storage introspection that is meant to provide visibility and management of external/underlying storage that is attached via methods specified in drivers.  This storage can be from a specific storage platform in addition to being provided by virtual infrastructure.
 
 The driver to be used is automatically detected or hints can be provided.  Drivers are then intialized to retrieve guest identifiers and further information from other platforms that are relevant to storage management.
 
@@ -20,12 +20,15 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
 
     REXRAY_DEBUG - show debug messages
     REXRAY_STORAGEDRIVERS - only do checks using these drivers
+    AWS_ACCESS_KEY - (AWS)
+    AWS_SECRET_KEY - (AWS)
+    OS_AUTH_URL - (RACKSPACE)
+    OS_USERNAME - (RACKSPACE)
+    OS_PASSWORD - (RACKSPACE)
 
 ## Storage Drivers - Examples
 
 ### Azure
-
-### Ceph
 
 ### AWS
     AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key" go run /usr/src/go/src/github.com/emccode/rexray/rexray.go
@@ -43,7 +46,16 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
       region: us-west-1
       status: attached
 
+
+### Ceph
+
+### CloudStack
+
 ### GCE
+
+### KVM
+
+### OpenStack
 
 ### RackSpace
     OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password' go run /usr/src/go/src/github.com/emccode/rexray/rexray.go
@@ -63,7 +75,11 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
 
 ### ScaleIO
 
+### vSphere
 
+### vCloud Director
+
+### VIPR-C
 
 
 Licensing

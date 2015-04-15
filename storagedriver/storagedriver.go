@@ -28,14 +28,50 @@ type BlockDevice struct {
 
 type Instance struct {
 	ProviderName string
+	InstanceID   string
+	Region       string
+	Name         string
+}
+
+type Snapshot struct {
+	VolumeID    string
+	SnapshotID  string
+	VolumeSize  string
+	StartTime   string
+	Description string
+	Status      string
+}
+
+type Volume struct {
+	VolumeID         string
+	AvailabilityZone string
+	Status           string
+	VolumeType       string
+	IOPS             int64
+	Attachments      []VolumeAttachment
+}
+
+type VolumeAttachment struct {
+	VolumeID   string
 	InstanceID string
-	Region string
-	Name string
+	DeviceName string
+	Status     string
 }
 
 type Driver interface {
 	GetBlockDeviceMapping() (interface{}, error)
 	GetInstance() (interface{}, error)
+	CreateSnapshot(bool, string, string) (interface{}, error)
+	GetSnapshot(string, string) (interface{}, error)
+	RemoveSnapshot(string) error
+	GetDeviceNextAvailable() (string, error)
+	CreateSnapshotVolume(bool, string) (string, error)
+	CreateVolume(bool, string, string, int64, int64) (interface{}, error)
+	RemoveVolume(string) error
+	GetVolume(string) (interface{}, error)
+	GetVolumeAttach(string, string) (interface{}, error)
+	AttachVolume(bool, string, string) (interface{}, error)
+	DetachVolume(bool, string) error
 }
 
 type InitFunc func() (Driver, error)

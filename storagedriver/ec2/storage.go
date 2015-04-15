@@ -2,11 +2,15 @@ package ec2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/emccode/rexray/storagedriver"
@@ -45,6 +49,7 @@ func Init() (storagedriver.Driver, error) {
 		InstanceDocument: instanceDocument,
 	}
 
+	log.Println("Driver Initialized: " + providerName)
 	return driver, nil
 }
 
@@ -84,6 +89,7 @@ func (driver *Driver) GetBlockDeviceMapping() (interface{}, error) {
 		BlockDevices = append(BlockDevices, sdBlockDevice)
 	}
 
+	log.Println("Got Block Device Mappings: " + fmt.Sprintf("%+v", BlockDevices))
 	return BlockDevices, nil
 }
 
@@ -154,6 +160,7 @@ func (driver *Driver) GetInstance() (interface{}, error) {
 		Name:         getInstanceName(server),
 	}
 
+	log.Println("Got Instance: " + fmt.Sprintf("%+v", instance))
 	return instance, nil
 }
 
@@ -165,5 +172,375 @@ func (driver *Driver) getInstance() (ec2.Instance, error) {
 	}
 
 	return resp.Reservations[0].Instances[0], nil
+}
 
+func (driver *Driver) CreateSnapshot(runAsync bool, volumeID string, description string) (interface{}, error) {
+	resp, err := driver.EC2Instance.CreateSnapshot(volumeID, description)
+	if err != nil {
+		return storagedriver.Snapshot{}, err
+	}
+
+	if !runAsync {
+		log.Println("Waiting for snapshot to complete")
+		err = driver.waitSnapshotComplete(resp.Snapshot.Id)
+		if err != nil {
+			return storagedriver.Snapshot{}, err
+		}
+	}
+
+	snapshot, err := driver.GetSnapshot("", resp.Snapshot.Id)
+	if err != nil {
+		return storagedriver.Snapshot{}, err
+	}
+
+	log.Println("Created Snapshot: " + snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
+	return snapshot, nil
+
+}
+
+func (driver *Driver) getSnapshot(volumeID, snapshotID string) ([]ec2.Snapshot, error) {
+	filter := ec2.NewFilter()
+	if snapshotID == "" {
+		filter.Add("volume-id", volumeID)
+	}
+
+	resp, err := driver.EC2Instance.Snapshots([]string{snapshotID}, filter)
+	if err != nil {
+		return []ec2.Snapshot{}, err
+	}
+
+	return resp.Snapshots, nil
+}
+
+func (driver *Driver) GetSnapshot(volumeID, snapshotID string) (interface{}, error) {
+	snapshots, err := driver.getSnapshot(volumeID, snapshotID)
+	if err != nil {
+		return []*storagedriver.Snapshot{}, err
+	}
+
+	var snapshotsInt []*storagedriver.Snapshot
+	for _, snapshot := range snapshots {
+		snapshotSD := &storagedriver.Snapshot{
+			VolumeID:    snapshot.VolumeId,
+			SnapshotID:  snapshot.Id,
+			VolumeSize:  snapshot.VolumeSize,
+			StartTime:   snapshot.StartTime,
+			Description: snapshot.Description,
+			Status:      snapshot.Status,
+		}
+		snapshotsInt = append(snapshotsInt, snapshotSD)
+	}
+
+	log.Println("Got Snapshots: " + fmt.Sprintf("%+v", snapshotsInt))
+	return snapshotsInt, nil
+}
+
+func (driver *Driver) RemoveSnapshot(snapshotID string) error {
+	_, err := driver.EC2Instance.DeleteSnapshots([]string{snapshotID})
+	if err != nil {
+		return err
+	}
+
+	log.Println("Removed Snapshot: " + snapshotID)
+	return nil
+}
+
+func (driver *Driver) GetDeviceNextAvailable() (string, error) {
+	letters := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
+	blockDeviceNames := make(map[string]bool)
+
+	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
+	if err != nil {
+		return "", err
+	}
+
+	for _, blockDevice := range blockDeviceMapping.([]*storagedriver.BlockDevice) {
+		re, _ := regexp.Compile(`^/dev/xvd([a-z])`)
+		res := re.FindStringSubmatch(blockDevice.DeviceName)
+		if len(res) > 0 {
+			blockDeviceNames[res[1]] = true
+		}
+	}
+
+	localDevices, err := getLocalDevices()
+	if err != nil {
+		return "", err
+	}
+
+	for _, localDevice := range localDevices {
+		re, _ := regexp.Compile(`^xvd([a-z])`)
+		res := re.FindStringSubmatch(localDevice)
+		if len(res) > 0 {
+			blockDeviceNames[res[1]] = true
+		}
+	}
+
+	for _, letter := range letters {
+		if !blockDeviceNames[letter] {
+			nextDeviceName := "/dev/xvd" + letter
+			log.Println("Got next device name: " + nextDeviceName)
+			return nextDeviceName, nil
+		}
+	}
+	return "", errors.New("No available device")
+}
+
+func getLocalDevices() (deviceNames []string, err error) {
+	file := "/proc/partitions"
+	contentBytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return []string{}, errors.New(fmt.Sprintf("Couldn't read %s: %v", file, err))
+	}
+
+	content := string(contentBytes)
+
+	lines := strings.Split(content, "\n")
+	for _, line := range lines[2:] {
+		fields := strings.Fields(line)
+		if len(fields) == 4 {
+			deviceNames = append(deviceNames, fields[3])
+		}
+	}
+
+	return deviceNames, nil
+}
+
+func (driver *Driver) CreateVolume(runAsync bool, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
+	resp, err := driver.createVolume(runAsync, snapshotID, volumeType, IOPS, size)
+	if err != nil {
+		return storagedriver.Volume{}, err
+	}
+
+	volume, err := driver.GetVolume(resp.VolumeId)
+	if err != nil {
+		return storagedriver.Volume{}, err
+	}
+
+	log.Println(fmt.Sprintf("Created volume: %+v", volume))
+	return volume, nil
+
+}
+
+func (driver *Driver) createVolume(runAsync bool, snapshotID string, volumeType string, IOPS int64, size int64) (*ec2.CreateVolumeResp, error) {
+
+	server, err := driver.getInstance()
+	if err != nil {
+		return &ec2.CreateVolumeResp{}, err
+	}
+
+	options := &ec2.CreateVolume{
+		Size:       size,
+		SnapshotId: snapshotID,
+		AvailZone:  server.AvailabilityZone,
+		VolumeType: volumeType,
+		IOPS:       IOPS,
+	}
+	resp, err := driver.EC2Instance.CreateVolume(options)
+	if err != nil {
+		return &ec2.CreateVolumeResp{}, err
+	}
+
+	// return resp, nil
+
+	if !runAsync {
+		log.Println("Waiting for volume creation to complete")
+		err = driver.waitVolumeComplete(resp.VolumeId)
+		if err != nil {
+			return &ec2.CreateVolumeResp{}, err
+		}
+	}
+
+	return resp, nil
+}
+
+func (driver *Driver) getVolume(volumeID string) (ec2.Volume, error) {
+	filter := ec2.NewFilter()
+
+	resp, err := driver.EC2Instance.Volumes([]string{volumeID}, filter)
+	if err != nil {
+		return ec2.Volume{}, err
+	}
+
+	return resp.Volumes[0], nil
+}
+
+func (driver *Driver) GetVolume(volumeID string) (interface{}, error) {
+	volume, err := driver.getVolume(volumeID)
+	if err != nil {
+		return storagedriver.Volume{}, nil
+	}
+
+	var attachmentsSD []storagedriver.VolumeAttachment
+	for _, attachment := range volume.Attachments {
+		attachmentSD := storagedriver.VolumeAttachment{
+			VolumeID:   attachment.VolumeId,
+			InstanceID: attachment.InstanceId,
+			DeviceName: attachment.Device,
+			Status:     attachment.Status,
+		}
+		attachmentsSD = append(attachmentsSD, attachmentSD)
+	}
+
+	volumeSD := storagedriver.Volume{
+		VolumeID:         volume.VolumeId,
+		AvailabilityZone: volume.AvailZone,
+		Status:           volume.Status,
+		VolumeType:       volume.VolumeType,
+		IOPS:             volume.IOPS,
+		Attachments:      attachmentsSD,
+	}
+
+	return volumeSD, nil
+}
+
+func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{}, error) {
+	volume, err := driver.GetVolume(volumeID)
+	if err != nil {
+		return []storagedriver.VolumeAttachment{}, err
+	}
+
+	if instanceID != "" {
+		var attached bool
+		for _, volumeAttachment := range volume.(storagedriver.Volume).Attachments {
+			if volumeAttachment.InstanceID == instanceID {
+				return volumeAttachment, nil
+			}
+		}
+		if !attached {
+			return storagedriver.VolumeAttachment{}, nil
+		}
+	}
+	return volume.(storagedriver.Volume).Attachments, nil
+}
+
+func (driver *Driver) waitSnapshotComplete(snapshotID string) error {
+	for {
+		snapshots, err := driver.getSnapshot("", snapshotID)
+		if err != nil {
+			return err
+		}
+
+		snapshot := snapshots[0]
+		if snapshot.Status == "completed" {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
+}
+
+func (driver *Driver) waitVolumeComplete(volumeID string) error {
+	for {
+		volume, err := driver.getVolume(volumeID)
+		if err != nil {
+			return err
+		}
+
+		if volume.Status == "available" {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
+}
+
+func (driver *Driver) waitVolumeAttach(volumeID, instanceID string) error {
+	for {
+		volume, err := driver.GetVolumeAttach(volumeID, instanceID)
+		if err != nil {
+			return err
+		}
+		if volume.(storagedriver.VolumeAttachment).Status == "attached" {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
+}
+
+func (driver *Driver) waitVolumeDetach(volumeID string) error {
+	for {
+		volume, err := driver.GetVolumeAttach(volumeID, "")
+		if err != nil {
+			return err
+		}
+
+		if len(volume.([]storagedriver.VolumeAttachment)) == 0 {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
+}
+
+func (driver *Driver) CreateSnapshotVolume(runAsync bool, snapshotID string) (string, error) {
+	volume, err := driver.createVolume(runAsync, snapshotID, "", 0, 0)
+	if err != nil {
+		return "", err
+	}
+
+	volumeID := volume.VolumeId
+
+	log.Println("Created Volume Snapshot: " + volumeID)
+	return volumeID, nil
+}
+
+func (driver *Driver) RemoveVolume(volumeID string) error {
+	_, err := driver.EC2Instance.DeleteVolume(volumeID)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Deleted Volume: " + volumeID)
+	return nil
+}
+
+func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) (interface{}, error) {
+	nextDeviceName, err := driver.GetDeviceNextAvailable()
+	if err != nil {
+		return storagedriver.VolumeAttachment{}, err
+	}
+
+	_, err = driver.EC2Instance.AttachVolume(volumeID, instanceID, nextDeviceName)
+	if err != nil {
+		return storagedriver.VolumeAttachment{}, err
+	}
+
+	if !runAsync {
+		log.Println("Waiting for volume attachment to complete")
+		err = driver.waitVolumeAttach(volumeID, instanceID)
+		if err != nil {
+			return storagedriver.VolumeAttachment{}, err
+		}
+	}
+
+	volumeAttachment, err := driver.GetVolumeAttach(volumeID, instanceID)
+	if err != nil {
+		return storagedriver.VolumeAttachment{}, err
+	}
+
+	log.Println(fmt.Sprintf("Attached volume %s to instance %s", volumeID, instanceID))
+	return volumeAttachment, nil
+}
+
+func (driver *Driver) DetachVolume(runAsync bool, volumeID string) error {
+	_, err := driver.EC2Instance.DetachVolume(volumeID)
+	if err != nil {
+		return err
+	}
+
+	if !runAsync {
+		log.Println("Waiting for volume detachment to complete")
+		err = driver.waitVolumeDetach(volumeID)
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Println("Detached volume", volumeID)
+	return nil
 }

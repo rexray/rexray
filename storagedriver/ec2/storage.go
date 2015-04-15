@@ -387,6 +387,7 @@ func (driver *Driver) GetVolume(volumeID string) (interface{}, error) {
 		Status:           volume.Status,
 		VolumeType:       volume.VolumeType,
 		IOPS:             volume.IOPS,
+		Size:             volume.Size,
 		Attachments:      attachmentsSD,
 	}
 

@@ -15,7 +15,15 @@ import (
 )
 
 var (
-	cfgFile string
+	cfgFile     string
+	snapshotID  string
+	volumeID    string
+	runAsync    bool
+	description string
+	volumeType  string
+	IOPS        int64
+	size        int64
+	instanceID  string
 )
 
 //FlagValue struct
@@ -42,8 +50,27 @@ var versionCmd = &cobra.Command{
 	},
 }
 
-var getstorageCmd = &cobra.Command{
-	Use: "get-storage",
+var getinstanceCmd = &cobra.Command{
+	Use: "get-instance",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		allInstances, err := rexray.GetInstance()
+		if err != nil {
+			panic(err)
+		}
+
+		if len(allInstances) > 0 {
+			yamlOutput, err := yaml.Marshal(&allInstances)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf(string(yamlOutput))
+		}
+	},
+}
+
+var getblockdeviceCmd = &cobra.Command{
+	Use: "get-blockdevice",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		allBlockDevices, err := rexray.GetBlockDeviceMapping()
@@ -61,6 +88,158 @@ var getstorageCmd = &cobra.Command{
 	},
 }
 
+var getvolumeCmd = &cobra.Command{
+	Use: "get-volume",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		allVolumes, err := rexray.GetVolume(volumeID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if len(allVolumes) > 0 {
+			yamlOutput, err := yaml.Marshal(&allVolumes)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf(string(yamlOutput))
+		}
+	},
+}
+
+var getsnapshotCmd = &cobra.Command{
+	Use: "get-snapshot",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		allSnapshots, err := rexray.GetSnapshot(volumeID, snapshotID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if len(allSnapshots) > 0 {
+			yamlOutput, err := yaml.Marshal(&allSnapshots)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf(string(yamlOutput))
+		}
+	},
+}
+
+var newsnapshotCmd = &cobra.Command{
+	Use: "new-snapshot",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if volumeID == "" {
+			log.Fatalf("missing --volumeID")
+		}
+
+		snapshot, err := rexray.CreateSnapshot(runAsync, volumeID, description)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		yamlOutput, err := yaml.Marshal(&snapshot)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf(string(yamlOutput))
+
+	},
+}
+
+var removesnapshotCmd = &cobra.Command{
+	Use: "remove-snapshot",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if snapshotID == "" {
+			log.Fatalf("missing --snapshotID")
+		}
+
+		err := rexray.RemoveSnapshot(snapshotID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
+}
+
+var newvolumeCmd = &cobra.Command{
+	Use: "new-volume",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if size == 0 && snapshotID == "" {
+			log.Fatalf("missing --size")
+		}
+
+		volume, err := rexray.CreateVolume(runAsync, snapshotID, volumeType, IOPS, size)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		yamlOutput, err := yaml.Marshal(&volume)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf(string(yamlOutput))
+
+	},
+}
+
+var removevolumeCmd = &cobra.Command{
+	Use: "remove-volume",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if volumeID == "" {
+			log.Fatalf("missing --volumeID")
+		}
+
+		err := rexray.RemoveVolume(volumeID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
+}
+
+var attachvolumeCmd = &cobra.Command{
+	Use: "attach-volume",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if volumeID == "" {
+			log.Fatalf("missing --volumeID")
+		}
+
+		volumeAttachment, err := rexray.AttachVolume(runAsync, volumeID, instanceID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		yamlOutput, err := yaml.Marshal(&volumeAttachment)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf(string(yamlOutput))
+
+	},
+}
+
+var detachvolumeCmd = &cobra.Command{
+	Use: "detach-volume",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if volumeID == "" {
+			log.Fatalf("missing --volumeID")
+		}
+
+		err := rexray.DetachVolume(runAsync, volumeID, instanceID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
+}
+
 //Exec function
 func Exec() {
 	AddCommands()
@@ -70,15 +249,41 @@ func Exec() {
 //AddCommands function
 func AddCommands() {
 	RexrayCmd.AddCommand(versionCmd)
-	RexrayCmd.AddCommand(getstorageCmd)
+	RexrayCmd.AddCommand(getinstanceCmd)
+	RexrayCmd.AddCommand(getblockdeviceCmd)
+	RexrayCmd.AddCommand(getvolumeCmd)
+	RexrayCmd.AddCommand(getsnapshotCmd)
+	RexrayCmd.AddCommand(newsnapshotCmd)
+	RexrayCmd.AddCommand(removesnapshotCmd)
+	RexrayCmd.AddCommand(newvolumeCmd)
+	RexrayCmd.AddCommand(removevolumeCmd)
+	RexrayCmd.AddCommand(attachvolumeCmd)
+	RexrayCmd.AddCommand(detachvolumeCmd)
 }
 
-var goscliCmdV *cobra.Command
+var rexrayCmdV *cobra.Command
 
 func init() {
 	RexrayCmd.PersistentFlags().StringVar(&cfgFile, "Config", "", "config file (default is $HOME/rexray/config.yaml)")
-	//loginCmd.Flags().StringVar(&username, "username", "", "GOSCALEIO_USERNAME")
-	goscliCmdV = RexrayCmd
+	getvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	getsnapshotCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	getsnapshotCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
+	newsnapshotCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
+	newsnapshotCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	newsnapshotCmd.Flags().StringVar(&description, "description", "", "description")
+	removesnapshotCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
+	newvolumeCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
+	newvolumeCmd.Flags().StringVar(&volumeType, "volumetype", "", "volumetype")
+	newvolumeCmd.Flags().Int64Var(&IOPS, "iops", 0, "IOPS")
+	newvolumeCmd.Flags().Int64Var(&size, "size", 0, "size")
+	removevolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	attachvolumeCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
+	attachvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	attachvolumeCmd.Flags().StringVar(&instanceID, "instanceid", "", "instanceid")
+	detachvolumeCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
+	detachvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	detachvolumeCmd.Flags().StringVar(&instanceID, "instanceid", "", "instanceid")
+	rexrayCmdV = RexrayCmd
 
 	// initConfig(systemCmd, "rexray", true, map[string]FlagValue{
 	// 	"endpoint": {&endpoint, false, false, ""},

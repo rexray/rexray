@@ -1,13 +1,9 @@
 # rexraycli
-A CLI implementation of RexRay providing guest storage introspection and management.  The CLI should be distributed to the system that requires introspection and storage management.  It will discover proper drivers to use, and then with proper authorization, will get further details about those devices.  In the long term, managenement capabilities for volumes, and snapshots should be present.
+A CLI implementation of RexRay providing guest storage introspection and management.  The CLI should be distributed to the system that requires introspection and storage management.  It will discover proper drivers to use, and then with proper authorization, will get further details about those devices.
+
+Once the introspection has occured, ```Rexray``` can then manage manage storage using initialized drivers in a common manner between storage providers.  The providers will attach devices via any method possible to get the device attached as the next available  ```/dev/xvd_```.
 
 ```RexrayCLI``` is an implementation of [Rexray](https://github.com/emccode/rexray).  It provides a working application, but as well a working example of using the ```Rexray``` Go package.
-
-
-## Manually Building
-
-    docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexraycli golang:1.4.2-cross make release
-
 
 ## Environment Variables
 
@@ -22,7 +18,16 @@ A CLI implementation of RexRay providing guest storage introspection and managem
 ## CLI Usage Examples
 The CLI can be built, or you can retrieve pre-compiled executables from the Github releases.
 
-    get-storage - retrieve storage details for guest instance
+    get-instance - get the intro-spected instances for this server
+    get-blockdevice - get the block devices and respective volumes that are attached to this server
+    get-volume - get all volumes available to be attached
+    new-volume - create a new volume from scratch or from a snapshot
+    remove-volume - remove a volume
+    get-snapshot - get all or specific snapshots
+    new-snapshot - create a new snapshot on a volume
+    remove-snapshot - remove a snapshot
+    attach-volume - attach volume to this server
+    detach-volume - detach volume from this server
     version - show Rexray version
 
 ### Azure
@@ -77,6 +82,10 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
 ### vCloud Director
 
 ### VIPR-C
+
+## Manually Building
+
+    docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexraycli golang:1.4.2-cross make release
 
 
 Licensing

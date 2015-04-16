@@ -44,7 +44,7 @@ func TestGetInstance(*testing.T) {
 }
 
 func TestGetVolume(*testing.T) {
-	volume, err := driver.GetVolume("43de157d-3dfb-441f-b832-4d2d8cf457cc")
+	volume, err := driver.GetVolume("12b64bd3-2c34-4fe1-b389-5cf8df668ef5")
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +52,7 @@ func TestGetVolume(*testing.T) {
 }
 
 func TestGetVolumeAttach(*testing.T) {
-	volume, err := driver.GetVolumeAttach("43de157d-3dfb-441f-b832-4d2d8cf457cc", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
+	volume, err := driver.GetVolumeAttach("12b64bd3-2c34-4fe1-b389-5cf8df668ef5", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
 	if err != nil {
 		panic(err)
 	}
@@ -73,4 +73,68 @@ func TestGetSnapshotFromSnapshotID(*testing.T) {
 		panic(err)
 	}
 	fmt.Println(fmt.Sprintf("%+v", snapshots.([]*storagedriver.Snapshot)[0]))
+}
+
+func TestCreateSnapshot(*testing.T) {
+	snapshot, err := driver.CreateSnapshot(false, "738ea6b9-8c49-416c-97b7-a5264a799eb6", "")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(fmt.Sprintf("%+v", snapshot))
+}
+
+func TestRemoveSnapshot(*testing.T) {
+	err := driver.RemoveSnapshot("ea14a2f0-16b2-47e9-b7ba-01d812f65205")
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestCreateVolume(*testing.T) {
+	volume, err := driver.CreateVolume(false, "", "", 0, 75)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(fmt.Sprintf("%+v", volume))
+}
+
+func TestRemoveVolume(*testing.T) {
+	err := driver.RemoveVolume("743e9de5-8de4-4f09-8249-0238849a3a29")
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestCreateSnapshotVolume(*testing.T) {
+	volume, err := driver.CreateSnapshotVolume(false, "8e97c4fc-8ee1-40c4-96d2-dc4583a7cada")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(fmt.Sprintf("%+v", volume))
+}
+
+func TestGetDeviceNextAvailable(*testing.T) {
+	deviceName, err := driver.GetDeviceNextAvailable()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(fmt.Sprintf(deviceName))
+}
+
+func TestAttachVolume(*testing.T) {
+	volumeAttachment, err := driver.AttachVolume(false, "94e02a4a-71dc-4026-b561-1cd0cad37bce", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(fmt.Sprintf("%+v", volumeAttachment.(storagedriver.VolumeAttachment)))
+}
+
+func TestDetachVolume(*testing.T) {
+	err := driver.DetachVolume(false, "94e02a4a-71dc-4026-b561-1cd0cad37bce", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
+	if err != nil {
+		panic(err)
+	}
+
 }

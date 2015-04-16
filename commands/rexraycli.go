@@ -46,7 +46,7 @@ var RexrayCmd = &cobra.Command{
 var versionCmd = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("\nRexray Version: %v\n", "0.1.150414")
+		fmt.Printf("\nRexray Version: %v\n", "0.1.150416")
 	},
 }
 

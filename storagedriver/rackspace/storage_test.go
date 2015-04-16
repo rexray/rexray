@@ -72,7 +72,7 @@ func TestGetSnapshotFromSnapshotID(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", snapshots.([]*storagedriver.Snapshot)[0]))
+	fmt.Println(fmt.Sprintf("%+v", snapshots.([]*storagedriver.Snapshot)))
 }
 
 func TestCreateSnapshot(*testing.T) {

@@ -35,19 +35,19 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
 These represent the methods that should be available from storage drivers.
 
     type Driver interface {
-    	GetBlockDeviceMapping() (interface{}, error)
+      GetBlockDeviceMapping() (interface{}, error)
     	GetInstance() (interface{}, error)
-    	CreateSnapshot(bool, string, string) (interface{}, error)
-    	GetSnapshot(string, string) (interface{}, error)
-    	RemoveSnapshot(string) error
-    	GetDeviceNextAvailable() (string, error)
-    	CreateSnapshotVolume(bool, string) (string, error)
-    	CreateVolume(bool, string, string, int64, int64) (interface{}, error)
-    	RemoveVolume(string) error
     	GetVolume(string) (interface{}, error)
     	GetVolumeAttach(string, string) (interface{}, error)
+    	GetSnapshot(string, string) (interface{}, error)
+    	CreateSnapshot(bool, string, string) (interface{}, error)
+    	RemoveSnapshot(string) error
+    	CreateVolume(bool, string, string, int64, int64) (interface{}, error)
+    	RemoveVolume(string) error
+    	CreateSnapshotVolume(bool, string) (string, error)
+    	GetDeviceNextAvailable() (string, error)
     	AttachVolume(bool, string, string) (interface{}, error)
-    	DetachVolume(bool, string) error
+    	DetachVolume(bool, string, string) error
     }
 
 ### Get all block devices

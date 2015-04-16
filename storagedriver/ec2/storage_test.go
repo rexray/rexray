@@ -180,7 +180,7 @@ func TestAttachVolume(*testing.T) {
 
 	log.Println(fmt.Sprintf("Volumes attached: %+v", volumeAttachment))
 
-	err = driver.DetachVolume(false, volumeAttachment.(storagedriver.VolumeAttachment).VolumeID)
+	err = driver.DetachVolume(false, volumeAttachment.(storagedriver.VolumeAttachment).VolumeID, "")
 	if err != nil {
 		panic(err)
 	}
@@ -193,4 +193,12 @@ func TestAttachVolume(*testing.T) {
 	}
 
 	log.Println(fmt.Sprintf("Volume removed: %+v", volumeAttachment.(storagedriver.VolumeAttachment).VolumeID))
+}
+
+func TestGetVolume(*testing.T) {
+	volume, err := driver.GetVolume("")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(fmt.Sprintf("%+v", volume))
 }

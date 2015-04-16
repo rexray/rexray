@@ -49,7 +49,7 @@ type Volume struct {
 	VolumeType       string
 	IOPS             int64
 	Size             string
-	Attachments      []VolumeAttachment
+	Attachments      []*VolumeAttachment
 }
 
 type VolumeAttachment struct {

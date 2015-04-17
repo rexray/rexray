@@ -52,11 +52,13 @@ func TestGetVolume(*testing.T) {
 }
 
 func TestGetVolumeByName(*testing.T) {
-	volume, err := driver.GetVolume("", "Volume-1")
+	volumes, err := driver.GetVolume("", "Volume-1")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", volume))
+	for _, volume := range volumes.([]*storagedriver.Volume) {
+		fmt.Println(fmt.Sprintf("%+v", volume))
+	}
 }
 
 func TestGetVolumeAttach(*testing.T) {

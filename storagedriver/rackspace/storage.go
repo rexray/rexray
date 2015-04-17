@@ -225,6 +225,7 @@ func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error
 		}
 
 		volumeSD := &storagedriver.Volume{
+			Name:             volume.Name,
 			VolumeID:         volume.ID,
 			AvailabilityZone: volume.AvailabilityZone,
 			Status:           volume.Status,
@@ -300,6 +301,7 @@ func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (in
 	var snapshotsInt []*storagedriver.Snapshot
 	for _, snapshot := range snapshots {
 		snapshotSD := &storagedriver.Snapshot{
+			Name:        snapshot.Name,
 			VolumeID:    snapshot.VolumeID,
 			SnapshotID:  snapshot.ID,
 			VolumeSize:  strconv.Itoa(snapshot.Size),

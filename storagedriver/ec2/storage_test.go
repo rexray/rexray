@@ -58,7 +58,7 @@ func TestCreateSnapshot(*testing.T) {
 		panic(err)
 	}
 
-	snapshot, err := driver.CreateSnapshot(false, blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
+	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +72,7 @@ func TestGetSnapshot(*testing.T) {
 		panic(err)
 	}
 
-	snapshots, err := driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "")
+	snapshots, err := driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +87,7 @@ func TestRemoveSnapshot(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	snapshots, err := driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "")
+	snapshots, err := driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +96,7 @@ func TestRemoveSnapshot(*testing.T) {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 
-	snapshot, err := driver.CreateSnapshot(false, blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
+	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +107,7 @@ func TestRemoveSnapshot(*testing.T) {
 		panic(err)
 	}
 
-	snapshots, err = driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "")
+	snapshots, err = driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -134,12 +134,12 @@ func TestCreateSnapshotVolume(*testing.T) {
 		panic(err)
 	}
 
-	snapshot, err := driver.CreateSnapshot(false, blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
+	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
 	if err != nil {
 		panic(err)
 	}
 
-	volumeID, err := driver.CreateSnapshotVolume(false, snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
+	volumeID, err := driver.CreateSnapshotVolume(false, "testing", snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
 	if err != nil {
 		panic(err)
 	}
@@ -161,7 +161,7 @@ func TestAttachVolume(*testing.T) {
 		panic(err)
 	}
 
-	volume, err := driver.CreateVolume(false, "", "", 0, 2)
+	volume, err := driver.CreateVolume(false, "testing", "", "", 0, 2)
 	if err != nil {
 		panic(err)
 	}
@@ -196,9 +196,50 @@ func TestAttachVolume(*testing.T) {
 }
 
 func TestGetVolume(*testing.T) {
-	volume, err := driver.GetVolume("")
+	volume, err := driver.GetVolume("", "testing")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", volume))
+	for _, volume := range volume.([]*storagedriver.Volume) {
+		fmt.Println(fmt.Sprintf("%+v", volume))
+	}
 }
+
+func TestCreateVolume(*testing.T) {
+	volume, err := driver.CreateVolume(true, "testing", "", "", 0, 1)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(fmt.Sprintf("%+v", volume.(*storagedriver.Volume)))
+}
+
+func TestCreateSnapshot2(*testing.T) {
+	snapshots, err := driver.CreateSnapshot(false, "testing", "vol-8295eb9f", "test")
+	if err != nil {
+		panic(err)
+	}
+	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+		fmt.Println(fmt.Sprintf("%+v", snapshot))
+	}
+}
+
+func TestGetSnapshotByName(*testing.T) {
+	volume, err := driver.GetSnapshot("", "", "testing")
+	if err != nil {
+		panic(err)
+	}
+	for _, snapshot := range volume.([]*storagedriver.Snapshot) {
+		fmt.Println(fmt.Sprintf("%+v", snapshot))
+	}
+}
+
+// func TestListTables(*testing.T) {
+// 	ListTables()
+// }
+//
+// func TestGetDDValue(*testing.T) {
+// 	value, err := driver.GetDDValue("name1")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }

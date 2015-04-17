@@ -15,6 +15,7 @@ import (
 
 	"github.com/emccode/rexray/storagedriver"
 	"github.com/goamz/goamz/aws"
+	"github.com/goamz/goamz/dynamodb"
 	"github.com/goamz/goamz/ec2"
 )
 
@@ -25,6 +26,7 @@ var (
 type Driver struct {
 	InstanceDocument *instanceIdentityDocument
 	EC2Instance      *ec2.EC2
+	DDTable          *dynamodb.Table
 }
 
 var (
@@ -35,6 +37,17 @@ func init() {
 	providerName = "ec2"
 	storagedriver.Register("ec2", Init)
 }
+
+// func InitDD(auth aws.Auth, region aws.Region) *dynamodb.Table {
+// 	ddbs := dynamodb.Server{auth, aws.USWest}
+// 	tableDesc, _ := ddbs.DescribeTable("volumes")
+// 	pkTable, err := tableDesc.BuildPrimaryKey()
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+// 	table := ddbs.NewTable("volumes", pkTable)
+// 	return table
+// }
 
 func Init() (storagedriver.Driver, error) {
 	instanceDocument, err := getInstanceIdendityDocument()
@@ -48,9 +61,12 @@ func Init() (storagedriver.Driver, error) {
 		aws.Regions[instanceDocument.Region],
 	)
 
+	// table := InitDD(auth, aws.Regions[instanceDocument.Region])
+
 	driver := &Driver{
 		EC2Instance:      ec2Instance,
 		InstanceDocument: instanceDocument,
+		// DDTable:          table,
 	}
 
 	log.Println("Driver Initialized: " + providerName)
@@ -178,10 +194,17 @@ func (driver *Driver) getInstance() (ec2.Instance, error) {
 	return resp.Reservations[0].Instances[0], nil
 }
 
-func (driver *Driver) CreateSnapshot(runAsync bool, volumeID string, description string) (interface{}, error) {
+func (driver *Driver) CreateSnapshot(runAsync bool, snapshotName, volumeID, description string) (interface{}, error) {
 	resp, err := driver.EC2Instance.CreateSnapshot(volumeID, description)
 	if err != nil {
 		return storagedriver.Snapshot{}, err
+	}
+
+	if snapshotName != "" {
+		_, err := driver.EC2Instance.CreateTags([]string{resp.Id}, []ec2.Tag{{"Name", snapshotName}})
+		if err != nil {
+			return &ec2.CreateVolumeResp{}, err
+		}
 	}
 
 	if !runAsync {
@@ -192,7 +215,7 @@ func (driver *Driver) CreateSnapshot(runAsync bool, volumeID string, description
 		}
 	}
 
-	snapshot, err := driver.GetSnapshot("", resp.Snapshot.Id)
+	snapshot, err := driver.GetSnapshot("", resp.Snapshot.Id, "")
 	if err != nil {
 		return storagedriver.Snapshot{}, err
 	}
@@ -202,12 +225,17 @@ func (driver *Driver) CreateSnapshot(runAsync bool, volumeID string, description
 
 }
 
-func (driver *Driver) getSnapshot(volumeID, snapshotID string) ([]ec2.Snapshot, error) {
+func (driver *Driver) getSnapshot(volumeID, snapshotID, snapshotName string) ([]ec2.Snapshot, error) {
 	filter := ec2.NewFilter()
-	snapshotList := []string{}
+	if snapshotName != "" {
+		filter.Add("tag:Name", fmt.Sprintf("%s", snapshotName))
+	}
+
 	if volumeID != "" {
 		filter.Add("volume-id", volumeID)
 	}
+
+	snapshotList := []string{}
 	if snapshotID != "" {
 		snapshotList = append(snapshotList, snapshotID)
 	}
@@ -220,15 +248,17 @@ func (driver *Driver) getSnapshot(volumeID, snapshotID string) ([]ec2.Snapshot, 
 	return resp.Snapshots, nil
 }
 
-func (driver *Driver) GetSnapshot(volumeID, snapshotID string) (interface{}, error) {
-	snapshots, err := driver.getSnapshot(volumeID, snapshotID)
+func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (interface{}, error) {
+	snapshots, err := driver.getSnapshot(volumeID, snapshotID, snapshotName)
 	if err != nil {
 		return []*storagedriver.Snapshot{}, err
 	}
 
 	var snapshotsInt []*storagedriver.Snapshot
 	for _, snapshot := range snapshots {
+		name := getName(snapshot.Tags)
 		snapshotSD := &storagedriver.Snapshot{
+			Name:        name,
 			VolumeID:    snapshot.VolumeId,
 			SnapshotID:  snapshot.Id,
 			VolumeSize:  snapshot.VolumeSize,
@@ -313,13 +343,13 @@ func getLocalDevices() (deviceNames []string, err error) {
 	return deviceNames, nil
 }
 
-func (driver *Driver) CreateVolume(runAsync bool, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
-	resp, err := driver.createVolume(runAsync, snapshotID, volumeType, IOPS, size)
+func (driver *Driver) CreateVolume(runAsync bool, volumeName string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
+	resp, err := driver.createVolume(runAsync, volumeName, snapshotID, volumeType, IOPS, size)
 	if err != nil {
 		return storagedriver.Volume{}, err
 	}
 
-	volumes, err := driver.GetVolume(resp.VolumeId)
+	volumes, err := driver.GetVolume(resp.VolumeId, "")
 	if err != nil {
 		return storagedriver.Volume{}, err
 	}
@@ -329,7 +359,7 @@ func (driver *Driver) CreateVolume(runAsync bool, snapshotID string, volumeType 
 
 }
 
-func (driver *Driver) createVolume(runAsync bool, snapshotID string, volumeType string, IOPS int64, size int64) (*ec2.CreateVolumeResp, error) {
+func (driver *Driver) createVolume(runAsync bool, volumeName string, snapshotID string, volumeType string, IOPS int64, size int64) (*ec2.CreateVolumeResp, error) {
 
 	server, err := driver.getInstance()
 	if err != nil {
@@ -348,7 +378,12 @@ func (driver *Driver) createVolume(runAsync bool, snapshotID string, volumeType 
 		return &ec2.CreateVolumeResp{}, err
 	}
 
-	// return resp, nil
+	if volumeName != "" {
+		_, err := driver.EC2Instance.CreateTags([]string{resp.VolumeId}, []ec2.Tag{{"Name", volumeName}})
+		if err != nil {
+			return &ec2.CreateVolumeResp{}, err
+		}
+	}
 
 	if !runAsync {
 		log.Println("Waiting for volume creation to complete")
@@ -361,8 +396,11 @@ func (driver *Driver) createVolume(runAsync bool, snapshotID string, volumeType 
 	return resp, nil
 }
 
-func (driver *Driver) getVolume(volumeID string) ([]ec2.Volume, error) {
+func (driver *Driver) getVolume(volumeID, volumeName string) ([]ec2.Volume, error) {
 	filter := ec2.NewFilter()
+	if volumeName != "" {
+		filter.Add("tag:Name", fmt.Sprintf("%s", volumeName))
+	}
 
 	volumeList := []string{}
 	if volumeID != "" {
@@ -377,9 +415,19 @@ func (driver *Driver) getVolume(volumeID string) ([]ec2.Volume, error) {
 	return resp.Volumes, nil
 }
 
-func (driver *Driver) GetVolume(volumeID string) (interface{}, error) {
+func getName(tags []ec2.Tag) string {
+	for _, tag := range tags {
+		if tag.Key == "Name" {
+			return tag.Value
+			break
+		}
+	}
+	return ""
+}
 
-	volumes, err := driver.getVolume(volumeID)
+func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error) {
+
+	volumes, err := driver.getVolume(volumeID, volumeName)
 	if err != nil {
 		return []*storagedriver.Volume{}, err
 	}
@@ -397,7 +445,10 @@ func (driver *Driver) GetVolume(volumeID string) (interface{}, error) {
 			attachmentsSD = append(attachmentsSD, attachmentSD)
 		}
 
+		name := getName(volume.Tags)
+
 		volumeSD := &storagedriver.Volume{
+			Name:             name,
 			VolumeID:         volume.VolumeId,
 			AvailabilityZone: volume.AvailZone,
 			Status:           volume.Status,
@@ -417,7 +468,7 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 		return []*storagedriver.VolumeAttachment{}, ErrMissingVolumeID
 	}
 
-	volumes, err := driver.GetVolume(volumeID)
+	volumes, err := driver.GetVolume(volumeID, "")
 	if err != nil {
 		return []*storagedriver.VolumeAttachment{}, err
 	}
@@ -438,7 +489,7 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 
 func (driver *Driver) waitSnapshotComplete(snapshotID string) error {
 	for {
-		snapshots, err := driver.getSnapshot("", snapshotID)
+		snapshots, err := driver.getSnapshot("", snapshotID, "")
 		if err != nil {
 			return err
 		}
@@ -459,7 +510,7 @@ func (driver *Driver) waitVolumeComplete(volumeID string) error {
 	}
 
 	for {
-		volumes, err := driver.getVolume(volumeID)
+		volumes, err := driver.getVolume(volumeID, "")
 		if err != nil {
 			return err
 		}
@@ -512,9 +563,9 @@ func (driver *Driver) waitVolumeDetach(volumeID string) error {
 	return nil
 }
 
-func (driver *Driver) CreateSnapshotVolume(runAsync bool, snapshotID string) (string, error) {
+func (driver *Driver) CreateSnapshotVolume(runAsync bool, volumeName, snapshotID string) (string, error) {
 
-	volume, err := driver.createVolume(runAsync, snapshotID, "", 0, 0)
+	volume, err := driver.createVolume(runAsync, volumeName, snapshotID, "", 0, 0)
 	if err != nil {
 		return "", err
 	}
@@ -592,3 +643,23 @@ func (driver *Driver) DetachVolume(runAsync bool, volumeID string, blank string)
 	log.Println("Detached volume", volumeID)
 	return nil
 }
+
+// func ListTables() []string {
+// 	auth := aws.Auth{AccessKey: os.Getenv("AWS_ACCESS_KEY"), SecretKey: os.Getenv("AWS_SECRET_KEY")}
+// 	ddbs := dynamodb.Server{auth, aws.USWest}
+// 	response, err := ddbs.ListTables()
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+//
+// 	return response
+// }
+
+// func (driver *Driver) GetDDValue(hashKey string) (string, error) {
+// 	pk := &dynamodb.Key{HashKey: hashKey}
+// 	response, err := driver.DDTable.GetItem(pk)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return response["volumeID"].Value, nil
+// }

@@ -179,7 +179,7 @@ func getInstanceRegion() (string, error) {
 	return region, nil
 }
 
-func (driver *Driver) getVolume(volumeID string) (volumesRet []volumes.Volume, err error) {
+func (driver *Driver) getVolume(volumeID, volumeName string) (volumesRet []volumes.Volume, err error) {
 	if volumeID != "" {
 		volume, err := volumes.Get(driver.ClientBlockStorage, volumeID).Extract()
 		if err != nil {
@@ -187,7 +187,11 @@ func (driver *Driver) getVolume(volumeID string) (volumesRet []volumes.Volume, e
 		}
 		volumesRet = append(volumesRet, *volume)
 	} else {
-		allPages, err := volumes.List(driver.ClientBlockStorage, &volumes.ListOpts{}).AllPages()
+		listOpts := &volumes.ListOpts{
+			Name: volumeName,
+		}
+
+		allPages, err := volumes.List(driver.ClientBlockStorage, listOpts).AllPages()
 		if err != nil {
 			return []volumes.Volume{}, err
 		}
@@ -201,8 +205,8 @@ func (driver *Driver) getVolume(volumeID string) (volumesRet []volumes.Volume, e
 	return volumesRet, nil
 }
 
-func (driver *Driver) GetVolume(volumeID string) (interface{}, error) {
-	volumesRet, err := driver.getVolume(volumeID)
+func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error) {
+	volumesRet, err := driver.getVolume(volumeID, volumeName)
 	if err != nil {
 		return []*storagedriver.Volume{}, err
 	}
@@ -239,7 +243,7 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 	if volumeID == "" {
 		return []*storagedriver.VolumeAttachment{}, ErrMissingVolumeID
 	}
-	volume, err := driver.GetVolume(volumeID)
+	volume, err := driver.GetVolume(volumeID, "")
 	if err != nil {
 		return []*storagedriver.VolumeAttachment{}, err
 	}
@@ -258,7 +262,7 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 	return volume.([]*storagedriver.Volume)[0].Attachments, nil
 }
 
-func (driver *Driver) getSnapshot(volumeID, snapshotID string) (allSnapshots []snapshots.Snapshot, err error) {
+func (driver *Driver) getSnapshot(volumeID, snapshotID, snapshotName string) (allSnapshots []snapshots.Snapshot, err error) {
 
 	if snapshotID != "" {
 		snapshot, err := snapshots.Get(driver.ClientBlockStorage, snapshotID).Extract()
@@ -270,6 +274,7 @@ func (driver *Driver) getSnapshot(volumeID, snapshotID string) (allSnapshots []s
 	} else {
 		opts := snapshots.ListOpts{
 			VolumeID: volumeID,
+			Name:     snapshotName,
 		}
 
 		allPages, err := snapshots.List(driver.ClientBlockStorage, opts).AllPages()
@@ -286,8 +291,8 @@ func (driver *Driver) getSnapshot(volumeID, snapshotID string) (allSnapshots []s
 	return allSnapshots, nil
 }
 
-func (driver *Driver) GetSnapshot(volumeID, snapshotID string) (interface{}, error) {
-	snapshots, err := driver.getSnapshot(volumeID, snapshotID)
+func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (interface{}, error) {
+	snapshots, err := driver.getSnapshot(volumeID, snapshotID, snapshotName)
 	if err != nil {
 		return []*storagedriver.Snapshot{}, err
 	}
@@ -308,8 +313,9 @@ func (driver *Driver) GetSnapshot(volumeID, snapshotID string) (interface{}, err
 	return snapshotsInt, nil
 }
 
-func (driver *Driver) CreateSnapshot(runAsync bool, volumeID string, description string) (interface{}, error) {
+func (driver *Driver) CreateSnapshot(runAsync bool, snapshotName, volumeID, description string) (interface{}, error) {
 	opts := snapshots.CreateOpts{
+		Name:        snapshotName,
 		VolumeID:    volumeID,
 		Description: description,
 		Force:       true,
@@ -328,7 +334,7 @@ func (driver *Driver) CreateSnapshot(runAsync bool, volumeID string, description
 		}
 	}
 
-	snapshot, err := driver.GetSnapshot("", resp.ID)
+	snapshot, err := driver.GetSnapshot("", resp.ID, "")
 	if err != nil {
 		return storagedriver.Snapshot{}, err
 	}
@@ -348,9 +354,9 @@ func (driver *Driver) RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (driver *Driver) CreateVolume(runAsync bool, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
+func (driver *Driver) CreateVolume(runAsync bool, snapshotName string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
 	if snapshotID != "" {
-		snapshot, err := driver.GetSnapshot("", snapshotID)
+		snapshot, err := driver.GetSnapshot("", snapshotID, "")
 		if err != nil {
 			return "", err
 		}
@@ -363,6 +369,7 @@ func (driver *Driver) CreateVolume(runAsync bool, snapshotID string, volumeType 
 	}
 
 	options := &volumes.CreateOpts{
+		Name:       snapshotName,
 		Size:       int(size),
 		SnapshotID: snapshotID,
 		VolumeType: volumeType,
@@ -382,7 +389,7 @@ func (driver *Driver) CreateVolume(runAsync bool, snapshotID string, volumeType 
 		}
 	}
 
-	volume, err := driver.GetVolume(resp.ID)
+	volume, err := driver.GetVolume(resp.ID, "")
 	if err != nil {
 		return storagedriver.Volume{}, err
 	}
@@ -404,8 +411,8 @@ func (driver *Driver) RemoveVolume(volumeID string) error {
 	return nil
 }
 
-func (driver *Driver) CreateSnapshotVolume(runAsync bool, snapshotID string) (string, error) {
-	snapshot, err := driver.GetSnapshot("", snapshotID)
+func (driver *Driver) CreateSnapshotVolume(runAsync bool, volumeName, snapshotID string) (string, error) {
+	snapshot, err := driver.GetSnapshot("", snapshotID, "")
 	if err != nil {
 		return "", err
 	}
@@ -414,7 +421,7 @@ func (driver *Driver) CreateSnapshotVolume(runAsync bool, snapshotID string) (st
 	if err != nil {
 		return "", err
 	}
-	volume, err := driver.CreateVolume(runAsync, snapshotID, "", 0, int64(size))
+	volume, err := driver.CreateVolume(runAsync, volumeName, snapshotID, "", 0, int64(size))
 	if err != nil {
 		return "", err
 	}
@@ -522,7 +529,7 @@ func (driver *Driver) DetachVolume(runAsync bool, volumeID, instanceID string) e
 	if volumeID == "" {
 		return ErrMissingVolumeID
 	}
-	volume, err := driver.GetVolume(volumeID)
+	volume, err := driver.GetVolume(volumeID, "")
 	if err != nil {
 		return err
 	}
@@ -549,7 +556,7 @@ func (driver *Driver) waitVolumeAttach(volumeID string) error {
 		return ErrMissingVolumeID
 	}
 	for {
-		volume, err := driver.GetVolume(volumeID)
+		volume, err := driver.GetVolume(volumeID, "")
 		if err != nil {
 			return err
 		}
@@ -567,7 +574,7 @@ func (driver *Driver) waitVolumeDetach(volumeID string) error {
 		return ErrMissingVolumeID
 	}
 	for {
-		volume, err := driver.GetVolume(volumeID)
+		volume, err := driver.GetVolume(volumeID, "")
 		if err != nil {
 			return err
 		}

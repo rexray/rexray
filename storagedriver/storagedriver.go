@@ -34,6 +34,7 @@ type Instance struct {
 }
 
 type Snapshot struct {
+	Name        string
 	VolumeID    string
 	SnapshotID  string
 	VolumeSize  string
@@ -43,6 +44,7 @@ type Snapshot struct {
 }
 
 type Volume struct {
+	Name             string
 	VolumeID         string
 	AvailabilityZone string
 	Status           string
@@ -62,14 +64,14 @@ type VolumeAttachment struct {
 type Driver interface {
 	GetBlockDeviceMapping() (interface{}, error)
 	GetInstance() (interface{}, error)
-	GetVolume(string) (interface{}, error)
+	GetVolume(string, string) (interface{}, error)
 	GetVolumeAttach(string, string) (interface{}, error)
-	GetSnapshot(string, string) (interface{}, error)
-	CreateSnapshot(bool, string, string) (interface{}, error)
+	GetSnapshot(string, string, string) (interface{}, error)
+	CreateSnapshot(bool, string, string, string) (interface{}, error)
 	RemoveSnapshot(string) error
-	CreateVolume(bool, string, string, int64, int64) (interface{}, error)
+	CreateVolume(bool, string, string, string, int64, int64) (interface{}, error)
 	RemoveVolume(string) error
-	CreateSnapshotVolume(bool, string) (string, error)
+	CreateSnapshotVolume(bool, string, string) (string, error)
 	GetDeviceNextAvailable() (string, error)
 	AttachVolume(bool, string, string) (interface{}, error)
 	DetachVolume(bool, string, string) error

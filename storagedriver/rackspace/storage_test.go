@@ -44,7 +44,15 @@ func TestGetInstance(*testing.T) {
 }
 
 func TestGetVolume(*testing.T) {
-	volume, err := driver.GetVolume("12b64bd3-2c34-4fe1-b389-5cf8df668ef5")
+	volume, err := driver.GetVolume("ccde08e3-d21b-467a-a7d3-bc92ffe0a14f", "")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(fmt.Sprintf("%+v", volume))
+}
+
+func TestGetVolumeByName(*testing.T) {
+	volume, err := driver.GetVolume("", "Volume-1")
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +68,15 @@ func TestGetVolumeAttach(*testing.T) {
 }
 
 func TestGetSnapshotFromVolumeID(*testing.T) {
-	snapshots, err := driver.GetSnapshot("738ea6b9-8c49-416c-97b7-a5264a799eb6", "")
+	snapshots, err := driver.GetSnapshot("738ea6b9-8c49-416c-97b7-a5264a799eb6", "", "")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(fmt.Sprintf("%+v", snapshots.([]*storagedriver.Snapshot)))
+}
+
+func TestGetSnapshotBySnapshotName(*testing.T) {
+	snapshots, err := driver.GetSnapshot("", "", "Volume-1-1")
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +84,7 @@ func TestGetSnapshotFromVolumeID(*testing.T) {
 }
 
 func TestGetSnapshotFromSnapshotID(*testing.T) {
-	snapshots, err := driver.GetSnapshot("", "83743ccc-200f-45bb-8144-e802ceb4b555")
+	snapshots, err := driver.GetSnapshot("", "83743ccc-200f-45bb-8144-e802ceb4b555", "")
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +92,7 @@ func TestGetSnapshotFromSnapshotID(*testing.T) {
 }
 
 func TestCreateSnapshot(*testing.T) {
-	snapshot, err := driver.CreateSnapshot(false, "738ea6b9-8c49-416c-97b7-a5264a799eb6", "")
+	snapshot, err := driver.CreateSnapshot(false, "testing", "87ef25ed-9c5f-4030-ada7-eeaf4cba0814", "")
 	if err != nil {
 		panic(err)
 	}
@@ -91,7 +107,7 @@ func TestRemoveSnapshot(*testing.T) {
 }
 
 func TestCreateVolume(*testing.T) {
-	volume, err := driver.CreateVolume(false, "", "", 0, 75)
+	volume, err := driver.CreateVolume(false, "testing", "", "", 0, 75)
 	if err != nil {
 		panic(err)
 	}
@@ -106,7 +122,7 @@ func TestRemoveVolume(*testing.T) {
 }
 
 func TestCreateSnapshotVolume(*testing.T) {
-	volume, err := driver.CreateSnapshotVolume(false, "8e97c4fc-8ee1-40c4-96d2-dc4583a7cada")
+	volume, err := driver.CreateSnapshotVolume(false, "testing", "8e97c4fc-8ee1-40c4-96d2-dc4583a7cada")
 	if err != nil {
 		panic(err)
 	}

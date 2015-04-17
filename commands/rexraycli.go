@@ -15,15 +15,17 @@ import (
 )
 
 var (
-	cfgFile     string
-	snapshotID  string
-	volumeID    string
-	runAsync    bool
-	description string
-	volumeType  string
-	IOPS        int64
-	size        int64
-	instanceID  string
+	cfgFile      string
+	snapshotID   string
+	volumeID     string
+	runAsync     bool
+	description  string
+	volumeType   string
+	IOPS         int64
+	size         int64
+	instanceID   string
+	volumeName   string
+	snapshotName string
 )
 
 //FlagValue struct
@@ -92,7 +94,7 @@ var getvolumeCmd = &cobra.Command{
 	Use: "get-volume",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allVolumes, err := rexray.GetVolume(volumeID)
+		allVolumes, err := rexray.GetVolume(volumeID, volumeName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -111,7 +113,7 @@ var getsnapshotCmd = &cobra.Command{
 	Use: "get-snapshot",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allSnapshots, err := rexray.GetSnapshot(volumeID, snapshotID)
+		allSnapshots, err := rexray.GetSnapshot(volumeID, snapshotID, snapshotName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -134,7 +136,7 @@ var newsnapshotCmd = &cobra.Command{
 			log.Fatalf("missing --volumeID")
 		}
 
-		snapshot, err := rexray.CreateSnapshot(runAsync, volumeID, description)
+		snapshot, err := rexray.CreateSnapshot(runAsync, volumeID, description, volumeName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -172,7 +174,7 @@ var newvolumeCmd = &cobra.Command{
 			log.Fatalf("missing --size")
 		}
 
-		volume, err := rexray.CreateVolume(runAsync, snapshotID, volumeType, IOPS, size)
+		volume, err := rexray.CreateVolume(runAsync, volumeName, snapshotID, volumeType, IOPS, size)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -265,14 +267,18 @@ var rexrayCmdV *cobra.Command
 
 func init() {
 	RexrayCmd.PersistentFlags().StringVar(&cfgFile, "Config", "", "config file (default is $HOME/rexray/config.yaml)")
+	getvolumeCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
 	getvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	getsnapshotCmd.Flags().StringVar(&snapshotName, "snapshotname", "", "snapshotname")
 	getsnapshotCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	getsnapshotCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
 	newsnapshotCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
+	newsnapshotCmd.Flags().StringVar(&snapshotName, "snapshotname", "", "snapshotname")
 	newsnapshotCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	newsnapshotCmd.Flags().StringVar(&description, "description", "", "description")
 	removesnapshotCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
 	newvolumeCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
+	newvolumeCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
 	newvolumeCmd.Flags().StringVar(&volumeType, "volumetype", "", "volumetype")
 	newvolumeCmd.Flags().Int64Var(&IOPS, "iops", 0, "IOPS")
 	newvolumeCmd.Flags().Int64Var(&size, "size", 0, "size")

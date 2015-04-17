@@ -72,11 +72,11 @@ func GetInstance() ([]*storagedriver.Instance, error) {
 	return allInstances, nil
 }
 
-func GetVolume(volumeID string) ([]*storagedriver.Volume, error) {
+func GetVolume(volumeID, volumeName string) ([]*storagedriver.Volume, error) {
 	var allVolumes []*storagedriver.Volume
 
 	for _, driver := range drivers {
-		volumes, err := driver.GetVolume(volumeID)
+		volumes, err := driver.GetVolume(volumeID, volumeName)
 		if err != nil {
 			return []*storagedriver.Volume{}, fmt.Errorf("Error: %s: %s", ErrDriverVolumeDiscovery, err)
 		}
@@ -90,11 +90,11 @@ func GetVolume(volumeID string) ([]*storagedriver.Volume, error) {
 	return allVolumes, nil
 }
 
-func GetSnapshot(volumeID, snapshotID string) ([]*storagedriver.Snapshot, error) {
+func GetSnapshot(volumeID, snapshotID, snapshotName string) ([]*storagedriver.Snapshot, error) {
 	var allSnapshots []*storagedriver.Snapshot
 
 	for _, driver := range drivers {
-		snapshots, err := driver.GetSnapshot(volumeID, snapshotID)
+		snapshots, err := driver.GetSnapshot(volumeID, snapshotID, snapshotName)
 		if err != nil {
 			return []*storagedriver.Snapshot{}, fmt.Errorf("Error: %s: %s", ErrDriverSnapshotDiscovery, err)
 		}
@@ -108,12 +108,12 @@ func GetSnapshot(volumeID, snapshotID string) ([]*storagedriver.Snapshot, error)
 	return allSnapshots, nil
 }
 
-func CreateSnapshot(runAsync bool, volumeID, description string) ([]*storagedriver.Snapshot, error) {
+func CreateSnapshot(runAsync bool, snapshotName, volumeID, description string) ([]*storagedriver.Snapshot, error) {
 	if len(drivers) > 1 {
 		return []*storagedriver.Snapshot{}, ErrMultipleDriversDetected
 	}
 	for _, driver := range drivers {
-		snapshot, err := driver.CreateSnapshot(runAsync, volumeID, description)
+		snapshot, err := driver.CreateSnapshot(runAsync, snapshotName, volumeID, description)
 		if err != nil {
 			return []*storagedriver.Snapshot{}, err
 		}
@@ -135,12 +135,12 @@ func RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func CreateVolume(runAsync bool, snapshotID string, volumeType string, IOPS int64, size int64) (*storagedriver.Volume, error) {
+func CreateVolume(runAsync bool, volumeName string, snapshotID string, volumeType string, IOPS int64, size int64) (*storagedriver.Volume, error) {
 	if len(drivers) > 1 {
 		return &storagedriver.Volume{}, ErrMultipleDriversDetected
 	}
 	for _, driver := range drivers {
-		volume, err := driver.CreateVolume(runAsync, snapshotID, volumeType, IOPS, size)
+		volume, err := driver.CreateVolume(runAsync, volumeName, snapshotID, volumeType, IOPS, size)
 		if err != nil {
 			return &storagedriver.Volume{}, err
 		}

@@ -48,7 +48,7 @@ var RexrayCmd = &cobra.Command{
 var versionCmd = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("\nRexray Version: %v\n", "0.1.150416")
+		fmt.Printf("\nRexray Version: %v\n", "0.1.150418")
 	},
 }
 
@@ -133,10 +133,10 @@ var newsnapshotCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if volumeID == "" {
-			log.Fatalf("missing --volumeID")
+			log.Fatalf("missing --volumeid")
 		}
 
-		snapshot, err := rexray.CreateSnapshot(runAsync, volumeID, description, volumeName)
+		snapshot, err := rexray.CreateSnapshot(runAsync, volumeName, volumeID, description)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -155,7 +155,7 @@ var removesnapshotCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if snapshotID == "" {
-			log.Fatalf("missing --snapshotID")
+			log.Fatalf("missing --snapshotid")
 		}
 
 		err := rexray.RemoveSnapshot(snapshotID)
@@ -170,11 +170,11 @@ var newvolumeCmd = &cobra.Command{
 	Use: "new-volume",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if size == 0 && snapshotID == "" {
+		if size == 0 && snapshotID == "" && volumeID == "" {
 			log.Fatalf("missing --size")
 		}
 
-		volume, err := rexray.CreateVolume(runAsync, volumeName, snapshotID, volumeType, IOPS, size)
+		volume, err := rexray.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -193,7 +193,7 @@ var removevolumeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if volumeID == "" {
-			log.Fatalf("missing --volumeID")
+			log.Fatalf("missing --volumeid")
 		}
 
 		err := rexray.RemoveVolume(volumeID)
@@ -209,7 +209,7 @@ var attachvolumeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if volumeID == "" {
-			log.Fatalf("missing --volumeID")
+			log.Fatalf("missing --volumeid")
 		}
 
 		volumeAttachment, err := rexray.AttachVolume(runAsync, volumeID, instanceID)
@@ -231,7 +231,7 @@ var detachvolumeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if volumeID == "" {
-			log.Fatalf("missing --volumeID")
+			log.Fatalf("missing --volumeid")
 		}
 
 		err := rexray.DetachVolume(runAsync, volumeID, instanceID)
@@ -280,6 +280,8 @@ func init() {
 	newvolumeCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
 	newvolumeCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
 	newvolumeCmd.Flags().StringVar(&volumeType, "volumetype", "", "volumetype")
+	newvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	newvolumeCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
 	newvolumeCmd.Flags().Int64Var(&IOPS, "iops", 0, "IOPS")
 	newvolumeCmd.Flags().Int64Var(&size, "size", 0, "size")
 	removevolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")

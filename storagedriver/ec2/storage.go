@@ -237,7 +237,9 @@ func (driver *Driver) getSnapshot(volumeID, snapshotID, snapshotName string) ([]
 
 	snapshotList := []string{}
 	if snapshotID != "" {
-		snapshotList = append(snapshotList, snapshotID)
+		//using snapshotList is returning stale data
+		//snapshotList = append(snapshotList, snapshotID)
+		filter.Add("snapshot-id", snapshotID)
 	}
 
 	resp, err := driver.EC2Instance.Snapshots(snapshotList, filter)
@@ -489,10 +491,13 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 
 func (driver *Driver) waitSnapshotComplete(snapshotID string) error {
 	for {
+
+		log.Println(snapshotID)
 		snapshots, err := driver.getSnapshot("", snapshotID, "")
 		if err != nil {
 			return err
 		}
+		log.Println(fmt.Sprintf("%+v", snapshots[0]))
 
 		snapshot := snapshots[0]
 		if snapshot.Status == "completed" {

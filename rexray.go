@@ -135,12 +135,12 @@ func RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func CreateVolume(runAsync bool, volumeName string, snapshotID string, volumeType string, IOPS int64, size int64) (*storagedriver.Volume, error) {
+func CreateVolume(runAsync bool, volumeName string, volumeID, snapshotID string, volumeType string, IOPS int64, size int64) (*storagedriver.Volume, error) {
 	if len(drivers) > 1 {
 		return &storagedriver.Volume{}, ErrMultipleDriversDetected
 	}
 	for _, driver := range drivers {
-		volume, err := driver.CreateVolume(runAsync, volumeName, snapshotID, volumeType, IOPS, size)
+		volume, err := driver.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size)
 		if err != nil {
 			return &storagedriver.Volume{}, err
 		}

@@ -109,7 +109,7 @@ func TestRemoveSnapshot(*testing.T) {
 }
 
 func TestCreateVolume(*testing.T) {
-	volume, err := driver.CreateVolume(false, "testing", "", "", 0, 75)
+	volume, err := driver.CreateVolume(false, "testing", "", "", "", 0, 75)
 	if err != nil {
 		panic(err)
 	}
@@ -121,14 +121,6 @@ func TestRemoveVolume(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func TestCreateSnapshotVolume(*testing.T) {
-	volume, err := driver.CreateSnapshotVolume(false, "testing", "8e97c4fc-8ee1-40c4-96d2-dc4583a7cada")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(fmt.Sprintf("%+v", volume))
 }
 
 func TestGetDeviceNextAvailable(*testing.T) {

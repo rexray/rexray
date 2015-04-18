@@ -345,8 +345,8 @@ func getLocalDevices() (deviceNames []string, err error) {
 	return deviceNames, nil
 }
 
-func (driver *Driver) CreateVolume(runAsync bool, volumeName string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
-	resp, err := driver.createVolume(runAsync, volumeName, snapshotID, volumeType, IOPS, size)
+func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
+	resp, err := driver.createVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size)
 	if err != nil {
 		return storagedriver.Volume{}, err
 	}
@@ -361,11 +361,21 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, snapshotID 
 
 }
 
-func (driver *Driver) createVolume(runAsync bool, volumeName string, snapshotID string, volumeType string, IOPS int64, size int64) (*ec2.CreateVolumeResp, error) {
+func (driver *Driver) createVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (*ec2.CreateVolumeResp, error) {
 
 	server, err := driver.getInstance()
 	if err != nil {
 		return &ec2.CreateVolumeResp{}, err
+	}
+
+	snapshot := &storagedriver.Snapshot{}
+	if volumeID != "" {
+		snapshotInt, err := driver.CreateSnapshot(true, fmt.Sprintf("temp-%v", volumeID), volumeID, "created for createVolume")
+		if err != nil {
+			return &ec2.CreateVolumeResp{}, err
+		}
+		snapshot = snapshotInt.([]*storagedriver.Snapshot)[0]
+		snapshotID = snapshot.SnapshotID
 	}
 
 	options := &ec2.CreateVolume{
@@ -375,13 +385,28 @@ func (driver *Driver) createVolume(runAsync bool, volumeName string, snapshotID 
 		VolumeType: volumeType,
 		IOPS:       IOPS,
 	}
-	resp, err := driver.EC2Instance.CreateVolume(options)
-	if err != nil {
-		return &ec2.CreateVolumeResp{}, err
+	resp := &ec2.CreateVolumeResp{}
+	for {
+		resp, err = driver.EC2Instance.CreateVolume(options)
+		if err != nil {
+			if err.Error() == "Snapshot is in invalid state - pending (IncorrectState)" {
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			return &ec2.CreateVolumeResp{}, err
+		}
+		break
 	}
 
 	if volumeName != "" {
 		_, err := driver.EC2Instance.CreateTags([]string{resp.VolumeId}, []ec2.Tag{{"Name", volumeName}})
+		if err != nil {
+			return &ec2.CreateVolumeResp{}, err
+		}
+	}
+
+	if volumeID != "" {
+		err := driver.RemoveSnapshot(snapshotID)
 		if err != nil {
 			return &ec2.CreateVolumeResp{}, err
 		}
@@ -492,12 +517,10 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 func (driver *Driver) waitSnapshotComplete(snapshotID string) error {
 	for {
 
-		log.Println(snapshotID)
 		snapshots, err := driver.getSnapshot("", snapshotID, "")
 		if err != nil {
 			return err
 		}
-		log.Println(fmt.Sprintf("%+v", snapshots[0]))
 
 		snapshot := snapshots[0]
 		if snapshot.Status == "completed" {
@@ -566,19 +589,6 @@ func (driver *Driver) waitVolumeDetach(volumeID string) error {
 	}
 
 	return nil
-}
-
-func (driver *Driver) CreateSnapshotVolume(runAsync bool, volumeName, snapshotID string) (string, error) {
-
-	volume, err := driver.createVolume(runAsync, volumeName, snapshotID, "", 0, 0)
-	if err != nil {
-		return "", err
-	}
-
-	volumeID := volume.VolumeId
-
-	log.Println("Created Volume Snapshot: " + volumeID)
-	return volumeID, nil
 }
 
 func (driver *Driver) RemoveVolume(volumeID string) error {

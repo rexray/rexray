@@ -356,7 +356,7 @@ func (driver *Driver) RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (driver *Driver) CreateVolume(runAsync bool, snapshotName string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
+func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
 	if snapshotID != "" {
 		snapshot, err := driver.GetSnapshot("", snapshotID, "")
 		if err != nil {
@@ -370,8 +370,21 @@ func (driver *Driver) CreateVolume(runAsync bool, snapshotName string, snapshotI
 		size = int64(sizeInt)
 	}
 
+	if volumeID != "" {
+		volume, err := driver.GetVolume(volumeID, "")
+		if err != nil {
+			return "", err
+		}
+
+		sizeInt, err := strconv.Atoi(volume.([]*storagedriver.Volume)[0].Size)
+		if err != nil {
+			return "", err
+		}
+		size = int64(sizeInt)
+	}
+
 	options := &volumes.CreateOpts{
-		Name:       snapshotName,
+		Name:       volumeName,
 		Size:       int(size),
 		SnapshotID: snapshotID,
 		VolumeType: volumeType,
@@ -411,27 +424,6 @@ func (driver *Driver) RemoveVolume(volumeID string) error {
 
 	log.Println("Deleted Volume: " + volumeID)
 	return nil
-}
-
-func (driver *Driver) CreateSnapshotVolume(runAsync bool, volumeName, snapshotID string) (string, error) {
-	snapshot, err := driver.GetSnapshot("", snapshotID, "")
-	if err != nil {
-		return "", err
-	}
-
-	size, err := strconv.Atoi(snapshot.([]*storagedriver.Snapshot)[0].VolumeSize)
-	if err != nil {
-		return "", err
-	}
-	volume, err := driver.CreateVolume(runAsync, volumeName, snapshotID, "", 0, int64(size))
-	if err != nil {
-		return "", err
-	}
-
-	volumeID := volume.([]*storagedriver.Volume)[0].VolumeID
-
-	log.Println("Created Volume from Snapshot: " + volumeID)
-	return volumeID, nil
 }
 
 func (driver *Driver) GetDeviceNextAvailable() (string, error) {

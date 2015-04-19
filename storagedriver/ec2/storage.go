@@ -363,6 +363,10 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 
 func (driver *Driver) createVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (*ec2.CreateVolumeResp, error) {
 
+	if volumeID != "" && runAsync {
+		return &ec2.CreateVolumeResp{}, errors.New("Cannot create volume from volume and run asynchronously")
+	}
+
 	server, err := driver.getInstance()
 	if err != nil {
 		return &ec2.CreateVolumeResp{}, err
@@ -405,18 +409,18 @@ func (driver *Driver) createVolume(runAsync bool, volumeName string, volumeID st
 		}
 	}
 
-	if volumeID != "" {
-		err := driver.RemoveSnapshot(snapshotID)
-		if err != nil {
-			return &ec2.CreateVolumeResp{}, err
-		}
-	}
-
 	if !runAsync {
 		log.Println("Waiting for volume creation to complete")
 		err = driver.waitVolumeComplete(resp.VolumeId)
 		if err != nil {
 			return &ec2.CreateVolumeResp{}, err
+		}
+
+		if volumeID != "" {
+			err := driver.RemoveSnapshot(snapshotID)
+			if err != nil {
+				return &ec2.CreateVolumeResp{}, err
+			}
 		}
 	}
 

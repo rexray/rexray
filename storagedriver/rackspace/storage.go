@@ -24,6 +24,10 @@ var (
 	providerName string
 )
 
+const (
+	minSize = 75 //rackspace is 75
+)
+
 var (
 	ErrMissingVolumeID = errors.New("Missing VolumeID")
 )
@@ -188,7 +192,7 @@ func (driver *Driver) getVolume(volumeID, volumeName string) (volumesRet []volum
 		volumesRet = append(volumesRet, *volume)
 	} else {
 		listOpts := &volumes.ListOpts{
-			Name: volumeName,
+		//Name:       volumeName,
 		}
 
 		allPages, err := volumes.List(driver.ClientBlockStorage, listOpts).AllPages()
@@ -200,6 +204,21 @@ func (driver *Driver) getVolume(volumeID, volumeName string) (volumesRet []volum
 			return []volumes.Volume{}, err
 		}
 
+		var volumesRetFiltered []volumes.Volume
+		if volumeName != "" {
+			var found bool
+			for _, volume := range volumesRet {
+				if volume.Name == volumeName {
+					volumesRetFiltered = append(volumesRetFiltered, volume)
+					found = true
+					break
+				}
+			}
+			if !found {
+				return []volumes.Volume{}, nil
+			}
+		}
+		volumesRet = volumesRetFiltered
 	}
 
 	return volumesRet, nil
@@ -357,6 +376,10 @@ func (driver *Driver) RemoveSnapshot(snapshotID string) error {
 }
 
 func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
+	if volumeID != "" && runAsync {
+		return "", errors.New("Cannot create volume from volume and run asynchronously")
+	}
+
 	if snapshotID != "" {
 		snapshot, err := driver.GetSnapshot("", snapshotID, "")
 		if err != nil {
@@ -381,6 +404,19 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 			return "", err
 		}
 		size = int64(sizeInt)
+
+		volumeID := volume.([]*storagedriver.Volume)[0].VolumeID
+		snapshot, err := driver.CreateSnapshot(false, fmt.Sprintf("temp-%s", volumeID), volumeID, "")
+		if err != nil {
+			return "", err
+		}
+
+		snapshotID = snapshot.(*storagedriver.Snapshot).SnapshotID
+
+	}
+
+	if size != 0 && size < minSize {
+		size = minSize
 	}
 
 	options := &volumes.CreateOpts{
@@ -401,6 +437,13 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 		err = volumes.WaitForStatus(driver.ClientBlockStorage, resp.ID, "available", 120)
 		if err != nil {
 			return storagedriver.Volume{}, err
+		}
+
+		if volumeID != "" {
+			err := driver.RemoveSnapshot(snapshotID)
+			if err != nil {
+				return "", err
+			}
 		}
 	}
 
@@ -554,7 +597,7 @@ func (driver *Driver) waitVolumeAttach(volumeID string) error {
 		if err != nil {
 			return err
 		}
-		if volume.([]*storagedriver.Volume)[0].Status == "attached" {
+		if volume.([]*storagedriver.Volume)[0].Status == "in-use" {
 			break
 		}
 		time.Sleep(1 * time.Second)

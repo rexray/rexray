@@ -3,8 +3,8 @@ package rexray
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/emccode/rexray/storagedriver"
@@ -32,7 +32,9 @@ func init() {
 		fmt.Println(err)
 	}
 	if len(drivers) == 0 {
-		log.Fatalf("No drivers initialized")
+		if os.Getenv("REXRAY_DEBUG") == "true" {
+			fmt.Println("Rexray: No drivers initialized")
+		}
 	}
 }
 
@@ -140,6 +142,18 @@ func CreateVolume(runAsync bool, volumeName string, volumeID, snapshotID string,
 		return &storagedriver.Volume{}, ErrMultipleDriversDetected
 	}
 	for _, driver := range drivers {
+		var minSize int
+		var err error
+		minVolSize := os.Getenv("REXRAY_MINVOLSIZE")
+		if size != 0 && minVolSize != "" {
+			minSize, err = strconv.Atoi(os.Getenv("REXRAY_MINVOLSIZE"))
+			if err != nil {
+				return &storagedriver.Volume{}, err
+			}
+		}
+		if minSize > 0 && int64(minSize) > size {
+			size = int64(minSize)
+		}
 		volume, err := driver.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size)
 		if err != nil {
 			return &storagedriver.Volume{}, err

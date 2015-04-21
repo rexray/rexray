@@ -20,6 +20,7 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
 
     REXRAY_DEBUG - show debug messages
     REXRAY_STORAGEDRIVERS - only do checks using these drivers
+    REXRAY_MINVOLSIZE - minimum volume size to create
     AWS_ACCESS_KEY - (AWS)
     AWS_SECRET_KEY - (AWS)
     OS_AUTH_URL - (RACKSPACE)

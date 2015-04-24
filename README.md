@@ -23,6 +23,7 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
     REXRAY_MINVOLSIZE - minimum volume size to create
     AWS_ACCESS_KEY - (AWS)
     AWS_SECRET_KEY - (AWS)
+    AWS_REGION (AWS) - Override the detected region
     OS_AUTH_URL - (RACKSPACE)
     OS_USERNAME - (RACKSPACE)
     OS_PASSWORD - (RACKSPACE)
@@ -35,20 +36,21 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
 ## Storage Driver - Interface
 These represent the methods that should be available from storage drivers.
 
-    type Driver interface {
-      GetBlockDeviceMapping() (interface{}, error)
-    	GetInstance() (interface{}, error)
-    	GetVolume(string, string) (interface{}, error)
-    	GetVolumeAttach(string, string) (interface{}, error)
-    	GetSnapshot(string, string, string) (interface{}, error)
-    	CreateSnapshot(bool, string, string, string) (interface{}, error)
-    	RemoveSnapshot(string) error
-    	CreateVolume(bool, string, string, string, string, int64, int64) (interface{}, error)
-    	RemoveVolume(string) error
-    	GetDeviceNextAvailable() (string, error)
-    	AttachVolume(bool, string, string) (interface{}, error)
-    	DetachVolume(bool, string, string) error
-    }
+      type Driver interface {
+      	GetBlockDeviceMapping() (interface{}, error)
+      	GetInstance() (interface{}, error)
+      	GetVolume(string, string) (interface{}, error)
+      	GetVolumeAttach(string, string) (interface{}, error)
+      	GetSnapshot(string, string, string) (interface{}, error)
+      	CreateSnapshot(bool, string, string, string) (interface{}, error)
+      	RemoveSnapshot(string) error
+      	CreateVolume(bool, string, string, string, string, int64, int64, string) (interface{}, error)
+      	RemoveVolume(string) error
+      	GetDeviceNextAvailable() (string, error)
+      	AttachVolume(bool, string, string) (interface{}, error)
+      	DetachVolume(bool, string, string) error
+      	CopySnapshot(bool, string, string, string, string, string) (interface{}, error)
+      }
 
 
 ### Get all block devices

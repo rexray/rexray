@@ -137,7 +137,7 @@ func RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func CreateVolume(runAsync bool, volumeName string, volumeID, snapshotID string, volumeType string, IOPS int64, size int64) (*storagedriver.Volume, error) {
+func CreateVolume(runAsync bool, volumeName string, volumeID, snapshotID string, volumeType string, IOPS int64, size int64, availabilityZone string) (*storagedriver.Volume, error) {
 	if len(drivers) > 1 {
 		return &storagedriver.Volume{}, ErrMultipleDriversDetected
 	}
@@ -154,7 +154,7 @@ func CreateVolume(runAsync bool, volumeName string, volumeID, snapshotID string,
 		if minSize > 0 && int64(minSize) > size {
 			size = int64(minSize)
 		}
-		volume, err := driver.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size)
+		volume, err := driver.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size, availabilityZone)
 		if err != nil {
 			return &storagedriver.Volume{}, err
 		}
@@ -218,4 +218,33 @@ func DetachVolume(runAsync bool, volumeID string, instanceID string) error {
 		return nil
 	}
 	return nil
+}
+
+func GetVolumeAttach(volumeID string, instanceID string) ([]*storagedriver.VolumeAttachment, error) {
+	if len(drivers) > 1 {
+		return []*storagedriver.VolumeAttachment{}, ErrMultipleDriversDetected
+	}
+	for _, driver := range drivers {
+		volumeAttachments, err := driver.GetVolumeAttach(volumeID, instanceID)
+		if err != nil {
+			return []*storagedriver.VolumeAttachment{}, err
+		}
+		return volumeAttachments.([]*storagedriver.VolumeAttachment), nil
+	}
+
+	return []*storagedriver.VolumeAttachment{}, nil
+}
+
+func CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, targetSnapshotName, targetRegion string) (*storagedriver.Snapshot, error) {
+	if len(drivers) > 1 {
+		return &storagedriver.Snapshot{}, ErrMultipleDriversDetected
+	}
+	for _, driver := range drivers {
+		snapshot, err := driver.CopySnapshot(runAsync, volumeID, snapshotID, snapshotName, targetSnapshotName, targetRegion)
+		if err != nil {
+			return &storagedriver.Snapshot{}, err
+		}
+		return snapshot.([]*storagedriver.Snapshot)[0], nil
+	}
+	return &storagedriver.Snapshot{}, nil
 }

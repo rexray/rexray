@@ -30,24 +30,15 @@ type Driver struct {
 }
 
 var (
-	ErrMissingVolumeID = errors.New("Missing VolumeID")
+	ErrMissingVolumeID         = errors.New("Missing VolumeID")
+	ErrMultipleVolumesReturned = errors.New("Multiple Volumes returned")
+	ErrNoVolumesReturned       = errors.New("No Volumes returned")
 )
 
 func init() {
 	providerName = "ec2"
 	storagedriver.Register("ec2", Init)
 }
-
-// func InitDD(auth aws.Auth, region aws.Region) *dynamodb.Table {
-// 	ddbs := dynamodb.Server{auth, aws.USWest}
-// 	tableDesc, _ := ddbs.DescribeTable("volumes")
-// 	pkTable, err := tableDesc.BuildPrimaryKey()
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
-// 	table := ddbs.NewTable("volumes", pkTable)
-// 	return table
-// }
 
 func Init() (storagedriver.Driver, error) {
 	instanceDocument, err := getInstanceIdendityDocument()
@@ -56,9 +47,13 @@ func Init() (storagedriver.Driver, error) {
 	}
 
 	auth := aws.Auth{AccessKey: os.Getenv("AWS_ACCESS_KEY"), SecretKey: os.Getenv("AWS_SECRET_KEY")}
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		region = instanceDocument.Region
+	}
 	ec2Instance := ec2.New(
 		auth,
-		aws.Regions[instanceDocument.Region],
+		aws.Regions[region],
 	)
 
 	// table := InitDD(auth, aws.Regions[instanceDocument.Region])
@@ -69,7 +64,10 @@ func Init() (storagedriver.Driver, error) {
 		// DDTable:          table,
 	}
 
-	log.Println("Driver Initialized: " + providerName)
+	if os.Getenv("REXRAY_DEBUG") == "true" {
+		log.Println("Driver Initialized: " + providerName)
+	}
+
 	return driver, nil
 }
 
@@ -345,8 +343,8 @@ func getLocalDevices() (deviceNames []string, err error) {
 	return deviceNames, nil
 }
 
-func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
-	resp, err := driver.createVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size)
+func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64, availabilityZone string) (interface{}, error) {
+	resp, err := driver.createVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size, availabilityZone)
 	if err != nil {
 		return storagedriver.Volume{}, err
 	}
@@ -361,7 +359,7 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 
 }
 
-func (driver *Driver) createVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (*ec2.CreateVolumeResp, error) {
+func (driver *Driver) createVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64, availabilityZone string) (*ec2.CreateVolumeResp, error) {
 
 	if volumeID != "" && runAsync {
 		return &ec2.CreateVolumeResp{}, errors.New("Cannot create volume from volume and run asynchronously")
@@ -382,10 +380,14 @@ func (driver *Driver) createVolume(runAsync bool, volumeName string, volumeID st
 		snapshotID = snapshot.SnapshotID
 	}
 
+	if availabilityZone == "" {
+		availabilityZone = server.AvailabilityZone
+	}
+
 	options := &ec2.CreateVolume{
 		Size:       size,
 		SnapshotId: snapshotID,
-		AvailZone:  server.AvailabilityZone,
+		AvailZone:  availabilityZone,
 		VolumeType: volumeType,
 		IOPS:       IOPS,
 	}
@@ -662,6 +664,77 @@ func (driver *Driver) DetachVolume(runAsync bool, volumeID string, blank string)
 	log.Println("Detached volume", volumeID)
 	return nil
 }
+
+func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (interface{}, error) {
+	snapshots, err := driver.getSnapshot(volumeID, snapshotID, snapshotName)
+	if err != nil {
+		return []*storagedriver.Snapshot{}, err
+	}
+
+	if len(snapshots) > 1 {
+		return nil, ErrMultipleVolumesReturned
+	} else if len(snapshots) == 0 {
+		return nil, ErrNoVolumesReturned
+	}
+
+	snapshotID = snapshots[0].Id
+
+	options := &ec2.CopySnapshot{
+		SourceRegion:      driver.EC2Instance.Region.Name,
+		DestinationRegion: destinationRegion,
+		SourceSnapshotId:  snapshotID,
+		Description:       fmt.Sprintf("[Copied %s from %s]", snapshotID, driver.EC2Instance.Region.Name),
+	}
+	resp := &ec2.CopySnapshotResp{}
+
+	auth := aws.Auth{AccessKey: os.Getenv("AWS_ACCESS_KEY"), SecretKey: os.Getenv("AWS_SECRET_KEY")}
+	destEC2Instance := ec2.New(
+		auth,
+		aws.Regions[destinationRegion],
+	)
+
+	origEC2Instance := driver.EC2Instance
+	driver.EC2Instance = destEC2Instance
+	defer func() { driver.EC2Instance = origEC2Instance }()
+
+	resp, err = driver.EC2Instance.CopySnapshot(options)
+	if err != nil {
+		return nil, err
+	}
+
+	if destinationSnapshotName != "" {
+		_, err := driver.EC2Instance.CreateTags([]string{resp.SnapshotId}, []ec2.Tag{{"Name", destinationSnapshotName}})
+		if err != nil {
+			return &ec2.CreateVolumeResp{}, err
+		}
+	}
+
+	if !runAsync {
+		log.Println("Waiting for snapshot copy to complete")
+		err = driver.waitSnapshotComplete(resp.SnapshotId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	snapshot, err := driver.GetSnapshot("", resp.SnapshotId, "")
+	if err != nil {
+		return storagedriver.Snapshot{}, err
+	}
+
+	return snapshot, nil
+}
+
+// func InitDD(auth aws.Auth, region aws.Region) *dynamodb.Table {
+// 	ddbs := dynamodb.Server{auth, aws.USWest}
+// 	tableDesc, _ := ddbs.DescribeTable("volumes")
+// 	pkTable, err := tableDesc.BuildPrimaryKey()
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+// 	table := ddbs.NewTable("volumes", pkTable)
+// 	return table
+// }
 
 // func ListTables() []string {
 // 	auth := aws.Auth{AccessKey: os.Getenv("AWS_ACCESS_KEY"), SecretKey: os.Getenv("AWS_SECRET_KEY")}

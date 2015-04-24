@@ -375,7 +375,7 @@ func (driver *Driver) RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64) (interface{}, error) {
+func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64, availabilityZone string) (interface{}, error) {
 	if volumeID != "" && runAsync {
 		return "", errors.New("Cannot create volume from volume and run asynchronously")
 	}
@@ -393,8 +393,10 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 		size = int64(sizeInt)
 	}
 
+	var volume interface{}
+	var err error
 	if volumeID != "" {
-		volume, err := driver.GetVolume(volumeID, "")
+		volume, err = driver.GetVolume(volumeID, "")
 		if err != nil {
 			return "", err
 		}
@@ -419,18 +421,21 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 		size = minSize
 	}
 
+	if availabilityZone == "" {
+		availabilityZone = volume.([]*storagedriver.Volume)[0].AvailabilityZone
+	}
+
 	options := &volumes.CreateOpts{
-		Name:       volumeName,
-		Size:       int(size),
-		SnapshotID: snapshotID,
-		VolumeType: volumeType,
+		Name:         volumeName,
+		Size:         int(size),
+		SnapshotID:   snapshotID,
+		VolumeType:   volumeType,
+		Availability: availabilityZone,
 	}
 	resp, err := volumes.Create(driver.ClientBlockStorage, options).Extract()
 	if err != nil {
 		return storagedriver.Volume{}, err
 	}
-
-	// return resp, nil
 
 	if !runAsync {
 		log.Println("Waiting for volume creation to complete")
@@ -447,7 +452,7 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 		}
 	}
 
-	volume, err := driver.GetVolume(resp.ID, "")
+	volume, err = driver.GetVolume(resp.ID, "")
 	if err != nil {
 		return storagedriver.Volume{}, err
 	}
@@ -623,4 +628,8 @@ func (driver *Driver) waitVolumeDetach(volumeID string) error {
 	}
 
 	return nil
+}
+
+func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (interface{}, error) {
+	return nil, errors.New("This driver does not implement CopySnapshot")
 }

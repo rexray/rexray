@@ -15,17 +15,20 @@ import (
 )
 
 var (
-	cfgFile      string
-	snapshotID   string
-	volumeID     string
-	runAsync     bool
-	description  string
-	volumeType   string
-	IOPS         int64
-	size         int64
-	instanceID   string
-	volumeName   string
-	snapshotName string
+	cfgFile                 string
+	snapshotID              string
+	volumeID                string
+	runAsync                bool
+	description             string
+	volumeType              string
+	IOPS                    int64
+	size                    int64
+	instanceID              string
+	volumeName              string
+	snapshotName            string
+	availabilityZone        string
+	destinationSnapshotName string
+	destinationRegion       string
 )
 
 //FlagValue struct
@@ -174,7 +177,7 @@ var newvolumeCmd = &cobra.Command{
 			log.Fatalf("missing --size")
 		}
 
-		volume, err := rexray.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size)
+		volume, err := rexray.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size, availabilityZone)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -242,6 +245,28 @@ var detachvolumeCmd = &cobra.Command{
 	},
 }
 
+var copysnapshotCmd = &cobra.Command{
+	Use: "copy-snapshot",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if snapshotID == "" && volumeID == "" && volumeName == "" {
+			log.Fatalf("missing --volumeid or --snapshotid or --volumename")
+		}
+
+		snapshot, err := rexray.CopySnapshot(runAsync, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		yamlOutput, err := yaml.Marshal(&snapshot)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf(string(yamlOutput))
+
+	},
+}
+
 //Exec function
 func Exec() {
 	AddCommands()
@@ -261,6 +286,7 @@ func AddCommands() {
 	RexrayCmd.AddCommand(removevolumeCmd)
 	RexrayCmd.AddCommand(attachvolumeCmd)
 	RexrayCmd.AddCommand(detachvolumeCmd)
+	RexrayCmd.AddCommand(copysnapshotCmd)
 }
 
 var rexrayCmdV *cobra.Command
@@ -284,6 +310,7 @@ func init() {
 	newvolumeCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
 	newvolumeCmd.Flags().Int64Var(&IOPS, "iops", 0, "IOPS")
 	newvolumeCmd.Flags().Int64Var(&size, "size", 0, "size")
+	newvolumeCmd.Flags().StringVar(&availabilityZone, "availabilityzone", "", "availabilityzone")
 	removevolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	attachvolumeCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
 	attachvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
@@ -291,6 +318,13 @@ func init() {
 	detachvolumeCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
 	detachvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	detachvolumeCmd.Flags().StringVar(&instanceID, "instanceid", "", "instanceid")
+	copysnapshotCmd.Flags().BoolVar(&runAsync, "runasync", false, "runasync")
+	copysnapshotCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	copysnapshotCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
+	copysnapshotCmd.Flags().StringVar(&snapshotName, "snapshotname", "", "snapshotname")
+	copysnapshotCmd.Flags().StringVar(&destinationSnapshotName, "destinationsnapshotname", "", "destinationsnapshotname")
+	copysnapshotCmd.Flags().StringVar(&destinationRegion, "destinationregion", "", "destinationregion")
+
 	rexrayCmdV = RexrayCmd
 
 	// initConfig(systemCmd, "rexray", true, map[string]FlagValue{

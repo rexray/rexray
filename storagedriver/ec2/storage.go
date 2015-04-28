@@ -666,6 +666,10 @@ func (driver *Driver) DetachVolume(runAsync bool, volumeID string, blank string)
 }
 
 func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (interface{}, error) {
+	if volumeID == "" && snapshotID == "" && snapshotName == "" {
+		return []*storagedriver.Snapshot{}, errors.New("Missing volumeID, snapshotID, or snapshotName")
+	}
+
 	snapshots, err := driver.getSnapshot(volumeID, snapshotID, snapshotName)
 	if err != nil {
 		return []*storagedriver.Snapshot{}, err

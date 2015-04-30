@@ -1,20 +1,29 @@
-# RexRay
+# REX-Ray
 
 
 ## Overview
-```RexRay``` is a Go package for guest storage introspection that is meant to provide visibility and management of external/underlying storage that is attached via methods specified in drivers.  This storage can be from a specific storage platform in addition to being provided by virtual infrastructure.
+```REX-Ray``` is a Go package for guest storage introspection that is meant to provide visibility and management of external/underlying storage that is attached via methods specified in drivers.  This storage can be from a specific storage platform in addition to being provided by virtual infrastructure.
 
 The driver to be used is automatically detected or hints can be provided.  Drivers are then intialized to retrieve guest identifiers and further information from other platforms that are relevant to storage management.
 
 ## State
-Currently it has view only capabilities.  Working on more drivers, and actual management capabilities.
+We have a first release available that support all of the following capabilities!
+
+## Examples
+One of the best examples of this in action would be to review the [REX-Ray CLI](https://github.com/emccode/rexraycli) tool.
 
 ## Features
 - Visibility
+ - Local Instance
+ - Volumes
 - Management
- - Disk Provision
- - Disk Snapshot/Unsnapshot
- - Disk Attach/Detach
+ - Volume Create/Remove
+ - Volume Snapshot/Unsnapshot
+ - Volume Attach/Detach
+ - Replicate Snapshot
+
+## CLI
+See the [REX-RayCLI](https://github.com/emccode/rexraycli) repo.
 
 ## Environment Variables
 
@@ -27,28 +36,50 @@ Currently it has view only capabilities.  Working on more drivers, and actual ma
     OS_AUTH_URL - (RACKSPACE)
     OS_USERNAME - (RACKSPACE)
     OS_PASSWORD - (RACKSPACE)
+    GOSCALEIO_ENDPOINT - (SCALEIO)
+    GOSCALEIO_INSECURE - (SCALEIO)
+    GOSCALEIO_USERNAME - (SCALEIO)
+    GOSCALEIO_PASSWORD - (SCALEIO)
+    GOSCALEIO_SYSTEMID - (SCALEIO)
+    GOSCALEIO_PROTECTIONDOMAINID - (SCALEIO)
+    GOSCALEIO_STORAGEPOOLID - (SCALEIO)
+
 
 ## Storage Drivers - Examples
 - AWS
 - RackSpace
+- ScaleIO
 - ..more to come
 
 ## Storage Driver - Interface
 These represent the methods that should be available from storage drivers.
 
       type Driver interface {
+      	// Lists the block devices that are attached to the instance
       	GetBlockDeviceMapping() (interface{}, error)
+      	// Get the local instance
       	GetInstance() (interface{}, error)
+      	// Get all Volumes available from infrastructure and storage platform
       	GetVolume(string, string) (interface{}, error)
+      	// Get the currently attached Volumes
       	GetVolumeAttach(string, string) (interface{}, error)
-      	GetSnapshot(string, string, string) (interface{}, error)
+      	// Create a snpashot of a Volume
       	CreateSnapshot(bool, string, string, string) (interface{}, error)
+      	// Get all Snapshots or specific Snapshots
+      	GetSnapshot(string, string, string) (interface{}, error)
+      	// Remove Snapshot
       	RemoveSnapshot(string) error
+      	// Create a Volume from scratch, from a Snaphot, or from another Volume
       	CreateVolume(bool, string, string, string, string, int64, int64, string) (interface{}, error)
+      	// Remove Volume
       	RemoveVolume(string) error
+      	// Get the next available Linux device for attaching external storage
       	GetDeviceNextAvailable() (string, error)
+      	// Attach a Volume to an Instance
       	AttachVolume(bool, string, string) (interface{}, error)
+      	// Detach a Volume from an Instance
       	DetachVolume(bool, string, string) error
+      	// Copy a Snapshot to another region
       	CopySnapshot(bool, string, string, string, string, string) (interface{}, error)
       }
 
@@ -68,6 +99,14 @@ The following examples assumes that you have passed proper environment variables
       log.Fatalf("Error: %s", err)
     }
 
+
+## Contributions
+We are actively looking for contributors to this project.  This can involve any number of area.
+
+  - Documentation
+  - Storage Drivers
+  - OS Drivers
+  - A future distributed model
 
 
 Licensing

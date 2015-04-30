@@ -62,18 +62,31 @@ type VolumeAttachment struct {
 }
 
 type Driver interface {
+	// Lists the block devices that are attached to the instance
 	GetBlockDeviceMapping() (interface{}, error)
+	// Get the local instance
 	GetInstance() (interface{}, error)
+	// Get all Volumes available from infrastructure and storage platform
 	GetVolume(string, string) (interface{}, error)
+	// Get the currently attached Volumes
 	GetVolumeAttach(string, string) (interface{}, error)
+	// Create a snpashot of a Volume
 	CreateSnapshot(bool, string, string, string) (interface{}, error)
+	// Get all Snapshots or specific Snapshots
 	GetSnapshot(string, string, string) (interface{}, error)
+	// Remove Snapshot
 	RemoveSnapshot(string) error
+	// Create a Volume from scratch, from a Snaphot, or from another Volume
 	CreateVolume(bool, string, string, string, string, int64, int64, string) (interface{}, error)
+	// Remove Volume
 	RemoveVolume(string) error
+	// Get the next available Linux device for attaching external storage
 	GetDeviceNextAvailable() (string, error)
+	// Attach a Volume to an Instance
 	AttachVolume(bool, string, string) (interface{}, error)
+	// Detach a Volume from an Instance
 	DetachVolume(bool, string, string) error
+	// Copy a Snapshot to another region
 	CopySnapshot(bool, string, string, string, string, string) (interface{}, error)
 }
 

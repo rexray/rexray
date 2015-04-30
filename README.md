@@ -1,9 +1,9 @@
-# rexraycli
+# REX-RayCLI
 A CLI implementation of RexRay providing guest storage introspection and management.  The CLI should be distributed to the system that requires introspection and storage management.  It will discover proper drivers to use, and then with proper authorization, will get further details about those devices.
 
-Once the introspection has occured, ```Rexray``` can then manage manage storage using initialized drivers in a common manner between storage providers.  The providers will attach devices via any method possible to get the device attached as the next available  ```/dev/xvd_```.
+Once the introspection has occured, ```Rexray``` can then manage manage storage using initialized drivers in a common manner between storage providers.  The providers will attach devices via any method possible to get the device attached as the next available  ```/dev/xvd_``` or one that is automatically assigned via the REX-Ray driver.
 
-```RexrayCLI``` is an implementation of [Rexray](https://github.com/emccode/rexray).  It provides a working application, but as well a working example of using the ```Rexray``` Go package.
+```REX-RayCLI``` is an implementation of [REX-Ray](https://github.com/emccode/rexray).  It provides a working application, but as well a working example of using the ```Rexray``` Go package.
 
 ## Environment Variables
 
@@ -14,6 +14,13 @@ Once the introspection has occured, ```Rexray``` can then manage manage storage 
     OS_AUTH_URL - (RACKSPACE)
     OS_USERNAME - (RACKSPACE)
     OS_PASSWORD - (RACKSPACE)
+    GOSCALEIO_ENDPOINT - (SCALEIO)
+    GOSCALEIO_INSECURE - (SCALEIO)
+    GOSCALEIO_USERNAME - (SCALEIO)
+    GOSCALEIO_PASSWORD - (SCALEIO)
+    GOSCALEIO_SYSTEMID - (SCALEIO)
+    GOSCALEIO_PROTECTIONDOMAINID - (SCALEIO)
+    GOSCALEIO_STORAGEPOOLID - (SCALEIO)
 
 ## CLI Usage Examples
 The CLI can be built, or you can retrieve pre-compiled executables from the Github releases.
@@ -26,14 +33,17 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
     get-snapshot - get all or specific snapshots
     new-snapshot - create a new snapshot on a volume
     remove-snapshot - remove a snapshot
+    copy-snapshot - copy a snapshot to another region
     attach-volume - attach volume to this server
     detach-volume - detach volume from this server
     version - show Rexray version
 
+
 ### Azure
 
 ### AWS
-    AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key" ./rexray get-storage
+    export REXRAY_STORAGEDRIVERS=ec2
+    AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key" ./rexray get-volume
 
     - providername: ec2
       instanceid: i-695bb6ab
@@ -60,7 +70,8 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
 ### OpenStack
 
 ### RackSpace
-    OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password' ./rexray get-storage
+    export REXRAY_STORAGEDRIVERS=rackspace
+    OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password' ./rexray get-volume
 
     - providername: RackSpace
       instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7
@@ -76,6 +87,10 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
       status: ""
 
 ### ScaleIO
+    export REXRAY_STORAGEDRIVERS=scaleio
+    export GOSCALEIO_ENDPOINT=https://mdm1.scaleio.local:443/api GOSCALEIO_INSECURE=true GOSCALEIO_USERNAME=admin GOSCALEIO_PASSWORD=Scaleio123 GOSCALEIO_SYSTEMID=1aa75ddc59b6a8f7 GOSCALEIO_PROTECTIONDOMAINID=ea81096700000000 GOSCALEIO_STORAGEPOOLID=1041757800000001
+    ./rexray get-volume
+
 
 ### vSphere
 
@@ -83,10 +98,21 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
 
 ### VIPR-C
 
+## Downloading
+See the releases area for downloadable binaries.
+
 ## Manually Building
+This might currently require upstream additions for the Goamz package to github.com/clintonskitson/goamz at the snapcopy branch.
 
     docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexraycli golang:1.4.2-cross make release
 
+
+## Contributing
+We are always looking for contributors!
+
+  - Documentation
+  - Upstream [REX-Ray](https://github.com/emccode/rexray) storage and infrastructure drivers
+  - Additional enhancements to CLI commands
 
 Licensing
 ---------

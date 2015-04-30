@@ -10,7 +10,7 @@ The driver to be used is automatically detected or hints can be provided.  Drive
 We have a first release available that support all of the following capabilities!
 
 ## Examples
-One of the best examples of this in action would be to review the [REX-Ray CLI](https://github.com/emccode/rexraycli) tool.
+One of the best examples of this in action would be to review the [Dogged](https://github.com/emccode/dogged) repo.  This repo maintains efforts for the EMC {code} team relating to embedding REX-Ray inside of Container Engines such as Docker.  Here you will REX-Ray enabling Docker to manage it's own storage via Container Data Volumes.
 
 ## Features
 - Visibility
@@ -23,7 +23,7 @@ One of the best examples of this in action would be to review the [REX-Ray CLI](
  - Replicate Snapshot
 
 ## CLI
-See the [REX-RayCLI](https://github.com/emccode/rexraycli) repo.
+REX-Ray can be used independently as a CLI tool instead of embedding via Go packages.  See the [REX-RayCLI](https://github.com/emccode/rexraycli) repo.
 
 ## Environment Variables
 

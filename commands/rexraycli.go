@@ -51,7 +51,7 @@ var RexrayCmd = &cobra.Command{
 var versionCmd = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("\nRexray Version: %v\n", "0.1.150418")
+		fmt.Printf("\nRexray Version: %v\n", "0.1.150429")
 	},
 }
 
@@ -139,7 +139,7 @@ var newsnapshotCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		snapshot, err := rexray.CreateSnapshot(runAsync, volumeName, volumeID, description)
+		snapshot, err := rexray.CreateSnapshot(runAsync, snapshotName, volumeID, description)
 		if err != nil {
 			log.Fatal(err)
 		}

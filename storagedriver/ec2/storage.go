@@ -107,7 +107,7 @@ func (driver *Driver) GetBlockDeviceMapping() (interface{}, error) {
 		BlockDevices = append(BlockDevices, sdBlockDevice)
 	}
 
-	log.Println("Got Block Device Mappings: " + fmt.Sprintf("%+v", BlockDevices))
+	// log.Println("Got Block Device Mappings: " + fmt.Sprintf("%+v", BlockDevices))
 	return BlockDevices, nil
 }
 
@@ -178,7 +178,7 @@ func (driver *Driver) GetInstance() (interface{}, error) {
 		Name:         getInstanceName(server),
 	}
 
-	log.Println("Got Instance: " + fmt.Sprintf("%+v", instance))
+	// log.Println("Got Instance: " + fmt.Sprintf("%+v", instance))
 	return instance, nil
 }
 
@@ -269,7 +269,7 @@ func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (in
 		snapshotsInt = append(snapshotsInt, snapshotSD)
 	}
 
-	log.Println("Got Snapshots: " + fmt.Sprintf("%+v", snapshotsInt))
+	// log.Println("Got Snapshots: " + fmt.Sprintf("%+v", snapshotsInt))
 	return snapshotsInt, nil
 }
 
@@ -354,7 +354,7 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 		return storagedriver.Volume{}, err
 	}
 
-	log.Println(fmt.Sprintf("Created volume: %+v", volumes.([]*storagedriver.Volume)[0]))
+	// log.Println(fmt.Sprintf("Created volume: %+v", volumes.([]*storagedriver.Volume)[0]))
 	return volumes.([]*storagedriver.Volume)[0], nil
 
 }

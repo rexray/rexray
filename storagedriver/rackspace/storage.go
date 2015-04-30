@@ -360,7 +360,7 @@ func (driver *Driver) CreateSnapshot(runAsync bool, snapshotName, volumeID, desc
 		return storagedriver.Snapshot{}, err
 	}
 
-	log.Println(fmt.Sprintf("Created Snapshot: %v", snapshot.([]*storagedriver.Snapshot)))
+	// log.Println(fmt.Sprintf("Created Snapshot: %v", snapshot.([]*storagedriver.Snapshot)))
 	return snapshot.([]*storagedriver.Snapshot), nil
 
 }
@@ -415,14 +415,14 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 
 		snapshotID = snapshot.(*storagedriver.Snapshot).SnapshotID
 
+		if availabilityZone == "" {
+			availabilityZone = volume.([]*storagedriver.Volume)[0].AvailabilityZone
+		}
+
 	}
 
 	if size != 0 && size < minSize {
 		size = minSize
-	}
-
-	if availabilityZone == "" {
-		availabilityZone = volume.([]*storagedriver.Volume)[0].AvailabilityZone
 	}
 
 	options := &volumes.CreateOpts{
@@ -457,7 +457,7 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 		return storagedriver.Volume{}, err
 	}
 
-	log.Println(fmt.Sprintf("Created volume: %+v", volume.([]*storagedriver.Volume)[0]))
+	// log.Println(fmt.Sprintf("Created volume: %+v", volume.([]*storagedriver.Volume)[0]))
 	return volume.([]*storagedriver.Volume)[0], nil
 }
 
@@ -507,7 +507,6 @@ func (driver *Driver) GetDeviceNextAvailable() (string, error) {
 	for _, letter := range letters {
 		if !blockDeviceNames[letter] {
 			nextDeviceName := "/dev/xvd" + letter
-			log.Println("Got next device name: " + nextDeviceName)
 			return nextDeviceName, nil
 		}
 	}

@@ -66,8 +66,8 @@ type Driver interface {
 	GetInstance() (interface{}, error)
 	GetVolume(string, string) (interface{}, error)
 	GetVolumeAttach(string, string) (interface{}, error)
-	GetSnapshot(string, string, string) (interface{}, error)
 	CreateSnapshot(bool, string, string, string) (interface{}, error)
+	GetSnapshot(string, string, string) (interface{}, error)
 	RemoveSnapshot(string) error
 	CreateVolume(bool, string, string, string, string, int64, int64, string) (interface{}, error)
 	RemoveVolume(string) error

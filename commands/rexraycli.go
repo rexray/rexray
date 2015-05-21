@@ -7,7 +7,11 @@ import (
 	"strings"
 
 	"github.com/emccode/clue"
-	"github.com/emccode/rexray"
+	_ "github.com/emccode/rexray"
+	rrdaemon "github.com/emccode/rexray/daemon"
+	rros "github.com/emccode/rexray/os"
+	"github.com/emccode/rexray/storage"
+	"github.com/emccode/rexray/volume"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -15,6 +19,8 @@ import (
 )
 
 var (
+	daemon                  bool
+	host                    string
 	cfgFile                 string
 	snapshotID              string
 	volumeID                string
@@ -29,6 +35,12 @@ var (
 	availabilityZone        string
 	destinationSnapshotName string
 	destinationRegion       string
+	deviceName              string
+	mountPoint              string
+	mountOptions            string
+	mountLabel              string
+	fsType                  string
+	overwriteFs             bool
 )
 
 //FlagValue struct
@@ -44,7 +56,16 @@ var RexrayCmd = &cobra.Command{
 	Use: "rexray",
 	Run: func(cmd *cobra.Command, args []string) {
 		InitConfig()
-		cmd.Usage()
+
+		if !daemon {
+			cmd.Usage()
+			return
+		}
+
+		if err := rrdaemon.Start(host); err != nil {
+			log.Fatalf("Error starting daemon: %s", err)
+		}
+
 	},
 }
 
@@ -59,7 +80,7 @@ var getinstanceCmd = &cobra.Command{
 	Use: "get-instance",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allInstances, err := rexray.GetInstance()
+		allInstances, err := storage.GetInstance()
 		if err != nil {
 			panic(err)
 		}
@@ -74,11 +95,11 @@ var getinstanceCmd = &cobra.Command{
 	},
 }
 
-var getblockdeviceCmd = &cobra.Command{
-	Use: "get-blockdevice",
+var getvolumemapCmd = &cobra.Command{
+	Use: "get-volumemap",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allBlockDevices, err := rexray.GetBlockDeviceMapping()
+		allBlockDevices, err := storage.GetVolumeMapping()
 		if err != nil {
 			log.Fatalf("Error: %s", err)
 		}
@@ -97,7 +118,7 @@ var getvolumeCmd = &cobra.Command{
 	Use: "get-volume",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allVolumes, err := rexray.GetVolume(volumeID, volumeName)
+		allVolumes, err := storage.GetVolume(volumeID, volumeName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -116,7 +137,7 @@ var getsnapshotCmd = &cobra.Command{
 	Use: "get-snapshot",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allSnapshots, err := rexray.GetSnapshot(volumeID, snapshotID, snapshotName)
+		allSnapshots, err := storage.GetSnapshot(volumeID, snapshotID, snapshotName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -139,7 +160,7 @@ var newsnapshotCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		snapshot, err := rexray.CreateSnapshot(runAsync, snapshotName, volumeID, description)
+		snapshot, err := storage.CreateSnapshot(runAsync, snapshotName, volumeID, description)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -161,7 +182,7 @@ var removesnapshotCmd = &cobra.Command{
 			log.Fatalf("missing --snapshotid")
 		}
 
-		err := rexray.RemoveSnapshot(snapshotID)
+		err := storage.RemoveSnapshot(snapshotID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -177,7 +198,7 @@ var newvolumeCmd = &cobra.Command{
 			log.Fatalf("missing --size")
 		}
 
-		volume, err := rexray.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size, availabilityZone)
+		volume, err := storage.CreateVolume(runAsync, volumeName, volumeID, snapshotID, volumeType, IOPS, size, availabilityZone)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -199,7 +220,7 @@ var removevolumeCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		err := rexray.RemoveVolume(volumeID)
+		err := storage.RemoveVolume(volumeID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -215,7 +236,7 @@ var attachvolumeCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		volumeAttachment, err := rexray.AttachVolume(runAsync, volumeID, instanceID)
+		volumeAttachment, err := storage.AttachVolume(runAsync, volumeID, instanceID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -237,7 +258,7 @@ var detachvolumeCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		err := rexray.DetachVolume(runAsync, volumeID, instanceID)
+		err := storage.DetachVolume(runAsync, volumeID, instanceID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -253,7 +274,7 @@ var copysnapshotCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid or --snapshotid or --volumename")
 		}
 
-		snapshot, err := rexray.CopySnapshot(runAsync, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion)
+		snapshot, err := storage.CopySnapshot(runAsync, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -263,6 +284,114 @@ var copysnapshotCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		fmt.Printf(string(yamlOutput))
+
+	},
+}
+
+var getmountCmd = &cobra.Command{
+	Use: "get-mount",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		mounts, err := rros.GetMounts(deviceName, mountPoint)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		yamlOutput, err := yaml.Marshal(&mounts)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf(string(yamlOutput))
+	},
+}
+
+var mountdeviceCmd = &cobra.Command{
+	Use: "mount-device",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if deviceName == "" || mountPoint == "" {
+			log.Fatal("Missing --devicename and --mountpoint")
+		}
+
+		// mountOptions = fmt.Sprintf("val,%s", mountOptions)
+		err := rros.Mount(deviceName, mountPoint, mountOptions, mountLabel)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
+}
+
+var unmountdeviceCmd = &cobra.Command{
+	Use: "unmount-device",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if mountPoint == "" {
+			log.Fatal("Missing --mountpoint")
+		}
+
+		err := rros.Unmount(mountPoint)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
+}
+
+var formatdeviceCmd = &cobra.Command{
+	Use: "format-device",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if deviceName == "" {
+			log.Fatal("Missing --devicename")
+		}
+
+		if fsType == "" {
+			fsType = "ext4"
+		}
+
+		err := rros.Format(deviceName, fsType, overwriteFs)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
+}
+
+var mountvolumeCmd = &cobra.Command{
+	Use: "mount-volume",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if volumeName == "" && volumeID == "" {
+			log.Fatal("Missing --volumename or --volumeid")
+		}
+
+		mountPath, err := volume.MountVolume(volumeName, volumeID, overwriteFs, fsType)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		yamlOutput, err := yaml.Marshal(&mountPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf(string(yamlOutput))
+
+	},
+}
+
+var unmountvolumeCmd = &cobra.Command{
+	Use: "unmount-volume",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if volumeName == "" && volumeID == "" {
+			log.Fatal("Missing --volumename or --volumeid")
+		}
+
+		err := volume.UnmountVolume(volumeName, volumeID)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 	},
 }
@@ -277,7 +406,7 @@ func Exec() {
 func AddCommands() {
 	RexrayCmd.AddCommand(versionCmd)
 	RexrayCmd.AddCommand(getinstanceCmd)
-	RexrayCmd.AddCommand(getblockdeviceCmd)
+	RexrayCmd.AddCommand(getvolumemapCmd)
 	RexrayCmd.AddCommand(getvolumeCmd)
 	RexrayCmd.AddCommand(getsnapshotCmd)
 	RexrayCmd.AddCommand(newsnapshotCmd)
@@ -287,12 +416,20 @@ func AddCommands() {
 	RexrayCmd.AddCommand(attachvolumeCmd)
 	RexrayCmd.AddCommand(detachvolumeCmd)
 	RexrayCmd.AddCommand(copysnapshotCmd)
+	RexrayCmd.AddCommand(getmountCmd)
+	RexrayCmd.AddCommand(mountdeviceCmd)
+	RexrayCmd.AddCommand(unmountdeviceCmd)
+	RexrayCmd.AddCommand(formatdeviceCmd)
+	RexrayCmd.AddCommand(mountvolumeCmd)
+	RexrayCmd.AddCommand(unmountvolumeCmd)
 }
 
 var rexrayCmdV *cobra.Command
 
 func init() {
 	RexrayCmd.PersistentFlags().StringVar(&cfgFile, "Config", "", "config file (default is $HOME/rexray/config.yaml)")
+	RexrayCmd.Flags().BoolVar(&daemon, "daemon", false, "Daemonize and establish a socket file")
+	RexrayCmd.Flags().StringVar(&host, "host", "", "Socket to connect to")
 	getvolumeCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
 	getvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	getsnapshotCmd.Flags().StringVar(&snapshotName, "snapshotname", "", "snapshotname")
@@ -324,6 +461,22 @@ func init() {
 	copysnapshotCmd.Flags().StringVar(&snapshotName, "snapshotname", "", "snapshotname")
 	copysnapshotCmd.Flags().StringVar(&destinationSnapshotName, "destinationsnapshotname", "", "destinationsnapshotname")
 	copysnapshotCmd.Flags().StringVar(&destinationRegion, "destinationregion", "", "destinationregion")
+	getmountCmd.Flags().StringVar(&deviceName, "devicename", "", "devicename")
+	getmountCmd.Flags().StringVar(&mountPoint, "mountpoint", "", "mountpoint")
+	mountdeviceCmd.Flags().StringVar(&deviceName, "devicename", "", "devicename")
+	mountdeviceCmd.Flags().StringVar(&mountPoint, "mountpoint", "", "mountpoint")
+	mountdeviceCmd.Flags().StringVar(&mountOptions, "mountoptions", "", "mountoptions")
+	mountdeviceCmd.Flags().StringVar(&mountLabel, "mountlabel", "", "mountlabel")
+	unmountdeviceCmd.Flags().StringVar(&mountPoint, "mountpoint", "", "mountpoint")
+	formatdeviceCmd.Flags().StringVar(&deviceName, "devicename", "", "devicename")
+	formatdeviceCmd.Flags().StringVar(&fsType, "fstype", "", "fstype")
+	formatdeviceCmd.Flags().BoolVar(&overwriteFs, "overwritefs", false, "overwritefs")
+	mountvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	mountvolumeCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
+	mountvolumeCmd.Flags().BoolVar(&overwriteFs, "overwritefs", false, "overwritefs")
+	mountvolumeCmd.Flags().StringVar(&fsType, "fstype", "", "fstype")
+	unmountvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	unmountvolumeCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
 
 	rexrayCmdV = RexrayCmd
 

@@ -1,13 +1,10 @@
 package ec2
 
-import (
-	"fmt"
-	"log"
-)
+import "fmt"
 
 import "testing"
 import (
-	"github.com/emccode/rexray/storagedriver"
+	"github.com/emccode/rexray/drivers/storage"
 	"github.com/goamz/goamz/ec2"
 )
 
@@ -31,8 +28,8 @@ func TestGetInstanceIdentityDocument(*testing.T) {
 
 }
 
-func TestGetBlockDeviceMapping(*testing.T) {
-	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
+func TestGetVolumeMapping(*testing.T) {
+	blockDeviceMapping, err := driver.GetVolumeMapping()
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +50,7 @@ func TestGetInstance(*testing.T) {
 
 func TestCreateSnapshot(*testing.T) {
 	// (ec2 *EC2) CreateSnapshot(volumeId, description string)
-	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
+	blockDeviceMapping, err := driver.GetVolumeMapping()
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +64,7 @@ func TestCreateSnapshot(*testing.T) {
 }
 
 func TestGetSnapshot(*testing.T) {
-	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
+	blockDeviceMapping, err := driver.GetVolumeMapping()
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +80,7 @@ func TestGetSnapshot(*testing.T) {
 }
 
 func TestRemoveSnapshot(*testing.T) {
-	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
+	blockDeviceMapping, err := driver.GetVolumeMapping()
 	if err != nil {
 		panic(err)
 	}
@@ -128,72 +125,72 @@ func TestGetDeviceNextAvailable(*testing.T) {
 
 }
 
-func TestCreateSnapshotVolume(*testing.T) {
-	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
-	if err != nil {
-		panic(err)
-	}
+// func TestCreateSnapshotVolume(*testing.T) {
+// 	blockDeviceMapping, err := driver.GetVolumeMapping()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	volumeID, err := driver.CreateVolume(false, "testing", snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	err = driver.RemoveVolume(volumeID)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	err = driver.RemoveSnapshot(snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
 
-	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
-	if err != nil {
-		panic(err)
-	}
-
-	volumeID, err := driver.CreateSnapshotVolume(false, "testing", snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
-	if err != nil {
-		panic(err)
-	}
-
-	err = driver.RemoveVolume(volumeID)
-	if err != nil {
-		panic(err)
-	}
-
-	err = driver.RemoveSnapshot(snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func TestAttachVolume(*testing.T) {
-	instance, err := driver.GetInstance()
-	if err != nil {
-		panic(err)
-	}
-
-	volume, err := driver.CreateVolume(false, "testing", "", "", 0, 2)
-	if err != nil {
-		panic(err)
-	}
-
-	volumeAttachment, err := driver.GetVolumeAttach(volume.(storagedriver.Volume).VolumeID, instance.(*storagedriver.Instance).InstanceID)
-	if err != nil {
-		panic(err)
-	}
-
-	log.Println(fmt.Sprintf("Volumes attached: %+v", volumeAttachment))
-
-	volumeAttachment, err = driver.AttachVolume(false, volume.(storagedriver.Volume).VolumeID, instance.(*storagedriver.Instance).InstanceID)
-	if err != nil {
-		panic(err)
-	}
-
-	log.Println(fmt.Sprintf("Volumes attached: %+v", volumeAttachment))
-
-	err = driver.DetachVolume(false, volumeAttachment.(storagedriver.VolumeAttachment).VolumeID, "")
-	if err != nil {
-		panic(err)
-	}
-
-	log.Println(fmt.Sprintf("Volume detached: %+v", volumeAttachment.(storagedriver.VolumeAttachment).VolumeID))
-
-	err = driver.RemoveVolume(volume.(storagedriver.Volume).VolumeID)
-	if err != nil {
-		panic(err)
-	}
-
-	log.Println(fmt.Sprintf("Volume removed: %+v", volumeAttachment.(storagedriver.VolumeAttachment).VolumeID))
-}
+// func TestAttachVolume(*testing.T) {
+// 	instance, err := driver.GetInstance()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	volume, err := driver.CreateVolume(false, "testing", "", "", "", 0, 2)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	volumeAttachment, err := driver.GetVolumeAttach(volume.(storagedriver.Volume).VolumeID, instance.(*storagedriver.Instance).InstanceID)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	log.Println(fmt.Sprintf("Volumes attached: %+v", volumeAttachment))
+//
+// 	volumeAttachment, err = driver.AttachVolume(false, volume.(storagedriver.Volume).VolumeID, instance.(*storagedriver.Instance).InstanceID)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	log.Println(fmt.Sprintf("Volumes attached: %+v", volumeAttachment))
+//
+// 	err = driver.DetachVolume(false, volumeAttachment.(storagedriver.VolumeAttachment).VolumeID, "")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	log.Println(fmt.Sprintf("Volume detached: %+v", volumeAttachment.(storagedriver.VolumeAttachment).VolumeID))
+//
+// 	err = driver.RemoveVolume(volume.(storagedriver.Volume).VolumeID)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	log.Println(fmt.Sprintf("Volume removed: %+v", volumeAttachment.(storagedriver.VolumeAttachment).VolumeID))
+// }
 
 func TestGetVolume(*testing.T) {
 	volume, err := driver.GetVolume("", "testing")
@@ -205,13 +202,13 @@ func TestGetVolume(*testing.T) {
 	}
 }
 
-func TestCreateVolume(*testing.T) {
-	volume, err := driver.CreateVolume(true, "testing", "", "", 0, 1)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(fmt.Sprintf("%+v", volume.(*storagedriver.Volume)))
-}
+// func TestCreateVolume(*testing.T) {
+// 	volume, err := driver.CreateVolume(true, "testing", "", "", 0, 1)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	fmt.Println(fmt.Sprintf("%+v", volume.(*storagedriver.Volume)))
+// }
 
 func TestCreateSnapshot2(*testing.T) {
 	snapshots, err := driver.CreateSnapshot(false, "testing", "vol-8295eb9f", "test")

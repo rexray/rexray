@@ -13,9 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emccode/rexray/storagedriver"
+	"github.com/emccode/rexray/drivers/storage"
 	"github.com/goamz/goamz/aws"
-	"github.com/goamz/goamz/dynamodb"
 	"github.com/goamz/goamz/ec2"
 )
 
@@ -26,7 +25,6 @@ var (
 type Driver struct {
 	InstanceDocument *instanceIdentityDocument
 	EC2Instance      *ec2.EC2
-	DDTable          *dynamodb.Table
 }
 
 var (
@@ -65,7 +63,7 @@ func Init() (storagedriver.Driver, error) {
 	}
 
 	if os.Getenv("REXRAY_DEBUG") == "true" {
-		log.Println("Driver Initialized: " + providerName)
+		log.Println("Storage Driver Initialized: " + providerName)
 	}
 
 	return driver, nil
@@ -88,7 +86,7 @@ type instanceIdentityDocument struct {
 	PrivateIP          string      `json:"privateIp"`
 }
 
-func (driver *Driver) GetBlockDeviceMapping() (interface{}, error) {
+func (driver *Driver) GetVolumeMapping() (interface{}, error) {
 	blockDevices, err := driver.getBlockDevices(driver.InstanceDocument.InstanceID)
 	if err != nil {
 		return nil, err
@@ -287,7 +285,7 @@ func (driver *Driver) GetDeviceNextAvailable() (string, error) {
 	letters := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
 	blockDeviceNames := make(map[string]bool)
 
-	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
+	blockDeviceMapping, err := driver.GetVolumeMapping()
 	if err != nil {
 		return "", err
 	}
@@ -728,34 +726,3 @@ func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshot
 
 	return snapshot, nil
 }
-
-// func InitDD(auth aws.Auth, region aws.Region) *dynamodb.Table {
-// 	ddbs := dynamodb.Server{auth, aws.USWest}
-// 	tableDesc, _ := ddbs.DescribeTable("volumes")
-// 	pkTable, err := tableDesc.BuildPrimaryKey()
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
-// 	table := ddbs.NewTable("volumes", pkTable)
-// 	return table
-// }
-
-// func ListTables() []string {
-// 	auth := aws.Auth{AccessKey: os.Getenv("AWS_ACCESS_KEY"), SecretKey: os.Getenv("AWS_SECRET_KEY")}
-// 	ddbs := dynamodb.Server{auth, aws.USWest}
-// 	response, err := ddbs.ListTables()
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
-//
-// 	return response
-// }
-
-// func (driver *Driver) GetDDValue(hashKey string) (string, error) {
-// 	pk := &dynamodb.Key{HashKey: hashKey}
-// 	response, err := driver.DDTable.GetItem(pk)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return response["volumeID"].Value, nil
-// }

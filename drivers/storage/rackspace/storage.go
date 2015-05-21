@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emccode/rexray/storagedriver"
+	"github.com/emccode/rexray/drivers/storage"
 	"github.com/rackspace/gophercloud"
 	"github.com/rackspace/gophercloud/openstack"
 	"github.com/rackspace/gophercloud/openstack/blockstorage/v1/snapshots"
@@ -136,7 +136,7 @@ func (driver *Driver) GetInstance() (interface{}, error) {
 	return instance, nil
 }
 
-func (driver *Driver) GetBlockDeviceMapping() (interface{}, error) {
+func (driver *Driver) GetVolumeMapping() (interface{}, error) {
 	blockDevices, err := driver.getBlockDevices(driver.InstanceID)
 	if err != nil {
 		return nil, err
@@ -478,7 +478,7 @@ func (driver *Driver) GetDeviceNextAvailable() (string, error) {
 	letters := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
 	blockDeviceNames := make(map[string]bool)
 
-	blockDeviceMapping, err := driver.GetBlockDeviceMapping()
+	blockDeviceMapping, err := driver.GetVolumeMapping()
 	if err != nil {
 		return "", err
 	}

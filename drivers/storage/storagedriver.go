@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/emccode/rexray/util"
 )
 
 var (
@@ -16,6 +18,8 @@ var (
 var (
 	ErrDriverInstanceDiscovery = errors.New("Driver Instance discovery failed")
 )
+
+var Adapters map[string]Driver
 
 type BlockDevice struct {
 	ProviderName string
@@ -63,7 +67,7 @@ type VolumeAttachment struct {
 
 type Driver interface {
 	// Lists the block devices that are attached to the instance
-	GetBlockDeviceMapping() (interface{}, error)
+	GetVolumeMapping() (interface{}, error)
 	// Get the local instance
 	GetInstance() (interface{}, error)
 	// Get all Volumes available from infrastructure and storage platform
@@ -115,7 +119,7 @@ func GetDrivers(storageDrivers string) (map[string]Driver, error) {
 	}
 
 	for name, initFunc := range driverInitFuncs {
-		if len(storageDriversArr) > 0 && !stringInSlice(name, storageDriversArr) {
+		if len(storageDriversArr) > 0 && !util.StringInSlice(name, storageDriversArr) {
 			continue
 		}
 		drivers[name], err = initFunc()

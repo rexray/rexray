@@ -11,7 +11,7 @@ import (
 
 	"github.com/emccode/goscaleio"
 	types "github.com/emccode/goscaleio/types/v1"
-	"github.com/emccode/rexray/storagedriver"
+	"github.com/emccode/rexray/drivers/storage"
 )
 
 var (
@@ -51,22 +51,22 @@ func Init() (storagedriver.Driver, error) {
 
 	client, err := goscaleio.NewClient()
 	if err != nil {
-		log.Fatalf("err: %v", err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	_, err = client.Authenticate(&goscaleio.ConfigConnect{endpoint, username, password})
 	if err != nil {
-		log.Fatalf("error authenticating: %v", err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	system, err := client.FindSystem(systemID, "")
 	if err != nil {
-		log.Fatalf("err: problem getting system: %v", err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	pd, err := system.FindProtectionDomain(protectionDomainID, "", "")
 	if err != nil {
-		log.Fatalf("err: problem getting protection domain: %v", err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	protectionDomain := goscaleio.NewProtectionDomain(client)
@@ -74,7 +74,7 @@ func Init() (storagedriver.Driver, error) {
 
 	sp, err := protectionDomain.FindStoragePool(storagePoolID, "", "")
 	if err != nil {
-		log.Fatalf("err: problem getting protection domain: %v", err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	storagePool := goscaleio.NewStoragePool(client)
@@ -82,12 +82,12 @@ func Init() (storagedriver.Driver, error) {
 
 	sdcguid, err := goscaleio.GetSdcLocalGUID()
 	if err != nil {
-		log.Fatalf("Error getting local sdc guid: %s", err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	sdc, err := system.FindSdc("SdcGuid", strings.ToUpper(sdcguid))
 	if err != nil {
-		log.Fatalf("Error finding Sdc %s: %s", sdcguid, err)
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
 	driver := &Driver{
@@ -99,7 +99,7 @@ func Init() (storagedriver.Driver, error) {
 	}
 
 	if os.Getenv("REXRAY_DEBUG") == "true" {
-		log.Println("Driver Initialized: " + providerName)
+		log.Println("Storage Driver Initialized: " + providerName)
 	}
 
 	return driver, nil
@@ -135,7 +135,7 @@ func (driver *Driver) getBlockDevices() ([]*goscaleio.SdcMappedVolume, error) {
 	return volumeMaps, nil
 }
 
-func (driver *Driver) GetBlockDeviceMapping() (interface{}, error) {
+func (driver *Driver) GetVolumeMapping() (interface{}, error) {
 	blockDevices, err := driver.getBlockDevices()
 	if err != nil {
 		return nil, err

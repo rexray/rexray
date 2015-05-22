@@ -159,13 +159,16 @@ func (driver *Driver) Unmount(volumeName, volumeID string) error {
 	}
 
 	if len(volumeAttachment) == 0 {
-		fmt.Println("HERE")
 		return nil
 	}
 
 	mounts, err := rros.GetMounts(volumeAttachment[0].DeviceName, "")
 	if err != nil {
 		return err
+	}
+
+	if len(mounts) == 0 {
+		return nil
 	}
 
 	err = rros.Unmount(mounts[0].Mountpoint)
@@ -256,8 +259,10 @@ func (driver *Driver) Create(volumeName string) error {
 	}
 
 	switch {
-	case len(volumes) > 0:
-		return errors.New(fmt.Sprintf("Volume by the name of %s already exists", volumeName))
+	case len(volumes) == 1:
+		return nil
+	case len(volumes) > 1:
+		return errors.New(fmt.Sprintf("Too many volumes returned by name of %s", volumeName))
 	}
 
 	volumeType := os.Getenv("REXRAY_DOCKER_VOLUMETYPE")

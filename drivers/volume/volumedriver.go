@@ -18,9 +18,15 @@ var Adapters map[string]Driver
 
 type Driver interface {
 	//MountVolume will attach a Volume, prepare for mounting, and mount
-	MountVolume(string, string, bool, string) (string, error)
+	Mount(string, string, bool, string) (string, error)
 	//UnmountVolume will unmount and detach a Volume
-	UnmountVolume(string, string) error
+	Unmount(string, string) error
+	//Path will return the mountpoint of a volume
+	Path(string, string) (string, error)
+	//Create will create a remote volume
+	Create(string) error
+	//Remove will remove a remote volume
+	Remove(string) error
 }
 
 type InitFunc func() (Driver, error)

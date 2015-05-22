@@ -90,7 +90,7 @@ func (driver *Driver) Mount(device, target, mountOptions, mountLabel string) err
 }
 
 // Format will look for ext4/xfs and overwrite it is it doesn't exist
-func (driver *Driver) Format(deviceName, fsType string, overwriteFs bool) error {
+func (driver *Driver) Format(deviceName, newFsType string, overwriteFs bool) error {
 
 	var fsDetected bool
 
@@ -105,7 +105,7 @@ func (driver *Driver) Format(deviceName, fsType string, overwriteFs bool) error 
 	}
 
 	if overwriteFs || !fsDetected {
-		switch fsType {
+		switch newFsType {
 		case "ext4":
 			if err := exec.Command("mkfs.ext4", deviceName).Run(); err != nil {
 				return fmt.Errorf("Problem creating filesystem on %s with error %s", deviceName, err)

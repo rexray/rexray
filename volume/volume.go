@@ -34,16 +34,37 @@ func initVolumeDrivers() {
 
 }
 
-func MountVolume(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
+func Mount(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
 	for _, driver := range volumedriver.Adapters {
-		return driver.MountVolume(volumeName, volumeID, overwriteFs, newFsType)
+		return driver.Mount(volumeName, volumeID, overwriteFs, newFsType)
 	}
 	return "", errors.New("No Volume Manager specified")
 }
 
-func UnmountVolume(volumeName, volumeID string) error {
+func Unmount(volumeName, volumeID string) error {
 	for _, driver := range volumedriver.Adapters {
-		return driver.UnmountVolume(volumeName, volumeID)
+		return driver.Unmount(volumeName, volumeID)
+	}
+	return errors.New("No Volume Manager specified")
+}
+
+func Path(volumeName, volumeID string) (string, error) {
+	for _, driver := range volumedriver.Adapters {
+		return driver.Path(volumeName, volumeID)
+	}
+	return "", errors.New("No Volume Manager specified")
+}
+
+func Create(volumeName string) error {
+	for _, driver := range volumedriver.Adapters {
+		return driver.Create(volumeName)
+	}
+	return errors.New("No Volume Manager specified")
+}
+
+func Remove(volumeName string) error {
+	for _, driver := range volumedriver.Adapters {
+		return driver.Remove(volumeName)
 	}
 	return errors.New("No Volume Manager specified")
 }

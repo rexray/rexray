@@ -28,6 +28,15 @@ var daemonConfig struct {
 	httpServer   *http.Server
 }
 
+type volumeDriverResponse struct {
+	Mountpoint string `json:",ommitempty"`
+	Err        error  `json:",ommitempty"`
+}
+
+type pluginRequest struct {
+	Name string `json:"name,ommitempty"`
+}
+
 func Start(host string) error {
 
 	if host == "" {
@@ -51,21 +60,39 @@ func Start(host string) error {
 		return ErrBadProtocol
 	}
 
-	type pluginRequest struct {
-		Name string `json:"name,ommitempty"`
-	}
-
 	mux.HandleFunc("/Plugin.Activate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
 		fmt.Fprintln(w, `{"Implements": ["VolumeDriver"]}`)
 	})
 
 	mux.HandleFunc("/VolumeDriver.Create", func(w http.ResponseWriter, r *http.Request) {
+		var pr pluginRequest
+		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
+			http.Error(w, err.Error(), 500)
+		}
+
+		err := volume.Create(pr.Name)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
 		fmt.Fprintln(w, `{}`)
 	})
 
 	mux.HandleFunc("/VolumeDriver.Remove", func(w http.ResponseWriter, r *http.Request) {
+		var pr pluginRequest
+		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
+			http.Error(w, err.Error(), 500)
+		}
+
+		err := volume.Remove(pr.Name)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
 		fmt.Fprintln(w, `{}`)
 	})
@@ -76,18 +103,7 @@ func Start(host string) error {
 			http.Error(w, err.Error(), 500)
 		}
 
-		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
-		fmt.Fprintln(w, fmt.Sprintf("{\"Mountpoint\": \"%s\"}", ""))
-	})
-
-	mux.HandleFunc("/VolumeDriver.Mount", func(w http.ResponseWriter, r *http.Request) {
-		var pr pluginRequest
-		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
-
-		mountPath, err := volume.MountVolume(pr.Name, "", false, "ext4")
+		mountPath, err := volume.Path(pr.Name, "")
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
@@ -97,16 +113,34 @@ func Start(host string) error {
 		fmt.Fprintln(w, fmt.Sprintf("{\"Mountpoint\": \"%s\"}", mountPath))
 	})
 
-	mux.HandleFunc("/VolumeDriver.Umount", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/VolumeDriver.Mount", func(w http.ResponseWriter, r *http.Request) {
+		var pr pluginRequest
+		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		mountPath, err := volume.Mount(pr.Name, "", false, "")
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
+		fmt.Fprintln(w, fmt.Sprintf("{\"Mountpoint\": \"%s\"}", mountPath))
+	})
+
+	mux.HandleFunc("/VolumeDriver.Unmount", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, err.Error(), 500)
 		}
 
-		// p := hostVolumePath(pr.Name)
-		// if err := os.RemoveAll(p); err != nil {
-		// 	http.Error(w, err.Error(), 500)
-		// }
+		err := volume.Unmount(pr.Name, "")
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
 
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
 		fmt.Fprintln(w, `{}`)

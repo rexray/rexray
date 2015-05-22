@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/emccode/rexray/drivers/volume"
 	rros "github.com/emccode/rexray/os"
@@ -13,6 +14,10 @@ import (
 
 var (
 	providerName string
+)
+
+const (
+	defaultVolumeSize int64 = 16
 )
 
 type Driver struct{}
@@ -40,8 +45,8 @@ func getVolumeMountPath(name string) (string, error) {
 	return fmt.Sprintf("/var/lib/docker/volumes/%s", name), nil
 }
 
-// MountVolume will perform the steps to get an existing Volume with or without a fileystem mounted to a guest
-func (driver *Driver) MountVolume(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
+// Mount will perform the steps to get an existing Volume with or without a fileystem mounted to a guest
+func (driver *Driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
 
 	instances, err := storage.GetInstance()
 	if err != nil {
@@ -88,7 +93,10 @@ func (driver *Driver) MountVolume(volumeName, volumeID string, overwriteFs bool,
 		return mounts[0].Mountpoint, nil
 	}
 
-	if newFsType == "" {
+	switch {
+	case os.Getenv("REXRAY_DOCKER_VOLUMETYPE") != "":
+		newFsType = os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
+	case newFsType == "":
 		newFsType = "ext4"
 	}
 
@@ -112,8 +120,8 @@ func (driver *Driver) MountVolume(volumeName, volumeID string, overwriteFs bool,
 	return mountPath, nil
 }
 
-// UnmountVolume will perform the steps to unmount and existing volume and detach
-func (driver *Driver) UnmountVolume(volumeName, volumeID string) error {
+// Unmount will perform the steps to unmount and existing volume and detach
+func (driver *Driver) Unmount(volumeName, volumeID string) error {
 
 	instances, err := storage.GetInstance()
 	if err != nil {
@@ -144,6 +152,10 @@ func (driver *Driver) UnmountVolume(volumeName, volumeID string) error {
 		return err
 	}
 
+	if len(volumeAttachment) == 0 {
+		return nil
+	}
+
 	mounts, err := rros.GetMounts(volumeAttachment[0].DeviceName, "")
 	if err != nil {
 		return err
@@ -154,14 +166,137 @@ func (driver *Driver) UnmountVolume(volumeName, volumeID string) error {
 		return err
 	}
 
-	if len(volumeAttachment) == 0 {
-		return nil
-	}
-
 	err = storage.DetachVolume(false, volumes[0].VolumeID, "")
 	if err != nil {
 		return err
 	}
 	return nil
 
+}
+
+// Path returns the mounted path of the volume
+func (driver *Driver) Path(volumeName, volumeID string) (string, error) {
+	instances, err := storage.GetInstance()
+	if err != nil {
+		return "", err
+	}
+
+	switch {
+	case len(instances) == 0:
+		return "", errors.New("No instances")
+	case len(instances) > 1:
+		return "", errors.New("Too many instances returned, limit the storagedrivers")
+	}
+
+	volumes, err := storage.GetVolume(volumeID, volumeName)
+	if err != nil {
+		return "", err
+	}
+
+	switch {
+	case len(volumes) == 0:
+		return "", errors.New("No volumes returned by name")
+	case len(volumes) > 1:
+		return "", errors.New("Multiple volumes returned by name")
+	}
+
+	volumeAttachment, err := storage.GetVolumeAttach(volumes[0].VolumeID, instances[0].InstanceID)
+	if err != nil {
+		return "", err
+	}
+
+	if len(volumeAttachment) == 0 {
+		return "", nil
+	}
+
+	mounts, err := rros.GetMounts(volumeAttachment[0].DeviceName, "")
+	if err != nil {
+		return "", err
+	}
+
+	if len(mounts) == 0 {
+		return "", nil
+	}
+
+	return mounts[0].Mountpoint, nil
+}
+
+// Create will create a remote volume
+func (driver *Driver) Create(volumeName string) error {
+	instances, err := storage.GetInstance()
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case len(instances) == 0:
+		return errors.New("No instances")
+	case len(instances) > 1:
+		return errors.New("Too many instances returned, limit the storagedrivers")
+	}
+
+	volumes, err := storage.GetVolume("", volumeName)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case len(volumes) > 0:
+		return errors.New("Volume by this name already exists")
+	}
+
+	volumeType := os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
+	IOPSi, _ := strconv.Atoi(os.Getenv("REXRAY_DOCKER_IOPS"))
+	IOPS := int64(IOPSi)
+	sizei, _ := strconv.Atoi(os.Getenv("REXRAY_DOCKER_SIZE"))
+	size := int64(sizei)
+	if size == 0 {
+		size = defaultVolumeSize
+	}
+	availabilityZone := os.Getenv("REXRAY_DOCKER_AVAILABILITYZONE")
+
+	_, err = storage.CreateVolume(false, volumeName, "", "", volumeType, IOPS, size, availabilityZone)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Remove will remove a remote volume
+func (driver *Driver) Remove(volumeName string) error {
+	instances, err := storage.GetInstance()
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case len(instances) == 0:
+		return errors.New("No instances")
+	case len(instances) > 1:
+		return errors.New("Too many instances returned, limit the storagedrivers")
+	}
+
+	volumes, err := storage.GetVolume("", volumeName)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case len(volumes) == 0:
+		return errors.New("No volumes returned by name")
+	case len(volumes) > 1:
+		return errors.New("Multiple volumes returned by name")
+	}
+
+	err = driver.Unmount("", volumes[0].VolumeID)
+	if err != nil {
+		return err
+	}
+
+	err = storage.RemoveVolume(volumes[0].VolumeID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

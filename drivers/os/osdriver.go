@@ -25,12 +25,16 @@ var Adapters map[string]Driver
 type Driver interface {
 	// Shows the existing mount points
 	GetMounts(string, string) ([]*mount.MountInfo, error)
+
 	// Check whether path is mounted or not
 	Mounted(string) (bool, error)
+
 	// Unmount based on a path
 	Unmount(string) error
+
 	// Mount based on a device, target, options, label
 	Mount(string, string, string, string) error
+
 	// Format a device with a FS type
 	Format(string, string, bool) error
 }

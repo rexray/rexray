@@ -47,6 +47,9 @@ func getVolumeMountPath(name string) (string, error) {
 
 // Mount will perform the steps to get an existing Volume with or without a fileystem mounted to a guest
 func (driver *Driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
+	if volumeName == "" && volumeID == "" {
+		return "", errors.New("Missing volume name or ID")
+	}
 
 	instances, err := storage.GetInstance()
 	if err != nil {
@@ -122,6 +125,9 @@ func (driver *Driver) Mount(volumeName, volumeID string, overwriteFs bool, newFs
 
 // Unmount will perform the steps to unmount and existing volume and detach
 func (driver *Driver) Unmount(volumeName, volumeID string) error {
+	if volumeName == "" && volumeID == "" {
+		return errors.New("Missing volume name or ID")
+	}
 
 	instances, err := storage.GetInstance()
 	if err != nil {
@@ -153,6 +159,7 @@ func (driver *Driver) Unmount(volumeName, volumeID string) error {
 	}
 
 	if len(volumeAttachment) == 0 {
+		fmt.Println("HERE")
 		return nil
 	}
 
@@ -176,6 +183,10 @@ func (driver *Driver) Unmount(volumeName, volumeID string) error {
 
 // Path returns the mounted path of the volume
 func (driver *Driver) Path(volumeName, volumeID string) (string, error) {
+	if volumeName == "" && volumeID == "" {
+		return "", errors.New("Missing volume name or ID")
+	}
+
 	instances, err := storage.GetInstance()
 	if err != nil {
 		return "", err
@@ -223,6 +234,10 @@ func (driver *Driver) Path(volumeName, volumeID string) (string, error) {
 
 // Create will create a remote volume
 func (driver *Driver) Create(volumeName string) error {
+	if volumeName == "" {
+		return errors.New("Missing volume name")
+	}
+
 	instances, err := storage.GetInstance()
 	if err != nil {
 		return err
@@ -242,7 +257,7 @@ func (driver *Driver) Create(volumeName string) error {
 
 	switch {
 	case len(volumes) > 0:
-		return errors.New("Volume by this name already exists")
+		return errors.New(fmt.Sprintf("Volume by the name of %s already exists", volumeName))
 	}
 
 	volumeType := os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
@@ -264,6 +279,10 @@ func (driver *Driver) Create(volumeName string) error {
 
 // Remove will remove a remote volume
 func (driver *Driver) Remove(volumeName string) error {
+	if volumeName == "" {
+		return errors.New("Missing volume name")
+	}
+
 	instances, err := storage.GetInstance()
 	if err != nil {
 		return err

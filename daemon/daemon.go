@@ -34,7 +34,7 @@ type volumeDriverResponse struct {
 }
 
 type pluginRequest struct {
-	Name string `json:"name,ommitempty"`
+	Name string `json:"Name,ommitempty"`
 }
 
 func Start(host string) error {
@@ -68,12 +68,13 @@ func Start(host string) error {
 	mux.HandleFunc("/VolumeDriver.Create", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			return
 		}
 
 		err := volume.Create(pr.Name)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
@@ -84,12 +85,13 @@ func Start(host string) error {
 	mux.HandleFunc("/VolumeDriver.Remove", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			return
 		}
 
 		err := volume.Remove(pr.Name)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
@@ -100,12 +102,13 @@ func Start(host string) error {
 	mux.HandleFunc("/VolumeDriver.Path", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			return
 		}
 
 		mountPath, err := volume.Path(pr.Name, "")
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
@@ -116,13 +119,13 @@ func Start(host string) error {
 	mux.HandleFunc("/VolumeDriver.Mount", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
 		mountPath, err := volume.Mount(pr.Name, "", false, "")
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
@@ -133,12 +136,13 @@ func Start(host string) error {
 	mux.HandleFunc("/VolumeDriver.Unmount", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			return
 		}
 
 		err := volume.Unmount(pr.Name, "")
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 

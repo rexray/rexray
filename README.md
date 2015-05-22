@@ -186,6 +186,33 @@ These represent the methods that should be available from Volume drivers.
     	Remove(string) error
     }
 
+## REX-Ray Daemon
+The daemon allows you to advertise a ```HTTP``` interface to provide capabilities that match a ```Volume Manager``` requirements.  The first example of this is for Docker.
+
+### Example
+First run REX-Ray as a daemon, possibly via CLI with ```rexray --daemon```.  In the case of doing local tests, since it passes HTTP via Unix socket, you can use tools like ```socat``` and others like ```curl-unix-socket``` to talk with the API.
+
+#### socat
+This can be used for as a simple test of the messages that do not have bodies since it is not HTTP aware.  The following will test a basic activation message.
+
+    echo -e "GET /Plugin.Activate HTTP/1.1\r\n" | socat unix-connect:/usr/share/docker/plugins/rexray.sock STDIO
+
+#### curl-unix-socket (go get github.com/Soulou/curl-unix-socket)
+This utility is HTTP and Unix socket aware so can do POST messages in a HTTP friendly manner which allows us to specify a body.  
+
+    /usr/src/go/bin/curl-unix-socket -v -X POST -d '{"Name":"test22"}\r\n' unix:///usr/share/docker/plugins/rexray.sock
+
+    > POST /VolumeDriver.Mount HTTP/1.1
+    > Socket: /usr/share/docker/plugins/rexray.sock
+    > Content-Length: 21
+    >
+    < HTTP/1.1 200 OK
+    < Content-Type: appplication/vnd.docker.plugins.v1+json
+    < Date: Fri, 22 May 2015 15:52:21 GMT
+    < Content-Length: 49
+    {"Mountpoint": "/var/lib/docker/volumes/test22"}
+
+
 ## Contributions
 We are actively looking for contributors to this project.  This can involve any number of area.
 

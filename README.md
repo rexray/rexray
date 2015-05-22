@@ -25,25 +25,33 @@ Once the introspection has occured, ```Rexray``` can then manage manage storage 
 ## CLI Usage Examples
 The CLI can be built, or you can retrieve pre-compiled executables from the Github releases.
 
-    get-instance - get the intro-spected instances for this server
-    get-blockdevice - get the block devices and respective volumes that are attached to this server
-    get-volume - get all volumes available to be attached
-    new-volume - create a new volume from scratch or from a snapshot
-    remove-volume - remove a volume
-    get-snapshot - get all or specific snapshots
-    new-snapshot - create a new snapshot on a volume
-    remove-snapshot - remove a snapshot
-    copy-snapshot - copy a snapshot to another region
-    attach-volume - attach volume to this server
-    detach-volume - detach volume from this server
-    version - show Rexray version
+    attach-volume - attach a remote volume to this instance
+    copy-snapshot - copy a snapshot to another snapshot
+    detach-volume - detach a remote volume from this instance
+    format-device - format an attached device
+    get-instance - get the local storage instance information
+    get-mount - get the local mounts
+    get-snapshot - get remote volume snapshots
+    get-volume - get remote volumes
+    get-volumemap - get volume mapping
+    get-volumepath - get local mount path of a remote volume
+    mount-device - mount a local device to a mount path
+    mount-volume - mount a remote volume to a mount path
+    new-snapshot - create a new snapshot
+    new-volume - create a new volume
+    remove-snapshot - remote a snapshot
+    remove-volume - remove a remote volume
+    unmount-device - unmount a local device
+    unmount-volume - unmount a remote volume from this instance
+    version
 
 
 ### Azure
 
 ### AWS
     export REXRAY_STORAGEDRIVERS=ec2
-    AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key" ./rexray get-volume
+    export AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key"
+    ./rexray get-volume
 
     - providername: ec2
       instanceid: i-695bb6ab
@@ -71,7 +79,8 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
 
 ### RackSpace
     export REXRAY_STORAGEDRIVERS=rackspace
-    OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password' ./rexray get-volume
+    export OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password'
+    ./rexray get-volume
 
     - providername: RackSpace
       instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7

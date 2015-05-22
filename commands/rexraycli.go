@@ -72,7 +72,7 @@ var RexrayCmd = &cobra.Command{
 var versionCmd = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("\nRexray Version: %v\n", "0.1.150429")
+		fmt.Printf("\nRexray Version: %v\n", "0.1.150521")
 	},
 }
 
@@ -427,25 +427,26 @@ func Exec() {
 
 //AddCommands function
 func AddCommands() {
-	RexrayCmd.AddCommand(versionCmd)
-	RexrayCmd.AddCommand(getinstanceCmd)
-	RexrayCmd.AddCommand(getvolumemapCmd)
-	RexrayCmd.AddCommand(getvolumeCmd)
-	RexrayCmd.AddCommand(getsnapshotCmd)
-	RexrayCmd.AddCommand(newsnapshotCmd)
-	RexrayCmd.AddCommand(removesnapshotCmd)
-	RexrayCmd.AddCommand(newvolumeCmd)
-	RexrayCmd.AddCommand(removevolumeCmd)
+
 	RexrayCmd.AddCommand(attachvolumeCmd)
-	RexrayCmd.AddCommand(detachvolumeCmd)
 	RexrayCmd.AddCommand(copysnapshotCmd)
-	RexrayCmd.AddCommand(getmountCmd)
-	RexrayCmd.AddCommand(mountdeviceCmd)
-	RexrayCmd.AddCommand(unmountdeviceCmd)
+	RexrayCmd.AddCommand(detachvolumeCmd)
 	RexrayCmd.AddCommand(formatdeviceCmd)
-	RexrayCmd.AddCommand(mountvolumeCmd)
-	RexrayCmd.AddCommand(unmountvolumeCmd)
+	RexrayCmd.AddCommand(getinstanceCmd)
+	RexrayCmd.AddCommand(getmountCmd)
+	RexrayCmd.AddCommand(getsnapshotCmd)
+	RexrayCmd.AddCommand(getvolumeCmd)
+	RexrayCmd.AddCommand(getvolumemapCmd)
 	RexrayCmd.AddCommand(getvolumepathCmd)
+	RexrayCmd.AddCommand(mountdeviceCmd)
+	RexrayCmd.AddCommand(mountvolumeCmd)
+	RexrayCmd.AddCommand(newsnapshotCmd)
+	RexrayCmd.AddCommand(newvolumeCmd)
+	RexrayCmd.AddCommand(removesnapshotCmd)
+	RexrayCmd.AddCommand(removevolumeCmd)
+	RexrayCmd.AddCommand(unmountdeviceCmd)
+	RexrayCmd.AddCommand(unmountvolumeCmd)
+	RexrayCmd.AddCommand(versionCmd)
 }
 
 var rexrayCmdV *cobra.Command

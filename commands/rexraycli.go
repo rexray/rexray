@@ -366,7 +366,7 @@ var mountvolumeCmd = &cobra.Command{
 			log.Fatal("Missing --volumename or --volumeid")
 		}
 
-		mountPath, err := volume.MountVolume(volumeName, volumeID, overwriteFs, fsType)
+		mountPath, err := volume.Mount(volumeName, volumeID, overwriteFs, fsType)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -388,11 +388,34 @@ var unmountvolumeCmd = &cobra.Command{
 			log.Fatal("Missing --volumename or --volumeid")
 		}
 
-		err := volume.UnmountVolume(volumeName, volumeID)
+		err := volume.Unmount(volumeName, volumeID)
 		if err != nil {
 			log.Fatal(err)
 		}
 
+	},
+}
+
+var getvolumepathCmd = &cobra.Command{
+	Use: "get-volumepath",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if volumeName == "" && volumeID == "" {
+			log.Fatal("Missing --volumename or --volumeid")
+		}
+
+		mountPath, err := volume.Path(volumeName, volumeID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if mountPath != "" {
+			yamlOutput, err := yaml.Marshal(&mountPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf(string(yamlOutput))
+		}
 	},
 }
 
@@ -422,6 +445,7 @@ func AddCommands() {
 	RexrayCmd.AddCommand(formatdeviceCmd)
 	RexrayCmd.AddCommand(mountvolumeCmd)
 	RexrayCmd.AddCommand(unmountvolumeCmd)
+	RexrayCmd.AddCommand(getvolumepathCmd)
 }
 
 var rexrayCmdV *cobra.Command
@@ -477,6 +501,8 @@ func init() {
 	mountvolumeCmd.Flags().StringVar(&fsType, "fstype", "", "fstype")
 	unmountvolumeCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	unmountvolumeCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
+	getvolumepathCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
+	getvolumepathCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
 
 	rexrayCmdV = RexrayCmd
 

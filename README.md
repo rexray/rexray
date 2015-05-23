@@ -200,7 +200,7 @@ This can be used for as a simple test of the messages that do not have bodies si
 #### curl-unix-socket (go get github.com/Soulou/curl-unix-socket)
 This utility is HTTP and Unix socket aware so can do POST messages in a HTTP friendly manner which allows us to specify a body.  
 
-    /usr/src/go/bin/curl-unix-socket -v -X POST -d '{"Name":"test22"}\r\n' unix:///usr/share/docker/plugins/rexray.sock
+    /usr/src/go/bin/curl-unix-socket -v -X POST -d '{"Name":"test22"}\r\n' unix:///usr/share/docker/plugins/rexray.sock:/VolumeDriver.Mount
 
     > POST /VolumeDriver.Mount HTTP/1.1
     > Socket: /usr/share/docker/plugins/rexray.sock

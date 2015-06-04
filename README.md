@@ -13,6 +13,17 @@ The driver to be used is automatically detected or hints can be provided.  Drive
 ## State
 We have a first release available that support all of the following capabilities!  
 
+## Current Storage Drivers
+- Block
+ - Cloud infrastructure
+  - EC2
+  - OpenStack
+ - Software-Defined with Kernel Module
+  - ScaleIO
+ - iSCSI
+  - XtremIO (with/without Multipath and Device-Mapper)
+- NAS
+
 ## Examples
 One of the best examples of this in action would be to review the [Dogged](https://github.com/emccode/dogged) repo.  This repo maintains efforts for the EMC {code} team relating to embedding REX-Ray inside of Container Engines such as Docker.  Here you will REX-Ray enabling Docker to manage it's own storage via Container Data Volumes.
 
@@ -71,6 +82,13 @@ REX-Ray can be used independently as a CLI tool instead of embedding via Go pack
     GOSCALEIO_SYSTEMID - (SCALEIO)
     GOSCALEIO_PROTECTIONDOMAINID - (SCALEIO)
     GOSCALEIO_STORAGEPOOLID - (SCALEIO)
+    GOXTREMIO_ENDPOINT (XTREMIO) - the API endpoint, ie. https://10.5.132.140/api/json
+    GOXTREMIO_USERNAME (XTREMIO) - the username
+    GOXTREMIO_PASSWORD (XTREMIO) - the password
+    GOXTREMIO_INSECURE (XTREMIO) - whether to skip SSL validation
+    GOREXRAY_XTREMIO_DM (XTREMIO) - whether device-mapper is installed and claiming devices
+    GOREXRAY_XTREMIO_MULTIPATH (XTREMIO) - whether multipath is installed and claiming devices, overrides DM setting
+
 
 ## Environment Variables - Volume Drivers - Docker
 
@@ -85,6 +103,9 @@ REX-Ray can be used independently as a CLI tool instead of embedding via Go pack
 - AWS
 - RackSpace
 - ScaleIO
+- XtremIO
+  - iSCSI only
+  - requires that an XtremIO device is already advertised host and working properly
 - ..more to come
 
 ## Storage Driver - Interface

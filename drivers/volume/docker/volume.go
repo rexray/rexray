@@ -87,6 +87,10 @@ func (driver *Driver) Mount(volumeName, volumeID string, overwriteFs bool, newFs
 		}
 	}
 
+	if len(volumeAttachment) == 0 {
+		return "", errors.New("Volume did not attach")
+	}
+
 	mounts, err := rros.GetMounts(volumeAttachment[0].DeviceName, "")
 	if err != nil {
 		return "", err

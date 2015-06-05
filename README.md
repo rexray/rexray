@@ -21,6 +21,12 @@ Once the introspection has occured, ```Rexray``` can then manage manage storage 
     GOSCALEIO_SYSTEMID - (SCALEIO)
     GOSCALEIO_PROTECTIONDOMAINID - (SCALEIO)
     GOSCALEIO_STORAGEPOOLID - (SCALEIO)
+    GOXTREMIO_ENDPOINT (XTREMIO) - the API endpoint, ie. https://10.5.132.140/api/json
+    GOXTREMIO_USERNAME (XTREMIO) - the username
+    GOXTREMIO_PASSWORD (XTREMIO) - the password
+    GOXTREMIO_INSECURE (XTREMIO) - whether to skip SSL validation
+    REXRAY_XTREMIO_DM (XTREMIO) - whether device-mapper is installed and claiming devices
+    REXRAY_XTREMIO_MULTIPATH (XTREMIO) - whether multipath is installed and claiming devices, overrides DM setting
 
 ## CLI Usage Examples
 The CLI can be built, or you can retrieve pre-compiled executables from the Github releases.
@@ -100,6 +106,13 @@ The CLI can be built, or you can retrieve pre-compiled executables from the Gith
     export GOSCALEIO_ENDPOINT=https://mdm1.scaleio.local:443/api GOSCALEIO_INSECURE=true GOSCALEIO_USERNAME=admin GOSCALEIO_PASSWORD=Scaleio123 GOSCALEIO_SYSTEMID=1aa75ddc59b6a8f7 GOSCALEIO_PROTECTIONDOMAINID=ea81096700000000 GOSCALEIO_STORAGEPOOLID=1041757800000001
     ./rexray get-volume
 
+### XtremIO (iSCSI)
+    export GOXTREMIO_ENDPOINT="https://10.5.132.140/api/json"
+    export GOXTREMIO_INSECURE="true"
+    export GOXTREMIO_USERNAME="admin"
+    export GOXTREMIO_PASSWORD="Xtrem10"
+    export REXRAY_XTREMIO_MULTIPATH=true
+    ./rexray get-volume
 
 ### vSphere
 

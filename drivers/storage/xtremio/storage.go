@@ -99,8 +99,8 @@ func Init() (storagedriver.Driver, error) {
 		return nil, err
 	}
 
-	useDeviceMapper, _ := strconv.ParseBool(os.Getenv("GOREXRAY_XTREMIO_DM"))
-	useMultipath, _ := strconv.ParseBool(os.Getenv("GOREXRAY_XTREMIO_MULTIPATH"))
+	useDeviceMapper, _ := strconv.ParseBool(os.Getenv("REXRAY_XTREMIO_DM"))
+	useMultipath, _ := strconv.ParseBool(os.Getenv("REXRAY_XTREMIO_MULTIPATH"))
 
 	driver := &Driver{
 		Initiator:       initiator,

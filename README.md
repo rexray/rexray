@@ -86,8 +86,8 @@ REX-Ray can be used independently as a CLI tool instead of embedding via Go pack
     GOXTREMIO_USERNAME (XTREMIO) - the username
     GOXTREMIO_PASSWORD (XTREMIO) - the password
     GOXTREMIO_INSECURE (XTREMIO) - whether to skip SSL validation
-    GOREXRAY_XTREMIO_DM (XTREMIO) - whether device-mapper is installed and claiming devices
-    GOREXRAY_XTREMIO_MULTIPATH (XTREMIO) - whether multipath is installed and claiming devices, overrides DM setting
+    REXRAY_XTREMIO_DM (XTREMIO) - whether device-mapper is installed and claiming devices
+    REXRAY_XTREMIO_MULTIPATH (XTREMIO) - whether multipath is installed and claiming devices, overrides DM setting
 
 
 ## Environment Variables - Volume Drivers - Docker

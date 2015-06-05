@@ -743,6 +743,11 @@ func (driver *Driver) DetachVolume(notUsed bool, volumeID string, blank string) 
 	if err != nil {
 		return err
 	}
+
+	if len(lunMaps) == 0 {
+		return nil
+	}
+
 	index := getIndex(lunMaps[0].Href)
 	if err = goxtremio.DeleteLunMap(index, ""); err != nil {
 		return err

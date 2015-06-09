@@ -41,12 +41,15 @@ func init() {
 func Init() (storagedriver.Driver, error) {
 
 	var (
-		username           = os.Getenv("GOSCALEIO_USERNAME")
-		password           = os.Getenv("GOSCALEIO_PASSWORD")
-		endpoint           = os.Getenv("GOSCALEIO_ENDPOINT")
-		systemID           = os.Getenv("GOSCALEIO_SYSTEMID")
-		protectionDomainID = os.Getenv("GOSCALEIO_PROTECTIONDOMAINID")
-		storagePoolID      = os.Getenv("GOSCALEIO_STORAGEPOOLID")
+		username             = os.Getenv("GOSCALEIO_USERNAME")
+		password             = os.Getenv("GOSCALEIO_PASSWORD")
+		endpoint             = os.Getenv("GOSCALEIO_ENDPOINT")
+		systemID             = os.Getenv("GOSCALEIO_SYSTEMID")
+		systemName           = os.Getenv("GOSCALEIO_SYSTEM")
+		protectionDomainID   = os.Getenv("GOSCALEIO_PROTECTIONDOMAINID")
+		protectionDomainName = os.Getenv("GOSCALEIO_PROTECTIONDOMAIN")
+		storagePoolID        = os.Getenv("GOSCALEIO_STORAGEPOOLID")
+		storagePoolName      = os.Getenv("GOSCALEIO_STORAGEPOOL")
 	)
 
 	client, err := goscaleio.NewClient()
@@ -59,12 +62,12 @@ func Init() (storagedriver.Driver, error) {
 		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
-	system, err := client.FindSystem(systemID, "")
+	system, err := client.FindSystem(systemID, systemName, "")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
 
-	pd, err := system.FindProtectionDomain(protectionDomainID, "", "")
+	pd, err := system.FindProtectionDomain(protectionDomainID, protectionDomainName, "")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
@@ -72,7 +75,7 @@ func Init() (storagedriver.Driver, error) {
 	protectionDomain := goscaleio.NewProtectionDomain(client)
 	protectionDomain.ProtectionDomain = pd
 
-	sp, err := protectionDomain.FindStoragePool(storagePoolID, "", "")
+	sp, err := protectionDomain.FindStoragePool(storagePoolID, storagePoolName, "")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, err)
 	}
@@ -161,7 +164,7 @@ func (driver *Driver) GetVolumeMapping() (interface{}, error) {
 func (driver *Driver) getVolume(volumeID, volumeName string) ([]*types.Volume, error) {
 	volumes, err := driver.StoragePool.GetVolume("", volumeID, "", volumeName)
 	if err != nil {
-		log.Fatalf("error getting volumes: %v", err)
+		return nil, err
 	}
 	return volumes, nil
 }

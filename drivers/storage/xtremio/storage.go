@@ -94,6 +94,10 @@ func Init() (storagedriver.Driver, error) {
 		return nil, err
 	}
 
+	if err := goxtremio.New(); err != nil {
+		return nil, err
+	}
+
 	initiator, err := goxtremio.GetInitiator("", iqn)
 	if err != nil {
 		return nil, err

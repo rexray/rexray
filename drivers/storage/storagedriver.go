@@ -28,6 +28,7 @@ type BlockDevice struct {
 	DeviceName   string
 	Region       string
 	Status       string
+	NetworkName  string
 }
 
 type Instance struct {
@@ -55,6 +56,7 @@ type Volume struct {
 	VolumeType       string
 	IOPS             int64
 	Size             string
+	NetworkName      string
 	Attachments      []*VolumeAttachment
 }
 

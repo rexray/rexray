@@ -291,6 +291,7 @@ func (driver *Driver) GetVolumeMapping() (interface{}, error) {
 							Region:       volume.SysID[0].(string),
 							DeviceName:   blockDeviceName,
 							VolumeID:     strconv.Itoa(volume.Index),
+							NetworkName:  naa,
 							Status:       "",
 						}
 						BlockDevices = append(BlockDevices, sdBlockDevice)
@@ -373,6 +374,7 @@ func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error
 			VolumeID:         strconv.Itoa(volume.Index),
 			Size:             strconv.Itoa(volSize / 1024 / 1024),
 			AvailabilityZone: az,
+			NetworkName:      volume.NaaName,
 			Attachments:      attachmentsSD,
 		}
 		volumesSD = append(volumesSD, volumeSD)

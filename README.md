@@ -65,6 +65,7 @@ REX-Ray can be used independently as a CLI tool instead of embedding via Go pack
     REXRAY_STORAGEDRIVERS (optional) - only do checks using these drivers
     REXRAY_OSDRIVERS (optional) - only do checks using these drivers
     REXRAY_VOLUMEDRIVERS (optional) - only do checks using these drivers
+    REXRAY_DAEMONDRIVERS (optional) - only run this daemon REST endpoint (default dockervolumedriver)
     REXRAY_MINVOLSIZE - minimum volume size to create
 
 ## Environment Variables - Storage Drivers

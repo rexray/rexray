@@ -328,3 +328,71 @@ func (driver *Driver) Remove(volumeName string) error {
 
 	return nil
 }
+
+// Attach will attach a volume to an instance
+func (driver *Driver) Attach(volumeName, instanceID string) (string, error) {
+	volumes, err := storage.GetVolume("", volumeName)
+	if err != nil {
+		return "", err
+	}
+
+	switch {
+	case len(volumes) == 0:
+		return "", errors.New("No volumes returned by name")
+	case len(volumes) > 1:
+		return "", errors.New("Multiple volumes returned by name")
+	}
+
+	_, err = storage.AttachVolume(true, volumes[0].VolumeID, instanceID)
+	if err != nil {
+		return "", err
+	}
+
+	volumes, err = storage.GetVolume("", volumeName)
+	if err != nil {
+		return "", err
+	}
+
+	return volumes[0].NetworkName, nil
+}
+
+// Remove will remove a remote volume
+func (driver *Driver) Detach(volumeName, instanceID string) error {
+	volume, err := storage.GetVolume("", volumeName)
+	if err != nil {
+		return err
+	}
+
+	return storage.DetachVolume(true, volume[0].VolumeID, instanceID)
+}
+
+// NetworkName will return relevant information about how a volume can be discovered on an OS
+func (driver *Driver) NetworkName(volumeName, instanceID string) (string, error) {
+	volumes, err := storage.GetVolume("", volumeName)
+	if err != nil {
+		return "", err
+	}
+
+	switch {
+	case len(volumes) == 0:
+		return "", errors.New("No volumes returned by name")
+	case len(volumes) > 1:
+		return "", errors.New("Multiple volumes returned by name")
+	}
+
+	volumeAttachment, err := storage.GetVolumeAttach(volumes[0].VolumeID, instanceID)
+	if err != nil {
+		return "", err
+	}
+
+	if len(volumeAttachment) == 0 {
+		return "", errors.New("Volume not attached")
+	}
+
+	volumes, err = storage.GetVolume("", volumeName)
+	if err != nil {
+		return "", err
+	}
+
+	return volumes[0].NetworkName, nil
+}

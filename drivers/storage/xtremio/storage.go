@@ -85,22 +85,29 @@ func getIQN() (string, error) {
 
 func Init() (storagedriver.Driver, error) {
 
-	if !isXtremIOAttached() {
-		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, "Device not detected")
-	}
+	remoteManagement, _ := strconv.ParseBool(os.Getenv("REXRAY_REMOTEMANAGEMENT"))
 
-	iqn, err := getIQN()
-	if err != nil {
-		return nil, err
+	if !isXtremIOAttached() && !remoteManagement {
+		return nil, fmt.Errorf("%s: %s", storagedriver.ErrDriverInstanceDiscovery, "Device not detected")
 	}
 
 	if err := goxtremio.New(); err != nil {
 		return nil, err
 	}
 
-	initiator, err := goxtremio.GetInitiator("", iqn)
-	if err != nil {
-		return nil, err
+	var iqn string
+	var initiator *xmsv3.Initiator
+	if !remoteManagement {
+		var err error
+		iqn, err = getIQN()
+		if err != nil {
+			return nil, err
+		}
+
+		initiator, err = goxtremio.GetInitiator("", iqn)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	useDeviceMapper, _ := strconv.ParseBool(os.Getenv("REXRAY_XTREMIO_DM"))
@@ -291,6 +298,7 @@ func (driver *Driver) GetVolumeMapping() (interface{}, error) {
 							Region:       volume.SysID[0].(string),
 							DeviceName:   blockDeviceName,
 							VolumeID:     strconv.Itoa(volume.Index),
+							NetworkName:  naa,
 							Status:       "",
 						}
 						BlockDevices = append(BlockDevices, sdBlockDevice)
@@ -373,6 +381,7 @@ func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error
 			VolumeID:         strconv.Itoa(volume.Index),
 			Size:             strconv.Itoa(volSize / 1024 / 1024),
 			AvailabilityZone: az,
+			NetworkName:      volume.NaaName,
 			Attachments:      attachmentsSD,
 		}
 		volumesSD = append(volumesSD, volumeSD)
@@ -649,7 +658,9 @@ func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) (
 	}
 
 	// doing a lookup here for intiator name as IG name, so limited to IG name as initiator name to work for now
+	//1) need to consider when instanceid is blank,need to lookup ig from instanceid
 
+	// if instanceID == "" {
 	initiatorGroup, err := goxtremio.GetInitiatorGroup("", driver.Initiator.Name)
 	if err != nil {
 		return nil, err
@@ -680,6 +691,8 @@ func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) (
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		_, _ = driver.GetVolumeMapping()
 	}
 
 	volumeAttachment, err := driver.GetVolumeAttach(volumeID, instanceID)

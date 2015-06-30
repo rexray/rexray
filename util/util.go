@@ -1,8 +1,10 @@
 package util
 
+import "strings"
+
 func StringInSlice(a string, list []string) bool {
 	for _, b := range list {
-		if b == a {
+		if strings.ToLower(b) == strings.ToLower(a) {
 			return true
 		}
 	}

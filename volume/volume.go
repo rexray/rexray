@@ -68,3 +68,24 @@ func Remove(volumeName string) error {
 	}
 	return errors.New("No Volume Manager specified")
 }
+
+func Attach(volumeName, instanceID string) (string, error) {
+	for _, driver := range volumedriver.Adapters {
+		return driver.Attach(volumeName, instanceID)
+	}
+	return "", errors.New("No Volume Manager specified")
+}
+
+func Detach(volumeName, instanceID string) error {
+	for _, driver := range volumedriver.Adapters {
+		return driver.Detach(volumeName, instanceID)
+	}
+	return errors.New("No Volume Manager specified")
+}
+
+func NetworkName(volumeName, instanceID string) (string, error) {
+	for _, driver := range volumedriver.Adapters {
+		return driver.NetworkName(volumeName, instanceID)
+	}
+	return "", errors.New("No Volume Manager specified")
+}

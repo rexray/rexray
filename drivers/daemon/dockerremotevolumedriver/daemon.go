@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	daemondriver.Register("dockervolumedriver", Init)
+	daemondriver.Register("dockerremotevolumedriver", Init)
 }
 
 type Driver struct{}
@@ -36,12 +36,13 @@ var daemonConfig struct {
 }
 
 type volumeDriverResponse struct {
-	Mountpoint string `json:",ommitempty"`
-	Err        error  `json:",ommitempty"`
+	NetworkName string `json:"Networkname,ommitempty"`
+	Err         error  `json:",ommitempty"`
 }
 
 type pluginRequest struct {
-	Name string `json:"Name,ommitempty"`
+	Name       string `json:"Name,ommitempty"`
+	InstanceID string `json:"Instanceid,ommitempty"`
 }
 
 func (driver *Driver) Start(host string) error {
@@ -69,10 +70,10 @@ func (driver *Driver) Start(host string) error {
 
 	mux.HandleFunc("/Plugin.Activate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
-		fmt.Fprintln(w, `{"Implements": ["VolumeDriver"]}`)
+		fmt.Fprintln(w, `{"Implements": ["RemoteVolumeDriver"]}`)
 	})
 
-	mux.HandleFunc("/VolumeDriver.Create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/RemoteVolumeDriver.Create", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
@@ -89,7 +90,7 @@ func (driver *Driver) Start(host string) error {
 		fmt.Fprintln(w, `{}`)
 	})
 
-	mux.HandleFunc("/VolumeDriver.Remove", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/RemoteVolumeDriver.Remove", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
@@ -106,48 +107,63 @@ func (driver *Driver) Start(host string) error {
 		fmt.Fprintln(w, `{}`)
 	})
 
-	mux.HandleFunc("/VolumeDriver.Path", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/RemoteVolumeDriver.NetworkName", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
-		mountPath, err := volume.Path(pr.Name, "")
+		if pr.InstanceID == "" {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", errors.New("Missing InstanceID").Error()), 500)
+			return
+		}
+
+		networkName, err := volume.NetworkName(pr.Name, pr.InstanceID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
-		fmt.Fprintln(w, fmt.Sprintf("{\"Mountpoint\": \"%s\"}", mountPath))
+		fmt.Fprintln(w, fmt.Sprintf("{\"Networkname\": \"%s\"}", networkName))
 	})
 
-	mux.HandleFunc("/VolumeDriver.Mount", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/RemoteVolumeDriver.Attach", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
-		mountPath, err := volume.Mount(pr.Name, "", false, "")
+		if pr.InstanceID == "" {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", errors.New("Missing InstanceID").Error()), 500)
+			return
+		}
+
+		networkName, err := volume.Attach(pr.Name, pr.InstanceID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
-		fmt.Fprintln(w, fmt.Sprintf("{\"Mountpoint\": \"%s\"}", mountPath))
+		fmt.Fprintln(w, fmt.Sprintf("{\"Networkname\": \"%s\"}", networkName))
 	})
 
-	mux.HandleFunc("/VolumeDriver.Unmount", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/RemoteVolumeDriver.Detach", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
 
-		err := volume.Unmount(pr.Name, "")
+		if pr.InstanceID == "" {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", errors.New("Missing InstanceID").Error()), 500)
+			return
+		}
+
+		err := volume.Detach(pr.Name, pr.InstanceID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return

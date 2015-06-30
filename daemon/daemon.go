@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/emccode/rexray/drivers/daemon"
+	"github.com/emccode/rexray/drivers/storage"
 )
 
 var (
@@ -39,6 +40,10 @@ func initDaemonDrivers() {
 }
 
 func Start(hostname string) error {
+	if len(storagedriver.Adapters) == 0 {
+		return errors.New("No storage driver initialized")
+	}
+
 	if len(daemondriver.Adapters) > 0 {
 		for _, driver := range daemondriver.Adapters {
 			return driver.Start(hostname)

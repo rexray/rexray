@@ -34,21 +34,34 @@ func init() {
 	debug = strings.ToUpper(os.Getenv("REXRAY_DEBUG"))
 }
 
-func GetDrivers(osDrivers string) (map[string]Driver, error) {
+func GetDrivers(daemonDrivers string) (map[string]Driver, error) {
 	var err error
-	var osDriversArr []string
-	if osDrivers != "" {
-		osDriversArr = strings.Split(osDrivers, ",")
+	var daemonDriversArr []string
+	if daemonDrivers != "" {
+		daemonDriversArr = strings.Split(daemonDrivers, ",")
 	}
 
 	if debug == "TRUE" {
 		fmt.Println(driverInitFuncs)
 	}
 
-	for name, initFunc := range driverInitFuncs {
-		if len(osDriversArr) > 0 && !util.StringInSlice(name, osDriversArr) {
+	driverPriority := []string{
+		"dockervolumedriver",
+		"dockerremotevolumedriver",
+	}
+
+	for _, name := range driverPriority {
+
+		if len(daemonDriversArr) > 0 && !util.StringInSlice(name, daemonDriversArr) {
 			continue
 		}
+
+		var initFunc InitFunc
+		var ok bool
+		if initFunc, ok = driverInitFuncs[name]; !ok {
+			continue
+		}
+
 		drivers[name], err = initFunc()
 		if err != nil {
 			if debug == "TRUE" {

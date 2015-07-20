@@ -5,28 +5,35 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/emccode/rexray/drivers/daemon"
 	"github.com/emccode/rexray/volume"
 )
 
+const driverName = "dockerremotevolumedriver"
+
 func init() {
-	daemondriver.Register("dockerremotevolumedriver", Init)
+	daemondriver.Register(driverName, Init)
 }
 
 type Driver struct{}
 
 func Init() (daemondriver.Driver, error) {
+	if os.Getenv("REXRAY_DEBUG") == "true" {
+		log.Println("Daemon Driver Initialized: " + driverName)
+	}
 	return &Driver{}, nil
 }
 
 var (
 	ErrMissingHost      = errors.New("Missing host parameter")
-	ErrBadHostSpecified = errors.New("Bad host specified, ie. unix:///usr/share/docker/plugins/rexray.sock or tcp://127.0.0.1:8080")
+	ErrBadHostSpecified = errors.New("Bad host specified, ie. unix:///run/docker/plugins/rexray.sock or tcp://127.0.0.1:8080")
 	ErrBadProtocol      = errors.New("Bad protocol specified with host, ie. unix:// or tcp://")
 )
 
@@ -48,7 +55,7 @@ type pluginRequest struct {
 func (driver *Driver) Start(host string) error {
 
 	if host == "" {
-		host = "unix:///usr/share/docker/plugins/rexray.sock"
+		host = "unix:///run/docker/plugins/rexray.sock"
 	}
 
 	protoAndAddr := strings.Split(host, "://")
@@ -61,6 +68,9 @@ func (driver *Driver) Start(host string) error {
 	var unixPath string
 	if protoAndAddr[0] == "unix" {
 		path := protoAndAddr[1]
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			return err
+		}
 		_ = os.RemoveAll(path)
 		unixPath = fmt.Sprintf("%s://%s", "unix", path)
 	} else if protoAndAddr[0] == "tcp" {
@@ -173,7 +183,7 @@ func (driver *Driver) Start(host string) error {
 		fmt.Fprintln(w, `{}`)
 	})
 
-	if err := os.MkdirAll("/usr/share/docker/plugins", 0755); err != nil {
+	if err := os.MkdirAll("/etc/docker/plugins", 0755); err != nil {
 		return err
 	}
 
@@ -198,7 +208,7 @@ func (driver *Driver) Start(host string) error {
 		specPath = daemonConfig.httpServer.Addr
 	}
 
-	if err := ioutil.WriteFile("/usr/share/docker/plugins/rexray.spec", []byte(specPath), 0644); err != nil {
+	if err := ioutil.WriteFile("/etc/docker/plugins/rexray.spec", []byte(specPath), 0644); err != nil {
 		return err
 	}
 

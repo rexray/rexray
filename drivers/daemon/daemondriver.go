@@ -1,6 +1,7 @@
 package daemondriver
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -69,7 +70,7 @@ func GetDrivers(daemonDrivers string) (map[string]Driver, error) {
 			}
 			delete(drivers, name)
 		}
+		return drivers, nil
 	}
-
-	return drivers, nil
+	return nil, errors.New("No daemon driver loaded")
 }

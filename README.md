@@ -5,10 +5,17 @@ Once the introspection has occured, ```Rexray``` can then manage manage storage 
 
 ```REX-RayCLI``` is an implementation of [REX-Ray](https://github.com/emccode/rexray).  It provides a working application, but as well a working example of using the ```Rexray``` Go package.
 
+## Docker Volume Driver
+```REX-Ray``` can be ran as a CLI for interactive usage or can be ran in a daemonized mode that allows for HTTP/REST based access.  ```Docker``` includes this functionality with 1.7+.  In order enable this mode, run with ```--daemon``` flag.  It can be ran multiple times by specifying different ```--host``` flags of ```unix:///run/docker/plugins/name.sock``` or ```tcp://127.0.0.1:port```.
+
+It can be loaded as a service in systemd or otherwise.  See the rexray.service unit file as an example.  Place the file as ```/usr/lib/systemd/system/rexray.service``` and issue ```systemctl daemon-reload``` followed by ```systemctl start rexray.service```.
+
+
 ## Environment Variables
 
     REXRAY_DEBUG - show debug messages
-    REXRAY_STORAGEDRIVERS - only do checks using these drivers
+    REXRAY_STORAGEDRIVERS - only do checks using these drivers (ec2,openstack,xtremio,scaleio)
+    REXRAY_DAEMONDRIVERS - only do checks using these drivers (dockervolumedriver,dockerremotevolumedriver)
     AWS_ACCESS_KEY - (AWS)
     AWS_SECRET_KEY - (AWS)
     OS_AUTH_URL - (RACKSPACE)

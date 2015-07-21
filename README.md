@@ -8,7 +8,7 @@ Once the introspection has occured, ```Rexray``` can then manage manage storage 
 ## Docker Volume Driver
 ```REX-Ray``` can be ran as a CLI for interactive usage or can be ran in a daemonized mode that allows for HTTP/REST based access.  ```Docker``` includes this functionality with 1.7+.  In order enable this mode, run with ```--daemon``` flag.  It can be ran multiple times by specifying different ```--host``` flags of ```unix:///run/docker/plugins/name.sock``` or ```tcp://127.0.0.1:port```.
 
-It can be loaded as a service in systemd or otherwise.  See the rexray.service unit file as an example.  Place the file as ```/usr/lib/systemd/system/rexray.service``` and issue ```systemctl daemon-reload``` followed by ```systemctl start rexray.service```.
+It can be loaded as a service in systemd or otherwise.  See the rexray.service unit file as an example.  Place the file as ```/usr/lib/systemd/system/rexray.service``` and issue ```systemctl daemon-reload``` followed by ```systemctl start rexray.service```.  Environment variables should be set in a file and specified in the unit file.
 
 Following this docker can be ran with ```docker run --volume-driver=rexray -v volumename:/pathtomount container```.
 

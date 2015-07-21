@@ -10,6 +10,8 @@ Once the introspection has occured, ```Rexray``` can then manage manage storage 
 
 It can be loaded as a service in systemd or otherwise.  See the rexray.service unit file as an example.  Place the file as ```/usr/lib/systemd/system/rexray.service``` and issue ```systemctl daemon-reload``` followed by ```systemctl start rexray.service```.
 
+Following this docker can be ran with ```docker run --volume-driver=rexray -v volumename:/pathtomount container```.
+
 
 ## Environment Variables
 

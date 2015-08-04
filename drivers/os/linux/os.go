@@ -10,7 +10,7 @@ import (
 	"runtime"
 
 	"github.com/docker/docker/pkg/mount"
-	"github.com/docker/libcontainer/label"
+	"github.com/opencontainers/runc/libcontainer/label"
 	osdriver "github.com/emccode/rexray/drivers/os"
 )
 
@@ -39,7 +39,7 @@ func Init() (osdriver.Driver, error) {
 
 }
 
-func (driver *Driver) GetMounts(deviceName, mountPoint string) ([]*mount.MountInfo, error) {
+func (driver *Driver) GetMounts(deviceName, mountPoint string) ([]*mount.Info, error) {
 
 	mounts, err := mount.GetMounts()
 	if err != nil {
@@ -52,7 +52,7 @@ func (driver *Driver) GetMounts(deviceName, mountPoint string) ([]*mount.MountIn
 		return nil, errors.New("Cannot specify mountPoint and deviceName")
 	}
 
-	var matchedMounts []*mount.MountInfo
+	var matchedMounts []*mount.Info
 	for _, mount := range mounts {
 		if mount.Mountpoint == mountPoint || mount.Source == deviceName {
 			matchedMounts = append(matchedMounts, mount)

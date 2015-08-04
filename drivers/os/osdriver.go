@@ -24,7 +24,7 @@ var Adapters map[string]Driver
 
 type Driver interface {
 	// Shows the existing mount points
-	GetMounts(string, string) ([]*mount.MountInfo, error)
+	GetMounts(string, string) ([]*mount.Info, error)
 
 	// Check whether path is mounted or not
 	Mounted(string) (bool, error)

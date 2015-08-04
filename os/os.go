@@ -34,7 +34,7 @@ func initOSDrivers() {
 	}
 }
 
-func GetMounts(deviceName, mountPoint string) ([]*mount.MountInfo, error) {
+func GetMounts(deviceName, mountPoint string) ([]*mount.Info, error) {
 
 	for _, driver := range osdriver.Adapters {
 		mounts, err := driver.GetMounts(deviceName, mountPoint)

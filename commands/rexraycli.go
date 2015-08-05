@@ -76,6 +76,16 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var getdriversCmd = &cobra.Command{
+	Use: "get-drivers",
+	Run: func(cmd *cobra.Command, args []string) {
+	    drivers := storage.GetDriverNames()
+	    for n := range drivers {
+            fmt.Printf("\nStorage Driver: %v\n", drivers[n])
+        }
+	},
+}
+
 var getinstanceCmd = &cobra.Command{
 	Use: "get-instance",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -432,6 +442,7 @@ func AddCommands() {
 	RexrayCmd.AddCommand(copysnapshotCmd)
 	RexrayCmd.AddCommand(detachvolumeCmd)
 	RexrayCmd.AddCommand(formatdeviceCmd)
+	RexrayCmd.AddCommand(getdriversCmd)
 	RexrayCmd.AddCommand(getinstanceCmd)
 	RexrayCmd.AddCommand(getmountCmd)
 	RexrayCmd.AddCommand(getsnapshotCmd)

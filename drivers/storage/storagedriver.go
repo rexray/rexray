@@ -121,6 +121,14 @@ func init() {
 	debug = strings.ToUpper(os.Getenv("REXRAY_DEBUG"))
 }
 
+func GetDriverNames() ([]string) {
+    names := make([]string, 0, len(drivers))
+    for n := range drivers {
+       names = append(names, n)
+    }
+    return names
+}
+
 func GetDrivers(storageDrivers string) (map[string]Driver, error) {
 	var err error
 	var storageDriversArr []string

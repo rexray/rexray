@@ -253,3 +253,8 @@ func CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, targetSnaps
 	}
 	return &storagedriver.Snapshot{}, nil
 }
+
+
+func GetDriverNames() ([]string) {
+    return storagedriver.GetDriverNames()
+}

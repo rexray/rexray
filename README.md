@@ -7,11 +7,11 @@ There are three types of drivers.  The ```Volume Driver``` represents ```Volume 
 
 The driver to be used is automatically detected or hints can be provided.  Drivers are then initialized as adapters which allow the retrieval of guest identifiers and further information from other platforms that are relevant to storage management.
 
-The following example shows how easy it is to use REX-ray to get a list of volumes from a storage platform such as Amazon Web Services (AWS): 
+The following example shows how easy it is to use REX-ray to get a list of volumes from a storage platform such as Amazon Web Services (AWS):
 
 ```bash
 [0]akutz@pax:~$ export REXRAY_STORAGEDRIVERS=ec2
-[0]akutz@pax:~$ export AWS_ACCESS_KEY=access_key 
+[0]akutz@pax:~$ export AWS_ACCESS_KEY=access_key
 [0]akutz@pax:~$ export AWS_SECRET_KEY=secret_key
 [0]akutz@pax:~$ rexray get-volume
 
@@ -69,7 +69,7 @@ See the releases area for downloadable binaries.
 This might currently require upstream additions for the Goamz package to github.com/clintonskitson/goamz at the snapcopy branch.
 
 ```bash
-docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexraycli golang:1.4.2-cross make release
+docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexray/rexray golang:1.4.2-cross make release
 ```
 
 # Environment Variables
@@ -87,7 +87,7 @@ Name | Description | Optional
 ```REXRAY_REMOTEMANAGEMENT``` | Set to ```true``` or ```TRUE``` to skip introspection during discovery and local instance lookups to enable remote managaement (XtremIO) | yes
 
 ## Volume Driver (Docker)
-Name | Description 
+Name | Description
 -----|-------------
 ```REXRAY_DOCKER_VOLUMETYPE``` | Specifies the type of volume, based on Storage Driver
 ```REXRAY_DOCKER_IOPS``` | Specifies the amount of IOPS, based on Storage Driver
@@ -97,21 +97,21 @@ Name | Description
 ## Storage Drivers
 
 ### Amazon Web Services (AWS)
-Name | Description 
+Name | Description
 -----|-------------
 ```AWS_ACCESS_KEY``` | |
 ```AWS_SECRET_KEY``` | |
 ```AWS_REGION``` | Override the detected region |
 
 ### Rackspace
-Name | Description 
+Name | Description
 -----|-------------
 ```OS_AUTH_URL``` | |
 ```OS_USERNAME``` | |
 ```OS_PASSWORD``` | |
 
 ### ScaleIO
-Name | Description 
+Name | Description
 -----|-------------
 ```GOSCALEIO_ENDPOINT``` | |
 ```GOSCALEIO_INSECURE``` | |
@@ -125,10 +125,10 @@ Name | Description
 ```GOSCALEIO_STORAGEPOOL``` | |
 
 ### XtremIO
-Name | Description 
+Name | Description
 -----|-------------
-```GOXTREMIO_ENDPOINT``` | The API endpoint, ex. ```https://10.5.132.140/api/json``` 
-```GOXTREMIO_USERNAME``` | The username 
+```GOXTREMIO_ENDPOINT``` | The API endpoint, ex. ```https://10.5.132.140/api/json```
+```GOXTREMIO_USERNAME``` | The username
 ```GOXTREMIO_PASSWORD``` | The password
 ```GOXTREMIO_INSECURE``` | Set to ```true``` or ```TRUE``` to disable SSL certificate validation
 ```REXRAY_XTREMIO_DM``` | Set to ```true``` or ```TRUE``` to indicate that the device-mapper is installed and claiming devices
@@ -274,7 +274,7 @@ type Driver interface {
 }
 ```
 
-# REX-Ray CLI 
+# REX-Ray CLI
 ```REX-Ray``` can be used independently as a CLI tool that provides guest storage introspection and management.  The CLI should be distributed to the system that requires introspection and storage management.  It will discover proper drivers to use, and then with proper authorization, will get further details about those devices.
 
 Once the introspection has occurred, ```REX-Ray``` can then manage manage storage using initialized drivers in a common manner between storage providers.  The providers will attach devices via any method possible to get the device attached as the next available  ```/dev/xvd_``` or one that is automatically assigned via the ```REX-Ray``` driver.
@@ -390,7 +390,7 @@ export REXRAY_XTREMIO_MULTIPATH=true
 ### vCloud Director
 // TODO
 
-### VIPR-C 
+### VIPR-C
 // TODO
 
 # REX-Ray Daemon

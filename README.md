@@ -52,7 +52,7 @@ We have a first release available that support all of the following capabilities
 
 ```bash
 # start the docker daemon and active the rex-ray driver
-sudo docker --daemon --host unix:///run/docker/plugins/rexray.sock
+sudo rexray --daemon --host unix:///run/docker/plugins/rexray.sock
 
 # create a new container with a volume that leverages the rex-ray driver
 docker run --volume-driver=rexray -v volumename:/pathtomount container

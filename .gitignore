@@ -1,3 +1,4 @@
+.build/
 example
 release/*
 golang-crosscompile/

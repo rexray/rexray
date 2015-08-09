@@ -2,7 +2,7 @@ package rackspace
 
 import "fmt"
 import "testing"
-import "github.com/emccode/rexray/storagedriver"
+import "github.com/emccode/rexray/drivers/storage"
 
 var driver storagedriver.Driver
 
@@ -29,7 +29,7 @@ func TestGetBlockDeviceMapping(*testing.T) {
 		panic(err)
 	}
 
-	for _, blockDevice := range blockDeviceMapping.([]*storagedriver.BlockDevice) {
+	for _, blockDevice := range blockDeviceMapping {
 		fmt.Println(fmt.Sprintf("%+v", blockDevice))
 	}
 }
@@ -56,7 +56,7 @@ func TestGetVolumeByName(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, volume := range volumes.([]*storagedriver.Volume) {
+	for _, volume := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", volume))
 	}
 }
@@ -74,7 +74,7 @@ func TestGetSnapshotFromVolumeID(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", snapshots.([]*storagedriver.Snapshot)))
+	fmt.Println(fmt.Sprintf("%+v", snapshots))
 }
 
 func TestGetSnapshotBySnapshotName(*testing.T) {
@@ -82,7 +82,7 @@ func TestGetSnapshotBySnapshotName(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", snapshots.([]*storagedriver.Snapshot)))
+	fmt.Println(fmt.Sprintf("%+v", snapshots))
 }
 
 func TestGetSnapshotFromSnapshotID(*testing.T) {
@@ -90,7 +90,7 @@ func TestGetSnapshotFromSnapshotID(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", snapshots.([]*storagedriver.Snapshot)))
+	fmt.Println(fmt.Sprintf("%+v", snapshots))
 }
 
 func TestCreateSnapshot(*testing.T) {

@@ -3,10 +3,7 @@ package ec2
 import "fmt"
 
 import "testing"
-import (
-	"github.com/emccode/rexray/drivers/storage"
-	"github.com/goamz/goamz/ec2"
-)
+import "github.com/emccode/rexray/drivers/storage"
 
 var driver storagedriver.Driver
 
@@ -34,7 +31,7 @@ func TestGetVolumeMapping(*testing.T) {
 		panic(err)
 	}
 
-	for _, blockDevice := range blockDeviceMapping.([]*storagedriver.BlockDevice) {
+	for _, blockDevice := range blockDeviceMapping {
 		fmt.Println(fmt.Sprintf("%+v", blockDevice))
 	}
 }
@@ -55,7 +52,7 @@ func TestCreateSnapshot(*testing.T) {
 		panic(err)
 	}
 
-	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
+	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping[0].VolumeID, "test")
 	if err != nil {
 		panic(err)
 	}
@@ -69,12 +66,12 @@ func TestGetSnapshot(*testing.T) {
 		panic(err)
 	}
 
-	snapshots, err := driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "", "")
+	snapshots, err := driver.GetSnapshot(blockDeviceMapping[0].VolumeID, "", "")
 	if err != nil {
 		panic(err)
 	}
 
-	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+	for _, snapshot := range snapshots {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -84,32 +81,32 @@ func TestRemoveSnapshot(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	snapshots, err := driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "", "")
+	snapshots, err := driver.GetSnapshot(blockDeviceMapping[0].VolumeID, "", "")
 	if err != nil {
 		panic(err)
 	}
 
-	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+	for _, snapshot := range snapshots {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 
-	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
+	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping[0].VolumeID, "test")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(fmt.Sprintf("%+v", snapshot))
 
-	err = driver.RemoveSnapshot(snapshot.(ec2.Snapshot).Id)
+	err = driver.RemoveSnapshot(snapshot[0].SnapshotID)
 	if err != nil {
 		panic(err)
 	}
 
-	snapshots, err = driver.GetSnapshot(blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "", "")
+	snapshots, err = driver.GetSnapshot(blockDeviceMapping[0].VolumeID, "", "")
 	if err != nil {
 		panic(err)
 	}
 
-	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+	for _, snapshot := range snapshots {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -131,12 +128,12 @@ func TestGetDeviceNextAvailable(*testing.T) {
 // 		panic(err)
 // 	}
 //
-// 	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping.([]*storagedriver.BlockDevice)[0].VolumeID, "test")
+// 	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping[0].VolumeID, "test")
 // 	if err != nil {
 // 		panic(err)
 // 	}
 //
-// 	volumeID, err := driver.CreateVolume(false, "testing", snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
+// 	volumeID, err := driver.CreateVolume(false, "testing", snapshot[0].SnapshotID)
 // 	if err != nil {
 // 		panic(err)
 // 	}
@@ -146,7 +143,7 @@ func TestGetDeviceNextAvailable(*testing.T) {
 // 		panic(err)
 // 	}
 //
-// 	err = driver.RemoveSnapshot(snapshot.([]*storagedriver.Snapshot)[0].SnapshotID)
+// 	err = driver.RemoveSnapshot(snapshot[0].SnapshotID)
 // 	if err != nil {
 // 		panic(err)
 // 	}
@@ -197,7 +194,7 @@ func TestGetVolume(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, volume := range volume.([]*storagedriver.Volume) {
+	for _, volume := range volume {
 		fmt.Println(fmt.Sprintf("%+v", volume))
 	}
 }
@@ -207,7 +204,7 @@ func TestGetVolume(*testing.T) {
 // 	if err != nil {
 // 		panic(err)
 // 	}
-// 	fmt.Println(fmt.Sprintf("%+v", volume.(*storagedriver.Volume)))
+// 	fmt.Println(fmt.Sprintf("%+v", volume))
 // }
 
 func TestCreateSnapshot2(*testing.T) {
@@ -215,7 +212,7 @@ func TestCreateSnapshot2(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+	for _, snapshot := range snapshots {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -225,7 +222,7 @@ func TestGetSnapshotByName(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range volume.([]*storagedriver.Snapshot) {
+	for _, snapshot := range volume {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }

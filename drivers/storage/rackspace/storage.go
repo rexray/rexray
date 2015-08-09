@@ -120,7 +120,7 @@ func (driver *Driver) getInstance() (*servers.Server, error) {
 	return server, nil
 }
 
-func (driver *Driver) GetInstance() (interface{}, error) {
+func (driver *Driver) GetInstance() (*storagedriver.Instance, error) {
 	server, err := driver.getInstance()
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func (driver *Driver) GetInstance() (interface{}, error) {
 	return instance, nil
 }
 
-func (driver *Driver) GetVolumeMapping() (interface{}, error) {
+func (driver *Driver) GetVolumeMapping() ([]*storagedriver.BlockDevice, error) {
 	blockDevices, err := driver.getBlockDevices(driver.InstanceID)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func (driver *Driver) getVolume(volumeID, volumeName string) (volumesRet []volum
 	return volumesRet, nil
 }
 
-func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error) {
+func (driver *Driver) GetVolume(volumeID, volumeName string) ([]*storagedriver.Volume, error) {
 	volumesRet, err := driver.getVolume(volumeID, volumeName)
 	if err != nil {
 		return []*storagedriver.Volume{}, err
@@ -259,7 +259,7 @@ func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error
 	return volumesSD, nil
 }
 
-func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{}, error) {
+func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) ([]*storagedriver.VolumeAttachment, error) {
 	if volumeID == "" {
 		return []*storagedriver.VolumeAttachment{}, ErrMissingVolumeID
 	}
@@ -270,16 +270,16 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 
 	if instanceID != "" {
 		var attached bool
-		for _, volumeAttachment := range volume.([]*storagedriver.Volume)[0].Attachments {
+		for _, volumeAttachment := range volume[0].Attachments {
 			if volumeAttachment.InstanceID == instanceID {
-				return volume.([]*storagedriver.Volume)[0].Attachments, nil
+				return volume[0].Attachments, nil
 			}
 		}
 		if !attached {
 			return []*storagedriver.VolumeAttachment{}, nil
 		}
 	}
-	return volume.([]*storagedriver.Volume)[0].Attachments, nil
+	return volume[0].Attachments, nil
 }
 
 func (driver *Driver) getSnapshot(volumeID, snapshotID, snapshotName string) (allSnapshots []snapshots.Snapshot, err error) {
@@ -311,10 +311,10 @@ func (driver *Driver) getSnapshot(volumeID, snapshotID, snapshotName string) (al
 	return allSnapshots, nil
 }
 
-func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (interface{}, error) {
+func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) ([]*storagedriver.Snapshot, error) {
 	snapshots, err := driver.getSnapshot(volumeID, snapshotID, snapshotName)
 	if err != nil {
-		return []*storagedriver.Snapshot{}, err
+		return nil, err
 	}
 
 	var snapshotsInt []*storagedriver.Snapshot
@@ -334,7 +334,7 @@ func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (in
 	return snapshotsInt, nil
 }
 
-func (driver *Driver) CreateSnapshot(runAsync bool, snapshotName, volumeID, description string) (interface{}, error) {
+func (driver *Driver) CreateSnapshot(runAsync bool, snapshotName, volumeID, description string) ([]*storagedriver.Snapshot, error) {
 	opts := snapshots.CreateOpts{
 		Name:        snapshotName,
 		VolumeID:    volumeID,
@@ -344,24 +344,24 @@ func (driver *Driver) CreateSnapshot(runAsync bool, snapshotName, volumeID, desc
 
 	resp, err := snapshots.Create(driver.ClientBlockStorage, opts).Extract()
 	if err != nil {
-		return storagedriver.Snapshot{}, err
+		return nil, err
 	}
 
 	if !runAsync {
 		log.Println("Waiting for snapshot to complete")
 		err = snapshots.WaitForStatus(driver.ClientBlockStorage, resp.ID, "available", 120)
 		if err != nil {
-			return storagedriver.Snapshot{}, err
+			return nil, err
 		}
 	}
 
 	snapshot, err := driver.GetSnapshot("", resp.ID, "")
 	if err != nil {
-		return storagedriver.Snapshot{}, err
+		return nil, err
 	}
 
-	// log.Println(fmt.Sprintf("Created Snapshot: %v", snapshot.([]*storagedriver.Snapshot)))
-	return snapshot.([]*storagedriver.Snapshot), nil
+	// log.Println(fmt.Sprintf("Created Snapshot: %v", snapshot))
+	return snapshot, nil
 
 }
 
@@ -375,48 +375,48 @@ func (driver *Driver) RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64, availabilityZone string) (interface{}, error) {
+func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64, availabilityZone string) (*storagedriver.Volume, error) {
 	if volumeID != "" && runAsync {
-		return "", errors.New("Cannot create volume from volume and run asynchronously")
+		return nil, errors.New("Cannot create volume from volume and run asynchronously")
 	}
 
 	if snapshotID != "" {
 		snapshot, err := driver.GetSnapshot("", snapshotID, "")
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
-		sizeInt, err := strconv.Atoi(snapshot.([]*storagedriver.Snapshot)[0].VolumeSize)
+		sizeInt, err := strconv.Atoi(snapshot[0].VolumeSize)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		size = int64(sizeInt)
 	}
 
-	var volume interface{}
+	var volume []*storagedriver.Volume
 	var err error
 	if volumeID != "" {
 		volume, err = driver.GetVolume(volumeID, "")
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
-		sizeInt, err := strconv.Atoi(volume.([]*storagedriver.Volume)[0].Size)
+		sizeInt, err := strconv.Atoi(volume[0].Size)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		size = int64(sizeInt)
 
-		volumeID := volume.([]*storagedriver.Volume)[0].VolumeID
+		volumeID := volume[0].VolumeID
 		snapshot, err := driver.CreateSnapshot(false, fmt.Sprintf("temp-%s", volumeID), volumeID, "")
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
-		snapshotID = snapshot.(*storagedriver.Snapshot).SnapshotID
+		snapshotID = snapshot[0].SnapshotID
 
 		if availabilityZone == "" {
-			availabilityZone = volume.([]*storagedriver.Volume)[0].AvailabilityZone
+			availabilityZone = volume[0].AvailabilityZone
 		}
 
 	}
@@ -434,31 +434,31 @@ func (driver *Driver) CreateVolume(runAsync bool, volumeName string, volumeID st
 	}
 	resp, err := volumes.Create(driver.ClientBlockStorage, options).Extract()
 	if err != nil {
-		return storagedriver.Volume{}, err
+		return nil, err
 	}
 
 	if !runAsync {
 		log.Println("Waiting for volume creation to complete")
 		err = volumes.WaitForStatus(driver.ClientBlockStorage, resp.ID, "available", 120)
 		if err != nil {
-			return storagedriver.Volume{}, err
+			return nil, err
 		}
 
 		if volumeID != "" {
 			err := driver.RemoveSnapshot(snapshotID)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 		}
 	}
 
 	volume, err = driver.GetVolume(resp.ID, "")
 	if err != nil {
-		return storagedriver.Volume{}, err
+		return nil, err
 	}
 
-	// log.Println(fmt.Sprintf("Created volume: %+v", volume.([]*storagedriver.Volume)[0]))
-	return volume.([]*storagedriver.Volume)[0], nil
+	// log.Println(fmt.Sprintf("Created volume: %+v", volume[0]))
+	return volume[0], nil
 }
 
 func (driver *Driver) RemoveVolume(volumeID string) error {
@@ -483,7 +483,7 @@ func (driver *Driver) GetDeviceNextAvailable() (string, error) {
 		return "", err
 	}
 
-	for _, blockDevice := range blockDeviceMapping.([]*storagedriver.BlockDevice) {
+	for _, blockDevice := range blockDeviceMapping {
 		re, _ := regexp.Compile(`^/dev/xvd([a-z])`)
 		res := re.FindStringSubmatch(blockDevice.DeviceName)
 		if len(res) > 0 {
@@ -533,10 +533,10 @@ func getLocalDevices() (deviceNames []string, err error) {
 	return deviceNames, nil
 }
 
-func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) (interface{}, error) {
+func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) ([]*storagedriver.VolumeAttachment, error) {
 	nextDeviceName, err := driver.GetDeviceNextAvailable()
 	if err != nil {
-		return storagedriver.VolumeAttachment{}, err
+		return nil, err
 	}
 
 	options := &volumeattach.CreateOpts{
@@ -546,20 +546,20 @@ func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) (
 
 	_, err = volumeattach.Create(driver.Client, instanceID, options).Extract()
 	if err != nil {
-		return storagedriver.VolumeAttachment{}, err
+		return nil, err
 	}
 
 	if !runAsync {
 		log.Println("Waiting for volume attachment to complete")
 		err = driver.waitVolumeAttach(volumeID)
 		if err != nil {
-			return storagedriver.VolumeAttachment{}, err
+			return nil, err
 		}
 	}
 
 	volumeAttachment, err := driver.GetVolumeAttach(volumeID, instanceID)
 	if err != nil {
-		return storagedriver.VolumeAttachment{}, err
+		return nil, err
 	}
 
 	log.Println(fmt.Sprintf("Attached volume %s to instance %s", volumeID, instanceID))
@@ -575,7 +575,7 @@ func (driver *Driver) DetachVolume(runAsync bool, volumeID, instanceID string) e
 		return err
 	}
 
-	resp := volumeattach.Delete(driver.Client, volume.([]*storagedriver.Volume)[0].Attachments[0].InstanceID, volumeID)
+	resp := volumeattach.Delete(driver.Client, volume[0].Attachments[0].InstanceID, volumeID)
 	if resp.Err != nil {
 		return resp.Err
 	}
@@ -601,7 +601,7 @@ func (driver *Driver) waitVolumeAttach(volumeID string) error {
 		if err != nil {
 			return err
 		}
-		if volume.([]*storagedriver.Volume)[0].Status == "in-use" {
+		if volume[0].Status == "in-use" {
 			break
 		}
 		time.Sleep(1 * time.Second)
@@ -619,7 +619,7 @@ func (driver *Driver) waitVolumeDetach(volumeID string) error {
 		if err != nil {
 			return err
 		}
-		if len(volume.([]*storagedriver.Volume)[0].Attachments) == 0 {
+		if len(volume[0].Attachments) == 0 {
 			break
 		}
 
@@ -629,6 +629,6 @@ func (driver *Driver) waitVolumeDetach(volumeID string) error {
 	return nil
 }
 
-func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (interface{}, error) {
+func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (*storagedriver.Snapshot, error) {
 	return nil, errors.New("This driver does not implement CopySnapshot")
 }

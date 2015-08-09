@@ -29,7 +29,7 @@ func TestGetVolumeMapping(*testing.T) {
 		panic(err)
 	}
 
-	for _, blockDevice := range blockDeviceMapping.([]*storagedriver.BlockDevice) {
+	for _, blockDevice := range blockDeviceMapping {
 		fmt.Println(fmt.Sprintf("%+v", blockDevice))
 	}
 }
@@ -39,7 +39,7 @@ func TestGetVolume(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, volume := range volumes.([]*storagedriver.Volume) {
+	for _, volume := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", volume))
 		for _, attachment := range volume.Attachments {
 			fmt.Println(fmt.Sprintf("%+v", attachment))
@@ -52,7 +52,7 @@ func TestGetVolumeByID(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, volume := range volumes.([]*storagedriver.Volume) {
+	for _, volume := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", volume))
 		for _, attachment := range volume.Attachments {
 			fmt.Println(fmt.Sprintf("%+v", attachment))
@@ -65,7 +65,7 @@ func TestGetVolumeByName(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, volume := range volumes.([]*storagedriver.Volume) {
+	for _, volume := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", volume))
 		for _, attachment := range volume.Attachments {
 			fmt.Println(fmt.Sprintf("%+v", attachment))
@@ -109,7 +109,7 @@ func TestGetSnapshot(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range volumes.([]*storagedriver.Snapshot) {
+	for _, snapshot := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -119,7 +119,7 @@ func TestGetSnapshotByID(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range volumes.([]*storagedriver.Snapshot) {
+	for _, snapshot := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -129,7 +129,7 @@ func TestGetSnapshotByName(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range volumes.([]*storagedriver.Snapshot) {
+	for _, snapshot := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -139,7 +139,7 @@ func TestGetSnapshotByVolID(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range volumes.([]*storagedriver.Snapshot) {
+	for _, snapshot := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -149,7 +149,7 @@ func TestCreateSnapshot(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+	for _, snapshot := range snapshots {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -166,7 +166,7 @@ func TestGetVolumeAttach(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", volume.([]*storagedriver.VolumeAttachment)[0]))
+	fmt.Println(fmt.Sprintf("%+v", volume[0]))
 }
 
 func TestAttachVolume(*testing.T) {
@@ -175,7 +175,7 @@ func TestAttachVolume(*testing.T) {
 		panic(err)
 	}
 
-	for volumeAttachment := range volumeAttachments.([]*storagedriver.VolumeAttachment) {
+	for volumeAttachment := range volumeAttachments {
 		fmt.Println(fmt.Sprintf("%+v", volumeAttachment))
 	}
 }

@@ -255,11 +255,11 @@ func (driver *Driver) getLocalDeviceByID() (map[string]string, error) {
 	return mapDiskByID, nil
 }
 
-func (driver *Driver) GetInstance() (interface{}, error) {
+func (driver *Driver) GetInstance() (*storagedriver.Instance, error) {
 
 	initiator, err := driver.getInitiator()
 	if err != nil {
-		return storagedriver.Instance{}, err
+		return &storagedriver.Instance{}, err
 	}
 
 	instance := &storagedriver.Instance{
@@ -273,7 +273,7 @@ func (driver *Driver) GetInstance() (interface{}, error) {
 	return instance, nil
 }
 
-func (driver *Driver) GetVolumeMapping() (interface{}, error) {
+func (driver *Driver) GetVolumeMapping() ([]*storagedriver.BlockDevice, error) {
 
 	mapDiskByID, err := driver.getLocalDeviceByID()
 	if err != nil {
@@ -336,7 +336,7 @@ func (driver *Driver) getVolume(volumeID, volumeName string) ([]*xmsv3.Volume, e
 	return volumes, nil
 }
 
-func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error) {
+func (driver *Driver) GetVolume(volumeID, volumeName string) ([]*storagedriver.Volume, error) {
 
 	volumes, err := driver.getVolume(volumeID, volumeName)
 	if err != nil && err.Error() == "obj_not_found" {
@@ -351,7 +351,7 @@ func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error
 	}
 
 	blockDeviceMap := make(map[string]*storagedriver.BlockDevice)
-	for _, volume := range localVolumeMappings.([]*storagedriver.BlockDevice) {
+	for _, volume := range localVolumeMappings {
 		blockDeviceMap[volume.VolumeID] = volume
 	}
 
@@ -390,9 +390,9 @@ func (driver *Driver) GetVolume(volumeID, volumeName string) (interface{}, error
 	return volumesSD, nil
 }
 
-func (driver *Driver) CreateVolume(notUsed bool, volumeName string, volumeID string, snapshotID string, NUvolumeType string, NUIOPS int64, size int64, NUavailabilityZone string) (interface{}, error) {
+func (driver *Driver) CreateVolume(notUsed bool, volumeName string, volumeID string, snapshotID string, NUvolumeType string, NUIOPS int64, size int64, NUavailabilityZone string) (*storagedriver.Volume, error) {
 
-	var volumes interface{}
+	var volumes []*storagedriver.Volume
 	if volumeID == "" && snapshotID == "" {
 		req := &xmsv3.PostVolumesReq{
 			VolName: volumeName,
@@ -414,14 +414,14 @@ func (driver *Driver) CreateVolume(notUsed bool, volumeName string, volumeID str
 			if err != nil {
 				return nil, err
 			}
-			volumeID = snapshots.([]*storagedriver.Snapshot)[0].VolumeID
+			volumeID = snapshots[0].VolumeID
 		}
 		snapshot, err := driver.CreateSnapshot(false, volumeName, volumeID, "")
 		if err != nil {
 			return nil, err
 		}
 
-		snapshotID := snapshot.([]*storagedriver.Snapshot)[0].SnapshotID
+		snapshotID := snapshot[0].SnapshotID
 		snapshots, err := driver.getSnapshot(snapshotID, "")
 		if err != nil {
 			return nil, err
@@ -433,7 +433,7 @@ func (driver *Driver) CreateVolume(notUsed bool, volumeName string, volumeID str
 		}
 	}
 
-	return volumes.([]*storagedriver.Volume)[0], nil
+	return volumes[0], nil
 }
 
 func (driver *Driver) RemoveVolume(volumeID string) error {
@@ -472,19 +472,19 @@ func (driver *Driver) getSnapshot(snapshotID, snapshotName string) ([]*xmsv3.Sna
 }
 
 //GetSnapshot returns snapshots from a volume or a specific snapshot
-func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (interface{}, error) {
+func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) ([]*storagedriver.Snapshot, error) {
 	var snapshotsInt []*storagedriver.Snapshot
 	if volumeID != "" {
 		volumes, err := driver.getVolume(volumeID, "")
 		if err != nil {
-			return []*storagedriver.Snapshot{}, err
+			return nil, err
 		}
 
 		for _, volume := range volumes {
 			for _, destSnap := range volume.DestSnapList {
 				snapshot, err := driver.getSnapshot(strconv.Itoa(int(destSnap.([]interface{})[2].(float64))), "")
 				if err != nil {
-					return []*storagedriver.Snapshot{}, err
+					return nil, err
 				}
 
 				volSize, _ := strconv.Atoi(volume.VolSize)
@@ -503,7 +503,7 @@ func (driver *Driver) GetSnapshot(volumeID, snapshotID, snapshotName string) (in
 	} else {
 		snapshots, err := driver.getSnapshot(snapshotID, snapshotName)
 		if err != nil {
-			return []*storagedriver.Snapshot{}, err
+			return nil, err
 		}
 
 		for _, snapshot := range snapshots {
@@ -540,7 +540,7 @@ func getIndex(href string) string {
 	return hrefFields[len(hrefFields)-1]
 }
 
-func (driver *Driver) CreateSnapshot(notUsed bool, snapshotName, volumeID, description string) (interface{}, error) {
+func (driver *Driver) CreateSnapshot(notUsed bool, snapshotName, volumeID, description string) ([]*storagedriver.Snapshot, error) {
 	volume, err := goxtremio.GetVolume(volumeID, "")
 	if err != nil {
 		return nil, err
@@ -569,7 +569,7 @@ func (driver *Driver) CreateSnapshot(notUsed bool, snapshotName, volumeID, descr
 		return nil, err
 	}
 
-	return snapshot.([]*storagedriver.Snapshot), nil
+	return snapshot, nil
 }
 
 func (driver *Driver) RemoveSnapshot(snapshotID string) error {
@@ -581,7 +581,7 @@ func (driver *Driver) RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{}, error) {
+func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) ([]*storagedriver.VolumeAttachment, error) {
 	if volumeID == "" {
 		return []*storagedriver.VolumeAttachment{}, ErrMissingVolumeID
 	}
@@ -592,16 +592,16 @@ func (driver *Driver) GetVolumeAttach(volumeID, instanceID string) (interface{},
 
 	if instanceID != "" {
 		var attached bool
-		for _, volumeAttachment := range volume.([]*storagedriver.Volume)[0].Attachments {
+		for _, volumeAttachment := range volume[0].Attachments {
 			if volumeAttachment.InstanceID == instanceID {
-				return volume.([]*storagedriver.Volume)[0].Attachments, nil
+				return volume[0].Attachments, nil
 			}
 		}
 		if !attached {
 			return []*storagedriver.VolumeAttachment{}, nil
 		}
 	}
-	return volume.([]*storagedriver.Volume)[0].Attachments, nil
+	return volume[0].Attachments, nil
 }
 
 func (driver *Driver) waitAttach(volumeID string) (*storagedriver.BlockDevice, error) {
@@ -630,7 +630,7 @@ func (driver *Driver) waitAttach(volumeID string) (*storagedriver.BlockDevice, e
 				return
 			}
 
-			for _, blockDevice := range blockDevices.([]*storagedriver.BlockDevice) {
+			for _, blockDevice := range blockDevices {
 				if blockDevice.VolumeID == volumeID {
 					successCh <- blockDevice
 					return
@@ -652,9 +652,9 @@ func (driver *Driver) waitAttach(volumeID string) (*storagedriver.BlockDevice, e
 
 }
 
-func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) (interface{}, error) {
+func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) ([]*storagedriver.VolumeAttachment, error) {
 	if volumeID == "" {
-		return storagedriver.VolumeAttachment{}, ErrMissingVolumeID
+		return nil, ErrMissingVolumeID
 	}
 
 	// doing a lookup here for intiator name as IG name, so limited to IG name as initiator name to work for now
@@ -697,7 +697,7 @@ func (driver *Driver) AttachVolume(runAsync bool, volumeID, instanceID string) (
 
 	volumeAttachment, err := driver.GetVolumeAttach(volumeID, instanceID)
 	if err != nil {
-		return storagedriver.VolumeAttachment{}, err
+		return nil, err
 	}
 
 	return volumeAttachment, nil
@@ -774,7 +774,7 @@ func (driver *Driver) DetachVolume(notUsed bool, volumeID string, blank string) 
 	return nil
 }
 
-func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (interface{}, error) {
+func (driver *Driver) CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (*storagedriver.Snapshot, error) {
 	return nil, errors.New("This driver does not implement CopySnapshot")
 }
 

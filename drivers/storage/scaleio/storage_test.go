@@ -2,7 +2,7 @@ package scaleio
 
 import "fmt"
 import "testing"
-import "github.com/emccode/rexray/storagedriver"
+import "github.com/emccode/rexray/drivers/storage"
 
 var driver storagedriver.Driver
 
@@ -29,7 +29,7 @@ func TestGetBlockDeviceMapping(*testing.T) {
 		panic(err)
 	}
 
-	for _, blockDevice := range blockDeviceMapping.([]*storagedriver.BlockDevice) {
+	for _, blockDevice := range blockDeviceMapping {
 		fmt.Println(fmt.Sprintf("%+v", blockDevice))
 	}
 }
@@ -40,11 +40,11 @@ func TestGetVolume(*testing.T) {
 		panic(err)
 	}
 
-	volumes, err := driver.GetVolume("", instance.(*storagedriver.Instance).InstanceID)
+	volumes, err := driver.GetVolume("", instance.InstanceID)
 	if err != nil {
 		panic(err)
 	}
-	for _, volume := range volumes.([]*storagedriver.Volume) {
+	for _, volume := range volumes {
 		fmt.Println(fmt.Sprintf("%+v", volume))
 		for _, attachment := range volume.Attachments {
 			fmt.Println(fmt.Sprintf("%+v", attachment))
@@ -57,7 +57,7 @@ func TestGetVolumeAttach(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", volume.([]*storagedriver.VolumeAttachment)[0]))
+	fmt.Println(fmt.Sprintf("%+v", volume[0]))
 }
 
 func TestCreateSnapshot(*testing.T) {
@@ -65,7 +65,7 @@ func TestCreateSnapshot(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+	for _, snapshot := range snapshots {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -75,7 +75,7 @@ func TestGetSnapshotFromVolumeID(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	for _, snapshot := range snapshots.([]*storagedriver.Snapshot) {
+	for _, snapshot := range snapshots {
 		fmt.Println(fmt.Sprintf("%+v", snapshot))
 	}
 }
@@ -108,7 +108,7 @@ func TestAttachVolume(*testing.T) {
 		panic(err)
 	}
 
-	for volumeAttachment := range volumeAttachments.([]*storagedriver.VolumeAttachment) {
+	for volumeAttachment := range volumeAttachments {
 		fmt.Println(fmt.Sprintf("%+v", volumeAttachment))
 	}
 }

@@ -165,71 +165,89 @@ This section outlines the primary types in the ```REX-Ray``` library as well as 
     - Unmount
     - Format
 
-## Volume Driver Interface
-These represent the methods that should be available from Volume drivers.
-
-```go
-type Driver interface {
-    // MountVolume will attach a Volume, prepare for mounting, and mount
-    Mount(string, string, bool, string) (string, error)
-
-    // UnmountVolume will unmount and detach a Volume
-    Unmount(string, string) error
-
-    // Path will return the mountpoint of a volume
-    Path(string, string) (string, error)
-
-    // Create will create a remote volume
-    Create(string) error
-
-    // Remove will remove a remote volume
-    Remove(string) error
-}
-```
 
 ## Storage Driver Interface
 These represent the methods that should be available from storage drivers.
 
 ```go
 type Driver interface {
-    // Lists the block devices that are attached to the instance
-    GetVolumeMapping() (interface{}, error)
+  // GetVolumeMapping lists the block devices that are attached to the instance.
+	GetVolumeMapping() ([]*BlockDevice, error)
 
-    // Get the local instance
-    GetInstance() (interface{}, error)
+	// GetInstance retrieves the local instance.
+	GetInstance() (*Instance, error)
 
-    // Get all Volumes available from infrastructure and storage platform
-    GetVolume(string, string) (interface{}, error)
+	// GetVolume returns all volumes for the instance based on either volumeID or volumeName
+	// that are available to the instance.
+	GetVolume(volumeID, volumeName string) ([]*Volume, error)
 
-    // Get the currently attached Volumes
-    GetVolumeAttach(string, string) (interface{}, error)
+	// GetVolumeAttach returns the attachment details based on volumeID or volumeName
+	// where the volume is currently attached.
+	GetVolumeAttach(volumeID, instanceID string) ([]*VolumeAttachment, error)
 
-    // Create a snpashot of a Volume
-    CreateSnapshot(bool, string, string, string) (interface{}, error)
+	// CreateSnapshot is a synch/async operation that returns snapshots that have been
+	// performed based on supplying a snapshotName, source volumeID, and optional description.
+	CreateSnapshot(runAsync bool, snapshotName, volumeID, description string) ([]*Snapshot, error)
 
-    // Get all Snapshots or specific Snapshots
-    GetSnapshot(string, string, string) (interface{}, error)
+	// GetSnapshot returns a list of snapshots for a volume based on volumeID, snapshotID, or snapshotName.
+	GetSnapshot(volumeID, snapshotID, snapshotName string) ([]*Snapshot, error)
 
-    // Remove Snapshot
-    RemoveSnapshot(string) error
+	// RemoveSnapshot will remove a snapshot based on the snapshotID.
+	RemoveSnapshot(snapshotID string) error
 
-    // Create a Volume from scratch, from a Snaphot, or from another Volume
-    CreateVolume(bool, string, string, string, string, int64, int64, string) (interface{}, error)
+	// CreateVolume is sync/async and will create an return a new/existing Volume based on volumeID/snapshotID with
+	// a name of volumeName and a size in GB.  Optionally based on the storage driver, a volumeType, IOPS, and availabilityZone
+	// could be defined.
+	CreateVolume(runAsync bool, volumeName string, volumeID string, snapshotID string, volumeType string, IOPS int64, size int64, availabilityZone string) (*Volume, error)
 
-    // Remove Volume
-    RemoveVolume(string) error
+	// RemoveVolume will remove a volume based on volumeID.
+	RemoveVolume(volumeID string) error
 
-    // Get the next available Linux device for attaching external storage
-    GetDeviceNextAvailable() (string, error)
+	// GetDeviceNextAvailable return a device path that will retrieve the next available disk device that can be used.
+	GetDeviceNextAvailable() (string, error)
 
-    // Attach a Volume to an Instance
-    AttachVolume(bool, string, string) (interface{}, error)
+	// AttachVolume returns a list of VolumeAttachments is sync/async that will attach a volume to an instance based on volumeID and instanceID.
+	AttachVolume(runAsync bool, volumeID, instanceID string) ([]*VolumeAttachment, error)
 
-    // Detach a Volume from an Instance
-    DetachVolume(bool, string, string) error
+	// DetachVolume is sync/async that will detach the volumeID from the local instance or the instanceID.
+	DetachVolume(runAsync bool, volumeID string, instanceID string) error
 
-    // Copy a Snapshot to another region
-    CopySnapshot(bool, string, string, string, string, string) (interface{}, error)
+	// CopySnapshot is a sync/async and returns a snapshot that will copy a snapshot based on volumeID/snapshotID/snapshotName and
+	// create a new snapshot of desinationSnapshotName in the destinationRegion location.
+	CopySnapshot(runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName, destinationRegion string) (*Snapshot, error)}
+```
+
+## Volume Driver Interface
+These represent the methods that should be available from volume drivers.  These drivers allow an abstracted way to
+access storage drivers.
+
+```go
+type Driver interface {
+	// Mount will return a mount point path when specifying either a volumeName or volumeID.  If a overwriteFs boolean
+	// is specified it will overwrite the FS based on newFsType if it is detected that there is no FS present.
+	Mount(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error)
+
+	// Unmount will unmount the specified volume by volumeName or volumeID.
+	Unmount(volumeName, volumeID string) error
+
+	// Path will return the mounted path of the volumeName or volumeID.
+	Path(volumeName, volumeID string) (string, error)
+
+	// Create will create a new volume with the volumeName.
+	Create(volumeName string) error
+
+	// Remove will remove a volume of volumeName.
+	Remove(volumeName string) error
+
+	// Attach will attach a volume based on volumeName to the instance of instanceID.
+	Attach(volumeName, instanceID string) (string, error)
+
+	// Detach will detach a volume based on volumeName to the instance of instanceID.
+	Detach(volumeName, instanceID string) error
+
+	// NetworkName will return an identifier of a volume that is relevant when corelating a
+	// local device to a device that is the volumeName to the local instanceID.
+	NetworkName(volumeName, instanceID string) (string, error)
 }
 ```
 

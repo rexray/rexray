@@ -127,6 +127,13 @@ func init() {
 	debug = strings.ToUpper(os.Getenv("REXRAY_DEBUG"))
 }
 
+func IsAdapters() error {
+	if len(Adapters) == 0 {
+		return errors.New("No storage driver initialized")
+	}
+	return nil
+}
+
 func GetDriverNames() []string {
 	names := make([]string, 0, len(drivers))
 	for n := range drivers {

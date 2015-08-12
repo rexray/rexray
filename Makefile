@@ -1,45 +1,84 @@
 .PHONY: all test clean deps build install
 
 ROOT_DIR := $(shell pwd)
-ifeq ($(origin GOPATH), undefined)
-	export GOPATH := $(ROOT_DIR)/.build
-endif
 export GOBIN := $(GOPATH)/bin
-GOFLAGS := $(GOFLAGS) -gcflags "-N -l"
+export GO15VENDOREXPERIMENT := 1
+SEMVER := $(shell git describe --tags | sed -E 's/^v.?//g')
+GOFLAGS := $(GOFLAGS)
+NV := $(shell glide novendor)
+VERSIONPKG := github.com/emccode/rexray/version
+LDFLAGS := -ldflags "-X $(VERSIONPKG).Version=$(SEMVER)" 
 RPMBUILD := $(ROOT_DIR)/.rpmbuild
 EMCCODE := $(GOPATH)/src/github.com/emccode
-GOAMZ_WRKDIR := $(GOPATH)/src/github.com/goamz/goamz
-GOAMZ_GITDIR := $(GOAMZ_WRKDIR)/.git
-GOAMZ_SNAP = https://github.com/clintonskitson/goamz.git
-GOAMZ_SNAP_BRANCH = snapcopy
-GOAMZ_GIT = git --git-dir=$(GOAMZ_GITDIR) --work-tree=$(GOAMZ_WRKDIR)
-GOAMZ_BRANCH = $(shell $(GOAMZ_GIT) branch --list | grep '^*' | awk '{print $$2}')
-GOAMZ_SNAPCOPY_REMOTE = $(GOAMZ_GIT) remote -v | grep snapcopy &> /dev/null
-GOAMZ_SNAPCOPY_REMOTE_ADD = $(GOAMZ_GIT) remote add -f snapcopy $(GOAMZ_SNAP) &> /dev/null
-GOAMZ_SNAPCOPY_CHECKOUT = $(GOAMZ_GIT) checkout -f snapcopy &> /dev/null
+PRINT_STATUS = export EC=$$?; if [ "$$EC" -eq "0" ]; then printf "SUCCESS!\n"; else exit $$EC; fi
+STAT_FILE_SIZE = stat --format '%s' $$FILE 2> /dev/null || stat -f '%z' $$FILE 2> /dev/null
 
 all: install
-
-deps_rexray_sources:
-	@mkdir -p $(EMCCODE)
-	@if [ ! -e "$(EMCCODE)/rexray" ]; then \
-		ln -s $(ROOT_DIR) $(EMCCODE)/rexray &> /dev/null; \
-	fi
 	
-deps_go_get:
-	@cd $(EMCCODE)/rexray; \
-		go get -d $(GOFLAGS) ./...; \
-		cd $(ROOT_DIR)
+deps: 
+	@echo "target: deps"
+	@printf "  ...downloading go dependencies..."
+	@go get -d $(GOFLAGS) $(NV); \
+		glide -q up 2> /dev/null; \
+		$(PRINT_STATUS)
 
-deps_goamz:
-	@$(GOAMZ_SNAPCOPY_REMOTE) || $(GOAMZ_SNAPCOPY_REMOTE_ADD)
-	@if [ "$(GOAMZ_BRANCH)" != "snapcopy" ]; then \
-		$(GOAMZ_SNAPCOPY_CHECKOUT); \
-	fi
+build-nodeps: fmt
+	@echo "target: build-nodeps"
+	@printf "  ...building rexray..."
+	@go build $(GOFLAGS) $(LDFLAGS) $(NV); \
+		$(PRINT_STATUS)
 
-deps: deps_rexray_sources deps_go_get deps_goamz
+build: deps fmt
+	@echo "target: build"
+	@printf "  ...building rexray..."
+	@go build $(GOFLAGS) $(LDFLAGS) $(NV); \
+		$(PRINT_STATUS)
+
+install: deps fmt
+	@echo "target: install"
+	@printf "  ...building and installing rexray..."; \
+		go clean -i $(VERSIONPKG); \
+		go install $(GOFLAGS) $(LDFLAGS) $(NV); \
+		$(PRINT_STATUS); \
+		if [ "$$EC" -eq "0" ]; then \
+			FILE=$(GOPATH)/bin/rexray; \
+			BYTES=$$($(STAT_FILE_SIZE)); \
+			SIZE=$$(($$BYTES / 1024 / 1024)); \
+			printf "\nThe REX-Ray binary is $${SIZE}MB and located at:\n\n"; \
+			printf "  $$FILE\n\n"; \
+		fi
+
+fmt:
+	@echo "target: fmt"
+	@printf "  ...formatting rexray..."; \
+		go fmt $(NV); \
+		$(PRINT_STATUS)
+		
+fix:
+	@echo "target: fix"
+	@printf "  ...fixing rexray..."; \
+		go fmt $(NV); \
+		$(PRINT_STATUS)
+
+test: install
+	@echo "target: test"
+	@printf "  ...testing rexray..."; \
+		go test $(GOFLAGS) $(NV); \
+		$(PRINT_STATUS)
+
+bench: install
+	@echo "target: bench"
+	@printf "  ...benchmarking rexray..."; \
+		go test -run=NONE -bench=. $(GOFLAGS) $(NV); \
+		$(PRINT_STATUS)
+
+clean:
+	@echo "target: clean"
+	@go clean $(GOFLAGS) -i $(NV); \
+		$(PRINT_STATUS)
 
 rpm: install
+	@echo "target: rpm"
 	@rm -fr $(RPMBUILD)
 	
 	@mkdir -p $(RPMBUILD)/{RPMS,SRPMS,SPECS,tmp}
@@ -49,31 +88,13 @@ rpm: install
 		-e 's|$${GOPATH}|$(GOPATH)|g' \
 		$(ROOT_DIR)/rexray.spec > $(RPMBUILD)/SPECS/rexray.spec
 
-	@cd $(RPMBUILD); \
-		rpmbuild -ba SPECS/rexray.spec; \
-		cd $(ROOT_DIR)
-
-build: deps
-	@cd $(EMCCODE)/rexray; \
-		go build $(GOFLAGS) ./...; \
-		cd $(ROOT_DIR)
-
-install: deps
-	@cd $(EMCCODE)/rexray; \
-		go install $(GOFLAGS) ./...; \
-		cd $(ROOT_DIR)
-
-test: install
-	@cd $(EMCCODE)/rexray; \
-		go test $(GOFLAGS) ./...; \
-		cd $(ROOT_DIR)
-
-bench: install
-	@cd $(EMCCODE)/rexray; \
-		go test -run=NONE -bench=. $(GOFLAGS) ./...; \
-		cd $(ROOT_DIR)
-
-clean:
-	@cd $(EMCCODE)/rexray; \
-		go clean $(GOFLAGS) -i ./...; \
-		cd $(ROOT_DIR)
+	@printf "  ...building rpm..."; \
+		rpmbuild -ba --quiet SPECS/rexray.spec; \
+		$(PRINT_STATUS); \
+		if [ "$$EC" -eq "0" ]; then \
+			FILE=$$(readlink -f $$(find $(RPMBUILD)/RPMS -name *.rpm)); \
+			BYTES=$$($(STAT_FILE_SIZE)); \
+			SIZE=$$(($$BYTES / 1024 / 1024)); \
+			printf "\nThe REX-Ray RPM is $${SIZE}MB and located at:\n\n"; \
+			printf "  $$FILE\n\n"; \
+		fi

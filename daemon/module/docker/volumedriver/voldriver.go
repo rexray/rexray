@@ -1,35 +1,69 @@
-package daemon
+package volumedriver
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
+	"time"
 
-	"github.com/emccode/rexray/drivers/daemon"
+	"github.com/emccode/rexray/daemon/module"
+	"github.com/emccode/rexray/drivers/storage"
+	"github.com/emccode/rexray/util"
 	"github.com/emccode/rexray/volume"
 )
 
-const driverName = "dockervolumedriver"
+const MOD_ADDR = "unix:///run/docker/plugins/rexray.sock"
+const MOD_PORT = 7980
+const MOD_NAME = "DockerVolumeDriverModule"
+const MOD_DESC = "The REX-Ray Docker VolumeDriver module"
+
+type Module struct {
+	id           int32
+	name         string
+	addr         string
+	desc         string
+	unixListener net.Listener
+}
 
 func init() {
-	daemondriver.Register(driverName, Init)
-}
+	tcpAddr := fmt.Sprintf("tcp://:%d", MOD_PORT)
 
-type Driver struct{}
-
-func Init() (daemondriver.Driver, error) {
-	if os.Getenv("REXRAY_DEBUG") == "true" {
-		log.Println("Daemon Driver Initialized: " + driverName)
+	_, fsPath, parseAddrErr := util.ParseAddress(MOD_ADDR)
+	if parseAddrErr != nil {
+		panic(parseAddrErr)
 	}
-	return &Driver{}, nil
+
+	fsPathDir := filepath.Dir(fsPath)
+	os.MkdirAll(fsPathDir, 0755)
+
+	module.RegisterModule(MOD_NAME, true, Init, []string{MOD_ADDR, tcpAddr})
 }
+
+func (mod *Module) Id() int32 {
+	return mod.id
+}
+
+func Init(id int32, address string) (module.Module, error) {
+	adapErr := storagedriver.IsAdapters()
+	if adapErr != nil {
+		return nil, adapErr
+	}
+
+	return &Module{
+		id:   id,
+		name: MOD_NAME,
+		desc: MOD_DESC,
+		addr: address,
+	}, nil
+}
+
+const driverName = "dockervolumedriver"
 
 var (
 	ErrMissingHost      = errors.New("Missing host parameter")
@@ -51,31 +85,104 @@ type pluginRequest struct {
 	Name string `json:"Name,ommitempty"`
 }
 
-func (driver *Driver) Start(host string) error {
+func (mod *Module) Start() error {
 
-	if host == "" {
-		host = "unix:///run/docker/plugins/rexray.sock"
+	proto, addr, parseAddrErr := util.ParseAddress(mod.Address())
+	if parseAddrErr != nil {
+		return parseAddrErr
 	}
 
-	protoAndAddr := strings.Split(host, "://")
-	if len(protoAndAddr) != 2 {
-		return ErrBadHostSpecified
+	const validProtoPatt = "(?i)^unix|tcp$"
+	isProtoValid, matchProtoErr := regexp.MatchString(validProtoPatt, proto)
+	if matchProtoErr != nil {
+		return errors.New(fmt.Sprintf(
+			"Error matching protocol %s with pattern '%s' ERR: %v",
+			proto, validProtoPatt, matchProtoErr))
 	}
+	if !isProtoValid {
+		return errors.New(fmt.Sprintf("Invalid protocol %s", proto))
+	}
+
+	if err := os.MkdirAll("/etc/docker/plugins", 0755); err != nil {
+		return err
+	}
+
+	var specPath string
+	var startFunc func() error
+
+	mux := buildMux()
+
+	if proto == "unix" {
+		sockFile := addr
+		sockFileDir := filepath.Dir(sockFile)
+		mkSockFileDirErr := os.MkdirAll(sockFileDir, 0755)
+		if mkSockFileDirErr != nil {
+			return mkSockFileDirErr
+		}
+
+		_ = os.RemoveAll(sockFile)
+
+		specPath = mod.Address()
+		startFunc = func() error {
+			l, lErr := net.Listen("unix", sockFile)
+			if lErr != nil {
+				return lErr
+			}
+			defer l.Close()
+			defer os.Remove(sockFile)
+
+			mod.unixListener = l
+			return http.Serve(l, mux)
+		}
+	} else {
+		specPath = addr
+		startFunc = func() error {
+			s := &http.Server{
+				Addr:           addr,
+				Handler:        mux,
+				ReadTimeout:    10 * time.Second,
+				WriteTimeout:   10 * time.Second,
+				MaxHeaderBytes: 1 << 20,
+			}
+			return s.ListenAndServe()
+		}
+	}
+
+	go func() {
+		sErr := startFunc()
+		if sErr != nil {
+			panic(sErr)
+		}
+	}()
+
+	writeSpecErr := ioutil.WriteFile(
+		"/etc/docker/plugins/rexray.spec", []byte(specPath), 0644)
+	if writeSpecErr != nil {
+		return writeSpecErr
+	}
+
+	return nil
+}
+
+func (mod *Module) Stop() error {
+	return nil
+}
+
+func (mod *Module) Name() string {
+	return mod.name
+}
+
+func (mod *Module) Description() string {
+	return mod.desc
+}
+
+func (mod *Module) Address() string {
+	return mod.addr
+}
+
+func buildMux() *http.ServeMux {
 
 	mux := http.NewServeMux()
-
-	var unixPath string
-	if protoAndAddr[0] == "unix" {
-		path := protoAndAddr[1]
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			return err
-		}
-		_ = os.RemoveAll(path)
-		unixPath = fmt.Sprintf("%s://%s", "unix", path)
-	} else if protoAndAddr[0] == "tcp" {
-	} else {
-		return ErrBadProtocol
-	}
 
 	mux.HandleFunc("/Plugin.Activate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
@@ -167,36 +274,5 @@ func (driver *Driver) Start(host string) error {
 		fmt.Fprintln(w, `{}`)
 	})
 
-	if err := os.MkdirAll("/etc/docker/plugins", 0755); err != nil {
-		return err
-	}
-
-	var specPath string
-	if protoAndAddr[0] == "unix" {
-		listener, err := net.Listen("unix", protoAndAddr[1])
-		if err != nil {
-			return err
-		}
-
-		daemonConfig.unixListener = listener
-		go http.Serve(daemonConfig.unixListener, mux)
-		specPath = unixPath
-	} else {
-		host = strings.Replace(host, "tcp://", "", 1)
-		daemonConfig.httpServer = &http.Server{
-			Addr:    host,
-			Handler: mux,
-		}
-		go daemonConfig.httpServer.ListenAndServe()
-
-		specPath = daemonConfig.httpServer.Addr
-	}
-
-	if err := ioutil.WriteFile("/etc/docker/plugins/rexray.spec", []byte(specPath), 0644); err != nil {
-		return err
-	}
-
-	fmt.Println(fmt.Sprintf("Listening for HTTP (%s)", specPath))
-
-	return nil
+	return mux
 }

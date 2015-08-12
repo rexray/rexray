@@ -10,8 +10,8 @@ import (
 	"runtime"
 
 	"github.com/docker/docker/pkg/mount"
-	"github.com/opencontainers/runc/libcontainer/label"
 	osdriver "github.com/emccode/rexray/drivers/os"
+	"github.com/opencontainers/runc/libcontainer/label"
 )
 
 func init() {

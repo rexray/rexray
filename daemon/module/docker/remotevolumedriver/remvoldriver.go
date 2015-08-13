@@ -112,8 +112,9 @@ var (
 )
 
 type pluginRequest struct {
-	Name       string `json:"Name,ommitempty"`
-	InstanceID string `json:"Instanceid,ommitempty"`
+	Name       string            `json:"Name,omitempty"`
+	Opts       volume.VolumeOpts `json:"Opts,omitempty"`
+	InstanceID string            `json:"Instanceid,omitempty"`
 }
 
 func (mod *Module) Start() error {
@@ -225,8 +226,7 @@ func (mod *Module) buildMux() *http.ServeMux {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
-
-		err := mod.vdm.Create(pr.Name)
+		err := mod.vdm.Create(pr.Name, pr.Opts)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return

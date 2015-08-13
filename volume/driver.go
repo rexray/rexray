@@ -1,5 +1,7 @@
 package volume
 
+type VolumeOpts map[string]string
+
 type Driver interface {
 	// Mount will return a mount point path when specifying either a volumeName or volumeID.  If a overwriteFs boolean
 	// is specified it will overwrite the FS based on newFsType if it is detected that there is no FS present.
@@ -11,8 +13,8 @@ type Driver interface {
 	// Path will return the mounted path of the volumeName or volumeID.
 	Path(volumeName, volumeID string) (string, error)
 
-	// Create will create a new volume with the volumeName.
-	Create(volumeName string) error
+	// Create will create a new volume with the volumeName and opts.
+	Create(volumeName string, opts VolumeOpts) error
 
 	// Remove will remove a volume of volumeName.
 	Remove(volumeName string) error

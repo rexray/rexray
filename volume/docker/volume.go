@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	osm "github.com/emccode/rexray/os"
@@ -244,7 +245,7 @@ func (driver *Driver) Path(volumeName, volumeID string) (string, error) {
 }
 
 // Create will create a remote volume
-func (driver *Driver) Create(volumeName string) error {
+func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) error {
 	if volumeName == "" {
 		return errors.New("Missing volume name")
 	}
@@ -273,15 +274,42 @@ func (driver *Driver) Create(volumeName string) error {
 		return errors.New(fmt.Sprintf("Too many volumes returned by name of %s", volumeName))
 	}
 
-	volumeType := os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
-	IOPSi, _ := strconv.Atoi(os.Getenv("REXRAY_DOCKER_IOPS"))
+	var (
+		ok               bool
+		volumeType       string
+		IOPSi            int
+		sizei            int
+		availabilityZone string
+	)
+
+	for k, v := range volumeOpts {
+		volumeOpts[strings.ToLower(k)] = v
+	}
+
+	if volumeType, ok = volumeOpts["volumetype"]; !ok {
+		volumeType = os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
+	}
+
+	if IOPSs, ok := volumeOpts["iops"]; ok {
+		IOPSi, _ = strconv.Atoi(IOPSs)
+	} else {
+		IOPSi, _ = strconv.Atoi(os.Getenv("REXRAY_DOCKER_IOPS"))
+	}
 	IOPS := int64(IOPSi)
-	sizei, _ := strconv.Atoi(os.Getenv("REXRAY_DOCKER_SIZE"))
+
+	if sizes, ok := volumeOpts["size"]; ok {
+		sizei, _ = strconv.Atoi(sizes)
+	} else {
+		sizei, _ = strconv.Atoi(os.Getenv("REXRAY_DOCKER_SIZE"))
+	}
 	size := int64(sizei)
 	if size == 0 {
 		size = defaultVolumeSize
 	}
-	availabilityZone := os.Getenv("REXRAY_DOCKER_AVAILABILITYZONE")
+
+	if availabilityZone, ok = volumeOpts["availabilityzone"]; !ok {
+		availabilityZone = os.Getenv("REXRAY_DOCKER_AVAILABILITYZONE")
+	}
 
 	_, err = driver.sdm.CreateVolume(
 		false, volumeName, "", "", volumeType, IOPS, size, availabilityZone)

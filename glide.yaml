@@ -1,0 +1,9 @@
+package: main
+import:
+  - package: github.com/spf13/cobra
+    repo:    https://github.com/akutz/cobra
+    ref:     feature/129-HelpFlagSettings
+    vcs:     git
+  - package: github.com/mitchellh/goamz
+    repo:    https://github.com/clintonskitson/goamz
+    vcs:     git

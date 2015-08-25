@@ -213,6 +213,7 @@ func (driver *Driver) Start(host string) error {
 	}
 
 	fmt.Println(fmt.Sprintf("Listening for HTTP (%s)", specPath))
-	select {}
+
+	return nil
 
 }

@@ -1,19 +1,11 @@
 # Overview
-```REX-Ray``` is a Go package for guest storage introspection that is meant to provide visibility and management of external/underlying storage that is attached via methods specified in drivers.  This storage can be from a specific storage platform in addition to being provided by virtual infrastructure.
-
-This can either be integrated at a package level to other Go based projects, or it can used in as a daemon.  Currently, when spinning up the daemon it would result in a ```Unix socket``` or a ```HTTP endpoint```.  The ```REX-Ray``` CLI can be used to start the daemon. In fact, the CLI should provide the majority of functionality for ```REX-Ray```.
-
-There are three types of drivers.  The ```Volume Driver``` represents ```Volume Manager``` abstractions that should satisfy requirements from things that wish to manage storage.  For example, ```Docker``` would leverage this interface which matches the Docker storage API.  The ```Storage Driver``` is an abstraction for ```External Storage``` which can be virtual or from a storage platform.  Lastly, the ```OS Driver``` is provides an abstraction for the differences relating to mounting across operating systems.
-
-The driver to be used is automatically detected or hints can be provided.  Drivers are then initialized as adapters which allow the retrieval of guest identifiers and further information from other platforms that are relevant to storage management.
-
-The following example shows how easy it is to use REX-ray to get a list of volumes from a storage platform such as Amazon Web Services (AWS):
+```REX-Ray``` provides visibility and management of external/underlying storage via guest storage introspection. Available as a Go package, CLI tool, and Linux service, and with built-in third-party support for tools such as ```Docker```, ```REX-Ray``` is easily integrated into any workflow. For example, here's how to list storage for a guest hosted on Amazon Web Services (AWS) with ```REX-Ray```:
 
 ```bash
 [0]akutz@pax:~$ export REXRAY_STORAGEDRIVERS=ec2
 [0]akutz@pax:~$ export AWS_ACCESS_KEY=access_key
 [0]akutz@pax:~$ export AWS_SECRET_KEY=secret_key
-[0]akutz@pax:~$ rexray get-volume
+[0]akutz@pax:~$ rexray volume get
 
 - providername: ec2
   instanceid: i-695bb6ab
@@ -31,7 +23,8 @@ The following example shows how easy it is to use REX-ray to get a list of volum
 [0]akutz@pax:~$
 ```
 
-See below for more examples of using the ```REX-ray``` CLI, features like Docker integration, and more.
+# Downloading
+See the releases area for downloadable binaries.
 
 # State
 We have a first release available that support all of the following capabilities!  
@@ -51,17 +44,15 @@ We have a first release available that support all of the following capabilities
 ```REX-Ray``` can be leveraged by ```Docker``` (1.7+) as a ```VolumeDriver```. ```Docker``` can connect to one or more of these drivers by specifying different ```--host``` flags of ```unix:///run/docker/plugins/name.sock``` or ```tcp://127.0.0.1:port``` when executed. That means getting ```Docker``` to leverage ```REX-Ray``` is as easy as:
 
 ```bash
-# start the docker daemon and active the rex-ray driver
-sudo rexray --daemon --host=unix:///run/docker/plugins/rexray.sock
+# Start the REX-Ray service. The Docker volume driver is enabled
+# by default.
+sudo rexray service start
 
-# create a new container with a volume that leverages the rex-ray driver
+# Create a new container with a volume that leverages the REX-Ray driver
 docker run --volume-driver=rexray -v volumename:/pathtomount container
 ```
 
 Additionally, the [Dogged](https://github.com/emccode/dogged) repo maintains efforts for the EMC {code} team relating to embedding ```REX-Ray``` inside of Container Engines such as Docker. Here you will find ```REX-Ray``` enabling Docker to manage its own storage via Container Data Volumes.
-
-# Downloading
-See the releases area for downloadable binaries.
 
 # Building
 // TODO
@@ -69,7 +60,7 @@ See the releases area for downloadable binaries.
 This might currently require upstream additions for the Goamz package to github.com/clintonskitson/goamz at the snapcopy branch.
 
 ```bash
-docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexray/rexray golang:1.4.2-cross make release
+docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexray/rexray golang:1.5-cross make release
 ```
 
 # Environment Variables
@@ -297,31 +288,40 @@ type Driver interface {
 
 Once the introspection has occurred, ```REX-Ray``` can then manage manage storage using initialized drivers in a common manner between storage providers.  The providers will attach devices via any method possible to get the device attached as the next available  ```/dev/xvd_``` or one that is automatically assigned via the ```REX-Ray``` driver.
 
-## Commands
-Name | Description
------|------------
-```attach-volume``` | Attach a remote volume to this instance
-```copy-snapshot``` | Copy a snapshot to another snapshot
-```detach-volume``` | Detach a remote volume from this instance
-```format-device``` | Format an attached device
-```get-instance``` | Get the local storage instance information
-```get-mount``` | Get the local mounts
-```get-snapshot``` | Get remote volume snapshots
-```get-volume``` | Get remote volumes
-```get-volumemap``` | Get volume mapping
-```get-volumepath``` | Get local mount path of a remote volume
-```mount-device``` | Mount a local device to a mount path
-```mount-volume``` | Mount a remote volume to a mount path
-```new-snapshot``` | Create a new snapshot
-```new-volume``` | Create a new volume
-```remove-snapshot``` | Remote a snapshot
-```remove-volume``` | Remove a remote volume
-```unmount-device``` | Unmount a local device
-```unmount-volume``` | Unmount a remote volume from this instance
-```version``` | Print the ```REX-ray``` CLI version
+The ```REX-Ray``` CLI has a set of top-level commands that each represent logical groupings of 
+common categorizations. Simply execute them to find out more about them!
+
+```bash
+[0]akutz@pax:rexray$ rexray
+REX-Ray:
+  A guest-based storage introspection tool that enables local
+  visibility and management from cloud and storage platforms.
+
+Usage: 
+  rexray [flags]
+  rexray [command]
+
+Available Commands: 
+  volume      The volume manager
+  snapshot    The snapshot manager
+  device      The device manager
+  driver      The driver manager
+  service     The service controller
+  version     Print the version
+  help        Help about any command
+
+Flags:
+  -c, --config="$HOME/.rexray/config.yaml": The REX-Ray configuration file
+  -d, --debug=false: Enables verbose output
+  -?, --help=false: Help for rexray
+  -h, --host="tcp://127.0.0.1:7979": The REX-Ray service address
+
+
+Use "rexray [command] --help" for more information about a command.
+```
 
 ## Examples
-The follow examples demonstrate how to configure storage platforms and use the ```REX-ray``` CLI to interact with them.
+The follow examples demonstrate how to configure storage platforms and use the ```REX-Ray``` CLI to interact with them.
 
 ### Azure
 // TODO
@@ -331,7 +331,7 @@ The follow examples demonstrate how to configure storage platforms and use the `
 export REXRAY_STORAGEDRIVERS=ec2
 export AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key"
 
-./rexray get-volume
+./rexray volume get
 
 - providername: ec2
   instanceid: i-695bb6ab
@@ -367,7 +367,7 @@ export AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key"
 export REXRAY_STORAGEDRIVERS=rackspace
 export OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password'
 
-./rexray get-volume
+./rexray volume get
 
 - providername: RackSpace
   instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7
@@ -388,7 +388,7 @@ export OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=user
 export REXRAY_STORAGEDRIVERS=scaleio
 export GOSCALEIO_ENDPOINT=https://mdm1.scaleio.local:443/api GOSCALEIO_INSECURE=true GOSCALEIO_USERNAME=admin GOSCALEIO_PASSWORD=Scaleio123 GOSCALEIO_SYSTEMID=1aa75ddc59b6a8f7 GOSCALEIO_PROTECTIONDOMAINID=ea81096700000000 GOSCALEIO_STORAGEPOOLID=1041757800000001
 
-./rexray get-volume
+./rexray volume get
 ```
 
 ### XtremIO (iSCSI)
@@ -399,7 +399,7 @@ export GOXTREMIO_USERNAME="admin"
 export GOXTREMIO_PASSWORD="Xtrem10"
 export REXRAY_XTREMIO_MULTIPATH=true
 
-./rexray get-volume
+./rexray volume get
 ```
 
 ### vSphere
@@ -415,7 +415,7 @@ export REXRAY_XTREMIO_MULTIPATH=true
 ```REX-Ray``` can be run as a CLI for interactive usage, but it can also be executed with the ```--daemon``` flag to spawn a background process that hosts an HTTP server with a RESTful API.
 
 ## Installation
-The ```REX-ray``` daemon comes with out-of-the-box support for SysV init scripts and systemd services. For example, in order to configure ```REX-ray``` as a systemd service using the included ```rexray.service``` unit file, please follow the commands below:
+The ```REX-ray``` daemon comes with out-of-the-box support for SysV init scripts and systemd services. For example, in order to configure ```REX-Ray``` as a systemd service using the included ```rexray.service``` unit file, please follow the commands below:
 
 ```bash
 # copy the service file to the systemd service unit file directory

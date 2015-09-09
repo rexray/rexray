@@ -1,9 +1,9 @@
 [Unit]
-Description=Start Rex-RAY Service
+Description=REX-Ray Service
 Before=docker.service
 
 [Service]
-EnvironmentFile=/etc/environment
+EnvironmentFile=/etc/sysconfig/rexray
 ExecStart=/bin/rexray --daemon
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process

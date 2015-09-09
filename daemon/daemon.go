@@ -1,54 +1,58 @@
+// +build !exclude_module
+
 package daemon
 
 import (
-	"errors"
-	"fmt"
 	"os"
-	"strings"
 
-	"github.com/emccode/rexray/drivers/daemon"
-	"github.com/emccode/rexray/drivers/storage"
+	log "github.com/Sirupsen/logrus"
+	"github.com/emccode/rexray/daemon/module"
 )
 
-var (
-	debug         string
-	daemonDrivers string
-)
+func Start(host string, init chan error, stop <-chan os.Signal) {
 
-const (
-	defaultDaemon string = "dockervolumedriver"
-)
+	isErr := false
 
-func init() {
-	debug = strings.ToUpper(os.Getenv("REXRAY_DEBUG"))
-	initDaemonDrivers()
-}
+	initModErr := module.InitializeDefaultModules()
 
-func initDaemonDrivers() {
-	daemonDrivers = strings.ToLower(os.Getenv("REXRAY_DAEMONDRIVERS"))
-	var err error
-	daemondriver.Adapters, err = daemondriver.GetDrivers(daemonDrivers)
-	if err != nil && debug == "TRUE" {
-		fmt.Println(err)
-	}
-	if len(daemondriver.Adapters) == 0 {
-		if debug == "true" {
-			fmt.Println("Rexray: No daemon adapters initialized")
+	if initModErr != nil {
+		init <- initModErr
+		isErr = true
+		log.Error("default module(s) failed to initialize")
+
+	} else {
+
+		startModErr := module.StartDefaultModules()
+		if startModErr != nil {
+			init <- startModErr
+			isErr = true
+			log.Error("default module(s) failed to start")
 		}
+
 	}
 
-}
+	log.Info("service sent registered modules start signals")
 
-func Start(hostname string) error {
-	if len(storagedriver.Adapters) == 0 {
-		return errors.New("No storage driver initialized")
+	// if there is a channel receiving initialization errors go ahead and
+	// close it so that callers reading this channel will know that the
+	// initialization of the daemon is complete
+	if init != nil {
+		close(init)
 	}
 
-	if len(daemondriver.Adapters) > 0 {
-		for _, driver := range daemondriver.Adapters {
-			return driver.Start(hostname)
-		}
+	// if there were initialization errors go ahead and return instead of
+	// waiting for a stop signal
+	if isErr {
+		log.Error("service initialized failed")
+		return
 	}
 
-	return errors.New("No daemon driver initialized")
+	log.Info("service successfully initialized, waiting on stop signal")
+
+	// if a channel to receive a stop signal is provided then block until
+	// a stop signal is received
+	if stop != nil {
+		<-stop
+		log.Info("Service received stop signal")
+	}
 }

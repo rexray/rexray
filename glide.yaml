@@ -1,0 +1,32 @@
+package: github.com/emccode/rexray
+import:
+  - package: github.com/spf13/pflag
+    repo:    https://github.com/spf13/pflag
+    vcs:     git
+  - package: github.com/spf13/viper
+    repo:    https://github.com/akutz/viper
+    ref:     support/typed-vars-plfag-defaults
+    vcs:     git
+  - package: github.com/spf13/cobra
+    repo:    https://github.com/akutz/cobra
+    ref:     feature/rexray
+    vcs:     git
+  - package: github.com/goamz/goamz
+    repo:    https://github.com/clintonskitson/goamz
+    ref:     snapcopy
+    vcs:     git
+  - package: github.com/emccode/goscaleio
+    repo:    https://github.com/akutz/goscaleio.git
+    ref:     feature/manual-config
+    vcs:     git
+  - package: github.com/emccode/goxtremio
+    repo:    https://github.com/akutz/goxtremio.git
+    ref:     feature/rexray
+    vcs:     git
+  - package: github.com/akutz/golf
+    ref:     v0.1.0
+    vcs:     git
+  - package: github.com/Sirupsen/logrus
+    repo:    https://github.com/akutz/logrus.git
+    ref:     feature/golfs
+    vcs:     git

@@ -1,42 +1,82 @@
 package os
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"strings"
-
+	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/mount"
-	osdriver "github.com/emccode/rexray/drivers/os"
+	"github.com/emccode/rexray/config"
+	"github.com/emccode/rexray/errors"
+	"github.com/emccode/rexray/util"
 )
 
-var (
-	debug     string
-	osDrivers string
-)
+var driverInitFuncs map[string]InitFunc
+
+type InitFunc func(conf *config.Config) (Driver, error)
 
 func init() {
-	debug = strings.ToUpper(os.Getenv("REXRAY_DEBUG"))
-	initOSDrivers()
+	driverInitFuncs = make(map[string]InitFunc)
 }
 
-func initOSDrivers() {
-	osDrivers = strings.ToLower(os.Getenv("REXRAY_OSDRIVERS"))
-	var err error
-	osdriver.Adapters, err = osdriver.GetDrivers(osDrivers)
-	if err != nil && debug == "TRUE" {
-		fmt.Println(err)
+func Register(name string, initFunc InitFunc) {
+	driverInitFuncs[name] = initFunc
+}
+
+type OSDriverManager struct {
+	Drivers map[string]Driver
+	Config  *config.Config
+}
+
+func NewOSDriverManager(conf *config.Config) (*OSDriverManager, error) {
+
+	drivers, err := getDrivers(conf)
+	if err != nil {
+		return nil, err
 	}
-	if len(osdriver.Adapters) == 0 {
-		if debug == "true" {
-			fmt.Println("Rexray: No OS adapters initialized")
+
+	if len(drivers) == 0 {
+		return nil, errors.New("no os drivers initialized")
+	}
+
+	return &OSDriverManager{drivers, conf}, nil
+}
+
+func (osdm *OSDriverManager) IsDrivers() bool {
+	return len(osdm.Drivers) > 0
+}
+
+func getDrivers(conf *config.Config) (map[string]Driver, error) {
+
+	driverNames := conf.OsDrivers
+
+	log.WithFields(log.Fields{
+		"driverInitFuncs": driverInitFuncs,
+		"driverNames":     driverNames}).Debug("getting driver instances")
+
+	drivers := map[string]Driver{}
+
+	for name, initFunc := range driverInitFuncs {
+		if len(driverNames) > 0 && !util.StringInSlice(name, driverNames) {
+			continue
 		}
+
+		var initErr error
+		drivers[name], initErr = initFunc(conf)
+		if initErr != nil {
+			log.WithFields(log.Fields{
+				"driverName": name,
+				"error":      initErr}).Debug("error initializing driver")
+			delete(drivers, name)
+			continue
+		}
+
+		log.WithField("driverName", name).Debug("initialized driver")
 	}
+
+	return drivers, nil
 }
 
-func GetMounts(deviceName, mountPoint string) ([]*mount.Info, error) {
+func (osdm *OSDriverManager) GetMounts(deviceName, mountPoint string) ([]*mount.Info, error) {
 
-	for _, driver := range osdriver.Adapters {
+	for _, driver := range osdm.Drivers {
 		mounts, err := driver.GetMounts(deviceName, mountPoint)
 		if err != nil {
 			return nil, err
@@ -47,29 +87,29 @@ func GetMounts(deviceName, mountPoint string) ([]*mount.Info, error) {
 	return nil, errors.New("No OS detected")
 }
 
-func Mounted(mountPoint string) (bool, error) {
-	for _, driver := range osdriver.Adapters {
+func (osdm *OSDriverManager) Mounted(mountPoint string) (bool, error) {
+	for _, driver := range osdm.Drivers {
 		return driver.Mounted(mountPoint)
 	}
 	return false, errors.New("No OS detected")
 }
 
-func Unmount(mountPoint string) error {
-	for _, driver := range osdriver.Adapters {
+func (osdm *OSDriverManager) Unmount(mountPoint string) error {
+	for _, driver := range osdm.Drivers {
 		return driver.Unmount(mountPoint)
 	}
 	return errors.New("No OS detected")
 }
 
-func Mount(device, target, mountOptions, mountLabel string) error {
-	for _, driver := range osdriver.Adapters {
+func (osdm *OSDriverManager) Mount(device, target, mountOptions, mountLabel string) error {
+	for _, driver := range osdm.Drivers {
 		return driver.Mount(device, target, mountOptions, mountLabel)
 	}
 	return errors.New("No OS detected")
 }
 
-func Format(deviceName, fsType string, overwriteFs bool) error {
-	for _, driver := range osdriver.Adapters {
+func (osdm *OSDriverManager) Format(deviceName, fsType string, overwriteFs bool) error {
+	for _, driver := range osdm.Drivers {
 		return driver.Format(deviceName, fsType, overwriteFs)
 	}
 	return errors.New("No OS detected")

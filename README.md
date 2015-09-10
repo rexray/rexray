@@ -60,7 +60,7 @@ Additionally, the [Dogged](https://github.com/emccode/dogged) repo maintains eff
 This might currently require upstream additions for the Goamz package to github.com/clintonskitson/goamz at the snapcopy branch.
 
 ```bash
-docker run --rm -it -v $GOPATH:/go -w /go/src/github.com/emccode/rexray/rexray golang:1.5-cross make release
+docker run --rm -it -e GO15VENDOREXPERIMENT=1 -v $GOPATH:/go -w /go/src/github.com/emccode/rexray/ golang:1.5 make install
 ```
 
 # Environment Variables
@@ -288,7 +288,7 @@ type Driver interface {
 
 Once the introspection has occurred, ```REX-Ray``` can then manage manage storage using initialized drivers in a common manner between storage providers.  The providers will attach devices via any method possible to get the device attached as the next available  ```/dev/xvd_``` or one that is automatically assigned via the ```REX-Ray``` driver.
 
-The ```REX-Ray``` CLI has a set of top-level commands that each represent logical groupings of 
+The ```REX-Ray``` CLI has a set of top-level commands that each represent logical groupings of
 common categorizations. Simply execute them to find out more about them!
 
 ```bash
@@ -297,11 +297,11 @@ REX-Ray:
   A guest-based storage introspection tool that enables local
   visibility and management from cloud and storage platforms.
 
-Usage: 
+Usage:
   rexray [flags]
   rexray [command]
 
-Available Commands: 
+Available Commands:
   volume      The volume manager
   snapshot    The snapshot manager
   device      The device manager

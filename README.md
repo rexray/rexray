@@ -1,4 +1,4 @@
-# Overview
+# REX-Ray [![Build Status](https://travis-ci.org/emccode/rexray.svg?branch=master)](https://travis-ci.org/emccode/rexray)
 ```REX-Ray``` provides visibility and management of external/underlying storage via guest storage introspection. Available as a Go package, CLI tool, and Linux service, and with built-in third-party support for tools such as ```Docker```, ```REX-Ray``` is easily integrated into any workflow. For example, here's how to list storage for a guest hosted on Amazon Web Services (AWS) with ```REX-Ray```:
 
 ```bash

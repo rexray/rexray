@@ -5,11 +5,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/rexray"
 	"github.com/emccode/rexray/util"
+	version "github.com/emccode/rexray/version_info"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v1"
 )
@@ -96,7 +97,13 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%v\n", rexray.Version)
+
+		buildDate := time.Unix(version.BuildDate(), 0)
+
+		fmt.Printf("SemVer: %s\n", version.FullSemVer())
+		fmt.Printf("Branch: %s\n", version.Branch())
+		fmt.Printf("Commit: %s\n", version.Sha())
+		fmt.Printf("Formed: %s\n", buildDate.Format(time.RFC1123))
 	},
 }
 

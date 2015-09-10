@@ -5,7 +5,12 @@ WD := $(shell pwd)
 export MAKEFLAGS := $(MAKEFLAGS) -k
 export GOBIN := $(GOPATH)/bin
 export GO15VENDOREXPERIMENT := 1
-SEMVER := $(shell git describe --tags | sed -E 's/^v\.?//g')
+GITDSC := $(shell git describe --long)
+BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
+TGTVER := $(shell cat VERSION | tr -d " \n\r\t")
+BLDDTE := $(shell date +%s)
+CMTDTE := $(shell git show HEAD -s --format=%ct)
+CMTHSH := $(shell git show HEAD -s --format=%H)
 GOFLAGS := $(GOFLAGS)
 GLIDE := $(GOBIN)/glide
 NV := $$($(GLIDE) novendor)
@@ -14,8 +19,14 @@ BASEDIR := $(GOPATH)/src/$(BASEPKG)
 BASEDIR_NAME := $(shell basename $(BASEDIR))
 BASEDIR_PARENTDIR := $(shell dirname $(BASEDIR))
 BASEDIR_TEMPMVLOC := $(BASEDIR_PARENTDIR)/.$(BASEDIR_NAME)-$(shell date +%s)
-VERSIONPKG := $(BASEPKG)
-LDFLAGS := -ldflags "-X $(VERSIONPKG).Version=$(SEMVER)" 
+VERSIONPKG := $(BASEPKG)/version_info
+LDF_GITDSC := -X $(VERSIONPKG).GitDescribe=$(GITDSC)
+LDF_BRANCH := -X $(VERSIONPKG).BranchName=$(BRANCH)
+LDF_TGTVER := -X $(VERSIONPKG).TargetVersion=$(TGTVER)
+LDF_BLDDTE := -X $(VERSIONPKG).BuildDateEpochStr=$(BLDDTE)
+LDF_CMTDTE := -X $(VERSIONPKG).CommitDateEpochStr=$(CMTDTE)
+LDF_CMTHSH := -X $(VERSIONPKG).CommitHash=$(CMTHSH)
+LDFLAGS := -ldflags "$(LDF_GITDSC) $(LDF_BRANCH) $(LDF_TGTVER) $(LDF_BLDDTE) $(LDF_CMTDTE) $(LDF_CMTHSH)" 
 RPMBUILD := $(WD)/.rpmbuild
 EMCCODE := $(GOPATH)/src/github.com/emccode
 PRINT_STATUS = export EC=$$?; cd $(WD); if [ "$$EC" -eq "0" ]; then printf "SUCCESS!\n"; else exit $$EC; fi

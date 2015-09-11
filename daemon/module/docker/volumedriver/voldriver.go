@@ -21,7 +21,7 @@ import (
 	"github.com/emccode/rexray/volume"
 )
 
-const MOD_ADDR = "unix:///run/docker/plugins/rexray-local.sock"
+const MOD_ADDR = "unix:///run/docker/plugins/rexray.sock"
 const MOD_PORT = 7980
 const MOD_NAME = "DockerVolumeDriverModule"
 const MOD_DESC = "The REX-Ray Docker VolumeDriver module"

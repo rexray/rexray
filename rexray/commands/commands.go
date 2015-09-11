@@ -45,12 +45,14 @@ func initCommands() {
 	adapterCmd.AddCommand(adapterGetInstancesCmd)
 
 	RexrayCmd.AddCommand(serviceStartCmd)
+	RexrayCmd.AddCommand(serviceRestartCmd)
 	RexrayCmd.AddCommand(serviceStopCmd)
 	RexrayCmd.AddCommand(serviceStatusCmd)
 
 	RexrayCmd.AddCommand(serviceCmd)
 	serviceCmd.AddCommand(serviceInstallCmd)
 	serviceCmd.AddCommand(serviceStartCmd)
+	serviceCmd.AddCommand(serviceRestartCmd)
 	serviceCmd.AddCommand(serviceStopCmd)
 	serviceCmd.AddCommand(serviceStatusCmd)
 	serviceCmd.AddCommand(serviceInitSysCmd)
@@ -310,6 +312,14 @@ var serviceStartCmd = &cobra.Command{
 	Short: "Start the service",
 	Run: func(cmd *cobra.Command, args []string) {
 		Start()
+	},
+}
+
+var serviceRestartCmd = &cobra.Command{
+	Use:   "restart",
+	Short: "Restart the service",
+	Run: func(cmd *cobra.Command, args []string) {
+		Restart()
 	},
 }
 

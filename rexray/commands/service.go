@@ -49,23 +49,18 @@ func GetInitSystemType() int {
 func Install() {
 	checkOpPerms("installed")
 
-	_, _, thisAbsPath := util.GetThisPathParts()
+	_, _, exeFile := util.GetThisPathParts()
 
-	exeDir := filepath.Dir(EXEFILE)
-	os.MkdirAll(exeDir, 0755)
-	os.Chown(exeDir, 0, 0)
-
-	exec.Command("cp", "-f", thisAbsPath, EXEFILE).Run()
-	os.Chown(EXEFILE, 0, 0)
-	exec.Command("chmod", "4755", EXEFILE).Run()
+	os.Chown(exeFile, 0, 0)
+	exec.Command("chmod", "4755", exeFile).Run()
 
 	switch GetInitSystemType() {
 	case SYSTEMD:
-		installSystemD()
+		installSystemD(exeFile)
 	case UPDATERCD:
-		installUpdateRcd()
+		installUpdateRcd(exeFile)
 	case CHKCONFIG:
-		installChkConfig()
+		installChkConfig(exeFile)
 	}
 }
 
@@ -295,8 +290,8 @@ func checkOpPerms(op string) error {
 	return nil
 }
 
-func installSystemD() {
-	createUnitFile()
+func installSystemD(exeFile string) {
+	createUnitFile(exeFile)
 	createEnvFile()
 
 	cmd := exec.Command("systemctl", "enable", "rexray.service")
@@ -314,8 +309,8 @@ func installSystemD() {
 	fmt.Print("started with the command 'sudo systemctl start rexray'.\n\n")
 }
 
-func installUpdateRcd() {
-	createInitFile()
+func installUpdateRcd(exeFile string) {
+	createInitFile(exeFile)
 	cmd := exec.Command("update-rc.d", "rexray", "defaults")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -331,8 +326,8 @@ func installUpdateRcd() {
 	fmt.Print("started with the command 'sudo /etc/init.d/rexray start'.\n\n")
 }
 
-func installChkConfig() {
-	createInitFile()
+func installChkConfig(exeFile string) {
+	createInitFile(exeFile)
 	cmd := exec.Command("chkconfig", "rexray", "on")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -362,7 +357,7 @@ func createEnvFile() {
 	f.WriteString("REXRAY_HOME=/opt/rexray")
 }
 
-func createUnitFile() {
+func createUnitFile(exeFile string) {
 	f, err := os.OpenFile(UNTFILE, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
@@ -375,19 +370,17 @@ func createUnitFile() {
 	f.WriteString("\n")
 	f.WriteString("[Service]\n")
 	f.WriteString(fmt.Sprintf("EnvironmentFile=%s\n", ENVFILE))
-	f.WriteString(fmt.Sprintf("ExecStart=%s --daemon\n", EXEFILE))
-	f.WriteString("ExecReload=/bin/kill -HUP $MAINPID\n")
+	f.WriteString(fmt.Sprintf("ExecStart=%s start -f\n", exeFile))
+	f.WriteString(fmt.Sprintf("ExecReload=/bin/kill -HUP $MAINPID\n"))
 	f.WriteString("KillMode=process\n")
-	f.WriteString("Restart=always\n")
-	f.WriteString("StartLimitInterval=0\n")
 	f.WriteString("\n")
 	f.WriteString("[Install]\n")
 	f.WriteString("WantedBy=docker.service\n")
 	f.WriteString("\n")
 }
 
-func createInitFile() {
-	os.Symlink(EXEFILE, INTFILE)
+func createInitFile(exeFile string) {
+	os.Symlink(exeFile, INTFILE)
 }
 
 const RexRayLogoAscii = `

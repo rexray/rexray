@@ -1,0 +1,4 @@
+StorageDrivers: 
+  - ec2
+AwsAccessKey: 
+AwsSecretKey: 

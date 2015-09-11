@@ -99,6 +99,28 @@ func ReadPidFile() (int, error) {
 	return pid, nil
 }
 
+func LineReader(filePath string) <-chan string {
+	if !FileExists(filePath) {
+		return nil
+	}
+
+	c := make(chan string)
+	go func() {
+		f, err := os.Open(filePath)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		s := bufio.NewScanner(f)
+		for s.Scan() {
+			c <- s.Text()
+		}
+		close(c)
+	}()
+	return c
+}
+
 func FileExists(filePath string) bool {
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
 		return true

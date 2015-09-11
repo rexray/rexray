@@ -63,10 +63,16 @@ This might currently require upstream additions for the Goamz package to github.
 docker run --rm -it -e GO15VENDOREXPERIMENT=1 -v $GOPATH:/go -w /go/src/github.com/emccode/rexray/ golang:1.5 make install
 ```
 
-# Environment Variables
-The primary method used to configure the ```REX-Ray``` library and influence its behavior is through he use of environment variables.
+# Configuration
+There are two methods to configure ```REX-Ray```.  One is through usage of environment variables and the other is through configuration files.  These two methods are respected equally whether interacting through the CLI or packages/library.
 
-## General
+## Configuration File
+The configuration file should be placed in the local profile as a YAML file `~/.rexray/config.yaml` or JSON file `~/.rexray/config.json`.  The `/rexray/config/constants.go` file in this repo includes all of the available parameters.
+
+
+## Environment Variables
+It is expected that environment variables are managed in traditional manners.  There is an exception however, where ```REX-Ray``` will evaluate `/etc/environment` to ensure these values are loaded since when elevating privileges these thend to only be present with an `sudo su`.
+
 Name | Description | Optional
 -----|-------------|-----------
 ```REXRAY_DEBUG``` | Set to ```true``` or ```TRUE``` to enable debug messages | yes
@@ -124,6 +130,37 @@ Name | Description
 ```GOXTREMIO_INSECURE``` | Set to ```true``` or ```TRUE``` to disable SSL certificate validation
 ```REXRAY_XTREMIO_DM``` | Set to ```true``` or ```TRUE``` to indicate that the device-mapper is installed and claiming devices
 ```REXRAY_XTREMIO_MULTIPATH``` | Set to ```true``` or ```TRUE``` to indicate that multipath is installed and claiming devices, overrides DM setting
+
+
+
+
+## Testing
+In the case of doing local tests, since it passes HTTP via Unix socket, you can use tools like ```socat``` and others like ```curl-unix-socket``` to talk with the API.
+
+### socat
+This can be used for as a simple test of the messages that do not have bodies since it is not HTTP aware.  The following will test a basic activation message.
+
+```bash
+echo -e "GET /Plugin.Activate HTTP/1.1\r\n" | socat unix-connect:/run/docker/plugins/rexray.sock STDIO
+```
+
+### curl-unix-socket (go get github.com/Soulou/curl-unix-socket)
+This utility is HTTP and Unix socket aware so can do POST messages in a HTTP friendly manner which allows us to specify a body.  
+
+```bash
+/usr/src/go/bin/curl-unix-socket -v -X POST -d '{"Name":"test22"}\r\n' unix:///run/docker/plugins/rexray.sock:/VolumeDriver.Mount
+
+> POST /VolumeDriver.Mount HTTP/1.1
+> Socket: /run/docker/plugins/rexray.sock
+> Content-Length: 21
+>
+< HTTP/1.1 200 OK
+< Content-Type: appplication/vnd.docker.plugins.v1+json
+< Date: Fri, 22 May 2015 15:52:21 GMT
+< Content-Length: 49
+{"Mountpoint": "/var/lib/docker/volumes/test22"}
+```
+
 
 # ```REX-Ray``` Library
 This section outlines the primary types in the ```REX-Ray``` library as well as providing some code examples.
@@ -283,177 +320,6 @@ type Driver interface {
 }
 ```
 
-# REX-Ray CLI
-```REX-Ray``` can be used independently as a CLI tool that provides guest storage introspection and management.  The CLI should be distributed to the system that requires introspection and storage management.  It will discover proper drivers to use, and then with proper authorization, will get further details about those devices.
-
-Once the introspection has occurred, ```REX-Ray``` can then manage manage storage using initialized drivers in a common manner between storage providers.  The providers will attach devices via any method possible to get the device attached as the next available  ```/dev/xvd_``` or one that is automatically assigned via the ```REX-Ray``` driver.
-
-The ```REX-Ray``` CLI has a set of top-level commands that each represent logical groupings of
-common categorizations. Simply execute them to find out more about them!
-
-```bash
-[0]akutz@pax:rexray$ rexray
-REX-Ray:
-  A guest-based storage introspection tool that enables local
-  visibility and management from cloud and storage platforms.
-
-Usage:
-  rexray [flags]
-  rexray [command]
-
-Available Commands:
-  volume      The volume manager
-  snapshot    The snapshot manager
-  device      The device manager
-  driver      The driver manager
-  service     The service controller
-  version     Print the version
-  help        Help about any command
-
-Flags:
-  -c, --config="$HOME/.rexray/config.yaml": The REX-Ray configuration file
-  -d, --debug=false: Enables verbose output
-  -?, --help=false: Help for rexray
-  -h, --host="tcp://127.0.0.1:7979": The REX-Ray service address
-
-
-Use "rexray [command] --help" for more information about a command.
-```
-
-## Examples
-The follow examples demonstrate how to configure storage platforms and use the ```REX-Ray``` CLI to interact with them.
-
-### Azure
-// TODO
-
-### AWS
-```bash
-export REXRAY_STORAGEDRIVERS=ec2
-export AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key"
-
-./rexray volume get
-
-- providername: ec2
-  instanceid: i-695bb6ab
-  volumeid: vol-dedbadc3
-  devicename: /dev/sda1
-  region: us-west-1
-  status: attached
-- providername: ec2
-  instanceid: i-695bb6ab
-  volumeid: vol-04c4b219
-  devicename: /dev/xvdb
-  region: us-west-1
-  status: attached
-```
-
-### Ceph
-// TODO
-
-### CloudStack
-// TODO
-
-### GCE
-// TODO
-
-### KVM
-// TODO
-
-### OpenStack
-// TODO
-
-### RackSpace
-```bash
-export REXRAY_STORAGEDRIVERS=rackspace
-export OS_AUTH_URL=https://identity.api.rackspacecloud.com/v2.0 OS_USERNAME=username OS_PASSWORD='password'
-
-./rexray volume get
-
-- providername: RackSpace
-  instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7
-  volumeid: 738ea6b9-8c49-416c-97b7-a5264a799eb6
-  devicename: /dev/xvdb
-  region: DFW
-  status: ""
-- providername: RackSpace
-  instanceid: 5ad7727c-aa5a-43e4-8ab7-a499295032d7
-  volumeid: 43de157d-3dfb-441f-b832-4d2d8cf457cc
-  devicename: /dev/xvdd
-  region: DFW
-  status: ""
-```
-
-### ScaleIO
-```bash
-export REXRAY_STORAGEDRIVERS=scaleio
-export GOSCALEIO_ENDPOINT=https://mdm1.scaleio.local:443/api GOSCALEIO_INSECURE=true GOSCALEIO_USERNAME=admin GOSCALEIO_PASSWORD=Scaleio123 GOSCALEIO_SYSTEMID=1aa75ddc59b6a8f7 GOSCALEIO_PROTECTIONDOMAINID=ea81096700000000 GOSCALEIO_STORAGEPOOLID=1041757800000001
-
-./rexray volume get
-```
-
-### XtremIO (iSCSI)
-```bash
-export GOXTREMIO_ENDPOINT="https://10.5.132.140/api/json"
-export GOXTREMIO_INSECURE="true"
-export GOXTREMIO_USERNAME="admin"
-export GOXTREMIO_PASSWORD="Xtrem10"
-export REXRAY_XTREMIO_MULTIPATH=true
-
-./rexray volume get
-```
-
-### vSphere
-// TODO
-
-### vCloud Director
-// TODO
-
-### VIPR-C
-// TODO
-
-# REX-Ray Daemon
-```REX-Ray``` can be run as a CLI for interactive usage, but it can also be executed with the ```--daemon``` flag to spawn a background process that hosts an HTTP server with a RESTful API.
-
-## Installation
-The ```REX-ray``` daemon comes with out-of-the-box support for SysV init scripts and systemd services. For example, in order to configure ```REX-Ray``` as a systemd service using the included ```rexray.service``` unit file, please follow the commands below:
-
-```bash
-# copy the service file to the systemd service unit file directory
-sudo cp rexray.service /usr/lib/systemd/system/
-
-# notify systemd about the new service & enable it to start on boot
-sudo systemctl enable rexray
-
-# start the rexray service
-sudo systemctl start rexray
-```
-
-## Testing
-In the case of doing local tests, since it passes HTTP via Unix socket, you can use tools like ```socat``` and others like ```curl-unix-socket``` to talk with the API.
-
-### socat
-This can be used for as a simple test of the messages that do not have bodies since it is not HTTP aware.  The following will test a basic activation message.
-
-```bash
-echo -e "GET /Plugin.Activate HTTP/1.1\r\n" | socat unix-connect:/run/docker/plugins/rexray.sock STDIO
-```
-
-### curl-unix-socket (go get github.com/Soulou/curl-unix-socket)
-This utility is HTTP and Unix socket aware so can do POST messages in a HTTP friendly manner which allows us to specify a body.  
-
-```bash
-/usr/src/go/bin/curl-unix-socket -v -X POST -d '{"Name":"test22"}\r\n' unix:///run/docker/plugins/rexray.sock:/VolumeDriver.Mount
-
-> POST /VolumeDriver.Mount HTTP/1.1
-> Socket: /run/docker/plugins/rexray.sock
-> Content-Length: 21
->
-< HTTP/1.1 200 OK
-< Content-Type: appplication/vnd.docker.plugins.v1+json
-< Date: Fri, 22 May 2015 15:52:21 GMT
-< Content-Length: 49
-{"Mountpoint": "/var/lib/docker/volumes/test22"}
-```
 
 # Contributions
 We are actively looking for contributors to this project.  This can involve any number of area.

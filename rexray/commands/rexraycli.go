@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	_ "github.com/emccode/rexray/imports"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -14,8 +16,6 @@ import (
 	"github.com/emccode/rexray/volume"
 )
 
-const REXHOME = "/opt/rexray"
-const EXEFILE = "/opt/rexray/rexray"
 const ENVFILE = "/etc/rexray/rexray.env"
 const CFGFILE = "/etc/rexray/rexray.conf"
 const UNTFILE = "/etc/systemd/system/rexray.service"
@@ -246,7 +246,11 @@ func isInitDriverManagersCmd(cmd *cobra.Command) bool {
 		cmd != serviceInstallCmd &&
 		cmd != serviceStatusCmd &&
 		cmd != serviceStopCmd &&
-		!(cmd == serviceStartCmd && (isClient || isForeground))
+		!(cmd == serviceStartCmd && (isClient || isForeground)) &&
+		cmd != moduleCmd &&
+		cmd != moduleTypesCmd &&
+		cmd != moduleInstancesCmd &&
+		cmd != moduleInstancesListCmd
 }
 
 func initDriverManagers() error {

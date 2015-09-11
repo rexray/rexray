@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"regexp"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -13,7 +15,17 @@ import (
 	"github.com/emccode/rexray/util"
 )
 
+var (
+	envVarRx *regexp.Regexp
+)
+
 func init() {
+	var envVarRxErr error
+	envVarRx, envVarRxErr = regexp.Compile(`^\s*([^#=]+)=(.+)$`)
+	if envVarRxErr != nil {
+		panic(envVarRxErr)
+	}
+	loadEtcEnvironment()
 	initConfigKeyMap()
 }
 
@@ -226,4 +238,18 @@ func (c *Config) Sync() {
 	w(XtremIoDeviceMapper, c.XtremIoDeviceMapper)
 	w(XtremIoMultipath, c.XtremIoMultipath)
 	w(XtremIoRemoteManagement, c.XtremIoRemoteManagement)
+}
+
+func loadEtcEnvironment() {
+	lr := util.LineReader("/etc/environment")
+	if lr == nil {
+		return
+	}
+	for l := range lr {
+		m := envVarRx.FindStringSubmatch(l)
+		if m == nil {
+			continue
+		}
+		os.Setenv(m[1], m[2])
+	}
 }

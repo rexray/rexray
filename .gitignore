@@ -1,3 +1,5 @@
+.bintray-filtered.json
+.bin/
 vendor/
 .build/
 .rpmbuild/

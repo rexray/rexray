@@ -1,3 +1,13 @@
 language: go
 go:
-  - 1.5
+- 1.5.1
+script: make build-all
+deploy:
+  provider: bintray
+  file: .bintray-filtered.json
+  user: akutz
+  key: 60b9a06880345572303b65d079dd9f82d16fb8b6
+  skip_cleanup: true
+  on:
+    repo: emccode/rexray
+    branch: master

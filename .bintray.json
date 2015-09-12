@@ -1,0 +1,21 @@
+{
+    "package": {
+        "name": "rexray", 
+        "repo": "generic",
+        "subject": "akutz"
+    },
+
+    "version": {
+        "name": "${SEMVER}",
+        "desc": "${DSCRIP}",
+        "released": "${RELDTE}",
+        "gpgSign": false
+    },
+
+    "files": [{
+        "includePattern": ".bin/(.+)/(.*\.tar\.gz)",
+        "uploadPattern": "$2"
+    }],
+
+    "publish": true
+}

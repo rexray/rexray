@@ -103,6 +103,7 @@ var versionCmd = &cobra.Command{
 		buildDate := time.Unix(version.BuildDate(), 0)
 
 		fmt.Printf("SemVer: %s\n", version.FullSemVer())
+		fmt.Printf("Binary: %s\n", version.BinArch())
 		fmt.Printf("Branch: %s\n", version.Branch())
 		fmt.Printf("Commit: %s\n", version.Sha())
 		fmt.Printf("Formed: %s\n", buildDate.Format(time.RFC1123))

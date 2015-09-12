@@ -18,6 +18,7 @@ var (
 	BuildDateEpochStr  string
 	BranchName         string
 	TargetVersion      string
+	BinArchStr         string
 
 	version  *Version
 	semVerRx *regexp.Regexp
@@ -36,6 +37,7 @@ type Version struct {
 	BranchName      string `json:"branchName"`
 	CommitDate      int64  `json:"commitDate"`
 	BuildDate       int64  `json:"buildDate"`
+	BinArch         string `json:"binArch"`
 }
 
 func init() {
@@ -55,6 +57,7 @@ func getVersion() *Version {
 			"buildDateEpcoh":  BuildDateEpochStr,
 			"branchName":      BranchName,
 			"targetVersion":   TargetVersion,
+			"binArch":         BinArchStr,
 		}
 		log.WithFields(versionFields).Debug("rexray version info")
 		version = parseSemVer(GitDescribe, TargetVersion)
@@ -83,6 +86,7 @@ func parseSemVer(semVer, targetVer string) *Version {
 		BranchName: BranchName,
 		CommitDate: commitDate,
 		BuildDate:  buildDate,
+		BinArch:    BinArchStr,
 	}
 
 	parseSemVer_(v, semVer, targetVer)
@@ -212,4 +216,8 @@ func CommitDate() int64 {
 
 func BuildDate() int64 {
 	return getVersion().BuildDate
+}
+
+func BinArch() string {
+	return getVersion().BinArch
 }

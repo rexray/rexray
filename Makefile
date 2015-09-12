@@ -1,18 +1,22 @@
-.PHONY: all install build deps fmt fix clean
-.NOTPARALLEL: all test clean deps fmt fix pre-build build post-build install rpm
-
 WD := $(shell pwd)
-export MAKEFLAGS := $(MAKEFLAGS) -k
-export GOBIN := $(GOPATH)/bin
-export GO15VENDOREXPERIMENT := 1
+export MAKEFLAGS := $(MAKEFLAGS) --no-print-directory -k
+export GO15VENDOREXPERIMENT ?= 1
+export GOOS ?= $(shell go version | awk '{print $$4}' | tr '/' ' ' | awk '{print $$1}')
+export GOARCH ?= $(shell go version | awk '{print $$4}' | tr '/' ' ' | awk '{print $$2}')
+_GOOS ?= $(GOOS)
+_GOARCH ?= $(GOARCH)
+ARCH = $(_GOOS)_$(_GOARCH)
 GITDSC := $(shell git describe --long)
-BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
+TRAVIS_BRANCH ?= $(shell git branch | grep '*' | awk '{print $$2}')
+BRANCH = $(TRAVIS_BRANCH)
 TGTVER := $(shell cat VERSION | tr -d " \n\r\t")
 BLDDTE := $(shell date +%s)
 CMTDTE := $(shell git show HEAD -s --format=%ct)
 CMTHSH := $(shell git show HEAD -s --format=%H)
+RELDTE := $(shell date -u "+%Y-%m-%d")
+SHA := $(shell git show HEAD -s --format=%h)
 GOFLAGS := $(GOFLAGS)
-GLIDE := $(GOBIN)/glide
+GLIDE := $(GOPATH)/bin/glide
 NV := $$($(GLIDE) novendor)
 BASEPKG := github.com/emccode/rexray
 BASEDIR := $(GOPATH)/src/$(BASEPKG)
@@ -26,7 +30,8 @@ LDF_TGTVER := -X $(VERSIONPKG).TargetVersion=$(TGTVER)
 LDF_BLDDTE := -X $(VERSIONPKG).BuildDateEpochStr=$(BLDDTE)
 LDF_CMTDTE := -X $(VERSIONPKG).CommitDateEpochStr=$(CMTDTE)
 LDF_CMTHSH := -X $(VERSIONPKG).CommitHash=$(CMTHSH)
-LDFLAGS := -ldflags "$(LDF_GITDSC) $(LDF_BRANCH) $(LDF_TGTVER) $(LDF_BLDDTE) $(LDF_CMTDTE) $(LDF_CMTHSH)" 
+LDF_GOARCH = -X $(VERSIONPKG).BinArchStr=$(ARCH)
+LDFLAGS = -ldflags "$(LDF_GITDSC) $(LDF_BRANCH) $(LDF_TGTVER) $(LDF_BLDDTE) $(LDF_CMTDTE) $(LDF_CMTHSH) $(LDF_GOARCH)" 
 RPMBUILD := $(WD)/.rpmbuild
 EMCCODE := $(GOPATH)/src/github.com/emccode
 PRINT_STATUS = export EC=$$?; cd $(WD); if [ "$$EC" -eq "0" ]; then printf "SUCCESS!\n"; else exit $$EC; fi
@@ -50,7 +55,6 @@ _post-make:
 	fi
 
 deps: _pre-make _deps _post-make
-
 _deps: 
 	@echo "target: deps"
 	@printf "  ...installing glide..."
@@ -63,19 +67,56 @@ _deps:
 		$(PRINT_STATUS)
 
 build: _pre-make _build _post-make
-
-_build: _deps _fmt
+_build: _deps _fmt build_
+build_: 
 	@echo "target: build"
-	@printf "  ...building rexray..."; \
+	@printf "  ...building rexray $(ARCH)..."; \
 		cd $(BASEDIR); \
-		go build $(GOFLAGS) $(LDFLAGS) $(NV); \
-		$(PRINT_STATUS)
+		FILE=.bin/$(ARCH)/rexray; \
+		env GOOS=$(_GOOS) GOARCH=$(_GOARCH) go build -o $$FILE $(GOFLAGS) $(LDFLAGS) ./rexray; \
+		$(PRINT_STATUS); \
+		if [ "$$EC" -eq "0" ]; then \
+			BYTES=$$($(STAT_FILE_SIZE)); \
+			SIZE=$$(($$BYTES / 1024 / 1024)); \
+			printf "\nThe REX-Ray binary is $${SIZE}MB and located at:\n\n"; \
+			printf "  $$FILE\n\n"; \
+		fi
+
+build-all: _pre-make _deps _fmt build-all_ _post-make
+build-all_: build-linux-386_ build-linux-amd64_ build-darwin-amd64_
+	@SEMVER=$$(.bin/$(GOOS)_$(GOARCH)/rexray version | grep SemVer | awk '{print $$2}'); \
+		for BIN in $$(find .bin -type f -name "rexray"); do \
+			BINDIR=$$(dirname $$BIN); \
+			FARCH=$$(echo $$BINDIR | cut -c6-); \
+			TARBALL=rexray-$$FARCH-$$SEMVER.tar.gz; \
+			cd $$BINDIR; \
+			tar -czf $$TARBALL rexray; \
+			cd - > /dev/null; \
+		done; \
+		sed -e 's/$${SEMVER}/'"$$SEMVER"'/g' \
+			-e 's|$${DSCRIP}|'"$$SEMVER"'.Branch.$(BRANCH).Sha.$(CMTHSH)|g' \
+			-e 's/$${RELDTE}/$(RELDTE)/g' \
+			.bintray.json > .bintray-filtered.json
+
+build-linux-386: _pre-make _build-linux-386 _post-make
+_build-linux-386: _deps _fmt build-linux-386_
+build-linux-386_:
+	@env _GOOS=linux _GOARCH=386 make build_
+
+build-linux-amd64: _pre-make _build-linux-amd64 _post-make
+_build-linux-amd64: _deps _fmt build-linux-amd64_
+build-linux-amd64_:
+	@env _GOOS=linux _GOARCH=amd64 make build_
+
+build-darwin-amd64: _pre-make _build-darwin-amd64 _post-make
+_build-darwin-amd64: _deps _fmt build-darwin-amd64_
+build-darwin-amd64_:
+	@env _GOOS=darwin _GOARCH=amd64 make build_
 
 install: _pre-make _install _post-make
-
 _install: _deps _fmt
 	@echo "target: install"
-	@printf "  ...building and installing rexray..."; \
+	@printf "  ...installing rexray $$GOOS-$$GOARCH..."; \
 		cd $(BASEDIR); \
 		go clean -i $(VERSIONPKG); \
 		go install $(GOFLAGS) $(LDFLAGS) $(NV); \
@@ -154,3 +195,6 @@ rpm: install
 			printf "\nThe REX-Ray RPM is $${SIZE}MB and located at:\n\n"; \
 			printf "  $$FILE\n\n"; \
 		fi
+
+.PHONY: all install build build_ build-all deps fmt fix clean
+.NOTPARALLEL: all test clean deps _deps fmt _fmt fix pre-make _pre-make post-make _post-make build build-all_ install rpm

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -100,12 +101,16 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		buildDate := time.Unix(version.BuildDate(), 0)
+		epochInt, epochIntErr := strconv.ParseInt(version.Epoch, 10, 64)
+		if epochIntErr != nil {
+			panic(epochIntErr)
+		}
+		buildDate := time.Unix(epochInt, 0)
 
-		fmt.Printf("SemVer: %s\n", version.FullSemVer())
-		fmt.Printf("Binary: %s\n", version.BinArch())
-		fmt.Printf("Branch: %s\n", version.Branch())
-		fmt.Printf("Commit: %s\n", version.Sha())
+		fmt.Printf("SemVer: %s\n", version.SemVer)
+		fmt.Printf("Binary: %s\n", version.Arch)
+		fmt.Printf("Branch: %s\n", version.Branch)
+		fmt.Printf("Commit: %s\n", version.ShaLong)
 		fmt.Printf("Formed: %s\n", buildDate.Format(time.RFC1123))
 	},
 }

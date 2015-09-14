@@ -106,9 +106,9 @@ func (vdm *VolumeDriverManager) Path(volumeName, volumeID string) (string, error
 	return "", errors.New("no volume manager specified")
 }
 
-func (vdm *VolumeDriverManager) Create(volumeName string) error {
+func (vdm *VolumeDriverManager) Create(volumeName string, volumeOpts VolumeOpts) error {
 	for _, driver := range vdm.Drivers {
-		return driver.Create(volumeName)
+		return driver.Create(volumeName, volumeOpts)
 	}
 	return errors.New("no volume manager specified")
 }

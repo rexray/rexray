@@ -10,4 +10,5 @@ deploy:
   skip_cleanup: true
   on:
     repo: emccode/rexray
-    branch: master
+    all_branches: true
+    condition: $TRAVIS_BRANCH = master || $TRAVIS_TAG != ''

@@ -380,6 +380,10 @@ func createUnitFile(exeFile string) {
 }
 
 func createInitFile(exeFile string) {
+	log.WithFields(log.Fields{
+		"exeFile":  exeFile,
+		"initFile": INTFILE,
+	}).Debug("creating symlink")
 	os.Symlink(exeFile, INTFILE)
 }
 

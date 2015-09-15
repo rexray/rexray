@@ -134,7 +134,12 @@ func FileExistsInPath(fileName string) bool {
 }
 
 func GetPathParts(path string) (dirPath, fileName, absPath string) {
+	lookup, lookupErr := exec.LookPath(path)
+	if lookupErr == nil {
+		path = lookup
+	}
 	absPath, _ = filepath.Abs(path)
+
 	dirPath = filepath.Dir(absPath)
 	fileName = filepath.Base(absPath)
 	return

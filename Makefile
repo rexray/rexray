@@ -117,6 +117,13 @@ EMCCODE := $(GOPATH)/src/github.com/emccode
 PRINT_STATUS = export EC=$$?; cd $(CWD); if [ "$$EC" -eq "0" ]; then printf "SUCCESS!\n"; else exit $$EC; fi
 STAT_FILE_SIZE = stat --format '%s' $$FILE 2> /dev/null || stat -f '%z' $$FILE 2> /dev/null
 
+$(info SemVer: $(V_SEMVER))
+$(info Binary: $(V_ARCH))
+$(info Branch: $(V_BRANCH))
+$(info Commit: $(V_SHA_LONG))
+$(info Formed: $(V_BUILD_DATE))
+$(info $(shell echo))
+	
 all: install
 
 _pre-make:
@@ -173,7 +180,7 @@ build-all_: build-linux-386_ build-linux-amd64_ build-darwin-amd64_
 		cd - > /dev/null; \
 	done; \
 	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG))|g' \
+		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
 		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
 		.bintray.json > .bintray-filtered.json
 
@@ -254,11 +261,6 @@ _clean:
 		$(PRINT_STATUS)
 		
 version:
-	@echo "SemVer: $(V_SEMVER)"
-	@echo "Binary: $(V_ARCH)"
-	@echo "Branch: $(V_BRANCH)"
-	@echo "Commit: $(V_SHA_LONG)"
-	@echo "Formed: $(V_BUILD_DATE)"
 
 rpm: install
 	@echo "target: rpm"

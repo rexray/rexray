@@ -452,7 +452,7 @@ This utility is HTTP and Unix socket aware so can do POST messages in a HTTP fri
 < Content-Type: appplication/vnd.docker.plugins.v1+json
 < Date: Fri, 22 May 2015 15:52:21 GMT
 < Content-Length: 49
-{"Mountpoint": "/var/lib/docker/volumes/test22"}
+{"Mountpoint": "/var/lib/rexray/volumes/test22"}
 ```
 
 # Contributions

@@ -13,10 +13,10 @@ import (
 	"github.com/emccode/rexray/volume"
 )
 
-const ProviderName = "docker"
-
 const (
-	defaultVolumeSize int64 = 16
+	ProviderName            = "docker"
+	MountDirectory          = "/var/lib/rexray/volumes"
+	DefaultVolumeSize int64 = 16
 )
 
 type Driver struct {
@@ -26,6 +26,7 @@ type Driver struct {
 
 func init() {
 	volume.Register(ProviderName, Init)
+	os.MkdirAll(MountDirectory, 0755)
 }
 
 func Init(
@@ -45,7 +46,7 @@ func getVolumeMountPath(name string) (string, error) {
 		return "", errors.New("Missing volume name")
 	}
 
-	return fmt.Sprintf("/var/lib/docker/volumes/%s", name), nil
+	return fmt.Sprintf("%s/%s", MountDirectory, name), nil
 }
 
 // Mount will perform the steps to get an existing Volume with or without a fileystem mounted to a guest
@@ -304,7 +305,7 @@ func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) er
 	}
 	size := int64(sizei)
 	if size == 0 {
-		size = defaultVolumeSize
+		size = DefaultVolumeSize
 	}
 
 	if availabilityZone, ok = volumeOpts["availabilityzone"]; !ok {

@@ -292,7 +292,7 @@ rpm: install
 		$(CWD)/rexray.spec > $(RPMBUILD)/SPECS/rexray.spec
 
 	@printf "  ...building rpm..."; \
-		cd $)RPMBUILD); \
+		cd $(RPMBUILD); \
 		rpmbuild -ba --quiet SPECS/rexray.spec; \
 		$(PRINT_STATUS); \
 		if [ "$$EC" -eq "0" ]; then \

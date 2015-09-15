@@ -61,9 +61,22 @@ V_ARCH := $(_GOOS)_$(_GOARCH)
 # the long commit hash
 V_SHA_LONG := $(shell git show HEAD -s --format=%H)
 
-# the branch name, possible from travis-ci
-TRAVIS_BRANCH ?= $(shell git branch | grep '*' | awk '{print $$2}')
-V_BRANCH = $(TRAVIS_BRANCH)
+# the branch name, possibly from travis-ci
+ifeq ($(origin TRAVIS_BRANCH), undefined)
+	TRAVIS_BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
+else
+	ifeq ($(strip $(TRAVIS_BRANCH)),)
+		TRAVIS_BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
+	endif
+endif
+ifeq ($(origin TRAVIS_TAG), undefined)
+	TRAVIS_TAG := $(TRAVIS_BRANCH)
+else
+	ifeq ($(strip $(TRAVIS_TAG)),)
+		TRAVIS_TAG := $(TRAVIS_BRANCH)
+	endif
+endif
+V_BRANCH := $(TRAVIS_TAG)
 
 # the build date as an epoch
 V_EPOCH := $(shell date +%s)
@@ -116,7 +129,7 @@ RPMBUILD := $(CWD)/.rpmbuild
 EMCCODE := $(GOPATH)/src/github.com/emccode
 PRINT_STATUS = export EC=$$?; cd $(CWD); if [ "$$EC" -eq "0" ]; then printf "SUCCESS!\n"; else exit $$EC; fi
 STAT_FILE_SIZE = stat --format '%s' $$FILE 2> /dev/null || stat -f '%z' $$FILE 2> /dev/null
-
+	
 all: install
 
 _pre-make:
@@ -162,7 +175,7 @@ build_:
 			printf "  $$FILE\n\n"; \
 		fi
 
-build-all: _pre-make _deps _fmt build-all_ _post-make
+build-all: _pre-make version-noarch _deps _fmt build-all_ _post-make
 build-all_: build-linux-386_ build-linux-amd64_ build-darwin-amd64_
 	@for BIN in $$(find .bin -type f -name "rexray"); do \
 		BINDIR=$$(dirname $$BIN); \
@@ -173,7 +186,7 @@ build-all_: build-linux-386_ build-linux-amd64_ build-darwin-amd64_
 		cd - > /dev/null; \
 	done; \
 	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG))|g' \
+		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
 		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
 		.bintray.json > .bintray-filtered.json
 
@@ -192,7 +205,7 @@ _build-darwin-amd64: _deps _fmt build-darwin-amd64_
 build-darwin-amd64_:
 	@env _GOOS=darwin _GOARCH=amd64 make build_
 
-install: _pre-make _install _post-make
+install: _pre-make version-noarch _install _post-make
 _install: _deps _fmt
 	@echo "target: install"
 	@printf "  ...installing rexray $(V_ARCH)..."; \
@@ -254,11 +267,18 @@ _clean:
 		$(PRINT_STATUS)
 		
 version:
-	@echo "SemVer: $(V_SEMVER)"
-	@echo "Binary: $(V_ARCH)"
-	@echo "Branch: $(V_BRANCH)"
-	@echo "Commit: $(V_SHA_LONG)"
-	@echo "Formed: $(V_BUILD_DATE)"
+	@echo SemVer: $(V_SEMVER)
+	@echo Binary: $(V_ARCH)
+	@echo Branch: $(V_BRANCH)
+	@echo Commit: $(V_SHA_LONG)
+	@echo Formed: $(V_BUILD_DATE)
+	
+version-noarch:
+	@echo SemVer: $(V_SEMVER)
+	@echo Branch: $(V_BRANCH)
+	@echo Commit: $(V_SHA_LONG)
+	@echo Formed: $(V_BUILD_DATE)
+	@echo
 
 rpm: install
 	@echo "target: rpm"

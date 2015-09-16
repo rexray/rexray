@@ -1,4 +1,7 @@
-.bintray-filtered.json
+test.sh
+.bintray-stable-filtered.json
+.bintray-stupid-filtered.json
+.bintray-staged-filtered.json
 .bin/
 vendor/
 .build/

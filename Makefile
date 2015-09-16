@@ -37,13 +37,16 @@ else
 	endif
 endif
 
+# init the build platforms
+BUILD_PLATFORMS ?= Linux-i386 Linux-x86_64 Darwin-x86_64
+
 # init the internal go os and architecture variable values used for naming files
 _GOOS ?= $(GOOS)
 _GOARCH ?= $(GOARCH)
 
 # describe the git information and create a parsing function for it
 GIT_DESCRIBE := $(shell git describe --long --dirty)
-GIT_DESCRIBE_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-(.+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
+GIT_DESCRIBE_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z].+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
 PARSE_GIT_DESCRIBE = $(shell echo $(GIT_DESCRIBE) | perl -pe 's/$(GIT_DESCRIBE_PATT)/$(1)/gim')
 
 # parse the version components from the git information
@@ -56,7 +59,21 @@ V_SHA_SHORT := $(call PARSE_GIT_DESCRIBE,$$6)
 V_DIRTY := $(call PARSE_GIT_DESCRIBE,$$7)
 
 # the version's binary os and architecture type
-V_ARCH := $(_GOOS)_$(_GOARCH)
+ifeq ($(_GOOS),windows)
+	V_ARCH := Windows_NT
+endif
+ifeq ($(_GOOS),linux)
+	V_ARCH := Linux
+endif
+ifeq ($(_GOOS),darwin)
+	V_ARCH := Darwin
+endif
+ifeq ($(_GOARCH),386)
+	V_ARCH := $(V_ARCH)-i386
+endif
+ifeq ($(_GOARCH),amd64)
+	V_ARCH := $(V_ARCH)-x86_64
+endif
 
 # the long commit hash
 V_SHA_LONG := $(shell git show HEAD -s --format=%H)
@@ -96,15 +113,16 @@ endif
 # get the version file's version
 V_FILE := $(strip $(shell cat VERSION 2> /dev/null))
 
-# if the version file's version is different than the version parsed from the
-# git describe information then use the version file's version
-ifneq ($(V_SEMVER),$(V_FILE))
-	V_SEMVER := $(V_FILE)
-endif
-
 # append the build number and dirty values to the semver if appropriate
-ifneq ($(V_BUILD),0)
-	V_SEMVER := $(V_SEMVER)+$(V_BUILD)
+ifneq ($(V_BUILD),)
+	ifneq ($(V_BUILD),0)
+		# if the version file's version is different than the version parsed from the
+		# git describe information then use the version file's version
+		ifneq ($(V_SEMVER),$(V_FILE))
+			V_SEMVER := $(V_FILE)
+		endif
+		V_SEMVER := $(V_SEMVER)+$(V_BUILD)
+	endif
 endif
 ifeq ($(V_DIRTY),dirty)
 	V_SEMVER := $(V_SEMVER)+$(V_DIRTY)
@@ -181,29 +199,46 @@ build-all_: build-linux-386_ build-linux-amd64_ build-darwin-amd64_
 		BINDIR=$$(dirname $$BIN); \
 		FARCH=$$(echo $$BINDIR | cut -c6-); \
 		TARBALL=rexray-$$FARCH-$(V_SEMVER).tar.gz; \
+		LATEST=rexray-$$FARCH.tar.gz;\
 		cd $$BINDIR; \
 		tar -czf $$TARBALL rexray; \
+		mkdir -p ../latest; \
+		cp -f $$TARBALL ../latest/$$LATEST; \
 		cd - > /dev/null; \
 	done; \
 	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
 		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
 		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
-		.bintray.json > .bintray-filtered.json
+		.bintray-stupid.json > .bintray-stupid-filtered.json; \
+	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
+		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
+		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
+		.bintray-staged.json > .bintray-staged-filtered.json; \
+	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
+		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
+		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
+		.bintray-stable.json > .bintray-stable-filtered.json
 
 build-linux-386: _pre-make _build-linux-386 _post-make
 _build-linux-386: _deps _fmt build-linux-386_
 build-linux-386_:
-	@env _GOOS=linux _GOARCH=386 make build_
+	@if [ "" != "$(findstring Linux-i386,$(BUILD_PLATFORMS))" ]; then \
+		env _GOOS=linux _GOARCH=386 make build_; \
+	fi
 
 build-linux-amd64: _pre-make _build-linux-amd64 _post-make
 _build-linux-amd64: _deps _fmt build-linux-amd64_
 build-linux-amd64_:
-	@env _GOOS=linux _GOARCH=amd64 make build_
+	@if [ "" != "$(findstring Linux-x86_64,$(BUILD_PLATFORMS))" ]; then \
+		env _GOOS=linux _GOARCH=amd64 make build_; \
+	fi
 
 build-darwin-amd64: _pre-make _build-darwin-amd64 _post-make
 _build-darwin-amd64: _deps _fmt build-darwin-amd64_
 build-darwin-amd64_:
-	@env _GOOS=darwin _GOARCH=amd64 make build_
+	@if [ "" != "$(findstring Darwin-x86_64,$(BUILD_PLATFORMS))" ]; then \
+		env _GOOS=darwin _GOARCH=amd64 make build_; \
+	fi
 
 install: _pre-make version-noarch _install _post-make
 _install: _deps _fmt

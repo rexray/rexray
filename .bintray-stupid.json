@@ -1,0 +1,28 @@
+{
+   "package": {
+        "name": "stupid", 
+        "repo": "rexray",
+        "subject": "emccode"
+    },
+
+    "version": {
+        "name": "${SEMVER}",
+        "desc": "${DSCRIP}",
+        "released": "${RELDTE}",
+        "gpgSign": false
+    },
+
+    "files": [
+        {
+            "includePattern": ".bin/(.+)/(.*\.tar\.gz)",
+            "excludePattern": ".bin/latest/(.*)",
+            "uploadPattern": "stupid/${SEMVER}/$2"
+        },
+        {
+            "includePattern": ".bin/latest/(.*)",
+            "uploadPattern": "stupid/latest/$1"
+        }
+    ],
+
+    "publish": true
+}

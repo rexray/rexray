@@ -1,4 +1,4 @@
-# REX-Ray [![Build Status](https://travis-ci.org/emccode/rexray.svg?branch=master)](https://travis-ci.org/emccode/rexray) [ ![Download](https://api.bintray.com/packages/akutz/generic/rexray/images/download.svg) ](https://bintray.com/akutz/generic/rexray/_latestVersion#files)
+# REX-Ray [![Build Status](https://travis-ci.org/emccode/rexray.svg?branch=master)](https://travis-ci.org/emccode/rexray) [ ![Download](https://api.bintray.com/packages/emccode/rexray/stable/images/download.svg) ](https://dl.bintray.com/emccode/rexray/stable/latest/)
 ```REX-Ray``` provides visibility and management of external/underlying storage via guest storage introspection. Available as a Go package, CLI tool, and Linux service, and with built-in third-party support for tools such as ```Docker```, ```REX-Ray``` is easily integrated into any workflow. For example, here's how to list storage for a guest hosted on Amazon Web Services (AWS) with ```REX-Ray```:
 
 ```bash
@@ -24,7 +24,11 @@
 ```
 
 # Downloading
-See the releases area for downloadable binaries.
+It's easy to download pre-build binaries for REX-Ray:
+
+* Stupid - [ ![Download](https://api.bintray.com/packages/emccode/rexray/stupid/images/download.svg) ](https://dl.bintray.com/emccode/rexray/stupid/latest/)
+* Staged - [ ![Download](https://api.bintray.com/packages/emccode/rexray/staged/images/download.svg) ](https://dl.bintray.com/emccode/rexray/staged/latest/)
+* Stable - [ ![Download](https://api.bintray.com/packages/emccode/rexray/stable/images/download.svg) ](https://dl.bintray.com/emccode/rexray/stable/latest/)
 
 # State
 We have a first release available that support all of the following capabilities!  

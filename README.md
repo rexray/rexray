@@ -42,12 +42,24 @@ Repository | Version | Description
 [stable](https://dl.bintray.com/emccode/rexray/stable)   | [ ![Download](https://api.bintray.com/packages/emccode/rexray/stable/images/download.svg) ](https://dl.bintray.com/emccode/rexray/stable/latest/) | The most up-to-date, stable REX-Ray binaries.
 
 # Building
-`REX-Ray` is also fairly simple to build from source, especially if you have `Docker` installed:
+There are a few simple ways to build `REX-Ray` with and without `Docker`
 
+## With a clean repo
+This method would be the equivalent of `go get` where it builds from a clean repo with proper dependencies.
 ```bash
-SRC=$(mktemp -d 2> /dev/null || mktemp -d -t rexray 2> /dev/null) && cd $SRC && docker run --rm -it -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c "git clone https://github.com/emccode/rexray.git . && make build-all”
+SRC=$(mktemp -d 2> /dev/null || mktemp -d -t rexray 2> /dev/null) && \
+cd $SRC && \
+docker run --rm -it -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c "git clone https://github.com/emccode/rexray.git . && make build-all”
 ```
 
+## With local code changes
+If you are modifying `REX-Ray`, then you may leverage this or the `Native` technique where you have more control over which code source is being used during the build.  Here Ensure your `$GOPATH` is set properly prior to running.
+```bash
+go get -d github.com/emccode/rexray
+docker run --rm -it -v $GOPATH/src/github.com/emccode/rexray:/go/src/github.com/emccode/rexray -w /go/src/github.com/emccode/rexray/ golang:1.5 make build-all
+```
+
+## Native
 If you'd prefer to not use `Docker` to build `REX-Ray` then all you need is Go 1.5:
 
 ```bash
@@ -61,8 +73,8 @@ cd rexray
 make build-all
 ```
 
-After either of the above methods for building `REX-Ray` there should be a `.bin` directory in the
-current directory, and inside `.bin` will be binaries for Linux-i386, Linux-x86-64, 
+After any of the above methods for building `REX-Ray` there should be a `.bin` directory in the
+current directory or within the `REX-Ray` repo, and inside `.bin` will be binaries for Linux-i386, Linux-x86-64, 
 and Darwin-x86-64.
 
 ```bash
@@ -99,15 +111,6 @@ docker run --volume-driver=rexray -v volumename:/pathtomount container
 ```
 
 Additionally, the [Dogged](https://github.com/emccode/dogged) repo maintains efforts for the EMC {code} team relating to embedding ```REX-Ray``` inside of Container Engines such as Docker. Here you will find ```REX-Ray``` enabling Docker to manage its own storage via Container Data Volumes.
-
-# Building
-// TODO
-
-This might currently require upstream additions for the Goamz package to github.com/clintonskitson/goamz at the snapcopy branch.
-
-```bash
-docker run --rm -it -e GO15VENDOREXPERIMENT=1 -v $GOPATH:/go -w /go/src/github.com/emccode/rexray/ golang:1.5 make install
-```
 
 # Environment Variables
 The primary method used to configure the ```REX-Ray``` library and influence its behavior is through he use of environment variables.

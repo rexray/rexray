@@ -1,12 +1,12 @@
-package commands
+package cli
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
@@ -17,59 +17,12 @@ import (
 	"github.com/emccode/rexray/util"
 )
 
-func GetInitSystemCmd() string {
-	switch GetInitSystemType() {
-	case SYSTEMD:
-		return "systemd"
-	case UPDATERCD:
-		return "update-rc.d"
-	case CHKCONFIG:
-		return "chkconfig"
-	default:
-		return "unknown"
-	}
-}
-
-func GetInitSystemType() int {
-	if util.FileExistsInPath("systemctl") {
-		return SYSTEMD
-	}
-
-	if util.FileExistsInPath("update-rc.d") {
-		return UPDATERCD
-	}
-
-	if util.FileExistsInPath("chkconfig") {
-		return CHKCONFIG
-	}
-
-	return UNKNOWN
-}
-
-func Install() {
-	checkOpPerms("installed")
-
-	_, _, exeFile := util.GetThisPathParts()
-
-	os.Chown(exeFile, 0, 0)
-	exec.Command("chmod", "4755", exeFile).Run()
-
-	switch GetInitSystemType() {
-	case SYSTEMD:
-		installSystemD(exeFile)
-	case UPDATERCD:
-		installUpdateRcd(exeFile)
-	case CHKCONFIG:
-		installChkConfig(exeFile)
-	}
-}
-
-func Start() {
+func start() {
 	checkOpPerms("started")
 
 	log.WithField("os.Args", os.Args).Debug("invoking service start")
 
-	pidFile := util.PidFile()
+	pidFile := util.PidFilePath()
 
 	if util.FileExists(pidFile) {
 		pid, pidErr := util.ReadPidFile()
@@ -97,7 +50,15 @@ func failOnError(err error) {
 
 func startDaemon() {
 
-	fmt.Printf("%s\n", RexRayLogoAscii)
+	var out io.Writer = os.Stdout
+	if !log.IsTerminal() {
+		logFile, logFileErr := util.LogFile("rexray.log")
+		failOnError(logFileErr)
+		out = io.MultiWriter(os.Stdout, logFile)
+	}
+	log.SetOutput(out)
+
+	fmt.Fprintf(out, "%s\n", RexRayLogoAscii)
 
 	var success []byte
 	var failure []byte
@@ -110,7 +71,7 @@ func startDaemon() {
 
 		var dialErr error
 
-		log.Printf("Dialing %s\n", client)
+		log.Printf("dialing %s", client)
 		conn, dialErr = net.Dial("unix", client)
 		if dialErr != nil {
 			panic(dialErr)
@@ -127,13 +88,13 @@ func startDaemon() {
 
 	defer func() {
 		r := recover()
-		os.Remove(util.PidFile())
+		os.Remove(util.PidFilePath())
 		if r != nil {
 			panic(r)
 		}
 	}()
 
-	log.Printf("Created pid file, pid=%d\n", os.Getpid())
+	log.Printf("created pid file, pid=%d", os.Getpid())
 
 	init := make(chan error)
 	sigc := make(chan os.Signal, 1)
@@ -172,7 +133,7 @@ func startDaemon() {
 	}
 
 	sigv := <-sigc
-	log.Printf("Received shutdown signal %v\n", sigv)
+	log.Printf("received shutdown signal %v", sigv)
 	stop <- sigv
 }
 
@@ -217,13 +178,8 @@ func tryToStartDaemon() {
 	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)
-
-	logFile, logFileErr :=
-		os.OpenFile(util.LogFile(), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
-	failOnError(logFileErr)
-
-	cmd.Stdout = logFile
-	cmd.Stderr = logFile
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	cmdErr := cmd.Start()
 	failOnError(cmdErr)
@@ -241,10 +197,10 @@ func tryToStartDaemon() {
 	fmt.Printf("    sudo %s stop\n\n", thisAbsPath)
 }
 
-func Stop() {
+func stop() {
 	checkOpPerms("stopped")
 
-	if !util.FileExists(util.PidFile()) {
+	if !util.FileExists(util.PidFilePath()) {
 		fmt.Println("REX-Ray is already stopped")
 		panic(1)
 	}
@@ -263,8 +219,8 @@ func Stop() {
 	fmt.Println("SUCCESS!")
 }
 
-func Status() {
-	if !util.FileExists(util.PidFile()) {
+func status() {
+	if !util.FileExists(util.PidFilePath()) {
 		fmt.Println("REX-Ray is stopped")
 		return
 	}
@@ -272,14 +228,14 @@ func Status() {
 	fmt.Printf("REX-Ray is running at pid %d\n", pid)
 }
 
-func Restart() {
+func restart() {
 	checkOpPerms("restarted")
 
-	if util.FileExists(util.PidFile()) {
-		Stop()
+	if util.FileExists(util.PidFilePath()) {
+		stop()
 	}
 
-	Start()
+	start()
 }
 
 func checkOpPerms(op string) error {
@@ -288,103 +244,6 @@ func checkOpPerms(op string) error {
 	}
 
 	return nil
-}
-
-func installSystemD(exeFile string) {
-	createUnitFile(exeFile)
-	createEnvFile()
-
-	cmd := exec.Command("systemctl", "enable", "rexray.service")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatalf("installation error %v", err)
-	}
-
-	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/emccode/rexray for instructions on how to ")
-	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
-	fmt.Print("started with the command 'sudo systemctl start rexray'.\n\n")
-}
-
-func installUpdateRcd(exeFile string) {
-	createInitFile(exeFile)
-	cmd := exec.Command("update-rc.d", "rexray", "defaults")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatalf("installation error %v", err)
-	}
-
-	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/emccode/rexray for instructions on how to ")
-	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
-	fmt.Print("started with the command 'sudo /etc/init.d/rexray start'.\n\n")
-}
-
-func installChkConfig(exeFile string) {
-	createInitFile(exeFile)
-	cmd := exec.Command("chkconfig", "rexray", "on")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatalf("installation error %v", err)
-	}
-
-	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/emccode/rexray for instructions on how to ")
-	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
-	fmt.Print("started with the command 'sudo /etc/init.d/rexray start'.\n\n")
-}
-
-func createEnvFile() {
-
-	envdir := filepath.Dir(ENVFILE)
-	os.MkdirAll(envdir, 0755)
-
-	f, err := os.OpenFile(ENVFILE, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	f.WriteString("REXRAY_HOME=/opt/rexray")
-}
-
-func createUnitFile(exeFile string) {
-	f, err := os.OpenFile(UNTFILE, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	f.WriteString("[Unit]\n")
-	f.WriteString("Description=rexray\n")
-	f.WriteString("Before=docker.service\n")
-	f.WriteString("\n")
-	f.WriteString("[Service]\n")
-	f.WriteString(fmt.Sprintf("EnvironmentFile=%s\n", ENVFILE))
-	f.WriteString(fmt.Sprintf("ExecStart=%s start -f\n", exeFile))
-	f.WriteString(fmt.Sprintf("ExecReload=/bin/kill -HUP $MAINPID\n"))
-	f.WriteString("KillMode=process\n")
-	f.WriteString("\n")
-	f.WriteString("[Install]\n")
-	f.WriteString("WantedBy=docker.service\n")
-	f.WriteString("\n")
-}
-
-func createInitFile(exeFile string) {
-	log.WithFields(log.Fields{
-		"exeFile":  exeFile,
-		"initFile": INTFILE,
-	}).Debug("creating symlink")
-	os.Symlink(exeFile, INTFILE)
 }
 
 const RexRayLogoAscii = `

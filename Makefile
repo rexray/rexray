@@ -44,10 +44,13 @@ BUILD_PLATFORMS ?= Linux-i386 Linux-x86_64 Darwin-x86_64
 _GOOS ?= $(GOOS)
 _GOARCH ?= $(GOARCH)
 
+# parse a semver
+SEMVER_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z].+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
+PARSE_SEMVER = $(shell echo $(1) | perl -pe 's/$(SEMVER_PATT)/$(2)/gim')
+
 # describe the git information and create a parsing function for it
 GIT_DESCRIBE := $(shell git describe --long --dirty)
-GIT_DESCRIBE_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z].+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
-PARSE_GIT_DESCRIBE = $(shell echo $(GIT_DESCRIBE) | perl -pe 's/$(GIT_DESCRIBE_PATT)/$(1)/gim')
+PARSE_GIT_DESCRIBE = $(call PARSE_SEMVER,$(GIT_DESCRIBE),$(1))
 
 # parse the version components from the git information
 V_MAJOR := $(call PARSE_GIT_DESCRIBE,$$1)
@@ -60,20 +63,21 @@ V_DIRTY := $(call PARSE_GIT_DESCRIBE,$$7)
 
 # the version's binary os and architecture type
 ifeq ($(_GOOS),windows)
-	V_ARCH := Windows_NT
+	V_OS := Windows_NT
 endif
 ifeq ($(_GOOS),linux)
-	V_ARCH := Linux
+	V_OS := Linux
 endif
 ifeq ($(_GOOS),darwin)
-	V_ARCH := Darwin
+	V_OS := Darwin
 endif
 ifeq ($(_GOARCH),386)
-	V_ARCH := $(V_ARCH)-i386
+	V_ARCH := i386
 endif
 ifeq ($(_GOARCH),amd64)
-	V_ARCH := $(V_ARCH)-x86_64
+	V_ARCH := x86_64
 endif
+V_OS_ARCH := $(V_OS)-$(V_ARCH)
 
 # the long commit hash
 V_SHA_LONG := $(shell git show HEAD -s --format=%H)
@@ -119,7 +123,14 @@ ifneq ($(V_BUILD),)
 		# if the version file's version is different than the version parsed from the
 		# git describe information then use the version file's version
 		ifneq ($(V_SEMVER),$(V_FILE))
-			V_SEMVER := $(V_FILE)
+			V_MAJOR := $(call PARSE_SEMVER,$(V_FILE),$$1)
+			V_MINOR := $(call PARSE_SEMVER,$(V_FILE),$$2)
+			V_PATCH := $(call PARSE_SEMVER,$(V_FILE),$$3)
+			V_NOTES := $(call PARSE_SEMVER,$(V_FILE),$$4)
+			V_SEMVER := $(V_MAJOR).$(V_MINOR).$(V_PATCH)
+			ifneq ($(V_NOTES),)
+				V_SEMVER := $(V_SEMVER)-$(V_NOTES)
+			endif
 		endif
 		V_SEMVER := $(V_SEMVER)+$(V_BUILD)
 	endif
@@ -127,6 +138,9 @@ endif
 ifeq ($(V_DIRTY),dirty)
 	V_SEMVER := $(V_SEMVER)+$(V_DIRTY)
 endif
+
+# the rpm version cannot have any dashes
+V_RPM_SEMVER := $(subst -,+,$(V_SEMVER))
 
 GOFLAGS := $(GOFLAGS)
 GLIDE := $(GOPATH)/bin/glide
@@ -141,7 +155,7 @@ LDF_SEMVER := -X $(VERSIONPKG).SemVer=$(V_SEMVER)
 LDF_BRANCH := -X $(VERSIONPKG).Branch=$(V_BRANCH)
 LDF_EPOCH := -X $(VERSIONPKG).Epoch=$(V_EPOCH)
 LDF_SHA_LONG := -X $(VERSIONPKG).ShaLong=$(V_SHA_LONG)
-LDF_ARCH = -X $(VERSIONPKG).Arch=$(V_ARCH)
+LDF_ARCH = -X $(VERSIONPKG).Arch=$(V_OS_ARCH)
 LDFLAGS = -ldflags "$(LDF_SEMVER) $(LDF_BRANCH) $(LDF_EPOCH) $(LDF_SHA_LONG) $(LDF_ARCH)"
 RPMBUILD := $(CWD)/.rpmbuild
 EMCCODE := $(GOPATH)/src/github.com/emccode
@@ -181,12 +195,21 @@ build: _pre-make _build _post-make
 _build: _deps _fmt build_
 build_: 
 	@echo "target: build"
-	@printf "  ...building rexray $(V_ARCH)..."; \
+	@printf "  ...building rexray $(V_OS_ARCH)..."; \
 		cd $(BASEDIR); \
-		FILE=.bin/$(V_ARCH)/rexray; \
+		FILE=.bin/$(V_OS_ARCH)/rexray; \
 		env GOOS=$(_GOOS) GOARCH=$(_GOARCH) go build -o $$FILE $(GOFLAGS) $(LDFLAGS) ./rexray; \
 		$(PRINT_STATUS); \
 		if [ "$$EC" -eq "0" ]; then \
+			mkdir -p .deploy/$(V_OS_ARCH); \
+			mkdir -p .deploy/latest; \
+			cd .bin/$(V_OS_ARCH); \
+			TARBALL=rexray-$(V_OS_ARCH)-$(V_SEMVER).tar.gz; \
+			LATEST=rexray-$(V_OS_ARCH).tar.gz; \
+			tar -czf $$TARBALL rexray; \
+			cp -f $$TARBALL ../../.deploy/latest/$$LATEST; \
+			mv -f $$TARBALL ../../.deploy/$(V_OS_ARCH); \
+			cd - > /dev/null ; \
 			BYTES=$$($(STAT_FILE_SIZE)); \
 			SIZE=$$(($$BYTES / 1024 / 1024)); \
 			printf "\nThe REX-Ray binary is $${SIZE}MB and located at:\n\n"; \
@@ -195,29 +218,23 @@ build_:
 
 build-all: _pre-make version-noarch _deps _fmt build-all_ _post-make
 build-all_: build-linux-386_ build-linux-amd64_ build-darwin-amd64_
-	@for BIN in $$(find .bin -type f -name "rexray"); do \
-		BINDIR=$$(dirname $$BIN); \
-		FARCH=$$(echo $$BINDIR | cut -c6-); \
-		TARBALL=rexray-$$FARCH-$(V_SEMVER).tar.gz; \
-		LATEST=rexray-$$FARCH.tar.gz;\
-		cd $$BINDIR; \
-		tar -czf $$TARBALL rexray; \
-		mkdir -p ../latest; \
-		cp -f $$TARBALL ../latest/$$LATEST; \
-		cd - > /dev/null; \
-	done; \
-	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
-		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
-		.bintray-stupid.json > .bintray-stupid-filtered.json; \
-	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
-		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
-		.bintray-staged.json > .bintray-staged-filtered.json; \
-	sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
-		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
-		.bintray-stable.json > .bintray-stable-filtered.json
+
+deploy-prep:
+	@echo "target: deploy-prep"
+	@printf "  ...preparing deployment..."; \
+		sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
+			-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
+			-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
+			.bintray-stupid.json > .bintray-stupid-filtered.json; \
+		sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
+			-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
+			-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
+			.bintray-staged.json > .bintray-staged-filtered.json; \
+		sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
+			-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
+			-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
+			.bintray-stable.json > .bintray-stable-filtered.json;\
+		printf "SUCCESS!\n"
 
 build-linux-386: _pre-make _build-linux-386 _post-make
 _build-linux-386: _deps _fmt build-linux-386_
@@ -243,7 +260,7 @@ build-darwin-amd64_:
 install: _pre-make version-noarch _install _post-make
 _install: _deps _fmt
 	@echo "target: install"
-	@printf "  ...installing rexray $(V_ARCH)..."; \
+	@printf "  ...installing rexray $(V_OS_ARCH)..."; \
 		cd $(BASEDIR); \
 		go clean -i $(VERSIONPKG); \
 		go install $(GOFLAGS) $(LDFLAGS) $(NV); \
@@ -303,40 +320,88 @@ _clean:
 		
 version:
 	@echo SemVer: $(V_SEMVER)
-	@echo Binary: $(V_ARCH)
+	@echo RpmVer: $(V_RPM_SEMVER)
+	@echo Binary: $(V_OS_ARCH)
 	@echo Branch: $(V_BRANCH)
 	@echo Commit: $(V_SHA_LONG)
 	@echo Formed: $(V_BUILD_DATE)
 	
 version-noarch:
 	@echo SemVer: $(V_SEMVER)
+	@echo RpmVer: $(V_RPM_SEMVER)
 	@echo Branch: $(V_BRANCH)
 	@echo Commit: $(V_SHA_LONG)
 	@echo Formed: $(V_BUILD_DATE)
 	@echo
 
-rpm: install
+rpm: 
 	@echo "target: rpm"
-	@rm -fr $(RPMBUILD)
-	
-	@mkdir -p $(RPMBUILD)/{RPMS,SRPMS,SPECS,tmp}
-	@ln -s $(CWD) $(RPMBUILD)/BUILD
-	@ln -s $(CWD) $(RPMBUILD)/SOURCES
-	@sed -e 's|$${RPMBUILD}|$(RPMBUILD)|g' \
-		-e 's|$${GOPATH}|$(GOPATH)|g' \
-		$(CWD)/rexray.spec > $(RPMBUILD)/SPECS/rexray.spec
-
-	@printf "  ...building rpm..."; \
+	@printf "  ...building rpm $(V_ARCH)..."; \
+		mkdir -p .deploy/latest; \
+		rm -fr $(RPMBUILD); \
+		mkdir -p $(RPMBUILD)/BUILD \
+				 $(RPMBUILD)/RPMS \
+				 $(RPMBUILD)/SRPMS \
+				 $(RPMBUILD)/SPECS \
+				 $(RPMBUILD)/SOURCES \
+				 $(RPMBUILD)/tmp; \
+		cp rexray.spec $(RPMBUILD)/SPECS/rexray.spec; \
 		cd $(RPMBUILD); \
-		rpmbuild -ba --quiet SPECS/rexray.spec; \
+		setarch $(V_ARCH) rpmbuild -ba --quiet \
+			-D "rpmbuild $(RPMBUILD)" \
+			-D "v_semver $(V_RPM_SEMVER)" \
+			-D "v_arch $(V_ARCH)" \
+			-D "rexray $(CWD)/.bin/$(V_OS_ARCH)/rexray" \
+			SPECS/rexray.spec; \
 		$(PRINT_STATUS); \
 		if [ "$$EC" -eq "0" ]; then \
 			FILE=$$(readlink -f $$(find $(RPMBUILD)/RPMS -name *.rpm)); \
+			DEPLOY_FILE=.deploy/$(V_OS_ARCH)/$$(basename $$FILE); \
+			mkdir -p .deploy/$(V_OS_ARCH); \
+			mv -f $$FILE $$DEPLOY_FILE; \
+			FILE=$$DEPLOY_FILE; \
+			cp -f $$FILE .deploy/latest/rexray-latest-$(V_ARCH).rpm; \
 			BYTES=$$($(STAT_FILE_SIZE)); \
 			SIZE=$$(($$BYTES / 1024 / 1024)); \
 			printf "\nThe REX-Ray RPM is $${SIZE}MB and located at:\n\n"; \
 			printf "  $$FILE\n\n"; \
 		fi
 
-.PHONY: all install build build_ build-all deps fmt fix clean version
+rpm-linux-386:
+	@if [ "" != "$(findstring Linux-i386,$(BUILD_PLATFORMS))" ]; then \
+		env _GOOS=linux _GOARCH=386 make rpm; \
+	fi
+
+rpm-linux-amd64:
+	@if [ "" != "$(findstring Linux-x86_64,$(BUILD_PLATFORMS))" ]; then \
+		env _GOOS=linux _GOARCH=amd64 make rpm; \
+	fi
+	
+rpm-all: rpm-linux-386 rpm-linux-amd64
+
+deb:
+	@echo "target: deb"
+	@printf "  ...building deb $(V_ARCH)..."; \
+		cd .deploy/$(V_OS_ARCH); \
+		fakeroot alien -k -c --bump=0 *.rpm > /dev/null; \
+		$(PRINT_STATUS); \
+		if [ "$$EC" -eq "0" ]; then \
+			FILE=$$(readlink -f $$(find .deploy/$(V_OS_ARCH) -name *.deb)); \
+			DEPLOY_FILE=.deploy/$(V_OS_ARCH)/$$(basename $$FILE); \
+			FILE=$$DEPLOY_FILE; \
+			cp -f $$FILE .deploy/latest/rexray-latest-$(V_ARCH).deb; \
+			BYTES=$$($(STAT_FILE_SIZE)); \
+			SIZE=$$(($$BYTES / 1024 / 1024)); \
+			printf "\nThe REX-Ray DEB is $${SIZE}MB and located at:\n\n"; \
+			printf "  $$FILE\n\n"; \
+		fi
+
+deb-linux-amd64: 
+	@if [ "" != "$(findstring Linux-x86_64,$(BUILD_PLATFORMS))" ]; then \
+		env _GOOS=linux _GOARCH=amd64 make deb; \
+	fi
+
+deb-all: deb-linux-amd64
+
+.PHONY: all install build build_ build-all deps fmt fix clean version rpm rpm-all deb deb-all
 .NOTPARALLEL: all test clean deps _deps fmt _fmt fix pre-make _pre-make post-make _post-make build build-all_ install rpm

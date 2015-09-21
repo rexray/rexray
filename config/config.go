@@ -90,8 +90,8 @@ func New() *Config {
 	}
 
 	cfgName := "config"
-	cfgType := "yaml"
-	etcRexRay := "/etc/rexray"
+	cfgType := "yml"
+	etcRexRay := util.EtcDirPath()
 	usrRexRay := fmt.Sprintf("%s/.rexray", util.HomeDir())
 	etcRexRayFile := fmt.Sprintf("%s/%s.%s", etcRexRay, cfgName, cfgType)
 	usrRexRayFile := fmt.Sprintf("%s/%s.%s", usrRexRay, cfgName, cfgType)

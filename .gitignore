@@ -1,8 +1,11 @@
+var/
+etc/
 test.sh
 .bintray-stable-filtered.json
 .bintray-stupid-filtered.json
 .bintray-staged-filtered.json
 .bin/
+.deploy/
 vendor/
 .build/
 .rpmbuild/

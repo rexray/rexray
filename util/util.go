@@ -2,8 +2,8 @@ package util
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
 	"os"
@@ -14,20 +14,53 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/emccode/rexray/errors"
 )
 
-const LOGFILE = "/var/log/rexray.log"
-const PIDFILE = "/var/run/rexray.pid"
-const PIDDIR = "/var/run/rexray"
-const LOGDIR = "/var/log/rexray"
-const CLILOG = "/var/log/rexray.log"
+const (
+	LogDirPathSuffix = "/var/log/rexray"
+	EtcDirPathSuffix = "/etc/rexray"
+	BinDirPathSuffix = "/usr/bin"
+	RunDirPathSuffix = "/var/run/rexray"
+	LibDirPathSuffix = "/var/lib/rexray"
+	UnitFilePath     = "/etc/systemd/system/rexray.service"
+	InitFilePath     = "/etc/init.d/rexray"
+	EnvFileName      = "rexray.env"
+)
 
 var (
-	homeDir string
+	prefix string
+
+	homeDir     string
+	binDirPath  string
+	binFilePath string
+	logDirPath  string
+	libDirPath  string
+	runDirPath  string
+	etcDirPath  string
+	pidFilePath string
 )
 
 func init() {
 	homeDir = HomeDir()
+	prefix = os.Getenv("REXRAY_HOME")
+}
+
+func GetPrefix() string {
+	return prefix
+}
+
+func Prefix(p string) {
+	if p == "" || p == "/" {
+		return
+	}
+
+	prefix = p
+}
+
+func IsPrefixed() bool {
+	return !(prefix == "" || prefix == "/")
 }
 
 func HomeDir() string {
@@ -53,12 +86,123 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
-func PidFile() string {
-	return PIDFILE
+func Install(args ...string) {
+	exec.Command("install", args...).Run()
 }
 
-func LogFile() string {
-	return LOGFILE
+func InstallChownRoot(args ...string) {
+	a := []string{"-o", "0", "-g", "0"}
+	for _, i := range args {
+		a = append(a, i)
+	}
+	exec.Command("install", a...).Run()
+}
+
+func InstallDirChownRoot(dirPath string) {
+	InstallChownRoot("-d", dirPath)
+}
+
+func EtcDirPath() string {
+	if etcDirPath == "" {
+		etcDirPath = fmt.Sprintf("%s%s", prefix, EtcDirPathSuffix)
+		os.MkdirAll(etcDirPath, 0755)
+	}
+	return etcDirPath
+}
+
+func RunDirPath() string {
+	if runDirPath == "" {
+		runDirPath = fmt.Sprintf("%s%s", prefix, RunDirPathSuffix)
+		os.MkdirAll(runDirPath, 0755)
+	}
+	return runDirPath
+}
+
+func LogDirPath() string {
+	if logDirPath == "" {
+		logDirPath = fmt.Sprintf("%s%s", prefix, LogDirPathSuffix)
+		os.MkdirAll(logDirPath, 0755)
+	}
+	return logDirPath
+}
+
+func LibDirPath() string {
+	if libDirPath == "" {
+		libDirPath = fmt.Sprintf("%s%s", prefix, LibDirPathSuffix)
+		os.MkdirAll(libDirPath, 0755)
+	}
+	return libDirPath
+}
+
+func BinDirPath() string {
+	if binDirPath == "" {
+		binDirPath = fmt.Sprintf("%s%s", prefix, BinDirPathSuffix)
+		os.MkdirAll(binDirPath, 0755)
+	}
+	return binDirPath
+}
+
+func PidFilePath() string {
+	if pidFilePath == "" {
+		pidFilePath = fmt.Sprintf("%s/rexray.pid", RunDirPath())
+	}
+	return pidFilePath
+}
+
+func BinFilePath() string {
+	if binFilePath == "" {
+		binFilePath = fmt.Sprintf("%s/rexray", BinDirPath())
+	}
+	return binFilePath
+}
+
+func EtcFilePath(fileName string) string {
+	return fmt.Sprintf("%s/%s", EtcDirPath(), fileName)
+}
+
+func LogFilePath(fileName string) string {
+	return fmt.Sprintf("%s/%s", LogDirPath(), fileName)
+}
+
+func LogFile(fileName string) (io.Writer, error) {
+	return os.OpenFile(
+		LogFilePath(fileName), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+}
+
+func StdOutAndLogFile(fileName string) (io.Writer, error) {
+	lf, lfErr := LogFile(fileName)
+	if lfErr != nil {
+		return nil, lfErr
+	}
+	return io.MultiWriter(os.Stdout, lf), nil
+}
+
+func WriteStringToFile(text, path string) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+	defer f.Close()
+
+	if err != nil {
+		return err
+	}
+
+	f.WriteString(text)
+	return nil
+}
+
+func ReadFileToString(path string) (string, error) {
+
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	if !scanner.Scan() {
+		return "", errors.WithField("path", path, "error reading file")
+	}
+
+	return scanner.Text(), nil
 }
 
 func WritePidFile(pid int) error {
@@ -67,36 +211,36 @@ func WritePidFile(pid int) error {
 		pid = os.Getpid()
 	}
 
-	f, err := os.OpenFile(PidFile(), os.O_CREATE|os.O_WRONLY, 0644)
-	defer f.Close()
-
-	if err != nil {
-		return err
-	}
-
-	f.WriteString(fmt.Sprintf("%d", pid))
-	return nil
+	return WriteStringToFile(fmt.Sprintf("%d", pid), PidFilePath())
 }
 
 func ReadPidFile() (int, error) {
 
-	f, err := os.Open(PidFile())
-	if err != nil {
-		return -1, err
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	if !scanner.Scan() {
-		return -1, errors.New("Error reading PID file")
+	pidStr, pidStrErr := ReadFileToString(PidFilePath())
+	if pidStrErr != nil {
+		return -1, pidStrErr
 	}
 
-	pid, atoiErr := strconv.Atoi(scanner.Text())
+	pid, atoiErr := strconv.Atoi(pidStr)
 	if atoiErr != nil {
 		return -1, atoiErr
 	}
 
 	return pid, nil
+}
+
+func IsDirEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
 }
 
 func LineReader(filePath string) <-chan string {

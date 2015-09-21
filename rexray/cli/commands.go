@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	"fmt"
@@ -51,7 +51,6 @@ func initCommands() {
 	RexrayCmd.AddCommand(serviceStatusCmd)
 
 	RexrayCmd.AddCommand(serviceCmd)
-	serviceCmd.AddCommand(serviceInstallCmd)
 	serviceCmd.AddCommand(serviceStartCmd)
 	serviceCmd.AddCommand(serviceRestartCmd)
 	serviceCmd.AddCommand(serviceStopCmd)
@@ -64,6 +63,9 @@ func initCommands() {
 	moduleInstancesCmd.AddCommand(moduleInstancesListCmd)
 	moduleInstancesCmd.AddCommand(moduleInstancesCreateCmd)
 	moduleInstancesCmd.AddCommand(moduleInstancesStartCmd)
+
+	RexrayCmd.AddCommand(installCmd)
+	RexrayCmd.AddCommand(uninstallCmd)
 
 	RexrayCmd.AddCommand(versionCmd)
 }
@@ -305,11 +307,20 @@ var moduleInstancesStartCmd = &cobra.Command{
 	},
 }
 
-var serviceInstallCmd = &cobra.Command{
+var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Install the service into SystemV or SystemD",
+	Short: "Install REX-Ray",
 	Run: func(cmd *cobra.Command, args []string) {
-		Install()
+		install()
+	},
+}
+
+var uninstallCmd = &cobra.Command{
+	Use:   "uninstall",
+	Short: "Uninstall REX-Ray",
+	Run: func(cmd *cobra.Command, args []string) {
+		pkgManager, _ := cmd.Flags().GetBool("package")
+		uninstall(pkgManager)
 	},
 }
 
@@ -317,15 +328,16 @@ var serviceStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the service",
 	Run: func(cmd *cobra.Command, args []string) {
-		Start()
+		start()
 	},
 }
 
 var serviceRestartCmd = &cobra.Command{
-	Use:   "restart",
-	Short: "Restart the service",
+	Use:     "restart",
+	Aliases: []string{"reload", "force-reload"},
+	Short:   "Restart the service",
 	Run: func(cmd *cobra.Command, args []string) {
-		Restart()
+		restart()
 	},
 }
 
@@ -333,7 +345,7 @@ var serviceStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop the service",
 	Run: func(cmd *cobra.Command, args []string) {
-		Stop()
+		stop()
 	},
 }
 
@@ -341,7 +353,7 @@ var serviceStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Print the service status",
 	Run: func(cmd *cobra.Command, args []string) {
-		Status()
+		status()
 	},
 }
 

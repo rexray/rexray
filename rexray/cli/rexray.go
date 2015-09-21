@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	"fmt"
@@ -11,22 +11,9 @@ import (
 
 	"github.com/emccode/rexray/config"
 	osm "github.com/emccode/rexray/os"
-	"github.com/emccode/rexray/rexray/terminal"
+	"github.com/emccode/rexray/rexray/cli/term"
 	"github.com/emccode/rexray/storage"
 	"github.com/emccode/rexray/volume"
-)
-
-const ENVFILE = "/etc/rexray/rexray.env"
-const CFGFILE = "/etc/rexray/rexray.conf"
-const UNTFILE = "/etc/systemd/system/rexray.service"
-const INTFILE = "/etc/init.d/rexray"
-
-// init system types
-const (
-	UNKNOWN = iota
-	SYSTEMD
-	UPDATERCD
-	CHKCONFIG
 )
 
 const (
@@ -141,7 +128,7 @@ func preRun(cmd *cobra.Command, args []string) {
 	}
 
 	if permErr := checkCmdPermRequirements(cmd); permErr != nil {
-		if terminal.IsTerminal() {
+		if term.IsTerminal() {
 			printColorizedError(permErr)
 		} else {
 			printNonColorizedError(permErr)
@@ -155,7 +142,7 @@ func preRun(cmd *cobra.Command, args []string) {
 	if isInitDriverManagersCmd(cmd) {
 		if initDmErr := initDriverManagers(); initDmErr != nil {
 
-			if terminal.IsTerminal() {
+			if term.IsTerminal() {
 				printColorizedError(initDmErr)
 			} else {
 				printNonColorizedError(initDmErr)
@@ -186,8 +173,12 @@ func isHelpFlags(cmd *cobra.Command) bool {
 }
 
 func checkCmdPermRequirements(cmd *cobra.Command) error {
-	if cmd == serviceInstallCmd {
+	if cmd == installCmd {
 		return checkOpPerms("installed")
+	}
+
+	if cmd == uninstallCmd {
+		return checkOpPerms("uninstalled")
 	}
 
 	if cmd == serviceStartCmd {
@@ -196,6 +187,10 @@ func checkCmdPermRequirements(cmd *cobra.Command) error {
 
 	if cmd == serviceStopCmd {
 		return checkOpPerms("stopped")
+	}
+
+	if cmd == serviceRestartCmd {
+		return checkOpPerms("restarted")
 	}
 
 	return nil
@@ -243,7 +238,8 @@ func isInitDriverManagersCmd(cmd *cobra.Command) bool {
 		cmd != versionCmd &&
 		cmd != serviceCmd &&
 		cmd != serviceInitSysCmd &&
-		cmd != serviceInstallCmd &&
+		cmd != installCmd &&
+		cmd != uninstallCmd &&
 		cmd != serviceStatusCmd &&
 		cmd != serviceStopCmd &&
 		!(cmd == serviceStartCmd && (isClient || isForeground)) &&

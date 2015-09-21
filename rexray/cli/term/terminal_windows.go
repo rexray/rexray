@@ -5,7 +5,7 @@
 
 // +build windows
 
-package terminal
+package term
 
 import (
 	"syscall"

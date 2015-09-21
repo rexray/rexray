@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	"fmt"
@@ -13,6 +13,7 @@ func initFlags() {
 
 	initGlobalFlags()
 	initServiceFlags()
+	initInstallerFlags()
 	initVolumeFlags()
 	initSnapshotFlags()
 	initDeviceFlags()
@@ -31,10 +32,15 @@ func initGlobalFlags() {
 }
 
 func initServiceFlags() {
-	serviceStartCmd.PersistentFlags().BoolVarP(&fg, "foreground", "f", false,
+	serviceStartCmd.Flags().BoolVarP(&fg, "foreground", "f", false,
 		"Starts the service in the foreground")
-	serviceStartCmd.PersistentFlags().StringVarP(&client, "client", "", "",
+	serviceStartCmd.Flags().StringVarP(&client, "client", "", "",
 		"Socket the daemon uses to communicate to the client")
+}
+
+func initInstallerFlags() {
+	uninstallCmd.Flags().Bool("package", false,
+		"A flag indicating a package manager is performing the uninstallation")
 }
 
 func initVolumeFlags() {

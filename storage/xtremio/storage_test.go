@@ -1,8 +1,8 @@
-package scaleio
+package xtremio
 
 import "fmt"
 import "testing"
-import "github.com/emccode/rexray/drivers/storage"
+import "github.com/emccode/godogged/storagedriver"
 
 var driver storagedriver.Driver
 

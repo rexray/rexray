@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	"fmt"
@@ -125,7 +125,7 @@ func commands(cmd *cobra.Command) []*cobra.Command {
 
 	cArr := []*cobra.Command{}
 	for _, c := range cmd.Commands() {
-		if m, _ := rx.MatchString("((re)?start)|stop|status", c.Name()); !m {
+		if m, _ := rx.MatchString("((re)?start)|stop|status|((un)?install)", c.Name()); !m {
 			cArr = append(cArr, c)
 		}
 	}

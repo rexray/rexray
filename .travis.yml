@@ -1,11 +1,35 @@
 language: go
+
 go:
-- 1.5.1
-script: make build-all
+  - 1.5.1
+
+addons:
+  apt:
+    packages:
+    - cpio
+    - debhelper
+    - dpkg-dev
+    - make
+    - perl
+    - rpm
+    - fakeroot
+    
+before_script:
+  - wget http://archive.ubuntu.com/ubuntu/pool/main/a/alien/alien_8.86_all.deb
+  - dpkg -X alien_8.86_all.deb alien
+  - rm -fr alien_8.86_all.deb
+  - export PATH=$PATH:$PWD/alien/usr/bin
+  - export PERL5LIB=$PERL5LIB:$PWD/alien/usr/share/perl5
+  
+script: 
+  - make build-all rpm-all deb-all deploy-prep
+
 notifications:
-  slack: emccode:uuShEq2FwEReY2r5jDLve8uD
+  - slack: emccode:uuShEq2FwEReY2r5jDLve8uD
+  
 before_deploy: 
   - ./.bintray-decapitate.sh
+  
 deploy:
   - provider: bintray
     file: .bintray-stupid-filtered.json

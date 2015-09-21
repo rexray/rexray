@@ -1,9 +1,10 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/emccode/rexray/rexray/commands"
 	"os"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/emccode/rexray/rexray/cli"
 )
 
 func main() {
@@ -24,5 +25,5 @@ func main() {
 		}
 	}()
 
-	commands.Exec()
+	cli.Exec()
 }

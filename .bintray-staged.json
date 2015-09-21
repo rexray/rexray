@@ -14,12 +14,12 @@
 
     "files": [
         {
-            "includePattern": ".bin/(.+)/(.*\.tar\.gz)",
-            "excludePattern": ".bin/latest/(.*)",
+            "includePattern": ".deploy/(.+)/(.*\.tar\.gz)",
+            "excludePattern": ".deploy/latest/(.*)",
             "uploadPattern": "staged/${SEMVER}/$2"
         },
         {
-            "includePattern": ".bin/latest/(.*)",
+            "includePattern": ".deploy/latest/(.*)",
             "uploadPattern": "staged/latest/$1"
         }
     ],

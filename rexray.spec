@@ -1,9 +1,9 @@
-%define        _topdir  ${RPMBUILD}
+%define        _topdir  %{rpmbuild}
 %define        _tmppath %{_topdir}/tmp
 
 Summary: Tool for managing remote & local storage.
 Name: rexray
-Version: 1.0
+Version: %{v_semver}
 Release: 1
 License: Apache License
 Group: Applications/Storage
@@ -11,7 +11,7 @@ Group: Applications/Storage
 URL: https://github.com/emccode/rexray
 Vendor: EMC{code}
 Packager: Andrew Kutz <sakutz@gmail.com>
-BuildArch: x86_64
+BuildArch: %{v_arch}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}
 
 %description
@@ -24,12 +24,16 @@ and storage platforms.
 %build
 
 %install
-mkdir -p $RPM_BUILD_ROOT/usr/bin
-cp -a ${GOPATH}/bin/rexray $RPM_BUILD_ROOT/usr/bin
+install -D %{rexray} $RPM_BUILD_ROOT/usr/bin/rexray
+
+%post
+/usr/bin/rexray install 1> /dev/null
+
+%preun
+/usr/bin/rexray uninstall --package 1> /dev/null
 
 %clean
-rm -rf "$RPM_BUILD_ROOT"
+#rm -rf "$RPM_BUILD_ROOT"
 
 %files
-%defattr(-,root,root,-)
-%{_bindir}/*
+%attr(0755, root, root) /usr/bin/rexray

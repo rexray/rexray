@@ -37,7 +37,7 @@ There are also pre-built binaries at the following locations:
 
 Repository | Version | Description
 ---------- | ------- | -----------
-[unstable](https://dl.bintray.com/emccode/rexray/stupid) | [ ![Download](https://api.bintray.com/packages/emccode/rexray/stupid/images/download.svg) ](https://dl.bintray.com/emccode/rexray/stupid/latest/) | The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.
+[unstable](https://dl.bintray.com/emccode/rexray/unstable) | [ ![Download](https://api.bintray.com/packages/emccode/rexray/unstable/images/download.svg) ](https://dl.bintray.com/emccode/rexray/unstable/latest/) | The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.
 [staged](https://dl.bintray.com/emccode/rexray/staged)   | [ ![Download](https://api.bintray.com/packages/emccode/rexray/staged/images/download.svg) ](https://dl.bintray.com/emccode/rexray/staged/latest/) | The most up-to-date, release candidate REX-Ray binaries.
 [stable](https://dl.bintray.com/emccode/rexray/stable)   | [ ![Download](https://api.bintray.com/packages/emccode/rexray/stable/images/download.svg) ](https://dl.bintray.com/emccode/rexray/stable/latest/) | The most up-to-date, stable REX-Ray binaries.
 

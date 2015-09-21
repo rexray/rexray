@@ -3,10 +3,6 @@ import:
   - package: github.com/spf13/pflag
     repo:    https://github.com/spf13/pflag
     vcs:     git
-  - package: github.com/spf13/viper
-    repo:    https://github.com/akutz/viper
-    ref:     support/typed-vars-plfag-defaults
-    vcs:     git
   - package: github.com/spf13/cobra
     repo:    https://github.com/akutz/cobra
     ref:     feature/rexray

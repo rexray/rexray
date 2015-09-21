@@ -134,7 +134,7 @@ func New() *Config {
 
 func (c *Config) Copy() (*Config, error) {
 	newC := New()
-	mErr := c.Viper.Marshal(newC)
+	mErr := c.Viper.Unmarshal(newC)
 	if mErr != nil {
 		return nil, mErr
 	}

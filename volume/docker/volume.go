@@ -22,6 +22,7 @@ const (
 type Driver struct {
 	osdm *osm.OSDriverManager
 	sdm  *storage.StorageDriverManager
+	name string
 }
 
 func init() {
@@ -36,6 +37,7 @@ func Init(
 	driver := &Driver{
 		osdm: osdm,
 		sdm:  sdm,
+		name: ProviderName,
 	}
 	log.WithField("provider", ProviderName).Debug("volume driver initialized")
 	return driver, nil
@@ -47,6 +49,11 @@ func getVolumeMountPath(name string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s/%s", MountDirectory, name), nil
+}
+
+// Name will return the name of the volume driver manager
+func (driver *Driver) Name() string {
+	return driver.name
 }
 
 // Mount will perform the steps to get an existing Volume with or without a fileystem mounted to a guest

@@ -30,3 +30,7 @@ import:
     repo:    https://github.com/akutz/logrus.git
     ref:     feature/golfs
     vcs:     git
+  - package: github.com/akutz/golf
+    repo:    https://github.com/akutz/golf.git
+    ref:     0b41df385fbc7a558c84f2f5fb5dc2ff4976db35
+    vcs:     git

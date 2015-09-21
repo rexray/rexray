@@ -87,6 +87,12 @@ func getDrivers(
 
 func (vdm *VolumeDriverManager) Mount(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName":  volumeName,
+			"volumeID":    volumeID,
+			"overwriteFs": overwriteFs,
+			"newFsType":   newFsType,
+			"driverName":  driver.Name()}).Info("mount volume")
 		return driver.Mount(volumeName, volumeID, overwriteFs, newFsType)
 	}
 	return "", errors.New("no volume manager specified")
@@ -94,6 +100,10 @@ func (vdm *VolumeDriverManager) Mount(volumeName, volumeID string, overwriteFs b
 
 func (vdm *VolumeDriverManager) Unmount(volumeName, volumeID string) error {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"volumeID":   volumeID,
+			"driverName": driver.Name()}).Info("unmount volume")
 		return driver.Unmount(volumeName, volumeID)
 	}
 	return errors.New("no volume manager specified")
@@ -101,6 +111,10 @@ func (vdm *VolumeDriverManager) Unmount(volumeName, volumeID string) error {
 
 func (vdm *VolumeDriverManager) Path(volumeName, volumeID string) (string, error) {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"volumeID":   volumeID,
+			"driverName": driver.Name()}).Info("path of volume")
 		return driver.Path(volumeName, volumeID)
 	}
 	return "", errors.New("no volume manager specified")
@@ -108,6 +122,10 @@ func (vdm *VolumeDriverManager) Path(volumeName, volumeID string) (string, error
 
 func (vdm *VolumeDriverManager) Create(volumeName string, volumeOpts VolumeOpts) error {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"volumeOpts": volumeOpts,
+			"driverName": driver.Name()}).Info("create volume")
 		return driver.Create(volumeName, volumeOpts)
 	}
 	return errors.New("no volume manager specified")
@@ -115,6 +133,9 @@ func (vdm *VolumeDriverManager) Create(volumeName string, volumeOpts VolumeOpts)
 
 func (vdm *VolumeDriverManager) Remove(volumeName string) error {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"driverName": driver.Name()}).Info("remove volume")
 		return driver.Remove(volumeName)
 	}
 	return errors.New("no volume manager specified")
@@ -122,6 +143,10 @@ func (vdm *VolumeDriverManager) Remove(volumeName string) error {
 
 func (vdm *VolumeDriverManager) Attach(volumeName, instanceID string) (string, error) {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"instanceID": instanceID,
+			"driverName": driver.Name()}).Info("attach volume")
 		return driver.Attach(volumeName, instanceID)
 	}
 	return "", errors.New("no volume manager specified")
@@ -129,6 +154,10 @@ func (vdm *VolumeDriverManager) Attach(volumeName, instanceID string) (string, e
 
 func (vdm *VolumeDriverManager) Detach(volumeName, instanceID string) error {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"instanceID": instanceID,
+			"driverName": driver.Name()}).Info("detach volume")
 		return driver.Detach(volumeName, instanceID)
 	}
 	return errors.New("no volume manager specified")
@@ -136,6 +165,10 @@ func (vdm *VolumeDriverManager) Detach(volumeName, instanceID string) error {
 
 func (vdm *VolumeDriverManager) NetworkName(volumeName, instanceID string) (string, error) {
 	for _, driver := range vdm.Drivers {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"instanceID": instanceID,
+			"driverName": driver.Name()}).Info("get network name")
 		return driver.NetworkName(volumeName, instanceID)
 	}
 	return "", errors.New("no volume manager specified")

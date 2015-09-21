@@ -11,7 +11,7 @@ if [ -e "/etc/redhat-release" -o \
     #echo "installing rpm"
     sudo rpm -ih --quiet $URL/rexray-latest-$ARCH.rpm > /dev/null
     
-elif [ "$ARCH" == "x86_64" -a \
+elif [ "$ARCH" = "x86_64" -a \
        -e "/etc/debian-release" -o \
        -e "/etc/debian-version" -o \
        -e "/etc/lsb-release" ]; then

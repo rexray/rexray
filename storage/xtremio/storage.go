@@ -1,4 +1,4 @@
-package scaleio
+package xtremio
 
 import (
 	"fmt"

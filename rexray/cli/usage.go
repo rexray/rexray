@@ -146,7 +146,7 @@ Aliases:
   {{.NameAndAliases | rtrim}}{{end}}{{if .HasExample}}
 
 Examples:
-{{.Example | rtrim}}{{end}}{{ if .HasNonHelpSubCommands}}
+{{.Example | rtrim}}{{end}}{{ if .HasAvailableSubCommands}}
 
 Available Commands: {{range cmds $cmd}}{{if (not .IsHelpCommand)}}
   {{rpad .Name .NamePadding }} {{.Short | rtrim}}{{end}}{{end}}{{end}}{{$lf := lf $cmd}}{{if hf $lf}}

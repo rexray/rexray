@@ -1,6 +1,7 @@
 #!/bin/bash
 
-URL=https://dl.bintray.com/emccode/rexray/staged/latest
+REPO="${1:-staged}"
+URL=https://dl.bintray.com/emccode/rexray/$REPO/latest
 ARCH=$(uname -m)
 
 # how to detect the linux distro was taken from http://bit.ly/1JkNwWx

@@ -247,7 +247,7 @@ func loadEtcEnvironment() {
 	}
 	for l := range lr {
 		m := envVarRx.FindStringSubmatch(l)
-		if m == nil {
+		if m == nil || len(m) < 3 || os.Getenv(m[1]) != "" {
 			continue
 		}
 		os.Setenv(m[1], m[2])

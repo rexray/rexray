@@ -291,15 +291,6 @@ _fix:
 		go fmt $(NV); \
 		$(PRINT_STATUS)
 
-test: _pre-make _test _post-make
-
-_test: _install
-	@echo "target: test"
-	@printf "  ...testing rexray..."; \
-		cd $(BASEDIR); \
-		go test $(GOFLAGS) $(NV); \
-		$(PRINT_STATUS)
-
 bench: _pre-make _bench _post-make
 
 _bench: _install
@@ -403,5 +394,12 @@ deb-linux-amd64:
 
 deb-all: deb-linux-amd64
 
-.PHONY: all install build build_ build-all deps fmt fix clean version rpm rpm-all deb deb-all
+test: _install
+	@echo "target: test"
+	@printf "  ...testing rexray ..."; \
+		cd $(BASEDIR); \
+		./test.sh; \
+		$(PRINT_STATUS)
+
+.PHONY: all install build build_ build-all deps fmt fix clean version rpm rpm-all deb deb-all test
 .NOTPARALLEL: all test clean deps _deps fmt _fmt fix pre-make _pre-make post-make _post-make build build-all_ install rpm

@@ -1,201 +1,190 @@
 package xtremio
 
-import "fmt"
-import "testing"
-import "github.com/emccode/godogged/storagedriver"
+import (
+	"flag"
+	"github.com/emccode/rexray/config"
+	"github.com/emccode/rexray/storage"
+	"os"
+	"testing"
+)
 
-var driver storagedriver.Driver
+var (
+	c        *config.Config
+	driver   storage.Driver
+	runTests bool
+)
 
-func init() {
+func TestMain(m *testing.M) {
+	flag.BoolVar(&runTests, "xtremio", false, "")
+	flag.Parse()
+	beforeTests()
+	os.Exit(m.Run())
+}
+
+func beforeTests() {
+	if !runTests {
+		return
+	}
+	c = config.New()
 	var err error
-	driver, err = Init()
+	driver, err = Init(c)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func TestGetInstance(*testing.T) {
+func TestGetInstance(t *testing.T) {
+	if !runTests {
+		return
+	}
 	instance, err := driver.GetInstance()
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-
-	fmt.Println(fmt.Sprintf("%+v", instance))
+	t.Logf("%+v", instance)
 }
 
-func TestGetVolumeMapping(*testing.T) {
-	blockDeviceMapping, err := driver.GetVolumeMapping()
+func TestGetVolume(t *testing.T) {
+	if !runTests {
+		return
+	}
+	volume, err := driver.GetVolume("ccde08e3-d21b-467a-a7d3-bc92ffe0a14f", "")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-
-	for _, blockDevice := range blockDeviceMapping {
-		fmt.Println(fmt.Sprintf("%+v", blockDevice))
-	}
+	t.Logf("%+v", volume)
 }
 
-func TestGetVolume(*testing.T) {
-	volumes, err := driver.GetVolume("", "")
+func TestGetVolumeByName(t *testing.T) {
+	if !runTests {
+		return
+	}
+	volumes, err := driver.GetVolume("", "Volume-1")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	for _, volume := range volumes {
-		fmt.Println(fmt.Sprintf("%+v", volume))
-		for _, attachment := range volume.Attachments {
-			fmt.Println(fmt.Sprintf("%+v", attachment))
-		}
+		t.Logf("%+v", volume)
 	}
 }
 
-func TestGetVolumeByID(*testing.T) {
-	volumes, err := driver.GetVolume("30", "")
-	if err != nil {
-		panic(err)
+func TestGetVolumeAttach(t *testing.T) {
+	if !runTests {
+		return
 	}
-	for _, volume := range volumes {
-		fmt.Println(fmt.Sprintf("%+v", volume))
-		for _, attachment := range volume.Attachments {
-			fmt.Println(fmt.Sprintf("%+v", attachment))
-		}
+	volume, err := driver.GetVolumeAttach("12b64bd3-2c34-4fe1-b389-5cf8df668ef5", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", volume)
+}
+
+func TestGetSnapshotFromVolumeID(t *testing.T) {
+	if !runTests {
+		return
+	}
+	snapshots, err := driver.GetSnapshot("738ea6b9-8c49-416c-97b7-a5264a799eb6", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", snapshots)
+}
+
+func TestGetSnapshotBySnapshotName(t *testing.T) {
+	if !runTests {
+		return
+	}
+	snapshots, err := driver.GetSnapshot("", "", "Volume-1-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", snapshots)
+}
+
+func TestGetSnapshotFromSnapshotID(t *testing.T) {
+	if !runTests {
+		return
+	}
+	snapshots, err := driver.GetSnapshot("", "83743ccc-200f-45bb-8144-e802ceb4b555", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", snapshots)
+}
+
+func TestCreateSnapshot(t *testing.T) {
+	if !runTests {
+		return
+	}
+	snapshot, err := driver.CreateSnapshot(false, "testing", "87ef25ed-9c5f-4030-ada7-eeaf4cba0814", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", snapshot)
+}
+
+func TestRemoveSnapshot(t *testing.T) {
+	if !runTests {
+		return
+	}
+	err := driver.RemoveSnapshot("ea14a2f0-16b2-47e9-b7ba-01d812f65205")
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestGetVolumeByName(*testing.T) {
-	volumes, err := driver.GetVolume("", "ubuntu-vol4")
-	if err != nil {
-		panic(err)
+func TestCreateVolume(t *testing.T) {
+	if !runTests {
+		return
 	}
-	for _, volume := range volumes {
-		fmt.Println(fmt.Sprintf("%+v", volume))
-		for _, attachment := range volume.Attachments {
-			fmt.Println(fmt.Sprintf("%+v", attachment))
-		}
+	volume, err := driver.CreateVolume(false, "testing", "", "", "", 0, 75, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", volume)
+}
+
+func TestRemoveVolume(t *testing.T) {
+	if !runTests {
+		return
+	}
+	err := driver.RemoveVolume("743e9de5-8de4-4f09-8249-0238849a3a29")
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestCreateVolume(*testing.T) {
-	volume, err := driver.CreateVolume(false, "testing12", "", "", "", 0, 1, "")
-	if err != nil {
-		panic(err)
+func TestGetDeviceNextAvailable(t *testing.T) {
+	if !runTests {
+		return
 	}
-	fmt.Println(fmt.Sprintf("%+v", volume))
+	deviceName, err := driver.GetDeviceNextAvailable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf(deviceName)
 }
 
-func TestCreateVolumeFromVolID(*testing.T) {
-	volume, err := driver.CreateVolume(false, "testing12", "24", "", "", 0, 1, "")
-	if err != nil {
-		panic(err)
+func TestAttachVolume(t *testing.T) {
+	if !runTests {
+		return
 	}
-	fmt.Println(fmt.Sprintf("%+v", volume))
-}
-
-func TestCreateVolumeFromSnapshotID(*testing.T) {
-	volume, err := driver.CreateVolume(false, "testing12", "", "25", "", 0, 1, "")
+	volumeAttachment, err := driver.AttachVolume(false, "94e02a4a-71dc-4026-b561-1cd0cad37bce", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", volume))
-}
-
-func TestRemoveVolume(*testing.T) {
-	err := driver.RemoveVolume("30")
-	if err != nil {
-		panic(err)
+	t.Logf("%+v", volumeAttachment)
+	for _, i := range volumeAttachment {
+		t.Logf("%+v", i)
 	}
 }
 
-func TestGetSnapshot(*testing.T) {
-	volumes, err := driver.GetSnapshot("", "", "")
+func TestDetachVolume(t *testing.T) {
+	if !runTests {
+		return
+	}
+	err := driver.DetachVolume(false, "94e02a4a-71dc-4026-b561-1cd0cad37bce", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-	for _, snapshot := range volumes {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
-	}
-}
-
-func TestGetSnapshotByID(*testing.T) {
-	volumes, err := driver.GetSnapshot("", "25", "")
-	if err != nil {
-		panic(err)
-	}
-	for _, snapshot := range volumes {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
-	}
-}
-
-func TestGetSnapshotByName(*testing.T) {
-	volumes, err := driver.GetSnapshot("", "", "ubuntu-vol4.snap.06022015-09:58")
-	if err != nil {
-		panic(err)
-	}
-	for _, snapshot := range volumes {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
-	}
-}
-
-func TestGetSnapshotByVolID(*testing.T) {
-	volumes, err := driver.GetSnapshot("24", "", "")
-	if err != nil {
-		panic(err)
-	}
-	for _, snapshot := range volumes {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
-	}
-}
-
-func TestCreateSnapshot(*testing.T) {
-	snapshots, err := driver.CreateSnapshot(false, "testing6", "24", "")
-	if err != nil {
-		panic(err)
-	}
-	for _, snapshot := range snapshots {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
-	}
-}
-
-func TestRemoveSnapshot(*testing.T) {
-	err := driver.RemoveSnapshot("26")
-	if err != nil {
-		panic(err)
-	}
-}
-
-func TestGetVolumeAttach(*testing.T) {
-	volume, err := driver.GetVolumeAttach("24", "")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(fmt.Sprintf("%+v", volume[0]))
-}
-
-func TestAttachVolume(*testing.T) {
-	volumeAttachments, err := driver.AttachVolume(false, "24", "")
-	if err != nil {
-		panic(err)
-	}
-
-	for volumeAttachment := range volumeAttachments {
-		fmt.Println(fmt.Sprintf("%+v", volumeAttachment))
-	}
-}
-
-func TestGetLunMaps(*testing.T) {
-	instanceLunMaps, err := getLunMaps("iqn.1993-08.org.debian:01:dca5bccb64", "24")
-	if err != nil {
-		panic(err)
-	}
-
-	for _, lunMap := range instanceLunMaps {
-		fmt.Println(fmt.Sprintf("%+v", lunMap))
-	}
-
-}
-
-func TestDetachVolume(*testing.T) {
-	err := driver.DetachVolume(false, "24", "")
-	if err != nil {
-		panic(err)
-	}
-
 }

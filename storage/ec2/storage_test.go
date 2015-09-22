@@ -1,239 +1,190 @@
 package ec2
 
-import "fmt"
+import (
+	"flag"
+	"github.com/emccode/rexray/config"
+	"github.com/emccode/rexray/storage"
+	"os"
+	"testing"
+)
 
-import "testing"
-import "github.com/emccode/rexray/drivers/storage"
+var (
+	c        *config.Config
+	driver   storage.Driver
+	runTests bool
+)
 
-var driver storagedriver.Driver
+func TestMain(m *testing.M) {
+	flag.BoolVar(&runTests, "ec2", false, "")
+	flag.Parse()
+	beforeTests()
+	os.Exit(m.Run())
+}
 
-func init() {
+func beforeTests() {
+	if !runTests {
+		return
+	}
+	c = config.New()
 	var err error
-	driver, err = Init()
+	driver, err = Init(c)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func TestGetInstanceIdentityDocument(*testing.T) {
-	instanceIdentityDocument, err := getInstanceIdendityDocument()
-	if err != nil {
-		panic(err)
+func TestGetInstance(t *testing.T) {
+	if !runTests {
+		return
 	}
-
-	fmt.Println(fmt.Sprintf("%+v", instanceIdentityDocument))
-
-}
-
-func TestGetVolumeMapping(*testing.T) {
-	blockDeviceMapping, err := driver.GetVolumeMapping()
-	if err != nil {
-		panic(err)
-	}
-
-	for _, blockDevice := range blockDeviceMapping {
-		fmt.Println(fmt.Sprintf("%+v", blockDevice))
-	}
-}
-
-func TestGetInstance(*testing.T) {
 	instance, err := driver.GetInstance()
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-
-	fmt.Println(fmt.Sprintf("%+v", instance))
+	t.Logf("%+v", instance)
 }
 
-func TestCreateSnapshot(*testing.T) {
-	// (ec2 *EC2) CreateSnapshot(volumeId, description string)
-	blockDeviceMapping, err := driver.GetVolumeMapping()
-	if err != nil {
-		panic(err)
+func TestGetVolume(t *testing.T) {
+	if !runTests {
+		return
 	}
-
-	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping[0].VolumeID, "test")
+	volume, err := driver.GetVolume("ccde08e3-d21b-467a-a7d3-bc92ffe0a14f", "")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-
-	fmt.Println(fmt.Sprintf("%+v", snapshot))
+	t.Logf("%+v", volume)
 }
 
-func TestGetSnapshot(*testing.T) {
-	blockDeviceMapping, err := driver.GetVolumeMapping()
-	if err != nil {
-		panic(err)
+func TestGetVolumeByName(t *testing.T) {
+	if !runTests {
+		return
 	}
-
-	snapshots, err := driver.GetSnapshot(blockDeviceMapping[0].VolumeID, "", "")
+	volumes, err := driver.GetVolume("", "Volume-1")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-
-	for _, snapshot := range snapshots {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
+	for _, volume := range volumes {
+		t.Logf("%+v", volume)
 	}
 }
 
-func TestRemoveSnapshot(*testing.T) {
-	blockDeviceMapping, err := driver.GetVolumeMapping()
+func TestGetVolumeAttach(t *testing.T) {
+	if !runTests {
+		return
+	}
+	volume, err := driver.GetVolumeAttach("12b64bd3-2c34-4fe1-b389-5cf8df668ef5", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-	snapshots, err := driver.GetSnapshot(blockDeviceMapping[0].VolumeID, "", "")
+	t.Logf("%+v", volume)
+}
+
+func TestGetSnapshotFromVolumeID(t *testing.T) {
+	if !runTests {
+		return
+	}
+	snapshots, err := driver.GetSnapshot("738ea6b9-8c49-416c-97b7-a5264a799eb6", "", "")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
+	t.Logf("%+v", snapshots)
+}
 
-	for _, snapshot := range snapshots {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
+func TestGetSnapshotBySnapshotName(t *testing.T) {
+	if !runTests {
+		return
 	}
-
-	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping[0].VolumeID, "test")
+	snapshots, err := driver.GetSnapshot("", "", "Volume-1-1")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", snapshot))
+	t.Logf("%+v", snapshots)
+}
 
-	err = driver.RemoveSnapshot(snapshot[0].SnapshotID)
+func TestGetSnapshotFromSnapshotID(t *testing.T) {
+	if !runTests {
+		return
+	}
+	snapshots, err := driver.GetSnapshot("", "83743ccc-200f-45bb-8144-e802ceb4b555", "")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
+	t.Logf("%+v", snapshots)
+}
 
-	snapshots, err = driver.GetSnapshot(blockDeviceMapping[0].VolumeID, "", "")
+func TestCreateSnapshot(t *testing.T) {
+	if !runTests {
+		return
+	}
+	snapshot, err := driver.CreateSnapshot(false, "testing", "87ef25ed-9c5f-4030-ada7-eeaf4cba0814", "")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
+	t.Logf("%+v", snapshot)
+}
 
-	for _, snapshot := range snapshots {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
+func TestRemoveSnapshot(t *testing.T) {
+	if !runTests {
+		return
+	}
+	err := driver.RemoveSnapshot("ea14a2f0-16b2-47e9-b7ba-01d812f65205")
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestGetDeviceNextAvailable(*testing.T) {
+func TestCreateVolume(t *testing.T) {
+	if !runTests {
+		return
+	}
+	volume, err := driver.CreateVolume(false, "testing", "", "", "", 0, 75, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", volume)
+}
 
+func TestRemoveVolume(t *testing.T) {
+	if !runTests {
+		return
+	}
+	err := driver.RemoveVolume("743e9de5-8de4-4f09-8249-0238849a3a29")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetDeviceNextAvailable(t *testing.T) {
+	if !runTests {
+		return
+	}
 	deviceName, err := driver.GetDeviceNextAvailable()
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-
-	fmt.Println(fmt.Sprintf(deviceName))
-
+	t.Logf(deviceName)
 }
 
-// func TestCreateSnapshotVolume(*testing.T) {
-// 	blockDeviceMapping, err := driver.GetVolumeMapping()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	snapshot, err := driver.CreateSnapshot(false, "", blockDeviceMapping[0].VolumeID, "test")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	volumeID, err := driver.CreateVolume(false, "testing", snapshot[0].SnapshotID)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	err = driver.RemoveVolume(volumeID)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	err = driver.RemoveSnapshot(snapshot[0].SnapshotID)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
-
-// func TestAttachVolume(*testing.T) {
-// 	instance, err := driver.GetInstance()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	volume, err := driver.CreateVolume(false, "testing", "", "", "", 0, 2)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	volumeAttachment, err := driver.GetVolumeAttach(volume.(storagedriver.Volume).VolumeID, instance.(*storagedriver.Instance).InstanceID)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	log.Println(fmt.Sprintf("Volumes attached: %+v", volumeAttachment))
-//
-// 	volumeAttachment, err = driver.AttachVolume(false, volume.(storagedriver.Volume).VolumeID, instance.(*storagedriver.Instance).InstanceID)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	log.Println(fmt.Sprintf("Volumes attached: %+v", volumeAttachment))
-//
-// 	err = driver.DetachVolume(false, volumeAttachment.(storagedriver.VolumeAttachment).VolumeID, "")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	log.Println(fmt.Sprintf("Volume detached: %+v", volumeAttachment.(storagedriver.VolumeAttachment).VolumeID))
-//
-// 	err = driver.RemoveVolume(volume.(storagedriver.Volume).VolumeID)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	log.Println(fmt.Sprintf("Volume removed: %+v", volumeAttachment.(storagedriver.VolumeAttachment).VolumeID))
-// }
-
-func TestGetVolume(*testing.T) {
-	volume, err := driver.GetVolume("", "testing")
+func TestAttachVolume(t *testing.T) {
+	if !runTests {
+		return
+	}
+	volumeAttachment, err := driver.AttachVolume(false, "94e02a4a-71dc-4026-b561-1cd0cad37bce", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-	for _, volume := range volume {
-		fmt.Println(fmt.Sprintf("%+v", volume))
+	t.Logf("%+v", volumeAttachment)
+	for _, i := range volumeAttachment {
+		t.Logf("%+v", i)
 	}
 }
 
-// func TestCreateVolume(*testing.T) {
-// 	volume, err := driver.CreateVolume(true, "testing", "", "", 0, 1)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	fmt.Println(fmt.Sprintf("%+v", volume))
-// }
-
-func TestCreateSnapshot2(*testing.T) {
-	snapshots, err := driver.CreateSnapshot(false, "testing", "vol-8295eb9f", "test")
+func TestDetachVolume(t *testing.T) {
+	if !runTests {
+		return
+	}
+	err := driver.DetachVolume(false, "94e02a4a-71dc-4026-b561-1cd0cad37bce", "5ad7727c-aa5a-43e4-8ab7-a499295032d7")
 	if err != nil {
-		panic(err)
-	}
-	for _, snapshot := range snapshots {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
+		t.Fatal(err)
 	}
 }
-
-func TestGetSnapshotByName(*testing.T) {
-	volume, err := driver.GetSnapshot("", "", "testing")
-	if err != nil {
-		panic(err)
-	}
-	for _, snapshot := range volume {
-		fmt.Println(fmt.Sprintf("%+v", snapshot))
-	}
-}
-
-// func TestListTables(*testing.T) {
-// 	ListTables()
-// }
-//
-// func TestGetDDValue(*testing.T) {
-// 	value, err := driver.GetDDValue("name1")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }

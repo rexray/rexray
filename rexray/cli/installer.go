@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"text/template"
 
 	log "github.com/Sirupsen/logrus"
@@ -38,8 +39,92 @@ func install() {
 	}
 }
 
+func isRpmInstall(exePath string, pkgName *string) bool {
+	cmd := exec.Command("rpm", "-qf", exePath)
+	output, err := cmd.CombinedOutput()
+	soutput := string(output)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"exePath": exePath,
+			"output":  soutput,
+			"error":   err,
+		}).Debug("error checking if rpm install")
+		return false
+	}
+	log.WithField("output", soutput).Debug("rpm install query result")
+	*pkgName = util.Trim(soutput)
+
+	log.WithFields(log.Fields{
+		"exePath": exePath,
+		"pkgName": *pkgName,
+	}).Debug("is rpm install success")
+	return true
+}
+
+func isDebInstall(exePath string, pkgName *string) bool {
+	cmd := exec.Command("dpkg-query", "-S", exePath)
+	output, err := cmd.CombinedOutput()
+	soutput := string(output)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"exePath": exePath,
+			"output":  soutput,
+			"error":   err,
+		}).Debug("error checking if deb install")
+		return false
+	}
+	log.WithField("output", soutput).Debug("deb install query result")
+	*pkgName = strings.Split(util.Trim(soutput), ":")[0]
+
+	log.WithFields(log.Fields{
+		"exePath": exePath,
+		"pkgName": *pkgName,
+	}).Debug("is deb install success")
+	return true
+}
+
+func uninstallRpm(pkgName string) bool {
+	output, err := exec.Command("rpm", "-e", pkgName).CombinedOutput()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"pkgName": pkgName,
+			"output":  string(output),
+			"error":   err,
+		}).Error("error uninstalling rpm")
+	}
+	return true
+}
+
+func uninstallDeb(pkgName string) bool {
+	output, err := exec.Command("dpkg", "-r", pkgName).CombinedOutput()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"pkgName": pkgName,
+			"output":  string(output),
+			"error":   err,
+		}).Error("error uninstalling deb")
+	}
+	return true
+}
+
 func uninstall(pkgManager bool) {
 	checkOpPerms("uninstalled")
+
+	_, _, binFile := util.GetThisPathParts()
+
+	// if the uninstall command was executed manually we should check to see
+	// if this file is owned by a package manager and remove it that way if so
+	if !pkgManager {
+		log.WithField("binFile", binFile).Debug("is this a managed file?")
+		var pkgName string
+		if isRpmInstall(binFile, &pkgName) {
+			uninstallRpm(pkgName)
+			return
+		} else if isDebInstall(binFile, &pkgName) {
+			uninstallDeb(pkgName)
+			return
+		}
+	}
 
 	func() {
 		defer func() {
@@ -63,7 +148,7 @@ func uninstall(pkgManager bool) {
 	os.RemoveAll(util.LogDirPath())
 
 	if !pkgManager {
-		os.Remove(util.BinFilePath())
+		os.Remove(binFile)
 		if util.IsPrefixed() {
 			os.RemoveAll(util.GetPrefix())
 		}

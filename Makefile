@@ -181,15 +181,17 @@ _post-make:
 
 deps: _pre-make _deps _post-make
 _deps: 
-	@echo "target: deps"
-	@printf "  ...installing glide..."
-	@go get github.com/Masterminds/glide; \
-		$(PRINT_STATUS)
-	@printf "  ...downloading go dependencies..."; \
-		cd $(BASEDIR); \
-		go get -d $(GOFLAGS) $(NV); \
-		$(GLIDE) -q up 2> /dev/null; \
-		$(PRINT_STATUS)
+	@if [ -z "$$OFFLINE" ]; then \
+		echo "target: deps"; \
+		printf "  ...installing glide..."; \
+		go get github.com/Masterminds/glide; \
+			$(PRINT_STATUS); \
+		printf "  ...downloading go dependencies..."; \
+			cd $(BASEDIR); \
+			go get -d $(GOFLAGS) $(NV); \
+			$(GLIDE) -q up 2> /dev/null; \
+			$(PRINT_STATUS); \
+	fi
 
 build: _pre-make _build _post-make
 _build: _deps _fmt build_
@@ -349,6 +351,7 @@ rpm:
 			FILE=$$(readlink -f $$(find $(RPMBUILD)/RPMS -name *.rpm)); \
 			DEPLOY_FILE=.deploy/$(V_OS_ARCH)/$$(basename $$FILE); \
 			mkdir -p .deploy/$(V_OS_ARCH); \
+			rm -f .deploy/$(V_OS_ARCH)/*.rpm; \
 			mv -f $$FILE $$DEPLOY_FILE; \
 			FILE=$$DEPLOY_FILE; \
 			cp -f $$FILE .deploy/latest/rexray-latest-$(V_ARCH).rpm; \
@@ -374,6 +377,7 @@ deb:
 	@echo "target: deb"
 	@printf "  ...building deb $(V_ARCH)..."; \
 		cd .deploy/$(V_OS_ARCH); \
+		rm -f *.deb; \
 		fakeroot alien -k -c --bump=0 *.rpm > /dev/null; \
 		$(PRINT_STATUS); \
 		if [ "$$EC" -eq "0" ]; then \

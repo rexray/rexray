@@ -109,6 +109,8 @@ var versionCmd = &cobra.Command{
 		}
 		buildDate := time.Unix(epochInt, 0)
 
+		_, _, exeFile := util.GetThisPathParts()
+		fmt.Printf("%s\n\n", exeFile)
 		fmt.Printf("SemVer: %s\n", version.SemVer)
 		fmt.Printf("Binary: %s\n", version.Arch)
 		fmt.Printf("Branch: %s\n", version.Branch)

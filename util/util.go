@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/emccode/rexray/errors"
+	"github.com/kardianos/osext"
 )
 
 const (
@@ -27,9 +28,20 @@ const (
 	UnitFilePath     = "/etc/systemd/system/rexray.service"
 	InitFilePath     = "/etc/init.d/rexray"
 	EnvFileName      = "rexray.env"
+
+	TrimPattern          = `(?s)^\s*(.*?)\s*$`
+	NetworkAdressPattern = `(?i)^((?:(?:tcp|udp|ip)[46]?)|(?:unix(?:gram|packet)?))://(.+)$`
+
+	LetterBytes     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	LetterIndexBits = 6
+	LetterIndexMask = 1<<LetterIndexBits - 1
+	LetterIndexMax  = 63 / LetterIndexBits
 )
 
 var (
+	trimRx    *regexp.Regexp
+	netAddrRx *regexp.Regexp
+
 	prefix string
 
 	homeDir     string
@@ -45,6 +57,17 @@ var (
 func init() {
 	homeDir = HomeDir()
 	prefix = os.Getenv("REXRAY_HOME")
+
+	var err error
+	trimRx, err = regexp.Compile(TrimPattern)
+	if err != nil {
+		panic(err)
+	}
+
+	netAddrRx, err = regexp.Compile(NetworkAdressPattern)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func GetPrefix() string {
@@ -283,35 +306,31 @@ func GetPathParts(path string) (dirPath, fileName, absPath string) {
 		path = lookup
 	}
 	absPath, _ = filepath.Abs(path)
-
 	dirPath = filepath.Dir(absPath)
 	fileName = filepath.Base(absPath)
 	return
 }
 
 func GetThisPathParts() (dirPath, fileName, absPath string) {
-	return GetPathParts(os.Args[0])
+	exeFile, err := osext.Executable()
+	if err != nil {
+		panic(err)
+	}
+	return GetPathParts(exeFile)
 }
-
-const (
-	LETTER_BYTES      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	LETTER_INDEX_BITS = 6
-	LETTER_INDEX_MASK = 1<<LETTER_INDEX_BITS - 1
-	LETTER_INDEX_MAX  = 63 / LETTER_INDEX_BITS
-)
 
 func RandomString(length int) string {
 	src := rand.NewSource(time.Now().UnixNano())
 	b := make([]byte, length)
-	for i, cache, remain := length-1, src.Int63(), LETTER_INDEX_MAX; i >= 0; {
+	for i, cache, remain := length-1, src.Int63(), LetterIndexMax; i >= 0; {
 		if remain == 0 {
-			cache, remain = src.Int63(), LETTER_INDEX_MAX
+			cache, remain = src.Int63(), LetterIndexMax
 		}
-		if idx := int(cache & LETTER_INDEX_MASK); idx < len(LETTER_BYTES) {
-			b[i] = LETTER_BYTES[idx]
+		if idx := int(cache & LetterIndexMask); idx < len(LetterBytes) {
+			b[i] = LetterBytes[idx]
 			i--
 		}
-		cache >>= LETTER_INDEX_BITS
+		cache >>= LetterIndexBits
 		remain--
 	}
 
@@ -335,16 +354,22 @@ func GetLocalIP() string {
 	return ""
 }
 
-const ADDR_PATT = "(?i)^((?:(?:tcp|udp|ip)[46]?)|(?:unix(?:gram|packet)?))://(.+)$"
-
+// ParseAddress parses a standard golang network address and returns the
+// protocol and path.
 func ParseAddress(addr string) (proto string, path string, err error) {
-	rx, rxErr := regexp.Compile(ADDR_PATT)
-	if rxErr != nil {
-		return "", "", nil
+	m := netAddrRx.FindStringSubmatch(addr)
+	if m == nil {
+		return "", "", errors.WithField("address", addr, "invalid address")
 	}
-	if !rx.MatchString(addr) {
-		return "", "", errors.New(fmt.Sprintf("Invalid address '%s'", addr))
-	}
-	m := rx.FindStringSubmatch(addr)
 	return m[1], m[2], nil
+}
+
+// Trim removes all leading and trailing whitespace, including tab, newline,
+// and carriage return characters.
+func Trim(text string) string {
+	m := trimRx.FindStringSubmatch(text)
+	if m == nil {
+		return text
+	}
+	return m[1]
 }

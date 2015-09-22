@@ -36,6 +36,8 @@ func initServiceFlags() {
 		"Starts the service in the foreground")
 	serviceStartCmd.Flags().StringVarP(&client, "client", "", "",
 		"Socket the daemon uses to communicate to the client")
+	serviceStartCmd.Flags().BoolVarP(&force, "force", "", false,
+		"Forces the service to start, ignoring errors")
 }
 
 func initInstallerFlags() {

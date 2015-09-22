@@ -178,7 +178,6 @@ func tryToStartDaemon() {
 	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	cmdErr := cmd.Start()

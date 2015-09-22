@@ -42,6 +42,7 @@ var (
 
 	client                  string
 	fg                      bool
+	force                   bool
 	cfgFile                 string
 	snapshotID              string
 	volumeID                string
@@ -229,9 +230,6 @@ func printNonColorizedError(err error) {
 
 func isInitDriverManagersCmd(cmd *cobra.Command) bool {
 
-	isClient, _ := cmd.Flags().GetBool("client")
-	isForeground, _ := cmd.Flags().GetBool("foreground")
-
 	return cmd.Parent() != nil &&
 		cmd != adapterCmd &&
 		cmd != adapterGetTypesCmd &&
@@ -242,7 +240,7 @@ func isInitDriverManagersCmd(cmd *cobra.Command) bool {
 		cmd != uninstallCmd &&
 		cmd != serviceStatusCmd &&
 		cmd != serviceStopCmd &&
-		!(cmd == serviceStartCmd && (isClient || isForeground)) &&
+		!(cmd == serviceStartCmd && (client != "" || fg || force)) &&
 		cmd != moduleCmd &&
 		cmd != moduleTypesCmd &&
 		cmd != moduleInstancesCmd &&

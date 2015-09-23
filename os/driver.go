@@ -11,6 +11,9 @@ var (
 )
 
 type Driver interface {
+	// Name returns the name of the driver
+	Name() string
+
 	// Shows the existing mount points
 	GetMounts(string, string) ([]*mount.Info, error)
 

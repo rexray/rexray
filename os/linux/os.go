@@ -40,6 +40,9 @@ func Init(conf *config.Config) (osm.Driver, error) {
 	}
 
 }
+func (driver *Driver) Name() string {
+	return ProviderName
+}
 
 func (driver *Driver) GetMounts(deviceName, mountPoint string) ([]*mount.Info, error) {
 
@@ -105,6 +108,13 @@ func (driver *Driver) Format(deviceName, newFsType string, overwriteFs bool) err
 	if fsType != "" {
 		fsDetected = true
 	}
+
+	log.WithFields(log.Fields{
+		"fsDetected":  fsDetected,
+		"fsType":      fsType,
+		"deviceName":  deviceName,
+		"overwriteFs": overwriteFs,
+		"driverName":  driver.Name()}).Info("probe information")
 
 	if overwriteFs || !fsDetected {
 		switch newFsType {

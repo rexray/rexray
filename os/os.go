@@ -77,6 +77,10 @@ func getDrivers(conf *config.Config) (map[string]Driver, error) {
 func (osdm *OSDriverManager) GetMounts(deviceName, mountPoint string) ([]*mount.Info, error) {
 
 	for _, driver := range osdm.Drivers {
+		log.WithFields(log.Fields{
+			"deviceName": deviceName,
+			"mountPoint": mountPoint,
+			"driverName": driver.Name()}).Info("getting mounts")
 		mounts, err := driver.GetMounts(deviceName, mountPoint)
 		if err != nil {
 			return nil, err
@@ -89,6 +93,9 @@ func (osdm *OSDriverManager) GetMounts(deviceName, mountPoint string) ([]*mount.
 
 func (osdm *OSDriverManager) Mounted(mountPoint string) (bool, error) {
 	for _, driver := range osdm.Drivers {
+		log.WithFields(log.Fields{
+			"mountPoint": mountPoint,
+			"driverName": driver.Name()}).Info("checking filesystem mount")
 		return driver.Mounted(mountPoint)
 	}
 	return false, errors.New("No OS detected")
@@ -96,6 +103,9 @@ func (osdm *OSDriverManager) Mounted(mountPoint string) (bool, error) {
 
 func (osdm *OSDriverManager) Unmount(mountPoint string) error {
 	for _, driver := range osdm.Drivers {
+		log.WithFields(log.Fields{
+			"mountPoint": mountPoint,
+			"driverName": driver.Name()}).Info("unmounting filesystem")
 		return driver.Unmount(mountPoint)
 	}
 	return errors.New("No OS detected")
@@ -103,6 +113,12 @@ func (osdm *OSDriverManager) Unmount(mountPoint string) error {
 
 func (osdm *OSDriverManager) Mount(device, target, mountOptions, mountLabel string) error {
 	for _, driver := range osdm.Drivers {
+		log.WithFields(log.Fields{
+			"device":       device,
+			"target":       target,
+			"mountOptions": mountOptions,
+			"mountLabel":   mountLabel,
+			"driverName":   driver.Name()}).Info("mounting filesystem")
 		return driver.Mount(device, target, mountOptions, mountLabel)
 	}
 	return errors.New("No OS detected")
@@ -110,6 +126,11 @@ func (osdm *OSDriverManager) Mount(device, target, mountOptions, mountLabel stri
 
 func (osdm *OSDriverManager) Format(deviceName, fsType string, overwriteFs bool) error {
 	for _, driver := range osdm.Drivers {
+		log.WithFields(log.Fields{
+			"deviceName":  deviceName,
+			"fsType":      fsType,
+			"overwriteFs": overwriteFs,
+			"driverName":  driver.Name()}).Info("formatting if blank or overwriteFs specified")
 		return driver.Format(deviceName, fsType, overwriteFs)
 	}
 	return errors.New("No OS detected")

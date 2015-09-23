@@ -58,6 +58,13 @@ func (driver *Driver) Name() string {
 
 // Mount will perform the steps to get an existing Volume with or without a fileystem mounted to a guest
 func (driver *Driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
+	log.WithFields(log.Fields{
+		"volumeName":  volumeName,
+		"volumeID":    volumeID,
+		"overwriteFs": overwriteFs,
+		"newFsType":   newFsType,
+		"driverName":  driver.Name()}).Info("mounting volume")
+
 	if volumeName == "" && volumeID == "" {
 		return "", errors.New("Missing volume name or ID")
 	}
@@ -142,6 +149,10 @@ func (driver *Driver) Mount(volumeName, volumeID string, overwriteFs bool, newFs
 
 // Unmount will perform the steps to unmount and existing volume and detach
 func (driver *Driver) Unmount(volumeName, volumeID string) error {
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"volumeID":   volumeID,
+		"driverName": driver.Name()}).Info("unmounting volume")
 	if volumeName == "" && volumeID == "" {
 		return errors.New("Missing volume name or ID")
 	}
@@ -184,13 +195,11 @@ func (driver *Driver) Unmount(volumeName, volumeID string) error {
 		return err
 	}
 
-	if len(mounts) == 0 {
-		return nil
-	}
-
-	err = driver.osdm.Unmount(mounts[0].Mountpoint)
-	if err != nil {
-		return err
+	if len(mounts) > 0 {
+		err := driver.osdm.Unmount(mounts[0].Mountpoint)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = driver.sdm.DetachVolume(false, volumes[0].VolumeID, "")
@@ -203,6 +212,10 @@ func (driver *Driver) Unmount(volumeName, volumeID string) error {
 
 // Path returns the mounted path of the volume
 func (driver *Driver) Path(volumeName, volumeID string) (string, error) {
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"volumeID":   volumeID,
+		"driverName": driver.Name()}).Info("getting path to volume")
 	if volumeName == "" && volumeID == "" {
 		return "", errors.New("Missing volume name or ID")
 	}
@@ -254,6 +267,10 @@ func (driver *Driver) Path(volumeName, volumeID string) (string, error) {
 
 // Create will create a remote volume
 func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) error {
+	log.WithFields(log.Fields{
+		"volumeOpts": volumeOpts,
+		"driverName": driver.Name()}).Info("creating volume")
+
 	if volumeName == "" {
 		return errors.New("Missing volume name")
 	}
@@ -275,8 +292,15 @@ func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) er
 		return err
 	}
 
+	for k, v := range volumeOpts {
+		volumeOpts[strings.ToLower(k)] = v
+	}
+
+	newFsType := volumeOpts["newfstype"]
+	overwriteFs, _ := strconv.ParseBool(volumeOpts["overwritefs"])
+
 	switch {
-	case len(volumes) == 1:
+	case len(volumes) == 1 && !overwriteFs:
 		return nil
 	case len(volumes) > 1:
 		return errors.New(fmt.Sprintf("Too many volumes returned by name of %s", volumeName))
@@ -289,10 +313,6 @@ func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) er
 		sizei            int
 		availabilityZone string
 	)
-
-	for k, v := range volumeOpts {
-		volumeOpts[strings.ToLower(k)] = v
-	}
 
 	if volumeType, ok = volumeOpts["volumetype"]; !ok {
 		volumeType = os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
@@ -319,16 +339,38 @@ func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) er
 		availabilityZone = os.Getenv("REXRAY_DOCKER_AVAILABILITYZONE")
 	}
 
-	_, err = driver.sdm.CreateVolume(
-		false, volumeName, "", "", volumeType, IOPS, size, availabilityZone)
-	if err != nil {
-		return err
+	if len(volumes) == 0 {
+		_, err := driver.sdm.CreateVolume(
+			false, volumeName, "", "", volumeType, IOPS, size, availabilityZone)
+		if err != nil {
+			return err
+		}
 	}
+
+	if newFsType != "" || overwriteFs {
+		_, err = driver.Mount(volumeName, "", overwriteFs, newFsType)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"volumeName":  volumeName,
+				"overwriteFs": overwriteFs,
+				"newFsType":   newFsType,
+				"driverName":  driver.Name()}).Error("Failed to create or mount file system")
+		}
+		err = driver.Unmount(volumeName, "")
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // Remove will remove a remote volume
 func (driver *Driver) Remove(volumeName string) error {
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"driverName": driver.Name()}).Info("removing volume")
+
 	if volumeName == "" {
 		return errors.New("Missing volume name")
 	}
@@ -372,6 +414,11 @@ func (driver *Driver) Remove(volumeName string) error {
 
 // Attach will attach a volume to an instance
 func (driver *Driver) Attach(volumeName, instanceID string) (string, error) {
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"instanceID": instanceID,
+		"driverName": driver.Name()}).Info("attaching volume")
+
 	volumes, err := driver.sdm.GetVolume("", volumeName)
 	if err != nil {
 		return "", err
@@ -399,6 +446,11 @@ func (driver *Driver) Attach(volumeName, instanceID string) (string, error) {
 
 // Remove will remove a remote volume
 func (driver *Driver) Detach(volumeName, instanceID string) error {
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"instanceID": instanceID,
+		"driverName": driver.Name()}).Info("detaching volume")
+
 	volume, err := driver.sdm.GetVolume("", volumeName)
 	if err != nil {
 		return err
@@ -409,6 +461,11 @@ func (driver *Driver) Detach(volumeName, instanceID string) error {
 
 // NetworkName will return relevant information about how a volume can be discovered on an OS
 func (driver *Driver) NetworkName(volumeName, instanceID string) (string, error) {
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"instanceID": instanceID,
+		"driverName": driver.Name()}).Info("returning network name")
+
 	volumes, err := driver.sdm.GetVolume("", volumeName)
 	if err != nil {
 		return "", err

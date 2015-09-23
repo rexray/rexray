@@ -92,7 +92,7 @@ func (vdm *VolumeDriverManager) Mount(volumeName, volumeID string, overwriteFs b
 			"volumeID":    volumeID,
 			"overwriteFs": overwriteFs,
 			"newFsType":   newFsType,
-			"driverName":  driver.Name()}).Info("mount volume")
+			"driverName":  driver.Name()}).Info("mounting volume")
 		return driver.Mount(volumeName, volumeID, overwriteFs, newFsType)
 	}
 	return "", errors.New("no volume manager specified")
@@ -103,7 +103,7 @@ func (vdm *VolumeDriverManager) Unmount(volumeName, volumeID string) error {
 		log.WithFields(log.Fields{
 			"volumeName": volumeName,
 			"volumeID":   volumeID,
-			"driverName": driver.Name()}).Info("unmount volume")
+			"driverName": driver.Name()}).Info("unmounting volume")
 		return driver.Unmount(volumeName, volumeID)
 	}
 	return errors.New("no volume manager specified")

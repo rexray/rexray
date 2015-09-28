@@ -357,7 +357,7 @@ Available Commands:
   help        Help about any command
 
 Flags:
-  -c, --config="$HOME/.rexray/config.yaml": The REX-Ray configuration file
+  -c, --config="$HOME/.rexray/config.yml": The REX-Ray configuration file
   -d, --debug=false: Enables verbose output
   -?, --help=false: Help for rexray
   -h, --host="tcp://127.0.0.1:7979": The REX-Ray service address

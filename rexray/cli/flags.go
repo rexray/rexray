@@ -22,7 +22,7 @@ func initFlags() {
 
 func initGlobalFlags() {
 	RexrayCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c",
-		fmt.Sprintf("%s/.rexray/config.yaml", util.HomeDir()),
+		fmt.Sprintf("%s/.rexray/config.yml", util.HomeDir()),
 		"The REX-Ray configuration file")
 	RexrayCmd.PersistentFlags().BoolP(
 		"verbose", "v", false, "Print verbose help information")

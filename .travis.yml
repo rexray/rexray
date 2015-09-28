@@ -14,17 +14,8 @@ addons:
     - rpm
     - fakeroot
 
-before_install:
-  - go get github.com/axw/gocov/gocov
-  - go get github.com/mattn/goveralls
-  - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
-
 before_script:
-  - wget http://archive.ubuntu.com/ubuntu/pool/main/a/alien/alien_8.86_all.deb
-  - dpkg -X alien_8.86_all.deb .alien
-  - rm -fr alien_8.86_all.deb
-  - export PATH=$PATH:$PWD/.alien/usr/bin
-  - export PERL5LIB=$PERL5LIB:$PWD/.alien/usr/share/perl5
+  - source install_build_deps.sh
 
 script:
   - make build-all test rpm-all deb-all deploy-prep
@@ -62,3 +53,9 @@ deploy:
     on:
       all_branches: true
       condition: $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'emccode/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+
+cache:
+  apt: true
+  directories:
+    - $GOPATH/pkg
+    - $HOME/.opt

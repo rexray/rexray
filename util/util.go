@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/emccode/rexray/errors"
+	version "github.com/emccode/rexray/version_info"
 	"github.com/kardianos/osext"
 )
 
@@ -41,6 +42,10 @@ const (
 var (
 	trimRx    *regexp.Regexp
 	netAddrRx *regexp.Regexp
+
+	thisExeDir     string
+	thisExeName    string
+	thisExeAbsPath string
 
 	prefix string
 
@@ -68,6 +73,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	thisExeDir, thisExeName, thisExeAbsPath = GetThisPathParts()
 }
 
 func GetPrefix() string {
@@ -376,4 +383,13 @@ func Trim(text string) string {
 		return text
 	}
 	return m[1]
+}
+
+func PrintVersion(out io.Writer) {
+	fmt.Fprintf(out, "Binary: %s\n", thisExeAbsPath)
+	fmt.Fprintf(out, "SemVer: %s\n", version.SemVer)
+	fmt.Fprintf(out, "OsArch: %s\n", version.Arch)
+	fmt.Fprintf(out, "Branch: %s\n", version.Branch)
+	fmt.Fprintf(out, "Commit: %s\n", version.ShaLong)
+	fmt.Fprintf(out, "Formed: %s\n", version.EpochToRfc1123())
 }

@@ -5,13 +5,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strconv"
-	"time"
+	"os"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/rexray/util"
-	version "github.com/emccode/rexray/version_info"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v1"
 )
@@ -102,20 +100,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		epochInt, epochIntErr := strconv.ParseInt(version.Epoch, 10, 64)
-		if epochIntErr != nil {
-			panic(epochIntErr)
-		}
-		buildDate := time.Unix(epochInt, 0)
-
-		_, _, exeFile := util.GetThisPathParts()
-		fmt.Printf("%s\n\n", exeFile)
-		fmt.Printf("SemVer: %s\n", version.SemVer)
-		fmt.Printf("Binary: %s\n", version.Arch)
-		fmt.Printf("Branch: %s\n", version.Branch)
-		fmt.Printf("Commit: %s\n", version.ShaLong)
-		fmt.Printf("Formed: %s\n", buildDate.Format(time.RFC1123))
+		util.PrintVersion(os.Stdout)
 	},
 }
 

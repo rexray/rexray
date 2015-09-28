@@ -59,6 +59,8 @@ func startDaemon() {
 	log.SetOutput(out)
 
 	fmt.Fprintf(out, "%s\n", RexRayLogoAscii)
+	util.PrintVersion(out)
+	fmt.Fprintln(out)
 
 	var success []byte
 	var failure []byte

@@ -265,7 +265,7 @@ _install: _deps _fmt
 	@printf "  ...installing rexray $(V_OS_ARCH)..."; \
 		cd $(BASEDIR); \
 		go clean -i $(VERSIONPKG); \
-		go install $(GOFLAGS) $(LDFLAGS) $(NV); \
+		go install $(GOFLAGS) $(LDFLAGS) ./rexray/; \
 		$(PRINT_STATUS); \
 		if [ "$$EC" -eq "0" ]; then \
 			FILE=$(GOPATH)/bin/rexray; \

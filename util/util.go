@@ -157,6 +157,10 @@ func LibDirPath() string {
 	return libDirPath
 }
 
+func LibFilePath(fileName string) string {
+	return fmt.Sprintf("%s/%s", LibDirPath(), fileName)
+}
+
 func BinDirPath() string {
 	if binDirPath == "" {
 		binDirPath = fmt.Sprintf("%s%s", prefix, BinDirPathSuffix)

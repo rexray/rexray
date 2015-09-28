@@ -10,12 +10,12 @@ import (
 	log "github.com/Sirupsen/logrus"
 	osm "github.com/emccode/rexray/os"
 	"github.com/emccode/rexray/storage"
+	"github.com/emccode/rexray/util"
 	"github.com/emccode/rexray/volume"
 )
 
 const (
 	ProviderName            = "docker"
-	MountDirectory          = "/var/lib/rexray/volumes"
 	DefaultVolumeSize int64 = 16
 )
 
@@ -25,9 +25,14 @@ type Driver struct {
 	name string
 }
 
+var (
+	mountDirectoryPath string
+)
+
 func init() {
 	volume.Register(ProviderName, Init)
-	os.MkdirAll(MountDirectory, 0755)
+	mountDirectoryPath = util.LibFilePath("volumes")
+	os.MkdirAll(mountDirectoryPath, 0755)
 }
 
 func Init(
@@ -48,7 +53,7 @@ func getVolumeMountPath(name string) (string, error) {
 		return "", errors.New("Missing volume name")
 	}
 
-	return fmt.Sprintf("%s/%s", MountDirectory, name), nil
+	return fmt.Sprintf("%s/%s", mountDirectoryPath, name), nil
 }
 
 // Name will return the name of the volume driver manager

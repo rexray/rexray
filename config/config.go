@@ -66,8 +66,8 @@ type secureConfig struct {
 	ScaleIoStoragePoolId        string
 	ScaleIoStoragePoolName      string
 
-	XtremIoEndpoint string
-	XtremIoUserName string
+	XtremIoEndpoint         string
+	XtremIoUserName         string
 	XtremIoInsecure         bool
 	XtremIoDeviceMapper     string
 	XtremIoMultipath        string

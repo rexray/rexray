@@ -1,32 +1,57 @@
 package: github.com/emccode/rexray
 import:
   - package: github.com/spf13/pflag
+    ref:     b084184666e02084b8ccb9b704bf0d79c466eb1d
     repo:    https://github.com/spf13/pflag
     vcs:     git
   - package: github.com/spf13/cobra
+    ref:     363816bb13ce1710460c2345017fd35593cbf5ed
     repo:    https://github.com/akutz/cobra
-    ref:     feature/rexray
     vcs:     git
   - package: github.com/goamz/goamz
+    ref:     d864e94f00efde9785b51e0d9f9e3ed04e2e6ecd
     repo:    https://github.com/clintonskitson/goamz
-    ref:     snapcopy
     vcs:     git
   - package: github.com/emccode/goscaleio
+    ref:     519f89a09591aad51b435d4a6ddf7472dee718b7
     repo:    https://github.com/akutz/goscaleio.git
-    ref:     feature/manual-config
     vcs:     git
   - package: github.com/emccode/goxtremio
+    ref:     89e87d4bdf43837a161fd36ad8dd32e0ce42ae98
     repo:    https://github.com/akutz/goxtremio.git
-    ref:     feature/rexray
     vcs:     git
   - package: github.com/akutz/golf
-    ref:     v0.1.0
+    ref:     0b41df385fbc7a558c84f2f5fb5dc2ff4976db35
     vcs:     git
   - package: github.com/Sirupsen/logrus
+    ref:     d4015a94e7693e84751530b3bd5644f9ab5adc66
     repo:    https://github.com/akutz/logrus.git
-    ref:     feature/golfs
     vcs:     git
   - package: github.com/spf13/viper
+    ref:     0e14b4944c2c4974cbea1392a55fbbdd89da6513
     repo:    https://github.com/akutz/viper.git
-    ref:     feature/readconfig-nonil
     vcs:     git
+  - package: github.com/spf13/cast
+    ref:     ee815aaf958c707ad07547cd62150d973710f747
+  - package: github.com/opencontainers/runc
+    ref:     902ccd0f1840115ca1ba01585b7051f0673eba92
+  - package: github.com/BurntSushi/toml
+    ref:     056c9bc7be7190eaa7715723883caffa5f8fa3e4
+  - package: github.com/kr/text
+    ref:     bb797dc4fb8320488f47bf11de07a733d7233e1f
+  - package: github.com/magiconair/properties
+    ref:     337395e44efb4affc8bf11971e22acbd4e27a32d
+  - package: github.com/docker/docker
+    ref:     724b410c555a278d428929d125005d624d4a94a5
+  - package: github.com/spf13/jwalterweatherman
+    ref:     3d60171a64319ef63c78bd45bd60e6eab1e75f8b
+  - package: github.com/rackspace/gophercloud
+    ref:     d86f9582b08d56dc9422e3a5d9f120b117487427
+  - package: github.com/mitchellh/mapstructure
+    ref:     281073eb9eb092240d33ef253c404f1cca550309
+  - package: gopkg.in/yaml.v2
+    ref:     53feefa2559fb8dfa8d81baad31be332c97d6c77
+  - package: github.com/kardianos/osext
+    ref:     6e7f843663477789fac7c02def0d0909e969b4e5
+  - package: github.com/kr/pretty
+    ref:     e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb

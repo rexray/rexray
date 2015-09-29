@@ -244,6 +244,8 @@ build-linux-386_:
 	@if [ "" != "$(findstring Linux-i386,$(BUILD_PLATFORMS))" ]; then \
 		env _GOOS=linux _GOARCH=386 make build_; \
 	fi
+rebuild-linux-386: _pre-make _clean _build-linux-386 _post-make
+rebuild-all-linux-386: _pre-make _clean-all _build-linux-386 _post-make
 
 build-linux-amd64: _pre-make _build-linux-amd64 _post-make
 _build-linux-amd64: _deps _fmt build-linux-amd64_
@@ -251,6 +253,9 @@ build-linux-amd64_:
 	@if [ "" != "$(findstring Linux-x86_64,$(BUILD_PLATFORMS))" ]; then \
 		env _GOOS=linux _GOARCH=amd64 make build_; \
 	fi
+rebuild-linux-amd64: _pre-make _clean _build-linux-amd64 _post-make
+rebuild-all-linux-amd64: _pre-make _clean-all _build-linux-amd64 _post-make
+
 
 build-darwin-amd64: _pre-make _build-darwin-amd64 _post-make
 _build-darwin-amd64: _deps _fmt build-darwin-amd64_
@@ -258,6 +263,9 @@ build-darwin-amd64_:
 	@if [ "" != "$(findstring Darwin-x86_64,$(BUILD_PLATFORMS))" ]; then \
 		env _GOOS=darwin _GOARCH=amd64 make build_; \
 	fi
+rebuild-darwin-amd64: _pre-make _clean _build-darwin-amd64 _post-make
+rebuild-all-darwin-amd64: _pre-make _clean-all _build-darwin-amd64 _post-make
+
 
 install: _pre-make version-noarch _install _post-make
 _install: _deps _fmt
@@ -300,15 +308,6 @@ _bench: _install
 	@printf "  ...benchmarking rexray..."; \
 		cd $(BASEDIR); \
 		go test -run=NONE -bench=. $(GOFLAGS) $(NV); \
-		$(PRINT_STATUS)
-
-clean: _pre-make _clean _post-make
-
-_clean:
-	@echo "target: clean"
-	@printf "  ...cleaning rexray..."; \
-		cd $(BASEDIR); \
-		go clean $(GOFLAGS) -i $(NV); \
 		$(PRINT_STATUS)
 		
 version:
@@ -405,5 +404,63 @@ test: _install
 		./test.sh; \
 		$(PRINT_STATUS)
 
-.PHONY: all install build build_ build-all deps fmt fix clean version rpm rpm-all deb deb-all test
-.NOTPARALLEL: all test clean deps _deps fmt _fmt fix pre-make _pre-make post-make _post-make build build-all_ install rpm
+clean: _pre-make _clean clean-etc _post-make
+
+_clean-go:
+	@echo "target: clean"
+	@printf "  ...go clean -i..."; \
+		cd $(BASEDIR); \
+		go clean $(GOFLAGS) -i $(NV); \
+		$(PRINT_STATUS)
+
+_clean-go-all:
+	@echo "target: clean-all"
+	@printf "  ...go clean -i -r..."; \
+		cd $(BASEDIR); \
+		go clean $(GOFLAGS) -i -r $(NV); \
+		$(PRINT_STATUS)
+
+_clean-etc:
+	@printf "  ...rm -fr vendor..."; \
+		cd $(BASEDIR); \
+		rm -fr vendor; \
+		$(PRINT_STATUS)
+	@printf "  ...rm -fr .bin..."; \
+		cd $(BASEDIR); \
+		rm -fr .bin; \
+		$(PRINT_STATUS)
+	@printf "  ...rm -fr .deploy..."; \
+		cd $(BASEDIR); \
+		rm -fr .bin; \
+		$(PRINT_STATUS)
+	@printf "  ...rm -fr .rpmbuild..."; \
+		cd $(BASEDIR); \
+		rm -fr .bin; \
+		$(PRINT_STATUS)
+	@printf "  ...rm -f .bintray-*-filtered.json..."; \
+		cd $(BASEDIR); \
+		rm -f .bintray-*-filtered.json; \
+		$(PRINT_STATUS)
+
+_clean: _clean-go _clean-etc
+
+_clean-all: _clean-go-all _clean-etc
+		
+clean-all: _pre-make _clean-all _post-make
+
+rebuild: _pre-make _clean _build _post-make
+rebuild-all: _pre-make _clean-all _build _post-make
+
+reinstall: _pre-make _clean _install _post-make
+reinstall-all: _pre-make _clean-all _build _post-make
+
+retest: _pre-make _clean test _post-make
+retest-all: _pre-make _clean-all test _post-make
+
+.PHONY: all install build build_ build-all deps fmt fix clean version \
+				rpm rpm-all deb deb-all test clean clean-all rebuild reinstall \
+				retest clean-etc
+
+.NOTPARALLEL: all test clean clean-all deps _deps fmt _fmt fix \
+							pre-make _pre-make post-make _post-make build build-all_ \
+							install rpm rebuild reinstall retest clean-etc

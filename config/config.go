@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/spf13/pflag"
+	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/emccode/rexray/util"
@@ -29,11 +30,12 @@ func init() {
 	initConfigKeyMap()
 }
 
+// Config contains the configuration information
 type Config struct {
-	GlobalFlags     *pflag.FlagSet `json:"-"`
-	AdditionalFlags *pflag.FlagSet `json:"-"`
-	Viper           *viper.Viper   `json:"-"`
-	Keys            ConfigKeyMap   `json:"-"`
+	GlobalFlags     *flag.FlagSet `json:"-"`
+	AdditionalFlags *flag.FlagSet `json:"-"`
+	Viper           *viper.Viper  `json:"-"`
+	Keys            ConfigKeyMap  `json:"-"`
 
 	Host             string `json:"-"`
 	LogLevel         string
@@ -82,54 +84,54 @@ type Config struct {
 	XtremIoRemoteManagement bool
 }
 
+// New initializes a new instance of a Config struct
 func New() *Config {
+	return NewConfig(true, true, "config", "yml")
+}
+
+func NewConfig(
+	loadGlobalConfig, loadUserConfig bool, 
+	configName, configType string) *Config {
+	
 	log.Debug("initializing configuration")
 
 	c := &Config{
-		Viper: viper.New(),
+		Viper:           viper.New(),
+		GlobalFlags:     &flag.FlagSet{},
+		AdditionalFlags: &flag.FlagSet{},
+	}
+	c.Viper.SetTypeByDefaultValue(true)
+	c.Viper.SetConfigName(configName)
+	c.Viper.SetConfigType(configType)
+
+	cfgFile := fmt.Sprintf("%s.%s", configName, configType)
+	etcRexRayFile := fmt.Sprintf("%s/%s", util.EtcDirPath(), cfgFile)
+	usrRexRayFile := fmt.Sprintf("%s/.rexray/%s", util.HomeDir(), cfgFile)
+
+	if loadGlobalConfig && util.FileExists(etcRexRayFile) {
+		log.WithField("path", etcRexRayFile).Debug("loading global config file")
+		if err := c.ReadConfigFile(etcRexRayFile); err != nil {
+			log.WithFields(log.Fields{
+				"path":  etcRexRayFile,
+				"error": err}).Error(
+				"error reading global config file")
+		}
 	}
 
-	cfgName := "config"
-	cfgType := "yml"
-	etcRexRay := util.EtcDirPath()
-	usrRexRay := fmt.Sprintf("%s/.rexray", util.HomeDir())
-	etcRexRayFile := fmt.Sprintf("%s/%s.%s", etcRexRay, cfgName, cfgType)
-	usrRexRayFile := fmt.Sprintf("%s/%s.%s", usrRexRay, cfgName, cfgType)
-
-	c.Viper.SetConfigName(cfgName)
-	c.Viper.SetConfigType(cfgType)
-	c.Viper.SetTypeByDefaultValue(true)
-
-	log.WithFields(log.Fields{
-		"name": cfgName,
-		"type": cfgType}).Debug("set config name and type")
-
-	c.Viper.AddConfigPath(etcRexRay)
-	c.Viper.AddConfigPath(usrRexRay)
-
-	log.WithFields(log.Fields{
-		"global": etcRexRay,
-		"user":   usrRexRay}).Debug("added config paths")
-
-	if util.FileExists(etcRexRayFile) || util.FileExists(usrRexRayFile) {
-
-		log.WithFields(log.Fields{
-			"global": etcRexRayFile,
-			"user":   usrRexRayFile}).Debug(
-			"reading configuration file(s) from default path(s)")
-
-		if readCfgErr := c.Viper.ReadInConfig(); readCfgErr != nil {
+	if loadUserConfig && util.FileExists(usrRexRayFile) {
+		log.WithField("path", usrRexRayFile).Debug("loading user config file")
+		if err := c.ReadConfigFile(usrRexRayFile); err != nil {
 			log.WithFields(log.Fields{
-				"global": etcRexRayFile,
-				"user":   usrRexRayFile,
-				"error":  readCfgErr}).Error(
-				"error reading configuration file(s) from default path(s)")
+				"path":  usrRexRayFile,
+				"error": err}).Error(
+				"error reading user config file")
 		}
 	}
 
 	c.initConfigKeys()
 
 	return c
+	
 }
 
 func (c *Config) Copy() (*Config, error) {
@@ -159,26 +161,38 @@ func (c *Config) ToJson() (string, error) {
 	return string(buf), nil
 }
 
-func (c *Config) ReadConfigFile(filePath string) error {
+func (c *Config) ReadConfig(in io.Reader) error {
 
-	buf, bufErr := ioutil.ReadFile(filePath)
-	if bufErr != nil {
-		log.WithFields(
-			log.Fields{"filePath": filePath, "error": bufErr}).Error(
-			"error reading config file")
-		return bufErr
+	if err := c.Viper.ReadConfigNoNil(in); err != nil {
+		return err
 	}
 
-	if cfgErr := c.Viper.ReadConfig(bytes.NewReader(buf)); cfgErr != nil {
-		log.WithFields(
-			log.Fields{"filePath": filePath, "error": cfgErr}).Error(
-			"error reading config file")
-		return cfgErr
+	if err := c.Viper.Unmarshal(c); err != nil {
+		return err
 	}
 
-	log.WithField("filePath", filePath).Info("read config file")
+	for key, _ := range keys {
+		c.updateFlag(key, c.GlobalFlags)
+		c.updateFlag(key, c.AdditionalFlags)
+	}
 
 	return nil
+}
+
+func (c *Config) ReadConfigFile(filePath string) error {
+	buf, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	return c.ReadConfig(bytes.NewBuffer(buf))
+}
+
+func (c *Config) updateFlag(name string, flags *flag.FlagSet) {
+	if f := flags.Lookup(name); f != nil {
+		val := c.Viper.Get(name)
+		strVal := fmt.Sprintf("%v", val)
+		f.DefValue = strVal
+	}
 }
 
 func (c *Config) EnvVars() []string {

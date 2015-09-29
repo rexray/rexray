@@ -26,3 +26,7 @@ import:
     repo:    https://github.com/akutz/logrus.git
     ref:     feature/golfs
     vcs:     git
+  - package: github.com/spf13/viper
+    repo:    https://github.com/akutz/viper.git
+    ref:     feature/readconfig-nonil
+    vcs:     git

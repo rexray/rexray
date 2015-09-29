@@ -13,6 +13,7 @@ import (
 	osm "github.com/emccode/rexray/os"
 	"github.com/emccode/rexray/rexray/cli/term"
 	"github.com/emccode/rexray/storage"
+	"github.com/emccode/rexray/util"
 	"github.com/emccode/rexray/volume"
 )
 
@@ -121,6 +122,14 @@ func updateLogLevel() {
 }
 
 func preRun(cmd *cobra.Command, args []string) {
+
+	if cfgFile != "" && util.FileExists(cfgFile) {
+		if err := c.ReadConfigFile(cfgFile); err != nil {
+			panic(err)
+		}
+		cmd.Flags().Parse(os.Args[1:])
+	}
+
 	updateLogLevel()
 
 	if isHelpFlag(cmd) {

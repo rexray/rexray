@@ -90,9 +90,9 @@ func New() *Config {
 }
 
 func NewConfig(
-	loadGlobalConfig, loadUserConfig bool, 
+	loadGlobalConfig, loadUserConfig bool,
 	configName, configType string) *Config {
-	
+
 	log.Debug("initializing configuration")
 
 	c := &Config{
@@ -131,7 +131,7 @@ func NewConfig(
 	c.initConfigKeys()
 
 	return c
-	
+
 }
 
 func (c *Config) Copy() (*Config, error) {

@@ -13,6 +13,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	"github.com/emccode/rexray/errors"
 	"github.com/emccode/rexray/util"
 )
 
@@ -30,14 +31,7 @@ func init() {
 	initConfigKeyMap()
 }
 
-// Config contains the configuration information
-type Config struct {
-	GlobalFlags     *flag.FlagSet `json:"-"`
-	AdditionalFlags *flag.FlagSet `json:"-"`
-	Viper           *viper.Viper  `json:"-"`
-	Keys            ConfigKeyMap  `json:"-"`
-
-	Host             string `json:"-"`
+type secureConfig struct {
 	LogLevel         string
 	StorageDrivers   []string
 	VolumeDrivers    []string
@@ -51,13 +45,11 @@ type Config struct {
 	DockerAvailabilityZone string
 
 	AwsAccessKey string
-	AwsSecretKey string
 	AwsRegion    string
 
 	RackspaceAuthUrl    string
 	RackspaceUserId     string
 	RackspaceUserName   string
-	RackspacePassword   string
 	RackspaceTenantId   string
 	RackspaceTenantName string
 	RackspaceDomainId   string
@@ -67,7 +59,6 @@ type Config struct {
 	ScaleIoInsecure             bool
 	ScaleIoUseCerts             bool
 	ScaleIoUserName             string
-	ScaleIoPassword             string
 	ScaleIoSystemId             string
 	ScaleIoSystemName           string
 	ScaleIoProtectionDomainId   string
@@ -75,13 +66,40 @@ type Config struct {
 	ScaleIoStoragePoolId        string
 	ScaleIoStoragePoolName      string
 
-	XtremIoEndpoint         string
-	XtremIoUserName         string
-	XtremIoPassword         string
+	XtremIoEndpoint string
+	XtremIoUserName string
 	XtremIoInsecure         bool
 	XtremIoDeviceMapper     string
 	XtremIoMultipath        string
 	XtremIoRemoteManagement bool
+}
+
+type JsonMarshalStrategy int
+
+const (
+	JsonMarshalSecure JsonMarshalStrategy = iota
+	JsonMarshalPlainText
+)
+
+type plainTextConfig struct {
+	secureConfig
+
+	AwsSecretKey      string
+	RackspacePassword string
+	ScaleIoPassword   string
+	XtremIoPassword   string
+}
+
+// Config contains the configuration information
+type Config struct {
+	plainTextConfig
+
+	GlobalFlags     *flag.FlagSet `json:"-"`
+	AdditionalFlags *flag.FlagSet `json:"-"`
+	Viper           *viper.Viper  `json:"-"`
+	Host            string        `json:"-"`
+
+	jsonMarshalStrategy JsonMarshalStrategy
 }
 
 // New initializes a new instance of a Config struct
@@ -96,9 +114,13 @@ func NewConfig(
 	log.Debug("initializing configuration")
 
 	c := &Config{
-		Viper:           viper.New(),
-		GlobalFlags:     &flag.FlagSet{},
-		AdditionalFlags: &flag.FlagSet{},
+		plainTextConfig: plainTextConfig{
+			secureConfig: secureConfig{},
+		},
+		Viper:               viper.New(),
+		GlobalFlags:         &flag.FlagSet{},
+		AdditionalFlags:     &flag.FlagSet{},
+		jsonMarshalStrategy: JsonMarshalSecure,
 	}
 	c.Viper.SetTypeByDefaultValue(true)
 	c.Viper.SetConfigName(configName)
@@ -134,31 +156,66 @@ func NewConfig(
 
 }
 
+func (c *Config) JsonMarshalStrategy() JsonMarshalStrategy {
+	return c.jsonMarshalStrategy
+}
+
+func (c *Config) SetJsonMarshalStrategy(s JsonMarshalStrategy) {
+	c.jsonMarshalStrategy = s
+}
+
 func (c *Config) Copy() (*Config, error) {
 	newC := New()
-	mErr := c.Viper.Unmarshal(newC)
-	if mErr != nil {
-		return nil, mErr
+	if err := c.Viper.Unmarshal(&newC.plainTextConfig); err != nil {
+		return nil, err
+	}
+	if err := c.Viper.Unmarshal(&newC.secureConfig); err != nil {
+		return nil, err
 	}
 	return newC, nil
 }
 
 func FromJson(from string) (*Config, error) {
 	c := New()
-	umErr := json.Unmarshal([]byte(from), c)
-	if umErr != nil {
-		return nil, umErr
+	if err := json.Unmarshal([]byte(from), c); err != nil {
+		return nil, err
 	}
 	c.Sync()
 	return c, nil
 }
 
 func (c *Config) ToJson() (string, error) {
-	buf, bufErr := json.MarshalIndent(c, "", "  ")
-	if bufErr != nil {
-		return "", bufErr
+	buf, err := c.marshalJSON(JsonMarshalPlainText)
+	if err != nil {
+		return "", err
 	}
 	return string(buf), nil
+}
+
+func (c *Config) ToSecureJson() (string, error) {
+	buf, err := c.marshalJSON(JsonMarshalSecure)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
+// The implementation of the encoding/json.Marshaller interface. It allows
+// this type to provide its own marshalling routine.
+func (c *Config) MarshalJSON() ([]byte, error) {
+	return c.marshalJSON(c.jsonMarshalStrategy)
+}
+
+func (c *Config) marshalJSON(s JsonMarshalStrategy) ([]byte, error) {
+	switch s {
+	case JsonMarshalSecure:
+		return json.MarshalIndent(c.secureConfig, "", "  ")
+	case JsonMarshalPlainText:
+		return json.MarshalIndent(c.plainTextConfig, "", "  ")
+	}
+
+	return nil, errors.WithField(
+		"strategy", s, "unknown json marshalling strategy")
 }
 
 func (c *Config) ReadConfig(in io.Reader) error {
@@ -167,7 +224,11 @@ func (c *Config) ReadConfig(in io.Reader) error {
 		return err
 	}
 
-	if err := c.Viper.Unmarshal(c); err != nil {
+	if err := c.Viper.Unmarshal(&c.plainTextConfig); err != nil {
+		return err
+	}
+
+	if err := c.Viper.Unmarshal(&c.secureConfig); err != nil {
 		return err
 	}
 
@@ -196,8 +257,8 @@ func (c *Config) updateFlag(name string, flags *flag.FlagSet) {
 }
 
 func (c *Config) EnvVars() []string {
-	evArr := make([]string, len(c.Keys))
-	for k, v := range c.Keys {
+	evArr := make([]string, len(keys))
+	for k, v := range keys {
 		evArr = append(evArr,
 			fmt.Sprintf("%s=%s", v.EnvVar, c.Viper.GetString(k)))
 	}

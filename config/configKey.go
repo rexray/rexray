@@ -70,9 +70,6 @@ func (c *Config) stringSliceVarP(fset *flag.FlagSet, name string, aof *[]string)
 
 func (c *Config) initConfigKeys() {
 
-	c.GlobalFlags = &flag.FlagSet{}
-	c.AdditionalFlags = &flag.FlagSet{}
-
 	for k, v := range keys {
 		c.Viper.BindEnv(k, v.EnvVar)
 		c.Viper.SetDefault(k, v.DefaultValue)

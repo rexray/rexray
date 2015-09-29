@@ -1,13 +1,13 @@
 package docker
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	errors "github.com/emccode/rexray/errors"
 	osm "github.com/emccode/rexray/os"
 	"github.com/emccode/rexray/storage"
 	"github.com/emccode/rexray/util"
@@ -273,6 +273,7 @@ func (driver *Driver) Path(volumeName, volumeID string) (string, error) {
 // Create will create a remote volume
 func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) error {
 	log.WithFields(log.Fields{
+		"volumeName": volumeName,
 		"volumeOpts": volumeOpts,
 		"driverName": driver.Name()}).Info("creating volume")
 
@@ -308,7 +309,7 @@ func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) er
 	case len(volumes) == 1 && !overwriteFs:
 		return nil
 	case len(volumes) > 1:
-		return errors.New(fmt.Sprintf("Too many volumes returned by name of %s", volumeName))
+		return errors.WithField("volumeName", volumeName, "Too many volumes returned")
 	}
 
 	var (
@@ -317,6 +318,8 @@ func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) er
 		IOPSi            int
 		sizei            int
 		availabilityZone string
+		optVolumeID      string
+		optSnapshotID    string
 	)
 
 	if volumeType, ok = volumeOpts["volumetype"]; !ok {
@@ -344,9 +347,45 @@ func (driver *Driver) Create(volumeName string, volumeOpts volume.VolumeOpts) er
 		availabilityZone = os.Getenv("REXRAY_DOCKER_AVAILABILITYZONE")
 	}
 
+	if optSnapshotName, ok := volumeOpts["snapshotname"]; !ok {
+		optSnapshotID = volumeOpts["snapshotid"]
+	} else {
+		snapshots, err := driver.sdm.GetSnapshot("", "", optSnapshotName)
+		if err != nil {
+			return err
+		}
+
+		switch {
+		case len(snapshots) == 0:
+			return errors.WithField("optSnapshotName", optSnapshotName, "No snapshots returned")
+		case len(snapshots) > 1:
+			return errors.WithField("optSnapshotName", optSnapshotName, "Too many snapshots returned")
+		}
+
+		optSnapshotID = snapshots[0].SnapshotID
+	}
+
+	if optVolumeName, ok := volumeOpts["volumename"]; !ok {
+		optVolumeID = volumeOpts["volumeid"]
+	} else {
+		volumes, err := driver.sdm.GetVolume("", optVolumeName)
+		if err != nil {
+			return err
+		}
+
+		switch {
+		case len(volumes) == 0:
+			return errors.WithField("optVolumeName", optVolumeName, "No volumes returned")
+		case len(volumes) > 1:
+			return errors.WithField("optVolumeName", optVolumeName, "Too many volumes returned")
+		}
+
+		optVolumeID = volumes[0].VolumeID
+	}
+
 	if len(volumes) == 0 {
 		_, err := driver.sdm.CreateVolume(
-			false, volumeName, "", "", volumeType, IOPS, size, availabilityZone)
+			false, volumeName, optVolumeID, optSnapshotID, volumeType, IOPS, size, availabilityZone)
 		if err != nil {
 			return err
 		}

@@ -2,24 +2,150 @@ package config
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/emccode/rexray/util"
 )
 
-var yamlConfig1 = []byte(`logLevel: error
-storageDrivers:
-- ec2
-- xtremio
-osDrivers:
-- linux`)
+func TestToJson(t *testing.T) {
+	c := New()
 
-var yamlConfig2 = []byte(`logLevel: debug
-osDrivers:
-- darwin
-- linux`)
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
+		t.Fatal(err)
+	}
+
+	c.AwsAccessKey = "MyAwsAccessKey"
+	c.AwsSecretKey = "MyAwsSecretKey"
+	var err error
+	var strJson string
+	if strJson, err = c.ToJson(); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(strJson)
+
+	map1 := map[string]interface{}{}
+	map2 := map[string]interface{}{}
+	json.Unmarshal([]byte(strJson), map1)
+	json.Unmarshal([]byte(jsonConfig), map2)
+
+	if !reflect.DeepEqual(map1, map2) {
+		t.Fail()
+	}
+}
+
+func TestToSecureJson(t *testing.T) {
+	c := New()
+
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig2)); err != nil {
+		t.Fatal(err)
+	}
+
+	c.AwsAccessKey = "MyAwsAccessKey"
+	c.AwsSecretKey = "MyAwsSecretKey"
+	var err error
+	var strJson string
+	if strJson, err = c.ToSecureJson(); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(strJson)
+
+	map1 := map[string]interface{}{}
+	map2 := map[string]interface{}{}
+	json.Unmarshal([]byte(strJson), map1)
+	json.Unmarshal([]byte(secureJsonConfig), map2)
+
+	if !reflect.DeepEqual(map1, map2) {
+		t.Fail()
+	}
+}
+
+func TestMarshalToJson(t *testing.T) {
+	c := New()
+
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
+		t.Fatal(err)
+	}
+
+	c.AwsAccessKey = "MyAwsAccessKey"
+	c.AwsSecretKey = "MyAwsSecretKey"
+	c.SetJsonMarshalStrategy(JsonMarshalPlainText)
+
+	var err error
+	var buff []byte
+	if buff, err = json.MarshalIndent(c, "", "  "); err != nil {
+		t.Fatal(err)
+	}
+
+	strJson := string(buff)
+
+	t.Log(strJson)
+
+	map1 := map[string]interface{}{}
+	map2 := map[string]interface{}{}
+	json.Unmarshal([]byte(strJson), map1)
+	json.Unmarshal([]byte(jsonConfig), map2)
+
+	if !reflect.DeepEqual(map1, map2) {
+		t.Fail()
+	}
+}
+
+func TestMarshalToSecureJson(t *testing.T) {
+	c := New()
+
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig2)); err != nil {
+		t.Fatal(err)
+	}
+
+	c.AwsAccessKey = "MyAwsAccessKey"
+	c.AwsSecretKey = "MyAwsSecretKey"
+	var err error
+	var buff []byte
+	if buff, err = json.MarshalIndent(c, "", "  "); err != nil {
+		t.Fatal(err)
+	}
+
+	strJson := string(buff)
+
+	t.Log(strJson)
+
+	map1 := map[string]interface{}{}
+	map2 := map[string]interface{}{}
+	json.Unmarshal([]byte(strJson), map1)
+	json.Unmarshal([]byte(secureJsonConfig), map2)
+
+	if !reflect.DeepEqual(map1, map2) {
+		t.Fail()
+	}
+}
+
+func TestFromJson(t *testing.T) {
+	c, err := FromJson(jsonConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertLogLevel(t, c, "error")
+	assertStorageDrivers(t, c)
+	assertOsDrivers1(t, c)
+	assertAwsSecretKey(t, c, "MyAwsSecretKey")
+}
+
+func TestFromSecureJson(t *testing.T) {
+	c, err := FromJson(secureJsonConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertLogLevel(t, c, "debug")
+	assertStorageDrivers(t, c)
+	assertOsDrivers2(t, c)
+	assertAwsSecretKey(t, c, "")
+}
 
 func TestNew(t *testing.T) {
 
@@ -53,7 +179,6 @@ func TestNew(t *testing.T) {
 }
 
 func TestReadConfig(t *testing.T) {
-
 	c := NewConfig(false, false, "config", "yml")
 	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
 		t.Fatal(err)
@@ -72,10 +197,20 @@ func TestReadConfig(t *testing.T) {
 	assertOsDrivers2(t, c)
 }
 
+func assertAwsSecretKey(t *testing.T, c *Config, expected string) {
+	val := c.Viper.GetString("awsSecretKey")
+	if val != expected {
+		t.Fatalf("viper.awsSecretKey != %s; == %v", expected, val)
+	}
+	if c.AwsSecretKey != expected {
+		t.Fatalf("config.awsSecretKey != %s; == %v", expected, c.AwsSecretKey)
+	}
+}
+
 func assertLogLevel(t *testing.T, c *Config, expected string) {
-	ll := c.Viper.GetString("logLevel")
-	if ll != expected {
-		t.Fatalf("viper.logLevel != %s; == %v", expected, ll)
+	val := c.Viper.GetString("logLevel")
+	if val != expected {
+		t.Fatalf("viper.logLevel != %s; == %v", expected, val)
 	}
 	if c.LogLevel != expected {
 		t.Fatalf("config.logLevel != %s; == %v", expected, c.LogLevel)
@@ -167,3 +302,110 @@ func assertOsDrivers2(t *testing.T, c *Config) {
 		t.Fatalf("config.od[1] != linux; == %v", c.OsDrivers[1])
 	}
 }
+
+var yamlConfig1 = []byte(`logLevel: error
+storageDrivers:
+- ec2
+- xtremio
+osDrivers:
+- linux`)
+
+var yamlConfig2 = []byte(`logLevel: debug
+osDrivers:
+- darwin
+- linux`)
+
+var jsonConfig = `{
+    "LogLevel": "error",
+    "StorageDrivers": [
+        "ec2",
+        "xtremio"
+    ],
+    "VolumeDrivers": [
+        "docker"
+    ],
+    "OsDrivers": [
+        "linux"
+    ],
+    "MinVolSize": 0,
+    "RemoteManagement": false,
+    "DockerVolumeType": "",
+    "DockerIops": 0,
+    "DockerSize": 0,
+    "DockerAvailabilityZone": "",
+    "AwsAccessKey": "MyAwsAccessKey",
+    "AwsRegion": "",
+    "RackspaceAuthUrl": "",
+    "RackspaceUserId": "",
+    "RackspaceUserName": "",
+    "RackspaceTenantId": "",
+    "RackspaceTenantName": "",
+    "RackspaceDomainId": "",
+    "RackspaceDomainName": "",
+    "ScaleIoEndpoint": "",
+    "ScaleIoInsecure": false,
+    "ScaleIoUseCerts": true,
+    "ScaleIoUserName": "",
+    "ScaleIoSystemId": "",
+    "ScaleIoSystemName": "",
+    "ScaleIoProtectionDomainId": "",
+    "ScaleIoProtectionDomainName": "",
+    "ScaleIoStoragePoolId": "",
+    "ScaleIoStoragePoolName": "",
+    "XtremIoEndpoint": "",
+    "XtremIoUserName": "",
+    "XtremIoInsecure": false,
+    "XtremIoDeviceMapper": "",
+    "XtremIoMultipath": "",
+    "XtremIoRemoteManagement": false,
+    "AwsSecretKey": "MyAwsSecretKey",
+    "RackspacePassword": "",
+    "ScaleIoPassword": "",
+    "XtremIoPassword": ""
+}`
+
+var secureJsonConfig = `{
+    "LogLevel": "debug",
+    "StorageDrivers": [
+        "ec2",
+        "xtremio"
+    ],
+    "VolumeDrivers": [
+        "docker"
+    ],
+    "OsDrivers": [
+        "darwin",
+        "linux"
+    ],
+    "MinVolSize": 0,
+    "RemoteManagement": false,
+    "DockerVolumeType": "",
+    "DockerIops": 0,
+    "DockerSize": 0,
+    "DockerAvailabilityZone": "",
+    "AwsAccessKey": "MyAwsAccessKey",
+    "AwsRegion": "",
+    "RackspaceAuthUrl": "",
+    "RackspaceUserId": "",
+    "RackspaceUserName": "",
+    "RackspaceTenantId": "",
+    "RackspaceTenantName": "",
+    "RackspaceDomainId": "",
+    "RackspaceDomainName": "",
+    "ScaleIoEndpoint": "",
+    "ScaleIoInsecure": false,
+    "ScaleIoUseCerts": true,
+    "ScaleIoUserName": "",
+    "ScaleIoSystemId": "",
+    "ScaleIoSystemName": "",
+    "ScaleIoProtectionDomainId": "",
+    "ScaleIoProtectionDomainName": "",
+    "ScaleIoStoragePoolId": "",
+    "ScaleIoStoragePoolName": "",
+    "XtremIoEndpoint": "",
+    "XtremIoUserName": "",
+    "XtremIoInsecure": false,
+    "XtremIoDeviceMapper": "",
+    "XtremIoMultipath": "",
+    "XtremIoRemoteManagement": false
+}`

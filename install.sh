@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REPO="${1:-staged}"
+REPO="${1:-stable}"
 URL=https://dl.bintray.com/emccode/rexray/$REPO/latest
 ARCH=$(uname -m)
 

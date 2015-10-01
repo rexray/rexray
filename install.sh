@@ -3,6 +3,11 @@
 REPO="${1:-stable}"
 URL=https://dl.bintray.com/emccode/rexray/$REPO/latest
 ARCH=$(uname -m)
+SUDO=$(which sudo)
+
+function sudo() {
+    if [[ $(id -u) -eq 0 ]]; then $@; else $SUDO $@; fi
+}
 
 # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
 if [ -e "/etc/redhat-release" -o \

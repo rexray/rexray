@@ -1,9 +1,155 @@
-#!/bin/sh
+#!/bin/bash
 
-# install rexray with the following command:
+##
+# this curl-install script supports the installation of the latest
+# version of REX-Ray for CentOS, Ubuntu, CoreOS, and Darwin using
+# RPMs, DEBs, and tarballs.
 #
-#   curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+# to install the latest version of REX-Ray simply execute:
+#
+#  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+#
+# however, this script will also allow users to install specific 
+# versions of REX-Ray and even supports the discovery of those versions.
+# for example, to list the available REX-Ray packages use the "list" 
+# command like so:
+#
+#  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s list -
+#
+# this will emit the following curl commands to demonstrate how to 
+# install one or more of the available packages, "unstable", "staged",
+# and "stable". 
+#
+#    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s unstable -
+#    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s staged -
+#    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable -
+#
+# again, the "list" command outputs the curl commands to perform 
+# installations, not how to traverse deeper into the package structure.
+# however, it's not hard to do that traversal. for example, to list the 
+# contents of the "stable" package we'd execute:
+#
+#  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s list stable -
+#
+# the above command would emit somthing similar to:
+#
+#    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable 0.2.0 -
+#    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable latest -
+#
+# as you can see, to traverse the structure, we simply insert the 
+# command "list" as the first argument after the "-s" flag. 
+##
 
-# get the real installer -- the current file is just an abstraction to maintain
-# a consistent download count for installs via the curl install method
-curl -sSL https://raw.githubusercontent.com/emccode/rexray/master/install.sh | sh -
+PROD=REX-Ray
+REPO=rexray
+BIN_NAME=rexray
+
+BINTRAY_URL=https://dl.bintray.com/emccode
+URL=$BINTRAY_URL/$REPO
+
+SCRIPT_URL=$URL/install
+SCRIPT_CMD="curl -sSL $SCRIPT_URL | sh -s"
+
+CMD=$1
+
+function sudo() {
+    if [[ $(id -u) -eq 0 ]]; then $@; else $SUDO $@; fi
+}
+
+function is_coreos() {
+    grep -q DISTRIB_ID=CoreOS /etc/lsb-release &> /dev/null
+    if [[ $? -eq 0 ]]; then echo 0; else echo 1; fi
+}
+
+function list() {
+    if [[ -z $PKG && -z $VERSION ]]; then 
+        echo "$SCRIPT_CMD list unstable -"
+        echo "$SCRIPT_CMD list staged -"
+        echo "$SCRIPT_CMD list stable -"
+    else
+        URL="$URL/$PKG"
+        for v in $(curl -sSL $URL | grep '<a' | \
+            perl -pe 's/^.*?<a.+?>([^<]+?)\/?<\/a>.*$/$1/gm'); do
+            echo "$SCRIPT_CMD $PKG $v -"
+        done
+    fi
+}
+
+function install() {
+    
+    URL=$URL/$PKG/$VERSION
+    OS=$(uname -s)
+    ARCH=$(uname -m)
+    SUDO=$(which sudo)
+    BIN_DIR=/usr/bin
+    BIN_FILE=$BIN_DIR/$BIN_NAME
+    IS_COREOS=$(is_coreos)
+
+    # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
+    if [[ -e /etc/redhat-release || \
+          -e /etc/redhat-version ]]; then
+        
+        #echo "installing rpm"
+        sudo rpm -ih --quiet $URL/$BIN_NAME-latest-$ARCH.rpm > /dev/null
+        
+    elif [[ $ARCH = x86_64 && \
+           (-e /etc/debian-release || \
+            -e /etc/debian-version || \
+            -e /etc/lsb-release) &&
+            $IS_COREOS -eq 1 ]]; then
+
+        #echo "installing deb"
+        curl -sSLO $URL/$BIN_NAME-latest-$ARCH.deb && \
+            sudo dpkg -i $BIN_NAME-latest-$ARCH.deb && \
+            rm -f $BIN_NAME-latest-$ARCH.deb
+
+    else 
+        if [[ $IS_COREOS -eq 0 ]]; then
+            BIN_DIR=/opt/bin
+            BIN_FILE=$BIN_DIR/$BIN_NAME
+        elif [[ $OS = Darwin ]]; then
+            BIN_DIR=/usr/local/bin
+            BIN_FILE=$BIN_DIR/$BIN_NAME
+        fi
+
+        if [[ -z $FILE_NAME ]]; then
+            if [[ $VERSION = latest ]]; then
+                FILE_NAME=$BIN_NAME-$OS-$ARCH.tar.gz
+            else
+                FILE_NAME=$BIN_NAME-$OS-$ARCH-$VERSION.tar.gz
+            fi
+        fi
+
+        FILE_URL=$URL/$FILE_NAME
+      
+        sudo mkdir -p $BIN_DIR && \
+          curl -sSLO $FILE_URL && \
+          sudo tar xzf $FILE_NAME -C $BIN_DIR && \
+          rm -f $FILE_NAME && \
+          sudo chmod 0755 $BIN_FILE && \
+          sudo chown 0 $BIN_FILE && \
+          sudo chgrp 0 $BIN_FILE && \
+          sudo $BIN_FILE install
+    fi
+
+    echo
+    echo "$PROD has been installed to $BIN_FILE"
+    echo
+    $BIN_FILE version
+    echo
+}
+
+if [[ $CMD = list || $CMD = install ]]; then
+    shift
+fi
+
+if [[ $CMD = list ]]; then
+    PKG=$1
+    VERSION=$2
+    list
+else
+    PKG=${1:-stable}
+    VERSION=${2:-latest}
+    FILE_NAME=$3
+    install
+fi

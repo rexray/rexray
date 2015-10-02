@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# install rexray with the following command:
-#
-#   curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
-
-# get the real installer -- the current file is just an abstraction to maintain
-# a consistent download count for installs via the curl install method
-curl -sSL https://raw.githubusercontent.com/emccode/rexray/master/install.sh | sh -s unstable -

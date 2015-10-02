@@ -178,7 +178,7 @@ var moduleInstancesCmd = &cobra.Command{
 
 var moduleInstancesListCmd = &cobra.Command{
 	Use:     "get",
-	Aliases: []string{"list"},
+	Aliases: []string{"ls", "list"},
 	Short:   "List the running module instances",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -367,7 +367,7 @@ var adapterCmd = &cobra.Command{
 var adapterGetTypesCmd = &cobra.Command{
 	Use:     "types",
 	Short:   "List the available adapter types",
-	Aliases: []string{"list"},
+	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
 		drivers := sdm.GetDriverNames()
 		for n := range drivers {
@@ -419,7 +419,7 @@ var volumeMapCmd = &cobra.Command{
 var volumeGetCmd = &cobra.Command{
 	Use:     "get",
 	Short:   "Get one or more volumes",
-	Aliases: []string{"list"},
+	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		allVolumes, err := sdm.GetVolume(volumeID, volumeName)
@@ -440,7 +440,7 @@ var volumeGetCmd = &cobra.Command{
 var snapshotGetCmd = &cobra.Command{
 	Use:     "get",
 	Short:   "Get one or more snapshots",
-	Aliases: []string{"list"},
+	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		allSnapshots, err := sdm.GetSnapshot(volumeID, snapshotID, snapshotName)
@@ -529,7 +529,7 @@ var volumeCreateCmd = &cobra.Command{
 var volumeRemoveCmd = &cobra.Command{
 	Use:     "remove",
 	Short:   "Remove a volume",
-	Aliases: []string{"create"},
+	Aliases: []string{"rm"},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if volumeID == "" {
@@ -612,7 +612,7 @@ var snapshotCopyCmd = &cobra.Command{
 var deviceGetCmd = &cobra.Command{
 	Use:     "get",
 	Short:   "Get a device's mount(s)",
-	Aliases: []string{"list"},
+	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		mounts, err := osdm.GetMounts(deviceName, mountPoint)

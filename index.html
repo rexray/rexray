@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>REX-Ray by emccode</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>REX-Ray</h1>
+        <p>A guest based storage introspection tool that allows local visibility and management from cloud and storage platforms</p>
+        <p class="view"><a href="https://github.com/emccode/rexray">View the Project on GitHub <small>emccode/rexray</small></a></p>
+        <ul>
+          <li><a href="https://github.com/emccode/rexray/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/emccode/rexray/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/emccode/rexray">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="rex-ray------" class="anchor" href="#rex-ray------" aria-hidden="true"><span class="octicon octicon-link"></span></a>REX-Ray <a href="https://travis-ci.org/emccode/rexray"><img src="http://travis-ci.org/emccode/rexray.svg?branch=master" alt="Build Status"></a> <a href="http://goreportcard.com/report/emccode/rexray"><img src="http://goreportcard.com/badge/emccode/rexray" alt="Go Report Card"></a> <a href="https://coveralls.io/github/emccode/rexray?branch=master"><img src="http://coveralls.io/repos/emccode/rexray/badge.svg?branch=master&amp;service=github" alt="Coverage Status"></a> <a href="https://dl.bintray.com/emccode/rexray/stable/latest/"> <img src="http://api.bintray.com/packages/emccode/rexray/stable/images/download.svg" alt="Download"> </a>
+</h1>
+
+<p><code>REX-Ray</code> provides visibility and management of external/underlying storage via guest storage introspection. Available as a Go package, CLI tool, and Linux service, and with built-in third-party support for tools such as <code>Docker</code>, <code>REX-Ray</code> is easily integrated into any workflow. For example, here's how to list storage for a guest hosted on Amazon Web Services (AWS) with <code>REX-Ray</code>:</p>
+
+<div class="highlight highlight-source-shell"><pre>[0]akutz@pax:<span class="pl-k">~</span>$ <span class="pl-k">export</span> REXRAY_STORAGEDRIVERS=ec2
+[0]akutz@pax:<span class="pl-k">~</span>$ <span class="pl-k">export</span> AWS_ACCESS_KEY=access_key
+[0]akutz@pax:<span class="pl-k">~</span>$ <span class="pl-k">export</span> AWS_SECRET_KEY=secret_key
+[0]akutz@pax:<span class="pl-k">~</span>$ rexray volume get
+
+- providername: ec2
+  instanceid: i-695bb6ab
+  volumeid: vol-dedbadc3
+  devicename: /dev/sda1
+  region: us-west-1
+  status: attached
+- providername: ec2
+  instanceid: i-695bb6ab
+  volumeid: vol-04c4b219
+  devicename: /dev/xvdb
+  region: us-west-1
+  status: attached</pre></div>
+
+<h1>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h1>
+
+<p>Today <code>REX-Ray</code> supports the following storage providers:</p>
+
+<ul>
+<li><a href="https://aws.amazon.com/ec2/">Amazon Elastic Computer Cloud (EC2)</a></li>
+<li><a href="http://www.rackspace.com/en-us/cloud/openstack">Openstack on Rackspace</a></li>
+<li><a href="http://www.emc.com/storage/scaleio/index.htm">ScaleIO</a></li>
+<li>
+<a href="http://xtremio.com/">XtremIO</a> (with Multipath &amp; Device Mapper support)</li>
+</ul>
+
+<p><code>REX-Ray</code> also supports integration with the following platforms:</p>
+
+<ul>
+<li><a href="https://docs.docker.com/extend/plugins_volume/">Docker</a></li>
+</ul>
+
+<h1>
+<a id="operating-system-support" class="anchor" href="#operating-system-support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Operating System Support</h1>
+
+<p><code>REX-Ray</code> currently supports the following operating systems:</p>
+
+<table>
+<thead>
+<tr>
+<th>OS</th>
+<th>Command Line</th>
+<th>As Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>OS X</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+
+<h1>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>The following command will download the most recent, stable build of <code>REX-Ray</code> and install it to <code>/usr/bin/rexray.</code> On Linux systems <code>REX-Ray</code> will also be registered as either a SystemD or SystemV service.</p>
+
+<div class="highlight highlight-source-shell"><pre>curl -sSL https://dl.bintray.com/emccode/rexray/install <span class="pl-k">|</span> sh -</pre></div>
+
+<p><code>REX-Ray</code> can also be installed from <a href="https://github.com/emccode/rexray/wiki/Installation#install-a-pre-built-binary">a pre-built binary</a>, an RPM or DEB package, or by <a href="https://github.com/emccode/rexray/wiki/Installation#build-and-install-from-source">building it from source</a>.</p>
+
+<h1>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h1>
+
+<p>Once installed, <code>REX-Ray</code> can be used by simply typing <code>rexray</code> on the command line, but in order for <code>REX-Ray</code> to do much more than print out help text, configuration is necessary:</p>
+
+<h3>
+<a id="configuring-rex-ray" class="anchor" href="#configuring-rex-ray" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuring REX-Ray</h3>
+
+<ul>
+<li>Environment variables</li>
+<li>Configuration files</li>
+<li>Command line options</li>
+<li>Global configuration options</li>
+</ul>
+
+<h3>
+<a id="configuring-storage-providers" class="anchor" href="#configuring-storage-providers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuring Storage Providers</h3>
+
+<ul>
+<li><a href="https://aws.amazon.com/ec2/">Amazon Elastic Computer Cloud (EC2)</a></li>
+<li><a href="http://www.rackspace.com/en-us/cloud/openstack">Openstack on Rackspace</a></li>
+<li><a href="http://www.emc.com/storage/scaleio/index.htm">ScaleIO</a></li>
+<li>
+<a href="http://xtremio.com/">XtremIO</a> (with Multipath &amp; Device Mapper support)</li>
+</ul>
+
+<h3>
+<a id="configuring-external-integration" class="anchor" href="#configuring-external-integration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuring External Integration</h3>
+
+<ul>
+<li>Docker Volume Plugin</li>
+</ul>
+
+<h1>
+<a id="contributions" class="anchor" href="#contributions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributions</h1>
+
+<p>We are actively looking for contributors to this project.  This can involve any number of area.</p>
+
+<ul>
+<li>Documentation</li>
+<li>Storage Drivers</li>
+<li>OS Drivers</li>
+<li>A future distributed model</li>
+</ul>
+
+<h1>
+<a id="licensing" class="anchor" href="#licensing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Licensing</h1>
+
+<hr>
+
+<p>Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License. You may obtain a copy of the License at <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+
+<p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
+
+<h1>
+<a id="support" class="anchor" href="#support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support</h1>
+
+<hr>
+
+<p>Please file bugs and issues at the Github issues page. For more general discussions you can contact the EMC Code team at <a href="https://groups.google.com/forum/#!forum/emccode-users">Google Groups</a> or tagged with <strong>EMC</strong> on <a href="https://stackoverflow.com">Stackoverflow.com</a>. The code and documentation are released with no warranties or SLAs and are intended to be supported through a community driven process.</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/emccode">emccode</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>

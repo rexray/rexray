@@ -4,10 +4,13 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	glog "github.com/akutz/golf/logrus"
 	"github.com/emccode/rexray/rexray/cli"
 )
 
 func main() {
+	log.SetFormatter(&glog.TextFormatter{log.TextFormatter{}})
+
 	defer func() {
 		r := recover()
 		if r == nil {

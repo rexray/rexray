@@ -21,11 +21,7 @@ import:
     repo:    https://github.com/akutz/goxtremio.git
     vcs:     git
   - package: github.com/akutz/golf
-    ref:     0b41df385fbc7a558c84f2f5fb5dc2ff4976db35
-    vcs:     git
-  - package: github.com/Sirupsen/logrus
-    ref:     d4015a94e7693e84751530b3bd5644f9ab5adc66
-    repo:    https://github.com/akutz/logrus.git
+    ref:     v0.1.1
     vcs:     git
   - package: github.com/spf13/viper
     ref:     0e14b4944c2c4974cbea1392a55fbbdd89da6513

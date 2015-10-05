@@ -31,27 +31,3 @@ import:
     ref:     0e14b4944c2c4974cbea1392a55fbbdd89da6513
     repo:    https://github.com/akutz/viper.git
     vcs:     git
-  - package: github.com/spf13/cast
-    ref:     ee815aaf958c707ad07547cd62150d973710f747
-  - package: github.com/opencontainers/runc
-    ref:     902ccd0f1840115ca1ba01585b7051f0673eba92
-  - package: github.com/BurntSushi/toml
-    ref:     056c9bc7be7190eaa7715723883caffa5f8fa3e4
-  - package: github.com/kr/text
-    ref:     bb797dc4fb8320488f47bf11de07a733d7233e1f
-  - package: github.com/magiconair/properties
-    ref:     337395e44efb4affc8bf11971e22acbd4e27a32d
-  - package: github.com/docker/docker
-    ref:     724b410c555a278d428929d125005d624d4a94a5
-  - package: github.com/spf13/jwalterweatherman
-    ref:     3d60171a64319ef63c78bd45bd60e6eab1e75f8b
-  - package: github.com/rackspace/gophercloud
-    ref:     d86f9582b08d56dc9422e3a5d9f120b117487427
-  - package: github.com/mitchellh/mapstructure
-    ref:     281073eb9eb092240d33ef253c404f1cca550309
-  - package: gopkg.in/yaml.v2
-    ref:     53feefa2559fb8dfa8d81baad31be332c97d6c77
-  - package: github.com/kardianos/osext
-    ref:     6e7f843663477789fac7c02def0d0909e969b4e5
-  - package: github.com/kr/pretty
-    ref:     e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ##
 # this curl-install script supports the installation of the latest
@@ -52,30 +52,30 @@ SCRIPT_CMD="curl -sSL $SCRIPT_URL | sh -s"
 
 CMD=$1
 
-function sudo() {
-    if [[ $(id -u) -eq 0 ]]; then $@; else $SUDO $@; fi
+sudo() {
+    if [ "$(id -u)" -eq "0" ]; then $@; else $SUDO $@; fi
 }
 
-function is_coreos() {
-    grep -q DISTRIB_ID=CoreOS /etc/lsb-release &> /dev/null
-    if [[ $? -eq 0 ]]; then echo 0; else echo 1; fi
+is_coreos() {
+    grep DISTRIB_ID=CoreOS /etc/lsb-release
 }
 
-function list() {
-    if [[ -z $PKG && -z $VERSION ]]; then 
+list() {
+    if [ -z "$PKG" ]; then 
         echo "$SCRIPT_CMD list unstable -"
         echo "$SCRIPT_CMD list staged -"
         echo "$SCRIPT_CMD list stable -"
     else
         URL="$URL/$PKG"
-        for v in $(curl -sSL $URL | grep '<a' | \
-            perl -pe 's/^.*?<a.+?>([^<]+?)\/?<\/a>.*$/$1/gm'); do
+        for v in $(curl -sSL $URL | \
+                   grep '<a' | grep -v 'latest' | \
+                   perl -pe 's/^.*?<a.+?>([^<]+?)\/?<\/a>.*$/$1/gm'); do
             echo "$SCRIPT_CMD $PKG $v -"
         done
     fi
 }
 
-function install() {
+install() {
     
     URL=$URL/$PKG/$VERSION
     OS=$(uname -s)
@@ -86,17 +86,15 @@ function install() {
     IS_COREOS=$(is_coreos)
 
     # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
-    if [[ -e /etc/redhat-release || \
-          -e /etc/redhat-version ]]; then
+    if [ -e "/etc/redhat-release" -o -e "/etc/redhat-version" ]; then
         
         #echo "installing rpm"
         sudo rpm -ih --quiet $URL/$BIN_NAME-latest-$ARCH.rpm > /dev/null
         
-    elif [[ $ARCH = x86_64 && \
-           (-e /etc/debian-release || \
-            -e /etc/debian-version || \
-            -e /etc/lsb-release) &&
-            $IS_COREOS -eq 1 ]]; then
+    elif [ "$ARCH" = "x86_64" -a -z "$IS_COREOS" ] && \
+         [ -e "/etc/debian-release" -o \
+           -e "/etc/debian-version" -o \
+           -e "/etc/lsb-release" ]; then
 
         #echo "installing deb"
         curl -sSLO $URL/$BIN_NAME-latest-$ARCH.deb && \
@@ -104,16 +102,16 @@ function install() {
             rm -f $BIN_NAME-latest-$ARCH.deb
 
     else 
-        if [[ $IS_COREOS -eq 0 ]]; then
+        if [ -n "$IS_COREOS" ]; then
             BIN_DIR=/opt/bin
             BIN_FILE=$BIN_DIR/$BIN_NAME
-        elif [[ $OS = Darwin ]]; then
+        elif [ "$OS" = "Darwin" ]; then
             BIN_DIR=/usr/local/bin
             BIN_FILE=$BIN_DIR/$BIN_NAME
         fi
 
-        if [[ -z $FILE_NAME ]]; then
-            if [[ $VERSION = latest ]]; then
+        if [ -z "$FILE_NAME" ]; then
+            if [ "$VERSION" = "latest" ]; then
                 FILE_NAME=$BIN_NAME-$OS-$ARCH.tar.gz
             else
                 FILE_NAME=$BIN_NAME-$OS-$ARCH-$VERSION.tar.gz
@@ -139,11 +137,11 @@ function install() {
     echo
 }
 
-if [[ $CMD = list || $CMD = install ]]; then
+if [ "$CMD" = "list" ] || [ "$CMD" = "install" ]; then
     shift
 fi
 
-if [[ $CMD = list ]]; then
+if [ "$CMD" = "list" ]; then
     PKG=$1
     VERSION=$2
     list

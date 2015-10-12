@@ -309,8 +309,8 @@ func (driver *Driver) getVolume(volumeID, volumeName string) (volumesRet []volum
 			if !found {
 				return []volumes.Volume{}, nil
 			}
+			volumesRet = volumesRetFiltered
 		}
-		volumesRet = volumesRetFiltered
 	}
 
 	return volumesRet, nil

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-BINTRAY_USER=akutz 
-BINTRAY_APIKEY=60b9a06880345572303b65d079dd9f82d16fb8b6
 BINTRAY_ACCOUNT=emccode
 BINTRAY_REPO=rexray
 BINTRAY_URL=https://api.bintray.com/content/$BINTRAY_ACCOUNT/$BINTRAY_REPO
@@ -29,7 +27,7 @@ DEBS="rexray-latest-$X86_64.deb"
 FILES="$TGZS $RPMS $DEBS"
 
 bintray_delete_latest() {
-    curl -vvf -u$BINTRAY_USER:$BINTRAY_APIKEY -X DELETE $1/$2 || true
+    curl -vvf -u$BINTRAY_USER:$BINTRAY_KEY -X DELETE $1/$2 || true
     echo
 }
 

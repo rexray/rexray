@@ -21,7 +21,7 @@ script:
   - make build-all test rpm-all deb-all deploy-prep
 
 notifications:
-  - slack: emccode:uuShEq2FwEReY2r5jDLve8uD
+  - slack: $SLACK_BUILDS
 
 before_deploy: 
   - ./.bintray-decapitate.sh
@@ -29,8 +29,8 @@ before_deploy:
 deploy:
   - provider: bintray
     file: .bintray-stupid-filtered.json
-    user: akutz
-    key: 60b9a06880345572303b65d079dd9f82d16fb8b6
+    user: $BINTRAY_USER
+    key: $BINTRAY_KEY
     skip_cleanup: true
     on:
       all_branches: true
@@ -38,8 +38,8 @@ deploy:
 
   - provider: bintray
     file: .bintray-staged-filtered.json
-    user: akutz
-    key: 60b9a06880345572303b65d079dd9f82d16fb8b6
+    user: $BINTRAY_USER
+    key: $BINTRAY_KEY
     skip_cleanup: true
     on:
       all_branches: true
@@ -47,8 +47,8 @@ deploy:
 
   - provider: bintray
     file: .bintray-stable-filtered.json
-    user: akutz
-    key: 60b9a06880345572303b65d079dd9f82d16fb8b6
+    user: $BINTRAY_USER
+    key: $BINTRAY_KEY
     skip_cleanup: true
     on:
       all_branches: true

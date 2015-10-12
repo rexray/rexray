@@ -6,13 +6,7 @@ go:
 addons:
   apt:
     packages:
-    - cpio
-    - debhelper
-    - dpkg-dev
-    - make
-    - perl
     - rpm
-    - fakeroot
 
 before_script:
   - source install_build_deps.sh

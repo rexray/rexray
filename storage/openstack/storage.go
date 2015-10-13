@@ -3,6 +3,8 @@ package openstack
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
+	"net/http"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -22,10 +24,10 @@ import (
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 )
 
-const ProviderName = "Rackspace"
+const ProviderName = "Openstack"
 
 const (
-	minSize = 75 //rackspace is 75
+	minSize = 1 //openstack has no minimum
 )
 
 type Driver struct {
@@ -33,6 +35,7 @@ type Driver struct {
 	Client             *gophercloud.ServiceClient
 	ClientBlockStorage *gophercloud.ServiceClient
 	Region             string
+	AvailabilityZone   string
 	InstanceID         string
 	Config             *config.Config
 }
@@ -71,9 +74,8 @@ func newCmd(cfg *config.Config, name string, args ...string) *exec.Cmd {
 
 func getInstanceID(cfg *config.Config) (string, error) {
 
-	cmd := newCmd(cfg, "/usr/bin/xenstore-read", "name")
+	cmd := newCmd(cfg, "/usr/sbin/dmidecode")
 	cmdOut, err := cmd.Output()
-
 	if err != nil {
 		return "",
 			errors.WithFields(eff(errors.Fields{
@@ -83,17 +85,10 @@ func getInstanceID(cfg *config.Config) (string, error) {
 			}), "error getting instance id")
 	}
 
-	instanceID := strings.Replace(string(cmdOut), "\n", "", -1)
+	rp := regexp.MustCompile("UUID:(.*)")
+	uuid := strings.Replace(rp.FindString(string(cmdOut)), "UUID: ", "", -1)
 
-	validInstanceID := regexp.MustCompile(`^instance-`)
-	valid := validInstanceID.MatchString(instanceID)
-	if !valid {
-		return "", errors.WithFields(eff(errors.Fields{
-			"instanceId": instanceID}), "error matching instance id")
-	}
-
-	instanceID = strings.Replace(instanceID, "instance-", "", 1)
-	return instanceID, nil
+	return strings.ToLower(uuid), nil
 }
 
 func Init(cfg *config.Config) (storage.Driver, error) {
@@ -105,11 +100,29 @@ func Init(cfg *config.Config) (storage.Driver, error) {
 	}
 	fields["instanceId"] = instanceID
 
-	region, err := getInstanceRegion(cfg)
-	if err != nil {
-		return nil, err
+	var region string
+	if cfg.OpenstackRegionName == "" {
+		var err error
+		region, err = getInstanceRegion(cfg)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		region = cfg.OpenstackRegionName
 	}
 	fields["region"] = region
+
+	var availabilityZone string
+	if cfg.OpenstackAvailabilityZoneName == "" {
+		var err error
+		availabilityZone, err = getInstanceAvailabilityZone()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		availabilityZone = cfg.OpenstackAvailabilityZoneName
+	}
+	fields["availabilityZone"] = availabilityZone
 
 	authOpts := getAuthOptions(cfg)
 
@@ -132,7 +145,6 @@ func Init(cfg *config.Config) (storage.Driver, error) {
 			errors.WithFieldsE(fields, "error getting authenticated client", err)
 	}
 
-	region = strings.ToUpper(region)
 	client, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
 		Region: region,
 	})
@@ -154,6 +166,7 @@ func Init(cfg *config.Config) (storage.Driver, error) {
 		Client:             client,
 		ClientBlockStorage: clientBlockStorage,
 		Region:             region,
+		AvailabilityZone:   availabilityZone,
 		InstanceID:         instanceID,
 		Config:             cfg,
 	}
@@ -163,14 +176,14 @@ func Init(cfg *config.Config) (storage.Driver, error) {
 
 func getAuthOptions(cfg *config.Config) gophercloud.AuthOptions {
 	return gophercloud.AuthOptions{
-		IdentityEndpoint: config.RackspaceAuthUrl,
-		UserID:           config.RackspaceUserId,
-		Username:         config.RackspaceUserName,
-		Password:         config.RackspacePassword,
-		TenantID:         config.RackspaceTenantId,
-		TenantName:       config.RackspaceTenantName,
-		DomainID:         config.RackspaceDomainId,
-		DomainName:       config.RackspaceDomainName,
+		IdentityEndpoint: cfg.OpenstackAuthUrl,
+		UserID:           cfg.OpenstackUserId,
+		Username:         cfg.OpenstackUserName,
+		Password:         cfg.OpenstackPassword,
+		TenantID:         cfg.OpenstackTenantId,
+		TenantName:       cfg.OpenstackTenantName,
+		DomainID:         cfg.OpenstackDomainId,
+		DomainName:       cfg.OpenstackDomainName,
 	}
 }
 
@@ -263,6 +276,29 @@ func getInstanceRegion(cfg *config.Config) (string, error) {
 	return region, nil
 }
 
+func getInstanceAvailabilityZone() (string, error) {
+	conn, err := net.DialTimeout("tcp", "169.254.169.254:80", 50*time.Millisecond)
+	if err != nil {
+		return "", fmt.Errorf("Error: %v\n", err)
+	}
+	defer conn.Close()
+
+	url := "http://169.254.169.254/2009-04-04/meta-data/placement/availability-zone"
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("Error: %v\n", err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Error: %v\n", err)
+	}
+
+	return string(data), nil
+}
+
 func (driver *Driver) getVolume(volumeID, volumeName string) (volumesRet []volumes.Volume, err error) {
 	if volumeID != "" {
 		volume, err := volumes.Get(driver.ClientBlockStorage, volumeID).Extract()
@@ -309,8 +345,8 @@ func (driver *Driver) getVolume(volumeID, volumeName string) (volumesRet []volum
 			if !found {
 				return []volumes.Volume{}, nil
 			}
+			volumesRet = volumesRetFiltered
 		}
-		volumesRet = volumesRetFiltered
 	}
 
 	return volumesRet, nil
@@ -539,6 +575,10 @@ func (driver *Driver) CreateVolume(
 			"cannot create volume from volume & run async")
 	}
 
+	if availabilityZone == "" {
+		availabilityZone = driver.AvailabilityZone
+	}
+
 	if snapshotID != "" {
 		snapshot, err := driver.GetSnapshot("", snapshotID, "")
 		if err != nil {
@@ -684,7 +724,7 @@ func (driver *Driver) GetDeviceNextAvailable() (string, error) {
 	}
 
 	for _, blockDevice := range blockDeviceMapping {
-		re, _ := regexp.Compile(`^/dev/xvd([a-z])`)
+		re, _ := regexp.Compile(`^/dev/vd([a-z])`)
 		res := re.FindStringSubmatch(blockDevice.DeviceName)
 		if len(res) > 0 {
 			blockDeviceNames[res[1]] = true
@@ -697,7 +737,7 @@ func (driver *Driver) GetDeviceNextAvailable() (string, error) {
 	}
 
 	for _, localDevice := range localDevices {
-		re, _ := regexp.Compile(`^xvd([a-z])`)
+		re, _ := regexp.Compile(`^vd([a-z])`)
 		res := re.FindStringSubmatch(localDevice)
 		if len(res) > 0 {
 			blockDeviceNames[res[1]] = true
@@ -706,7 +746,7 @@ func (driver *Driver) GetDeviceNextAvailable() (string, error) {
 
 	for _, letter := range letters {
 		if !blockDeviceNames[letter] {
-			nextDeviceName := "/dev/xvd" + letter
+			nextDeviceName := "/dev/vd" + letter
 			return nextDeviceName, nil
 		}
 	}

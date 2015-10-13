@@ -62,7 +62,7 @@ make build-all
 ```
 
 After either of the above methods for building `REX-Ray` there should be a `.bin` directory in the
-current directory, and inside `.bin` will be binaries for Linux-i386, Linux-x86-64, 
+current directory, and inside `.bin` will be binaries for Linux-i386, Linux-x86-64,
 and Darwin-x86-64.
 
 ```bash
@@ -406,7 +406,24 @@ export AWS_ACCESS_KEY=access_key AWS_SECRET_KEY="secret_key"
 // TODO
 
 ### OpenStack
-// TODO
+```bash
+export REXRAY_STORAGEDRIVERS=openstack
+export OS_AUTH_URL=https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/
+export OS_TENANT_NAME=10677883784544-Project OS_REGION_NAME=region-a.geo-1
+export OS_USERNAME=username OS_PASSWORD='password'
+
+./rexray volume get
+
+- name: testing4bc
+  volumeid: a6aa61a1-2b2b-4d30-974b-6809fcd7cbff
+  availabilityzone: az1
+  status: available
+  volumetype: standard
+  iops: 0
+  size: "1"
+  networkname: ""
+  attachments: []
+```
 
 ### RackSpace
 ```bash

@@ -74,7 +74,7 @@ func globalFlags(cmd *cobra.Command) *flag.FlagSet {
 
 	if cmd.HasParent() {
 		fs.AddFlagSet(cmd.InheritedFlags())
-		if fs.Lookup("help") == nil {
+		if fs.Lookup("help") == nil && cmd.Flag("help") != nil {
 			fs.AddFlag(cmd.Flag("help"))
 		}
 	} else {
@@ -160,7 +160,7 @@ Global Flags:
 Additional Flags:
 {{$af.FlagUsages | rtrim}}{{end}}{{end}}{{if .HasHelpSubCommands}}
 
-Additional help topics: {{range .Commands}}{{if .IsHelpCommand}}  
+Additional help topics: {{range .Commands}}{{if .IsHelpCommand}}
   {{rpad .CommandPath .CommandPathPadding}} {{.Short | rtrim}}{{end}}}{{end}}{{end}}{{if .HasSubCommands}}
 
 Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}

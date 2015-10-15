@@ -100,6 +100,17 @@ func (c *Config) initConfigKeys() {
 	c.asvp(RackspaceDomainId, &c.RackspaceDomainId)
 	c.asvp(RackspaceDomainName, &c.RackspaceDomainName)
 
+	c.asvp(OpenstackAuthUrl, &c.OpenstackAuthUrl)
+	c.asvp(OpenstackUserId, &c.OpenstackUserId)
+	c.asvp(OpenstackUserName, &c.OpenstackUserName)
+	c.asvp(OpenstackPassword, &c.OpenstackPassword)
+	c.asvp(OpenstackTenantId, &c.OpenstackTenantId)
+	c.asvp(OpenstackTenantName, &c.OpenstackTenantName)
+	c.asvp(OpenstackDomainId, &c.OpenstackDomainId)
+	c.asvp(OpenstackDomainName, &c.OpenstackDomainName)
+	c.asvp(OpenstackRegionName, &c.OpenstackRegionName)
+	c.asvp(OpenstackAvailabilityZoneName, &c.OpenstackAvailabilityZoneName)
+
 	c.asvp(ScaleIoEndpoint, &c.ScaleIoEndpoint)
 	c.abvp(ScaleIoInsecure, &c.ScaleIoInsecure)
 	c.abvp(ScaleIoUseCerts, &c.ScaleIoUseCerts)
@@ -173,6 +184,17 @@ func initConfigKeyMap() {
 		RackspaceTenantName: ck("OS_TENANT_NAME", "", ""),
 		RackspaceDomainId:   ck("OS_DOMAIN_ID", "", ""),
 		RackspaceDomainName: ck("OS_DOMAIN_NAME", "", ""),
+
+		OpenstackAuthUrl:              ck("OS_AUTH_URL", "", ""),
+		OpenstackUserId:               ck("OS_USERID", "", ""),
+		OpenstackUserName:             ck("OS_USERNAME", "", ""),
+		OpenstackPassword:             ck("OS_PASSWORD", "", ""),
+		OpenstackTenantId:             ck("OS_TENANT_ID", "", ""),
+		OpenstackTenantName:           ck("OS_TENANT_NAME", "", ""),
+		OpenstackDomainId:             ck("OS_DOMAIN_ID", "", ""),
+		OpenstackDomainName:           ck("OS_DOMAIN_NAME", "", ""),
+		OpenstackRegionName:           ck("OS_REGION_NAME", "", ""),
+		OpenstackAvailabilityZoneName: ck("OS_AVAILABILITY_ZONE_NAME", "", ""),
 
 		ScaleIoEndpoint:             ck("GOSCALEIO_ENDPOINT", "", ""),
 		ScaleIoInsecure:             ck("GOSCALEIO_INSECURE", false, ""),

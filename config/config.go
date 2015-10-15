@@ -55,6 +55,16 @@ type secureConfig struct {
 	RackspaceDomainId   string
 	RackspaceDomainName string
 
+	OpenstackAuthUrl              string
+	OpenstackUserId               string
+	OpenstackUserName             string
+	OpenstackTenantId             string
+	OpenstackTenantName           string
+	OpenstackDomainId             string
+	OpenstackDomainName           string
+	OpenstackRegionName           string
+	OpenstackAvailabilityZoneName string
+
 	ScaleIoEndpoint             string
 	ScaleIoInsecure             bool
 	ScaleIoUseCerts             bool
@@ -86,6 +96,7 @@ type plainTextConfig struct {
 
 	AwsSecretKey      string
 	RackspacePassword string
+	OpenstackPassword string
 	ScaleIoPassword   string
 	XtremIoPassword   string
 }
@@ -293,6 +304,17 @@ func (c *Config) Sync() {
 	w(RackspaceTenantName, c.RackspaceTenantName)
 	w(RackspaceDomainId, c.RackspaceDomainId)
 	w(RackspaceDomainName, c.RackspaceDomainName)
+
+	w(OpenstackAuthUrl, c.OpenstackAuthUrl)
+	w(OpenstackUserId, c.OpenstackUserId)
+	w(OpenstackUserName, c.OpenstackUserName)
+	w(OpenstackPassword, c.OpenstackPassword)
+	w(OpenstackTenantId, c.OpenstackTenantId)
+	w(OpenstackTenantName, c.OpenstackTenantName)
+	w(OpenstackDomainId, c.OpenstackDomainId)
+	w(OpenstackDomainName, c.OpenstackDomainName)
+	w(OpenstackRegionName, c.OpenstackRegionName)
+	w(OpenstackAvailabilityZoneName, c.OpenstackAvailabilityZoneName)
 
 	w(ScaleIoEndpoint, c.ScaleIoEndpoint)
 	w(ScaleIoInsecure, c.ScaleIoInsecure)

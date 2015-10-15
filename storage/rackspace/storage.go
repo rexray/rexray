@@ -163,14 +163,14 @@ func Init(cfg *config.Config) (storage.Driver, error) {
 
 func getAuthOptions(cfg *config.Config) gophercloud.AuthOptions {
 	return gophercloud.AuthOptions{
-		IdentityEndpoint: config.RackspaceAuthUrl,
-		UserID:           config.RackspaceUserId,
-		Username:         config.RackspaceUserName,
-		Password:         config.RackspacePassword,
-		TenantID:         config.RackspaceTenantId,
-		TenantName:       config.RackspaceTenantName,
-		DomainID:         config.RackspaceDomainId,
-		DomainName:       config.RackspaceDomainName,
+		IdentityEndpoint: cfg.RackspaceAuthUrl,
+		UserID:           cfg.RackspaceUserId,
+		Username:         cfg.RackspaceUserName,
+		Password:         cfg.RackspacePassword,
+		TenantID:         cfg.RackspaceTenantId,
+		TenantName:       cfg.RackspaceTenantName,
+		DomainID:         cfg.RackspaceDomainId,
+		DomainName:       cfg.RackspaceDomainName,
 	}
 }
 

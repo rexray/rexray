@@ -6,6 +6,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	glog "github.com/akutz/golf/logrus"
 	"github.com/emccode/rexray/rexray/cli"
+
+	// This blank import loads the drivers package
+	_ "github.com/emccode/rexray/drivers"
 )
 
 func main() {

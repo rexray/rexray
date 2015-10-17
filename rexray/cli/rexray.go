@@ -4,42 +4,34 @@ import (
 	"fmt"
 	"os"
 
-	_ "github.com/emccode/rexray/imports"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/emccode/rexray/config"
-	osm "github.com/emccode/rexray/os"
+	"github.com/emccode/rexray"
+	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/rexray/cli/term"
-	"github.com/emccode/rexray/storage"
 	"github.com/emccode/rexray/util"
-	"github.com/emccode/rexray/volume"
 )
 
 const (
-	NoColor     = 0
-	Black       = 30
-	Red         = 31
-	RedBg       = 41
-	Green       = 32
-	Yellow      = 33
-	Blue        = 34
-	Gray        = 37
-	BlueBg      = Blue + 10
-	White       = 97
-	WhiteBg     = White + 10
-	DarkGrayBg  = 100
-	LightBlue   = 94
-	LightBlueBg = LightBlue + 10
+	noColor     = 0
+	black       = 30
+	red         = 31
+	redBg       = 41
+	green       = 32
+	yellow      = 33
+	blue        = 34
+	gray        = 37
+	blueBg      = blue + 10
+	white       = 97
+	whiteBg     = white + 10
+	darkGrayBg  = 100
+	lightBlue   = 94
+	lightBlueBg = lightBlue + 10
 )
 
 var (
-	c *config.Config
-
-	sdm  *storage.StorageDriverManager
-	vdm  *volume.VolumeDriverManager
-	osdm *osm.OSDriverManager
+	r *core.RexRay
 
 	client                  string
 	fg                      bool
@@ -50,7 +42,7 @@ var (
 	runAsync                bool
 	description             string
 	volumeType              string
-	IOPS                    int64
+	iops                    int64
 	size                    int64
 	instanceID              string
 	volumeName              string
@@ -64,16 +56,16 @@ var (
 	mountLabel              string
 	fsType                  string
 	overwriteFs             bool
-	moduleTypeId            int32
-	moduleInstanceId        int32
+	moduleTypeID            int32
+	moduleInstanceID        int32
 	moduleInstanceAddress   string
 	moduleInstanceStart     bool
 	moduleConfig            []string
 )
 
-type HelpFlagPanic struct{}
-type PrintedErrorPanic struct{}
-type SubCommandPanic struct{}
+type helpFlagPanic struct{}
+type printedErrorPanic struct{}
+type subCommandPanic struct{}
 
 //Exec function
 func Exec() {
@@ -81,9 +73,9 @@ func Exec() {
 		r := recover()
 		if r != nil {
 			switch r.(type) {
-			case HelpFlagPanic, SubCommandPanic:
+			case helpFlagPanic, subCommandPanic:
 			// Do nothing
-			case PrintedErrorPanic:
+			case printedErrorPanic:
 				os.Exit(1)
 			default:
 				panic(r)
@@ -95,7 +87,10 @@ func Exec() {
 }
 
 func init() {
-	c = config.New()
+	var err error
+	if r, err = rexray.New(); err != nil {
+		panic(err)
+	}
 	updateLogLevel()
 	initCommands()
 	initFlags()
@@ -103,7 +98,7 @@ func init() {
 }
 
 func updateLogLevel() {
-	switch c.LogLevel {
+	switch r.Config.LogLevel {
 	case "panic":
 		log.SetLevel(log.PanicLevel)
 	case "fatal":
@@ -118,13 +113,13 @@ func updateLogLevel() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	log.WithField("logLevel", c.LogLevel).Debug("updated log level")
+	log.WithField("logLevel", r.Config.LogLevel).Debug("updated log level")
 }
 
 func preRun(cmd *cobra.Command, args []string) {
 
 	if cfgFile != "" && util.FileExists(cfgFile) {
-		if err := c.ReadConfigFile(cfgFile); err != nil {
+		if err := r.Config.ReadConfigFile(cfgFile); err != nil {
 			panic(err)
 		}
 		cmd.Flags().Parse(os.Args[1:])
@@ -134,7 +129,7 @@ func preRun(cmd *cobra.Command, args []string) {
 
 	if isHelpFlag(cmd) {
 		cmd.Help()
-		panic(&HelpFlagPanic{})
+		panic(&helpFlagPanic{})
 	}
 
 	if permErr := checkCmdPermRequirements(cmd); permErr != nil {
@@ -146,16 +141,16 @@ func preRun(cmd *cobra.Command, args []string) {
 
 		fmt.Println()
 		cmd.Help()
-		panic(&PrintedErrorPanic{})
+		panic(&printedErrorPanic{})
 	}
 
 	if isInitDriverManagersCmd(cmd) {
-		if initDmErr := initDriverManagers(); initDmErr != nil {
+		if err := r.InitDrivers(); err != nil {
 
 			if term.IsTerminal() {
-				printColorizedError(initDmErr)
+				printColorizedError(err)
 			} else {
-				printNonColorizedError(initDmErr)
+				printNonColorizedError(err)
 			}
 			fmt.Println()
 
@@ -171,7 +166,7 @@ func preRun(cmd *cobra.Command, args []string) {
 			}
 			helpCmd.Help()
 
-			panic(&PrintedErrorPanic{})
+			panic(&printedErrorPanic{})
 		}
 	}
 }
@@ -208,19 +203,19 @@ func checkCmdPermRequirements(cmd *cobra.Command) error {
 
 func printColorizedError(err error) {
 	stderr := os.Stderr
-	l := fmt.Sprintf("\x1b[%dm\xe2\x86\x93\x1b[0m", White)
+	l := fmt.Sprintf("\x1b[%dm\xe2\x86\x93\x1b[0m", white)
 
-	fmt.Fprintf(stderr, "Oops, an \x1b[%[1]dmerror\x1b[0m occured!\n\n", RedBg)
-	fmt.Fprintf(stderr, "  \x1b[%dm%s\n\n", Red, err.Error())
+	fmt.Fprintf(stderr, "Oops, an \x1b[%[1]dmerror\x1b[0m occured!\n\n", redBg)
+	fmt.Fprintf(stderr, "  \x1b[%dm%s\n\n", red, err.Error())
 	fmt.Fprintf(stderr, "\x1b[0m")
 	fmt.Fprintf(stderr,
-		"To correct the \x1b[%dmerror\x1b[0m please review:\n\n", RedBg)
+		"To correct the \x1b[%dmerror\x1b[0m please review:\n\n", redBg)
 	fmt.Fprintf(
 		stderr,
 		"  - Debug output by using the flag \x1b[%dm-l debug\x1b[0m\n",
-		LightBlue)
+		lightBlue)
 	fmt.Fprintf(stderr, "  - The REX-ray website at \x1b[%dm%s\x1b[0m\n",
-		BlueBg, "https://github.com/emccode/rexray")
+		blueBg, "https://github.com/emccode/rexray")
 	fmt.Fprintf(stderr, "  - The on%[1]sine he%[1]sp be%[1]sow\n", l)
 }
 
@@ -254,27 +249,4 @@ func isInitDriverManagersCmd(cmd *cobra.Command) bool {
 		cmd != moduleTypesCmd &&
 		cmd != moduleInstancesCmd &&
 		cmd != moduleInstancesListCmd
-}
-
-func initDriverManagers() error {
-
-	var osdmErr error
-	osdm, osdmErr = osm.NewOSDriverManager(c)
-	if osdmErr != nil {
-		return osdmErr
-	}
-
-	var sdmErr error
-	sdm, sdmErr = storage.NewStorageDriverManager(c)
-	if sdmErr != nil {
-		return sdmErr
-	}
-
-	var vdmErr error
-	vdm, vdmErr = volume.NewVolumeDriverManager(c, osdm, sdm)
-	if vdmErr != nil {
-		return vdmErr
-	}
-
-	return nil
 }

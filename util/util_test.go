@@ -21,13 +21,13 @@ func TestStringInSlice(t *testing.T) {
 
 func TestTrimSingleWord(t *testing.T) {
 
-	s := Trim(`    
-		
-						hi       
-						
-						
-		      
-		      
+	s := Trim(`
+
+						hi
+
+
+     		    
+
     `)
 
 	if s != "hi" {
@@ -37,19 +37,19 @@ func TestTrimSingleWord(t *testing.T) {
 
 func TestTrimMultipleWords(t *testing.T) {
 
-	s := Trim(`    
-		
-						hi       
-						
-		there				
-		      
-		     you 
+	s := Trim(`
+
+						hi
+
+		there
+
+		     you
     `)
 
-	if s != `hi       
-						
-		there				
-		      
+	if s != `hi
+
+		there
+
 		     you` {
 		t.Fatalf("trim failed '%v'", s)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/emccode/rexray/daemon/module"
 )
 
+// Start starts the daemon.
 func Start(host string, init chan error, stop <-chan os.Signal) {
 
 	isErr := false

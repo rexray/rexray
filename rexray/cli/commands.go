@@ -145,7 +145,7 @@ var moduleTypesCmd = &cobra.Command{
 	Short: "List the available module types and their IDs",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		_, addr, addrErr := util.ParseAddress(c.Host)
+		_, addr, addrErr := util.ParseAddress(r.Config.Host)
 		if addrErr != nil {
 			panic(addrErr)
 		}
@@ -182,7 +182,7 @@ var moduleInstancesListCmd = &cobra.Command{
 	Short:   "List the running module instances",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		_, addr, addrErr := util.ParseAddress(c.Host)
+		_, addr, addrErr := util.ParseAddress(r.Config.Host)
 		if addrErr != nil {
 			panic(addrErr)
 		}
@@ -211,40 +211,40 @@ var moduleInstancesCreateCmd = &cobra.Command{
 	Short:   "Create a new module instance",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		_, addr, addrErr := util.ParseAddress(c.Host)
+		_, addr, addrErr := util.ParseAddress(r.Config.Host)
 		if addrErr != nil {
 			panic(addrErr)
 		}
 
-		if moduleTypeId == -1 || moduleInstanceAddress == "" {
+		if moduleTypeID == -1 || moduleInstanceAddress == "" {
 			cmd.Usage()
 			return
 		}
 
-		modTypeIdStr := fmt.Sprintf("%d", moduleTypeId)
+		modTypeIDStr := fmt.Sprintf("%d", moduleTypeID)
 		modInstStartStr := fmt.Sprintf("%v", moduleInstanceStart)
 
 		u := fmt.Sprintf("http://%s/r/module/instances", addr)
-		cfgJson, cfgJsonErr := c.ToJson()
+		cfgJSON, cfgJSONErr := r.Config.ToJSON()
 
-		if cfgJsonErr != nil {
-			panic(cfgJsonErr)
+		if cfgJSONErr != nil {
+			panic(cfgJSONErr)
 		}
 
 		log.WithFields(log.Fields{
 			"url":     u,
-			"typeId":  modTypeIdStr,
+			"typeId":  modTypeIDStr,
 			"address": moduleInstanceAddress,
 			"start":   modInstStartStr,
-			"config":  cfgJson}).Debug("post create module instance")
+			"config":  cfgJSON}).Debug("post create module instance")
 
 		client := &http.Client{}
 		resp, respErr := client.PostForm(u,
 			url.Values{
-				"typeId":  {modTypeIdStr},
+				"typeId":  {modTypeIDStr},
 				"address": {moduleInstanceAddress},
 				"start":   {modInstStartStr},
-				"config":  {cfgJson},
+				"config":  {cfgJSON},
 			})
 		if respErr != nil {
 			panic(respErr)
@@ -265,18 +265,18 @@ var moduleInstancesStartCmd = &cobra.Command{
 	Short: "Starts a module instance",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		_, addr, addrErr := util.ParseAddress(c.Host)
+		_, addr, addrErr := util.ParseAddress(r.Config.Host)
 		if addrErr != nil {
 			panic(addrErr)
 		}
 
-		if moduleInstanceId == -1 {
+		if moduleInstanceID == -1 {
 			cmd.Usage()
 			return
 		}
 
 		u := fmt.Sprintf(
-			"http://%s/r/module/instances/%d/start", addr, moduleInstanceId)
+			"http://%s/r/module/instances/%d/start", addr, moduleInstanceID)
 
 		client := &http.Client{}
 		resp, respErr := client.Get(u)
@@ -348,7 +348,7 @@ var serviceInitSysCmd = &cobra.Command{
 	Use:   "initsys",
 	Short: "Print the detected init system type",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("\nInit System: %s\n", GetInitSystemCmd())
+		fmt.Printf("\nInit System: %s\n", getInitSystemCmd())
 	},
 }
 
@@ -369,9 +369,8 @@ var adapterGetTypesCmd = &cobra.Command{
 	Short:   "List the available adapter types",
 	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
-		drivers := sdm.GetDriverNames()
-		for n := range drivers {
-			fmt.Printf("Storage Driver: %v\n", drivers[n])
+		for n := range r.DriverNames() {
+			fmt.Printf("Storage Driver: %v\n", n)
 		}
 	},
 }
@@ -381,7 +380,7 @@ var adapterGetInstancesCmd = &cobra.Command{
 	Short: "List the configured adapter instances",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allInstances, err := sdm.GetInstance()
+		allInstances, err := r.Storage.GetInstances()
 		if err != nil {
 			panic(err)
 		}
@@ -401,7 +400,7 @@ var volumeMapCmd = &cobra.Command{
 	Short: "Print the volume mapping(s)",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allBlockDevices, err := sdm.GetVolumeMapping()
+		allBlockDevices, err := r.Storage.GetVolumeMapping()
 		if err != nil {
 			log.Fatalf("Error: %s", err)
 		}
@@ -422,7 +421,7 @@ var volumeGetCmd = &cobra.Command{
 	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allVolumes, err := sdm.GetVolume(volumeID, volumeName)
+		allVolumes, err := r.Storage.GetVolume(volumeID, volumeName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -443,7 +442,7 @@ var snapshotGetCmd = &cobra.Command{
 	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allSnapshots, err := sdm.GetSnapshot(volumeID, snapshotID, snapshotName)
+		allSnapshots, err := r.Storage.GetSnapshot(volumeID, snapshotID, snapshotName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -468,7 +467,7 @@ var snapshotCreateCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		snapshot, err := sdm.CreateSnapshot(runAsync, snapshotName, volumeID, description)
+		snapshot, err := r.Storage.CreateSnapshot(runAsync, snapshotName, volumeID, description)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -492,7 +491,7 @@ var snapshotRemoveCmd = &cobra.Command{
 			log.Fatalf("missing --snapshotid")
 		}
 
-		err := sdm.RemoveSnapshot(snapshotID)
+		err := r.Storage.RemoveSnapshot(snapshotID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -510,9 +509,9 @@ var volumeCreateCmd = &cobra.Command{
 			log.Fatalf("missing --size")
 		}
 
-		volume, err := sdm.CreateVolume(
+		volume, err := r.Storage.CreateVolume(
 			runAsync, volumeName, volumeID, snapshotID,
-			volumeType, IOPS, size, availabilityZone)
+			volumeType, iops, size, availabilityZone)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -536,7 +535,7 @@ var volumeRemoveCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		err := sdm.RemoveVolume(volumeID)
+		err := r.Storage.RemoveVolume(volumeID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -553,7 +552,7 @@ var volumeAttachCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		volumeAttachment, err := sdm.AttachVolume(runAsync, volumeID, instanceID)
+		volumeAttachment, err := r.Storage.AttachVolume(runAsync, volumeID, instanceID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -576,7 +575,7 @@ var volumeDetachCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid")
 		}
 
-		err := sdm.DetachVolume(runAsync, volumeID, instanceID)
+		err := r.Storage.DetachVolume(runAsync, volumeID, instanceID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -593,7 +592,7 @@ var snapshotCopyCmd = &cobra.Command{
 			log.Fatalf("missing --volumeid or --snapshotid or --volumename")
 		}
 
-		snapshot, err := sdm.CopySnapshot(
+		snapshot, err := r.Storage.CopySnapshot(
 			runAsync, volumeID, snapshotID,
 			snapshotName, destinationSnapshotName, destinationRegion)
 		if err != nil {
@@ -615,7 +614,7 @@ var deviceGetCmd = &cobra.Command{
 	Aliases: []string{"ls", "list"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		mounts, err := osdm.GetMounts(deviceName, mountPoint)
+		mounts, err := r.OS.GetMounts(deviceName, mountPoint)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -638,7 +637,7 @@ var deviceMountCmd = &cobra.Command{
 		}
 
 		// mountOptions = fmt.Sprintf("val,%s", mountOptions)
-		err := osdm.Mount(deviceName, mountPoint, mountOptions, mountLabel)
+		err := r.OS.Mount(deviceName, mountPoint, mountOptions, mountLabel)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -655,7 +654,7 @@ var devuceUnmountCmd = &cobra.Command{
 			log.Fatal("Missing --mountpoint")
 		}
 
-		err := osdm.Unmount(mountPoint)
+		err := r.OS.Unmount(mountPoint)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -676,7 +675,7 @@ var deviceFormatCmd = &cobra.Command{
 			fsType = "ext4"
 		}
 
-		err := osdm.Format(deviceName, fsType, overwriteFs)
+		err := r.OS.Format(deviceName, fsType, overwriteFs)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -693,7 +692,7 @@ var volumeMountCmd = &cobra.Command{
 			log.Fatal("Missing --volumename or --volumeid")
 		}
 
-		mountPath, err := vdm.Mount(volumeName, volumeID, overwriteFs, fsType)
+		mountPath, err := r.Volume.Mount(volumeName, volumeID, overwriteFs, fsType)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -716,7 +715,7 @@ var volumeUnmountCmd = &cobra.Command{
 			log.Fatal("Missing --volumename or --volumeid")
 		}
 
-		err := vdm.Unmount(volumeName, volumeID)
+		err := r.Volume.Unmount(volumeName, volumeID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -733,7 +732,7 @@ var volumePathCmd = &cobra.Command{
 			log.Fatal("Missing --volumename or --volumeid")
 		}
 
-		mountPath, err := vdm.Path(volumeName, volumeID)
+		mountPath, err := r.Volume.Path(volumeName, volumeID)
 		if err != nil {
 			log.Fatal(err)
 		}

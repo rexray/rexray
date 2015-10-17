@@ -1,6 +1,6 @@
 package admin
 
-const HtmlIndex = `
+const htmlIndex = `
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="styles/main.css" />

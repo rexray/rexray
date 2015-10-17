@@ -11,9 +11,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	_ "github.com/emccode/rexray/config"
+	"github.com/emccode/rexray/core/errors"
 	rrdaemon "github.com/emccode/rexray/daemon"
-	"github.com/emccode/rexray/errors"
 	"github.com/emccode/rexray/util"
 )
 
@@ -58,7 +57,7 @@ func startDaemon() {
 	}
 	log.SetOutput(out)
 
-	fmt.Fprintf(out, "%s\n", RexRayLogoAscii)
+	fmt.Fprintf(out, "%s\n", rexRayLogoASCII)
 	util.PrintVersion(out)
 	fmt.Fprintln(out)
 
@@ -110,10 +109,10 @@ func startDaemon() {
 		syscall.SIGQUIT)
 
 	go func() {
-		rrdaemon.Start(c.Host, init, stop)
+		rrdaemon.Start(r.Config.Host, init, stop)
 	}()
 
-	initErrors := make([]error, 0)
+	var initErrors []error
 
 	for initErr := range init {
 		initErrors = append(initErrors, initErr)
@@ -173,10 +172,10 @@ func tryToStartDaemon() {
 	cmdArgs := []string{
 		"start",
 		fmt.Sprintf("--client=%s", client),
-		fmt.Sprintf("--logLevel=%v", c.LogLevel)}
+		fmt.Sprintf("--logLevel=%v", r.Config.LogLevel)}
 
-	if c.Host != "" {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", c.Host))
+	if r.Config.Host != "" {
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", r.Config.Host))
 	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)
@@ -247,36 +246,36 @@ func checkOpPerms(op string) error {
 	return nil
 }
 
-const RexRayLogoAscii = `
-                          ⌐▄Q▓▄Ç▓▄,▄_                              
-                         Σ▄▓▓▓▓▓▓▓▓▓▓▄π                            
-                       ╒▓▓▌▓▓▓▓▓▓▓▓▓▓▀▓▄▄.                         
-                    ,_▄▀▓▓ ▓▓ ▓▓▓▓▓▓▓▓▓▓▓█                         
-                   │▄▓▓ _▓▓▓▓▓▓▓▓▓┌▓▓▓▓▓█                          
-                  _J┤▓▓▓▓▓▓▓▓▓▓▓▓▓├█▓█▓▀Γ                          
-            ,▄▓▓▓▓▓▓^██▓▓▓▓▓▓▓▓▓▓▓▓▄▀▄▄▓▓Ω▄                        
-            F▌▓▌█ⁿⁿⁿ  ⁿ└▀ⁿ██▓▀▀▀▀▀▀▀▀▀▀▌▓▓▓▌                       
-             'ⁿ_  ,▄▄▄▄▄▄▄▄▄█_▄▄▄▄▄▄▄▄▄ⁿ▀~██                       
-               Γ  ├▓▓▓▓▓█▀ⁿ█▌▓Ω]█▓▓▓▓▓▓ ├▓                         
-               │  ├▓▓▓▓▓▌≡,__▄▓▓▓█▓▓▓▓▓ ╞█~   Y,┐                  
-               ╞  ├▓▓▓▓▓▄▄__^^▓▓▓▌▓▓▓▓▓  ▓   /▓▓▓                  
-                  ├▓▓▓▓▓▓▓▄▄═▄▓▓▓▓▓▓▓▓▓  π ⌐▄▓▓█║n                 
-                _ ├▓▓▓▓▓▓▓▓▓~▓▓▓▓▓▓▓▓▓▓  ▄4▄▓▓▓██                  
-                µ ├▓▓▓▓█▀█▓▓_▓▓███▓▓▓▓▓  ▓▓▓▓▓Ω4                   
-                µ ├▓▀▀L   └ⁿ  ▀   ▀ ▓▓█w ▓▓▓▀ìⁿ                    
-                ⌐ ├_                τ▀▓  Σ⌐└                       
-                ~ ├▓▓  ▄  _     ╒  ┌▄▓▓  Γ                         
-                  ├▓▓▓▌█═┴▓▄╒▀▄_▄▌═¢▓▓▓  ╚                         
-               ⌠  ├▓▓▓▓▓ⁿ▄▓▓▓▓▓▓▓┐▄▓▓▓▓  └                         
-               Ω_.└██▓▀ⁿÇⁿ▀▀▀▀▀▀█≡▀▀▀▀▀   µ                        
-               ⁿ  .▄▄▓▓▓▓▄▄┌ ╖__▓_▄▄▄▄▄*Oⁿ                         
-                 û▌├▓█▓▓▓██ⁿ ¡▓▓▓▓▓▓▓▓█▓╪                          
-                 ╙Ω▀█ ▓██ⁿ    └█▀██▀▓█├█Å                          
-                     ⁿⁿ             ⁿ ⁿ^                           
+const rexRayLogoASCII = `
+                          ⌐▄Q▓▄Ç▓▄,▄_
+                         Σ▄▓▓▓▓▓▓▓▓▓▓▄π
+                       ╒▓▓▌▓▓▓▓▓▓▓▓▓▓▀▓▄▄.
+                    ,_▄▀▓▓ ▓▓ ▓▓▓▓▓▓▓▓▓▓▓█
+                   │▄▓▓ _▓▓▓▓▓▓▓▓▓┌▓▓▓▓▓█
+                  _J┤▓▓▓▓▓▓▓▓▓▓▓▓▓├█▓█▓▀Γ
+            ,▄▓▓▓▓▓▓^██▓▓▓▓▓▓▓▓▓▓▓▓▄▀▄▄▓▓Ω▄
+            F▌▓▌█ⁿⁿⁿ  ⁿ└▀ⁿ██▓▀▀▀▀▀▀▀▀▀▀▌▓▓▓▌
+             'ⁿ_  ,▄▄▄▄▄▄▄▄▄█_▄▄▄▄▄▄▄▄▄ⁿ▀~██
+               Γ  ├▓▓▓▓▓█▀ⁿ█▌▓Ω]█▓▓▓▓▓▓ ├▓
+               │  ├▓▓▓▓▓▌≡,__▄▓▓▓█▓▓▓▓▓ ╞█~   Y,┐
+               ╞  ├▓▓▓▓▓▄▄__^^▓▓▓▌▓▓▓▓▓  ▓   /▓▓▓
+                  ├▓▓▓▓▓▓▓▄▄═▄▓▓▓▓▓▓▓▓▓  π ⌐▄▓▓█║n
+                _ ├▓▓▓▓▓▓▓▓▓~▓▓▓▓▓▓▓▓▓▓  ▄4▄▓▓▓██
+                µ ├▓▓▓▓█▀█▓▓_▓▓███▓▓▓▓▓  ▓▓▓▓▓Ω4
+                µ ├▓▀▀L   └ⁿ  ▀   ▀ ▓▓█w ▓▓▓▀ìⁿ
+                ⌐ ├_                τ▀▓  Σ⌐└
+                ~ ├▓▓  ▄  _     ╒  ┌▄▓▓  Γ
+                  ├▓▓▓▌█═┴▓▄╒▀▄_▄▌═¢▓▓▓  ╚
+               ⌠  ├▓▓▓▓▓ⁿ▄▓▓▓▓▓▓▓┐▄▓▓▓▓  └
+               Ω_.└██▓▀ⁿÇⁿ▀▀▀▀▀▀█≡▀▀▀▀▀   µ
+               ⁿ  .▄▄▓▓▓▓▄▄┌ ╖__▓_▄▄▄▄▄*Oⁿ
+                 û▌├▓█▓▓▓██ⁿ ¡▓▓▓▓▓▓▓▓█▓╪
+                 ╙Ω▀█ ▓██ⁿ    └█▀██▀▓█├█Å
+                     ⁿⁿ             ⁿ ⁿ^
 :::::::..  .,::::::    .,::      .::::::::..    :::.  .-:.     ::-.
 ;;;;'';;;; ;;;;''''    ';;;,  .,;; ;;;;'';;;;   ;;';;  ';;.   ;;;;'
- [[[,/[[['  [[cccc       '[[,,[['   [[[,/[[['  ,[[ '[[,  '[[,[[['  
- $$$$$$c    $$""""        Y$$$Pcccc $$$$$$c   c$$$cc$$$c   c$$"    
- 888b "88bo,888oo,__    oP"''"Yo,   888b "88bo,888   888,,8P"'     
- MMMM   "W" """"YUMMM,m"       "Mm, MMMM   "W" YMM   ""'mM"        
+ [[[,/[[['  [[cccc       '[[,,[['   [[[,/[[['  ,[[ '[[,  '[[,[[['
+ $$$$$$c    $$""""        Y$$$Pcccc $$$$$$c   c$$$cc$$$c   c$$"
+ 888b "88bo,888oo,__    oP"''"Yo,   888b "88bo,888   888,,8P"'
+ MMMM   "W" """"YUMMM,m"       "Mm, MMMM   "W" YMM   ""'mM"
 `

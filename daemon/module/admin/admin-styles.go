@@ -1,6 +1,6 @@
 package admin
 
-const StyleMain = `
+const styleMain = `
 #rexray-banner-logo-div {
     height: 250px;
     display: inline-block;

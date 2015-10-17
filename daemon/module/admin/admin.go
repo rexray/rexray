@@ -11,48 +11,50 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/emccode/rexray/config"
+	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/daemon/module"
 	"github.com/emccode/rexray/util"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
-const MOD_PORT = 7979
-const MOD_NAME = "AdminModule"
-const MOD_DESC = "The REX-Ray admin module"
+const (
+	modPort        = 7979
+	modName        = "AdminModule"
+	modDescription = "The REX-Ray admin module"
+)
 
-type Module struct {
+type mod struct {
 	id   int32
 	name string
 	addr string
 	desc string
 }
 
-type JsonError struct {
-	msg string `json:"message"`
-	err error  `json:"error"`
+type jsonError struct {
+	Message string `json:"message"`
+	Error   error  `json:"error"`
 }
 
 func init() {
-	addr := fmt.Sprintf("tcp://:%d", MOD_PORT)
-	mc := &module.ModuleConfig{
+	addr := fmt.Sprintf("tcp://:%d", modPort)
+	mc := &module.Config{
 		Address: addr,
 	}
-	module.RegisterModule(MOD_NAME, false, Init, []*module.ModuleConfig{mc})
+	module.RegisterModule(modName, false, newModule, []*module.Config{mc})
 }
 
-func Init(id int32, config *module.ModuleConfig) (module.Module, error) {
-	return &Module{
+func newModule(id int32, config *module.Config) (module.Module, error) {
+	return &mod{
 		id:   id,
-		name: MOD_NAME,
-		desc: MOD_DESC,
+		name: modName,
+		desc: modDescription,
 		addr: config.Address,
 	}, nil
 }
 
-func (mod *Module) Id() int32 {
-	return mod.id
+func (m *mod) ID() int32 {
+	return m.id
 }
 
 func loadAsset(path, defaultValue string) string {
@@ -90,33 +92,33 @@ func writeContentLength(w http.ResponseWriter, content string) {
 
 func indexHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	fmt.Fprint(w, loadAsset("index.html", HtmlIndex))
+	fmt.Fprint(w, loadAsset("index.html", htmlIndex))
 }
 
 func scriptsHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
-	a := loadAsset("scripts/jquery-1.11.3.min.js", ScriptJQuery)
+	a := loadAsset("scripts/jquery-1.11.3.min.js", scriptJQuery)
 	writeContentLength(w, a)
 	fmt.Fprint(w, a)
 }
 
 func stylesHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
-	a := loadAsset("styles/main.css", StyleMain)
+	a := loadAsset("styles/main.css", styleMain)
 	writeContentLength(w, a)
 	fmt.Fprint(w, a)
 }
 
 func imagesHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "image/svg+xml; charset=UTF-8")
-	a := loadAsset("images/rexray-banner-logo.svg", ImageRexRayBannerLogo)
+	a := loadAsset("images/rexray-banner-logo.svg", imageRexRayBannerLogo)
 	writeContentLength(w, a)
 	fmt.Fprint(w, a)
 }
 
 func moduleTypeHandler(w http.ResponseWriter, req *http.Request) {
-	mods := make([]*module.ModuleType, 0)
-	for m := range module.ModuleTypes() {
+	var mods []*module.Type
+	for m := range module.Types() {
 		mods = append(mods, m)
 	}
 
@@ -135,8 +137,8 @@ func moduleTypeHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func moduleInstGetHandler(w http.ResponseWriter, req *http.Request) {
-	mods := make([]*module.ModuleInstance, 0)
-	for m := range module.ModuleInstances() {
+	var mods []*module.Instance
+	for m := range module.Instances() {
 		mods = append(mods, m)
 	}
 
@@ -155,48 +157,48 @@ func moduleInstGetHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
-	typeId := req.FormValue("typeId")
+	typeID := req.FormValue("typeId")
 	address := req.FormValue("address")
-	cfgJson := req.FormValue("config")
+	cfgJSON := req.FormValue("config")
 	start := req.FormValue("start")
 
 	log.WithFields(log.Fields{
-		"typeId":  typeId,
+		"typeId":  typeID,
 		"address": address,
 		"start":   start,
-		"config":  cfgJson,
+		"config":  cfgJSON,
 	}).Debug("received module instance post request")
 
-	cfg, cfgErr := config.FromJson(cfgJson)
+	cfg, cfgErr := config.FromJSON(cfgJSON)
 	if cfgErr != nil {
-		w.Write(jsonError("Error unmarshalling config json", nil))
+		w.Write(getJSONError("Error unmarshalling config json", nil))
 		log.Printf("Error unmarshalling config json\n")
 		return
 	}
 
-	modConfig := &module.ModuleConfig{
+	modConfig := &module.Config{
 		Address: address,
 		Config:  cfg,
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	if typeId == "" || address == "" {
-		w.Write(jsonError("Fields typeId and address are required", nil))
+	if typeID == "" || address == "" {
+		w.Write(getJSONError("Fields typeId and address are required", nil))
 		log.Printf("Fields typeId and address are required\n")
 		return
 	}
 
-	typeIdInt, typeIdIntErr := strconv.ParseInt(typeId, 10, 32)
-	if typeIdIntErr != nil {
-		w.Write(jsonError("Error parsing typeId", typeIdIntErr))
-		log.Printf("Error parsing typeId ERR: %v\n", typeIdIntErr)
+	typeIDInt, typeIDIntErr := strconv.ParseInt(typeID, 10, 32)
+	if typeIDIntErr != nil {
+		w.Write(getJSONError("Error parsing typeId", typeIDIntErr))
+		log.Printf("Error parsing typeId ERR: %v\n", typeIDIntErr)
 		return
 	}
 
-	typeIdInt32 := int32(typeIdInt)
+	typeIDInt32 := int32(typeIDInt)
 
-	modInst, initErr := module.InitializeModule(typeIdInt32, modConfig)
+	modInst, initErr := module.InitializeModule(typeIDInt32, modConfig)
 	if initErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("Error initializing module ERR: %v\n", initErr)
@@ -205,7 +207,7 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 
 	jsonBuf, jsonBufErr := json.MarshalIndent(modInst, "", "  ")
 	if jsonBufErr != nil {
-		w.Write(jsonError("Error marshalling object to json", jsonBufErr))
+		w.Write(getJSONError("Error marshalling object to json", jsonBufErr))
 		log.Printf("Error marshalling object to json ERR: %v\n", jsonBufErr)
 		return
 	}
@@ -216,22 +218,21 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if startBool {
-		startErr := module.StartModule(modInst.Id)
+		startErr := module.StartModule(modInst.ID)
 		if startErr != nil {
-			w.Write(jsonError("Error starting module", startErr))
+			w.Write(getJSONError("Error starting module", startErr))
 			log.Printf("Error starting module ERR: %v\n", startErr)
 			return
-		} else {
-
-			jsonBufErr = nil
-			jsonBuf, jsonBufErr = json.MarshalIndent(modInst, "", "  ")
-			if jsonBufErr != nil {
-				w.Write(jsonError("Error marshalling object to json", jsonBufErr))
-				log.Printf("Error marshalling object to json ERR: %v\n", jsonBufErr)
-				return
-			}
-			w.Write(jsonBuf)
 		}
+
+		jsonBufErr = nil
+		jsonBuf, jsonBufErr = json.MarshalIndent(modInst, "", "  ")
+		if jsonBufErr != nil {
+			w.Write(getJSONError("Error marshalling object to json", jsonBufErr))
+			log.Printf("Error marshalling object to json ERR: %v\n", jsonBufErr)
+			return
+		}
+		w.Write(jsonBuf)
 	} else {
 		w.Write(jsonBuf)
 	}
@@ -255,7 +256,7 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 	if id == "" {
-		w.Write(jsonError("The URL should include the module instance ID", nil))
+		w.Write(getJSONError("The URL should include the module instance ID", nil))
 		log.Printf("The URL should include the module instance ID\n")
 		return
 	}
@@ -263,7 +264,7 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 	idInt, idIntErr := strconv.ParseInt(id, 10, 32)
 
 	if idIntErr != nil {
-		w.Write(jsonError("Error parsing id", idIntErr))
+		w.Write(getJSONError("Error parsing id", idIntErr))
 		log.Printf("Error parsing id ERR: %v\n", idIntErr)
 		return
 	}
@@ -272,14 +273,14 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 
 	modInst, modInstErr := module.GetModuleInstance(idInt32)
 	if modInstErr != nil {
-		w.Write(jsonError("Unknown module id", modInstErr))
+		w.Write(getJSONError("Unknown module id", modInstErr))
 		log.Printf("Unknown module id ERR: %v\n", modInstErr)
 		return
 	}
 
 	jsonBuf, jsonBufErr := json.MarshalIndent(modInst, "", "  ")
 	if jsonBufErr != nil {
-		w.Write(jsonError("Error marshalling object to json", jsonBufErr))
+		w.Write(getJSONError("Error marshalling object to json", jsonBufErr))
 		log.Printf("Error marshalling object to json ERR: %v\n", jsonBufErr)
 		return
 	}
@@ -292,7 +293,7 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 	startErr := module.StartModule(idInt32)
 
 	if startErr != nil {
-		w.Write(jsonError("Error starting moudle", startErr))
+		w.Write(getJSONError("Error starting moudle", startErr))
 		log.Printf("Error starting module ERR: %v\n", startErr)
 		return
 	}
@@ -300,7 +301,7 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 	jsonBufErr = nil
 	jsonBuf, jsonBufErr = json.MarshalIndent(modInst, "", "  ")
 	if jsonBufErr != nil {
-		w.Write(jsonError("Error marshalling object to json", jsonBufErr))
+		w.Write(getJSONError("Error marshalling object to json", jsonBufErr))
 		log.Printf("Error marshalling object to json ERR: %v\n", jsonBufErr)
 		return
 	}
@@ -308,11 +309,11 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write(jsonBuf)
 }
 
-func jsonError(msg string, err error) []byte {
+func getJSONError(msg string, err error) []byte {
 	buf, marshalErr := json.MarshalIndent(
-		&JsonError{
-			msg: msg,
-			err: err,
+		&jsonError{
+			Message: msg,
+			Error:   err,
 		}, "", "  ")
 	if marshalErr != nil {
 		panic(marshalErr)
@@ -320,7 +321,7 @@ func jsonError(msg string, err error) []byte {
 	return buf
 }
 
-func (mod *Module) Start() error {
+func (m *mod) Start() error {
 	stdOut := log.StandardLogger().Writer()
 	stdErr := log.StandardLogger().Writer()
 
@@ -343,7 +344,7 @@ func (mod *Module) Start() error {
 	r.Handle("/",
 		handlers.LoggingHandler(stdOut, http.HandlerFunc(indexHandler)))
 
-	_, addr, parseAddrErr := util.ParseAddress(mod.Address())
+	_, addr, parseAddrErr := util.ParseAddress(m.Address())
 	if parseAddrErr != nil {
 		return parseAddrErr
 	}
@@ -370,18 +371,18 @@ func (mod *Module) Start() error {
 	return nil
 }
 
-func (mod *Module) Stop() error {
+func (m *mod) Stop() error {
 	return nil
 }
 
-func (mod *Module) Name() string {
-	return mod.name
+func (m *mod) Name() string {
+	return m.name
 }
 
-func (mod *Module) Description() string {
-	return mod.desc
+func (m *mod) Description() string {
+	return m.desc
 }
 
-func (mod *Module) Address() string {
-	return mod.addr
+func (m *mod) Address() string {
+	return m.addr
 }

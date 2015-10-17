@@ -28,7 +28,7 @@ func install() {
 	_, _, exeFile := util.GetThisPathParts()
 
 	if runtime.GOOS == "linux" {
-		switch GetInitSystemType() {
+		switch getInitSystemType() {
 		case SystemD:
 			installSystemD(exeFile)
 		case UpdateRcD:
@@ -133,7 +133,7 @@ func uninstall(pkgManager bool) {
 		stop()
 	}()
 
-	switch GetInitSystemType() {
+	switch getInitSystemType() {
 	case SystemD:
 		uninstallSystemD()
 	case UpdateRcD:
@@ -155,8 +155,8 @@ func uninstall(pkgManager bool) {
 	}
 }
 
-func GetInitSystemCmd() string {
-	switch GetInitSystemType() {
+func getInitSystemCmd() string {
+	switch getInitSystemType() {
 	case SystemD:
 		return "systemd"
 	case UpdateRcD:
@@ -168,7 +168,7 @@ func GetInitSystemCmd() string {
 	}
 }
 
-func GetInitSystemType() int {
+func getInitSystemType() int {
 	if util.FileExistsInPath("systemctl") {
 		return SystemD
 	}
@@ -306,7 +306,7 @@ func createUnitFile(exeFile string) {
 		util.EtcFilePath(util.EnvFileName),
 	}
 
-	tmpl, err := template.New("UnitFile").Parse(UnitFileTemplate)
+	tmpl, err := template.New("UnitFile").Parse(unitFileTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -326,7 +326,7 @@ func createUnitFile(exeFile string) {
 	f.WriteString(text)
 }
 
-const UnitFileTemplate = `[Unit]
+const unitFileTemplate = `[Unit]
 Description=rexray
 Before=docker.service
 
@@ -348,7 +348,7 @@ func createInitFile(exeFile string) {
 		exeFile,
 	}
 
-	tmpl, err := template.New("InitScript").Parse(InitScriptTemplate)
+	tmpl, err := template.New("InitScript").Parse(initScriptTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -374,7 +374,7 @@ func createInitFile(exeFile string) {
 	os.Chmod(util.InitFilePath, 0755)
 }
 
-const InitScriptTemplate = `### BEGIN INIT INFO
+const initScriptTemplate = `### BEGIN INIT INFO
 # Provides:          rexray
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog

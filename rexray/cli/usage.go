@@ -28,7 +28,7 @@ func initUsageTemplates() {
 		ut = string(dat)
 	} else {
 		log.WithField("source", "UsageTemplate").Debug("loaded usage template")
-		ut = UsageTemplate
+		ut = usageTemplate
 	}
 
 	RexrayCmd.SetUsageTemplate(ut)
@@ -87,7 +87,7 @@ func globalFlags(cmd *cobra.Command) *flag.FlagSet {
 func sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
 	fs := &flag.FlagSet{}
 	flags.VisitAll(func(f *flag.Flag) {
-		if c.AdditionalFlags.Lookup(f.Name) == nil {
+		if r.Config.AdditionalFlags.Lookup(f.Name) == nil {
 			fs.AddFlag(f)
 		}
 	})
@@ -99,7 +99,7 @@ func hasFlags(flags *flag.FlagSet) bool {
 }
 
 func additionalFlags() *flag.FlagSet {
-	return c.AdditionalFlags
+	return r.Config.AdditionalFlags
 }
 
 func isHelpFlag(cmd *cobra.Command) bool {
@@ -136,7 +136,7 @@ func rtrim(text string) string {
 	return strings.TrimRight(text, " \n")
 }
 
-const UsageTemplate = `{{$cmd := .}}{{with or .Long .Short }}{{. | trim}}{{end}}
+const usageTemplate = `{{$cmd := .}}{{with or .Long .Short }}{{. | trim}}{{end}}
 
 Usage: {{if .Runnable}}
   {{.UseLine}}{{if .HasFlags}} [flags]{{end}}{{end}}{{if .HasSubCommands}}

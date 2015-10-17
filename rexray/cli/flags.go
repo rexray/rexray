@@ -27,8 +27,8 @@ func initGlobalFlags() {
 	RexrayCmd.PersistentFlags().BoolP(
 		"verbose", "v", false, "Print verbose help information")
 
-	RexrayCmd.PersistentFlags().AddFlagSet(c.GlobalFlags)
-	RexrayCmd.PersistentFlags().AddFlagSet(c.AdditionalFlags)
+	RexrayCmd.PersistentFlags().AddFlagSet(r.Config.GlobalFlags)
+	RexrayCmd.PersistentFlags().AddFlagSet(r.Config.AdditionalFlags)
 }
 
 func initServiceFlags() {
@@ -53,7 +53,7 @@ func initVolumeFlags() {
 	volumeCreateCmd.Flags().StringVar(&volumeType, "volumetype", "", "volumetype")
 	volumeCreateCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	volumeCreateCmd.Flags().StringVar(&snapshotID, "snapshotid", "", "snapshotid")
-	volumeCreateCmd.Flags().Int64Var(&IOPS, "iops", 0, "IOPS")
+	volumeCreateCmd.Flags().Int64Var(&iops, "iops", 0, "IOPS")
 	volumeCreateCmd.Flags().Int64Var(&size, "size", 0, "size")
 	volumeCreateCmd.Flags().StringVar(&availabilityZone, "availabilityzone", "", "availabilityzone")
 	volumeRemoveCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
@@ -104,7 +104,7 @@ func initSnapshotFlags() {
 }
 
 func initModuleFlags() {
-	moduleInstancesCreateCmd.Flags().Int32VarP(&moduleTypeId, "id",
+	moduleInstancesCreateCmd.Flags().Int32VarP(&moduleTypeID, "id",
 		"i", -1, "The ID of the module type to instance")
 
 	moduleInstancesCreateCmd.Flags().StringVarP(&moduleInstanceAddress,
@@ -120,6 +120,6 @@ func initModuleFlags() {
 		"A comma-seperated string of key=value pairs used by some module "+
 			"types for custom configuraitons.")
 
-	moduleInstancesStartCmd.Flags().Int32VarP(&moduleInstanceId, "id",
+	moduleInstancesStartCmd.Flags().Int32VarP(&moduleInstanceID, "id",
 		"i", -1, "The ID of the module instance to start")
 }

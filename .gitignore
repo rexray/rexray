@@ -1,16 +1,6 @@
-var/
-etc/
-.bintray-stable-filtered.json
-.bintray-stupid-filtered.json
-.bintray-staged-filtered.json
-.bin/
-.deploy/
+.build/*/
+.build/*-filtered.json
 vendor/
-.build/
-.rpmbuild/
-example
-release/*
-golang-crosscompile/
 .project
 
 # Created by https://www.gitignore.io
@@ -279,7 +269,7 @@ publish/
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml
-# TODO: Comment the next line if you want to checkin your web deploy settings 
+# TODO: Comment the next line if you want to checkin your web deploy settings
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
 *.publishproj

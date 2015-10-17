@@ -9,7 +9,7 @@ addons:
     - rpm
 
 before_script:
-  - source install_build_deps.sh
+  - source .build/dependencies.sh
 
 script:
   - make build-all test rpm-all deb-all deploy-prep
@@ -17,12 +17,12 @@ script:
 notifications:
   - slack: $SLACK_BUILDS
 
-before_deploy: 
-  - ./.bintray-decapitate.sh
+before_deploy:
+  - .build/bintray-decapitate.sh
 
 deploy:
   - provider: bintray
-    file: .bintray-stupid-filtered.json
+    file: .build/bintray-stupid-filtered.json
     user: $BINTRAY_USER
     key: $BINTRAY_KEY
     skip_cleanup: true
@@ -31,7 +31,7 @@ deploy:
       condition: $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'emccode/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
   - provider: bintray
-    file: .bintray-staged-filtered.json
+    file: .build/bintray-staged-filtered.json
     user: $BINTRAY_USER
     key: $BINTRAY_KEY
     skip_cleanup: true
@@ -40,7 +40,7 @@ deploy:
       condition: $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'emccode/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: bintray
-    file: .bintray-stable-filtered.json
+    file: .build/bintray-stable-filtered.json
     user: $BINTRAY_USER
     key: $BINTRAY_KEY
     skip_cleanup: true

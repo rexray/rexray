@@ -2,7 +2,6 @@ package remotevolumedriver
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -14,23 +13,24 @@ import (
 
 	"github.com/emccode/rexray/daemon/module"
 
-	"github.com/emccode/rexray/config"
-	osm "github.com/emccode/rexray/os"
-	"github.com/emccode/rexray/storage"
+	"github.com/emccode/rexray/core"
+	"github.com/emccode/rexray/core/config"
+	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/util"
-	"github.com/emccode/rexray/volume"
 )
 
-const MOD_ADDR = "unix:///run/docker/plugins/rexray-remote.sock"
-const MOD_PORT = 7981
-const MOD_NAME = "DockerRemoteVolumeDriverModule"
-const MOD_DESC = "The REX-Ray Docker RemoteVolumeDriver module"
+const (
+	modAddress     = "unix:///run/docker/plugins/rexray-remote.sock"
+	modPort        = 7981
+	modName        = "DockerRemoteVolumeDriverModule"
+	modDescription = "The REX-Ray Docker RemoteVolumeDriver module"
 
-const MOD_OPTS_STORAGE_ADAPTER = "storageAdapter"
+	modOptsStorageAdapter = "storageAdapter"
+)
 
-type Module struct {
+type mod struct {
 	id   int32
-	vdm  *volume.VolumeDriverManager
+	r    *core.RexRay
 	name string
 	addr string
 	desc string
@@ -38,9 +38,9 @@ type Module struct {
 }
 
 func init() {
-	//tcpAddr := fmt.Sprintf("tcp://:%d", MOD_PORT)
+	//tcpAddr := fmt.Sprintf("tcp://:%d", ModPort)
 
-	_, fsPath, parseAddrErr := util.ParseAddress(MOD_ADDR)
+	_, fsPath, parseAddrErr := util.ParseAddress(modAddress)
 	if parseAddrErr != nil {
 		panic(parseAddrErr)
 	}
@@ -48,78 +48,59 @@ func init() {
 	fsPathDir := filepath.Dir(fsPath)
 	os.MkdirAll(fsPathDir, 0755)
 
-	mc := &module.ModuleConfig{
-		Address: MOD_ADDR,
+	mc := &module.Config{
+		Address: modAddress,
 		Config:  config.New(),
 	}
 
-	module.RegisterModule(MOD_NAME, true, Init, []*module.ModuleConfig{mc})
+	module.RegisterModule(modName, true, newModule, []*module.Config{mc})
 }
 
 func optVal(opts map[string]string, key string) string {
 	if opts == nil {
 		return ""
-	} else {
-		return opts[key]
 	}
+	return opts[key]
 }
 
 const driverName = "dockerremotevolumedriver"
 
-func (mod *Module) Id() int32 {
-	return mod.id
+func (m *mod) ID() int32 {
+	return m.id
 }
 
-func Init(id int32, cfg *module.ModuleConfig) (module.Module, error) {
+func newModule(id int32, cfg *module.Config) (module.Module, error) {
+	var err error
+	var r *core.RexRay
 
-	osdm, osdmErr := osm.NewOSDriverManager(cfg.Config)
-	if osdmErr != nil {
-		return nil, osdmErr
-	}
-	if len(osdm.Drivers) == 0 {
-		return nil, errors.New("no os drivers initialized")
+	if r, err = core.New(cfg.Config); err != nil {
+		return nil, err
 	}
 
-	sdm, sdmErr := storage.NewStorageDriverManager(cfg.Config)
-	if sdmErr != nil {
-		return nil, sdmErr
-	}
-	if len(sdm.Drivers) == 0 {
-		return nil, errors.New("no storage drivers initialized")
-	}
-
-	vdm, vdmErr := volume.NewVolumeDriverManager(cfg.Config, osdm, sdm)
-	if vdmErr != nil {
-		return nil, vdmErr
-	}
-	if len(vdm.Drivers) == 0 {
-		return nil, errors.New("no volume drivers initialized")
-	}
-
-	return &Module{
+	return &mod{
 		id:   id,
-		vdm:  vdm,
-		name: MOD_NAME,
-		desc: MOD_DESC,
+		r:    r,
+		name: modName,
+		desc: modDescription,
 		addr: cfg.Address,
 	}, nil
 }
 
 var (
-	ErrMissingHost      = errors.New("Missing host parameter")
-	ErrBadHostSpecified = errors.New("Bad host specified, ie. unix:///run/docker/plugins/rexray.sock or tcp://127.0.0.1:8080")
-	ErrBadProtocol      = errors.New("Bad protocol specified with host, ie. unix:// or tcp://")
+	errMissingHost      = errors.New("Missing host parameter")
+	errBadHostSpecified = errors.New("Bad host specified, ie. unix:///run/docker/plugins/rexray.sock or tcp://127.0.0.1:8080")
+	errBadProtocol      = errors.New("Bad protocol specified with host, ie. unix:// or tcp://")
 )
 
 type pluginRequest struct {
-	Name       string            `json:"Name,omitempty"`
-	Opts       volume.VolumeOpts `json:"Opts,omitempty"`
-	InstanceID string            `json:"Instanceid,omitempty"`
+	Name       string          `json:"Name,omitempty"`
+	Opts       core.VolumeOpts `json:"Opts,omitempty"`
+	InstanceID string          `json:"Instanceid,omitempty"`
 }
 
-func (mod *Module) Start() error {
+func (m *mod) Start() error {
 
-	proto, addr, parseAddrErr := util.ParseAddress(mod.Address())
+	proto, addr, parseAddrErr := util.ParseAddress(m.Address())
 	if parseAddrErr != nil {
 		return parseAddrErr
 	}
@@ -127,12 +108,20 @@ func (mod *Module) Start() error {
 	const validProtoPatt = "(?i)^unix|tcp$"
 	isProtoValid, matchProtoErr := regexp.MatchString(validProtoPatt, proto)
 	if matchProtoErr != nil {
-		return errors.New(fmt.Sprintf(
-			"Error matching protocol %s with pattern '%s' ERR: %v",
-			proto, validProtoPatt, matchProtoErr))
+		return errors.WithFieldsE(errors.Fields{
+			"protocol":       proto,
+			"validProtoPatt": validProtoPatt,
+		}, "error matching protocol", matchProtoErr)
 	}
 	if !isProtoValid {
-		return errors.New(fmt.Sprintf("Invalid protocol %s", proto))
+		return errors.WithField("protocol", proto, "invalid protocol")
+	}
+
+	if err := m.r.InitDrivers(); err != nil {
+		return errors.WithFieldsE(errors.Fields{
+			"m":   m,
+			"m.r": m.r,
+		}, "error initializing drivers", err)
 	}
 
 	if err := os.MkdirAll("/etc/docker/plugins", 0755); err != nil {
@@ -142,7 +131,7 @@ func (mod *Module) Start() error {
 	var specPath string
 	var startFunc func() error
 
-	mux := mod.buildMux()
+	mux := m.buildMux()
 
 	if proto == "unix" {
 		sockFile := addr
@@ -154,7 +143,7 @@ func (mod *Module) Start() error {
 
 		_ = os.RemoveAll(sockFile)
 
-		specPath = mod.Address()
+		specPath = m.Address()
 		startFunc = func() error {
 			l, lErr := net.Listen("unix", sockFile)
 			if lErr != nil {
@@ -195,23 +184,23 @@ func (mod *Module) Start() error {
 	return nil
 }
 
-func (mod *Module) Stop() error {
+func (m *mod) Stop() error {
 	return nil
 }
 
-func (mod *Module) Name() string {
-	return mod.name
+func (m *mod) Name() string {
+	return m.name
 }
 
-func (mod *Module) Description() string {
-	return mod.desc
+func (m *mod) Description() string {
+	return m.desc
 }
 
-func (mod *Module) Address() string {
-	return mod.addr
+func (m *mod) Address() string {
+	return m.addr
 }
 
-func (mod *Module) buildMux() *http.ServeMux {
+func (m *mod) buildMux() *http.ServeMux {
 
 	mux := http.NewServeMux()
 
@@ -226,7 +215,7 @@ func (mod *Module) buildMux() *http.ServeMux {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
 		}
-		err := mod.vdm.Create(pr.Name, pr.Opts)
+		err := m.r.Volume.Create(pr.Name, pr.Opts)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
@@ -243,7 +232,7 @@ func (mod *Module) buildMux() *http.ServeMux {
 			return
 		}
 
-		err := mod.vdm.Remove(pr.Name)
+		err := m.r.Volume.Remove(pr.Name)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
@@ -265,7 +254,7 @@ func (mod *Module) buildMux() *http.ServeMux {
 			return
 		}
 
-		networkName, err := mod.vdm.NetworkName(pr.Name, pr.InstanceID)
+		networkName, err := m.r.Volume.NetworkName(pr.Name, pr.InstanceID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
@@ -287,7 +276,7 @@ func (mod *Module) buildMux() *http.ServeMux {
 			return
 		}
 
-		networkName, err := mod.vdm.Attach(pr.Name, pr.InstanceID)
+		networkName, err := m.r.Volume.Attach(pr.Name, pr.InstanceID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
@@ -309,7 +298,7 @@ func (mod *Module) buildMux() *http.ServeMux {
 			return
 		}
 
-		err := mod.vdm.Detach(pr.Name, pr.InstanceID)
+		err := m.r.Volume.Detach(pr.Name, pr.InstanceID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return

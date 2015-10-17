@@ -9,4 +9,5 @@ import "syscall"
 
 const ioctlReadTermios = syscall.TCGETS
 
+// Termios is the Terminal Input/Output structure
 type Termios syscall.Termios

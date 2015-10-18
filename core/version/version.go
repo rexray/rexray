@@ -26,9 +26,14 @@ var (
 	buildDate time.Time
 )
 
-func init() {
+// EpochToRfc1123 returns the Epoch value as an RFC-1123 formatted date/time
+// string.
+func EpochToRfc1123() string {
+	if !buildDate.IsZero() {
+		return buildDate.Format(time.RFC1123)
+	}
 	if Epoch == "" {
-		return
+		return ""
 	}
 	var err error
 	epoch, err = strconv.ParseInt(Epoch, 10, 64)
@@ -36,13 +41,5 @@ func init() {
 		panic(err)
 	}
 	buildDate = time.Unix(epoch, 0)
-}
-
-// EpochToRfc1123 returns the Epoch value as an RFC-1123 formatted date/time
-// string.
-func EpochToRfc1123() string {
-	if Epoch == "" {
-		return ""
-	}
 	return buildDate.Format(time.RFC1123)
 }

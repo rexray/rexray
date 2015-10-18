@@ -101,14 +101,10 @@ func HomeDir() string {
 	if homeDir != "" {
 		return homeDir
 	}
-
-	hd := "$HOME"
-	curUser, curUserErr := user.Current()
-	if curUserErr == nil {
-		hd = curUser.HomeDir
+	if user, err := user.Current(); err == nil {
+		homeDir = user.HomeDir
 	}
-
-	return hd
+	return homeDir
 }
 
 // StringInSlice returns a flag indicating whether or not a provided string
@@ -262,9 +258,7 @@ func ReadFileToString(path string) (string, error) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	if !scanner.Scan() {
-		return "", errors.WithField("path", path, "error reading file")
-	}
+	scanner.Scan()
 
 	return scanner.Text(), nil
 }
@@ -319,10 +313,7 @@ func LineReader(filePath string) <-chan string {
 
 	c := make(chan string)
 	go func() {
-		f, err := os.Open(filePath)
-		if err != nil {
-			panic(err)
-		}
+		f, _ := os.Open(filePath)
 		defer f.Close()
 
 		s := bufio.NewScanner(f)
@@ -365,10 +356,7 @@ func GetPathParts(path string) (dirPath, fileName, absPath string) {
 // GetThisPathParts returns the same information as GetPathParts for the
 // current executable.
 func GetThisPathParts() (dirPath, fileName, absPath string) {
-	exeFile, err := osext.Executable()
-	if err != nil {
-		panic(err)
-	}
+	exeFile, _ := osext.Executable()
 	return GetPathParts(exeFile)
 }
 
@@ -392,20 +380,18 @@ func RandomString(length int) string {
 }
 
 // GetLocalIP returns the non loopback local IP of the host
-func GetLocalIP() string {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return ""
-	}
+func GetLocalIP() (ip string) {
+	addrs, _ := net.InterfaceAddrs()
 	for _, address := range addrs {
 		// check the address type and if it is not a loopback the display it
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String()
+				ip = ipnet.IP.String()
+				break
 			}
 		}
 	}
-	return ""
+	return
 }
 
 // ParseAddress parses a standard golang network address and returns the
@@ -421,11 +407,7 @@ func ParseAddress(addr string) (proto string, path string, err error) {
 // Trim removes all leading and trailing whitespace, including tab, newline,
 // and carriage return characters.
 func Trim(text string) string {
-	m := trimRx.FindStringSubmatch(text)
-	if m == nil {
-		return text
-	}
-	return m[1]
+	return trimRx.FindStringSubmatch(text)[1]
 }
 
 // PrintVersion prints the current version information to the provided writer.

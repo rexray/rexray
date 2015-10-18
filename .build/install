@@ -9,24 +9,24 @@
 #
 #  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
 #
-# however, this script will also allow users to install specific 
+# however, this script will also allow users to install specific
 # versions of REX-Ray and even supports the discovery of those versions.
-# for example, to list the available REX-Ray packages use the "list" 
+# for example, to list the available REX-Ray packages use the "list"
 # command like so:
 #
 #  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s list -
 #
-# this will emit the following curl commands to demonstrate how to 
+# this will emit the following curl commands to demonstrate how to
 # install one or more of the available packages, "unstable", "staged",
-# and "stable". 
+# and "stable".
 #
 #    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s unstable -
 #    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s staged -
 #    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable -
 #
-# again, the "list" command outputs the curl commands to perform 
+# again, the "list" command outputs the curl commands to perform
 # installations, not how to traverse deeper into the package structure.
-# however, it's not hard to do that traversal. for example, to list the 
+# however, it's not hard to do that traversal. for example, to list the
 # contents of the "stable" package we'd execute:
 #
 #  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s list stable -
@@ -36,8 +36,8 @@
 #    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable 0.2.0 -
 #    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable latest -
 #
-# as you can see, to traverse the structure, we simply insert the 
-# command "list" as the first argument after the "-s" flag. 
+# as you can see, to traverse the structure, we simply insert the
+# command "list" as the first argument after the "-s" flag.
 ##
 
 PROD=REX-Ray
@@ -57,11 +57,11 @@ sudo() {
 }
 
 is_coreos() {
-    grep DISTRIB_ID=CoreOS /etc/lsb-release
+    grep DISTRIB_ID=CoreOS /etc/lsb-release 2> /dev/null
 }
 
 list() {
-    if [ -z "$PKG" ]; then 
+    if [ -z "$PKG" ]; then
         echo "$SCRIPT_CMD list unstable -"
         echo "$SCRIPT_CMD list staged -"
         echo "$SCRIPT_CMD list stable -"
@@ -76,7 +76,7 @@ list() {
 }
 
 install() {
-    
+
     URL=$URL/$PKG/$VERSION
     OS=$(uname -s)
     ARCH=$(uname -m)
@@ -87,10 +87,10 @@ install() {
 
     # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
     if [ -e "/etc/redhat-release" -o -e "/etc/redhat-version" ]; then
-        
+
         #echo "installing rpm"
         sudo rpm -ih --quiet $URL/$BIN_NAME-latest-$ARCH.rpm > /dev/null
-        
+
     elif [ "$ARCH" = "x86_64" -a -z "$IS_COREOS" ] && \
          [ -e "/etc/debian-release" -o \
            -e "/etc/debian-version" -o \
@@ -101,7 +101,7 @@ install() {
             sudo dpkg -i $BIN_NAME-latest-$ARCH.deb && \
             rm -f $BIN_NAME-latest-$ARCH.deb
 
-    else 
+    else
         if [ -n "$IS_COREOS" ]; then
             BIN_DIR=/opt/bin
             BIN_FILE=$BIN_DIR/$BIN_NAME
@@ -119,7 +119,7 @@ install() {
         fi
 
         FILE_URL=$URL/$FILE_NAME
-      
+
         sudo mkdir -p $BIN_DIR && \
           curl -sSLO $FILE_URL && \
           sudo tar xzf $FILE_NAME -C $BIN_DIR && \

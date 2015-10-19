@@ -18,12 +18,20 @@ const (
 	mockOSDriverName   = "mockOSDriver"
 	mockVolDriverName  = "mockVolumeDriver"
 	mockStorDriverName = "mockStorageDriver"
+
+	badMockOSDriverName   = "badMockOSDriver"
+	badMockVolDriverName  = "badMockVolumeDriver"
+	badMockStorDriverName = "badMockStorageDriver"
 )
 
 func TestMain(m *testing.M) {
 	core.RegisterDriver(mockOSDriverName, newOSDriver)
 	core.RegisterDriver(mockVolDriverName, newVolDriver)
 	core.RegisterDriver(mockStorDriverName, newStorDriver)
+
+	core.RegisterDriver(badMockOSDriverName, newBadOSDriver)
+	core.RegisterDriver(badMockVolDriverName, newBadVolDriver)
+	core.RegisterDriver(badMockStorDriverName, newBadStorDriver)
 	os.Exit(m.Run())
 }
 
@@ -32,10 +40,7 @@ func getRexRay() (*core.RexRay, error) {
 	c.OSDrivers = []string{mockOSDriverName}
 	c.VolumeDrivers = []string{mockVolDriverName}
 	c.StorageDrivers = []string{mockStorDriverName}
-	r, err := core.New(c)
-	if err != nil {
-		return nil, err
-	}
+	r := core.New(c)
 
 	if err := r.InitDrivers(); err != nil {
 		return nil, err
@@ -49,19 +54,27 @@ func getRexRayNoDrivers() (*core.RexRay, error) {
 	c.OSDrivers = []string{""}
 	c.VolumeDrivers = []string{""}
 	c.StorageDrivers = []string{""}
-	r, err := core.New(c)
-	if err != nil {
-		return nil, err
-	}
-
+	r := core.New(c)
 	r.InitDrivers()
-
 	return r, nil
 }
 
 func TestNewWithConfig(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertDriverNames(t, r)
+}
+
+func TestNewWithNilConfig(t *testing.T) {
+	r := core.New(nil)
+	r.Config.OSDrivers = []string{mockOSDriverName}
+	r.Config.VolumeDrivers = []string{mockVolDriverName}
+	r.Config.StorageDrivers = []string{mockStorDriverName}
+
+	if err := r.InitDrivers(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -90,10 +103,7 @@ func TestNewNoOSDrivers(t *testing.T) {
 	c.OSDrivers = []string{}
 	c.VolumeDrivers = []string{mockVolDriverName}
 	c.StorageDrivers = []string{mockStorDriverName}
-	r, err := core.New(c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoOSDrivers {
 		t.Fatal(err)
 	}
@@ -104,10 +114,7 @@ func TestNewNoVolumeDrivers(t *testing.T) {
 	c.OSDrivers = []string{mockOSDriverName}
 	c.VolumeDrivers = []string{}
 	c.StorageDrivers = []string{mockStorDriverName}
-	r, err := core.New(c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoVolumeDrivers {
 		t.Fatal(err)
 	}
@@ -118,10 +125,7 @@ func TestNewNoStorageDrivers(t *testing.T) {
 	c.OSDrivers = []string{mockOSDriverName}
 	c.VolumeDrivers = []string{mockVolDriverName}
 	c.StorageDrivers = []string{}
-	r, err := core.New(c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoStorageDrivers {
 		t.Fatal(err)
 	}
@@ -136,11 +140,9 @@ func TestNewWithEnv(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if err := r.InitDrivers(); err != nil {
 		t.Fatal(err)
 	}
-
 	assertDriverNames(t, r)
 }
 
@@ -169,6 +171,12 @@ func TestNewWithConfigFile(t *testing.T) {
 	assertDriverNames(t, r)
 }
 
+func TestNewWithBadConfigFilePath(t *testing.T) {
+	if _, err := rexray.NewWithConfigFile(util.RandomString(10)); err == nil {
+		t.Fatal("expected error from bad config file path")
+	}
+}
+
 func TestNewWithConfigReader(t *testing.T) {
 	r, err := rexray.NewWithConfigReader(bytes.NewReader(yamlConfig1))
 
@@ -183,11 +191,20 @@ func TestNewWithConfigReader(t *testing.T) {
 	assertDriverNames(t, r)
 }
 
+func TestNewWithBadConfigReader(t *testing.T) {
+	if _, err := rexray.NewWithConfigReader(nil); err == nil {
+		t.Fatal("expected error from bad config reader")
+	}
+}
+
 func TestDriverNames(t *testing.T) {
 	allDriverNames := []string{
 		strings.ToLower(mockOSDriverName),
 		strings.ToLower(mockVolDriverName),
 		strings.ToLower(mockStorDriverName),
+		strings.ToLower(badMockOSDriverName),
+		strings.ToLower(badMockVolDriverName),
+		strings.ToLower(badMockStorDriverName),
 		"linux",
 		"docker",
 		"ec2",
@@ -199,6 +216,48 @@ func TestDriverNames(t *testing.T) {
 
 	var regDriverNames []string
 	for dn := range core.DriverNames() {
+		regDriverNames = append(regDriverNames, strings.ToLower(dn))
+	}
+
+	for _, n := range allDriverNames {
+		if !util.StringInSlice(n, regDriverNames) {
+			t.Fail()
+		}
+	}
+
+	for _, n := range regDriverNames {
+		if !util.StringInSlice(n, allDriverNames) {
+			t.Fail()
+		}
+	}
+}
+
+func TestRexRayDriverNames(t *testing.T) {
+
+	var err error
+	var r *core.RexRay
+	if r, err = getRexRay(); err != nil {
+		panic(err)
+	}
+
+	allDriverNames := []string{
+		strings.ToLower(mockOSDriverName),
+		strings.ToLower(mockVolDriverName),
+		strings.ToLower(mockStorDriverName),
+		strings.ToLower(badMockOSDriverName),
+		strings.ToLower(badMockVolDriverName),
+		strings.ToLower(badMockStorDriverName),
+		"linux",
+		"docker",
+		"ec2",
+		"openstack",
+		"rackspace",
+		"scaleio",
+		"xtremio",
+	}
+
+	var regDriverNames []string
+	for dn := range r.DriverNames() {
 		regDriverNames = append(regDriverNames, strings.ToLower(dn))
 	}
 

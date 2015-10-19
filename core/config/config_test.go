@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/emccode/rexray/util"
@@ -47,6 +48,38 @@ func newPrefixDir(testName string, t *testing.T) string {
 	os.MkdirAll(tmpDir, 0755)
 	tmpPrefixDirs = append(tmpPrefixDirs, tmpDir)
 	return tmpDir
+}
+
+func TestAssertConfigDefaults(t *testing.T) {
+	newPrefixDir("TestAssertConfigDefaults", t)
+
+	evs := os.Environ()
+	for _, v := range evs {
+		k := strings.Split(v, "=")[0]
+		os.Setenv(k, "")
+	}
+
+	c := New()
+
+	if c.Host != "tcp://:7979" {
+		t.Fatalf("c.Host != tcp://:7979, == %s", c.Host)
+	}
+
+	if c.LogLevel != "info" {
+		t.Fatalf("c.LogLevel != info, == %d", c.LogLevel)
+	}
+
+	if len(c.OSDrivers) != 1 && c.OSDrivers[0] != "linux" {
+		t.Fatalf("c.OSDrivers != []string{\"linux\"}, == %v", c.OSDrivers)
+	}
+
+	if len(c.VolumeDrivers) != 1 && c.VolumeDrivers[0] != "docker" {
+		t.Fatalf("c.VolumeDrivers != []string{\"docker\"}, == %v", c.VolumeDrivers)
+	}
+
+	if c.DockerSize != 16 {
+		t.Fatalf("c.DockerSize != 16, == %d", c.DockerSize)
+	}
 }
 
 func TestCopy(t *testing.T) {

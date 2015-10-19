@@ -310,7 +310,7 @@ func TestGetLocalIP(t *testing.T) {
 	t.Logf("ip=%s", ip)
 }
 
-func TestParseAddress(t *testing.T) {
+func TestParseIpAddress(t *testing.T) {
 	var err error
 	var addr, proto, path string
 
@@ -351,6 +351,11 @@ func TestParseAddress(t *testing.T) {
 	if path != "127.0.0.1:443/secure" {
 		t.Fatalf("path != 127.0.0.1:443/secure == %s", path)
 	}
+}
+
+func TestParseUdpAddress(t *testing.T) {
+	var err error
+	var addr, proto, path string
 
 	addr = "udp://127.0.0.1:443/secure"
 	if proto, path, err = ParseAddress(addr); err != nil {
@@ -362,6 +367,11 @@ func TestParseAddress(t *testing.T) {
 	if path != "127.0.0.1:443/secure" {
 		t.Fatalf("path != 127.0.0.1:443/secure == %s", path)
 	}
+}
+
+func TestParseUnixAddress(t *testing.T) {
+	var err error
+	var addr, proto, path string
 
 	addr = "unix:///var/run/rexray/rexray.sock"
 	if proto, path, err = ParseAddress(addr); err != nil {

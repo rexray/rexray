@@ -209,6 +209,9 @@ type sdm struct {
 }
 
 func (r *sdm) Init(rexray *RexRay) error {
+	if len(r.drivers) == 0 {
+		return errors.ErrNoStorageDrivers
+	}
 	return nil
 }
 
@@ -255,6 +258,10 @@ func (r *sdm) GetVolumeMapping() ([]*BlockDevice, error) {
 		}
 	}
 
+	if len(allBlockDevices) == 0 {
+		return nil, errors.ErrNoStorageDetected
+	}
+
 	return allBlockDevices, nil
 
 }
@@ -299,6 +306,9 @@ func (r *sdm) GetInstances() ([]*Instance, error) {
 		case e := <-cE:
 			return nil, e
 		case <-done:
+			if len(allInstances) == 0 {
+				return nil, errors.ErrNoStorageDetected
+			}
 			return allInstances, nil
 		}
 	}
@@ -308,21 +318,21 @@ func (r *sdm) GetInstance() (*Instance, error) {
 	for _, d := range r.drivers {
 		return d.GetInstance()
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) GetVolume(volumeID, volumeName string) ([]*Volume, error) {
 	for _, d := range r.drivers {
 		return d.GetVolume(volumeID, volumeName)
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) GetSnapshot(volumeID, snapshotID, snapshotName string) ([]*Snapshot, error) {
 	for _, d := range r.drivers {
 		return d.GetSnapshot(volumeID, snapshotID, snapshotName)
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) CreateSnapshot(runAsync bool,
@@ -330,14 +340,14 @@ func (r *sdm) CreateSnapshot(runAsync bool,
 	for _, d := range r.drivers {
 		return d.CreateSnapshot(runAsync, snapshotName, volumeID, description)
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) RemoveSnapshot(snapshotID string) error {
 	for _, d := range r.drivers {
 		return d.RemoveSnapshot(snapshotID)
 	}
-	return errors.ErrNoStorageDrivers
+	return errors.ErrNoStorageDetected
 }
 
 func (r *sdm) CreateVolume(runAsync bool,
@@ -348,14 +358,14 @@ func (r *sdm) CreateVolume(runAsync bool,
 			runAsync, volumeName, volumeID, snapshotID, volumeType,
 			IOPS, size, availabilityZone)
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) RemoveVolume(volumeID string) error {
 	for _, d := range r.drivers {
 		return d.RemoveVolume(volumeID)
 	}
-	return errors.ErrNoStorageDrivers
+	return errors.ErrNoStorageDetected
 }
 
 func (r *sdm) AttachVolume(
@@ -364,7 +374,7 @@ func (r *sdm) AttachVolume(
 	for _, d := range r.drivers {
 		return d.AttachVolume(runAsync, volumeID, instanceID)
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) DetachVolume(
@@ -373,7 +383,7 @@ func (r *sdm) DetachVolume(
 	for _, d := range r.drivers {
 		return d.DetachVolume(runAsync, volumeID, instanceID)
 	}
-	return errors.ErrNoStorageDrivers
+	return errors.ErrNoStorageDetected
 }
 
 func (r *sdm) GetVolumeAttach(
@@ -381,7 +391,7 @@ func (r *sdm) GetVolumeAttach(
 	for _, d := range r.drivers {
 		return d.GetVolumeAttach(volumeID, instanceID)
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) CopySnapshot(
@@ -392,12 +402,12 @@ func (r *sdm) CopySnapshot(
 		return d.CopySnapshot(runAsync, volumeID, snapshotID, snapshotName,
 			targetSnapshotName, targetRegion)
 	}
-	return nil, errors.ErrNoStorageDrivers
+	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) GetDeviceNextAvailable() (string, error) {
 	for _, d := range r.drivers {
 		return d.GetDeviceNextAvailable()
 	}
-	return "", errors.ErrNoStorageDrivers
+	return "", errors.ErrNoStorageDetected
 }

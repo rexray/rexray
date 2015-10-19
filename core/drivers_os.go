@@ -49,6 +49,9 @@ type odm struct {
 }
 
 func (r *odm) Init(rexray *RexRay) error {
+	if len(r.drivers) == 0 {
+		return errors.ErrNoOSDrivers
+	}
 	return nil
 }
 

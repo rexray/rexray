@@ -14,6 +14,14 @@ const (
 	// ErrCodeNoOSDetected is the error code for when no OS is detected.
 	ErrCodeNoOSDetected
 
+	// ErrCodeNoVolumesDetected is the error code for when no volumes are
+	// detected.
+	ErrCodeNoVolumesDetected
+
+	// ErrCodeNoStorageDetected is the error code for when no storage is
+	// detected.
+	ErrCodeNoStorageDetected
+
 	// ErrCodeDriverBlockDeviceDiscovery is the error code for for when there
 	// is an error discovering one or more block devices.
 	ErrCodeDriverBlockDeviceDiscovery
@@ -82,6 +90,12 @@ const (
 var (
 	// ErrNoOSDetected is the error for when no OS is detected.
 	ErrNoOSDetected = ErrRexRay(ErrCodeNoOSDetected)
+
+	// ErrNoVolumesDetected is the error for when no volumes are detected.
+	ErrNoVolumesDetected = ErrRexRay(ErrCodeNoVolumesDetected)
+
+	// ErrNoStorageDetected is the error for when no storage is detected.
+	ErrNoStorageDetected = ErrRexRay(ErrCodeNoStorageDetected)
 
 	// ErrDriverBlockDeviceDiscovery is the error for for when there
 	// is an error discovering block devices.
@@ -160,6 +174,8 @@ func ErrRexRay(code RexRayErrCode) *RexRayErr {
 func (e *RexRayErr) Error() string {
 	switch e.Code {
 	case ErrCodeNoOSDetected,
+		ErrCodeNoVolumesDetected,
+		ErrCodeNoStorageDetected,
 		ErrCodeNoOSDrivers,
 		ErrCodeNoVolumeDrivers,
 		ErrCodeNoStorageDrivers,
@@ -208,6 +224,10 @@ func (e *RexRayErr) errorNo() string {
 	switch e.Code {
 	case ErrCodeNoOSDetected:
 		return "no OS detected"
+	case ErrCodeNoVolumesDetected:
+		return "no volumes detected"
+	case ErrCodeNoStorageDetected:
+		return "no storage detected"
 	case ErrCodeNoOSDrivers:
 		return "no OS drivers initialized"
 	case ErrCodeNoVolumeDrivers:

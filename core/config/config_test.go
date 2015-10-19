@@ -78,7 +78,7 @@ func TestAssertConfigDefaults(t *testing.T) {
 	}
 
 	if c.DockerSize != 16 {
-		t.Fatalf("c.DockerSize != 16, == %d", c.DockerSize)
+		t.Fatalf("c.DockerSize != 0, == %d", c.DockerSize)
 	}
 }
 

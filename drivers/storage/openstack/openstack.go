@@ -574,87 +574,25 @@ func (d *driver) CreateVolume(
 	}
 
 	if volumeID != "" && runAsync {
-		return nil, errors.WithFields(fields,
-			"cannot create volume from volume & run async")
+		return nil, errors.ErrRunAsyncFromVolume
 	}
 
-	if availabilityZone == "" {
-		availabilityZone = d.availabilityZone
-	}
+	d.createVolumeEnsureAvailabilityZone(&availabilityZone)
 
-	if snapshotID != "" {
-		snapshot, err := d.GetSnapshot("", snapshotID, "")
-		if err != nil {
-			return nil,
-				errors.WithFieldsE(fields, "error getting snapshot", err)
-		}
+	var err error
 
-		if len(snapshot) == 0 {
-			return nil,
-				errors.WithFields(fields, "snapshot array is empty")
-		}
-
-		volSize := snapshot[0].VolumeSize
-		sizeInt, err := strconv.Atoi(volSize)
-		if err != nil {
-			f := errors.Fields{
-				"volumeSize": volSize,
-			}
-			for k, v := range fields {
-				f[k] = v
-			}
-			return nil,
-				errors.WithFieldsE(f, "error casting volume size", err)
-		}
-		size = int64(sizeInt)
+	if err = d.createVolumeHandleSnapshotID(
+		&size, snapshotID, fields); err != nil {
+		return nil, err
 	}
 
 	var volume []*core.Volume
-	var err error
-	if volumeID != "" {
-		volume, err = d.GetVolume(volumeID, "")
-		if err != nil {
-			return nil, errors.WithFields(fields, "error getting volume")
-		}
-
-		if len(volume) == 0 {
-			return nil,
-				errors.WithFields(fields, "volume array is empty")
-		}
-
-		volSize := volume[0].Size
-		sizeInt, err := strconv.Atoi(volSize)
-		if err != nil {
-			f := errors.Fields{
-				"volumeSize": volSize,
-			}
-			for k, v := range fields {
-				f[k] = v
-			}
-			return nil,
-				errors.WithFieldsE(f, "error casting volume size", err)
-		}
-		size = int64(sizeInt)
-
-		volumeID := volume[0].VolumeID
-		snapshot, err := d.CreateSnapshot(
-			false, fmt.Sprintf("temp-%s", volumeID), volumeID, "")
-		if err != nil {
-			return nil,
-				errors.WithFields(fields, "error creating snapshot")
-		}
-
-		snapshotID = snapshot[0].SnapshotID
-
-		if availabilityZone == "" {
-			availabilityZone = volume[0].AvailabilityZone
-		}
-
+	if volume, err = d.createVolumeHandleVolumeID(
+		&availabilityZone, &snapshotID, &volumeID, &size, fields); err != nil {
+		return nil, err
 	}
 
-	if size != 0 && size < minSize {
-		size = minSize
-	}
+	createVolumeEnsureSize(&size)
 
 	options := &volumes.CreateOpts{
 		Name:         volumeName,
@@ -699,6 +637,98 @@ func (d *driver) CreateVolume(
 
 	log.WithFields(fields).Debug("created volume")
 	return volume[0], nil
+}
+
+func (d *driver) createVolumeEnsureAvailabilityZone(availabilityZone *string) {
+	if *availabilityZone == "" {
+		*availabilityZone = d.availabilityZone
+	}
+}
+
+func createVolumeEnsureSize(size *int64) {
+	if *size != 0 && *size < minSize {
+		*size = minSize
+	}
+}
+
+func (d *driver) createVolumeHandleSnapshotID(
+	size *int64, snapshotID string, fields map[string]interface{}) error {
+	if snapshotID == "" {
+		return nil
+	}
+	snapshots, err := d.GetSnapshot("", snapshotID, "")
+	if err != nil {
+		return errors.WithFieldsE(fields, "error getting snapshot", err)
+	}
+
+	if len(snapshots) == 0 {
+		return errors.WithFields(fields, "snapshot array is empty")
+	}
+
+	volSize := snapshots[0].VolumeSize
+	sizeInt, err := strconv.Atoi(volSize)
+	if err != nil {
+		f := errors.Fields{
+			"volumeSize": volSize,
+		}
+		for k, v := range fields {
+			f[k] = v
+		}
+		return errors.WithFieldsE(f, "error casting volume size", err)
+	}
+	*size = int64(sizeInt)
+	return nil
+}
+
+func (d *driver) createVolumeHandleVolumeID(
+	availabilityZone, snapshotID, volumeID *string,
+	size *int64,
+	fields map[string]interface{}) ([]*core.Volume, error) {
+
+	if *volumeID == "" {
+		return nil, nil
+	}
+
+	var err error
+	var volume []*core.Volume
+
+	if volume, err = d.GetVolume(*volumeID, ""); err != nil {
+		return nil, errors.WithFieldsE(fields, "error getting volumes", err)
+	}
+
+	if len(volume) == 0 {
+		return nil, errors.WithFieldsE(fields, "", errors.ErrNoVolumesReturned)
+	}
+
+	volSize := volume[0].Size
+	sizeInt, err := strconv.Atoi(volSize)
+	if err != nil {
+		f := errors.Fields{
+			"volumeSize": volSize,
+		}
+		for k, v := range fields {
+			f[k] = v
+		}
+		return nil,
+			errors.WithFieldsE(f, "error casting volume size", err)
+	}
+	*size = int64(sizeInt)
+
+	*volumeID = volume[0].VolumeID
+	snapshot, err := d.CreateSnapshot(
+		false, fmt.Sprintf("temp-%s", *volumeID), *volumeID, "")
+	if err != nil {
+		return nil,
+			errors.WithFields(fields, "error creating snapshot")
+	}
+
+	*snapshotID = snapshot[0].SnapshotID
+
+	if *availabilityZone == "" {
+		*availabilityZone = volume[0].AvailabilityZone
+	}
+
+	return volume, nil
 }
 
 func (d *driver) RemoveVolume(volumeID string) error {

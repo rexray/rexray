@@ -233,19 +233,26 @@ func printNonColorizedError(err error) {
 }
 
 func isInitDriverManagersCmd(cmd *cobra.Command) bool {
-
 	return cmd.Parent() != nil &&
 		cmd != adapterCmd &&
 		cmd != adapterGetTypesCmd &&
 		cmd != versionCmd &&
-		cmd != serviceCmd &&
+		isServiceCmd(cmd) &&
+		isModuleCmd(cmd)
+}
+
+func isServiceCmd(cmd *cobra.Command) bool {
+	return cmd != serviceCmd &&
 		cmd != serviceInitSysCmd &&
 		cmd != installCmd &&
 		cmd != uninstallCmd &&
 		cmd != serviceStatusCmd &&
 		cmd != serviceStopCmd &&
-		!(cmd == serviceStartCmd && (client != "" || fg || force)) &&
-		cmd != moduleCmd &&
+		!(cmd == serviceStartCmd && (client != "" || fg || force))
+}
+
+func isModuleCmd(cmd *cobra.Command) bool {
+	return cmd != moduleCmd &&
 		cmd != moduleTypesCmd &&
 		cmd != moduleInstancesCmd &&
 		cmd != moduleInstancesListCmd

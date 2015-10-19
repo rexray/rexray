@@ -169,7 +169,7 @@ func initConfigKeyMap() {
 
 		DockerVolumeType:       ck("REXRAY_DOCKER_VOLUMETYPE", "", ""),
 		DockerIOPS:             ck("REXRAY_DOCKER_IOPS", 0, ""),
-		DockerSize:             ck("REXRAY_DOCKER_SIZE", 0, ""),
+		DockerSize:             ck("REXRAY_DOCKER_SIZE", 16, ""),
 		DockerAvailabilityZone: ck("REXRAY_DOCKER_AVAILABILITYZONE", "", ""),
 
 		AwsAccessKey: ck("AWS_ACCESS_KEY", "", ""),

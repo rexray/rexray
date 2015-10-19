@@ -393,34 +393,28 @@ func (d *driver) CreateVolume(
 
 func (d *driver) createVolume(
 	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
-	IOPS, size int64, availabilityZone string) (*ec2.CreateVolumeResp, error) {
+	IOPS, size int64,
+	availabilityZone string) (*ec2.CreateVolumeResp, error) {
 
 	if volumeID != "" && runAsync {
-		return &ec2.CreateVolumeResp{},
-			errors.New("Cannot create volume from volume and run asynchronously")
+		return &ec2.CreateVolumeResp{}, errors.ErrRunAsyncFromVolume
 	}
 
-	server, err := d.getInstance()
-	if err != nil {
+	var err error
+
+	var server ec2.Instance
+	if server, err = d.getInstance(); err != nil {
 		return &ec2.CreateVolumeResp{}, err
 	}
 
-	var snapshot *core.Snapshot
 	if volumeID != "" {
-		snapshotInt, err := d.CreateSnapshot(
-			true, fmt.Sprintf("temp-%v", volumeID),
-			volumeID, "created for createVolume")
-
-		if err != nil {
+		if snapshotID, err = d.createVolumeCreateSnapshot(
+			volumeID, snapshotID); err != nil {
 			return &ec2.CreateVolumeResp{}, err
 		}
-		snapshot = snapshotInt[0]
-		snapshotID = snapshot.SnapshotID
 	}
 
-	if availabilityZone == "" {
-		availabilityZone = server.AvailabilityZone
-	}
+	d.createVolumeEnsureAvailabilityZone(&availabilityZone, &server)
 
 	options := &ec2.CreateVolume{
 		Size:       size,
@@ -429,7 +423,48 @@ func (d *driver) createVolume(
 		VolumeType: volumeType,
 		IOPS:       IOPS,
 	}
-	resp := &ec2.CreateVolumeResp{}
+
+	var resp *ec2.CreateVolumeResp
+	if resp, err = d.createVolumeCreateVolume(options); err != nil {
+		return &ec2.CreateVolumeResp{}, err
+	}
+
+	if err = d.createVolumeCreateTags(volumeName, resp); err != nil {
+		return &ec2.CreateVolumeResp{}, err
+	}
+
+	if err = d.createVolumeWait(
+		runAsync, snapshotID, volumeID, resp); err != nil {
+		return &ec2.CreateVolumeResp{}, err
+	}
+
+	return resp, nil
+}
+
+func (d *driver) createVolumeCreateSnapshot(
+	volumeID string, snapshotID string) (string, error) {
+
+	var err error
+	var snapshots []*core.Snapshot
+
+	if snapshots, err = d.CreateSnapshot(
+		true, fmt.Sprintf("temp-%v", volumeID),
+		volumeID, "created for createVolume"); err != nil {
+		return "", err
+	}
+
+	return snapshots[0].SnapshotID, nil
+}
+
+func (d *driver) createVolumeEnsureAvailabilityZone(
+	availabilityZone *string, server *ec2.Instance) {
+	if *availabilityZone == "" {
+		*availabilityZone = server.AvailabilityZone
+	}
+}
+
+func (d *driver) createVolumeCreateVolume(
+	options *ec2.CreateVolume) (resp *ec2.CreateVolumeResp, err error) {
 	for {
 		resp, err = d.ec2Instance.CreateVolume(options)
 		if err != nil {
@@ -438,35 +473,42 @@ func (d *driver) createVolume(
 				time.Sleep(1 * time.Second)
 				continue
 			}
-			return &ec2.CreateVolumeResp{}, err
+			return nil, err
 		}
 		break
 	}
+	return
+}
 
-	if volumeName != "" {
-		_, err := d.ec2Instance.CreateTags(
-			[]string{resp.VolumeId}, []ec2.Tag{{"Name", volumeName}})
-		if err != nil {
-			return &ec2.CreateVolumeResp{}, err
+func (d *driver) createVolumeCreateTags(
+	volumeName string, resp *ec2.CreateVolumeResp) (err error) {
+	if volumeName == "" {
+		return
+	}
+	_, err = d.ec2Instance.CreateTags(
+		[]string{resp.VolumeId}, []ec2.Tag{{"Name", volumeName}})
+
+	return
+}
+
+func (d *driver) createVolumeWait(
+	runAsync bool, snapshotID, volumeID string,
+	resp *ec2.CreateVolumeResp) (err error) {
+	if runAsync {
+		return
+	}
+	log.Println("Waiting for volume creation to complete")
+	if err = d.waitVolumeComplete(resp.VolumeId); err != nil {
+		return
+	}
+
+	if volumeID != "" {
+		if err = d.RemoveSnapshot(snapshotID); err != nil {
+			return
 		}
 	}
 
-	if !runAsync {
-		log.Println("Waiting for volume creation to complete")
-		err = d.waitVolumeComplete(resp.VolumeId)
-		if err != nil {
-			return &ec2.CreateVolumeResp{}, err
-		}
-
-		if volumeID != "" {
-			err := d.RemoveSnapshot(snapshotID)
-			if err != nil {
-				return &ec2.CreateVolumeResp{}, err
-			}
-		}
-	}
-
-	return resp, nil
+	return
 }
 
 func (d *driver) getVolume(

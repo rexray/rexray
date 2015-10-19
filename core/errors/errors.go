@@ -73,6 +73,10 @@ const (
 	// ErrCodeLocalVolumeMaps is the error code for when there is an error
 	// discovering local volume mappings.
 	ErrCodeLocalVolumeMaps
+
+	// ErrCodeRunAsyncFromVolume is the error code for when an asynchronous
+	// create volume is received.
+	ErrCodeRunAsyncFromVolume
 )
 
 var (
@@ -136,6 +140,10 @@ var (
 	// ErrLocalVolumeMaps is the error for when there is an error
 	// discovering local volume mappings.
 	ErrLocalVolumeMaps = ErrRexRay(ErrCodeLocalVolumeMaps)
+
+	// ErrRunAsyncFromVolume is the error for when an asynchronous
+	// create volume is received.
+	ErrRunAsyncFromVolume = ErrRexRay(ErrCodeRunAsyncFromVolume)
 )
 
 // RexRayErr is the default error type for REX-Ray errors.
@@ -151,8 +159,38 @@ func ErrRexRay(code RexRayErrCode) *RexRayErr {
 // Error returns the string version of the error code.
 func (e *RexRayErr) Error() string {
 	switch e.Code {
-	case ErrCodeNoOSDetected:
-		return "no OS detected"
+	case ErrCodeNoOSDetected,
+		ErrCodeNoOSDrivers,
+		ErrCodeNoVolumeDrivers,
+		ErrCodeNoStorageDrivers,
+		ErrCodeNoVolumesReturned:
+		return e.errorNo()
+	case ErrCodeDriverBlockDeviceDiscovery,
+		ErrCodeDriverInstanceDiscovery,
+		ErrCodeDriverVolumeDiscovery,
+		ErrCodeDriverSnapshotDiscovery:
+		return e.errorFailed()
+	case ErrCodeMultipleDriversDetected,
+		ErrCodeMultipleVolumesReturned:
+		return e.errorMulitple()
+	case ErrCodeUnknownOS,
+		ErrCodeUnknownFileSystem:
+		return e.errorUnknown()
+	case ErrCodeMissingVolumeID:
+		return "missing volume ID"
+	case ErrCodeLocalVolumeMaps:
+		return "getting local volume mounts"
+	case ErrCodeRunAsyncFromVolume:
+		return "cannot create volume from volume and run asynchronously"
+	case ErrCodeNotImplemented:
+		return "not implemented"
+	default:
+		return "unknown error"
+	}
+}
+
+func (e *RexRayErr) errorFailed() string {
+	switch e.Code {
 	case ErrCodeDriverBlockDeviceDiscovery:
 		return "driver block device discovery failed"
 	case ErrCodeDriverInstanceDiscovery:
@@ -161,28 +199,45 @@ func (e *RexRayErr) Error() string {
 		return "driver volume discovery failed"
 	case ErrCodeDriverSnapshotDiscovery:
 		return "driver snapshot discovery failed"
-	case ErrCodeMultipleDriversDetected:
-		return "multiple drivers detected"
+	default:
+		return "unknown error"
+	}
+}
+
+func (e *RexRayErr) errorNo() string {
+	switch e.Code {
+	case ErrCodeNoOSDetected:
+		return "no OS detected"
 	case ErrCodeNoOSDrivers:
 		return "no OS drivers initialized"
 	case ErrCodeNoVolumeDrivers:
 		return "no volume drivers initialized"
 	case ErrCodeNoStorageDrivers:
 		return "no storage drivers initialized"
-	case ErrCodeNotImplemented:
-		return "not implemented"
+	case ErrCodeNoVolumesReturned:
+		return "no Volumes returned"
+	default:
+		return "unknown error"
+	}
+}
+
+func (e *RexRayErr) errorMulitple() string {
+	switch e.Code {
+	case ErrCodeMultipleDriversDetected:
+		return "multiple drivers detected"
+	case ErrCodeMultipleVolumesReturned:
+		return "multiple volumes returned"
+	default:
+		return "unknown error"
+	}
+}
+
+func (e *RexRayErr) errorUnknown() string {
+	switch e.Code {
 	case ErrCodeUnknownOS:
 		return "unknown OS"
 	case ErrCodeUnknownFileSystem:
 		return "unknown file system"
-	case ErrCodeMissingVolumeID:
-		return "missing volume ID"
-	case ErrCodeMultipleVolumesReturned:
-		return "multiple volumes returned"
-	case ErrCodeNoVolumesReturned:
-		return "no Volumes returned"
-	case ErrCodeLocalVolumeMaps:
-		return "getting local volume mounts"
 	default:
 		return "unknown error"
 	}

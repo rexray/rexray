@@ -303,21 +303,27 @@ func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 		return nil
 	}
 
-	volumeType := createInitVolumeType(volumeOpts)
-	IOPS := createInitIOPS(volumeOpts)
-	size := createInitSize(volumeOpts)
-	availabilityZone := createInitAvailabilityZone(volumeOpts)
-
-	var snapshotID string
-	if snapshotID, err = d.createGetSnapshotID(volumeOpts); err != nil {
-		return err
-	}
-
+	var volFrom *core.Volume
 	var volumeID string
-	if volumeID, err = d.createInitVolumeID(
-		snapshotID, volumeName, volumeOpts); err != nil {
+	if volFrom, err = d.createInitVolume(
+		volumeName, volumeOpts); err != nil {
 		return err
+	} else if volFrom != nil {
+		volumeID = volFrom.VolumeID
 	}
+
+	var snapFrom *core.Snapshot
+	var snapshotID string
+	if snapFrom, err = d.createGetSnapshot(volumeOpts); err != nil {
+		return err
+	} else if snapFrom != nil {
+		snapshotID = snapFrom.SnapshotID
+	}
+
+	volumeType := createInitVolumeType(volumeOpts, volFrom)
+	IOPS := createInitIOPS(volumeOpts, volFrom)
+	size := createInitSize(volumeOpts, volFrom, snapFrom)
+	availabilityZone := createInitAvailabilityZone(volumeOpts)
 
 	if len(volumes) == 0 {
 		if _, err = d.r.Storage.CreateVolume(
@@ -345,63 +351,69 @@ func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 	return nil
 }
 
-func (d *driver) createInitVolumeID(
-	snapshotID, volumeName string,
-	volumeOpts core.VolumeOpts) (string, error) {
+func (d *driver) createInitVolume(
+	volumeName string,
+	volumeOpts core.VolumeOpts) (*core.Volume, error) {
 
-	var ok bool
 	var optVolumeName string
+	var optVolumeID string
 
-	if optVolumeName, ok = volumeOpts["volumename"]; !ok {
-		return volumeOpts["volumeid"], nil
+	optVolumeName, _ = volumeOpts["volumename"]
+	optVolumeID, _ = volumeOpts["volumeid"]
+
+	if optVolumeName == "" && optVolumeID == "" {
+		return nil, nil
 	}
 
 	var err error
 	var volumes []*core.Volume
-	if volumes, err = d.r.Storage.GetVolume("", optVolumeName); err != nil {
-		return "", err
+	if volumes, err = d.r.Storage.GetVolume(optVolumeID, optVolumeName); err != nil {
+		return nil, err
 	}
 
 	switch {
 	case len(volumes) == 0:
-		return "", errors.WithField(
+		return nil, errors.WithField(
 			"optVolumeName", optVolumeName, "No volumes returned")
 	case len(volumes) > 1:
-		return "", errors.WithField(
+		return nil, errors.WithField(
 			"optVolumeName", optVolumeName, "Too many volumes returned")
 	}
 
-	return volumes[0].VolumeID, nil
+	return volumes[0], nil
 }
 
-func (d *driver) createGetSnapshotID(
-	volumeOpts core.VolumeOpts) (string, error) {
+func (d *driver) createGetSnapshot(
+	volumeOpts core.VolumeOpts) (*core.Snapshot, error) {
 
-	var ok bool
 	var optSnapshotName string
+	var optSnapshotID string
 
-	if optSnapshotName, ok = volumeOpts["snapshotname"]; !ok {
-		return volumeOpts["snapshotid"], nil
+	optSnapshotName, _ = volumeOpts["snapshotname"]
+	optSnapshotID, _ = volumeOpts["snapshotid"]
+
+	if optSnapshotName == "" && optSnapshotID == "" {
+		return nil, nil
 	}
 
 	var err error
 	var snapshots []*core.Snapshot
 
 	if snapshots, err = d.r.Storage.GetSnapshot(
-		"", "", optSnapshotName); err != nil {
-		return "", err
+		"", optSnapshotID, optSnapshotName); err != nil {
+		return nil, err
 	}
 
 	switch {
 	case len(snapshots) == 0:
-		return "", errors.WithField(
+		return nil, errors.WithField(
 			"optSnapshotName", optSnapshotName, "No snapshots returned")
 	case len(snapshots) > 1:
-		return "", errors.WithField(
+		return nil, errors.WithField(
 			"optSnapshotName", optSnapshotName, "Too many snapshots returned")
 	}
 
-	return snapshots[0].SnapshotID, nil
+	return snapshots[0], nil
 }
 
 func (d *driver) createGetInstance() error {
@@ -446,35 +458,71 @@ func (d *driver) createGetVolumes(
 	return volumes, overwriteFs, nil
 }
 
-func createInitVolumeType(volumeOpts core.VolumeOpts) string {
+func createInitVolumeType(volumeOpts core.VolumeOpts, volume *core.Volume) string {
 	var ok bool
 	var volumeType string
 	if volumeType, ok = volumeOpts["volumetype"]; ok {
 		return volumeType
+	} else if volume != nil {
+		return volume.VolumeType
+	} else if volumeType, ok = createInitEnv("REXRAY_DOCKER_VOLUMETYPE"); ok {
+		return volumeType
 	}
-	return os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
+	return ""
 }
 
-func createInitIOPS(volumeOpts core.VolumeOpts) int64 {
-	return createInitInt64("iops", "REXRAY_DOCKER_IOPS", volumeOpts)
+func createInitIOPS(volumeOpts core.VolumeOpts, volume *core.Volume) int64 {
+	if ok, i := createInitInt64("iops", "", volumeOpts); ok {
+		return i
+	} else if volume != nil {
+		return volume.IOPS
+	} else if ok, i := createInitInt64("", "REXRAY_DOCKER_IOPS", volumeOpts); ok {
+		return i
+	}
+	return 0
 }
 
-func createInitSize(volumeOpts core.VolumeOpts) int64 {
-	return createInitInt64("size", "REXRAY_DOCKER_SIZE", volumeOpts)
+func createInitSize(volumeOpts core.VolumeOpts, volume *core.Volume, snapshot *core.Snapshot) int64 {
+	if ok, i := createInitInt64("size", "", volumeOpts); ok {
+		return i
+	} else if volume != nil {
+		sizei, _ := strconv.Atoi(volume.Size)
+		return int64(sizei)
+	} else if snapshot != nil {
+		sizei, _ := strconv.Atoi(snapshot.VolumeSize)
+		return int64(sizei)
+	} else if ok, i := createInitInt64("", "REXRAY_DOCKER_SIZE", volumeOpts); ok {
+		return i
+	}
+	return defaultVolumeSize
 }
 
 func createInitInt64(
 	optKey, envVar string,
-	volumeOpts core.VolumeOpts) int64 {
+	volumeOpts core.VolumeOpts) (bool, int64) {
 	var k bool
 	var i int
 	var s string
+	var e string
 	if s, k = volumeOpts[optKey]; k {
 		i, _ = strconv.Atoi(s)
+	} else if envVar != "" {
+		if e, k = createInitEnv(envVar); !k {
+			return false, 0
+		}
+		i, _ = strconv.Atoi(e)
 	} else {
-		i, _ = strconv.Atoi(os.Getenv(envVar))
+		return false, 0
 	}
-	return int64(i)
+	return true, int64(i)
+}
+
+func createInitEnv(e string) (string, bool) {
+	envVal := os.Getenv(e)
+	if envVal == "" {
+		return "", false
+	}
+	return envVal, true
 }
 
 func createInitAvailabilityZone(volumeOpts core.VolumeOpts) string {

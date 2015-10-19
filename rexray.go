@@ -29,12 +29,7 @@ func NewWithConfigFile(path string) (*core.RexRay, error) {
 	if err := c.ReadConfigFile(path); err != nil {
 		return nil, err
 	}
-	var err error
-	var r *core.RexRay
-	if r, err = core.New(c); err != nil {
-		return nil, err
-	}
-	return r, nil
+	return core.New(c), nil
 }
 
 // NewWithConfigReader creates a new REX-Ray instance and configures it with a
@@ -44,23 +39,12 @@ func NewWithConfigReader(in io.Reader) (*core.RexRay, error) {
 	if err := c.ReadConfig(in); err != nil {
 		return nil, err
 	}
-	var err error
-	var r *core.RexRay
-	if r, err = core.New(c); err != nil {
-		return nil, err
-	}
-	return r, nil
+	return core.New(c), nil
 }
 
 // New creates a new REX-Ray instance and configures using the standard
 // configuration workflow: environment variables followed by global and user
 // configuration files.
 func New() (*core.RexRay, error) {
-	c := config.New()
-	var err error
-	var r *core.RexRay
-	if r, err = core.New(c); err != nil {
-		return nil, err
-	}
-	return r, nil
+	return core.New(config.New()), nil
 }

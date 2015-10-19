@@ -18,7 +18,7 @@ type RexRay struct {
 
 // New creates a new REX-Ray instance and configures it with the
 // provided configuration instance.
-func New(conf *config.Config) (*RexRay, error) {
+func New(conf *config.Config) *RexRay {
 
 	if conf == nil {
 		conf = config.New()
@@ -34,7 +34,7 @@ func New(conf *config.Config) (*RexRay, error) {
 		log.WithField("driverName", name).Debug("constructed driver")
 	}
 
-	return r, nil
+	return r
 }
 
 // InitDrivers initializes the drivers for the REX-Ray platform.

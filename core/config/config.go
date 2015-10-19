@@ -243,6 +243,10 @@ func (c *Config) marshalJSON(s JSONMarshalStrategy) ([]byte, error) {
 // ReadConfig reads a configuration stream into the current config instance
 func (c *Config) ReadConfig(in io.Reader) error {
 
+	if in == nil {
+		return errors.New("config reader is nil")
+	}
+
 	if err := c.Viper.ReadConfigNoNil(in); err != nil {
 		return err
 	}

@@ -59,16 +59,9 @@ func (m *mod) ID() int32 {
 }
 
 func newMod(id int32, cfg *module.Config) (module.Module, error) {
-	var err error
-	var r *core.RexRay
-
-	if r, err = core.New(cfg.Config); err != nil {
-		return nil, err
-	}
-
 	return &mod{
 		id:   id,
-		r:    r,
+		r:    core.New(cfg.Config),
 		name: modName,
 		desc: modDescription,
 		addr: cfg.Address,

@@ -88,6 +88,14 @@ func Prefix(p string) {
 		return
 	}
 
+	binDirPath = ""
+	binFilePath = ""
+	logDirPath = ""
+	libDirPath = ""
+	runDirPath = ""
+	etcDirPath = ""
+	pidFilePath = ""
+
 	prefix = p
 }
 

@@ -22,11 +22,7 @@ var (
 )
 
 func init() {
-	var envVarRxErr error
-	envVarRx, envVarRxErr = regexp.Compile(`^\s*([^#=]+)=(.+)$`)
-	if envVarRxErr != nil {
-		panic(envVarRxErr)
-	}
+	envVarRx = regexp.MustCompile(`^\s*([^#=]+)=(.+)$`)
 	loadEtcEnvironment()
 	initConfigKeyMap()
 }
@@ -142,7 +138,7 @@ func NewConfig(
 	c.Viper.SetConfigType(configType)
 
 	cfgFile := fmt.Sprintf("%s.%s", configName, configType)
-	etcRexRayFile := fmt.Sprintf("%s/%s", util.EtcDirPath(), cfgFile)
+	etcRexRayFile := util.EtcFilePath(cfgFile)
 	usrRexRayFile := fmt.Sprintf("%s/.rexray/%s", util.HomeDir(), cfgFile)
 
 	if loadGlobalConfig && util.FileExists(etcRexRayFile) {
@@ -184,12 +180,8 @@ func (c *Config) SetJSONMarshalStrategy(s JSONMarshalStrategy) {
 // Copy creates a copy of this Config instance
 func (c *Config) Copy() (*Config, error) {
 	newC := New()
-	if err := c.Viper.Unmarshal(&newC.plainTextConfig); err != nil {
-		return nil, err
-	}
-	if err := c.Viper.Unmarshal(&newC.secureConfig); err != nil {
-		return nil, err
-	}
+	c.Viper.Unmarshal(&newC.plainTextConfig)
+	c.Viper.Unmarshal(&newC.secureConfig)
 	return newC, nil
 }
 
@@ -205,20 +197,14 @@ func FromJSON(from string) (*Config, error) {
 
 // ToJSON exports this Config instance to a JSON string
 func (c *Config) ToJSON() (string, error) {
-	buf, err := c.marshalJSON(JSONMarshalPlainText)
-	if err != nil {
-		return "", err
-	}
+	buf, _ := c.marshalJSON(JSONMarshalPlainText)
 	return string(buf), nil
 }
 
 // ToSecureJSON exports this Config instance to a JSON string omitting any of
 // the secure fields
 func (c *Config) ToSecureJSON() (string, error) {
-	buf, err := c.marshalJSON(JSONMarshalSecure)
-	if err != nil {
-		return "", err
-	}
+	buf, _ := c.marshalJSON(JSONMarshalSecure)
 	return string(buf), nil
 }
 
@@ -230,14 +216,11 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 
 func (c *Config) marshalJSON(s JSONMarshalStrategy) ([]byte, error) {
 	switch s {
-	case JSONMarshalSecure:
-		return json.MarshalIndent(c.secureConfig, "", "  ")
 	case JSONMarshalPlainText:
 		return json.MarshalIndent(c.plainTextConfig, "", "  ")
+	default:
+		return json.MarshalIndent(c.secureConfig, "", "  ")
 	}
-
-	return nil, errors.WithField(
-		"strategy", s, "unknown json marshalling strategy")
 }
 
 // ReadConfig reads a configuration stream into the current config instance
@@ -247,17 +230,9 @@ func (c *Config) ReadConfig(in io.Reader) error {
 		return errors.New("config reader is nil")
 	}
 
-	if err := c.Viper.ReadConfigNoNil(in); err != nil {
-		return err
-	}
-
-	if err := c.Viper.Unmarshal(&c.secureConfig); err != nil {
-		return err
-	}
-
-	if err := c.Viper.Unmarshal(&c.plainTextConfig); err != nil {
-		return err
-	}
+	c.Viper.ReadConfigNoNil(in)
+	c.Viper.Unmarshal(&c.secureConfig)
+	c.Viper.Unmarshal(&c.plainTextConfig)
 
 	for key := range keys {
 		c.updateFlag(key, c.GlobalFlags)

@@ -13,33 +13,19 @@ import (
 )
 
 var r10 string
-var tmpHomeDirs []string
+var tmpPrefixDirs []string
 
 func TestMain(m *testing.M) {
 	r10 = RandomString(10)
 
 	exitCode := m.Run()
-	for _, d := range tmpHomeDirs {
+	for _, d := range tmpPrefixDirs {
 		os.RemoveAll(d)
 	}
 	os.Exit(exitCode)
 }
 
-func resetPaths() {
-	prefix = ""
-	homeDir = ""
-	binDirPath = ""
-	binFilePath = ""
-	logDirPath = ""
-	libDirPath = ""
-	runDirPath = ""
-	etcDirPath = ""
-	pidFilePath = ""
-}
-
-func newHomeDir(testName string, t *testing.T) string {
-	resetPaths()
-
+func newPrefixDir(testName string, t *testing.T) string {
 	tmpDir, err := ioutil.TempDir(
 		"", fmt.Sprintf("rexray-util_test-%s", testName))
 	if err != nil {
@@ -48,7 +34,7 @@ func newHomeDir(testName string, t *testing.T) string {
 
 	Prefix(tmpDir)
 	os.MkdirAll(tmpDir, 0755)
-	tmpHomeDirs = append(tmpHomeDirs, tmpDir)
+	tmpPrefixDirs = append(tmpPrefixDirs, tmpDir)
 	return tmpDir
 }
 
@@ -71,7 +57,7 @@ func TestPrefix(t *testing.T) {
 		t.Fatalf("is prefixed %s", GetPrefix())
 	}
 
-	tmpDir := newHomeDir("TestHomeDir", t)
+	tmpDir := newPrefixDir("TestHomeDir", t)
 	Prefix(tmpDir)
 	if !IsPrefixed() {
 		t.Fatalf("is not prefixed %s", GetPrefix())
@@ -84,7 +70,7 @@ func TestPrefix(t *testing.T) {
 }
 
 func TestPrefixAndDirs(t *testing.T) {
-	tmpDir := newHomeDir("TestPrefixAndDirs", t)
+	tmpDir := newPrefixDir("TestPrefixAndDirs", t)
 
 	etcDirPath := EtcDirPath()
 	expEtcDirPath := fmt.Sprintf("%s/etc/rexray", tmpDir)
@@ -152,7 +138,7 @@ func TestPrefixAndDirs(t *testing.T) {
 }
 
 func TestStdOutAndLogFile(t *testing.T) {
-	newHomeDir("TestStdOutAndLogFile", t)
+	newPrefixDir("TestStdOutAndLogFile", t)
 
 	if _, err := StdOutAndLogFile("BadFile/"); err == nil {
 		t.Fatal("error expected in created BadFile")
@@ -170,7 +156,7 @@ func TestStdOutAndLogFile(t *testing.T) {
 }
 
 func TestWriteAndReadStringToFile(t *testing.T) {
-	tmpDir := newHomeDir("TestWriteAndReadStringToFile", t)
+	tmpDir := newPrefixDir("TestWriteAndReadStringToFile", t)
 
 	tmpFile, _ := ioutil.TempFile(tmpDir, "temp")
 	WriteStringToFile("Hello, world.", tmpFile.Name())
@@ -192,7 +178,7 @@ func TestReadtringToFileError(t *testing.T) {
 }
 
 func TestWriteReadCurrentPidFile(t *testing.T) {
-	newHomeDir("TestWriteReadPidFile", t)
+	newPrefixDir("TestWriteReadPidFile", t)
 
 	var err error
 	var pidRead int
@@ -213,7 +199,7 @@ func TestWriteReadCurrentPidFile(t *testing.T) {
 }
 
 func TestWriteReadCustomPidFile(t *testing.T) {
-	newHomeDir("TestWriteReadPidFile", t)
+	newPrefixDir("TestWriteReadPidFile", t)
 
 	var err error
 	if _, err = ReadPidFile(); err == nil {
@@ -236,7 +222,7 @@ func TestWriteReadCustomPidFile(t *testing.T) {
 }
 
 func TestReadPidFileWithErrors(t *testing.T) {
-	newHomeDir("TestWriteReadPidFile", t)
+	newPrefixDir("TestWriteReadPidFile", t)
 
 	var err error
 	if _, err = ReadPidFile(); err == nil {
@@ -255,7 +241,7 @@ func TestIsDirEmpty(t *testing.T) {
 		t.Fatal("expected error for invalid path")
 	}
 
-	tmpDir := newHomeDir("TestWriteReadPidFile", t)
+	tmpDir := newPrefixDir("TestWriteReadPidFile", t)
 
 	var err error
 	var isEmpty bool
@@ -282,7 +268,7 @@ func TestLineReader(t *testing.T) {
 		t.Fatal("expected nil channel for invalid path")
 	}
 
-	newHomeDir("TestLineReader", t)
+	newPrefixDir("TestLineReader", t)
 
 	WritePidFile(100)
 	c := LineReader(PidFilePath())

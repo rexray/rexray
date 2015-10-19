@@ -56,7 +56,7 @@ type VolumeDriverManager interface {
 	// volume drivers.
 	Drivers() <-chan VolumeDriver
 
-	// Unmounts unmounts all volumes.
+	// UnmountAll unmounts all volumes.
 	UnmountAll() error
 
 	// RemoveAll removes all volumes.
@@ -104,7 +104,7 @@ func (r *vdm) Drivers() <-chan VolumeDriver {
 	return c
 }
 
-// Unmounts unmounts all volumes.
+// UnmountAll unmounts all volumes.
 func (r *vdm) UnmountAll() error {
 	for range r.drivers {
 		return nil

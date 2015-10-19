@@ -4,7 +4,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/rexray/core/config"
-	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/util"
 )
 
@@ -80,18 +79,6 @@ func (r *RexRay) InitDrivers() error {
 		}
 	}
 
-	if len(od) == 0 {
-		return errors.ErrNoOSDrivers
-	}
-
-	if len(vd) == 0 {
-		return errors.ErrNoVolumeDrivers
-	}
-
-	if len(sd) == 0 {
-		return errors.ErrNoStorageDrivers
-	}
-
 	r.OS = &odm{
 		rexray:  r,
 		drivers: od,
@@ -105,6 +92,18 @@ func (r *RexRay) InitDrivers() error {
 	r.Storage = &sdm{
 		rexray:  r,
 		drivers: sd,
+	}
+
+	if err := r.OS.Init(r); err != nil {
+		return err
+	}
+
+	if err := r.Volume.Init(r); err != nil {
+		return err
+	}
+
+	if err := r.Storage.Init(r); err != nil {
+		return err
 	}
 
 	return nil

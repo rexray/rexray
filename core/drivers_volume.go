@@ -72,6 +72,9 @@ type vdm struct {
 }
 
 func (r *vdm) Init(rexray *RexRay) error {
+	if len(r.drivers) == 0 {
+		return errors.ErrNoVolumeDrivers
+	}
 	return nil
 }
 
@@ -103,17 +106,26 @@ func (r *vdm) Drivers() <-chan VolumeDriver {
 
 // Unmounts unmounts all volumes.
 func (r *vdm) UnmountAll() error {
-	return nil
+	for range r.drivers {
+		return nil
+	}
+	return errors.ErrNoVolumesDetected
 }
 
 // RemoveAll removes all volumes.
 func (r *vdm) RemoveAll() error {
-	return nil
+	for range r.drivers {
+		return nil
+	}
+	return errors.ErrNoVolumesDetected
 }
 
 // DetachAll detaches all volumes attached to the instance of instanceID.
 func (r *vdm) DetachAll(instanceID string) error {
-	return nil
+	for range r.drivers {
+		return nil
+	}
+	return errors.ErrNoVolumesDetected
 }
 
 // Mount will return a mount point path when specifying either a volumeName
@@ -125,7 +137,7 @@ func (r *vdm) Mount(
 	for _, d := range r.drivers {
 		return d.Mount(volumeName, volumeID, overwriteFs, newFsType)
 	}
-	return "", errors.ErrNoStorageDrivers
+	return "", errors.ErrNoVolumesDetected
 }
 
 // Unmount will unmount the specified volume by volumeName or volumeID.
@@ -133,7 +145,7 @@ func (r *vdm) Unmount(volumeName, volumeID string) error {
 	for _, d := range r.drivers {
 		return d.Unmount(volumeName, volumeID)
 	}
-	return errors.ErrNoStorageDrivers
+	return errors.ErrNoVolumesDetected
 }
 
 // Path will return the mounted path of the volumeName or volumeID.
@@ -141,7 +153,7 @@ func (r *vdm) Path(volumeName, volumeID string) (string, error) {
 	for _, d := range r.drivers {
 		return d.Path(volumeName, volumeID)
 	}
-	return "", errors.ErrNoStorageDrivers
+	return "", errors.ErrNoVolumesDetected
 }
 
 // Create will create a new volume with the volumeName and opts.
@@ -149,7 +161,7 @@ func (r *vdm) Create(volumeName string, opts VolumeOpts) error {
 	for _, d := range r.drivers {
 		return d.Create(volumeName, opts)
 	}
-	return errors.ErrNoStorageDrivers
+	return errors.ErrNoVolumesDetected
 }
 
 // Remove will remove a volume of volumeName.
@@ -157,7 +169,7 @@ func (r *vdm) Remove(volumeName string) error {
 	for _, d := range r.drivers {
 		return d.Remove(volumeName)
 	}
-	return errors.ErrNoStorageDrivers
+	return errors.ErrNoVolumesDetected
 }
 
 // Attach will attach a volume based on volumeName to the instance of
@@ -166,7 +178,7 @@ func (r *vdm) Attach(volumeName, instanceID string) (string, error) {
 	for _, d := range r.drivers {
 		return d.Attach(volumeName, instanceID)
 	}
-	return "", errors.ErrNoStorageDrivers
+	return "", errors.ErrNoVolumesDetected
 }
 
 // Detach will detach a volume based on volumeName to the instance of
@@ -175,7 +187,7 @@ func (r *vdm) Detach(volumeName, instanceID string) error {
 	for _, d := range r.drivers {
 		return d.Detach(volumeName, instanceID)
 	}
-	return errors.ErrNoStorageDrivers
+	return errors.ErrNoVolumesDetected
 }
 
 // NetworkName will return an identifier of a volume that is relevant when
@@ -185,5 +197,5 @@ func (r *vdm) NetworkName(volumeName, instanceID string) (string, error) {
 	for _, d := range r.drivers {
 		return d.NetworkName(volumeName, instanceID)
 	}
-	return "", errors.ErrNoStorageDrivers
+	return "", errors.ErrNoVolumesDetected
 }

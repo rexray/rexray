@@ -1,6 +1,6 @@
 {
    "package": {
-        "name": "unstable", 
+        "name": "unstable",
         "repo": "rexray",
         "subject": "emccode"
     },
@@ -14,12 +14,12 @@
 
     "files": [
         {
-            "includePattern": ".deploy/(.+)/(.*\.tar\.gz)",
-            "excludePattern": ".deploy/latest/(.*)",
+            "includePattern": ".build/deploy/(.+)/(.*\.tar\.gz)",
+            "excludePattern": ".build/deploy/latest/(.*)",
             "uploadPattern": "unstable/${SEMVER}/$2"
         },
         {
-            "includePattern": ".deploy/latest/(.*)",
+            "includePattern": ".build/deploy/latest/(.*)",
             "uploadPattern": "unstable/latest/$1"
         }
     ],

@@ -1,6 +1,6 @@
 {
    "package": {
-        "name": "staged", 
+        "name": "staged",
         "repo": "rexray",
         "subject": "emccode"
     },
@@ -14,12 +14,12 @@
 
     "files": [
         {
-            "includePattern": ".deploy/(.+)/(.*\.tar\.gz)",
-            "excludePattern": ".deploy/latest/(.*)",
+            "includePattern": ".build/deploy/(.+)/(.*\.tar\.gz)",
+            "excludePattern": ".build/deploy/latest/(.*)",
             "uploadPattern": "staged/${SEMVER}/$2"
         },
         {
-            "includePattern": ".deploy/latest/(.*)",
+            "includePattern": ".build/deploy/latest/(.*)",
             "uploadPattern": "staged/latest/$1"
         }
     ],

@@ -126,7 +126,7 @@ func (d *driver) Init(r *core.RexRay) error {
 			"error getting newBlockStorageV1", err)
 	}
 
-	log.WithField("provider", providerName).Debug("storage driver initialized")
+	log.WithField("provider", providerName).Info("storage driver initialized")
 
 	return nil
 }

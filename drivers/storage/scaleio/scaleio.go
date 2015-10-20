@@ -1,10 +1,11 @@
 package scaleio
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/goscaleio"
 	types "github.com/emccode/goscaleio/types/v1"
@@ -124,7 +125,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		return errors.WithFieldsE(fields, "error finding sdc", err)
 	}
 
-	log.WithField("provider", providerName).Debug("storage driver initialized")
+	log.WithField("provider", providerName).Info("storage driver initialized")
 
 	return nil
 }

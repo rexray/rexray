@@ -65,8 +65,8 @@ func TestAssertConfigDefaults(t *testing.T) {
 		t.Fatalf("c.Host != tcp://:7979, == %s", c.Host)
 	}
 
-	if c.LogLevel != "info" {
-		t.Fatalf("c.LogLevel != info, == %d", c.LogLevel)
+	if c.LogLevel != "warn" {
+		t.Fatalf("c.LogLevel != warn, == %d", c.LogLevel)
 	}
 
 	if len(c.OSDrivers) != 1 && c.OSDrivers[0] != "linux" {

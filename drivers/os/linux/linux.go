@@ -32,7 +32,7 @@ func newDriver() core.Driver {
 func (d *driver) Init(r *core.RexRay) error {
 	if runtime.GOOS == "linux" {
 		d.r = r
-		log.WithField("provider", providerName).Debug(
+		log.WithField("provider", providerName).Info(
 			"os driver initialized")
 		return nil
 	}

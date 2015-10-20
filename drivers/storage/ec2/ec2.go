@@ -75,7 +75,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		aws.Regions[region],
 	)
 
-	log.WithField("provider", providerName).Debug("storage driver initialized")
+	log.WithField("provider", providerName).Info("storage driver initialized")
 
 	return nil
 }

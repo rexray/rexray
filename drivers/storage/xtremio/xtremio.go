@@ -103,7 +103,7 @@ func (d *xtremIODriver) Init(r *core.RexRay) error {
 		}
 	}
 
-	log.WithField("provider", providerName).Debug("storage driver initialized")
+	log.WithField("provider", providerName).Info("storage driver initialized")
 
 	return nil
 }

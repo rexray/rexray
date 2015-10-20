@@ -77,8 +77,8 @@ func TestAssertConfigDefaults(t *testing.T) {
 		t.Fatalf("c.VolumeDrivers != []string{\"docker\"}, == %v", c.VolumeDrivers)
 	}
 
-	if c.DockerSize != 16 {
-		t.Fatalf("c.DockerSize != 16, == %d", c.DockerSize)
+	if c.DockerSize != 0 {
+		t.Fatalf("c.DockerSize != 0, == %d", c.DockerSize)
 	}
 }
 

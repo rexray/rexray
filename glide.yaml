@@ -13,8 +13,8 @@ import:
     repo:    https://github.com/clintonskitson/goamz
     vcs:     git
   - package: github.com/emccode/goscaleio
-    ref:     519f89a09591aad51b435d4a6ddf7472dee718b7
-    repo:    https://github.com/akutz/goscaleio.git
+    ref:     ff8bf10008603307944f5b14cc2bc21bc6b411b2
+    repo:    https://github.com/emccode/goscaleio.git
     vcs:     git
   - package: github.com/emccode/goxtremio
     ref:     89e87d4bdf43837a161fd36ad8dd32e0ce42ae98

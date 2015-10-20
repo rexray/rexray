@@ -195,8 +195,8 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 }
 
 func (d *driver) getVolume(
-	volumeID, volumeName string) ([]*types.Volume, error) {
-	volumes, err := d.storagePool.GetVolume("", volumeID, "", volumeName)
+	volumeID, volumeName string, getSnapshots bool) ([]*types.Volume, error) {
+	volumes, err := d.storagePool.GetVolume("", volumeID, "", volumeName, getSnapshots)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (d *driver) GetVolume(
 		sdcDeviceMap[sdcMappedVolume.VolumeID] = sdcMappedVolume
 	}
 
-	volumes, err := d.getVolume(volumeID, volumeName)
+	volumes, err := d.getVolume(volumeID, volumeName, false)
 	if err != nil {
 		return []*core.Volume{}, err
 	}
@@ -299,7 +299,7 @@ func (d *driver) GetSnapshot(
 		volumeID = snapshotID
 	}
 
-	volumes, err := d.getVolume(volumeID, snapshotName)
+	volumes, err := d.getVolume(volumeID, snapshotName, true)
 	if err != nil {
 		return []*core.Snapshot{}, err
 	}
@@ -433,7 +433,7 @@ func (d *driver) RemoveVolume(volumeID string) error {
 	var err error
 	var volumes []*types.Volume
 
-	if volumes, err = d.getVolume(volumeID, ""); err != nil {
+	if volumes, err = d.getVolume(volumeID, "", false); err != nil {
 		return errors.WithFieldsE(fields, "error getting volume", err)
 	}
 
@@ -481,7 +481,7 @@ func (d *driver) AttachVolume(
 		AllSdcs:               "",
 	}
 
-	volumes, err := d.getVolume(volumeID, "")
+	volumes, err := d.getVolume(volumeID, "", false)
 	if err != nil {
 		return nil, errors.WithFieldsE(fields, "error getting volume", err)
 	}
@@ -532,7 +532,7 @@ func (d *driver) DetachVolume(
 		return errors.WithFields(fields, "volumeId is required")
 	}
 
-	volumes, err := d.getVolume(volumeID, "")
+	volumes, err := d.getVolume(volumeID, "", false)
 	if err != nil {
 		return errors.WithFieldsE(fields, "error getting volume", err)
 	}

@@ -204,7 +204,7 @@ _deps:
 		printf "  ...downloading go dependencies..."; \
 			cd $(BASEDIR); \
 			go get -d $(GOFLAGS) $(NV); \
-			$(GLIDE) -q up 2> /dev/null; \
+			$(GLIDE) -q up --no-recursive 2> /dev/null; \
 			$(PRINT_STATUS); \
 	fi
 

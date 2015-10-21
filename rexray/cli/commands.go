@@ -587,7 +587,7 @@ var volumeDetachCmd = &cobra.Command{
 
 var snapshotCopyCmd = &cobra.Command{
 	Use:   "copy",
-	Short: "Copie a snapshot",
+	Short: "Copies a snapshot",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if snapshotID == "" && volumeID == "" && volumeName == "" {

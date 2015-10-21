@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -386,11 +388,11 @@ var adapterGetInstancesCmd = &cobra.Command{
 		}
 
 		if len(allInstances) > 0 {
-			yamlOutput, err := yaml.Marshal(&allInstances)
+			out, err := marshalOutput(&allInstances)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf(string(yamlOutput))
+			fmt.Println(out)
 		}
 	},
 }
@@ -406,11 +408,11 @@ var volumeMapCmd = &cobra.Command{
 		}
 
 		if len(allBlockDevices) > 0 {
-			yamlOutput, err := yaml.Marshal(&allBlockDevices)
+			out, err := marshalOutput(&allBlockDevices)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf(string(yamlOutput))
+			fmt.Println(out)
 		}
 	},
 }
@@ -427,11 +429,11 @@ var volumeGetCmd = &cobra.Command{
 		}
 
 		if len(allVolumes) > 0 {
-			yamlOutput, err := yaml.Marshal(&allVolumes)
+			out, err := marshalOutput(&allVolumes)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf(string(yamlOutput))
+			fmt.Println(out)
 		}
 	},
 }
@@ -448,11 +450,11 @@ var snapshotGetCmd = &cobra.Command{
 		}
 
 		if len(allSnapshots) > 0 {
-			yamlOutput, err := yaml.Marshal(&allSnapshots)
+			out, err := marshalOutput(&allSnapshots)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf(string(yamlOutput))
+			fmt.Println(out)
 		}
 	},
 }
@@ -472,11 +474,11 @@ var snapshotCreateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		yamlOutput, err := yaml.Marshal(&snapshot)
+		out, err := marshalOutput(&snapshot)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf(string(yamlOutput))
+		fmt.Println(out)
 
 	},
 }
@@ -516,11 +518,11 @@ var volumeCreateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		yamlOutput, err := yaml.Marshal(&volume)
+		out, err := marshalOutput(&volume)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf(string(yamlOutput))
+		fmt.Println(out)
 
 	},
 }
@@ -557,11 +559,11 @@ var volumeAttachCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		yamlOutput, err := yaml.Marshal(&volumeAttachment)
+		out, err := marshalOutput(&volumeAttachment)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf(string(yamlOutput))
+		fmt.Println(out)
 
 	},
 }
@@ -599,11 +601,11 @@ var snapshotCopyCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		yamlOutput, err := yaml.Marshal(&snapshot)
+		out, err := marshalOutput(&snapshot)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf(string(yamlOutput))
+		fmt.Println(out)
 
 	},
 }
@@ -619,11 +621,11 @@ var deviceGetCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		yamlOutput, err := yaml.Marshal(&mounts)
+		out, err := marshalOutput(&mounts)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf(string(yamlOutput))
+		fmt.Println(out)
 	},
 }
 
@@ -697,11 +699,11 @@ var volumeMountCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		yamlOutput, err := yaml.Marshal(&mountPath)
+		out, err := marshalOutput(&mountPath)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf(string(yamlOutput))
+		fmt.Println(out)
 
 	},
 }
@@ -738,11 +740,33 @@ var volumePathCmd = &cobra.Command{
 		}
 
 		if mountPath != "" {
-			yamlOutput, err := yaml.Marshal(&mountPath)
+			out, err := marshalOutput(&mountPath)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf(string(yamlOutput))
+			fmt.Println(out)
 		}
 	},
+}
+
+func marshalOutput(v interface{}) (string, error) {
+	var err error
+	var buf []byte
+	if strings.ToUpper(outputFormat) == "JSON" {
+		buf, err = marshalJSONOutput(v)
+	} else {
+		buf, err = marshalYamlOutput(v)
+	}
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
+func marshalYamlOutput(v interface{}) ([]byte, error) {
+	return yaml.Marshal(v)
+}
+
+func marshalJSONOutput(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
 }

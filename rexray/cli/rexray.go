@@ -33,6 +33,7 @@ const (
 var (
 	r *core.RexRay
 
+	outputFormat            string
 	client                  string
 	fg                      bool
 	force                   bool

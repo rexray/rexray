@@ -5,6 +5,7 @@ import (
 
 	"github.com/emccode/rexray/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func initFlags() {
@@ -71,6 +72,14 @@ func initVolumeFlags() {
 	volumeUnmountCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
 	volumePathCmd.Flags().StringVar(&volumeID, "volumeid", "", "volumeid")
 	volumePathCmd.Flags().StringVar(&volumeName, "volumename", "", "volumename")
+
+	addOutputFormatFlag(volumeCmd.Flags())
+	addOutputFormatFlag(volumeGetCmd.Flags())
+	addOutputFormatFlag(volumeCreateCmd.Flags())
+	addOutputFormatFlag(volumeAttachCmd.Flags())
+	addOutputFormatFlag(volumeMountCmd.Flags())
+	addOutputFormatFlag(volumePathCmd.Flags())
+	addOutputFormatFlag(volumeMapCmd.Flags())
 }
 
 func initDeviceFlags() {
@@ -84,6 +93,9 @@ func initDeviceFlags() {
 	deviceFormatCmd.Flags().StringVar(&deviceName, "devicename", "", "devicename")
 	deviceFormatCmd.Flags().StringVar(&fsType, "fstype", "", "fstype")
 	deviceFormatCmd.Flags().BoolVar(&overwriteFs, "overwritefs", false, "overwritefs")
+
+	addOutputFormatFlag(deviceCmd.Flags())
+	addOutputFormatFlag(deviceGetCmd.Flags())
 }
 
 func initSnapshotFlags() {
@@ -101,6 +113,11 @@ func initSnapshotFlags() {
 	snapshotCopyCmd.Flags().StringVar(&snapshotName, "snapshotname", "", "snapshotname")
 	snapshotCopyCmd.Flags().StringVar(&destinationSnapshotName, "destinationsnapshotname", "", "destinationsnapshotname")
 	snapshotCopyCmd.Flags().StringVar(&destinationRegion, "destinationregion", "", "destinationregion")
+
+	addOutputFormatFlag(snapshotCmd.Flags())
+	addOutputFormatFlag(snapshotGetCmd.Flags())
+	addOutputFormatFlag(snapshotCopyCmd.Flags())
+	addOutputFormatFlag(snapshotCreateCmd.Flags())
 }
 
 func initModuleFlags() {
@@ -122,4 +139,13 @@ func initModuleFlags() {
 
 	moduleInstancesStartCmd.Flags().Int32VarP(&moduleInstanceID, "id",
 		"i", -1, "The ID of the module instance to start")
+}
+
+func initAdapterFlags() {
+	addOutputFormatFlag(adapterGetInstancesCmd.Flags())
+}
+
+func addOutputFormatFlag(fs *pflag.FlagSet) {
+	fs.StringVarP(
+		&outputFormat, "format", "f", "yml", "The output format (yml, json)")
 }

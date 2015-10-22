@@ -3,26 +3,9 @@ package test
 import (
 	"testing"
 
-	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/core/errors"
+	"github.com/emccode/rexray/drivers/mock"
 )
-
-type mockStorDriver struct {
-	name string
-}
-
-func newStorDriver() core.Driver {
-	var d core.StorageDriver = &mockStorDriver{mockStorDriverName}
-	return d
-}
-
-func (m *mockStorDriver) Init(r *core.RexRay) error {
-	return nil
-}
-
-func (m *mockStorDriver) Name() string {
-	return m.name
-}
 
 func TestStorageDriverName(t *testing.T) {
 	r, err := getRexRay()
@@ -30,8 +13,8 @@ func TestStorageDriverName(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := <-r.Storage.Drivers()
-	if d.Name() != mockStorDriverName {
-		t.Fatalf("driver name != %s, == %s", mockStorDriverName, d.Name())
+	if d.Name() != mock.MockStorDriverName {
+		t.Fatalf("driver name != %s, == %s", mock.MockStorDriverName, d.Name())
 	}
 }
 
@@ -40,8 +23,8 @@ func TestStorageDriverManagerName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.Storage.Name() != mockStorDriverName {
-		t.Fatalf("driver name != %s, == %s", mockStorDriverName, r.Storage.Name())
+	if r.Storage.Name() != mock.MockStorDriverName {
+		t.Fatalf("driver name != %s, == %s", mock.MockStorDriverName, r.Storage.Name())
 	}
 }
 
@@ -50,15 +33,6 @@ func TestStorageDriverManagerNameNoDrivers(t *testing.T) {
 	if r.Storage.Name() != "" {
 		t.Fatal("name not empty")
 	}
-}
-
-func (m *mockStorDriver) GetVolumeMapping() ([]*core.BlockDevice, error) {
-	return []*core.BlockDevice{&core.BlockDevice{
-		DeviceName:   "test",
-		ProviderName: mockStorDriverName,
-		InstanceID:   "test",
-		Region:       "test",
-	}}, nil
 }
 
 func TestStorageDriverGetVolumeMapping(t *testing.T) {
@@ -90,14 +64,6 @@ func TestStorageDriverManagerGetVolumeMappingNoDrivers(t *testing.T) {
 	if _, err := r.Storage.GetVolumeMapping(); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockStorDriver) GetInstance() (*core.Instance, error) {
-	return &core.Instance{
-		Name:         "test",
-		InstanceID:   "test",
-		ProviderName: mockStorDriverName,
-		Region:       "test"}, nil
 }
 
 func TestStorageDriverGetInstance(t *testing.T) {
@@ -151,15 +117,6 @@ func TestGetInstancesNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockStorDriver) GetVolume(
-	volumeID, volumeName string) ([]*core.Volume, error) {
-	return []*core.Volume{&core.Volume{
-		Name:             "test",
-		VolumeID:         "test",
-		AvailabilityZone: "test",
-	}}, nil
-}
-
 func TestStorageDriverGetVolume(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -192,11 +149,6 @@ func TestStorageDriverManagerGetVolumeNoDrivers(t *testing.T) {
 		"", ""); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockStorDriver) GetVolumeAttach(
-	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
-	return nil, nil
 }
 
 func TestStorageDriverGetVolumeAttach(t *testing.T) {
@@ -233,12 +185,6 @@ func TestStorageDriverManagerGetVolumeAttachNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockStorDriver) CreateSnapshot(
-	runAsync bool,
-	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
-	return nil, nil
-}
-
 func TestStorageDriverCreateSnapshot(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -271,11 +217,6 @@ func TestStorageDriverManagerCreateSnapshotNoDrivers(t *testing.T) {
 		false, "", "", ""); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockStorDriver) GetSnapshot(
-	volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
-	return nil, nil
 }
 
 func TestStorageDriverGetSnapshot(t *testing.T) {
@@ -312,10 +253,6 @@ func TestStorageDriverManagerGetSnapshotNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockStorDriver) RemoveSnapshot(snapshotID string) error {
-	return nil
-}
-
 func TestStorageDriverRemoveSnapshot(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -345,14 +282,6 @@ func TestStorageDriverManagerRemoveSnapshotNoDrivers(t *testing.T) {
 	if err := r.Storage.RemoveSnapshot(""); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockStorDriver) CreateVolume(
-	runAsync bool,
-	volumeName, volumeID, snapshotID, volumeType string,
-	IOPS, size int64,
-	availabilityZone string) (*core.Volume, error) {
-	return nil, nil
 }
 
 func TestStorageDriverCreateVolume(t *testing.T) {
@@ -389,10 +318,6 @@ func TestStorageDriverManagerCreateVolumeNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockStorDriver) RemoveVolume(volumeID string) error {
-	return nil
-}
-
 func TestStorageDriverRemoveVolume(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -424,10 +349,6 @@ func TestStorageDriverManagerRemoveVolumeNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockStorDriver) GetDeviceNextAvailable() (string, error) {
-	return "", nil
-}
-
 func TestStorageDriverGetDeviceNextAvailable(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -457,11 +378,6 @@ func TestStorageDriverManagerGetDeviceNextAvailableNoDrivers(t *testing.T) {
 	if _, err := r.Storage.GetDeviceNextAvailable(); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockStorDriver) AttachVolume(
-	runAsync bool, volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
-	return nil, nil
 }
 
 func TestStorageDriverAttachVolume(t *testing.T) {
@@ -498,11 +414,6 @@ func TestStorageDriverManagerAttachVolumeNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockStorDriver) DetachVolume(
-	runAsync bool, volumeID string, instanceID string) error {
-	return nil
-}
-
 func TestStorageDriverDetachVolume(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -535,12 +446,6 @@ func TestStorageDriverManagerDetachVolumeNoDrivers(t *testing.T) {
 		false, "", ""); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockStorDriver) CopySnapshot(
-	runAsync bool, volumeID, snapshotID, snapshotName,
-	destinationSnapshotName, destinationRegion string) (*core.Snapshot, error) {
-	return nil, nil
 }
 
 func TestStorageDriverCopySnapshot(t *testing.T) {

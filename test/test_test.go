@@ -11,42 +11,21 @@ import (
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
+	"github.com/emccode/rexray/drivers/mock"
 	"github.com/emccode/rexray/util"
 )
 
-const (
-	mockOSDriverName   = "mockOSDriver"
-	mockVolDriverName  = "mockVolumeDriver"
-	mockStorDriverName = "mockStorageDriver"
-
-	badMockOSDriverName   = "badMockOSDriver"
-	badMockVolDriverName  = "badMockVolumeDriver"
-	badMockStorDriverName = "badMockStorageDriver"
-)
-
-func registerMockDrivers() {
-	core.RegisterDriver(mockOSDriverName, newOSDriver)
-	core.RegisterDriver(mockVolDriverName, newVolDriver)
-	core.RegisterDriver(mockStorDriverName, newStorDriver)
-}
-
-func registerBadMockDrivers() {
-	core.RegisterDriver(badMockOSDriverName, newBadOSDriver)
-	core.RegisterDriver(badMockVolDriverName, newBadVolDriver)
-	core.RegisterDriver(badMockStorDriverName, newBadStorDriver)
-}
-
 func TestMain(m *testing.M) {
-	registerMockDrivers()
-	registerBadMockDrivers()
+	mock.RegisterMockDrivers()
+	mock.RegisterBadMockDrivers()
 	os.Exit(m.Run())
 }
 
 func getRexRay() (*core.RexRay, error) {
 	c := config.New()
-	c.OSDrivers = []string{mockOSDriverName}
-	c.VolumeDrivers = []string{mockVolDriverName}
-	c.StorageDrivers = []string{mockStorDriverName}
+	c.OSDrivers = []string{mock.MockOSDriverName}
+	c.VolumeDrivers = []string{mock.MockVolDriverName}
+	c.StorageDrivers = []string{mock.MockStorDriverName}
 	r := core.New(c)
 
 	if err := r.InitDrivers(); err != nil {
@@ -77,9 +56,9 @@ func TestNewWithConfig(t *testing.T) {
 
 func TestNewWithNilConfig(t *testing.T) {
 	r := core.New(nil)
-	r.Config.OSDrivers = []string{mockOSDriverName}
-	r.Config.VolumeDrivers = []string{mockVolDriverName}
-	r.Config.StorageDrivers = []string{mockStorDriverName}
+	r.Config.OSDrivers = []string{mock.MockOSDriverName}
+	r.Config.VolumeDrivers = []string{mock.MockVolDriverName}
+	r.Config.StorageDrivers = []string{mock.MockStorDriverName}
 
 	if err := r.InitDrivers(); err != nil {
 		t.Fatal(err)
@@ -89,9 +68,9 @@ func TestNewWithNilConfig(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	os.Setenv("REXRAY_OSDRIVERS", mockOSDriverName)
-	os.Setenv("REXRAY_VOLUMEDRIVERS", mockVolDriverName)
-	os.Setenv("REXRAY_STORAGEDRIVERS", mockStorDriverName)
+	os.Setenv("REXRAY_OSDRIVERS", mock.MockOSDriverName)
+	os.Setenv("REXRAY_VOLUMEDRIVERS", mock.MockVolDriverName)
+	os.Setenv("REXRAY_STORAGEDRIVERS", mock.MockStorDriverName)
 
 	r, err := rexray.New()
 	if err != nil {
@@ -108,8 +87,8 @@ func TestNew(t *testing.T) {
 func TestNewNoOSDrivers(t *testing.T) {
 	c := config.New()
 	c.OSDrivers = []string{}
-	c.VolumeDrivers = []string{mockVolDriverName}
-	c.StorageDrivers = []string{mockStorDriverName}
+	c.VolumeDrivers = []string{mock.MockVolDriverName}
+	c.StorageDrivers = []string{mock.MockStorDriverName}
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoOSDrivers {
 		t.Fatal(err)
@@ -118,9 +97,9 @@ func TestNewNoOSDrivers(t *testing.T) {
 
 func TestNewNoVolumeDrivers(t *testing.T) {
 	c := config.New()
-	c.OSDrivers = []string{mockOSDriverName}
+	c.OSDrivers = []string{mock.MockOSDriverName}
 	c.VolumeDrivers = []string{}
-	c.StorageDrivers = []string{mockStorDriverName}
+	c.StorageDrivers = []string{mock.MockStorDriverName}
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoVolumeDrivers {
 		t.Fatal(err)
@@ -129,8 +108,8 @@ func TestNewNoVolumeDrivers(t *testing.T) {
 
 func TestNewNoStorageDrivers(t *testing.T) {
 	c := config.New()
-	c.OSDrivers = []string{mockOSDriverName}
-	c.VolumeDrivers = []string{mockVolDriverName}
+	c.OSDrivers = []string{mock.MockOSDriverName}
+	c.VolumeDrivers = []string{mock.MockVolDriverName}
 	c.StorageDrivers = []string{}
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoStorageDrivers {
@@ -140,9 +119,9 @@ func TestNewNoStorageDrivers(t *testing.T) {
 
 func TestNewWithEnv(t *testing.T) {
 	r, err := rexray.NewWithEnv(map[string]string{
-		"REXRAY_OSDRIVERS":      mockOSDriverName,
-		"REXRAY_VOLUMEDRIVERS":  mockVolDriverName,
-		"REXRAY_STORAGEDRIVERS": mockStorDriverName,
+		"REXRAY_OSDRIVERS":      mock.MockOSDriverName,
+		"REXRAY_VOLUMEDRIVERS":  mock.MockVolDriverName,
+		"REXRAY_STORAGEDRIVERS": mock.MockStorDriverName,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -206,12 +185,12 @@ func TestNewWithBadConfigReader(t *testing.T) {
 
 func TestDriverNames(t *testing.T) {
 	allDriverNames := []string{
-		strings.ToLower(mockOSDriverName),
-		strings.ToLower(mockVolDriverName),
-		strings.ToLower(mockStorDriverName),
-		strings.ToLower(badMockOSDriverName),
-		strings.ToLower(badMockVolDriverName),
-		strings.ToLower(badMockStorDriverName),
+		strings.ToLower(mock.MockOSDriverName),
+		strings.ToLower(mock.MockVolDriverName),
+		strings.ToLower(mock.MockStorDriverName),
+		strings.ToLower(mock.BadMockOSDriverName),
+		strings.ToLower(mock.BadMockVolDriverName),
+		strings.ToLower(mock.BadMockStorDriverName),
 		"linux",
 		"docker",
 		"ec2",
@@ -248,12 +227,12 @@ func TestRexRayDriverNames(t *testing.T) {
 	}
 
 	allDriverNames := []string{
-		strings.ToLower(mockOSDriverName),
-		strings.ToLower(mockVolDriverName),
-		strings.ToLower(mockStorDriverName),
-		strings.ToLower(badMockOSDriverName),
-		strings.ToLower(badMockVolDriverName),
-		strings.ToLower(badMockStorDriverName),
+		strings.ToLower(mock.MockOSDriverName),
+		strings.ToLower(mock.MockVolDriverName),
+		strings.ToLower(mock.MockStorDriverName),
+		strings.ToLower(mock.BadMockOSDriverName),
+		strings.ToLower(mock.BadMockVolDriverName),
+		strings.ToLower(mock.BadMockStorDriverName),
 		"linux",
 		"docker",
 		"ec2",
@@ -283,18 +262,18 @@ func TestRexRayDriverNames(t *testing.T) {
 
 func assertDriverNames(t *testing.T, r *core.RexRay) {
 	od := <-r.OS.Drivers()
-	if od.Name() != mockOSDriverName {
-		t.Fatalf("expected %s but was %s", mockOSDriverName, od.Name())
+	if od.Name() != mock.MockOSDriverName {
+		t.Fatalf("expected %s but was %s", mock.MockOSDriverName, od.Name())
 	}
 
 	vd := <-r.Volume.Drivers()
-	if vd.Name() != mockVolDriverName {
-		t.Fatalf("expected %s but was %s", mockVolDriverName, vd.Name())
+	if vd.Name() != mock.MockVolDriverName {
+		t.Fatalf("expected %s but was %s", mock.MockVolDriverName, vd.Name())
 	}
 
 	sd := <-r.Storage.Drivers()
-	if sd.Name() != mockStorDriverName {
-		t.Fatalf("expected %s but was %s", mockStorDriverName, sd.Name())
+	if sd.Name() != mock.MockStorDriverName {
+		t.Fatalf("expected %s but was %s", mock.MockStorDriverName, sd.Name())
 	}
 }
 

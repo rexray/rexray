@@ -3,26 +3,9 @@ package test
 import (
 	"testing"
 
-	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/core/errors"
+	"github.com/emccode/rexray/drivers/mock"
 )
-
-type mockOSDriver struct {
-	name string
-}
-
-func newOSDriver() core.Driver {
-	var d core.OSDriver = &mockOSDriver{mockOSDriverName}
-	return d
-}
-
-func (m *mockOSDriver) Init(r *core.RexRay) error {
-	return nil
-}
-
-func (m *mockOSDriver) Name() string {
-	return m.name
-}
 
 func TestOSDriverName(t *testing.T) {
 	r, err := getRexRay()
@@ -30,8 +13,8 @@ func TestOSDriverName(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := <-r.OS.Drivers()
-	if d.Name() != mockOSDriverName {
-		t.Fatalf("driver name != %s, == %s", mockOSDriverName, d.Name())
+	if d.Name() != mock.MockOSDriverName {
+		t.Fatalf("driver name != %s, == %s", mock.MockOSDriverName, d.Name())
 	}
 }
 
@@ -40,8 +23,8 @@ func TestOSDriverManagerName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.OS.Name() != mockOSDriverName {
-		t.Fatalf("driver name != %s, == %s", mockOSDriverName, r.OS.Name())
+	if r.OS.Name() != mock.MockOSDriverName {
+		t.Fatalf("driver name != %s, == %s", mock.MockOSDriverName, r.OS.Name())
 	}
 }
 
@@ -50,10 +33,6 @@ func TestOSDriverManagerNameNoDrivers(t *testing.T) {
 	if r.OS.Name() != "" {
 		t.Fatal("name not empty")
 	}
-}
-
-func (m *mockOSDriver) GetMounts(string, string) (core.MountInfoArray, error) {
-	return nil, nil
 }
 
 func TestOSDriverGetMounts(t *testing.T) {
@@ -87,10 +66,6 @@ func TestOSDriverManagerGetMountsNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockOSDriver) Mounted(string) (bool, error) {
-	return false, nil
-}
-
 func TestOSDriverMounted(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -120,10 +95,6 @@ func TestOSDriverManagerMountedNoDrivers(t *testing.T) {
 	if _, err := r.OS.Mounted(""); err != errors.ErrNoOSDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockOSDriver) Unmount(string) error {
-	return nil
 }
 
 func TestOSDriverUnmount(t *testing.T) {
@@ -157,10 +128,6 @@ func TestOSDriverManagerUnmountNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockOSDriver) Mount(string, string, string, string) error {
-	return nil
-}
-
 func TestOSDriverMount(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -190,10 +157,6 @@ func TestOSDriverManagerMountNoDrivers(t *testing.T) {
 	if err := r.OS.Mount("", "", "", ""); err != errors.ErrNoOSDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockOSDriver) Format(string, string, bool) error {
-	return nil
 }
 
 func TestOSDriverFormat(t *testing.T) {

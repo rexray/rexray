@@ -53,7 +53,12 @@ func TestStorageDriverManagerNameNoDrivers(t *testing.T) {
 }
 
 func (m *mockStorDriver) GetVolumeMapping() ([]*core.BlockDevice, error) {
-	return []*core.BlockDevice{&core.BlockDevice{}}, nil
+	return []*core.BlockDevice{&core.BlockDevice{
+		DeviceName:   "test",
+		ProviderName: mockStorDriverName,
+		InstanceID:   "test",
+		Region:       "test",
+	}}, nil
 }
 
 func TestStorageDriverGetVolumeMapping(t *testing.T) {
@@ -88,7 +93,11 @@ func TestStorageDriverManagerGetVolumeMappingNoDrivers(t *testing.T) {
 }
 
 func (m *mockStorDriver) GetInstance() (*core.Instance, error) {
-	return &core.Instance{}, nil
+	return &core.Instance{
+		Name:         "test",
+		InstanceID:   "test",
+		ProviderName: mockStorDriverName,
+		Region:       "test"}, nil
 }
 
 func TestStorageDriverGetInstance(t *testing.T) {
@@ -144,7 +153,11 @@ func TestGetInstancesNoDrivers(t *testing.T) {
 
 func (m *mockStorDriver) GetVolume(
 	volumeID, volumeName string) ([]*core.Volume, error) {
-	return nil, nil
+	return []*core.Volume{&core.Volume{
+		Name:             "test",
+		VolumeID:         "test",
+		AvailabilityZone: "test",
+	}}, nil
 }
 
 func TestStorageDriverGetVolume(t *testing.T) {

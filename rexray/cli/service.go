@@ -16,7 +16,7 @@ import (
 	"github.com/emccode/rexray/util"
 )
 
-func start() {
+func (c *CLI) start() {
 	checkOpPerms("started")
 
 	log.WithField("os.Args", os.Args).Debug("invoking service start")
@@ -33,10 +33,10 @@ func start() {
 		panic(1)
 	}
 
-	if fg || client != "" {
-		startDaemon()
+	if c.fg || c.client != "" {
+		c.startDaemon()
 	} else {
-		tryToStartDaemon()
+		c.tryToStartDaemon()
 	}
 }
 
@@ -47,7 +47,7 @@ func failOnError(err error) {
 	}
 }
 
-func startDaemon() {
+func (c *CLI) startDaemon() {
 
 	var out io.Writer = os.Stdout
 	if !log.IsTerminal() {
@@ -65,15 +65,15 @@ func startDaemon() {
 	var failure []byte
 	var conn net.Conn
 
-	if !fg {
+	if !c.fg {
 
 		success = []byte{0}
 		failure = []byte{1}
 
 		var dialErr error
 
-		log.Printf("dialing %s", client)
-		conn, dialErr = net.Dial("unix", client)
+		log.Printf("dialing %s", c.client)
+		conn, dialErr = net.Dial("unix", c.client)
 		if dialErr != nil {
 			panic(dialErr)
 		}
@@ -109,7 +109,7 @@ func startDaemon() {
 		syscall.SIGQUIT)
 
 	go func() {
-		rrdaemon.Start(r.Config.Host, init, stop)
+		rrdaemon.Start(c.r.Config.Host, init, stop)
 	}()
 
 	var initErrors []error
@@ -138,7 +138,7 @@ func startDaemon() {
 	stop <- sigv
 }
 
-func tryToStartDaemon() {
+func (c *CLI) tryToStartDaemon() {
 	_, _, thisAbsPath := util.GetThisPathParts()
 
 	fmt.Print("Starting REX-Ray...")
@@ -172,10 +172,10 @@ func tryToStartDaemon() {
 	cmdArgs := []string{
 		"start",
 		fmt.Sprintf("--client=%s", client),
-		fmt.Sprintf("--logLevel=%v", r.Config.LogLevel)}
+		fmt.Sprintf("--logLevel=%v", c.r.Config.LogLevel)}
 
-	if r.Config.Host != "" {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", r.Config.Host))
+	if c.r.Config.Host != "" {
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", c.r.Config.Host))
 	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)
@@ -219,7 +219,7 @@ func stop() {
 	fmt.Println("SUCCESS!")
 }
 
-func status() {
+func (c *CLI) status() {
 	if !util.FileExists(util.PidFilePath()) {
 		fmt.Println("REX-Ray is stopped")
 		return
@@ -228,14 +228,14 @@ func status() {
 	fmt.Printf("REX-Ray is running at pid %d\n", pid)
 }
 
-func restart() {
+func (c *CLI) restart() {
 	checkOpPerms("restarted")
 
 	if util.FileExists(util.PidFilePath()) {
 		stop()
 	}
 
-	start()
+	c.start()
 }
 
 func checkOpPerms(op string) error {

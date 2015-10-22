@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/emccode/rexray/drivers/mock"
 	"github.com/emccode/rexray/rexray/cli"
 )
 
 var defaultFlags = []string{
-	fmt.Sprintf("--osDrivers=%s", mockOSDriverName),
-	fmt.Sprintf("--volumeDrivers=%s", mockVolDriverName),
-	fmt.Sprintf("--storageDrivers=%s", mockStorDriverName),
+	fmt.Sprintf("--osDrivers=%s", mock.MockOSDriverName),
+	fmt.Sprintf("--volumeDrivers=%s", mock.MockVolDriverName),
+	fmt.Sprintf("--storageDrivers=%s", mock.MockStorDriverName),
 }
 
 func a(a ...string) {

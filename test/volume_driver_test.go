@@ -3,26 +3,9 @@ package test
 import (
 	"testing"
 
-	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/core/errors"
+	"github.com/emccode/rexray/drivers/mock"
 )
-
-type mockVolDriver struct {
-	name string
-}
-
-func newVolDriver() core.Driver {
-	var d core.VolumeDriver = &mockVolDriver{mockVolDriverName}
-	return d
-}
-
-func (m *mockVolDriver) Init(r *core.RexRay) error {
-	return nil
-}
-
-func (m *mockVolDriver) Name() string {
-	return m.name
-}
 
 func TestVolumeDriverName(t *testing.T) {
 	r, err := getRexRay()
@@ -30,8 +13,8 @@ func TestVolumeDriverName(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := <-r.Volume.Drivers()
-	if d.Name() != mockVolDriverName {
-		t.Fatalf("driver name != %s, == %s", mockVolDriverName, d.Name())
+	if d.Name() != mock.MockVolDriverName {
+		t.Fatalf("driver name != %s, == %s", mock.MockVolDriverName, d.Name())
 	}
 }
 
@@ -40,8 +23,8 @@ func TestVolumeDriverManagerName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.Volume.Name() != mockVolDriverName {
-		t.Fatalf("driver name != %s, == %s", mockVolDriverName, r.Volume.Name())
+	if r.Volume.Name() != mock.MockVolDriverName {
+		t.Fatalf("driver name != %s, == %s", mock.MockVolDriverName, r.Volume.Name())
 	}
 }
 
@@ -112,12 +95,6 @@ func TestDetachAllNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockVolDriver) Mount(
-	volumeName, volumeID string,
-	overwriteFs bool, newFsType string) (string, error) {
-	return "", nil
-}
-
 func TestVolumeDriverMount(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -147,10 +124,6 @@ func TestVolumeDriverManagerMountNoDrivers(t *testing.T) {
 	if _, err := r.Volume.Mount("", "", false, ""); err != errors.ErrNoVolumesDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockVolDriver) Unmount(volumeName, volumeID string) error {
-	return nil
 }
 
 func TestVolumeDriverUnmount(t *testing.T) {
@@ -184,10 +157,6 @@ func TestVolumeDriverManagerUnmountNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockVolDriver) Path(volumeName, volumeID string) (string, error) {
-	return "", nil
-}
-
 func TestVolumeDriverPath(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -217,10 +186,6 @@ func TestVolumeDriverManagerPathNoDrivers(t *testing.T) {
 	if _, err := r.Volume.Path("", ""); err != errors.ErrNoVolumesDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockVolDriver) Create(volumeName string, opts core.VolumeOpts) error {
-	return nil
 }
 
 func TestVolumeDriverCreate(t *testing.T) {
@@ -254,10 +219,6 @@ func TestVolumeDriverManagerCreateNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockVolDriver) Remove(volumeName string) error {
-	return nil
-}
-
 func TestVolumeDriverRemove(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -287,10 +248,6 @@ func TestVolumeDriverManagerRemoveNoDrivers(t *testing.T) {
 	if err := r.Volume.Remove(""); err != errors.ErrNoVolumesDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockVolDriver) Attach(volumeName, instanceID string) (string, error) {
-	return "", nil
 }
 
 func TestVolumeDriverAttach(t *testing.T) {
@@ -324,10 +281,6 @@ func TestVolumeDriverManagerAttachNoDrivers(t *testing.T) {
 	}
 }
 
-func (m *mockVolDriver) Detach(volumeName, instanceID string) error {
-	return nil
-}
-
 func TestVolumeDriverDetach(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {
@@ -357,11 +310,6 @@ func TestVolumeDriverManagerDetachNoDrivers(t *testing.T) {
 	if err := r.Volume.Detach("", ""); err != errors.ErrNoVolumesDetected {
 		t.Fatal(err)
 	}
-}
-
-func (m *mockVolDriver) NetworkName(
-	volumeName, instanceID string) (string, error) {
-	return "", nil
 }
 
 func TestVolumeDriverNetworkName(t *testing.T) {

@@ -71,19 +71,18 @@ line, but in order for `REX-Ray` to do much more than print out help text,
 configuration is necessary:
 
 ### Configuring REX-Ray
-* Environment variables
-* Configuration files
-* Command line options
-* Global configuration options
+The first step to getting started is [configuring `REX-Ray`](/user-guide/config/)!
 
 ### Configuring Storage Providers
-* [Amazon Elastic Computer Cloud (EC2)](https://aws.amazon.com/ec2/)
-* [Openstack on Rackspace](http://www.rackspace.com/en-us/cloud/openstack)
-* [ScaleIO](http://www.emc.com/storage/scaleio/index.htm)
-* [XtremIO](http://xtremio.com/) (with Multipath & Device Mapper support)
+* [Amazon Elastic Computer Cloud (EC2)](/user-guide/ec2/)
+* [Rackspace](/user-guide/rackspace/)
+* [ScaleIO](/user-guide/scaleio/)
+* [OpenStack](/user-guide/openstack/)
+* [XtremIO](/user-guide/xtremio/)
 
 ### Configuring External Integration
-* Docker Volume Plugin
+* [Docker](/user-guide/docker/)
+* [Mesos](/user-guide/mesos/)
 
 ## Getting Help
 To get help with REX-Ray, please use the

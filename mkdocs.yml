@@ -9,6 +9,14 @@ pages:
 - Home: index.md
 - User Guide:
     - Installation: user-guide/installation.md
+    - Configuration: user-guide/config.md
+    - 'Amazon EC2': user-guide/ec2.md
+    - OpenStack: user-guide/openstack.md
+    - Rackspace: user-guide/rackspace.md
+    - ScaleIO: user-guide/scaleio.md
+    - XtremIO: user-guide/xtremio.md
+    - Docker: user-guide/docker.md
+    - Mesos: user-guide/mesos.md
 - About:
     - Contributing: about/contributing.md
     - License: about/license.md

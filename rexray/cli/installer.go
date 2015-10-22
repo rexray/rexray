@@ -142,11 +142,6 @@ func uninstall(pkgManager bool) {
 		uninstallChkConfig()
 	}
 
-	os.RemoveAll(util.EtcDirPath())
-	os.RemoveAll(util.RunDirPath())
-	os.RemoveAll(util.LibDirPath())
-	os.RemoveAll(util.LogDirPath())
-
 	if !pkgManager {
 		os.Remove(binFile)
 		if util.IsPrefixed() {

@@ -97,7 +97,7 @@ func (c *CLI) initSnapshotCmds() {
 
 	c.snapshotCopyCmd = &cobra.Command{
 		Use:   "copy",
-		Short: "Copie a snapshot",
+		Short: "Copies a snapshot",
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if c.snapshotID == "" && c.volumeID == "" && c.volumeName == "" {

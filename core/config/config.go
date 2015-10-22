@@ -217,7 +217,14 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 func (c *Config) marshalJSON(s JSONMarshalStrategy) ([]byte, error) {
 	switch s {
 	case JSONMarshalPlainText:
-		return json.MarshalIndent(c.plainTextConfig, "", "  ")
+		s := struct {
+			plainTextConfig
+			secureConfig
+		}{
+			c.plainTextConfig,
+			c.secureConfig,
+		}
+		return json.MarshalIndent(s, "", "  ")
 	default:
 		return json.MarshalIndent(c.secureConfig, "", "  ")
 	}

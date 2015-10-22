@@ -76,9 +76,9 @@ volumeDrivers: docker
 ## General Options
 The following are the general configuration options for `REX-Ray`.
 
-Name | EnvVar | YAML | CLI  | Description | Default
------|--------|------|------|-------------|---------
-Log Level | `REXRAY_LOGLEVEL` | `logLevel` | `--logLevel`, `-l` | Set to `true` or ```TRUE``` to enable debug messages
-OS Drivers | `REXRAY_OSDRIVERS` | `osDrivers` | `--osDrivers` |  A space-delimited list of OS driver names which instructs `REX-Ray` to only do checks using the specified drivers | `linux`
-Volume Drivers | `REXRAY_VOLUMEDRIVERS` | `volumeDrivers` | `--volumeDrivers` |  A space-delimited list of storage driver names which instructs `REX-Ray` to only do checks using the specified drivers | `docker`
-Storage Drivers | `REXRAY_STORAGEDRIVERS` | `storageDrivers` | `--storageDrivers` |  A space-delimitedlist of volume driver names which instructs `REX-Ray` to only do checks using the specified drivers |
+ EnvVar | YAML | CLI  | Description | Default
+--------|------|------|-------------|---------
+`REXRAY_LOGLEVEL` | `logLevel` | `--logLevel`, `-l` | The valid log levels are `error`, `warn`, `info`, `debug` | `warn`
+`REXRAY_OSDRIVERS` | `osDrivers` | `--osDrivers` |  A space-delimited list of OS driver names which instructs `REX-Ray` to only do checks using the specified drivers | `linux`
+`REXRAY_VOLUMEDRIVERS` | `volumeDrivers` | `--volumeDrivers` |  A space-delimited list of storage driver names which instructs `REX-Ray` to only do checks using the specified drivers | `docker`
+`REXRAY_STORAGEDRIVERS` | `storageDrivers` | `--storageDrivers` |  A space-delimitedlist of volume driver names which instructs `REX-Ray` to only do checks using the specified drivers |

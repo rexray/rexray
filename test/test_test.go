@@ -24,14 +24,21 @@ const (
 	badMockStorDriverName = "badMockStorageDriver"
 )
 
-func TestMain(m *testing.M) {
+func registerMockDrivers() {
 	core.RegisterDriver(mockOSDriverName, newOSDriver)
 	core.RegisterDriver(mockVolDriverName, newVolDriver)
 	core.RegisterDriver(mockStorDriverName, newStorDriver)
+}
 
+func registerBadMockDrivers() {
 	core.RegisterDriver(badMockOSDriverName, newBadOSDriver)
 	core.RegisterDriver(badMockVolDriverName, newBadVolDriver)
 	core.RegisterDriver(badMockStorDriverName, newBadStorDriver)
+}
+
+func TestMain(m *testing.M) {
+	registerMockDrivers()
+	registerBadMockDrivers()
 	os.Exit(m.Run())
 }
 

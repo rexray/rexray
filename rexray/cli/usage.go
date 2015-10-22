@@ -13,7 +13,7 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-func initUsageTemplates() {
+func (c *CLI) initUsageTemplates() {
 
 	var ut string
 	utPath := fmt.Sprintf("%s/.rexray/usage.template", util.HomeDir())
@@ -31,23 +31,23 @@ func initUsageTemplates() {
 		ut = usageTemplate
 	}
 
-	RexrayCmd.SetUsageTemplate(ut)
-	RexrayCmd.SetHelpTemplate(ut)
+	c.c.SetUsageTemplate(ut)
+	c.c.SetHelpTemplate(ut)
 
 	cobra.AddTemplateFuncs(template.FuncMap{
-		"af":    additionalFlags,
+		"af":    c.additionalFlags,
 		"hf":    hasFlags,
-		"lf":    localFlags,
-		"gf":    globalFlags,
+		"lf":    c.localFlags,
+		"gf":    c.globalFlags,
 		"ihf":   isHelpFlag,
 		"ivf":   isVerboseFlag,
-		"saf":   sansAdditionalFlags,
+		"saf":   c.sansAdditionalFlags,
 		"cmds":  commands,
 		"rtrim": rtrim,
 	})
 }
 
-func localFlags(cmd *cobra.Command) *flag.FlagSet {
+func (c *CLI) localFlags(cmd *cobra.Command) *flag.FlagSet {
 
 	fs := &flag.FlagSet{}
 
@@ -65,10 +65,10 @@ func localFlags(cmd *cobra.Command) *flag.FlagSet {
 		})
 	}
 
-	return sansAdditionalFlags(fs)
+	return c.sansAdditionalFlags(fs)
 }
 
-func globalFlags(cmd *cobra.Command) *flag.FlagSet {
+func (c *CLI) globalFlags(cmd *cobra.Command) *flag.FlagSet {
 
 	fs := &flag.FlagSet{}
 
@@ -81,13 +81,13 @@ func globalFlags(cmd *cobra.Command) *flag.FlagSet {
 		fs.AddFlagSet(cmd.PersistentFlags())
 	}
 
-	return sansAdditionalFlags(fs)
+	return c.sansAdditionalFlags(fs)
 }
 
-func sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
+func (c *CLI) sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
 	fs := &flag.FlagSet{}
 	flags.VisitAll(func(f *flag.Flag) {
-		if r.Config.AdditionalFlags.Lookup(f.Name) == nil {
+		if c.r.Config.AdditionalFlags.Lookup(f.Name) == nil {
 			fs.AddFlag(f)
 		}
 	})
@@ -98,8 +98,8 @@ func hasFlags(flags *flag.FlagSet) bool {
 	return flags != nil && flags.HasFlags()
 }
 
-func additionalFlags() *flag.FlagSet {
-	return r.Config.AdditionalFlags
+func (c *CLI) additionalFlags() *flag.FlagSet {
+	return c.r.Config.AdditionalFlags
 }
 
 func isHelpFlag(cmd *cobra.Command) bool {

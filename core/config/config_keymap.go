@@ -149,7 +149,7 @@ func initConfigKeyMap() {
 		Host: ck("REXRAY_HOST", "tcp://:7979",
 			"The REX-Ray service address"),
 
-		LogLevel: ck("REXRAY_LOGLEVEL", "info",
+		LogLevel: ck("REXRAY_LOGLEVEL", "warn",
 			"The log level (panic, fatal, error, warn, info, debug)"),
 
 		StorageDrivers: ck("REXRAY_STORAGEDRIVERS", []string{},

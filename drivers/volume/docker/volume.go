@@ -37,7 +37,7 @@ func newDriver() core.Driver {
 
 func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
-	log.WithField("provider", providerName).Debug("volume driver initialized")
+	log.WithField("provider", providerName).Info("volume driver initialized")
 	return nil
 }
 

@@ -187,9 +187,7 @@
     
         <li class="main active"><a href="#rex-ray">REX-Ray</a></li>
         
-            <li><a href="#features">Features</a></li>
-        
-            <li><a href="#installation">Installation</a></li>
+            <li><a href="#overview">Overview</a></li>
         
             <li><a href="#getting-started">Getting Started</a></li>
         
@@ -208,10 +206,10 @@ via guest storage introspection. Available as a Go package, CLI tool, and Linux
 service, and with built-in third-party support for tools such as <code>Docker</code>,
 <code>REX-Ray</code> is easily integrated into any workflow. For example, here's how to
 list storage for a guest hosted on Amazon Web Services (AWS) with <code>REX-Ray</code>:</p>
-<pre><code class="bash">[0]akutz@pax:~$ export REXRAY_STORAGEDRIVERS=ec2
-[0]akutz@pax:~$ export AWS_ACCESS_KEY=access_key
-[0]akutz@pax:~$ export AWS_SECRET_KEY=secret_key
-[0]akutz@pax:~$ rexray volume get
+<pre><code class="bash">$ export REXRAY_STORAGEDRIVERS=ec2
+$ export AWS_ACCESS_KEY=access_key
+$ export AWS_SECRET_KEY=secret_key
+$ rexray volume get
 
 - providername: ec2
   instanceid: i-695bb6ab
@@ -219,19 +217,14 @@ list storage for a guest hosted on Amazon Web Services (AWS) with <code>REX-Ray<
   devicename: /dev/sda1
   region: us-west-1
   status: attached
-- providername: ec2
-  instanceid: i-695bb6ab
-  volumeid: vol-04c4b219
-  devicename: /dev/xvdb
-  region: us-west-1
-  status: attached
 </code></pre>
 
-<h2 id="features">Features</h2>
+<h2 id="overview">Overview</h2>
 <p>Today <code>REX-Ray</code> supports the following storage providers:</p>
 <ul>
 <li><a href="https://aws.amazon.com/ec2/">Amazon Elastic Computer Cloud (EC2)</a></li>
 <li><a href="http://www.rackspace.com/en-us/cloud/openstack">Openstack on Rackspace</a></li>
+<li><a href="http://www.rackspace.com">Rackspace</a></li>
 <li><a href="http://www.emc.com/storage/scaleio/index.htm">ScaleIO</a></li>
 <li><a href="http://xtremio.com/">XtremIO</a> (with Multipath &amp; Device Mapper support)</li>
 </ul>
@@ -267,7 +260,9 @@ list storage for a guest hosted on Amazon Web Services (AWS) with <code>REX-Ray<
 </tr>
 </tbody>
 </table>
-<h2 id="installation">Installation</h2>
+<h2 id="getting-started">Getting Started</h2>
+<p>This section will help you get started using <code>REX-Ray</code>.</p>
+<h3 id="installing-rex-ray">Installing REX-Ray</h3>
 <p>The following command will download the most recent, stable build of <code>REX-Ray</code>
 and install it to <code>/usr/bin/rexray.</code> On Linux systems <code>REX-Ray</code> will also be
 registered as either a SystemD or SystemV service.</p>
@@ -278,7 +273,6 @@ registered as either a SystemD or SystemV service.</p>
 <a href="user-guide/installation/#install-a-pre-built-binary">a pre-built binary</a>, an RPM or DEB
 package, or by
 <a href="user-guide/installation/#build-and-install-from-source">building it from source</a>.</p>
-<h2 id="getting-started">Getting Started</h2>
 <p>Once installed, <code>REX-Ray</code> can be used by simply typing <code>rexray</code> on the command
 line, but in order for <code>REX-Ray</code> to do much more than print out help text,
 configuration is necessary:</p>

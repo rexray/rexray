@@ -1,0 +1,344 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "REX-Ray\n\n\nOpenly serious about storage\n\n\n\n\nREX-Ray\n provides visibility and management of external/underlying storage\nvia guest storage introspection. Available as a Go package, CLI tool, and Linux\nservice, and with built-in third-party support for tools such as \nDocker\n,\n\nREX-Ray\n is easily integrated into any workflow. For example, here's how to\nlist storage for a guest hosted on Amazon Web Services (AWS) with \nREX-Ray\n:\n\n\n[0]akutz@pax:~$ export REXRAY_STORAGEDRIVERS=ec2\n[0]akutz@pax:~$ export AWS_ACCESS_KEY=access_key\n[0]akutz@pax:~$ export AWS_SECRET_KEY=secret_key\n[0]akutz@pax:~$ rexray volume get\n\n- providername: ec2\n  instanceid: i-695bb6ab\n  volumeid: vol-dedbadc3\n  devicename: /dev/sda1\n  region: us-west-1\n  status: attached\n- providername: ec2\n  instanceid: i-695bb6ab\n  volumeid: vol-04c4b219\n  devicename: /dev/xvdb\n  region: us-west-1\n  status: attached\n\n\n\n\nFeatures\n\n\nToday \nREX-Ray\n supports the following storage providers:\n\n\n\n\nAmazon Elastic Computer Cloud (EC2)\n\n\nOpenstack on Rackspace\n\n\nScaleIO\n\n\nXtremIO\n (with Multipath \n Device Mapper support)\n\n\n\n\nREX-Ray\n also supports integration with the following platforms:\n\n\n\n\nDocker\n\n\n\n\nOperating System Support\n\n\nREX-Ray\n currently supports the following operating systems:\n\n\n\n\n\n\n\n\nOS\n\n\nCommand Line\n\n\nAs Service\n\n\n\n\n\n\n\n\n\n\nLinux\n\n\nYes\n\n\nYes\n\n\n\n\n\n\nOS X\n\n\nYes\n\n\nNo\n\n\n\n\n\n\nWindows\n\n\nNo\n\n\nNo\n\n\n\n\n\n\n\n\nInstallation\n\n\nThe following command will download the most recent, stable build of \nREX-Ray\n\nand install it to \n/usr/bin/rexray.\n On Linux systems \nREX-Ray\n will also be\nregistered as either a SystemD or SystemV service.\n\n\ncurl -sSL https://dl.bintray.com/emccode/rexray/install | sh -\n\n\n\n\nREX-Ray\n can also be installed from\n\na pre-built binary\n, an RPM or DEB\npackage, or by\n\nbuilding it from source\n.\n\n\nGetting Started\n\n\nOnce installed, \nREX-Ray\n can be used by simply typing \nrexray\n on the command\nline, but in order for \nREX-Ray\n to do much more than print out help text,\nconfiguration is necessary:\n\n\nConfiguring REX-Ray\n\n\nThe first step to getting started is \nconfiguring \nREX-Ray\n!\n\n\nConfiguring Storage Providers\n\n\n\n\nAmazon Elastic Computer Cloud (EC2)\n\n\nRackspace\n\n\nScaleIO\n\n\nOpenStack\n\n\nXtremIO\n\n\n\n\nConfiguring External Integration\n\n\n\n\nDocker\n\n\nMesos\n\n\n\n\nGetting Help\n\n\nTo get help with REX-Ray, please use the\n\ndiscussion group\n,\n\nGitHub issues\n, or tagging questions\nwith \nEMC\n at \nStackOverflow\n.\n\n\nThe code and documentation are released with no warranties or SLAs and are\nintended to be supported through a community driven process.", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#rex-ray", 
+            "text": "Openly serious about storage   REX-Ray  provides visibility and management of external/underlying storage\nvia guest storage introspection. Available as a Go package, CLI tool, and Linux\nservice, and with built-in third-party support for tools such as  Docker , REX-Ray  is easily integrated into any workflow. For example, here's how to\nlist storage for a guest hosted on Amazon Web Services (AWS) with  REX-Ray :  [0]akutz@pax:~$ export REXRAY_STORAGEDRIVERS=ec2\n[0]akutz@pax:~$ export AWS_ACCESS_KEY=access_key\n[0]akutz@pax:~$ export AWS_SECRET_KEY=secret_key\n[0]akutz@pax:~$ rexray volume get\n\n- providername: ec2\n  instanceid: i-695bb6ab\n  volumeid: vol-dedbadc3\n  devicename: /dev/sda1\n  region: us-west-1\n  status: attached\n- providername: ec2\n  instanceid: i-695bb6ab\n  volumeid: vol-04c4b219\n  devicename: /dev/xvdb\n  region: us-west-1\n  status: attached", 
+            "title": "REX-Ray"
+        }, 
+        {
+            "location": "/#features", 
+            "text": "Today  REX-Ray  supports the following storage providers:   Amazon Elastic Computer Cloud (EC2)  Openstack on Rackspace  ScaleIO  XtremIO  (with Multipath   Device Mapper support)   REX-Ray  also supports integration with the following platforms:   Docker   Operating System Support  REX-Ray  currently supports the following operating systems:     OS  Command Line  As Service      Linux  Yes  Yes    OS X  Yes  No    Windows  No  No", 
+            "title": "Features"
+        }, 
+        {
+            "location": "/#installation", 
+            "text": "The following command will download the most recent, stable build of  REX-Ray \nand install it to  /usr/bin/rexray.  On Linux systems  REX-Ray  will also be\nregistered as either a SystemD or SystemV service.  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -  REX-Ray  can also be installed from a pre-built binary , an RPM or DEB\npackage, or by building it from source .", 
+            "title": "Installation"
+        }, 
+        {
+            "location": "/#getting-started", 
+            "text": "Once installed,  REX-Ray  can be used by simply typing  rexray  on the command\nline, but in order for  REX-Ray  to do much more than print out help text,\nconfiguration is necessary:  Configuring REX-Ray  The first step to getting started is  configuring  REX-Ray !  Configuring Storage Providers   Amazon Elastic Computer Cloud (EC2)  Rackspace  ScaleIO  OpenStack  XtremIO   Configuring External Integration   Docker  Mesos", 
+            "title": "Getting Started"
+        }, 
+        {
+            "location": "/#getting-help", 
+            "text": "To get help with REX-Ray, please use the discussion group , GitHub issues , or tagging questions\nwith  EMC  at  StackOverflow .  The code and documentation are released with no warranties or SLAs and are\nintended to be supported through a community driven process.", 
+            "title": "Getting Help"
+        }, 
+        {
+            "location": "/user-guide/installation/", 
+            "text": "Installation\n\n\nGetting the bits, bit by bit\n\n\n\n\nInstall via curl\n\n\nThe following command will download the most recent, stable build of \nREX-Ray\n and install it to \n/usr/bin/rexray.\n On Linux systems \nREX-Ray\n will also be registered as either a SystemD or SystemV service.\n\n\ncurl -sSL https://dl.bintray.com/emccode/rexray/install | sh -\n\n\n\n\nInstall a pre-built binary\n\n\nThere are also pre-built binaries available for the various release types.\n\n\n \n \n Unstable\n\n\nThe most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.\n\n\n \n \n Staged\n\n\nThe most up-to-date, release candidate REX-Ray binaries.\n\n\n \n \n Stable\n\n\nThe most up-to-date, stable REX-Ray binaries.\n\n\nBuild and install from source\n\n\nREX-Ray\n is also fairly simple to build from source, especially if you have \nDocker\n installed:\n\n\nSRC=$(mktemp -d 2\n /dev/null || mktemp -d -t rexray 2\n /dev/null) \n cd $SRC \n docker run --rm -it -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c \ngit clone https://github.com/emccode/rexray.git . \n make build-all\u201d\n\n\n\n\nIf you'd prefer to not use \nDocker\n to build \nREX-Ray\n then all you need is Go 1.5:\n\n\n# clone the rexray repo\ngit clone https://github.com/emccode/rexray.git\n\n# change directories into the freshly-cloned repo\ncd rexray\n\n# build rexray\nmake build-all\n\n\n\n\nAfter either of the above methods for building \nREX-Ray\n there should be a \n.bin\n directory in the current directory, and inside \n.bin\n will be binaries for Linux-i386, Linux-x86-64,\nand Darwin-x86-64.\n\n\n[0]akutz@poppy:tmp.SJxsykQwp7$ ls .bin/*/rexray\n-rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Darwin-x86_64/rexray*\n-rwxr-xr-x. 1 root 12M Sep 17 10:36 .bin/Linux-i386/rexray*\n-rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Linux-x86_64/rexray*", 
+            "title": "Installation"
+        }, 
+        {
+            "location": "/user-guide/installation/#installation", 
+            "text": "Getting the bits, bit by bit", 
+            "title": "Installation"
+        }, 
+        {
+            "location": "/user-guide/installation/#install-via-curl", 
+            "text": "The following command will download the most recent, stable build of  REX-Ray  and install it to  /usr/bin/rexray.  On Linux systems  REX-Ray  will also be registered as either a SystemD or SystemV service.  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -", 
+            "title": "Install via curl"
+        }, 
+        {
+            "location": "/user-guide/installation/#install-a-pre-built-binary", 
+            "text": "There are also pre-built binaries available for the various release types.       Unstable  The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.       Staged  The most up-to-date, release candidate REX-Ray binaries.       Stable  The most up-to-date, stable REX-Ray binaries.", 
+            "title": "Install a pre-built binary"
+        }, 
+        {
+            "location": "/user-guide/installation/#build-and-install-from-source", 
+            "text": "REX-Ray  is also fairly simple to build from source, especially if you have  Docker  installed:  SRC=$(mktemp -d 2  /dev/null || mktemp -d -t rexray 2  /dev/null)   cd $SRC   docker run --rm -it -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c  git clone https://github.com/emccode/rexray.git .   make build-all\u201d  If you'd prefer to not use  Docker  to build  REX-Ray  then all you need is Go 1.5:  # clone the rexray repo\ngit clone https://github.com/emccode/rexray.git\n\n# change directories into the freshly-cloned repo\ncd rexray\n\n# build rexray\nmake build-all  After either of the above methods for building  REX-Ray  there should be a  .bin  directory in the current directory, and inside  .bin  will be binaries for Linux-i386, Linux-x86-64,\nand Darwin-x86-64.  [0]akutz@poppy:tmp.SJxsykQwp7$ ls .bin/*/rexray\n-rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Darwin-x86_64/rexray*\n-rwxr-xr-x. 1 root 12M Sep 17 10:36 .bin/Linux-i386/rexray*\n-rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Linux-x86_64/rexray*", 
+            "title": "Build and install from source"
+        }, 
+        {
+            "location": "/user-guide/config/", 
+            "text": "Configuring REX-Ray\n\n\nTweak this, turn that, peek behind the curtain...\n\n\n\n\nData Directories\n\n\nThe first time \nREX-Ray\n is executed it will create several directories if\nthey do not already exist:\n\n\n\n\n/etc/rexray\n\n\n/var/log/rexray\n\n\n/var/run/rexray\n\n\n/var/lib/rexray\n\n\n\n\nThe above directories will contain configuration files, logs, PID files, and\nmounted volumes. However, the location of these directories can also be\ninfluenced with the environment variable \nREXRAY_HOME\n.\n\n\nREXRAY_HOME\n can be used to define a custom home directory for \nREX-Ray\n.\nThis directory is irrespective of the actual \nREX-Ray\n binary. Instead, the\ndirectory specified in \nREXRAY_HOME\n is the root directory where the \nREX-Ray\n\nbinary expects all of the program's data directories to be located.\n\n\nFor example, the following command sets a custom value for \nREXRAY_HOME\n and\nthen gets a volume list:\n\n\nenv REXRAY_HOME=/tmp/rexray rexray volume\n\n\n\n\nThe above command would produce a list of volumes and create the following\ndirectories in the process:\n\n\n\n\n/tmp/rexray/etc/rexray\n\n\n/tmp/rexray/var/log/rexray\n\n\n/tmp/rexray/var/run/rexray\n\n\n/tmp/rexray/var/lib/rexray\n\n\n\n\nThe entire configuration section will refer to the global configuration file as\na file located inside of \n/etc/rexray\n, but it should be noted that if\n\nREXRAY_HOME\n is set the location of the global configuration file can be\nchanged.\n\n\nConfiguration Methods\n\n\nThere are three ways to configure \nREX-Ray\n:\n\n\n\n\nConfiguration files\n\n\nEnvironment variables\n\n\nCommand line options\n\n\n\n\nThe order of the items above is also the order of precedence when considering\noptions set in multiple locations that may override one another.\n\n\nConfiguration Files\n\n\nThere are two \nREX-Ray\n configuration files - global and user:\n\n\n\n\n/etc/rexray/config.yml\n\n\n$HOME/.rexray/config.yml\n\n\n\n\nPlease note that while the user configuration file is located inside the user's\nhome directory, this is the directory of the user that starts \nREX-Ray\n. And\nif \nREX-Ray\n is being started as a service, then \nsudo\n is likely being used,\nwhich means that \n$HOME/.rexray/config.yml\n won't point to \nyour\n home\ndirectory, but rather \n/root/.rexray/config.yml\n.\n\n\nThis is an example configuration with the default configuration for the general\noptions as described in the following section:\n\n\nlogLevel: warn\nosDrivers: linux\nvolumeDrivers: docker\n\n\n\n\nLogging\n\n\nThe \nREX-Ray\n log level determines the level of verbosity emitted by the\ninternal logger. The default level is \nwarn\n, but there are three other levels\nas well:\n\n\n\n\n\n\n\n\nLog Level\n\n\nDescription\n\n\n\n\n\n\n\n\n\n\nerror\n\n\nLog only errors\n\n\n\n\n\n\nwarn\n\n\nLog errors and anything out of place\n\n\n\n\n\n\ninfo\n\n\nLog errors, warnings, and workflow messages\n\n\n\n\n\n\ndebug\n\n\nLog everything\n\n\n\n\n\n\n\n\nThe log level can be set by environment variable, a configuration file, or via\nthe command line:\n\n\n\n\n\n\n\n\nEnvironment Variable\n\n\nConfig File Property\n\n\nCLI Flag(s)\n\n\n\n\n\n\n\n\n\n\nREXRAY_LOGLEVEL\n\n\nlogLevel\n\n\n--logLevel\n, \n-l\n\n\n\n\n\n\n\n\nFor example, the following two commands may look slightly different, but they\nare functionally the same, both printing a list of volumes using the \ndebug\n\nlog level:\n\n\nUse the \ndebug\n log level - Example 1\n\n\nrexray volume get -l debug\n\n\n\n\nUse the \ndebug\n log level - Example 2\n\n\nenv REXRAY_LOGLEVEL=debug rexray volume get\n\n\n\n\nOS Drivers\n\n\nOperating system (OS) drivers enable \nREX-Ray\n to manage storage on\nthe underlying OS.\n\n\nOS Driver Types\n\n\nCurrently the following OS drivers are supported:\n\n\n\n\n\n\n\n\nDriver\n\n\nDriver Name\n\n\n\n\n\n\n\n\n\n\nLinux\n\n\nlinux\n\n\n\n\n\n\n\n\nAutomatic OS Drivers\n\n\nThe OS driver \nlinux\n is automatically activated when \nREX-Ray\n is running on\nthe Linux OS.\n\n\nActivating OS Drivers\n\n\nWhile all drivers are automatically registered, they are not all automatically\nactivated. OS drivers can be activated by by environment variable, a\nconfiguration file, or via the command line:\n\n\n\n\n\n\n\n\nEnvironment Variable\n\n\nConfig File Property\n\n\nCLI Flag(s)\n\n\n\n\n\n\n\n\n\n\nREXRAY_OSDRIVERS\n\n\nosDrivers\n\n\n--osDrivers\n\n\n\n\n\n\n\n\nThe environment variable and CLI flag both expect a space-delimited list of\nOS driver names such as:\n\n\nenv REXRAY_OSDRIVERS=linux rexray volume get\n\n\n\n\nor\n\n\nrexray volume get --osDrivers=linux\n\n\n\n\nHowever, when specifying the \nosDrivers\n option in a configuration file, since\nthe option is multi-valued, it would look like the following:\n\n\nosDrivers:\n- linux\n\n\n\n\nStorage Drivers\n\n\nStorage drivers enable \nREX-Ray\n to communicate with direct-attached or remote\nstorage systems.\n\n\nStorage Driver Types\n\n\nCurrently the following storage drivers are supported:\n\n\n\n\n\n\n\n\nDriver\n\n\nDriver Name\n\n\n\n\n\n\n\n\n\n\nAmazon EC2\n\n\nec2\n\n\n\n\n\n\nOpenStack\n\n\nopenstack\n\n\n\n\n\n\nRackspace\n\n\nrackspace\n\n\n\n\n\n\nScaleIO\n\n\nscaleio\n\n\n\n\n\n\nXtremIO\n\n\nxtremio\n\n\n\n\n\n\n\n\nAutomatic Storage Drivers\n\n\nNo storage drivers are automatically activated.\n\n\nActivating Storage Drivers\n\n\nWhile all drivers are automatically registered, not all are automatically\nactivated. Storage drivers can be activated by by environment variable, a\nconfiguration file, or via the command line:\n\n\n\n\n\n\n\n\nEnvironment Variable\n\n\nConfig File Property\n\n\nCLI Flag(s)\n\n\n\n\n\n\n\n\n\n\nREXRAY_STORAGEDRIVERS\n\n\nstorageDrivers\n\n\n--storageDrivers\n\n\n\n\n\n\n\n\nThe environment variable and CLI flag both expect a space-delimited list of\nstorage driver names such as:\n\n\nenv REXRAY_STORAGEDRIVERS=\nec2 xtremio\n rexray volume get\n\n\n\n\nor\n\n\nrexray volume get --osDrivers=\nec2 xtremio\n\n\n\n\n\nHowever, when specifying the \nstorageDrivers\n option in a configuration file,\nsince the option is multi-valued, it would look like the following:\n\n\nstorageDrivers:\n- ec2\n- xtremio\n\n\n\n\nVolume Drivers\n\n\nVolume drivers enable \nREX-Ray\n to manage volumes for consumers of the storage,\nsuch as \nDocker\n or \nMesos\n.\n\n\nVolume Driver Types\n\n\nCurrently the following volume drivers are supported:\n\n\n\n\n\n\n\n\nDriver\n\n\nDriver Name\n\n\n\n\n\n\n\n\n\n\nDocker\n\n\ndocker\n\n\n\n\n\n\n\n\nAutomatic Volume Drivers\n\n\nThe volume driver \ndocker\n is automatically activated.\n\n\nActivating Volume Drivers\n\n\nWhile all drivers are automatically registered, they are not all automatically\nactivated. Volume drivers can be activated by by environment variable, a\nconfiguration file, or via the command line:\n\n\n\n\n\n\n\n\nEnvironment Variable\n\n\nConfig File Property\n\n\nCLI Flag(s)\n\n\n\n\n\n\n\n\n\n\nREXRAY_VOLUMEDRIVERS\n\n\nvolumeDrivers\n\n\n--volumeDrivers\n\n\n\n\n\n\n\n\nThe environment variable and CLI flag both expect a space-delimited list of\nvolume driver names such as:\n\n\nenv REXRAY_VOLUMEDRIVERS=docker rexray volume get\n\n\n\n\nor\n\n\nrexray volume get --volumeDrivers=docker\n\n\n\n\nHowever, when specifying the \nvolumeDrivers\n option in a configuration file,\nsince the option is multi-valued, it would look like the following:\n\n\nvolumeDrivers:\n- docker", 
+            "title": "Configuration"
+        }, 
+        {
+            "location": "/user-guide/config/#configuring-rex-ray", 
+            "text": "Tweak this, turn that, peek behind the curtain...", 
+            "title": "Configuring REX-Ray"
+        }, 
+        {
+            "location": "/user-guide/config/#data-directories", 
+            "text": "The first time  REX-Ray  is executed it will create several directories if\nthey do not already exist:   /etc/rexray  /var/log/rexray  /var/run/rexray  /var/lib/rexray   The above directories will contain configuration files, logs, PID files, and\nmounted volumes. However, the location of these directories can also be\ninfluenced with the environment variable  REXRAY_HOME .  REXRAY_HOME  can be used to define a custom home directory for  REX-Ray .\nThis directory is irrespective of the actual  REX-Ray  binary. Instead, the\ndirectory specified in  REXRAY_HOME  is the root directory where the  REX-Ray \nbinary expects all of the program's data directories to be located.  For example, the following command sets a custom value for  REXRAY_HOME  and\nthen gets a volume list:  env REXRAY_HOME=/tmp/rexray rexray volume  The above command would produce a list of volumes and create the following\ndirectories in the process:   /tmp/rexray/etc/rexray  /tmp/rexray/var/log/rexray  /tmp/rexray/var/run/rexray  /tmp/rexray/var/lib/rexray   The entire configuration section will refer to the global configuration file as\na file located inside of  /etc/rexray , but it should be noted that if REXRAY_HOME  is set the location of the global configuration file can be\nchanged.", 
+            "title": "Data Directories"
+        }, 
+        {
+            "location": "/user-guide/config/#configuration-methods", 
+            "text": "There are three ways to configure  REX-Ray :   Configuration files  Environment variables  Command line options   The order of the items above is also the order of precedence when considering\noptions set in multiple locations that may override one another.", 
+            "title": "Configuration Methods"
+        }, 
+        {
+            "location": "/user-guide/config/#configuration-files", 
+            "text": "There are two  REX-Ray  configuration files - global and user:   /etc/rexray/config.yml  $HOME/.rexray/config.yml   Please note that while the user configuration file is located inside the user's\nhome directory, this is the directory of the user that starts  REX-Ray . And\nif  REX-Ray  is being started as a service, then  sudo  is likely being used,\nwhich means that  $HOME/.rexray/config.yml  won't point to  your  home\ndirectory, but rather  /root/.rexray/config.yml .  This is an example configuration with the default configuration for the general\noptions as described in the following section:  logLevel: warn\nosDrivers: linux\nvolumeDrivers: docker", 
+            "title": "Configuration Files"
+        }, 
+        {
+            "location": "/user-guide/config/#logging", 
+            "text": "The  REX-Ray  log level determines the level of verbosity emitted by the\ninternal logger. The default level is  warn , but there are three other levels\nas well:     Log Level  Description      error  Log only errors    warn  Log errors and anything out of place    info  Log errors, warnings, and workflow messages    debug  Log everything     The log level can be set by environment variable, a configuration file, or via\nthe command line:     Environment Variable  Config File Property  CLI Flag(s)      REXRAY_LOGLEVEL  logLevel  --logLevel ,  -l     For example, the following two commands may look slightly different, but they\nare functionally the same, both printing a list of volumes using the  debug \nlog level:  Use the  debug  log level - Example 1  rexray volume get -l debug  Use the  debug  log level - Example 2  env REXRAY_LOGLEVEL=debug rexray volume get", 
+            "title": "Logging"
+        }, 
+        {
+            "location": "/user-guide/config/#os-drivers", 
+            "text": "Operating system (OS) drivers enable  REX-Ray  to manage storage on\nthe underlying OS.  OS Driver Types  Currently the following OS drivers are supported:     Driver  Driver Name      Linux  linux     Automatic OS Drivers  The OS driver  linux  is automatically activated when  REX-Ray  is running on\nthe Linux OS.  Activating OS Drivers  While all drivers are automatically registered, they are not all automatically\nactivated. OS drivers can be activated by by environment variable, a\nconfiguration file, or via the command line:     Environment Variable  Config File Property  CLI Flag(s)      REXRAY_OSDRIVERS  osDrivers  --osDrivers     The environment variable and CLI flag both expect a space-delimited list of\nOS driver names such as:  env REXRAY_OSDRIVERS=linux rexray volume get  or  rexray volume get --osDrivers=linux  However, when specifying the  osDrivers  option in a configuration file, since\nthe option is multi-valued, it would look like the following:  osDrivers:\n- linux", 
+            "title": "OS Drivers"
+        }, 
+        {
+            "location": "/user-guide/config/#storage-drivers", 
+            "text": "Storage drivers enable  REX-Ray  to communicate with direct-attached or remote\nstorage systems.  Storage Driver Types  Currently the following storage drivers are supported:     Driver  Driver Name      Amazon EC2  ec2    OpenStack  openstack    Rackspace  rackspace    ScaleIO  scaleio    XtremIO  xtremio     Automatic Storage Drivers  No storage drivers are automatically activated.  Activating Storage Drivers  While all drivers are automatically registered, not all are automatically\nactivated. Storage drivers can be activated by by environment variable, a\nconfiguration file, or via the command line:     Environment Variable  Config File Property  CLI Flag(s)      REXRAY_STORAGEDRIVERS  storageDrivers  --storageDrivers     The environment variable and CLI flag both expect a space-delimited list of\nstorage driver names such as:  env REXRAY_STORAGEDRIVERS= ec2 xtremio  rexray volume get  or  rexray volume get --osDrivers= ec2 xtremio   However, when specifying the  storageDrivers  option in a configuration file,\nsince the option is multi-valued, it would look like the following:  storageDrivers:\n- ec2\n- xtremio", 
+            "title": "Storage Drivers"
+        }, 
+        {
+            "location": "/user-guide/config/#volume-drivers", 
+            "text": "Volume drivers enable  REX-Ray  to manage volumes for consumers of the storage,\nsuch as  Docker  or  Mesos .  Volume Driver Types  Currently the following volume drivers are supported:     Driver  Driver Name      Docker  docker     Automatic Volume Drivers  The volume driver  docker  is automatically activated.  Activating Volume Drivers  While all drivers are automatically registered, they are not all automatically\nactivated. Volume drivers can be activated by by environment variable, a\nconfiguration file, or via the command line:     Environment Variable  Config File Property  CLI Flag(s)      REXRAY_VOLUMEDRIVERS  volumeDrivers  --volumeDrivers     The environment variable and CLI flag both expect a space-delimited list of\nvolume driver names such as:  env REXRAY_VOLUMEDRIVERS=docker rexray volume get  or  rexray volume get --volumeDrivers=docker  However, when specifying the  volumeDrivers  option in a configuration file,\nsince the option is multi-valued, it would look like the following:  volumeDrivers:\n- docker", 
+            "title": "Volume Drivers"
+        }, 
+        {
+            "location": "/user-guide/ec2/", 
+            "text": "Amazon EC2\n\n\nSimplifying storage with scalable compute capacity in the cloud\n\n\n\n\nOverview\n\n\nThe Amazon EC2 driver registers a storage driver named \nec2\n with the \nREX-Ray\n\ndriver manager and is used to connect and manage storage on EC2 instances. The\nEC2 driver is made possible by the\n\ngoamz project\n.\n\n\nConfiguration Options\n\n\nThe following are the configuration options for the \nec2\n storage driver.\n\n\n\n\n\n\n\n\nEnvVar\n\n\nYAML\n\n\nCLI\n\n\n\n\n\n\n\n\n\n\nAWS_ACCESS_KEY\n\n\nawsAccessKey\n\n\n--awsAccessKey\n\n\n\n\n\n\nAWS_SECRET_KEY\n\n\nawsSecretKey\n\n\n--awsSecretKey\n\n\n\n\n\n\nAWS_REGION\n\n\nawsRegion\n\n\n--awsRegion\n\n\n\n\n\n\n\n\nActivating the Driver\n\n\nTo activate the EC2 driver please follow the instructions for\n\nactivating storage drivers\n,\nusing \nec2\n as the driver name.\n\n\nExamples", 
+            "title": "Amazon EC2"
+        }, 
+        {
+            "location": "/user-guide/ec2/#amazon-ec2", 
+            "text": "Simplifying storage with scalable compute capacity in the cloud", 
+            "title": "Amazon EC2"
+        }, 
+        {
+            "location": "/user-guide/ec2/#overview", 
+            "text": "The Amazon EC2 driver registers a storage driver named  ec2  with the  REX-Ray \ndriver manager and is used to connect and manage storage on EC2 instances. The\nEC2 driver is made possible by the goamz project .", 
+            "title": "Overview"
+        }, 
+        {
+            "location": "/user-guide/ec2/#configuration-options", 
+            "text": "The following are the configuration options for the  ec2  storage driver.     EnvVar  YAML  CLI      AWS_ACCESS_KEY  awsAccessKey  --awsAccessKey    AWS_SECRET_KEY  awsSecretKey  --awsSecretKey    AWS_REGION  awsRegion  --awsRegion", 
+            "title": "Configuration Options"
+        }, 
+        {
+            "location": "/user-guide/ec2/#activating-the-driver", 
+            "text": "To activate the EC2 driver please follow the instructions for activating storage drivers ,\nusing  ec2  as the driver name.", 
+            "title": "Activating the Driver"
+        }, 
+        {
+            "location": "/user-guide/ec2/#examples", 
+            "text": "", 
+            "title": "Examples"
+        }, 
+        {
+            "location": "/user-guide/openstack/", 
+            "text": "OpenStack\n\n\nMaking storage management as transparent as the stack\n\n\n\n\nOverview\n\n\nThe OpenStack driver registers a storage driver named \nopenstack\n with the\n\nREX-Ray\n driver manager and is used to connect and manage storage on OpenStack\ninstances.\n\n\nConfiguration Options\n\n\nThe following are the configuration options for the \nopenstack\n storage driver.\n\n\n\n\n\n\n\n\nEnvVar\n\n\nYAML\n\n\nCLI\n\n\n\n\n\n\n\n\n\n\nOS_AUTH_URL\n\n\nopenstackAuthUrl\n\n\n--openstackAuthUrl\n\n\n\n\n\n\nOS_USERID\n\n\nopenstackUserId\n\n\n--openstackUserId\n\n\n\n\n\n\nOS_USERNAME\n\n\nopenstackUserName\n\n\n--openstackUserName\n\n\n\n\n\n\nOS_PASSWORD\n\n\nopenstackPassword\n\n\n--openstackPassword\n\n\n\n\n\n\nOS_TENANT_ID\n\n\nopenstackTenantId\n\n\n--openstackTenantId\n\n\n\n\n\n\nOS_TENANT_NAME\n\n\nopenstackTenantName\n\n\n--openstackTenantName\n\n\n\n\n\n\nOS_DOMAIN_ID\n\n\nopenstackDomainId\n\n\n--openstackDomainId\n\n\n\n\n\n\nOS_DOMAIN_NAME\n\n\nopenstackDomainName\n\n\n--openstackDomainName\n\n\n\n\n\n\nOS_REGION_NAME\n\n\nopenstackRegionName\n\n\n--openstackRegionName\n\n\n\n\n\n\nOS_AVAILABILITY_ZONE_NAME\n\n\nopenstackAvailabilityZoneName\n\n\n--openstackAvailabilityZoneName\n\n\n\n\n\n\n\n\nActivating the Driver\n\n\nTo activate the OpenStack driver please follow the instructions for\n\nactivating storage drivers\n,\nusing \nopenstack\n as the driver name.\n\n\nExamples", 
+            "title": "OpenStack"
+        }, 
+        {
+            "location": "/user-guide/openstack/#openstack", 
+            "text": "Making storage management as transparent as the stack", 
+            "title": "OpenStack"
+        }, 
+        {
+            "location": "/user-guide/openstack/#overview", 
+            "text": "The OpenStack driver registers a storage driver named  openstack  with the REX-Ray  driver manager and is used to connect and manage storage on OpenStack\ninstances.", 
+            "title": "Overview"
+        }, 
+        {
+            "location": "/user-guide/openstack/#configuration-options", 
+            "text": "The following are the configuration options for the  openstack  storage driver.     EnvVar  YAML  CLI      OS_AUTH_URL  openstackAuthUrl  --openstackAuthUrl    OS_USERID  openstackUserId  --openstackUserId    OS_USERNAME  openstackUserName  --openstackUserName    OS_PASSWORD  openstackPassword  --openstackPassword    OS_TENANT_ID  openstackTenantId  --openstackTenantId    OS_TENANT_NAME  openstackTenantName  --openstackTenantName    OS_DOMAIN_ID  openstackDomainId  --openstackDomainId    OS_DOMAIN_NAME  openstackDomainName  --openstackDomainName    OS_REGION_NAME  openstackRegionName  --openstackRegionName    OS_AVAILABILITY_ZONE_NAME  openstackAvailabilityZoneName  --openstackAvailabilityZoneName", 
+            "title": "Configuration Options"
+        }, 
+        {
+            "location": "/user-guide/openstack/#activating-the-driver", 
+            "text": "To activate the OpenStack driver please follow the instructions for activating storage drivers ,\nusing  openstack  as the driver name.", 
+            "title": "Activating the Driver"
+        }, 
+        {
+            "location": "/user-guide/openstack/#examples", 
+            "text": "", 
+            "title": "Examples"
+        }, 
+        {
+            "location": "/user-guide/rackspace/", 
+            "text": "Rackspace\n\n\nThey manage your services, we manage your storage\n\n\n\n\nOverview\n\n\nThe Rackspace driver registers a storage driver named \nrackspace\n with the\n\nREX-Ray\n driver manager and is used to connect and manage storage on Rackspace\ninstances.\n\n\nConfiguration Options\n\n\nThe following are the configuration options for the \nrackspace\n storage driver.\n\n\n\n\n\n\n\n\nEnvVar\n\n\nYAML\n\n\nCLI\n\n\n\n\n\n\n\n\n\n\nOS_AUTH_URL\n\n\nrackspaceAuthUrl\n\n\n--rackspaceAuthUrl\n\n\n\n\n\n\nOS_USERID\n\n\nrackspaceUserId\n\n\n--rackspaceUserId\n\n\n\n\n\n\nOS_USERNAME\n\n\nrackspaceUserName\n\n\n--rackspaceUserName\n\n\n\n\n\n\nOS_PASSWORD\n\n\nrackspacePassword\n\n\n--rackspacePassword\n\n\n\n\n\n\nOS_TENANT_ID\n\n\nrackspaceTenantId\n\n\n--rackspaceTenantId\n\n\n\n\n\n\nOS_TENANT_NAME\n\n\nrackspaceTenantName\n\n\n--rackspaceTenantName\n\n\n\n\n\n\nOS_DOMAIN_ID\n\n\nrackspaceDomainId\n\n\n--rackspaceDomainId\n\n\n\n\n\n\nOS_DOMAIN_NAME\n\n\nrackspaceDomainName\n\n\n--rackspaceDomainName\n\n\n\n\n\n\n\n\nActivating the Driver\n\n\nTo activate the Rackspace driver please follow the instructions for\n\nactivating storage drivers\n,\nusing \nrackspace\n as the driver name.\n\n\nExamples", 
+            "title": "Rackspace"
+        }, 
+        {
+            "location": "/user-guide/rackspace/#rackspace", 
+            "text": "They manage your services, we manage your storage", 
+            "title": "Rackspace"
+        }, 
+        {
+            "location": "/user-guide/rackspace/#overview", 
+            "text": "The Rackspace driver registers a storage driver named  rackspace  with the REX-Ray  driver manager and is used to connect and manage storage on Rackspace\ninstances.", 
+            "title": "Overview"
+        }, 
+        {
+            "location": "/user-guide/rackspace/#configuration-options", 
+            "text": "The following are the configuration options for the  rackspace  storage driver.     EnvVar  YAML  CLI      OS_AUTH_URL  rackspaceAuthUrl  --rackspaceAuthUrl    OS_USERID  rackspaceUserId  --rackspaceUserId    OS_USERNAME  rackspaceUserName  --rackspaceUserName    OS_PASSWORD  rackspacePassword  --rackspacePassword    OS_TENANT_ID  rackspaceTenantId  --rackspaceTenantId    OS_TENANT_NAME  rackspaceTenantName  --rackspaceTenantName    OS_DOMAIN_ID  rackspaceDomainId  --rackspaceDomainId    OS_DOMAIN_NAME  rackspaceDomainName  --rackspaceDomainName", 
+            "title": "Configuration Options"
+        }, 
+        {
+            "location": "/user-guide/rackspace/#activating-the-driver", 
+            "text": "To activate the Rackspace driver please follow the instructions for activating storage drivers ,\nusing  rackspace  as the driver name.", 
+            "title": "Activating the Driver"
+        }, 
+        {
+            "location": "/user-guide/rackspace/#examples", 
+            "text": "", 
+            "title": "Examples"
+        }, 
+        {
+            "location": "/user-guide/scaleio/", 
+            "text": "ScaleIO\n\n\nScale-out with simplified storage management\n\n\n\n\nOverview\n\n\nThe ScaleIO registers a storage driver named \nscaleio\n with the \nREX-Ray\n\ndriver manager and is used to connect and manage ScaleIO storage.\n\n\nConfiguration Options\n\n\nThe following are the configuration options for the \nscaleio\n storage driver.\n\n\n\n\n\n\n\n\nEnvVar\n\n\nYAML\n\n\nCLI\n\n\n\n\n\n\n\n\n\n\nGOSCALEIO_ENDPOINT\n\n\nscaleIoEndpoint\n\n\n--scaleIoEndpoint\n\n\n\n\n\n\nGOSCALEIO_INSECURE\n\n\nscaleIoInsecure\n\n\n--scaleIoInsecure\n\n\n\n\n\n\nGOSCALEIO_USECERTS\n\n\nscaleIoUseCerts\n\n\n--scaleIoUseCerts\n\n\n\n\n\n\nGOSCALEIO_USERNAME\n\n\nscaleIoUserName\n\n\n--scaleIoUserName\n\n\n\n\n\n\nGOSCALEIO_PASSWORD\n\n\nscaleIoPassword\n\n\n--scaleIoPassword\n\n\n\n\n\n\nGOSCALEIO_SYSTEMID\n\n\nscaleIoSystemId\n\n\n--scaleIoSystemId\n\n\n\n\n\n\nGOSCALEIO_SYSTEMNAME\n\n\nscaleIoSystemName\n\n\n--scaleIoSystemName\n\n\n\n\n\n\nGOSCALEIO_PROTECTIONDOMAINID\n\n\nscaleIoProtectionDomainId\n\n\n--scaleIoProtectionDomainId\n\n\n\n\n\n\nGOSCALEIO_PROTECTIONDOMAIN\n\n\nscaleIoProtectionDomainName\n\n\n--scaleIoProtectionDomainName\n\n\n\n\n\n\nGOSCALEIO_STORAGEPOOLID\n\n\nscaleIoStoragePoolId\n\n\n--scaleIoStoragePoolId\n\n\n\n\n\n\nGOSCALEIO_STORAGEPOOL\n\n\nscaleIoStoragePoolName\n\n\n--scaleIoStoragePoolName\n\n\n\n\n\n\n\n\nActivating the Driver\n\n\nTo activate the ScaleIO driver please follow the instructions for\n\nactivating storage drivers\n,\nusing \nscaleio\n as the driver name.\n\n\nExamples", 
+            "title": "ScaleIO"
+        }, 
+        {
+            "location": "/user-guide/scaleio/#scaleio", 
+            "text": "Scale-out with simplified storage management", 
+            "title": "ScaleIO"
+        }, 
+        {
+            "location": "/user-guide/scaleio/#overview", 
+            "text": "The ScaleIO registers a storage driver named  scaleio  with the  REX-Ray \ndriver manager and is used to connect and manage ScaleIO storage.", 
+            "title": "Overview"
+        }, 
+        {
+            "location": "/user-guide/scaleio/#configuration-options", 
+            "text": "The following are the configuration options for the  scaleio  storage driver.     EnvVar  YAML  CLI      GOSCALEIO_ENDPOINT  scaleIoEndpoint  --scaleIoEndpoint    GOSCALEIO_INSECURE  scaleIoInsecure  --scaleIoInsecure    GOSCALEIO_USECERTS  scaleIoUseCerts  --scaleIoUseCerts    GOSCALEIO_USERNAME  scaleIoUserName  --scaleIoUserName    GOSCALEIO_PASSWORD  scaleIoPassword  --scaleIoPassword    GOSCALEIO_SYSTEMID  scaleIoSystemId  --scaleIoSystemId    GOSCALEIO_SYSTEMNAME  scaleIoSystemName  --scaleIoSystemName    GOSCALEIO_PROTECTIONDOMAINID  scaleIoProtectionDomainId  --scaleIoProtectionDomainId    GOSCALEIO_PROTECTIONDOMAIN  scaleIoProtectionDomainName  --scaleIoProtectionDomainName    GOSCALEIO_STORAGEPOOLID  scaleIoStoragePoolId  --scaleIoStoragePoolId    GOSCALEIO_STORAGEPOOL  scaleIoStoragePoolName  --scaleIoStoragePoolName", 
+            "title": "Configuration Options"
+        }, 
+        {
+            "location": "/user-guide/scaleio/#activating-the-driver", 
+            "text": "To activate the ScaleIO driver please follow the instructions for activating storage drivers ,\nusing  scaleio  as the driver name.", 
+            "title": "Activating the Driver"
+        }, 
+        {
+            "location": "/user-guide/scaleio/#examples", 
+            "text": "", 
+            "title": "Examples"
+        }, 
+        {
+            "location": "/user-guide/xtremio/", 
+            "text": "XtremIO\n\n\nNot just a flash in the pan\n\n\n\n\nOverview\n\n\nThe XtremIO registers a storage driver named \nxtremio\n with the \nREX-Ray\n\ndriver manager and is used to connect and manage XtremIO storage.\n\n\nConfiguration Options\n\n\nThe following are the configuration options for the \nxtremio\n storage driver.\n\n\n\n\n\n\n\n\nEnvVar\n\n\nYAML\n\n\nCLI\n\n\n\n\n\n\n\n\n\n\nGOXTREMIO_ENDPOINT\n\n\nxtremIoEndpoint\n\n\n--xtremIoEndpoint\n\n\n\n\n\n\nGOXTREMIO_USERNAME\n\n\nxtremIoUserName\n\n\n--xtremIoUserName\n\n\n\n\n\n\nGOXTREMIO_PASSWORD\n\n\nxtremIoPassword\n\n\n--xtremIoPassword\n\n\n\n\n\n\nGOXTREMIO_INSECURE\n\n\nxtremIoInsecure\n\n\n--xtremIoInsecure\n\n\n\n\n\n\nGOXTREMIO_DM\n\n\nxtremIoDeviceMapper\n\n\n--xtremIoDeviceMapper\n\n\n\n\n\n\nGOXTREMIO_MULTIPATH\n\n\nxtremIoMultipath\n\n\n--xtremIoMultipath\n\n\n\n\n\n\nGOXTREMIO_REMOTEMANAGEMENT\n\n\nxtremIoRemoteManagement\n\n\n--xtremIoRemoteManagement\n\n\n\n\n\n\n\n\nActivating the Driver\n\n\nTo activate the XtremIO driver please follow the instructions for\n\nactivating storage drivers\n,\nusing \nxtremio\n as the driver name.\n\n\nExamples", 
+            "title": "XtremIO"
+        }, 
+        {
+            "location": "/user-guide/xtremio/#xtremio", 
+            "text": "Not just a flash in the pan", 
+            "title": "XtremIO"
+        }, 
+        {
+            "location": "/user-guide/xtremio/#overview", 
+            "text": "The XtremIO registers a storage driver named  xtremio  with the  REX-Ray \ndriver manager and is used to connect and manage XtremIO storage.", 
+            "title": "Overview"
+        }, 
+        {
+            "location": "/user-guide/xtremio/#configuration-options", 
+            "text": "The following are the configuration options for the  xtremio  storage driver.     EnvVar  YAML  CLI      GOXTREMIO_ENDPOINT  xtremIoEndpoint  --xtremIoEndpoint    GOXTREMIO_USERNAME  xtremIoUserName  --xtremIoUserName    GOXTREMIO_PASSWORD  xtremIoPassword  --xtremIoPassword    GOXTREMIO_INSECURE  xtremIoInsecure  --xtremIoInsecure    GOXTREMIO_DM  xtremIoDeviceMapper  --xtremIoDeviceMapper    GOXTREMIO_MULTIPATH  xtremIoMultipath  --xtremIoMultipath    GOXTREMIO_REMOTEMANAGEMENT  xtremIoRemoteManagement  --xtremIoRemoteManagement", 
+            "title": "Configuration Options"
+        }, 
+        {
+            "location": "/user-guide/xtremio/#activating-the-driver", 
+            "text": "To activate the XtremIO driver please follow the instructions for activating storage drivers ,\nusing  xtremio  as the driver name.", 
+            "title": "Activating the Driver"
+        }, 
+        {
+            "location": "/user-guide/xtremio/#examples", 
+            "text": "", 
+            "title": "Examples"
+        }, 
+        {
+            "location": "/user-guide/docker/", 
+            "text": "Docker\n\n\nBuild, ship, run on storage made easy", 
+            "title": "Docker"
+        }, 
+        {
+            "location": "/user-guide/docker/#docker", 
+            "text": "Build, ship, run on storage made easy", 
+            "title": "Docker"
+        }, 
+        {
+            "location": "/user-guide/mesos/", 
+            "text": "Mesos\n\n\nPooling storage has never been easier...", 
+            "title": "Mesos"
+        }, 
+        {
+            "location": "/user-guide/mesos/#mesos", 
+            "text": "Pooling storage has never been easier...", 
+            "title": "Mesos"
+        }, 
+        {
+            "location": "/about/contributing/", 
+            "text": "Contributing to REX-Ray\n\n\nAn introduction to contributing to the REX-Ray project\n\n\n\n\nThe REX-Ray project welcomes, and depends, on contributions from developers and\nusers in the open source community. Contributions can be made in a number of\nways, a few examples are:\n\n\n\n\nCode patches via pull requests\n\n\nDocumentation improvements\n\n\nBug reports and patch reviews\n\n\nOS, Storage, and Volume Drivers\n\n\nA distributed server/client model with profile support\n\n\n\n\nReporting an Issue\n\n\nPlease include as much detail as you can. This includes:\n\n\n\n\nThe OS type and version\n\n\nThe REX-Ray version\n\n\nThe storage system in question\n\n\nA set of logs with debug-logging enabled that show the problem\n\n\n\n\nTesting the Development Version\n\n\nIf you want to just install and try out the latest development version of\nREX-Ray you can do so with the following command. This can be useful if you\nwant to provide feedback for a new feature or want to confirm if a bug you\nhave encountered is fixed in the git master. It is \nstrongly\n recommended\nthat you do this within a [virtualenv].\n\n\ncurl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s unstable\n\n\n\n\nInstalling for Development\n\n\nFirst you'll need to fork and clone the repository. Once you have a local\ncopy, run the following command.\n\n\nmake install\n\n\n\n\nThis will install REX-Ray into your \nGOPATH\n and you'll be able to make changes\nlocally, test them, and commit ideas and fixes back to your fork of the\nrepository.\n\n\nRunning the tests\n\n\nTo run the tests, run the following commands:\n\n\nmake install test\n\n\n\n\nThe \nmake install\n isn't strictly necessary, but it ensures that the tests are\nexecuted with the latest bits.\n\n\nSubmitting Pull Requests\n\n\nOnce you are happy with your changes or you are ready for some feedback, push\nit to your fork and send a pull request. For a change to be accepted it will\nmost likely need to have tests and documentation if it is a new feature.", 
+            "title": "Contributing"
+        }, 
+        {
+            "location": "/about/contributing/#contributing-to-rex-ray", 
+            "text": "An introduction to contributing to the REX-Ray project   The REX-Ray project welcomes, and depends, on contributions from developers and\nusers in the open source community. Contributions can be made in a number of\nways, a few examples are:   Code patches via pull requests  Documentation improvements  Bug reports and patch reviews  OS, Storage, and Volume Drivers  A distributed server/client model with profile support", 
+            "title": "Contributing to REX-Ray"
+        }, 
+        {
+            "location": "/about/contributing/#reporting-an-issue", 
+            "text": "Please include as much detail as you can. This includes:   The OS type and version  The REX-Ray version  The storage system in question  A set of logs with debug-logging enabled that show the problem", 
+            "title": "Reporting an Issue"
+        }, 
+        {
+            "location": "/about/contributing/#testing-the-development-version", 
+            "text": "If you want to just install and try out the latest development version of\nREX-Ray you can do so with the following command. This can be useful if you\nwant to provide feedback for a new feature or want to confirm if a bug you\nhave encountered is fixed in the git master. It is  strongly  recommended\nthat you do this within a [virtualenv].  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s unstable", 
+            "title": "Testing the Development Version"
+        }, 
+        {
+            "location": "/about/contributing/#installing-for-development", 
+            "text": "First you'll need to fork and clone the repository. Once you have a local\ncopy, run the following command.  make install  This will install REX-Ray into your  GOPATH  and you'll be able to make changes\nlocally, test them, and commit ideas and fixes back to your fork of the\nrepository.", 
+            "title": "Installing for Development"
+        }, 
+        {
+            "location": "/about/contributing/#running-the-tests", 
+            "text": "To run the tests, run the following commands:  make install test  The  make install  isn't strictly necessary, but it ensures that the tests are\nexecuted with the latest bits.", 
+            "title": "Running the tests"
+        }, 
+        {
+            "location": "/about/contributing/#submitting-pull-requests", 
+            "text": "Once you are happy with your changes or you are ready for some feedback, push\nit to your fork and send a pull request. For a change to be accepted it will\nmost likely need to have tests and documentation if it is a new feature.", 
+            "title": "Submitting Pull Requests"
+        }, 
+        {
+            "location": "/about/license/", 
+            "text": "Licensing\n\n\nThe legal stuff\n\n\n\n\nREX-Ray License\n\n\nLicensed under the Apache License, Version 2.0 (the \u201cLicense\u201d); you may not use\nthis file except in compliance with the License. You may obtain a copy of the\nLicense at \nhttp://www.apache.org/licenses/LICENSE-2.0\n\n\nUnless required by applicable law or agreed to in writing, software distributed\nunder the License is distributed on an \u201cAS IS\u201d BASIS, WITHOUT WARRANTIES OR\nCONDITIONS OF ANY KIND, either express or implied. See the License for the\nspecific language governing permissions and limitations under the License.", 
+            "title": "License"
+        }, 
+        {
+            "location": "/about/license/#licensing", 
+            "text": "The legal stuff", 
+            "title": "Licensing"
+        }, 
+        {
+            "location": "/about/license/#rex-ray-license", 
+            "text": "Licensed under the Apache License, Version 2.0 (the \u201cLicense\u201d); you may not use\nthis file except in compliance with the License. You may obtain a copy of the\nLicense at  http://www.apache.org/licenses/LICENSE-2.0  Unless required by applicable law or agreed to in writing, software distributed\nunder the License is distributed on an \u201cAS IS\u201d BASIS, WITHOUT WARRANTIES OR\nCONDITIONS OF ANY KIND, either express or implied. See the License for the\nspecific language governing permissions and limitations under the License.", 
+            "title": "REX-Ray License"
+        }, 
+        {
+            "location": "/about/release-notes/", 
+            "text": "Release Notes\n\n\n\n\nUpgrading\n\n\nTo upgrade REX-Ray to the latest version, use \ncurl install\n:\n\n\ncurl -sSL https://dl.bintray.com/emccode/rexray/install | sh -\n\n\n\nYou can determine your currently installed version using \nrexray version\n:\n\n\n$ rexray version\nBinary: /usr/local/bin/rexray\nSemVer: 0.2.0\nOsArch: Darwin-x86_64\nBranch: v0.2.0\nCommit: b018a3be05b54a110728d3669213e3d8f65de197\nFormed: Wed, 30 Sep 2015 16:29:15 CDT\n\n\n\nVersion 0.2.0 (2015-09-30)\n\n\nInstallation, SysV, SystemD Support\n\n\nREX-Ray now includes built-in support for installing itself as a service on\nLinux distributions that support either SystemV or SystemD initialization\nsystems. This feature has been tested successfully on both CentOS 7 Minimal\n(SystemD) and Ubuntu 14.04 Server (SystemV) distributions.\n\n\nTo install REX-Ray on a supported Linux distribution, all that is required\nnow is to download the binary and execute:\n\n\nsudo ./rexray service install\n\n\n\nWhat does that do? In short the above command will determine if the Linux\ndistribution uses systemctl, update-rc.d, or chkconfig to manage system\nservices. After that the following steps occur:\n\n\n\n\nThe path /opt/rexray is created and chowned to root:root with permissions\n set to 0755.\n\n\nThe binary is copied to /opt/rexray/rexray and chowned to root:root with\n permissions set to 4755. This is important, because this means that any\n non-privileged user can execute the rexray binary as root without requiring\n sudo privileges. For more information on this feature, please read about the\n \nLinux kernel's super-user ID (SUID) bit\n.\n\n\n\n\nBecause the REX-Ray binary can now be executed with root privileges by\n non-root users, the binary can be used by non-root users to easily attach\n and mount external storage.\n\n\n\n\nThe directory /etc/rexray is created and chowned to root:root.\n\n\n\n\nThe next steps depends on the type of Linux distribution. However, it's\nimportant to know that the new version of the REX-Ray binary now supports\nmanaging its own PID (at \n/var/run/rexray.pid\n) when run as a service as well\nas supports the standard SysV control commands such as \nstart\n, \nstop\n,\n\nstatus\n, and \nrestart\n.\n\n\nFor SysV Linux distributions that use \nchkconfig\n or \nupdate-rc.d\n, a symlink\nof the REX-Ray binary is created in \n/etc/init.d\n and then either\n\nchkconfig rexray on\n or \nupdate-rc.d rexray defaults\n is executed.\n\n\nModern Linux distributions have moved to SystemD for controlling services.\nIf the \nsystemctl\n command is detected when installing REX-Ray then a unit\nfile is written to \n/etc/systemd/system/rexray.servic\ne with the following\ncontents:\n\n\n[Unit]\nDescription=rexray\nBefore=docker.service\n\n[Service]\nEnvironmentFile=/etc/rexray/rexray.env\nExecStart=/usr/local/bin/rexray start -f\nExecReload=/bin/kill -HUP $MAINPID\nKillMode=process\n\n[Install]\nWantedBy=docker.service\n\n\n\nThe REX-Ray service is not started immediately upon installation. The install\ncommand completes by informing the users that they should visit the\n\nREX-Ray website\n for information on how to\nconfigure REX-Ray's storage drivers. The text to the users also explains how\nto start the REX-Ray service once it's configured using the service command\nparticular to the Linux distribution.\n\n\nSingle Service\n\n\nThis release also removes the need for REX-Ray to be configured as multiple\nservice instances in order to provide multiple end-points to such consumers\nsuch as \nDocker\n. REX-Ray's backend now supports an internal, modular design\nwhich enables it to host multiple module instances of any module, such as the\nDockerVolumeDriverModule. In fact, one of the default, included modules is...\n\n\nAdmin Module \n HTTP JSON API\n\n\nThe AdminModule enables an HTTP JSON API for managing REX-Ray's module system\nas well as provides a UI to view the currently running modules. Simply start\nthe REX-Ray server and then visit the URL http://localhost:7979 in your favorite\nbrowser to see what's loaded. Or you can access either of the currently\nsupported REST URLs:\n\n\nhttp://localhost:7979/r/module/types\n\n\n\nand\n\n\nhttp://localhost:7979/r/module/instances\n\n\n\nActually, those aren't the \nonly\n two URLs, but the others are for internal\nusers as of this point. However, the source \nis\n open, so... :)\n\n\nIf you want to know what modules are available by using the CLI, after starting\nthe REX-Ray service simply type:\n\n\n[0]akutz@poppy:rexray$ rexray service module types\n[\n  {\n    \"id\": 2,\n    \"name\": \"DockerVolumeDriverModule\",\n    \"addresses\": [\n      \"unix:///run/docker/plugins/rexray.sock\",\n      \"tcp://:7980\"\n    ]\n  },\n  {\n    \"id\": 1,\n    \"name\": \"AdminModule\",\n    \"addresses\": [\n      \"tcp://:7979\"\n    ]\n  }\n]\n[0]akutz@poppy:rexray$\n\n\n\nTo get a list of the \nrunning\n modules you would type:\n\n\n[0]akutz@poppy:rexray$ rexray service module instance get\n[\n  {\n    \"id\": 1,\n    \"typeId\": 1,\n    \"name\": \"AdminModule\",\n    \"address\": \"tcp://:7979\",\n    \"description\": \"The REX-Ray admin module\",\n    \"started\": true\n  },\n  {\n    \"id\": 2,\n    \"typeId\": 2,\n    \"name\": \"DockerVolumeDriverModule\",\n    \"address\": \"unix:///run/docker/plugins/rexray.sock\",\n    \"description\": \"The REX-Ray Docker VolumeDriver module\",\n    \"started\": true\n  },\n  {\n    \"id\": 3,\n    \"typeId\": 2,\n    \"name\": \"DockerVolumeDriverModule\",\n    \"address\": \"tcp://:7980\",\n    \"description\": \"The REX-Ray Docker VolumeDriver module\",\n    \"started\": true\n  }\n]\n[0]akutz@poppy:rexray$\n\n\n\nHmmm, you know, the REX-Ray CLI looks a little different in the above examples,\ndoesn't it? About that...\n\n\nCommand Line Interface\n\n\nThe CLI has also been enhanced to present a more simplified view up front to\nusers. The commands are now categorized into logical groups:\n\n\n[0]akutz@pax:~$ rexray\nREX-Ray:\n  A guest-based storage introspection tool that enables local\n  visibility and management from cloud and storage platforms.\n\nUsage:\n  rexray [flags]\n  rexray [command]\n\nAvailable Commands:\n  volume      The volume manager\n  snapshot    The snapshot manager\n  device      The device manager\n  adapter     The adapter manager\n  service     The service controller\n  version     Print the version\n  help        Help about any command\n\nGlobal Flags:\n  -c, --config=\"/Users/akutz/.rexray/config.yaml\": The REX-Ray configuration file\n  -?, --help[=false]: Help for rexray\n  -h, --host=\"tcp://:7979\": The REX-Ray service address\n  -l, --logLevel=\"info\": The log level (panic, fatal, error, warn, info, debug)\n  -v, --verbose[=false]: Print verbose help information\n\nUse \"rexray [command] --help\" for more information about a command.\n\n\n\nTravis-CI Support\n\n\nREX-Ray now supports Travis-CI builds either from the primary REX-Ray repository\nor via a fork. All builds should be executed through the Makefile, which is a\nTravis-CI default. For the Travis-CI settings please be sure to set the\nenvironment variable \nGO15VENDOREXPERIMENT\n to \n1\n.", 
+            "title": "Release Notes"
+        }, 
+        {
+            "location": "/about/release-notes/#release-notes", 
+            "text": "", 
+            "title": "Release Notes"
+        }, 
+        {
+            "location": "/about/release-notes/#upgrading", 
+            "text": "To upgrade REX-Ray to the latest version, use  curl install :  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -  You can determine your currently installed version using  rexray version :  $ rexray version\nBinary: /usr/local/bin/rexray\nSemVer: 0.2.0\nOsArch: Darwin-x86_64\nBranch: v0.2.0\nCommit: b018a3be05b54a110728d3669213e3d8f65de197\nFormed: Wed, 30 Sep 2015 16:29:15 CDT", 
+            "title": "Upgrading"
+        }, 
+        {
+            "location": "/about/release-notes/#version-020-2015-09-30", 
+            "text": "Installation, SysV, SystemD Support  REX-Ray now includes built-in support for installing itself as a service on\nLinux distributions that support either SystemV or SystemD initialization\nsystems. This feature has been tested successfully on both CentOS 7 Minimal\n(SystemD) and Ubuntu 14.04 Server (SystemV) distributions.  To install REX-Ray on a supported Linux distribution, all that is required\nnow is to download the binary and execute:  sudo ./rexray service install  What does that do? In short the above command will determine if the Linux\ndistribution uses systemctl, update-rc.d, or chkconfig to manage system\nservices. After that the following steps occur:   The path /opt/rexray is created and chowned to root:root with permissions\n set to 0755.  The binary is copied to /opt/rexray/rexray and chowned to root:root with\n permissions set to 4755. This is important, because this means that any\n non-privileged user can execute the rexray binary as root without requiring\n sudo privileges. For more information on this feature, please read about the\n  Linux kernel's super-user ID (SUID) bit .   Because the REX-Ray binary can now be executed with root privileges by\n non-root users, the binary can be used by non-root users to easily attach\n and mount external storage.   The directory /etc/rexray is created and chowned to root:root.   The next steps depends on the type of Linux distribution. However, it's\nimportant to know that the new version of the REX-Ray binary now supports\nmanaging its own PID (at  /var/run/rexray.pid ) when run as a service as well\nas supports the standard SysV control commands such as  start ,  stop , status , and  restart .  For SysV Linux distributions that use  chkconfig  or  update-rc.d , a symlink\nof the REX-Ray binary is created in  /etc/init.d  and then either chkconfig rexray on  or  update-rc.d rexray defaults  is executed.  Modern Linux distributions have moved to SystemD for controlling services.\nIf the  systemctl  command is detected when installing REX-Ray then a unit\nfile is written to  /etc/systemd/system/rexray.servic e with the following\ncontents:  [Unit]\nDescription=rexray\nBefore=docker.service\n\n[Service]\nEnvironmentFile=/etc/rexray/rexray.env\nExecStart=/usr/local/bin/rexray start -f\nExecReload=/bin/kill -HUP $MAINPID\nKillMode=process\n\n[Install]\nWantedBy=docker.service  The REX-Ray service is not started immediately upon installation. The install\ncommand completes by informing the users that they should visit the REX-Ray website  for information on how to\nconfigure REX-Ray's storage drivers. The text to the users also explains how\nto start the REX-Ray service once it's configured using the service command\nparticular to the Linux distribution.  Single Service  This release also removes the need for REX-Ray to be configured as multiple\nservice instances in order to provide multiple end-points to such consumers\nsuch as  Docker . REX-Ray's backend now supports an internal, modular design\nwhich enables it to host multiple module instances of any module, such as the\nDockerVolumeDriverModule. In fact, one of the default, included modules is...  Admin Module   HTTP JSON API  The AdminModule enables an HTTP JSON API for managing REX-Ray's module system\nas well as provides a UI to view the currently running modules. Simply start\nthe REX-Ray server and then visit the URL http://localhost:7979 in your favorite\nbrowser to see what's loaded. Or you can access either of the currently\nsupported REST URLs:  http://localhost:7979/r/module/types  and  http://localhost:7979/r/module/instances  Actually, those aren't the  only  two URLs, but the others are for internal\nusers as of this point. However, the source  is  open, so... :)  If you want to know what modules are available by using the CLI, after starting\nthe REX-Ray service simply type:  [0]akutz@poppy:rexray$ rexray service module types\n[\n  {\n    \"id\": 2,\n    \"name\": \"DockerVolumeDriverModule\",\n    \"addresses\": [\n      \"unix:///run/docker/plugins/rexray.sock\",\n      \"tcp://:7980\"\n    ]\n  },\n  {\n    \"id\": 1,\n    \"name\": \"AdminModule\",\n    \"addresses\": [\n      \"tcp://:7979\"\n    ]\n  }\n]\n[0]akutz@poppy:rexray$  To get a list of the  running  modules you would type:  [0]akutz@poppy:rexray$ rexray service module instance get\n[\n  {\n    \"id\": 1,\n    \"typeId\": 1,\n    \"name\": \"AdminModule\",\n    \"address\": \"tcp://:7979\",\n    \"description\": \"The REX-Ray admin module\",\n    \"started\": true\n  },\n  {\n    \"id\": 2,\n    \"typeId\": 2,\n    \"name\": \"DockerVolumeDriverModule\",\n    \"address\": \"unix:///run/docker/plugins/rexray.sock\",\n    \"description\": \"The REX-Ray Docker VolumeDriver module\",\n    \"started\": true\n  },\n  {\n    \"id\": 3,\n    \"typeId\": 2,\n    \"name\": \"DockerVolumeDriverModule\",\n    \"address\": \"tcp://:7980\",\n    \"description\": \"The REX-Ray Docker VolumeDriver module\",\n    \"started\": true\n  }\n]\n[0]akutz@poppy:rexray$  Hmmm, you know, the REX-Ray CLI looks a little different in the above examples,\ndoesn't it? About that...  Command Line Interface  The CLI has also been enhanced to present a more simplified view up front to\nusers. The commands are now categorized into logical groups:  [0]akutz@pax:~$ rexray\nREX-Ray:\n  A guest-based storage introspection tool that enables local\n  visibility and management from cloud and storage platforms.\n\nUsage:\n  rexray [flags]\n  rexray [command]\n\nAvailable Commands:\n  volume      The volume manager\n  snapshot    The snapshot manager\n  device      The device manager\n  adapter     The adapter manager\n  service     The service controller\n  version     Print the version\n  help        Help about any command\n\nGlobal Flags:\n  -c, --config=\"/Users/akutz/.rexray/config.yaml\": The REX-Ray configuration file\n  -?, --help[=false]: Help for rexray\n  -h, --host=\"tcp://:7979\": The REX-Ray service address\n  -l, --logLevel=\"info\": The log level (panic, fatal, error, warn, info, debug)\n  -v, --verbose[=false]: Print verbose help information\n\nUse \"rexray [command] --help\" for more information about a command.  Travis-CI Support  REX-Ray now supports Travis-CI builds either from the primary REX-Ray repository\nor via a fork. All builds should be executed through the Makefile, which is a\nTravis-CI default. For the Travis-CI settings please be sure to set the\nenvironment variable  GO15VENDOREXPERIMENT  to  1 .", 
+            "title": "Version 0.2.0 (2015-09-30)"
+        }
+    ]
+}

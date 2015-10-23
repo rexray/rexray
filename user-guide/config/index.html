@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        <link rel="canonical" href="https://github.com/emccode/rexray/user-guide/config/">
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+
+	<title>Configuration - REX-Ray</title>
+
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
+        <link href="../../css/emccode-font.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../.themes/yeti/css/base.css" rel="stylesheet">
+        <link href="../../.themes/yeti/css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../.themes/yeti/css/emccode-font.css" rel="stylesheet">
+        <link href="../../.themes/yeti/css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link href="../../.themes/yeti/css/highlight.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">REX-Ray</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+                        <li >
+                            <a href="../installation/">Installation</a>
+                        </li>
+                    
+                        
+                        <li class="active">
+                            <a href="./">Configuration</a>
+                        </li>
+                    
+                        
+                        <li role="separator" class="divider"></li>
+                        
+                        <li >
+                            <a href="../ec2/">Amazon EC2</a>
+                        </li>
+                    
+                        
+                        <li >
+                            <a href="../openstack/">OpenStack</a>
+                        </li>
+                    
+                        
+                        <li >
+                            <a href="../rackspace/">Rackspace</a>
+                        </li>
+                    
+                        
+                        <li >
+                            <a href="../scaleio/">ScaleIO</a>
+                        </li>
+                    
+                        
+                        <li >
+                            <a href="../xtremio/">XtremIO</a>
+                        </li>
+                    
+                        
+                        <li role="separator" class="divider"></li>
+                        
+                        <li >
+                            <a href="../docker/">Docker</a>
+                        </li>
+                    
+                        
+                        <li >
+                            <a href="../mesos/">Mesos</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+                        <li >
+                            <a href="../../about/contributing/">Contributing</a>
+                        </li>
+                    
+                        
+                        <li >
+                            <a href="../../about/license/">License</a>
+                        </li>
+                    
+                        
+                        <li >
+                            <a href="../../about/release-notes/">Release Notes</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li >
+                    <a rel="next" href="../installation/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../ec2/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/emccode/rexray.git">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://emccode.github.io">
+                        <i class="fa icon-emccode-logo"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#configuring-rex-ray">Configuring REX-Ray</a></li>
+        
+            <li><a href="#data-directories">Data Directories</a></li>
+        
+            <li><a href="#configuration-methods">Configuration Methods</a></li>
+        
+            <li><a href="#configuration-files">Configuration Files</a></li>
+        
+            <li><a href="#logging">Logging</a></li>
+        
+            <li><a href="#os-drivers">OS Drivers</a></li>
+        
+            <li><a href="#storage-drivers">Storage Drivers</a></li>
+        
+            <li><a href="#volume-drivers">Volume Drivers</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="configuring-rex-ray">Configuring REX-Ray</h1>
+<p>Tweak this, turn that, peek behind the curtain...</p>
+<hr />
+<h2 id="data-directories">Data Directories</h2>
+<p>The first time <code>REX-Ray</code> is executed it will create several directories if
+they do not already exist:</p>
+<ul>
+<li><code>/etc/rexray</code></li>
+<li><code>/var/log/rexray</code></li>
+<li><code>/var/run/rexray</code></li>
+<li><code>/var/lib/rexray</code></li>
+</ul>
+<p>The above directories will contain configuration files, logs, PID files, and
+mounted volumes. However, the location of these directories can also be
+influenced with the environment variable <code>REXRAY_HOME</code>.</p>
+<p><code>REXRAY_HOME</code> can be used to define a custom home directory for <code>REX-Ray</code>.
+This directory is irrespective of the actual <code>REX-Ray</code> binary. Instead, the
+directory specified in <code>REXRAY_HOME</code> is the root directory where the <code>REX-Ray</code>
+binary expects all of the program's data directories to be located.</p>
+<p>For example, the following command sets a custom value for <code>REXRAY_HOME</code> and
+then gets a volume list:</p>
+<pre><code>env REXRAY_HOME=/tmp/rexray rexray volume
+</code></pre>
+
+<p>The above command would produce a list of volumes and create the following
+directories in the process:</p>
+<ul>
+<li><code>/tmp/rexray/etc/rexray</code></li>
+<li><code>/tmp/rexray/var/log/rexray</code></li>
+<li><code>/tmp/rexray/var/run/rexray</code></li>
+<li><code>/tmp/rexray/var/lib/rexray</code></li>
+</ul>
+<p>The entire configuration section will refer to the global configuration file as
+a file located inside of <code>/etc/rexray</code>, but it should be noted that if
+<code>REXRAY_HOME</code> is set the location of the global configuration file can be
+changed.</p>
+<h2 id="configuration-methods">Configuration Methods</h2>
+<p>There are three ways to configure <code>REX-Ray</code>:</p>
+<ul>
+<li>Configuration files</li>
+<li>Environment variables</li>
+<li>Command line options</li>
+</ul>
+<p>The order of the items above is also the order of precedence when considering
+options set in multiple locations that may override one another.</p>
+<h2 id="configuration-files">Configuration Files</h2>
+<p>There are two <code>REX-Ray</code> configuration files - global and user:</p>
+<ul>
+<li><code>/etc/rexray/config.yml</code></li>
+<li><code>$HOME/.rexray/config.yml</code></li>
+</ul>
+<p>Please note that while the user configuration file is located inside the user's
+home directory, this is the directory of the user that starts <code>REX-Ray</code>. And
+if <code>REX-Ray</code> is being started as a service, then <code>sudo</code> is likely being used,
+which means that <code>$HOME/.rexray/config.yml</code> won't point to <em>your</em> home
+directory, but rather <code>/root/.rexray/config.yml</code>.</p>
+<p>This is an example configuration with the default configuration for the general
+options as described in the following section:</p>
+<pre><code class="yaml">logLevel: warn
+osDrivers: linux
+volumeDrivers: docker
+</code></pre>
+
+<h2 id="logging">Logging</h2>
+<p>The <code>REX-Ray</code> log level determines the level of verbosity emitted by the
+internal logger. The default level is <code>warn</code>, but there are three other levels
+as well:</p>
+<table>
+<thead>
+<tr>
+<th>Log Level</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>error</code></td>
+<td>Log only errors</td>
+</tr>
+<tr>
+<td><code>warn</code></td>
+<td>Log errors and anything out of place</td>
+</tr>
+<tr>
+<td><code>info</code></td>
+<td>Log errors, warnings, and workflow messages</td>
+</tr>
+<tr>
+<td><code>debug</code></td>
+<td>Log everything</td>
+</tr>
+</tbody>
+</table>
+<p>The log level can be set by environment variable, a configuration file, or via
+the command line:</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Config File Property</th>
+<th>CLI Flag(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REXRAY_LOGLEVEL</code></td>
+<td><code>logLevel</code></td>
+<td><code>--logLevel</code>, <code>-l</code></td>
+</tr>
+</tbody>
+</table>
+<p>For example, the following two commands may look slightly different, but they
+are functionally the same, both printing a list of volumes using the <code>debug</code>
+log level:</p>
+<p><em>Use the <code>debug</code> log level - Example 1</em></p>
+<pre><code class="bash">rexray volume get -l debug
+</code></pre>
+
+<p><em>Use the <code>debug</code> log level - Example 2</em></p>
+<pre><code class="bash">env REXRAY_LOGLEVEL=debug rexray volume get
+</code></pre>
+
+<h2 id="os-drivers">OS Drivers</h2>
+<p>Operating system (OS) drivers enable <code>REX-Ray</code> to manage storage on
+the underlying OS.</p>
+<h3 id="os-driver-types">OS Driver Types</h3>
+<p>Currently the following OS drivers are supported:</p>
+<table>
+<thead>
+<tr>
+<th>Driver</th>
+<th>Driver Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td>linux</td>
+</tr>
+</tbody>
+</table>
+<h3 id="automatic-os-drivers">Automatic OS Drivers</h3>
+<p>The OS driver <code>linux</code> is automatically activated when <code>REX-Ray</code> is running on
+the Linux OS.</p>
+<h3 id="activating-os-drivers">Activating OS Drivers</h3>
+<p>While all drivers are automatically registered, they are not all automatically
+activated. OS drivers can be activated by by environment variable, a
+configuration file, or via the command line:</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Config File Property</th>
+<th>CLI Flag(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REXRAY_OSDRIVERS</code></td>
+<td><code>osDrivers</code></td>
+<td><code>--osDrivers</code></td>
+</tr>
+</tbody>
+</table>
+<p>The environment variable and CLI flag both expect a space-delimited list of
+OS driver names such as:</p>
+<pre><code class="bash">env REXRAY_OSDRIVERS=linux rexray volume get
+</code></pre>
+
+<p>or</p>
+<pre><code class="bash">rexray volume get --osDrivers=linux
+</code></pre>
+
+<p>However, when specifying the <code>osDrivers</code> option in a configuration file, since
+the option is multi-valued, it would look like the following:</p>
+<pre><code class="yaml">osDrivers:
+- linux
+</code></pre>
+
+<h2 id="storage-drivers">Storage Drivers</h2>
+<p>Storage drivers enable <code>REX-Ray</code> to communicate with direct-attached or remote
+storage systems.</p>
+<h3 id="storage-driver-types">Storage Driver Types</h3>
+<p>Currently the following storage drivers are supported:</p>
+<table>
+<thead>
+<tr>
+<th>Driver</th>
+<th>Driver Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon EC2</td>
+<td>ec2</td>
+</tr>
+<tr>
+<td>OpenStack</td>
+<td>openstack</td>
+</tr>
+<tr>
+<td>Rackspace</td>
+<td>rackspace</td>
+</tr>
+<tr>
+<td>ScaleIO</td>
+<td>scaleio</td>
+</tr>
+<tr>
+<td>XtremIO</td>
+<td>xtremio</td>
+</tr>
+</tbody>
+</table>
+<h3 id="automatic-storage-drivers">Automatic Storage Drivers</h3>
+<p>No storage drivers are automatically activated.</p>
+<h3 id="activating-storage-drivers">Activating Storage Drivers</h3>
+<p>While all drivers are automatically registered, not all are automatically
+activated. Storage drivers can be activated by by environment variable, a
+configuration file, or via the command line:</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Config File Property</th>
+<th>CLI Flag(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REXRAY_STORAGEDRIVERS</code></td>
+<td><code>storageDrivers</code></td>
+<td><code>--storageDrivers</code></td>
+</tr>
+</tbody>
+</table>
+<p>The environment variable and CLI flag both expect a space-delimited list of
+storage driver names such as:</p>
+<pre><code class="bash">env REXRAY_STORAGEDRIVERS=&quot;ec2 xtremio&quot; rexray volume get
+</code></pre>
+
+<p>or</p>
+<pre><code class="bash">rexray volume get --osDrivers=&quot;ec2 xtremio&quot;
+</code></pre>
+
+<p>However, when specifying the <code>storageDrivers</code> option in a configuration file,
+since the option is multi-valued, it would look like the following:</p>
+<pre><code class="yaml">storageDrivers:
+- ec2
+- xtremio
+</code></pre>
+
+<h2 id="volume-drivers">Volume Drivers</h2>
+<p>Volume drivers enable <code>REX-Ray</code> to manage volumes for consumers of the storage,
+such as <code>Docker</code> or <code>Mesos</code>.</p>
+<h3 id="volume-driver-types">Volume Driver Types</h3>
+<p>Currently the following volume drivers are supported:</p>
+<table>
+<thead>
+<tr>
+<th>Driver</th>
+<th>Driver Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker</td>
+<td>docker</td>
+</tr>
+</tbody>
+</table>
+<h3 id="automatic-volume-drivers">Automatic Volume Drivers</h3>
+<p>The volume driver <code>docker</code> is automatically activated.</p>
+<h3 id="activating-volume-drivers">Activating Volume Drivers</h3>
+<p>While all drivers are automatically registered, they are not all automatically
+activated. Volume drivers can be activated by by environment variable, a
+configuration file, or via the command line:</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Config File Property</th>
+<th>CLI Flag(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REXRAY_VOLUMEDRIVERS</code></td>
+<td><code>volumeDrivers</code></td>
+<td><code>--volumeDrivers</code></td>
+</tr>
+</tbody>
+</table>
+<p>The environment variable and CLI flag both expect a space-delimited list of
+volume driver names such as:</p>
+<pre><code class="bash">env REXRAY_VOLUMEDRIVERS=docker rexray volume get
+</code></pre>
+
+<p>or</p>
+<pre><code class="bash">rexray volume get --volumeDrivers=docker
+</code></pre>
+
+<p>However, when specifying the <code>volumeDrivers</code> option in a configuration file,
+since the option is multi-valued, it would look like the following:</p>
+<pre><code class="yaml">volumeDrivers:
+- docker
+</code></pre></div>
+        </div>
+
+        <script src="../../js/jquery-1.10.2.min.js"></script>
+        <script src="../../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
+        <script src="../../js/base.js"></script>
+        <script src="../../.themes/yeti/js/base.js"></script>
+        <script src="../../.themes/yeti/js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../.themes/yeti/js/highlight.pack.js"></script>
+        <script src="../../.themes/yeti/js/jquery-1.10.2.min.js"></script>
+    </body>
+</html>

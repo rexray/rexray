@@ -4,6 +4,7 @@ repo_url: https://github.com/emccode/rexray.git
 docs_dir: .docs
 site_dir: .site
 theme_dir: .docs/.themes/yeti
+site_favicon: favicon.png
 
 pages:
 - Home: index.md

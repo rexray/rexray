@@ -73,7 +73,7 @@ osDrivers: linux
 volumeDrivers: docker
 ```
 
-## Log Level
+## Logging
 The `REX-Ray` log level determines the level of verbosity emitted by the
 internal logger. The default level is `warn`, but there are three other levels
 as well:

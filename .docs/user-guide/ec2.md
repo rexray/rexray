@@ -13,11 +13,11 @@ EC2 driver is made possible by the
 ## Configuration Options
 The following are the configuration options for the `ec2` storage driver.
 
- EnvVar | YAML | CLI  | Description
---------|------|------|-------------
-`AWS_ACCESS_KEY` | `awsAccessKey` | `--awsAccessKey` | The AWS access key, the public part of the IAM credentials.
-`AWS_SECRET_KEY` | `awsSecretKey` | `--awsSecretKey` | The AWS secret key, the private part of the IAM credentials |
-`AWS_REGION` | `awsRegion` | `--awsRegion` | The AWS region |
+ EnvVar | YAML | CLI  
+--------|------|------
+`AWS_ACCESS_KEY` | `awsAccessKey` | `--awsAccessKey`
+`AWS_SECRET_KEY` | `awsSecretKey` | `--awsSecretKey`
+`AWS_REGION` | `awsRegion` | `--awsRegion`
 
 ## Activating the Driver
 To activate the EC2 driver please follow the instructions for

@@ -21,10 +21,15 @@
 }
 
 .icon-emccode-logo:before {
-    content: "a";
+    content: "e";
     vertical-align: middle;
 }
 
 .icon-emccode-logo:after {
     content: " EMC{code}";
+}
+
+.icon-rexray-logo:before {
+    content: "r";
+    vertical-align: middle;
 }

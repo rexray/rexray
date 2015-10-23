@@ -11,10 +11,10 @@ service, and with built-in third-party support for tools such as `Docker`,
 list storage for a guest hosted on Amazon Web Services (AWS) with `REX-Ray`:
 
 ```bash
-[0]akutz@pax:~$ export REXRAY_STORAGEDRIVERS=ec2
-[0]akutz@pax:~$ export AWS_ACCESS_KEY=access_key
-[0]akutz@pax:~$ export AWS_SECRET_KEY=secret_key
-[0]akutz@pax:~$ rexray volume get
+$ export REXRAY_STORAGEDRIVERS=ec2
+$ export AWS_ACCESS_KEY=access_key
+$ export AWS_SECRET_KEY=secret_key
+$ rexray volume get
 
 - providername: ec2
   instanceid: i-695bb6ab
@@ -22,19 +22,14 @@ list storage for a guest hosted on Amazon Web Services (AWS) with `REX-Ray`:
   devicename: /dev/sda1
   region: us-west-1
   status: attached
-- providername: ec2
-  instanceid: i-695bb6ab
-  volumeid: vol-04c4b219
-  devicename: /dev/xvdb
-  region: us-west-1
-  status: attached
 ```
 
-## Features
+## Overview
 Today `REX-Ray` supports the following storage providers:
 
 * [Amazon Elastic Computer Cloud (EC2)](https://aws.amazon.com/ec2/)
 * [Openstack on Rackspace](http://www.rackspace.com/en-us/cloud/openstack)
+* [Rackspace](http://www.rackspace.com)
 * [ScaleIO](http://www.emc.com/storage/scaleio/index.htm)
 * [XtremIO](http://xtremio.com/) (with Multipath & Device Mapper support)
 
@@ -51,7 +46,10 @@ Linux   | Yes          | Yes
 OS X    | Yes          | No
 Windows | No           | No
 
-## Installation
+## Getting Started
+This section will help you get started using `REX-Ray`.
+
+### Installing REX-Ray
 The following command will download the most recent, stable build of `REX-Ray`
 and install it to `/usr/bin/rexray.` On Linux systems `REX-Ray` will also be
 registered as either a SystemD or SystemV service.
@@ -65,7 +63,6 @@ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
 package, or by
 [building it from source](./user-guide/installation.md#build-and-install-from-source).
 
-## Getting Started
 Once installed, `REX-Ray` can be used by simply typing `rexray` on the command
 line, but in order for `REX-Ray` to do much more than print out help text,
 configuration is necessary:

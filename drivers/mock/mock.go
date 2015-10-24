@@ -39,10 +39,6 @@ func init() {
 	log.WithField("REXRAY_MOCKDRIVERS", v).Debug("got REXRAY_MOCKDRIVERS")
 
 	if b, err := strconv.ParseBool(v); !b || err != nil {
-		if err != nil {
-			log.WithError(err).WithField("REXRAY_MOCKDRIVERS", v).Error(
-				"error parsing REXRAY_MOCKDRIVERS")
-		}
 		log.Debug("not registering mock drivers")
 		return
 	}

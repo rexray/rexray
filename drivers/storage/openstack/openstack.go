@@ -97,18 +97,18 @@ func (d *driver) Init(r *core.RexRay) error {
 
 	authOpts := getAuthOptions(d.r.Config)
 
-	fields["identityEndpoint"] = d.r.Config.RackspaceAuthURL
-	fields["userId"] = d.r.Config.RackspaceUserID
-	fields["userName"] = d.r.Config.RackspaceUserName
-	if d.r.Config.RackspacePassword == "" {
+	fields["identityEndpoint"] = d.r.Config.OpenstackAuthURL
+	fields["userId"] = d.r.Config.OpenstackUserID
+	fields["userName"] = d.r.Config.OpenstackUserName
+	if d.r.Config.OpenstackPassword == "" {
 		fields["password"] = ""
 	} else {
 		fields["password"] = "******"
 	}
-	fields["tenantId"] = d.r.Config.RackspaceTenantID
-	fields["tenantName"] = d.r.Config.RackspaceTenantName
-	fields["domainId"] = d.r.Config.RackspaceDomainID
-	fields["domainName"] = d.r.Config.RackspaceDomainName
+	fields["tenantId"] = d.r.Config.OpenstackTenantID
+	fields["tenantName"] = d.r.Config.OpenstackTenantName
+	fields["domainId"] = d.r.Config.OpenstackDomainID
+	fields["domainName"] = d.r.Config.OpenstackDomainName
 
 	if d.provider, err = openstack.AuthenticatedClient(authOpts); err != nil {
 		return errors.WithFieldsE(fields,

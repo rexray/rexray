@@ -12,11 +12,11 @@ You can determine your currently installed version using `rexray version`:
 
     $ rexray version
     Binary: /usr/local/bin/rexray
-    SemVer: 0.2.0
-    OsArch: Darwin-x86_64
-    Branch: v0.2.0
-    Commit: b018a3be05b54a110728d3669213e3d8f65de197
-    Formed: Wed, 30 Sep 2015 16:29:15 CDT
+    SemVer: 0.2.1
+    OsArch: Linux-x86_64
+    Branch: master
+    Commit: 36ccc425faeab49d792eda4851e3d72a85744874
+    Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
 ## Version 0.2.1 (2015-10-27)
 REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,

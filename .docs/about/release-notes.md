@@ -18,6 +18,25 @@ You can determine your currently installed version using `rexray version`:
     Commit: b018a3be05b54a110728d3669213e3d8f65de197
     Formed: Wed, 30 Sep 2015 16:29:15 CDT
 
+## Version 0.2.1 (2015-10-27)
+REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,
+and continued foundation changes for future features.
+
+### New Features
+* Support for OpenStack ([#111](https://github.com/emccode/rexray/issues/111))
+* Create volume from volume using existing settings ([#129](https://github.com/emccode/rexray/issues/129))
+
+### Enhancements
+* A+ [GoReport Card](http://goreportcard.com/report/emccode/rexray)
+* A+ [Code Coverage](https://coveralls.io/github/emccode/rexray?branch=master)
+* [GoDoc Support](https://godoc.org/github.com/emccode/rexray)
+* Ability to load REX-Ray as an independent storage platform ([#127](https://github.com/emccode/rexray/issues/127))
+* New documentation at http://rexray.readthedocs.org ([#145](https://github.com/emccode/rexray/issues/145))
+* More foundation updates
+
+### Tweaks
+* Command aliases for `get` and `delete` - `ls` and `rm` ([#107](https://github.com/emccode/rexray/issues/107))
+
 ## Version 0.2.0 (2015-09-30)
 
 ### Installation, SysV, SystemD Support

@@ -57,7 +57,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	var err error
-	d.instanceDocument, err = getInstanceIdendityDocument()
+	d.instanceDocument, err = getInstanceIdentityDocument()
 	if err != nil {
 		return errors.WithFields(ef(), "error getting instance id doc")
 	}
@@ -124,7 +124,7 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	return BlockDevices, nil
 }
 
-func getInstanceIdendityDocument() (*instanceIdentityDocument, error) {
+func getInstanceIdentityDocument() (*instanceIdentityDocument, error) {
 	conn, err := net.DialTimeout("tcp", "169.254.169.254:80", 50*time.Millisecond)
 	if err != nil {
 		return &instanceIdentityDocument{}, fmt.Errorf("Error: %v\n", err)

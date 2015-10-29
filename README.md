@@ -5,9 +5,9 @@ via guest storage introspection. Available as a Go package, CLI tool, and Linux
 service, and with built-in third-party support for tools such as `Docker`,
 `REX-Ray` is easily integrated into any workflow.
 
-## Documentation for REX-Ray [![Docs](https://readthedocs.org/projects/rexray/badge/?version=latest)](http://rexray.readthedocs.org/en/latest/)
+## Documentation for REX-Ray [![Docs](https://readthedocs.org/projects/rexray/badge/?version=stable)](http://rexray.readthedocs.org/en/stable/)
 You will find complete documentation for `REX-Ray`, including
-[licensing](http://rexray.readthedocs.org/en/latest/about/license/) and
-[support](http://rexray.readthedocs.org/en/latest/#getting-help)
+[licensing](http://rexray.readthedocs.org/en/stable/about/license/) and
+[support](http://rexray.readthedocs.org/en/stable/#getting-help)
 information at
-[rexray.readthedocs.org](http://rexray.readthedocs.org/en/latest/)
+[rexray.readthedocs.org](http://rexray.readthedocs.org/en/stable/)

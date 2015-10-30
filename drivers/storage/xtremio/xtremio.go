@@ -17,13 +17,14 @@ import (
 	xtio "github.com/emccode/goxtremio"
 
 	"github.com/emccode/rexray/core"
+	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 )
 
 const providerName = "XtremIO"
 
 // The XtremIO storage driver.
-type xtremIODriver struct {
+type driver struct {
 	client       *xtio.Client
 	initiator    xtio.Initiator
 	volumesSig   string
@@ -52,48 +53,49 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
+	config.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
-	return &xtremIODriver{}
+	return &driver{}
 }
 
-func (d *xtremIODriver) Init(r *core.RexRay) error {
+func (d *driver) Init(r *core.RexRay) error {
 
 	d.r = r
 	d.volumesByNaa = map[string]xtio.Volume{}
 
 	fields := eff(map[string]interface{}{
-		"endpoint":         r.Config.XtremIOEndpoint,
-		"userName":         r.Config.XtremIOUserName,
-		"deviceMapper":     r.Config.XtremIODeviceMapper,
-		"multipath":        r.Config.XtremIOMultipath,
-		"remoteManagement": r.Config.XtremIORemoteManagement,
-		"insecure":         r.Config.XtremIOInsecure,
+		"endpoint":         d.endpoint(),
+		"userName":         d.userName(),
+		"deviceMapper":     d.deviceMapper(),
+		"multipath":        d.multipath(),
+		"remoteManagement": d.remoteManagement(),
+		"insecure":         d.insecure(),
 	})
 
-	if r.Config.XtremIoPassword == "" {
+	if d.password() == "" {
 		fields["password"] = ""
 	} else {
 		fields["password"] = "******"
 	}
 
-	if !isXtremIOAttached() && !d.r.Config.XtremIORemoteManagement {
+	if !isXtremIOAttached() && !d.remoteManagement() {
 		return errors.WithFields(fields, "device not detected")
 	}
 
 	var err error
 
 	if d.client, err = xtio.NewClientWithArgs(
-		r.Config.XtremIOEndpoint,
-		r.Config.XtremIOInsecure,
-		r.Config.XtremIOUserName,
-		r.Config.XtremIoPassword); err != nil {
+		d.endpoint(),
+		d.insecure(),
+		d.userName(),
+		d.password()); err != nil {
 		return errors.WithFieldsE(fields,
 			"error creating xtremio client", err)
 	}
 
-	if !d.r.Config.XtremIORemoteManagement {
+	if !d.remoteManagement() {
 		var iqn string
 		if iqn, err = getIQN(); err != nil {
 			return err
@@ -146,11 +148,11 @@ func getIQN() (string, error) {
 	return "", errors.New("IQN not found")
 }
 
-func (d *xtremIODriver) Name() string {
+func (d *driver) Name() string {
 	return providerName
 }
 
-func (d *xtremIODriver) getVolumesSig() (string, error) {
+func (d *driver) getVolumesSig() (string, error) {
 	volumes, err := d.client.GetVolumes()
 	if err != nil {
 		return "", err
@@ -165,7 +167,7 @@ func (d *xtremIODriver) getVolumesSig() (string, error) {
 	return strings.Join(volumesNameHref, ";"), err
 }
 
-func (d *xtremIODriver) getLunMapsSig() (string, error) {
+func (d *driver) getLunMapsSig() (string, error) {
 	lunMap, err := d.client.GetLunMaps()
 	if err != nil {
 		return "", err
@@ -180,7 +182,7 @@ func (d *xtremIODriver) getLunMapsSig() (string, error) {
 	return strings.Join(lunMapsNameHref, ";"), err
 }
 
-func (d *xtremIODriver) isVolumesSigEqual() (bool, string, error) {
+func (d *driver) isVolumesSigEqual() (bool, string, error) {
 	volumesSig, err := d.getVolumesSig()
 	if err != nil {
 		return false, "", err
@@ -191,7 +193,7 @@ func (d *xtremIODriver) isVolumesSigEqual() (bool, string, error) {
 	return false, volumesSig, nil
 }
 
-func (d *xtremIODriver) isLunMapsSigEqual() (bool, string, error) {
+func (d *driver) isLunMapsSigEqual() (bool, string, error) {
 	lunMapsSig, err := d.getLunMapsSig()
 	if err != nil {
 		return false, "", err
@@ -202,7 +204,7 @@ func (d *xtremIODriver) isLunMapsSigEqual() (bool, string, error) {
 	return false, lunMapsSig, nil
 }
 
-func (d *xtremIODriver) updateVolumesSig() error {
+func (d *driver) updateVolumesSig() error {
 	oldVolumesSig := d.volumesSig
 	checkSig, volumesSig, err := d.isVolumesSigEqual()
 	if err != nil {
@@ -242,11 +244,11 @@ func (d *xtremIODriver) updateVolumesSig() error {
 	return nil
 }
 
-func (d *xtremIODriver) getInitiator() (xtio.Initiator, error) {
+func (d *driver) getInitiator() (xtio.Initiator, error) {
 	return d.initiator, nil
 }
 
-func (d *xtremIODriver) getLocalDeviceByID() (map[string]string, error) {
+func (d *driver) getLocalDeviceByID() (map[string]string, error) {
 	mapDiskByID := make(map[string]string)
 	diskIDPath := "/dev/disk/by-id"
 	files, err := ioutil.ReadDir(diskIDPath)
@@ -257,7 +259,7 @@ func (d *xtremIODriver) getLocalDeviceByID() (map[string]string, error) {
 	var match1 *regexp.Regexp
 	var match2 string
 
-	if d.r.Config.XtremIODeviceMapper || d.r.Config.XtremIOMultipath {
+	if d.deviceMapper() || d.multipath() {
 		match1, _ = regexp.Compile(`^dm-name-\w*$`)
 		match2 = `^dm-name-\d+`
 	} else {
@@ -276,7 +278,7 @@ func (d *xtremIODriver) getLocalDeviceByID() (map[string]string, error) {
 	return mapDiskByID, nil
 }
 
-func (d *xtremIODriver) GetInstance() (*core.Instance, error) {
+func (d *driver) GetInstance() (*core.Instance, error) {
 
 	initiator, err := d.getInitiator()
 	if err != nil {
@@ -294,7 +296,7 @@ func (d *xtremIODriver) GetInstance() (*core.Instance, error) {
 	return instance, nil
 }
 
-func (d *xtremIODriver) GetVolumeMapping() ([]*core.BlockDevice, error) {
+func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 
 	mapDiskByID, err := d.getLocalDeviceByID()
 	if err != nil {
@@ -335,7 +337,7 @@ func (d *xtremIODriver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	return BlockDevices, nil
 }
 
-func (d *xtremIODriver) getVolume(volumeID, volumeName string) ([]xtio.Volume, error) {
+func (d *driver) getVolume(volumeID, volumeName string) ([]xtio.Volume, error) {
 	var volumes []xtio.Volume
 	if volumeID != "" || volumeName != "" {
 		volume, err := d.client.GetVolume(volumeID, volumeName)
@@ -358,7 +360,7 @@ func (d *xtremIODriver) getVolume(volumeID, volumeName string) ([]xtio.Volume, e
 	return volumes, nil
 }
 
-func (d *xtremIODriver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) {
+func (d *driver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) {
 
 	volumes, err := d.getVolume(volumeID, volumeName)
 	if err != nil && err.Error() == "obj_not_found" {
@@ -412,7 +414,7 @@ func (d *xtremIODriver) GetVolume(volumeID, volumeName string) ([]*core.Volume, 
 	return volumesSD, nil
 }
 
-func (d *xtremIODriver) CreateVolume(
+func (d *driver) CreateVolume(
 	notUsed bool,
 	volumeName, volumeID, snapshotID, NUvolumeType string,
 	NUIOPS, size int64, NUavailabilityZone string) (*core.Volume, error) {
@@ -462,7 +464,7 @@ func (d *xtremIODriver) CreateVolume(
 	return volumes[0], nil
 }
 
-func (d *xtremIODriver) RemoveVolume(volumeID string) error {
+func (d *driver) RemoveVolume(volumeID string) error {
 	err := d.client.DeleteVolume(volumeID, "")
 	if err != nil {
 		return err
@@ -472,7 +474,7 @@ func (d *xtremIODriver) RemoveVolume(volumeID string) error {
 	return nil
 }
 
-func (d *xtremIODriver) getSnapshot(snapshotID, snapshotName string) ([]xtio.Snapshot, error) {
+func (d *driver) getSnapshot(snapshotID, snapshotName string) ([]xtio.Snapshot, error) {
 	var snapshots []xtio.Snapshot
 	if snapshotID != "" || snapshotName != "" {
 		snapshot, err := d.client.GetSnapshot(snapshotID, snapshotName)
@@ -496,7 +498,7 @@ func (d *xtremIODriver) getSnapshot(snapshotID, snapshotName string) ([]xtio.Sna
 }
 
 //GetSnapshot returns snapshots from a volume or a specific snapshot
-func (d *xtremIODriver) GetSnapshot(
+func (d *driver) GetSnapshot(
 	volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
 
 	var snapshotsInt []*core.Snapshot
@@ -570,7 +572,7 @@ func getIndex(href string) string {
 	return hrefFields[len(hrefFields)-1]
 }
 
-func (d *xtremIODriver) CreateSnapshot(
+func (d *driver) CreateSnapshot(
 	notUsed bool,
 	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
@@ -599,7 +601,7 @@ func (d *xtremIODriver) CreateSnapshot(
 	return snapshot, nil
 }
 
-func (d *xtremIODriver) RemoveSnapshot(snapshotID string) error {
+func (d *driver) RemoveSnapshot(snapshotID string) error {
 	err := d.client.DeleteSnapshot(snapshotID, "")
 	if err != nil {
 		return err
@@ -608,7 +610,7 @@ func (d *xtremIODriver) RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (d *xtremIODriver) GetVolumeAttach(volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+func (d *driver) GetVolumeAttach(volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	if volumeID == "" {
 		return []*core.VolumeAttachment{}, errors.ErrMissingVolumeID
 	}
@@ -631,7 +633,7 @@ func (d *xtremIODriver) GetVolumeAttach(volumeID, instanceID string) ([]*core.Vo
 	return volume[0].Attachments, nil
 }
 
-func (d *xtremIODriver) waitAttach(volumeID string) (*core.BlockDevice, error) {
+func (d *driver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 
 	timeout := make(chan bool, 1)
 	go func() {
@@ -644,7 +646,7 @@ func (d *xtremIODriver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 	go func(volumeID string) {
 		log.Println("XtremIO: waiting for volume attach")
 		for {
-			if d.r.Config.XtremIOMultipath {
+			if d.multipath() {
 				_, err := exec.Command("/sbin/multipath").Output()
 				if err != nil {
 					errorCh <- fmt.Errorf(
@@ -682,7 +684,7 @@ func (d *xtremIODriver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 
 }
 
-func (d *xtremIODriver) AttachVolume(
+func (d *driver) AttachVolume(
 	runAsync bool,
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 
@@ -738,7 +740,7 @@ func (d *xtremIODriver) AttachVolume(
 
 }
 
-func (d *xtremIODriver) getLunMaps(initiatorName, volumeID string) (xtio.Refs, error) {
+func (d *driver) getLunMaps(initiatorName, volumeID string) (xtio.Refs, error) {
 	if initiatorName == "" {
 		return nil, errors.New("Missing initiatorName")
 	}
@@ -767,7 +769,7 @@ func (d *xtremIODriver) getLunMaps(initiatorName, volumeID string) (xtio.Refs, e
 	return refs, nil
 }
 
-func (d *xtremIODriver) DetachVolume(notUsed bool, volumeID string, blank string) error {
+func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string) error {
 	if volumeID == "" {
 		return errors.ErrMissingVolumeID
 	}
@@ -781,7 +783,7 @@ func (d *xtremIODriver) DetachVolume(notUsed bool, volumeID string, blank string
 		return errors.ErrNoVolumesReturned
 	}
 
-	if d.r.Config.XtremIOMultipath {
+	if d.multipath() {
 		_, err := exec.Command("/sbin/multipath", "-f",
 			fmt.Sprintf("3%s", volumes[0].NaaName)).Output()
 		if err != nil {
@@ -808,13 +810,53 @@ func (d *xtremIODriver) DetachVolume(notUsed bool, volumeID string, blank string
 	return nil
 }
 
-func (d *xtremIODriver) CopySnapshot(
+func (d *driver) CopySnapshot(
 	runAsync bool,
 	volumeID, snapshotID, snapshotName,
 	destinationSnapshotName, destinationRegion string) (*core.Snapshot, error) {
 	return nil, errors.ErrNotImplemented
 }
 
-func (d *xtremIODriver) GetDeviceNextAvailable() (string, error) {
+func (d *driver) GetDeviceNextAvailable() (string, error) {
 	return "", errors.ErrNotImplemented
+}
+
+func (d *driver) endpoint() string {
+	return d.r.Config.GetString("xtremio.endpoint")
+}
+
+func (d *driver) insecure() bool {
+	return d.r.Config.GetBool("xtremio.insecure")
+}
+
+func (d *driver) userName() string {
+	return d.r.Config.GetString("xtremio.userName")
+}
+
+func (d *driver) password() string {
+	return d.r.Config.GetString("xtremio.password")
+}
+
+func (d *driver) deviceMapper() bool {
+	return d.r.Config.GetBool("xtremio.deviceMapper")
+}
+
+func (d *driver) multipath() bool {
+	return d.r.Config.GetBool("xtremio.multipath")
+}
+
+func (d *driver) remoteManagement() bool {
+	return d.r.Config.GetBool("xtremio.remoteManagement")
+}
+
+func configRegistration() *config.Registration {
+	r := config.NewRegistration("XtremIO")
+	r.Key(config.String, "", "", "", "xtremio.endpoint")
+	r.Key(config.Bool, "", false, "", "xtremio.insecure")
+	r.Key(config.String, "", "", "", "xtremio.userName")
+	r.Key(config.String, "", "", "", "xtremio.password")
+	r.Key(config.Bool, "", false, "", "xtremio.deviceMapper")
+	r.Key(config.Bool, "", false, "", "xtremio.multipath")
+	r.Key(config.Bool, "", false, "", "xtremio.remoteManagement")
+	return r
 }

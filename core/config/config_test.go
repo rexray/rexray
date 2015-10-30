@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	//log "github.com/Sirupsen/logrus"
+
 	"github.com/emccode/rexray/util"
 )
 
@@ -19,6 +21,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	//log.SetLevel(log.DebugLevel)
 	usrRexRayDir := fmt.Sprintf("%s/.rexray", util.HomeDir())
 	os.MkdirAll(usrRexRayDir, 0755)
 	usrRexRayFile = fmt.Sprintf("%s/%s.%s", usrRexRayDir, "config", "yml")
@@ -52,38 +55,289 @@ func newPrefixDir(testName string, t *testing.T) string {
 
 func TestAssertConfigDefaults(t *testing.T) {
 	newPrefixDir("TestAssertConfigDefaults", t)
+	wipeEnv()
+	c := New()
 
-	evs := os.Environ()
-	for _, v := range evs {
-		k := strings.Split(v, "=")[0]
-		os.Setenv(k, "")
+	osDrivers := c.GetStringSlice("osDrivers")
+	volDrivers := c.GetStringSlice("volumeDrivers")
+
+	assertString(t, c, "host", "tcp://:7979")
+	assertString(t, c, "logLevel", "warn")
+
+	if len(osDrivers) != 1 || osDrivers[0] != "linux" {
+		t.Fatalf("osDrivers != []string{\"linux\"}, == %v", osDrivers)
 	}
+
+	if len(volDrivers) != 1 || volDrivers[0] != "docker" {
+		t.Fatalf("volumeDrivers != []string{\"docker\"}, == %v", volDrivers)
+	}
+}
+
+func TestAssertTestRegistration(t *testing.T) {
+	newPrefixDir("TestAssertTestRegistration", t)
+	wipeEnv()
+	Register(testRegistration())
+	c := New()
+
+	userName := c.GetString("mockProvider.username")
+	password := c.GetString("mockProvider.password")
+	useCerts := c.GetBool("mockProvider.useCerts")
+	minVolSize := c.GetInt("mockProvider.Docker.minVolSize")
+
+	if userName != "admin" {
+		t.Fatalf("mockProvider.userName != admin, == %s", userName)
+	}
+
+	if password != "" {
+		t.Fatalf("mockProvider.password != '', == %s", password)
+	}
+
+	if !useCerts {
+		t.Fatalf("mockProvider.useCerts != true, == %v", useCerts)
+	}
+
+	if minVolSize != 16 {
+		t.Fatalf("minVolSize != 16, == %d", minVolSize)
+	}
+}
+
+func TestBaselineJSON(t *testing.T) {
+	newPrefixDir("TestBaselineJSON", t)
+	wipeEnv()
+	Register(testRegistration())
+	c := New()
+
+	var err error
+	var cJSON string
+	if cJSON, err = c.ToJSON(); err != nil {
+		t.Fatal(err)
+	}
+
+	cMap := map[string]interface{}{}
+	ccMap := map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(cJSON), &cMap); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(
+		[]byte(jsonConfigBaseline), &ccMap); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(cMap, ccMap) {
+		t.Fail()
+	}
+
+	if reflect.DeepEqual(map[string]interface{}{}, ccMap) {
+		t.Fail()
+	}
+
+	if reflect.DeepEqual(cMap, map[string]interface{}{}) {
+		t.Fail()
+	}
+}
+
+func TestToJSON(t *testing.T) {
+	newPrefixDir("TestToJSON", t)
+	wipeEnv()
+	Register(testRegistration())
+	c := New()
+
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
+		t.Fatal(err)
+	}
+
+	var err error
+	var cJSON string
+	if cJSON, err = c.ToJSON(); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(cJSON)
+	t.Log(jsonConfigWithYamlConfig1)
+
+	cMap := map[string]interface{}{}
+	ccMap := map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(cJSON), &cMap); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(
+		[]byte(jsonConfigWithYamlConfig1), &ccMap); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(cMap, ccMap) {
+		t.Fatal("json not equal pre minVolSize change")
+	}
+
+	mvs := c.GetInt("mockprovider.docker.minvolsize")
+	if mvs != 32 {
+		t.Fatal("mvs != 32")
+	}
+
+	c.Set("mockprovider.docker.minvolsize", 128)
+	mvs = c.GetInt("mockprovider.docker.minvolsize")
+	if mvs != 128 {
+		t.Fatal("mvs != 128")
+	}
+
+	if cJSON, err = c.ToJSON(); err != nil {
+		t.Fatal(err)
+	}
+
+	cMap = map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(cJSON), &cMap); err != nil {
+		t.Fatal(err)
+	}
+
+	if reflect.DeepEqual(cMap, ccMap) {
+		t.Fatal("json equal post minVolSize change")
+	}
+}
+
+func TestToJSONCompact(t *testing.T) {
+	newPrefixDir("TestToJSONCompact", t)
+	wipeEnv()
+	Register(testRegistration())
+	c := New()
+
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
+		t.Fatal(err)
+	}
+
+	var err error
+	var cJSON string
+	if cJSON, err = c.ToJSONCompact(); err != nil {
+		t.Fatal(err)
+	}
+
+	cMap := map[string]interface{}{}
+	ccMap := map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(cJSON), &cMap); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(
+		[]byte(jsonConfigWithYamlConfig1), &ccMap); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(cMap, ccMap) {
+		t.Fail()
+	}
+
+	mvs := c.GetInt("mockprovider.docker.minvolsize")
+	if mvs != 32 {
+		t.Fatal("mvs != 32")
+	}
+
+	c.Set("mockprovider.docker.minvolsize", 128)
+	mvs = c.GetInt("mockprovider.docker.minvolsize")
+	if mvs != 128 {
+		t.Fatal("mvs != 128")
+	}
+
+	if cJSON, err = c.ToJSONCompact(); err != nil {
+		t.Fatal(err)
+	}
+
+	cMap = map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(cJSON), &cMap); err != nil {
+		t.Fatal(err)
+	}
+
+	if reflect.DeepEqual(cMap, ccMap) {
+		t.Fail()
+	}
+}
+
+func TestFromJSON(t *testing.T) {
+	newPrefixDir("TestFromJSON", t)
+	wipeEnv()
+	Register(testRegistration())
 
 	c := New()
 
-	if c.Host != "tcp://:7979" {
-		t.Fatalf("c.Host != tcp://:7979, == %s", c.Host)
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
+		t.Fatal(err)
 	}
 
-	if c.LogLevel != "warn" {
-		t.Fatalf("c.LogLevel != warn, == %d", c.LogLevel)
+	var err error
+	var cJSON string
+	if cJSON, err = c.ToJSON(); err != nil {
+		t.Fatal(err)
 	}
 
-	if len(c.OSDrivers) != 1 && c.OSDrivers[0] != "linux" {
-		t.Fatalf("c.OSDrivers != []string{\"linux\"}, == %v", c.OSDrivers)
+	var cfj *Config
+	var cfJSON string
+	if cfj, err = FromJSON(jsonConfigWithYamlConfig1); err != nil {
+		t.Fatal(err)
+	}
+	if cfJSON, err = cfj.ToJSON(); err != nil {
+		t.Fatal(err)
 	}
 
-	if len(c.VolumeDrivers) != 1 && c.VolumeDrivers[0] != "docker" {
-		t.Fatalf("c.VolumeDrivers != []string{\"docker\"}, == %v", c.VolumeDrivers)
+	cMap := map[string]interface{}{}
+	cfjMap := map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(cJSON), &cMap); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal([]byte(cfJSON), &cfjMap); err != nil {
+		t.Fatal(err)
 	}
 
-	if c.DockerSize != 0 {
-		t.Fatalf("c.DockerSize != 0, == %d", c.DockerSize)
+	if !reflect.DeepEqual(cMap, cfjMap) {
+		t.Fail()
+	}
+}
+
+func TestFromJSONWithErrors(t *testing.T) {
+	_, err := FromJSON("///*")
+	if err == nil {
+		t.Fatal("expected unmarshalling error")
+	}
+}
+
+func TestEnvVars(t *testing.T) {
+	newPrefixDir("TestEnvVars", t)
+	wipeEnv()
+	Register(testRegistration())
+	c := New()
+
+	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
+		t.Fatal(err)
+	}
+
+	fev := c.EnvVars()
+
+	for _, v := range fev {
+		t.Log(v)
+	}
+
+	assertEnvVar("REXRAY_HOST=tcp://:7979", fev, t)
+	assertEnvVar("REXRAY_LOGLEVEL=error", fev, t)
+	assertEnvVar("REXRAY_STORAGEDRIVERS=ec2 xtremio", fev, t)
+	assertEnvVar("REXRAY_OSDRIVERS=linux", fev, t)
+	assertEnvVar("REXRAY_VOLUMEDRIVERS=docker", fev, t)
+	assertEnvVar("MOCKPROVIDER_USERNAME=admin", fev, t)
+	assertEnvVar("MOCKPROVIDER_USECERTS=true", fev, t)
+	assertEnvVar("MOCKPROVIDER_DOCKER_MINVOLSIZE=32", fev, t)
+}
+
+func assertEnvVar(s string, evs []string, t *testing.T) {
+	if !util.StringInSlice(s, evs) {
+		t.Fatal(s)
 	}
 }
 
 func TestCopy(t *testing.T) {
 	newPrefixDir("TestCopy", t)
+	wipeEnv()
+	Register(testRegistration())
 
 	etcRexRayCfg := util.EtcFilePath("config.yml")
 	t.Logf("etcRexRayCfg=%s", etcRexRayCfg)
@@ -91,13 +345,13 @@ func TestCopy(t *testing.T) {
 
 	c := New()
 
-	assertLogLevel(t, c, "error")
+	assertString(t, c, "logLevel", "error")
 	assertStorageDrivers(t, c)
 	assertOsDrivers1(t, c)
 
 	cc, _ := c.Copy()
 
-	assertLogLevel(t, cc, "error")
+	assertString(t, cc, "logLevel", "error")
 	assertStorageDrivers(t, cc)
 	assertOsDrivers1(t, cc)
 
@@ -106,179 +360,17 @@ func TestCopy(t *testing.T) {
 
 	cMap := map[string]interface{}{}
 	ccMap := map[string]interface{}{}
-	json.Unmarshal([]byte(cJSON), cMap)
-	json.Unmarshal([]byte(ccJSON), ccJSON)
+
+	if err := json.Unmarshal([]byte(cJSON), &cMap); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal([]byte(ccJSON), &ccMap); err != nil {
+		t.Fatal(err)
+	}
 
 	if !reflect.DeepEqual(cMap, ccMap) {
 		t.Fail()
 	}
-}
-
-func TestEnvVars(t *testing.T) {
-	c := New()
-	c.Viper.Set("awsSecretKey", "Hello, world.")
-	if !util.StringInSlice("AWS_SECRET_KEY=Hello, world.", c.EnvVars()) {
-		t.Fail()
-	}
-
-	if util.StringInSlice("AWS_SECRET_KEY=Hello, world.", New().EnvVars()) {
-		t.Fail()
-	}
-}
-
-func TestJSONMarshalStrategy(t *testing.T) {
-	c := New()
-	if c.JSONMarshalStrategy() != JSONMarshalSecure {
-		t.Fail()
-	}
-	c.SetJSONMarshalStrategy(JSONMarshalPlainText)
-	if c.JSONMarshalStrategy() != JSONMarshalPlainText {
-		t.Fail()
-	}
-	c.SetJSONMarshalStrategy(JSONMarshalSecure)
-}
-
-func TestToJson(t *testing.T) {
-	c := New()
-
-	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
-		t.Fatal(err)
-	}
-
-	c.AwsAccessKey = "MyAwsAccessKey"
-	c.AwsSecretKey = "MyAwsSecretKey"
-	var err error
-	var strJSON string
-	if strJSON, err = c.ToJSON(); err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(strJSON)
-
-	map1 := map[string]interface{}{}
-	map2 := map[string]interface{}{}
-	json.Unmarshal([]byte(strJSON), map1)
-	json.Unmarshal([]byte(jsonConfig), map2)
-
-	if !reflect.DeepEqual(map1, map2) {
-		t.Fail()
-	}
-}
-
-func TestToSecureJson(t *testing.T) {
-	c := New()
-
-	if err := c.ReadConfig(bytes.NewReader(yamlConfig2)); err != nil {
-		t.Fatal(err)
-	}
-
-	c.AwsAccessKey = "MyAwsAccessKey"
-	c.AwsSecretKey = "MyAwsSecretKey"
-	var err error
-	var strJSON string
-	if strJSON, err = c.ToSecureJSON(); err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(strJSON)
-
-	map1 := map[string]interface{}{}
-	map2 := map[string]interface{}{}
-	json.Unmarshal([]byte(strJSON), map1)
-	json.Unmarshal([]byte(secureJSONConfig), map2)
-
-	if !reflect.DeepEqual(map1, map2) {
-		t.Fail()
-	}
-}
-
-func TestMarshalToJson(t *testing.T) {
-	c := New()
-
-	if err := c.ReadConfig(bytes.NewReader(yamlConfig1)); err != nil {
-		t.Fatal(err)
-	}
-
-	c.AwsAccessKey = "MyAwsAccessKey"
-	c.AwsSecretKey = "MyAwsSecretKey"
-	c.SetJSONMarshalStrategy(JSONMarshalPlainText)
-
-	var err error
-	var buff []byte
-	if buff, err = json.MarshalIndent(c, "", "  "); err != nil {
-		t.Fatal(err)
-	}
-
-	strJSON := string(buff)
-
-	t.Log(strJSON)
-
-	map1 := map[string]interface{}{}
-	map2 := map[string]interface{}{}
-	json.Unmarshal([]byte(strJSON), map1)
-	json.Unmarshal([]byte(jsonConfig), map2)
-
-	if !reflect.DeepEqual(map1, map2) {
-		t.Fail()
-	}
-}
-
-func TestMarshalToSecureJson(t *testing.T) {
-	c := New()
-
-	if err := c.ReadConfig(bytes.NewReader(yamlConfig2)); err != nil {
-		t.Fatal(err)
-	}
-
-	c.AwsAccessKey = "MyAwsAccessKey"
-	c.AwsSecretKey = "MyAwsSecretKey"
-	var err error
-	var buff []byte
-	if buff, err = json.MarshalIndent(c, "", "  "); err != nil {
-		t.Fatal(err)
-	}
-
-	strJSON := string(buff)
-
-	t.Log(strJSON)
-
-	map1 := map[string]interface{}{}
-	map2 := map[string]interface{}{}
-	json.Unmarshal([]byte(strJSON), map1)
-	json.Unmarshal([]byte(secureJSONConfig), map2)
-
-	if !reflect.DeepEqual(map1, map2) {
-		t.Fail()
-	}
-}
-
-func TestFromJson(t *testing.T) {
-	c, err := FromJSON(jsonConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assertLogLevel(t, c, "error")
-	assertStorageDrivers(t, c)
-	assertOsDrivers1(t, c)
-	assertAwsSecretKey(t, c, "MyAwsSecretKey")
-}
-
-func TestFromJsonWithErrors(t *testing.T) {
-	_, err := FromJSON("///*")
-	if err == nil {
-		t.Fatal("expected unmarshalling error")
-	}
-}
-
-func TestFromSecureJson(t *testing.T) {
-	c, err := FromJSON(secureJSONConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assertLogLevel(t, c, "debug")
-	assertStorageDrivers(t, c)
-	assertOsDrivers2(t, c)
-	assertAwsSecretKey(t, c, "")
 }
 
 func TestNewWithUserConfigFile(t *testing.T) {
@@ -287,7 +379,7 @@ func TestNewWithUserConfigFile(t *testing.T) {
 
 	c := New()
 
-	assertLogLevel(t, c, "error")
+	assertString(t, c, "logLevel", "error")
 	assertStorageDrivers(t, c)
 	assertOsDrivers1(t, c)
 
@@ -295,7 +387,7 @@ func TestNewWithUserConfigFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertLogLevel(t, c, "debug")
+	assertString(t, c, "logLevel", "debug")
 	assertStorageDrivers(t, c)
 	assertOsDrivers2(t, c)
 }
@@ -317,7 +409,7 @@ func TestNewWithGlobalConfigFile(t *testing.T) {
 
 	c := New()
 
-	assertLogLevel(t, c, "error")
+	assertString(t, c, "logLevel", "error")
 	assertStorageDrivers(t, c)
 	assertOsDrivers1(t, c)
 
@@ -325,7 +417,7 @@ func TestNewWithGlobalConfigFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertLogLevel(t, c, "debug")
+	assertString(t, c, "logLevel", "debug")
 	assertStorageDrivers(t, c)
 	assertOsDrivers2(t, c)
 }
@@ -368,7 +460,7 @@ func TestReadConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertLogLevel(t, c, "error")
+	assertString(t, c, "logLevel", "error")
 	assertStorageDrivers(t, c)
 	assertOsDrivers1(t, c)
 
@@ -376,7 +468,7 @@ func TestReadConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertLogLevel(t, c, "debug")
+	assertString(t, c, "logLevel", "debug")
 	assertStorageDrivers(t, c)
 	assertOsDrivers2(t, c)
 }
@@ -387,109 +479,89 @@ func TestReadNilConfig(t *testing.T) {
 	}
 }
 
-func assertAwsSecretKey(t *testing.T, c *Config, expected string) {
-	val := c.Viper.GetString("awsSecretKey")
-	if val != expected {
-		t.Fatalf("viper.awsSecretKey != %s; == %v", expected, val)
-	}
-	if c.AwsSecretKey != expected {
-		t.Fatalf("config.awsSecretKey != %s; == %v", expected, c.AwsSecretKey)
+func wipeEnv() {
+	evs := os.Environ()
+	for _, v := range evs {
+		k := strings.Split(v, "=")[0]
+		os.Setenv(k, "")
 	}
 }
 
-func assertLogLevel(t *testing.T, c *Config, expected string) {
-	val := c.Viper.GetString("logLevel")
-	if val != expected {
-		t.Fatalf("viper.logLevel != %s; == %v", expected, val)
+func printConfig(c *Config, t *testing.T) {
+	for k, v := range c.v.AllSettings() {
+		t.Logf("%s=%v\n", k, v)
 	}
-	if c.LogLevel != expected {
-		t.Fatalf("config.logLevel != %s; == %v", expected, c.LogLevel)
+}
+
+func testRegistration() *Registration {
+	r := NewRegistration("Mock Provider")
+	r.Yaml(`mockProvider:
+    userName: admin
+    useCerts: true
+    docker:
+        MinVolSize: 16
+`)
+	r.Key(String, "", "admin", "", "mockProvider.userName")
+	r.Key(String, "", "", "", "mockProvider.password")
+	r.Key(Bool, "", false, "", "mockProvider.useCerts")
+	r.Key(Int, "", 16, "", "mockProvider.docker.minVolSize")
+	r.Key(Bool, "i", true, "", "mockProvider.insecure")
+	r.Key(Int, "m", 256, "", "mockProvider.docker.maxVolSize")
+	return r
+}
+
+func assertString(t *testing.T, c *Config, key, expected string) {
+	v := c.GetString(key)
+	if v != expected {
+		t.Fatalf("%s != %s; == %v", key, expected, v)
 	}
 }
 
 func assertStorageDrivers(t *testing.T, c *Config) {
-	sd := c.Viper.GetStringSlice("storageDrivers")
+	sd := c.GetStringSlice("storageDrivers")
 	if sd == nil {
-		t.Fatalf("viper.storageDrivers == nil")
-	}
-	if c.StorageDrivers == nil {
-		t.Fatalf("config.storageDrivers == nil")
+		t.Fatalf("storageDrivers == nil")
 	}
 
 	if len(sd) != 2 {
-		t.Fatalf("len(viper.storageDrivers) != 2; == %d", len(sd))
-	}
-	if len(c.StorageDrivers) != 2 {
-		t.Fatalf("len(config.storageDrivers) != 2; == %d", len(c.StorageDrivers))
+		t.Fatalf("len(storageDrivers) != 2; == %d", len(sd))
 	}
 
 	if sd[0] != "ec2" {
-		t.Fatalf("viper.sd[0] != ec2; == %v", sd[0])
-	}
-	if c.StorageDrivers[0] != "ec2" {
-		t.Fatalf("config.sd[0] != ec2; == %v", c.StorageDrivers[0])
+		t.Fatalf("sd[0] != ec2; == %v", sd[0])
 	}
 
 	if sd[1] != "xtremio" {
-		t.Fatalf("viper.sd[1] != xtremio; == %v", sd[1])
-	}
-	if c.StorageDrivers[1] != "xtremio" {
-		t.Fatalf("config.sd[1] != xtremio; == %v", c.StorageDrivers[1])
+		t.Fatalf("sd[1] != xtremio; == %v", sd[1])
 	}
 }
 
 func assertOsDrivers1(t *testing.T, c *Config) {
-	od := c.Viper.GetStringSlice("osDrivers")
+	od := c.GetStringSlice("osDrivers")
 	if od == nil {
-		t.Fatalf("viper.osDrivers == nil")
+		t.Fatalf("osDrivers == nil")
 	}
-	if c.OSDrivers == nil {
-		t.Fatalf("config.osDrivers == nil")
-	}
-
 	if len(od) != 1 {
-		t.Fatalf("len(viper.osDrivers) != 1; == %d", len(od))
+		t.Fatalf("len(osDrivers) != 1; == %d", len(od))
 	}
-	if len(c.OSDrivers) != 1 {
-		t.Fatalf("len(config.osDrivers) != 1; == %d", len(c.OSDrivers))
-	}
-
 	if od[0] != "linux" {
-		t.Fatalf("viper.od[0] != linux; == %v", od[0])
-	}
-	if c.OSDrivers[0] != "linux" {
-		t.Fatalf("config.od[0] != linux; == %v", c.OSDrivers[0])
+		t.Fatalf("od[0] != linux; == %v", od[0])
 	}
 }
 
 func assertOsDrivers2(t *testing.T, c *Config) {
-	od := c.Viper.GetStringSlice("osDrivers")
+	od := c.GetStringSlice("osDrivers")
 	if od == nil {
-		t.Fatalf("viper.osDrivers == nil")
+		t.Fatalf("osDrivers == nil")
 	}
-	if c.OSDrivers == nil {
-		t.Fatalf("config.osDrivers == nil")
-	}
-
 	if len(od) != 2 {
-		t.Fatalf("len(viper.osDrivers) != 2; == %d", len(od))
+		t.Fatalf("len(osDrivers) != 2; == %d", len(od))
 	}
-	if len(c.OSDrivers) != 2 {
-		t.Fatalf("len(config.osDrivers) != 2; == %d", len(c.OSDrivers))
-	}
-
 	if od[0] != "darwin" {
-		t.Fatalf("viper.od[0] != darwin; == %v", od[0])
+		t.Fatalf("od[0] != darwin; == %v", od[0])
 	}
-	if c.OSDrivers[0] != "darwin" {
-		t.Fatalf("config.od[0] != darwin; == %v", c.OSDrivers[0])
-	}
-
 	if od[1] != "linux" {
-		t.Fatalf("viper.od[1] != linux; == %v", od[1])
-	}
-	if c.OSDrivers[1] != "linux" {
-		t.Fatalf("config.od[1] != linux; == %v", c.OSDrivers[1])
+		t.Fatalf("od[1] != linux; == %v", od[1])
 	}
 }
 
@@ -498,120 +570,58 @@ storageDrivers:
 - ec2
 - xtremio
 osDrivers:
-- linux`)
+- linux
+mockProvider:
+  userName: admin
+  useCerts: true
+  docker:
+    MinVolSize: 32
+`)
 
 var yamlConfig2 = []byte(`logLevel: debug
 osDrivers:
 - darwin
-- linux`)
+- linux
+`)
 
-var jsonConfig = `{
-    "LogLevel": "error",
-    "StorageDrivers": [
+var jsonConfigBaseline = `{
+    "host": "tcp://:7979",
+    "loglevel": "warn",
+    "mockprovider": {
+        "docker": {
+            "MinVolSize": 16
+        },
+        "useCerts": true,
+        "userName": "admin"
+    },
+    "osdrivers": [
+        "linux"
+    ],
+    "volumedrivers": [
+        "docker"
+    ]
+}
+`
+
+var jsonConfigWithYamlConfig1 = `{
+    "host": "tcp://:7979",
+    "loglevel": "error",
+    "mockprovider": {
+        "docker": {
+            "MinVolSize": 32
+        },
+        "useCerts": true,
+        "userName": "admin"
+    },
+    "osdrivers": [
+        "linux"
+    ],
+    "storagedrivers": [
         "ec2",
         "xtremio"
     ],
-    "VolumeDrivers": [
+    "volumedrivers": [
         "docker"
-    ],
-    "OsDrivers": [
-        "linux"
-    ],
-    "MinVolSize": 0,
-    "RemoteManagement": false,
-    "DockerVolumeType": "",
-    "DockerIops": 0,
-    "DockerSize": 0,
-    "DockerAvailabilityZone": "",
-    "AwsAccessKey": "MyAwsAccessKey",
-    "AwsRegion": "",
-    "RackspaceAuthUrl": "",
-    "RackspaceUserId": "",
-    "RackspaceUserName": "",
-    "RackspaceTenantId": "",
-    "RackspaceTenantName": "",
-    "RackspaceDomainId": "",
-    "RackspaceDomainName": "",
-	"OpenstackAuthUrl": "",
-    "OpenstackUserId": "",
-    "OpenstackUserName": "",
-    "OpenstackTenantId": "",
-    "OpenstackTenantName": "",
-    "OpenstackDomainId": "",
-    "OpenstackDomainName": "",
-	"OpenstackRegionName": "",
-    "ScaleIoEndpoint": "",
-    "ScaleIoInsecure": false,
-    "ScaleIoUseCerts": true,
-    "ScaleIoUserName": "",
-    "ScaleIoSystemId": "",
-    "ScaleIoSystemName": "",
-    "ScaleIoProtectionDomainId": "",
-    "ScaleIoProtectionDomainName": "",
-    "ScaleIoStoragePoolId": "",
-    "ScaleIoStoragePoolName": "",
-    "XtremIoEndpoint": "",
-    "XtremIoUserName": "",
-    "XtremIoInsecure": false,
-    "XtremIoDeviceMapper": false,
-    "XtremIoMultipath": false,
-    "XtremIoRemoteManagement": false,
-    "AwsSecretKey": "MyAwsSecretKey",
-    "RackspacePassword": "",
-    "ScaleIoPassword": "",
-    "XtremIoPassword": ""
-}`
-
-var secureJSONConfig = `{
-    "LogLevel": "debug",
-    "StorageDrivers": [
-        "ec2",
-        "xtremio"
-    ],
-    "VolumeDrivers": [
-        "docker"
-    ],
-    "OsDrivers": [
-        "darwin",
-        "linux"
-    ],
-    "MinVolSize": 0,
-    "RemoteManagement": false,
-    "DockerVolumeType": "",
-    "DockerIops": 0,
-    "DockerSize": 0,
-    "DockerAvailabilityZone": "",
-    "AwsAccessKey": "MyAwsAccessKey",
-    "AwsRegion": "",
-    "RackspaceAuthUrl": "",
-    "RackspaceUserId": "",
-    "RackspaceUserName": "",
-    "RackspaceTenantId": "",
-    "RackspaceTenantName": "",
-    "RackspaceDomainId": "",
-    "RackspaceDomainName": "",
-	"OpenstackAuthUrl": "",
-	"OpenstackUserId": "",
-	"OpenstackUserName": "",
-	"OpenstackTenantId": "",
-	"OpenstackTenantName": "",
-	"OpenstackDomainId": "",
-	"OpenstackDomainName": "",
-	"OpenstackRegionName": "",
-    "ScaleIoEndpoint": "",
-    "ScaleIoInsecure": false,
-    "ScaleIoUseCerts": true,
-    "ScaleIoUserName": "",
-    "ScaleIoSystemId": "",
-    "ScaleIoSystemName": "",
-    "ScaleIoProtectionDomainId": "",
-    "ScaleIoProtectionDomainName": "",
-    "ScaleIoStoragePoolId": "",
-    "ScaleIoStoragePoolName": "",
-    "XtremIoEndpoint": "",
-    "XtremIoUserName": "",
-    "XtremIoInsecure": false,
-    "XtremIoDeviceMapper": false,
-    "XtremIoMultipath": false,
-    "XtremIoRemoteManagement": false
-}`
+    ]
+}
+`

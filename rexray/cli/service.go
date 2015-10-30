@@ -109,7 +109,7 @@ func (c *CLI) startDaemon() {
 		syscall.SIGQUIT)
 
 	go func() {
-		rrdaemon.Start(c.r.Config.Host, init, stop)
+		rrdaemon.Start(c.host(), init, stop)
 	}()
 
 	var initErrors []error
@@ -172,10 +172,10 @@ func (c *CLI) tryToStartDaemon() {
 	cmdArgs := []string{
 		"start",
 		fmt.Sprintf("--client=%s", client),
-		fmt.Sprintf("--logLevel=%v", c.r.Config.LogLevel)}
+		fmt.Sprintf("--logLevel=%v", c.logLevel())}
 
-	if c.r.Config.Host != "" {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", c.r.Config.Host))
+	if c.host() != "" {
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", c.host()))
 	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)

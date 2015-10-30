@@ -35,6 +35,7 @@ type CLI struct {
 	serviceCmd               *cobra.Command
 	moduleCmd                *cobra.Command
 	versionCmd               *cobra.Command
+	envCmd                   *cobra.Command
 	volumeCmd                *cobra.Command
 	snapshotCmd              *cobra.Command
 	deviceCmd                *cobra.Command
@@ -238,7 +239,7 @@ func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 }
 
 func (c *CLI) updateLogLevel() {
-	switch c.r.Config.LogLevel {
+	switch c.logLevel() {
 	case "panic":
 		log.SetLevel(log.PanicLevel)
 	case "fatal":
@@ -253,7 +254,7 @@ func (c *CLI) updateLogLevel() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	log.WithField("logLevel", c.r.Config.LogLevel).Debug("updated log level")
+	log.WithField("logLevel", c.logLevel()).Debug("updated log level")
 }
 
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
@@ -377,6 +378,7 @@ func (c *CLI) isInitDriverManagersCmd(cmd *cobra.Command) bool {
 		cmd != c.adapterCmd &&
 		cmd != c.adapterGetTypesCmd &&
 		cmd != c.versionCmd &&
+		cmd != c.envCmd &&
 		c.isServiceCmd(cmd) &&
 		c.isModuleCmd(cmd)
 }
@@ -396,4 +398,12 @@ func (c *CLI) isModuleCmd(cmd *cobra.Command) bool {
 		cmd != c.moduleTypesCmd &&
 		cmd != c.moduleInstancesCmd &&
 		cmd != c.moduleInstancesListCmd
+}
+
+func (c *CLI) logLevel() string {
+	return c.r.Config.GetString("logLevel")
+}
+
+func (c *CLI) host() string {
+	return c.r.Config.GetString("host")
 }

@@ -36,9 +36,11 @@ func (c *CLI) initUsageTemplates() {
 
 	cobra.AddTemplateFuncs(template.FuncMap{
 		"af":    c.additionalFlags,
+		"afs":   c.additionalFlagSets,
 		"hf":    hasFlags,
 		"lf":    c.localFlags,
 		"gf":    c.globalFlags,
+		"df":    c.driverFlags,
 		"ihf":   isHelpFlag,
 		"ivf":   isVerboseFlag,
 		"saf":   c.sansAdditionalFlags,
@@ -69,9 +71,7 @@ func (c *CLI) localFlags(cmd *cobra.Command) *flag.FlagSet {
 }
 
 func (c *CLI) globalFlags(cmd *cobra.Command) *flag.FlagSet {
-
 	fs := &flag.FlagSet{}
-
 	if cmd.HasParent() {
 		fs.AddFlagSet(cmd.InheritedFlags())
 		if fs.Lookup("help") == nil && cmd.Flag("help") != nil {
@@ -80,14 +80,27 @@ func (c *CLI) globalFlags(cmd *cobra.Command) *flag.FlagSet {
 	} else {
 		fs.AddFlagSet(cmd.PersistentFlags())
 	}
+	return c.sansDriverFlags(c.sansAdditionalFlags(fs))
+}
 
-	return c.sansAdditionalFlags(fs)
+func (c *CLI) driverFlags() *flag.FlagSet {
+	return c.r.Config.FlagSets["Driver Flags"]
 }
 
 func (c *CLI) sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
 	fs := &flag.FlagSet{}
 	flags.VisitAll(func(f *flag.Flag) {
-		if c.r.Config.AdditionalFlags.Lookup(f.Name) == nil {
+		if c.additionalFlags().Lookup(f.Name) == nil {
+			fs.AddFlag(f)
+		}
+	})
+	return fs
+}
+
+func (c *CLI) sansDriverFlags(flags *flag.FlagSet) *flag.FlagSet {
+	fs := &flag.FlagSet{}
+	flags.VisitAll(func(f *flag.Flag) {
+		if c.driverFlags().Lookup(f.Name) == nil {
 			fs.AddFlag(f)
 		}
 	})
@@ -99,7 +112,22 @@ func hasFlags(flags *flag.FlagSet) bool {
 }
 
 func (c *CLI) additionalFlags() *flag.FlagSet {
-	return c.r.Config.AdditionalFlags
+	af := &flag.FlagSet{}
+	for _, fs := range c.additionalFlagSets() {
+		af.AddFlagSet(fs)
+	}
+	return af
+}
+
+func (c *CLI) additionalFlagSets() map[string]*flag.FlagSet {
+	afs := map[string]*flag.FlagSet{}
+	for fsn, fs := range c.r.Config.FlagSets {
+		if fsn == "Global Flags" || fsn == "Driver Flags" {
+			continue
+		}
+		afs[fsn] = fs
+	}
+	return afs
 }
 
 func isHelpFlag(cmd *cobra.Command) bool {
@@ -155,10 +183,14 @@ Flags:
 {{$lf.FlagUsages | rtrim}}{{end}}{{$gf := gf $cmd}}{{if hf $gf}}
 
 Global Flags:
-{{$gf.FlagUsages | rtrim}}{{end}}{{if ivf $cmd}}{{$af := af}}{{if hf $af}}
+{{$gf.FlagUsages | rtrim}}{{end}}{{if ivf $cmd}}{{$df := df}}{{if hf $df}}
 
-Additional Flags:
-{{$af.FlagUsages | rtrim}}{{end}}{{end}}{{if .HasHelpSubCommands}}
+Driver Flags:
+{{$df.FlagUsages | rtrim}}{{end}}
+{{range $fn, $fs := afs}}
+{{$fn}}
+{{$fs.FlagUsages | rtrim}}
+{{end}}{{end}}{{if .HasHelpSubCommands}}
 
 Additional help topics: {{range .Commands}}{{if .IsHelpCommand}}
   {{rpad .CommandPath .CommandPathPadding}} {{.Short | rtrim}}{{end}}}{{end}}{{end}}{{if .HasSubCommands}}

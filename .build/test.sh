@@ -3,6 +3,12 @@
 echo "mode: set" > acc.out
 FAIL=0
 
+go test -cover ./rexray/cli || FAIL=1
+
+if [ "$FAIL" -ne 0 ]; then
+    exit 1
+fi
+
 COVER_PKG="github.com/emccode/rexray","github.com/emccode/rexray/core"
 go test -coverpkg=$COVER_PKG  -coverprofile=profile.out ./test || FAIL=1
 if [ -f profile.out ]; then
@@ -24,6 +30,7 @@ for DIR in $(find . -type d \
              -not -path './.git*' \
              -not -path '*/_*' \
              -not -path './vendor/*' \
+             -not -path './rexray/*' \
              -not -path './core' \
              -not -path '.'); do
 

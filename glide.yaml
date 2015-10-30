@@ -8,6 +8,10 @@ import:
     ref:     363816bb13ce1710460c2345017fd35593cbf5ed
     repo:    https://github.com/akutz/cobra
     vcs:     git
+  - package: github.com/spf13/viper
+    ref:     support/rexray
+    repo:    https://github.com/akutz/viper.git
+    vcs:     git
   - package: github.com/goamz/goamz
     ref:     d864e94f00efde9785b51e0d9f9e3ed04e2e6ecd
     repo:    https://github.com/clintonskitson/goamz
@@ -23,7 +27,15 @@ import:
   - package: github.com/akutz/golf
     ref:     v0.1.1
     vcs:     git
-  - package: github.com/spf13/viper
-    ref:     0e14b4944c2c4974cbea1392a55fbbdd89da6513
-    repo:    https://github.com/akutz/viper.git
+  - package: github.com/go-yaml/yaml
+    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
+    repo:    https://github.com/akutz/yaml.git
+    vcs:     git
+  - package: gopkg.in/yaml.v1
+    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
+    repo:    https://github.com/akutz/yaml.git
+    vcs:     git
+  - package: gopkg.in/yaml.v2
+    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
+    repo:    https://github.com/akutz/yaml.git
     vcs:     git

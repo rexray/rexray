@@ -10,9 +10,9 @@ import (
 
 func TestNewWithBadOSDriver(t *testing.T) {
 	r := core.New(nil)
-	r.Config.OSDrivers = []string{mock.BadMockOSDriverName}
-	r.Config.VolumeDrivers = []string{mock.MockVolDriverName}
-	r.Config.StorageDrivers = []string{mock.MockStorDriverName}
+	r.Config.Set("osDrivers", []string{mock.BadMockOSDriverName})
+	r.Config.Set("volumeDrivers", []string{mock.MockVolDriverName})
+	r.Config.Set("storageDrivers", []string{mock.MockStorDriverName})
 	if err := r.InitDrivers(); err != errors.ErrNoOSDrivers {
 		t.Fatal(err)
 	}
@@ -20,9 +20,9 @@ func TestNewWithBadOSDriver(t *testing.T) {
 
 func TestNewWithBadVolumeDriver(t *testing.T) {
 	r := core.New(nil)
-	r.Config.OSDrivers = []string{mock.MockOSDriverName}
-	r.Config.VolumeDrivers = []string{mock.BadMockVolDriverName}
-	r.Config.StorageDrivers = []string{mock.MockStorDriverName}
+	r.Config.Set("osDrivers", []string{mock.MockOSDriverName})
+	r.Config.Set("volumeDrivers", []string{mock.BadMockVolDriverName})
+	r.Config.Set("storageDrivers", []string{mock.MockStorDriverName})
 	if err := r.InitDrivers(); err != errors.ErrNoVolumeDrivers {
 		t.Fatal(err)
 	}
@@ -30,9 +30,9 @@ func TestNewWithBadVolumeDriver(t *testing.T) {
 
 func TestNewWithBadStorageDriver(t *testing.T) {
 	r := core.New(nil)
-	r.Config.OSDrivers = []string{mock.MockOSDriverName}
-	r.Config.VolumeDrivers = []string{mock.MockVolDriverName}
-	r.Config.StorageDrivers = []string{mock.BadMockStorDriverName}
+	r.Config.Set("osDrivers", []string{mock.MockOSDriverName})
+	r.Config.Set("volumeDrivers", []string{mock.MockVolDriverName})
+	r.Config.Set("storageDrivers", []string{mock.BadMockStorDriverName})
 	if err := r.InitDrivers(); err != errors.ErrNoStorageDrivers {
 		t.Fatal(err)
 	}

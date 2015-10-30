@@ -9,19 +9,20 @@ The Rackspace driver registers a storage driver named `rackspace` with the
 `REX-Ray` driver manager and is used to connect and manage storage on Rackspace
 instances.
 
-## Configuration Options
-The following are the configuration options for the `rackspace` storage driver.
+## Configuration
+The following is an example configuration of the Rackspace driver.
 
- EnvVar | YAML | CLI  
---------|------|------
-`OS_AUTH_URL` | `rackspaceAuthUrl` | `--rackspaceAuthUrl`
-`OS_USERID` | `rackspaceUserId` | `--rackspaceUserId`
-`OS_USERNAME` | `rackspaceUserName` | `--rackspaceUserName`
-`OS_PASSWORD` | `rackspacePassword` | `--rackspacePassword`
-`OS_TENANT_ID` | `rackspaceTenantId` | `--rackspaceTenantId`
-`OS_TENANT_NAME` | `rackspaceTenantName` | `--rackspaceTenantName`
-`OS_DOMAIN_ID` | `rackspaceDomainId` | `--rackspaceDomainId`
-`OS_DOMAIN_NAME` | `rackspaceDomainName` | `--rackspaceDomainName` 
+```yaml
+rackspace:
+    authURL:    https://domain.com/rackspace
+    userID:     0
+    userName:   admin
+    password:   mypassword
+    tenantID:   0
+    tenantName: customer
+    domainID:   0
+    domainName: corp
+```
 
 ## Activating the Driver
 To activate the Rackspace driver please follow the instructions for

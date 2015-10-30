@@ -60,6 +60,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
+	config.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -77,38 +78,38 @@ func (d *driver) Init(r *core.RexRay) error {
 
 	fields["instanceId"] = d.instanceID
 
-	if d.r.Config.OpenstackRegionName == "" {
+	if d.regionName() == "" {
 		if d.region, err = getInstanceRegion(d.r.Config); err != nil {
 			return err
 		}
 	} else {
-		d.region = d.r.Config.OpenstackRegionName
+		d.region = d.regionName()
 	}
 	fields["region"] = d.region
 
-	if d.r.Config.OpenstackAvailabilityZoneName == "" {
+	if d.availabilityZoneName() == "" {
 		if d.availabilityZone, err = getInstanceAvailabilityZone(); err != nil {
 			return err
 		}
 	} else {
-		d.availabilityZone = d.r.Config.OpenstackAvailabilityZoneName
+		d.availabilityZone = d.availabilityZoneName()
 	}
 	fields["availabilityZone"] = d.availabilityZone
 
-	authOpts := getAuthOptions(d.r.Config)
+	authOpts := d.getAuthOptions()
 
-	fields["identityEndpoint"] = d.r.Config.OpenstackAuthURL
-	fields["userId"] = d.r.Config.OpenstackUserID
-	fields["userName"] = d.r.Config.OpenstackUserName
-	if d.r.Config.OpenstackPassword == "" {
+	fields["identityEndpoint"] = d.authURL()
+	fields["userId"] = d.userID()
+	fields["userName"] = d.userName()
+	if d.password() == "" {
 		fields["password"] = ""
 	} else {
 		fields["password"] = "******"
 	}
-	fields["tenantId"] = d.r.Config.OpenstackTenantID
-	fields["tenantName"] = d.r.Config.OpenstackTenantName
-	fields["domainId"] = d.r.Config.OpenstackDomainID
-	fields["domainName"] = d.r.Config.OpenstackDomainName
+	fields["tenantId"] = d.tenantID()
+	fields["tenantName"] = d.tenantName()
+	fields["domainId"] = d.domainID()
+	fields["domainName"] = d.domainName()
 
 	if d.provider, err = openstack.AuthenticatedClient(authOpts); err != nil {
 		return errors.WithFieldsE(fields,
@@ -164,16 +165,16 @@ func getInstanceID(c *config.Config) (string, error) {
 	return strings.ToLower(uuid), nil
 }
 
-func getAuthOptions(cfg *config.Config) gophercloud.AuthOptions {
+func (d *driver) getAuthOptions() gophercloud.AuthOptions {
 	return gophercloud.AuthOptions{
-		IdentityEndpoint: cfg.OpenstackAuthURL,
-		UserID:           cfg.OpenstackUserID,
-		Username:         cfg.OpenstackUserName,
-		Password:         cfg.OpenstackPassword,
-		TenantID:         cfg.OpenstackTenantID,
-		TenantName:       cfg.OpenstackTenantName,
-		DomainID:         cfg.OpenstackDomainID,
-		DomainName:       cfg.OpenstackDomainName,
+		IdentityEndpoint: d.authURL(),
+		UserID:           d.userID(),
+		Username:         d.userName(),
+		Password:         d.password(),
+		TenantID:         d.tenantID(),
+		TenantName:       d.tenantName(),
+		DomainID:         d.domainID(),
+		DomainName:       d.domainName(),
 	}
 }
 
@@ -940,4 +941,59 @@ func (d *driver) CopySnapshot(
 	runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName,
 	destinationRegion string) (*core.Snapshot, error) {
 	return nil, errors.New("This driver does not implement CopySnapshot")
+}
+
+func (d *driver) authURL() string {
+	return d.r.Config.GetString("openstack.authURL")
+}
+
+func (d *driver) userID() string {
+	return d.r.Config.GetString("openstack.userID")
+}
+
+func (d *driver) userName() string {
+	return d.r.Config.GetString("openstack.userName")
+}
+
+func (d *driver) password() string {
+	return d.r.Config.GetString("openstack.password")
+}
+
+func (d *driver) tenantID() string {
+	return d.r.Config.GetString("openstack.tenantID")
+}
+
+func (d *driver) tenantName() string {
+	return d.r.Config.GetString("openstack.tenantName")
+}
+
+func (d *driver) domainID() string {
+	return d.r.Config.GetString("openstack.domainID")
+}
+
+func (d *driver) domainName() string {
+	return d.r.Config.GetString("openstack.domainName")
+}
+
+func (d *driver) regionName() string {
+	return d.r.Config.GetString("openstack.regionName")
+}
+
+func (d *driver) availabilityZoneName() string {
+	return d.r.Config.GetString("openstack.availabilityZoneName")
+}
+
+func configRegistration() *config.Registration {
+	r := config.NewRegistration("Openstack")
+	r.Key(config.String, "", "", "", "openstack.authURL")
+	r.Key(config.String, "", "", "", "openstack.userID")
+	r.Key(config.String, "", "", "", "openstack.userName")
+	r.Key(config.String, "", "", "", "openstack.password")
+	r.Key(config.String, "", "", "", "openstack.tenantID")
+	r.Key(config.String, "", "", "", "openstack.tenantName")
+	r.Key(config.String, "", "", "", "openstack.domainID")
+	r.Key(config.String, "", "", "", "openstack.domainName")
+	r.Key(config.String, "", "", "", "openstack.regionName")
+	r.Key(config.String, "", "", "", "openstack.availabilityZoneName")
+	return r
 }

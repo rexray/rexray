@@ -57,6 +57,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
+	config.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -81,20 +82,20 @@ func (d *driver) Init(r *core.RexRay) error {
 	fields["region"] = d.region
 	d.region = strings.ToUpper(d.region)
 
-	authOpts := getAuthOptions(d.r.Config)
+	authOpts := d.getAuthOptions()
 
-	fields["identityEndpoint"] = d.r.Config.RackspaceAuthURL
-	fields["userId"] = d.r.Config.RackspaceUserID
-	fields["userName"] = d.r.Config.RackspaceUserName
-	if d.r.Config.RackspacePassword == "" {
+	fields["identityEndpoint"] = d.authURL()
+	fields["userId"] = d.userID()
+	fields["userName"] = d.userName()
+	if d.password() == "" {
 		fields["password"] = ""
 	} else {
 		fields["password"] = "******"
 	}
-	fields["tenantId"] = d.r.Config.RackspaceTenantID
-	fields["tenantName"] = d.r.Config.RackspaceTenantName
-	fields["domainId"] = d.r.Config.RackspaceDomainID
-	fields["domainName"] = d.r.Config.RackspaceDomainName
+	fields["tenantId"] = d.tenantID()
+	fields["tenantName"] = d.tenantName()
+	fields["domainId"] = d.domainID()
+	fields["domainName"] = d.domainName()
 
 	if d.provider, err = openstack.AuthenticatedClient(authOpts); err != nil {
 		return errors.WithFieldsE(fields,
@@ -158,16 +159,16 @@ func getInstanceID(c *config.Config) (string, error) {
 	return instanceID, nil
 }
 
-func getAuthOptions(cfg *config.Config) gophercloud.AuthOptions {
+func (d *driver) getAuthOptions() gophercloud.AuthOptions {
 	return gophercloud.AuthOptions{
-		IdentityEndpoint: cfg.RackspaceAuthURL,
-		UserID:           cfg.RackspaceUserID,
-		Username:         cfg.RackspaceUserName,
-		Password:         cfg.RackspacePassword,
-		TenantID:         cfg.RackspaceTenantID,
-		TenantName:       cfg.RackspaceTenantName,
-		DomainID:         cfg.RackspaceDomainID,
-		DomainName:       cfg.RackspaceDomainName,
+		IdentityEndpoint: d.authURL(),
+		UserID:           d.userID(),
+		Username:         d.userName(),
+		Password:         d.password(),
+		TenantID:         d.tenantID(),
+		TenantName:       d.tenantName(),
+		DomainID:         d.domainID(),
+		DomainName:       d.domainName(),
 	}
 }
 
@@ -903,4 +904,49 @@ func (d *driver) CopySnapshot(
 	runAsync bool, volumeID, snapshotID, snapshotName, destinationSnapshotName,
 	destinationRegion string) (*core.Snapshot, error) {
 	return nil, errors.New("This driver does not implement CopySnapshot")
+}
+
+func (d *driver) authURL() string {
+	return d.r.Config.GetString("rackspace.authURL")
+}
+
+func (d *driver) userID() string {
+	return d.r.Config.GetString("rackspace.userID")
+}
+
+func (d *driver) userName() string {
+	return d.r.Config.GetString("rackspace.userName")
+}
+
+func (d *driver) password() string {
+	return d.r.Config.GetString("rackspace.password")
+}
+
+func (d *driver) tenantID() string {
+	return d.r.Config.GetString("rackspace.tenantID")
+}
+
+func (d *driver) tenantName() string {
+	return d.r.Config.GetString("rackspace.tenantName")
+}
+
+func (d *driver) domainID() string {
+	return d.r.Config.GetString("rackspace.domainID")
+}
+
+func (d *driver) domainName() string {
+	return d.r.Config.GetString("rackspace.domainName")
+}
+
+func configRegistration() *config.Registration {
+	r := config.NewRegistration("Rackspace")
+	r.Key(config.String, "", "", "", "rackspace.authURL")
+	r.Key(config.String, "", "", "", "rackspace.userID")
+	r.Key(config.String, "", "", "", "rackspace.userName")
+	r.Key(config.String, "", "", "", "rackspace.password")
+	r.Key(config.String, "", "", "", "rackspace.tenantID")
+	r.Key(config.String, "", "", "", "rackspace.tenantName")
+	r.Key(config.String, "", "", "", "rackspace.domainID")
+	r.Key(config.String, "", "", "", "rackspace.domainName")
+	return r
 }

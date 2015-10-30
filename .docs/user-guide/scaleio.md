@@ -8,22 +8,27 @@ Scale-out with simplified storage management
 The ScaleIO registers a storage driver named `scaleio` with the `REX-Ray`
 driver manager and is used to connect and manage ScaleIO storage.
 
-## Configuration Options
-The following are the configuration options for the `scaleio` storage driver.
+## Configuration
+The following is an example configuration of the ScaleIO driver.
 
- EnvVar | YAML | CLI  
---------|------|------
-`GOSCALEIO_ENDPOINT` | `scaleIoEndpoint` | `--scaleIoEndpoint`
-`GOSCALEIO_INSECURE` | `scaleIoInsecure` | `--scaleIoInsecure`
-`GOSCALEIO_USECERTS` | `scaleIoUseCerts` | `--scaleIoUseCerts`
-`GOSCALEIO_USERNAME` | `scaleIoUserName` | `--scaleIoUserName`
-`GOSCALEIO_PASSWORD` | `scaleIoPassword` | `--scaleIoPassword`
-`GOSCALEIO_SYSTEMID` | `scaleIoSystemId` | `--scaleIoSystemId`
-`GOSCALEIO_SYSTEMNAME` | `scaleIoSystemName` | `--scaleIoSystemName`
-`GOSCALEIO_PROTECTIONDOMAINID` | `scaleIoProtectionDomainId` | `--scaleIoProtectionDomainId`
-`GOSCALEIO_PROTECTIONDOMAIN` | `scaleIoProtectionDomainName` | `--scaleIoProtectionDomainName`
-`GOSCALEIO_STORAGEPOOLID` | `scaleIoStoragePoolId` | `--scaleIoStoragePoolId`
-`GOSCALEIO_STORAGEPOOL` | `scaleIoStoragePoolName` | `--scaleIoStoragePoolName`
+```yaml
+scaleio:
+    endpoint:             https://domain.com/scalio
+    insecure:             false
+    useCerts:             true
+    userName:             admin
+    password:             mypassword
+    systemID:             0
+    systemName:           sysv
+    protectionDomainID:   0
+    protectionDomainName: corp
+    storagePoolID:        0
+    storagePoolName:      gold
+```
+
+For information on the equivalent environment variable and CLI flag names
+please see the section on how non top-level configuration properties are
+[transformed](./config/#all-other-properties).
 
 ## Activating the Driver
 To activate the ScaleIO driver please follow the instructions for

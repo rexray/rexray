@@ -1,13 +1,72 @@
 # REX-Ray [![GoDoc](https://godoc.org/github.com/emccode/rexray?status.svg)](http://godoc.org/github.com/emccode/rexray) [![Build Status](http://travis-ci.org/emccode/rexray.svg?branch=master)](https://travis-ci.org/emccode/rexray) [![Go Report Card](http://goreportcard.com/badge/emccode/rexray)](http://goreportcard.com/report/emccode/rexray) [![Coverage Status](http://coveralls.io/repos/emccode/rexray/badge.svg?branch=master&service=github&i=3)](https://coveralls.io/github/emccode/rexray?branch=master) [ ![Download](http://api.bintray.com/packages/emccode/rexray/stable/images/download.svg) ](https://dl.bintray.com/emccode/rexray/stable/latest/)
 
-`REX-Ray` provides visibility and management of external/underlying storage
-via guest storage introspection. Available as a Go package, CLI tool, and Linux
-service, and with built-in third-party support for tools such as `Docker`,
-`REX-Ray` is easily integrated into any workflow.
+`REX-Ray` provides visibility and management of external or underlying storage for an operating systems. Integrated with popular container platforms such as `Docker` and `Mesos`, its primary purpose is to extend external storage natively to be consumed through containers.  It is additionally available as a Go package, CLI tool, and Linux service which enables it to be used for additional use cases.
+
+## Architecture
+It is available as a standalone process today and in the future (0.3) as a distributed model of client-server.  The `client` performs a level of software-defined abstraction of local host processes (request for volume attachment, discovery, format, and mounting of devices) while the `server` provides the necessary abstraction of the control plane for multiple storage platforms.
+
+Irrespective of platform, `REX-Ray` provides common functionality for the following.
+- AWS EC2 (EBS)
+- OpenStack (Cinder)
+- EMC ScaleIO
+- EMC XtremIO
+- ..more coming
+
+## Operating System Support
+By default we prescribe the curl-bash method of installing `REX-Ray`.  Other methods are available, please consult the documentation for more information.
+
+
+We explicitly support the following operating system distributions.
+- Ubuntu
+- Debian
+- RedHat
+- CentOS
+- CoreOS
+- OSX
+
+## Installation
+The following command will install the REX-Ray client-server tool.  If using `CentOS`, `RedHat`, `Ubuntu`, or `Debian` the necessary service manager is used to bootstrap the process on startup.  
+
+`curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -`
+
+## Runtime - CLI
+`REX-Ray` can be ran as an interactive CLI to perform volume management capabilities.
+
+```bash
+$ export REXRAY_STORAGEDRIVERS=ec2
+$ export AWS_ACCESS_KEY=access_key
+$ export AWS_SECRET_KEY=secret_key
+$ rexray volume get
+
+- providername: ec2
+  instanceid: i-695bb6ab
+  volumeid: vol-dedbadc3
+  devicename: /dev/sda1
+  region: us-west-1
+  status: attached
+```
+
+## Runtime - Service (Docker)
+Additionally, it can be ran as a service to support `Docker`, `Mesos`, and other platforms that can communicate through `HTTP/JSON`.
+
+```bash
+$ export REXRAY_STORAGEDRIVERS=ec2
+$ export AWS_ACCESS_KEY=access_key
+$ export AWS_SECRET_KEY=secret_key
+$ rexray service start
+Starting REX-Ray...SUCESS!
+
+  The REX-Ray daemon is now running at PID XX. To
+  shutdown the daemon execute the following command:
+
+    sudo /usr/bin/rexray stop
+
+$ docker run -ti --volume-driver=rexray -v test:/test busybox
+$ df /test
+
+```
 
 ## Documentation for REX-Ray [![Docs](https://readthedocs.org/projects/rexray/badge/?version=stable)](http://rexray.readthedocs.org/en/stable/)
-You will find complete documentation for `REX-Ray`, including
+You will find complete documentation for `REX-Ray` at [rexray.readthedocs.org](http://rexray.readthedocs.org/en/stable/), including
 [licensing](http://rexray.readthedocs.org/en/stable/about/license/) and
-[support](http://rexray.readthedocs.org/en/stable/#getting-help)
-information at
-[rexray.readthedocs.org](http://rexray.readthedocs.org/en/stable/)
+[support](http://rexray.readthedocs.org/en/stable/#getting-help) information.

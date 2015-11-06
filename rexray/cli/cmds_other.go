@@ -24,6 +24,18 @@ func (c *CLI) initOtherCmds() {
 	}
 	c.c.AddCommand(c.versionCmd)
 
+	c.envCmd = &cobra.Command{
+		Use:   "env",
+		Short: "Print the REX-Ray environment",
+		Run: func(cmd *cobra.Command, args []string) {
+			evs := c.r.Config.EnvVars()
+			for _, ev := range evs {
+				fmt.Println(ev)
+			}
+		},
+	}
+	c.c.AddCommand(c.envCmd)
+
 	c.installCmd = &cobra.Command{
 		Use:   "install",
 		Short: "Install REX-Ray",
@@ -48,14 +60,15 @@ func (c *CLI) initOtherFlags() {
 	cobra.HelpFlagShorthand = "?"
 	cobra.HelpFlagUsageFormatString = "Help for %s"
 
-	c.c.PersistentFlags().StringVarP(&c.cfgFile, "config", "c",
-		fmt.Sprintf("%s/.rexray/config.yml", util.HomeDir()),
-		"The REX-Ray configuration file")
+	c.c.PersistentFlags().StringVarP(&c.cfgFile, "config", "c", "",
+		"The path to a custom REX-Ray configuration file")
 	c.c.PersistentFlags().BoolP(
 		"verbose", "v", false, "Print verbose help information")
 
-	c.c.PersistentFlags().AddFlagSet(c.r.Config.GlobalFlags)
-	c.c.PersistentFlags().AddFlagSet(c.r.Config.AdditionalFlags)
+	// add the flag sets
+	for _, fs := range c.r.Config.FlagSets {
+		c.c.PersistentFlags().AddFlagSet(fs)
+	}
 
 	c.uninstallCmd.Flags().Bool("package", false,
 		"A flag indicating a package manager is performing the uninstallation")

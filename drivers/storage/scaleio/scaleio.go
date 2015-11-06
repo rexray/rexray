@@ -11,6 +11,7 @@ import (
 	types "github.com/emccode/goscaleio/types/v1"
 
 	"github.com/emccode/rexray/core"
+	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 )
 
@@ -46,6 +47,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
+	config.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -56,46 +58,46 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	fields := eff(map[string]interface{}{
-		"endpoint": d.r.Config.ScaleIOEndpoint,
-		"insecure": d.r.Config.ScaleIOInsecure,
-		"useCerts": d.r.Config.ScaleIOUseCerts,
+		"endpoint": d.endpoint(),
+		"insecure": d.insecure(),
+		"useCerts": d.useCerts(),
 	})
 
 	var err error
 
 	if d.client, err = goscaleio.NewClientWithArgs(
-		d.r.Config.ScaleIOEndpoint,
-		d.r.Config.ScaleIOInsecure,
-		d.r.Config.ScaleIOUseCerts); err != nil {
+		d.endpoint(),
+		d.insecure(),
+		d.useCerts()); err != nil {
 		return errors.WithFieldsE(fields, "error constructing new client", err)
 	}
 
 	if _, err := d.client.Authenticate(
 		&goscaleio.ConfigConnect{
-			d.r.Config.ScaleIOEndpoint,
-			d.r.Config.ScaleIOUserName,
-			d.r.Config.ScaleIoPassword}); err != nil {
-		fields["userName"] = d.r.Config.ScaleIOUserName
-		if d.r.Config.ScaleIoPassword != "" {
+			d.endpoint(),
+			d.userName(),
+			d.password()}); err != nil {
+		fields["userName"] = d.userName()
+		if d.password() != "" {
 			fields["password"] = "******"
 		}
 		return errors.WithFieldsE(fields, "error authenticating", err)
 	}
 
 	if d.system, err = d.client.FindSystem(
-		d.r.Config.ScaleIOSystemID,
-		d.r.Config.ScaleIOSystemName, ""); err != nil {
-		fields["systemId"] = d.r.Config.ScaleIOSystemID
-		fields["systemName"] = d.r.Config.ScaleIOSystemName
+		d.systemID(),
+		d.systemName(), ""); err != nil {
+		fields["systemId"] = d.systemID()
+		fields["systemName"] = d.systemName()
 		return errors.WithFieldsE(fields, "error finding system", err)
 	}
 
 	var pd *types.ProtectionDomain
 	if pd, err = d.system.FindProtectionDomain(
-		d.r.Config.ScaleIOProtectionDomainID,
-		d.r.Config.ScaleIOProtectionDomainName, ""); err != nil {
-		fields["domainId"] = d.r.Config.ScaleIOProtectionDomainID
-		fields["domainName"] = d.r.Config.ScaleIOProtectionDomainName
+		d.protectionDomainID(),
+		d.protectionDomainName(), ""); err != nil {
+		fields["domainId"] = d.protectionDomainID()
+		fields["domainName"] = d.protectionDomainName()
 		return errors.WithFieldsE(fields,
 			"error finding protection domain", err)
 	}
@@ -104,10 +106,10 @@ func (d *driver) Init(r *core.RexRay) error {
 
 	var sp *types.StoragePool
 	if sp, err = d.protectionDomain.FindStoragePool(
-		d.r.Config.ScaleIOStoragePoolID,
-		d.r.Config.ScaleIOStoragePoolName, ""); err != nil {
-		fields["storagePoolId"] = d.r.Config.ScaleIOStoragePoolID
-		fields["storagePoolName"] = d.r.Config.ScaleIOStoragePoolName
+		d.storagePoolID(),
+		d.storagePoolName(), ""); err != nil {
+		fields["storagePoolId"] = d.storagePoolID()
+		fields["storagePoolName"] = d.storagePoolName()
 		return errors.WithFieldsE(fields, "error finding storage pool", err)
 	}
 	d.storagePool = goscaleio.NewStoragePool(d.client)
@@ -626,4 +628,69 @@ func waitMount(volumeID string) (*goscaleio.SdcMappedVolume, error) {
 			ef(), "timed out waiting for mount")
 	}
 
+}
+
+func (d *driver) endpoint() string {
+	return d.r.Config.GetString("scaleio.endpoint")
+}
+
+func (d *driver) insecure() bool {
+	return d.r.Config.GetBool("scaleio.insecure")
+}
+
+func (d *driver) useCerts() bool {
+	return d.r.Config.GetBool("scaleio.useCerts")
+}
+
+func (d *driver) userID() string {
+	return d.r.Config.GetString("scaleio.userID")
+}
+
+func (d *driver) userName() string {
+	return d.r.Config.GetString("scaleio.userName")
+}
+
+func (d *driver) password() string {
+	return d.r.Config.GetString("scaleio.password")
+}
+
+func (d *driver) systemID() string {
+	return d.r.Config.GetString("scaleio.systemID")
+}
+
+func (d *driver) systemName() string {
+	return d.r.Config.GetString("scaleio.systemName")
+}
+
+func (d *driver) protectionDomainID() string {
+	return d.r.Config.GetString("scaleio.protectionDomainID")
+}
+
+func (d *driver) protectionDomainName() string {
+	return d.r.Config.GetString("scaleio.protectionDomainName")
+}
+
+func (d *driver) storagePoolID() string {
+	return d.r.Config.GetString("scaleio.storagePoolID")
+}
+
+func (d *driver) storagePoolName() string {
+	return d.r.Config.GetString("scaleio.storagePoolName")
+}
+
+func configRegistration() *config.Registration {
+	r := config.NewRegistration("ScaleIO")
+	r.Key(config.String, "", "", "", "scaleio.endpoint")
+	r.Key(config.Bool, "", false, "", "scaleio.insecure")
+	r.Key(config.Bool, "", false, "", "scaleio.useCerts")
+	r.Key(config.String, "", "", "", "scaleio.userID")
+	r.Key(config.String, "", "", "", "scaleio.userName")
+	r.Key(config.String, "", "", "", "scaleio.password")
+	r.Key(config.String, "", "", "", "scaleio.systemID")
+	r.Key(config.String, "", "", "", "scaleio.systemName")
+	r.Key(config.String, "", "", "", "scaleio.protectionDomainID")
+	r.Key(config.String, "", "", "", "scaleio.protectionDomainName")
+	r.Key(config.String, "", "", "", "scaleio.storagePoolID")
+	r.Key(config.String, "", "", "", "scaleio.storagePoolName")
+	return r
 }

@@ -23,9 +23,9 @@ func TestMain(m *testing.M) {
 
 func getRexRay() (*core.RexRay, error) {
 	c := config.New()
-	c.OSDrivers = []string{mock.MockOSDriverName}
-	c.VolumeDrivers = []string{mock.MockVolDriverName}
-	c.StorageDrivers = []string{mock.MockStorDriverName}
+	c.Set("osDrivers", []string{mock.MockOSDriverName})
+	c.Set("volumeDrivers", []string{mock.MockVolDriverName})
+	c.Set("storageDrivers", []string{mock.MockStorDriverName})
 	r := core.New(c)
 
 	if err := r.InitDrivers(); err != nil {
@@ -37,9 +37,9 @@ func getRexRay() (*core.RexRay, error) {
 
 func getRexRayNoDrivers() (*core.RexRay, error) {
 	c := config.New()
-	c.OSDrivers = []string{""}
-	c.VolumeDrivers = []string{""}
-	c.StorageDrivers = []string{""}
+	c.Set("osDrivers", []string{""})
+	c.Set("volumeDrivers", []string{""})
+	c.Set("storageDrivers", []string{""})
 	r := core.New(c)
 	r.InitDrivers()
 	return r, nil
@@ -56,9 +56,9 @@ func TestNewWithConfig(t *testing.T) {
 
 func TestNewWithNilConfig(t *testing.T) {
 	r := core.New(nil)
-	r.Config.OSDrivers = []string{mock.MockOSDriverName}
-	r.Config.VolumeDrivers = []string{mock.MockVolDriverName}
-	r.Config.StorageDrivers = []string{mock.MockStorDriverName}
+	r.Config.Set("osDrivers", []string{mock.MockOSDriverName})
+	r.Config.Set("volumeDrivers", []string{mock.MockVolDriverName})
+	r.Config.Set("storageDrivers", []string{mock.MockStorDriverName})
 
 	if err := r.InitDrivers(); err != nil {
 		t.Fatal(err)
@@ -86,9 +86,9 @@ func TestNew(t *testing.T) {
 
 func TestNewNoOSDrivers(t *testing.T) {
 	c := config.New()
-	c.OSDrivers = []string{}
-	c.VolumeDrivers = []string{mock.MockVolDriverName}
-	c.StorageDrivers = []string{mock.MockStorDriverName}
+	c.Set("osDrivers", []string{})
+	c.Set("volumeDrivers", []string{mock.MockVolDriverName})
+	c.Set("storageDrivers", []string{mock.MockStorDriverName})
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoOSDrivers {
 		t.Fatal(err)
@@ -97,9 +97,9 @@ func TestNewNoOSDrivers(t *testing.T) {
 
 func TestNewNoVolumeDrivers(t *testing.T) {
 	c := config.New()
-	c.OSDrivers = []string{mock.MockOSDriverName}
-	c.VolumeDrivers = []string{}
-	c.StorageDrivers = []string{mock.MockStorDriverName}
+	c.Set("osDrivers", []string{mock.MockOSDriverName})
+	c.Set("volumeDrivers", []string{})
+	c.Set("storageDrivers", []string{mock.MockStorDriverName})
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoVolumeDrivers {
 		t.Fatal(err)
@@ -108,9 +108,9 @@ func TestNewNoVolumeDrivers(t *testing.T) {
 
 func TestNewNoStorageDrivers(t *testing.T) {
 	c := config.New()
-	c.OSDrivers = []string{mock.MockOSDriverName}
-	c.VolumeDrivers = []string{mock.MockVolDriverName}
-	c.StorageDrivers = []string{}
+	c.Set("osDrivers", []string{mock.MockOSDriverName})
+	c.Set("volumeDrivers", []string{mock.MockVolDriverName})
+	c.Set("storageDrivers", []string{})
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoStorageDrivers {
 		t.Fatal(err)

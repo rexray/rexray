@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	flag "github.com/spf13/pflag"
@@ -18,98 +19,28 @@ import (
 )
 
 var (
-	envVarRx *regexp.Regexp
+	envVarRx      *regexp.Regexp
+	bracketRx     *regexp.Regexp
+	registrations []*Registration
 )
 
 func init() {
 	envVarRx = regexp.MustCompile(`^\s*([^#=]+)=(.+)$`)
+	bracketRx = regexp.MustCompile(`^\[(.*)\]$`)
 	loadEtcEnvironment()
-	initConfigKeyMap()
-}
-
-// JSONMarshalStrategy is a JSON marshalling strategy
-type JSONMarshalStrategy int
-
-const (
-	// JSONMarshalSecure indicates that the secure fields should be omitted
-	JSONMarshalSecure JSONMarshalStrategy = iota
-
-	// JSONMarshalPlainText indicates that all fields should be included
-	JSONMarshalPlainText
-)
-
-type secureConfig struct {
-	LogLevel         string
-	StorageDrivers   []string
-	VolumeDrivers    []string
-	OSDrivers        []string
-	MinVolSize       int
-	RemoteManagement bool
-
-	DockerVolumeType       string
-	DockerIOPS             int
-	DockerSize             int
-	DockerAvailabilityZone string
-
-	AwsAccessKey string
-	AwsRegion    string
-
-	RackspaceAuthURL    string
-	RackspaceUserID     string
-	RackspaceUserName   string
-	RackspaceTenantID   string
-	RackspaceTenantName string
-	RackspaceDomainID   string
-	RackspaceDomainName string
-
-	OpenstackAuthURL              string
-	OpenstackUserID               string
-	OpenstackUserName             string
-	OpenstackTenantID             string
-	OpenstackTenantName           string
-	OpenstackDomainID             string
-	OpenstackDomainName           string
-	OpenstackRegionName           string
-	OpenstackAvailabilityZoneName string
-
-	ScaleIOEndpoint             string
-	ScaleIOInsecure             bool
-	ScaleIOUseCerts             bool
-	ScaleIOUserName             string
-	ScaleIOSystemID             string
-	ScaleIOSystemName           string
-	ScaleIOProtectionDomainID   string
-	ScaleIOProtectionDomainName string
-	ScaleIOStoragePoolID        string
-	ScaleIOStoragePoolName      string
-
-	XtremIOEndpoint         string
-	XtremIOUserName         string
-	XtremIOInsecure         bool
-	XtremIODeviceMapper     bool
-	XtremIOMultipath        bool
-	XtremIORemoteManagement bool
-}
-
-type plainTextConfig struct {
-	AwsSecretKey      string
-	RackspacePassword string
-	OpenstackPassword string
-	ScaleIoPassword   string
-	XtremIoPassword   string
+	Register(globalRegistration())
+	Register(driverRegistration())
 }
 
 // Config contains the configuration information
 type Config struct {
-	secureConfig
-	plainTextConfig
+	FlagSets map[string]*flag.FlagSet `json:"-"`
+	v        *viper.Viper
+}
 
-	GlobalFlags     *flag.FlagSet `json:"-"`
-	AdditionalFlags *flag.FlagSet `json:"-"`
-	Viper           *viper.Viper  `json:"-"`
-	Host            string        `json:"-"`
-
-	jsonMarshalStrategy JSONMarshalStrategy
+// Register registers a new configuration with the config package.
+func Register(r *Registration) {
+	registrations = append(registrations, r)
 }
 
 // New initializes a new instance of a Config struct
@@ -126,16 +57,14 @@ func NewConfig(
 	log.Debug("initializing configuration")
 
 	c := &Config{
-		secureConfig:        secureConfig{},
-		plainTextConfig:     plainTextConfig{},
-		Viper:               viper.New(),
-		GlobalFlags:         &flag.FlagSet{},
-		AdditionalFlags:     &flag.FlagSet{},
-		jsonMarshalStrategy: JSONMarshalSecure,
+		v:        viper.New(),
+		FlagSets: map[string]*flag.FlagSet{},
 	}
-	c.Viper.SetTypeByDefaultValue(true)
-	c.Viper.SetConfigName(configName)
-	c.Viper.SetConfigType(configType)
+	c.v.SetTypeByDefaultValue(false)
+	c.v.SetConfigName(configName)
+	c.v.SetConfigType(configType)
+
+	c.processRegistrations()
 
 	cfgFile := fmt.Sprintf("%s.%s", configName, configType)
 	etcRexRayFile := util.EtcFilePath(cfgFile)
@@ -161,73 +90,106 @@ func NewConfig(
 		}
 	}
 
-	c.initConfigKeys()
-
 	return c
-
 }
 
-// JSONMarshalStrategy gets the JSON marshalling strategy
-func (c *Config) JSONMarshalStrategy() JSONMarshalStrategy {
-	return c.jsonMarshalStrategy
-}
+func (c *Config) processRegistrations() {
+	for _, r := range registrations {
 
-// SetJSONMarshalStrategy sets the JSON marshalling strategy
-func (c *Config) SetJSONMarshalStrategy(s JSONMarshalStrategy) {
-	c.jsonMarshalStrategy = s
+		fs := &flag.FlagSet{}
+
+		for _, k := range r.keys {
+
+			evn := k.envVarName
+
+			if !strings.Contains(k.keyName, ".") {
+				evn = fmt.Sprintf("REXRAY_%s", k.envVarName)
+			}
+
+			log.WithFields(log.Fields{
+				"keyName":      k.keyName,
+				"keyType":      k.keyType,
+				"flagName":     k.flagName,
+				"envVar":       evn,
+				"defaultValue": k.defVal,
+				"usage":        k.desc,
+			}).Debug("adding flag")
+
+			// bind the environment variable
+			c.v.BindEnv(k.keyName, evn)
+
+			if k.short == "" {
+				switch k.keyType {
+				case String:
+					fs.String(k.flagName, k.defVal.(string), k.desc)
+				case Int:
+					fs.Int(k.flagName, k.defVal.(int), k.desc)
+				case Bool:
+					fs.Bool(k.flagName, k.defVal.(bool), k.desc)
+				}
+			} else {
+				switch k.keyType {
+				case String:
+					fs.StringP(k.flagName, k.short, k.defVal.(string), k.desc)
+				case Int:
+					fs.IntP(k.flagName, k.short, k.defVal.(int), k.desc)
+				case Bool:
+					fs.BoolP(k.flagName, k.short, k.defVal.(bool), k.desc)
+				}
+			}
+
+			c.v.BindPFlag(k.keyName, fs.Lookup(k.flagName))
+		}
+
+		c.FlagSets[r.name+" Flags"] = fs
+
+		// read the config
+		if r.yaml != "" {
+			c.ReadConfig(bytes.NewReader([]byte(r.yaml)))
+		}
+	}
 }
 
 // Copy creates a copy of this Config instance
 func (c *Config) Copy() (*Config, error) {
 	newC := New()
-	c.Viper.Unmarshal(&newC.plainTextConfig)
-	c.Viper.Unmarshal(&newC.secureConfig)
+	m := map[string]interface{}{}
+	c.v.Unmarshal(&m)
+	for k, v := range m {
+		newC.v.Set(k, v)
+	}
 	return newC, nil
 }
 
 // FromJSON initializes a new Config instance from a JSON string
 func FromJSON(from string) (*Config, error) {
 	c := New()
-	if err := json.Unmarshal([]byte(from), c); err != nil {
+	m := map[string]interface{}{}
+	if err := json.Unmarshal([]byte(from), &m); err != nil {
 		return nil, err
 	}
-	c.sync()
+	for k, v := range m {
+		c.v.Set(k, v)
+	}
 	return c, nil
 }
 
 // ToJSON exports this Config instance to a JSON string
 func (c *Config) ToJSON() (string, error) {
-	buf, _ := c.marshalJSON(JSONMarshalPlainText)
+	buf, _ := json.MarshalIndent(c, "", "  ")
 	return string(buf), nil
 }
 
-// ToSecureJSON exports this Config instance to a JSON string omitting any of
-// the secure fields
-func (c *Config) ToSecureJSON() (string, error) {
-	buf, _ := c.marshalJSON(JSONMarshalSecure)
+// ToJSONCompact exports this Config instance to a compact JSON string
+func (c *Config) ToJSONCompact() (string, error) {
+	buf, _ := json.Marshal(c)
 	return string(buf), nil
 }
 
 // MarshalJSON implements the encoding/json.Marshaller interface. It allows
 // this type to provide its own marshalling routine.
 func (c *Config) MarshalJSON() ([]byte, error) {
-	return c.marshalJSON(c.jsonMarshalStrategy)
-}
-
-func (c *Config) marshalJSON(s JSONMarshalStrategy) ([]byte, error) {
-	switch s {
-	case JSONMarshalPlainText:
-		s := struct {
-			plainTextConfig
-			secureConfig
-		}{
-			c.plainTextConfig,
-			c.secureConfig,
-		}
-		return json.MarshalIndent(s, "", "  ")
-	default:
-		return json.MarshalIndent(c.secureConfig, "", "  ")
-	}
+	return json.Marshal(c.allSettings())
 }
 
 // ReadConfig reads a configuration stream into the current config instance
@@ -237,14 +199,7 @@ func (c *Config) ReadConfig(in io.Reader) error {
 		return errors.New("config reader is nil")
 	}
 
-	c.Viper.ReadConfigNoNil(in)
-	c.Viper.Unmarshal(&c.secureConfig)
-	c.Viper.Unmarshal(&c.plainTextConfig)
-
-	for key := range keys {
-		c.updateFlag(key, c.GlobalFlags)
-		c.updateFlag(key, c.AdditionalFlags)
-	}
+	c.v.ReadConfigNoNil(in)
 
 	return nil
 }
@@ -258,85 +213,134 @@ func (c *Config) ReadConfigFile(filePath string) error {
 	return c.ReadConfig(bytes.NewBuffer(buf))
 }
 
-func (c *Config) updateFlag(name string, flags *flag.FlagSet) {
-	if f := flags.Lookup(name); f != nil {
-		val := c.Viper.Get(name)
-		strVal := fmt.Sprintf("%v", val)
-		f.DefValue = strVal
-	}
-}
-
 // EnvVars returns an array of the initialized configuration keys as key=value
 // strings where the key is configuration key's environment variable key and
 // the value is the current value for that key.
 func (c *Config) EnvVars() []string {
-	evArr := make([]string, len(keys))
-	for k, v := range keys {
-		evArr = append(evArr,
-			fmt.Sprintf("%s=%s", v.EnvVar, c.Viper.GetString(k)))
+	keyVals := c.allSettings()
+	envVars := make(map[string]string)
+	c.flattenEnvVars("", keyVals, envVars)
+	var evArr []string
+	for k, v := range envVars {
+		kk := k
+		if !strings.Contains(k, "_") {
+			kk = "REXRAY_" + k
+		}
+		evArr = append(evArr, fmt.Sprintf("%s=%v", kk, v))
 	}
 	return evArr
 }
 
-func (c *Config) sync() {
+// flattenEnvVars returns a map of configuration keys coming from a config
+// which may have been nested.
+func (c *Config) flattenEnvVars(
+	prefix string, keys map[string]interface{}, envVars map[string]string) {
 
-	w := c.Viper.Set
+	for k, v := range keys {
 
-	w(Host, c.Host)
-	w(LogLevel, c.LogLevel)
-	w(StorageDrivers, c.StorageDrivers)
-	w(VolumeDrivers, c.VolumeDrivers)
-	w(OSDrivers, c.OSDrivers)
-	w(MinVolSize, c.MinVolSize)
-	w(RemoteManagement, c.RemoteManagement)
+		var kk string
+		if prefix == "" {
+			kk = k
+		} else {
+			kk = fmt.Sprintf("%s.%s", prefix, k)
+		}
+		ek := strings.ToUpper(strings.Replace(kk, ".", "_", -1))
 
-	w(DockerVolumeType, c.DockerVolumeType)
-	w(DockerIOPS, c.DockerIOPS)
-	w(DockerSize, c.DockerSize)
-	w(DockerAvailabilityZone, c.DockerAvailabilityZone)
-	w(AwsAccessKey, c.AwsAccessKey)
-	w(AwsSecretKey, c.AwsSecretKey)
-	w(AwsRegion, c.AwsRegion)
+		log.WithFields(log.Fields{
+			"key":   kk,
+			"value": v,
+		}).Debug("flattening env vars")
 
-	w(RackspaceAuthURL, c.RackspaceAuthURL)
-	w(RackspaceUserID, c.RackspaceUserID)
-	w(RackspaceUserName, c.RackspaceUserName)
-	w(RackspacePassword, c.RackspacePassword)
-	w(RackspaceTenantID, c.RackspaceTenantID)
-	w(RackspaceTenantName, c.RackspaceTenantName)
-	w(RackspaceDomainID, c.RackspaceDomainID)
-	w(RackspaceDomainName, c.RackspaceDomainName)
+		switch vt := v.(type) {
+		case string:
+			envVars[ek] = vt
+		case []interface{}:
+			var vArr []string
+			for _, iv := range vt {
+				vArr = append(vArr, iv.(string))
+			}
+			envVars[ek] = strings.Join(vArr, " ")
+		case map[string]interface{}:
+			c.flattenEnvVars(kk, vt, envVars)
+		case bool:
+			envVars[ek] = fmt.Sprintf("%v", vt)
+		case int, int32, int64:
+			envVars[ek] = fmt.Sprintf("%v", vt)
+		}
+	}
+	return
+}
 
-	w(OpenstackAuthURL, c.OpenstackAuthURL)
-	w(OpenstackUserID, c.OpenstackUserID)
-	w(OpenstackUserName, c.OpenstackUserName)
-	w(OpenstackPassword, c.OpenstackPassword)
-	w(OpenstackTenantID, c.OpenstackTenantID)
-	w(OpenstackTenantName, c.OpenstackTenantName)
-	w(OpenstackDomainID, c.OpenstackDomainID)
-	w(OpenstackDomainName, c.OpenstackDomainName)
-	w(OpenstackRegionName, c.OpenstackRegionName)
-	w(OpenstackAvailabilityZoneName, c.OpenstackAvailabilityZoneName)
+func (c *Config) allSettings() map[string]interface{} {
+	as := map[string]interface{}{}
+	ms := map[string]map[string]interface{}{}
 
-	w(ScaleIOEndpoint, c.ScaleIOEndpoint)
-	w(ScaleIOInsecure, c.ScaleIOInsecure)
-	w(ScaleIOUseCerts, c.ScaleIOUseCerts)
-	w(ScaleIOUserName, c.ScaleIOUserName)
-	w(ScaleIOPassword, c.ScaleIoPassword)
-	w(ScaleIOSystemID, c.ScaleIOSystemID)
-	w(ScaleIOSystemName, c.ScaleIOSystemName)
-	w(ScaleIOProtectionDomainID, c.ScaleIOProtectionDomainID)
-	w(ScaleIOProtectionDomainName, c.ScaleIOProtectionDomainName)
-	w(ScaleIOStoragePoolID, c.ScaleIOStoragePoolID)
-	w(ScaleIOStoragePoolName, c.ScaleIOStoragePoolName)
+	for k, v := range c.v.AllSettings() {
+		switch tv := v.(type) {
+		case nil:
+			continue
+		case map[string]interface{}:
+			ms[k] = tv
+		default:
+			as[k] = tv
+		}
+	}
 
-	w(XtremIOEndpoint, c.XtremIOEndpoint)
-	w(XtremIOUserName, c.XtremIOUserName)
-	w(XtremIOPassword, c.XtremIoPassword)
-	w(XtremIOInsecure, c.XtremIOInsecure)
-	w(XtremIODeviceMapper, c.XtremIODeviceMapper)
-	w(XtremIOMultipath, c.XtremIOMultipath)
-	w(XtremIORemoteManagement, c.XtremIORemoteManagement)
+	for msk, msv := range ms {
+		flat := map[string]interface{}{}
+		flattenMapKeys(msk, msv, flat)
+		for fk, fv := range flat {
+			if asv, ok := as[fk]; ok && asv == fv {
+				delete(as, fk)
+			}
+		}
+		as[msk] = msv
+	}
+
+	return as
+}
+
+func flattenMapKeys(
+	prefix string, m map[string]interface{}, flat map[string]interface{}) {
+	for k, v := range m {
+		kk := fmt.Sprintf("%s.%s", prefix, k)
+		switch vt := v.(type) {
+		case map[string]interface{}:
+			flattenMapKeys(kk, vt, flat)
+		default:
+			flat[strings.ToLower(kk)] = v
+		}
+	}
+}
+
+// GetString returns the value associated with the key as a string
+func (c *Config) GetString(k string) string {
+	return c.v.GetString(k)
+}
+
+// GetBool returns the value associated with the key as a bool
+func (c *Config) GetBool(k string) bool {
+	return c.v.GetBool(k)
+}
+
+// GetStringSlice returns the value associated with the key as a string slice
+func (c *Config) GetStringSlice(k string) []string {
+	return c.v.GetStringSlice(k)
+}
+
+// GetInt returns the value associated with the key as an int
+func (c *Config) GetInt(k string) int {
+	return c.v.GetInt(k)
+}
+
+// Get returns the value associated with the key
+func (c *Config) Get(k string) interface{} {
+	return c.v.Get(k)
+}
+
+// Set sets an override value
+func (c *Config) Set(k string, v interface{}) {
+	c.v.Set(k, v)
 }
 
 func loadEtcEnvironment() {
@@ -351,4 +355,29 @@ func loadEtcEnvironment() {
 		}
 		os.Setenv(m[1], m[2])
 	}
+}
+
+func globalRegistration() *Registration {
+	r := NewRegistration("Global")
+	r.Yaml(`host: tcp://:7979
+logLevel: warn
+`)
+	r.Key(String, "h", "tcp://:7979", "The REX-Ray host", "host")
+	r.Key(String,
+		"l", "warn", "The log level (error, warn, info, debug)", "logLevel")
+	return r
+}
+
+func driverRegistration() *Registration {
+	r := NewRegistration("Driver")
+	r.Yaml(`osDrivers:
+- linux
+volumeDrivers:
+- docker
+`)
+	r.Key(String, "", "linux", "The OS drivers to consider", "osDrivers")
+	r.Key(String, "", "", "The storage drivers to consider", "storageDrivers")
+	r.Key(String,
+		"", "docker", "The volume drivers to consider", "volumeDrivers")
+	return r
 }

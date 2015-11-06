@@ -1,8 +1,6 @@
 package ec2
 
 import (
-	log "github.com/Sirupsen/logrus"
-
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,7 +10,10 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/emccode/rexray/core"
+	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 	"github.com/goamz/goamz/aws"
 	"github.com/goamz/goamz/ec2"
@@ -47,6 +48,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
+	config.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -63,10 +65,10 @@ func (d *driver) Init(r *core.RexRay) error {
 	}
 
 	auth := aws.Auth{
-		AccessKey: d.r.Config.AwsAccessKey,
-		SecretKey: d.r.Config.AwsSecretKey,
+		AccessKey: d.r.Config.GetString("aws.accessKey"),
+		SecretKey: d.r.Config.GetString("aws.secretKey"),
 	}
-	region := d.r.Config.AwsRegion
+	region := d.r.Config.GetString("aws.region")
 	if region == "" {
 		region = d.instanceDocument.Region
 	}
@@ -791,8 +793,8 @@ func (d *driver) CopySnapshot(runAsync bool,
 	resp := &ec2.CopySnapshotResp{}
 
 	auth := aws.Auth{
-		AccessKey: d.r.Config.AwsAccessKey,
-		SecretKey: d.r.Config.AwsSecretKey}
+		AccessKey: d.r.Config.GetString("aws.accessKey"),
+		SecretKey: d.r.Config.GetString("aws.secretKey")}
 	destec2Instance := ec2.New(
 		auth,
 		aws.Regions[destinationRegion],
@@ -831,4 +833,12 @@ func (d *driver) CopySnapshot(runAsync bool,
 	}
 
 	return snapshot[0], nil
+}
+
+func configRegistration() *config.Registration {
+	r := config.NewRegistration("Amazon EC2")
+	r.Key(config.String, "", "", "", "aws.accessKey")
+	r.Key(config.String, "", "", "", "aws.secretKey")
+	r.Key(config.String, "", "", "", "aws.region")
+	return r
 }

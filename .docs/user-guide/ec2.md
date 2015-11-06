@@ -10,14 +10,19 @@ driver manager and is used to connect and manage storage on EC2 instances. The
 EC2 driver is made possible by the
 [goamz project](https://github.com/mitchellh/goamz).
 
-## Configuration Options
-The following are the configuration options for the `ec2` storage driver.
+## Configuration
+The following is an example configuration of the AWS EC2 driver.
 
- EnvVar | YAML | CLI  
---------|------|------
-`AWS_ACCESS_KEY` | `awsAccessKey` | `--awsAccessKey`
-`AWS_SECRET_KEY` | `awsSecretKey` | `--awsSecretKey`
-`AWS_REGION` | `awsRegion` | `--awsRegion`
+```yaml
+aws:
+    accessKey: MyAccessKey
+    secretKey: MySecretKey
+    region:    USNW
+```
+
+For information on the equivalent environment variable and CLI flag names
+please see the section on how non top-level configuration properties are
+[transformed](./config/#all-other-properties).
 
 ## Activating the Driver
 To activate the EC2 driver please follow the instructions for

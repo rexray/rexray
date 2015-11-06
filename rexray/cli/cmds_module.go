@@ -32,7 +32,7 @@ func (c *CLI) initModuleCmds() {
 		Short: "List the available module types and their IDs",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.r.Config.Host)
+			_, addr, addrErr := util.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}
@@ -71,7 +71,7 @@ func (c *CLI) initModuleCmds() {
 		Short:   "List the running module instances",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.r.Config.Host)
+			_, addr, addrErr := util.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}
@@ -101,7 +101,7 @@ func (c *CLI) initModuleCmds() {
 		Short:   "Create a new module instance",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.r.Config.Host)
+			_, addr, addrErr := util.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}
@@ -156,7 +156,7 @@ func (c *CLI) initModuleCmds() {
 		Short: "Starts a module instance",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.r.Config.Host)
+			_, addr, addrErr := util.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}

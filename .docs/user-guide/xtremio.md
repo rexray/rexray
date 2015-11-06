@@ -8,18 +8,23 @@ Not just a flash in the pan
 The XtremIO registers a storage driver named `xtremio` with the `REX-Ray`
 driver manager and is used to connect and manage XtremIO storage.
 
-## Configuration Options
-The following are the configuration options for the `xtremio` storage driver.
+## Configuration
+The following is an example configuration of the XtremIO driver.
 
- EnvVar | YAML | CLI  
---------|------|------
-`GOXTREMIO_ENDPOINT` | `xtremIoEndpoint` | `--xtremIoEndpoint`
-`GOXTREMIO_USERNAME` | `xtremIoUserName` | `--xtremIoUserName`
-`GOXTREMIO_PASSWORD` | `xtremIoPassword` | `--xtremIoPassword`
-`GOXTREMIO_INSECURE` | `xtremIoInsecure` | `--xtremIoInsecure`
-`GOXTREMIO_DM` | `xtremIoDeviceMapper` | `--xtremIoDeviceMapper`
-`GOXTREMIO_MULTIPATH` | `xtremIoMultipath` | `--xtremIoMultipath`
-`GOXTREMIO_REMOTEMANAGEMENT` | `xtremIoRemoteManagement` | `--xtremIoRemoteManagement`
+```yaml
+xtremio:
+    endpoint:         https://domain.com/xtremio
+    userName:         admin
+    password:         mypassword
+    insecure:         false
+    deviceMapper:     false
+    multipath:        true
+    remoteManagement: false
+```
+
+For information on the equivalent environment variable and CLI flag names
+please see the section on how non top-level configuration properties are
+[transformed](./config/#all-other-properties).
 
 ## Activating the Driver
 To activate the XtremIO driver please follow the instructions for

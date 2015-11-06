@@ -188,6 +188,8 @@
         
             <li><a href="#upgrading">Upgrading</a></li>
         
+            <li><a href="#version-021-2015-10-27">Version 0.2.1 (2015-10-27)</a></li>
+        
             <li><a href="#version-020-2015-09-30">Version 0.2.0 (2015-09-30)</a></li>
         
     
@@ -204,12 +206,33 @@
 <p>You can determine your currently installed version using <code>rexray version</code>:</p>
 <pre><code>$ rexray version
 Binary: /usr/local/bin/rexray
-SemVer: 0.2.0
-OsArch: Darwin-x86_64
-Branch: v0.2.0
-Commit: b018a3be05b54a110728d3669213e3d8f65de197
-Formed: Wed, 30 Sep 2015 16:29:15 CDT
+SemVer: 0.2.1
+OsArch: Linux-x86_64
+Branch: master
+Commit: 36ccc425faeab49d792eda4851e3d72a85744874
+Formed: Tue, 27 Oct 2015 12:54:19 CDT
 </code></pre>
+<h2 id="version-021-2015-10-27">Version 0.2.1 (2015-10-27)</h2>
+<p>REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,
+and continued foundation changes for future features.</p>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li>Support for OpenStack (<a href="https://github.com/emccode/rexray/issues/111">#111</a>)</li>
+<li>Create volume from volume using existing settings (<a href="https://github.com/emccode/rexray/issues/129">#129</a>)</li>
+</ul>
+<h3 id="enhancements">Enhancements</h3>
+<ul>
+<li>A+ <a href="http://goreportcard.com/report/emccode/rexray">GoReport Card</a></li>
+<li>A+ <a href="https://coveralls.io/github/emccode/rexray?branch=master">Code Coverage</a></li>
+<li><a href="https://godoc.org/github.com/emccode/rexray">GoDoc Support</a></li>
+<li>Ability to load REX-Ray as an independent storage platform (<a href="https://github.com/emccode/rexray/issues/127">#127</a>)</li>
+<li>New documentation at http://rexray.readthedocs.org (<a href="https://github.com/emccode/rexray/issues/145">#145</a>)</li>
+<li>More foundation updates</li>
+</ul>
+<h3 id="tweaks">Tweaks</h3>
+<ul>
+<li>Command aliases for <code>get</code> and <code>delete</code> - <code>ls</code> and <code>rm</code> (<a href="https://github.com/emccode/rexray/issues/107">#107</a>)</li>
+</ul>
 <h2 id="version-020-2015-09-30">Version 0.2.0 (2015-09-30)</h2>
 <h3 id="installation-sysv-systemd-support">Installation, SysV, SystemD Support</h3>
 <p>REX-Ray now includes built-in support for installing itself as a service on

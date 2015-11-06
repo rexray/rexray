@@ -188,7 +188,7 @@
         
             <li><a href="#overview">Overview</a></li>
         
-            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#configuration-options">Configuration Options</a></li>
         
             <li><a href="#activating-the-driver">Activating the Driver</a></li>
         
@@ -207,17 +207,34 @@
 driver manager and is used to connect and manage storage on EC2 instances. The
 EC2 driver is made possible by the
 <a href="https://github.com/mitchellh/goamz">goamz project</a>.</p>
-<h2 id="configuration">Configuration</h2>
-<p>The following is an example configuration of the AWS EC2 driver.</p>
-<pre><code class="yaml">aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
-    region:    USNW
-</code></pre>
-
-<p>For information on the equivalent environment variable and CLI flag names
-please see the section on how non top-level configuration properties are
-<a href="../config/#all-other-properties">transformed</a>.</p>
+<h2 id="configuration-options">Configuration Options</h2>
+<p>The following are the configuration options for the <code>ec2</code> storage driver.</p>
+<table>
+<thead>
+<tr>
+<th>EnvVar</th>
+<th>YAML</th>
+<th>CLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AWS_ACCESS_KEY</code></td>
+<td><code>awsAccessKey</code></td>
+<td><code>--awsAccessKey</code></td>
+</tr>
+<tr>
+<td><code>AWS_SECRET_KEY</code></td>
+<td><code>awsSecretKey</code></td>
+<td><code>--awsSecretKey</code></td>
+</tr>
+<tr>
+<td><code>AWS_REGION</code></td>
+<td><code>awsRegion</code></td>
+<td><code>--awsRegion</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="activating-the-driver">Activating the Driver</h2>
 <p>To activate the EC2 driver please follow the instructions for
 <a href="../../user-guide/config#activating-storage-drivers">activating storage drivers</a>,

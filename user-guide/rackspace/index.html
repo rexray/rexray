@@ -188,7 +188,7 @@
         
             <li><a href="#overview">Overview</a></li>
         
-            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#configuration-options">Configuration Options</a></li>
         
             <li><a href="#activating-the-driver">Activating the Driver</a></li>
         
@@ -206,19 +206,59 @@
 <p>The Rackspace driver registers a storage driver named <code>rackspace</code> with the
 <code>REX-Ray</code> driver manager and is used to connect and manage storage on Rackspace
 instances.</p>
-<h2 id="configuration">Configuration</h2>
-<p>The following is an example configuration of the Rackspace driver.</p>
-<pre><code class="yaml">rackspace:
-    authURL:    https://domain.com/rackspace
-    userID:     0
-    userName:   admin
-    password:   mypassword
-    tenantID:   0
-    tenantName: customer
-    domainID:   0
-    domainName: corp
-</code></pre>
-
+<h2 id="configuration-options">Configuration Options</h2>
+<p>The following are the configuration options for the <code>rackspace</code> storage driver.</p>
+<table>
+<thead>
+<tr>
+<th>EnvVar</th>
+<th>YAML</th>
+<th>CLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OS_AUTH_URL</code></td>
+<td><code>rackspaceAuthUrl</code></td>
+<td><code>--rackspaceAuthUrl</code></td>
+</tr>
+<tr>
+<td><code>OS_USERID</code></td>
+<td><code>rackspaceUserId</code></td>
+<td><code>--rackspaceUserId</code></td>
+</tr>
+<tr>
+<td><code>OS_USERNAME</code></td>
+<td><code>rackspaceUserName</code></td>
+<td><code>--rackspaceUserName</code></td>
+</tr>
+<tr>
+<td><code>OS_PASSWORD</code></td>
+<td><code>rackspacePassword</code></td>
+<td><code>--rackspacePassword</code></td>
+</tr>
+<tr>
+<td><code>OS_TENANT_ID</code></td>
+<td><code>rackspaceTenantId</code></td>
+<td><code>--rackspaceTenantId</code></td>
+</tr>
+<tr>
+<td><code>OS_TENANT_NAME</code></td>
+<td><code>rackspaceTenantName</code></td>
+<td><code>--rackspaceTenantName</code></td>
+</tr>
+<tr>
+<td><code>OS_DOMAIN_ID</code></td>
+<td><code>rackspaceDomainId</code></td>
+<td><code>--rackspaceDomainId</code></td>
+</tr>
+<tr>
+<td><code>OS_DOMAIN_NAME</code></td>
+<td><code>rackspaceDomainName</code></td>
+<td><code>--rackspaceDomainName</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="activating-the-driver">Activating the Driver</h2>
 <p>To activate the Rackspace driver please follow the instructions for
 <a href="../../user-guide/config#activating-storage-drivers">activating storage drivers</a>,

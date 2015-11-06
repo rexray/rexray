@@ -188,7 +188,7 @@
         
             <li><a href="#overview">Overview</a></li>
         
-            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#configuration-options">Configuration Options</a></li>
         
             <li><a href="#activating-the-driver">Activating the Driver</a></li>
         
@@ -205,25 +205,74 @@
 <h2 id="overview">Overview</h2>
 <p>The ScaleIO registers a storage driver named <code>scaleio</code> with the <code>REX-Ray</code>
 driver manager and is used to connect and manage ScaleIO storage.</p>
-<h2 id="configuration">Configuration</h2>
-<p>The following is an example configuration of the ScaleIO driver.</p>
-<pre><code class="yaml">scaleio:
-    endpoint:             https://domain.com/scalio
-    insecure:             false
-    useCerts:             true
-    userName:             admin
-    password:             mypassword
-    systemID:             0
-    systemName:           sysv
-    protectionDomainID:   0
-    protectionDomainName: corp
-    storagePoolID:        0
-    storagePoolName:      gold
-</code></pre>
-
-<p>For information on the equivalent environment variable and CLI flag names
-please see the section on how non top-level configuration properties are
-<a href="../config/#all-other-properties">transformed</a>.</p>
+<h2 id="configuration-options">Configuration Options</h2>
+<p>The following are the configuration options for the <code>scaleio</code> storage driver.</p>
+<table>
+<thead>
+<tr>
+<th>EnvVar</th>
+<th>YAML</th>
+<th>CLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GOSCALEIO_ENDPOINT</code></td>
+<td><code>scaleIoEndpoint</code></td>
+<td><code>--scaleIoEndpoint</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_INSECURE</code></td>
+<td><code>scaleIoInsecure</code></td>
+<td><code>--scaleIoInsecure</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_USECERTS</code></td>
+<td><code>scaleIoUseCerts</code></td>
+<td><code>--scaleIoUseCerts</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_USERNAME</code></td>
+<td><code>scaleIoUserName</code></td>
+<td><code>--scaleIoUserName</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_PASSWORD</code></td>
+<td><code>scaleIoPassword</code></td>
+<td><code>--scaleIoPassword</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_SYSTEMID</code></td>
+<td><code>scaleIoSystemId</code></td>
+<td><code>--scaleIoSystemId</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_SYSTEMNAME</code></td>
+<td><code>scaleIoSystemName</code></td>
+<td><code>--scaleIoSystemName</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_PROTECTIONDOMAINID</code></td>
+<td><code>scaleIoProtectionDomainId</code></td>
+<td><code>--scaleIoProtectionDomainId</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_PROTECTIONDOMAIN</code></td>
+<td><code>scaleIoProtectionDomainName</code></td>
+<td><code>--scaleIoProtectionDomainName</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_STORAGEPOOLID</code></td>
+<td><code>scaleIoStoragePoolId</code></td>
+<td><code>--scaleIoStoragePoolId</code></td>
+</tr>
+<tr>
+<td><code>GOSCALEIO_STORAGEPOOL</code></td>
+<td><code>scaleIoStoragePoolName</code></td>
+<td><code>--scaleIoStoragePoolName</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="activating-the-driver">Activating the Driver</h2>
 <p>To activate the ScaleIO driver please follow the instructions for
 <a href="../../user-guide/config#activating-storage-drivers">activating storage drivers</a>,

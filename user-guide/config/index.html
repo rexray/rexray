@@ -192,8 +192,6 @@
         
             <li><a href="#configuration-files">Configuration Files</a></li>
         
-            <li><a href="#configuration-properties">Configuration Properties</a></li>
-        
             <li><a href="#logging">Logging</a></li>
         
             <li><a href="#os-drivers">OS Drivers</a></li>
@@ -246,14 +244,12 @@ changed.</p>
 <h2 id="configuration-methods">Configuration Methods</h2>
 <p>There are three ways to configure <code>REX-Ray</code>:</p>
 <ul>
-<li>Command line options</li>
-<li>Environment variables</li>
 <li>Configuration files</li>
+<li>Environment variables</li>
+<li>Command line options</li>
 </ul>
 <p>The order of the items above is also the order of precedence when considering
-options set in multiple locations that may override one another. Values set
-via CLI flags have the highest order of precedence, followed by values set by
-environment variables, followed, finally, by values set in configuration files.</p>
+options set in multiple locations that may override one another.</p>
 <h2 id="configuration-files">Configuration Files</h2>
 <p>There are two <code>REX-Ray</code> configuration files - global and user:</p>
 <ul>
@@ -268,149 +264,10 @@ directory, but rather <code>/root/.rexray/config.yml</code>.</p>
 <p>This is an example configuration with the default configuration for the general
 options as described in the following section:</p>
 <pre><code class="yaml">logLevel: warn
-osDrivers:
-- linux
-volumeDrivers:
-- docker
+osDrivers: linux
+volumeDrivers: docker
 </code></pre>
 
-<h2 id="configuration-properties">Configuration Properties</h2>
-<p>The section <a href="#configuration-methods">Configuration Methods</a> mentions there are
-three ways to configure REX-Ray: config files, environment variables, and the
-command line. However, this section will illuminate the relationship between the
-names of the configuration file properties, environment variables, and CLI
-flags.</p>
-<p>These are the global configuration properties with their default values as
-represented in a a YAML configuration file:</p>
-<pre><code class="yaml">logLevel: warn
-osDrivers:
-- linux
-storageDrivers:
-volumeDrivers:
-- docker
-</code></pre>
-
-<p>The property <code>logLevel</code> is a string and the properties <code>osDrivers</code>,
-<code>storageDrivers</code>, and <code>volumeDrivers</code> are all arrays of strings. These values
-can also be set via environment variables or the command line, but to do so
-requires knowing the names of the environment variables or CLI flags to use.
-Luckily those are very easy to figure out just by knowing the property names.</p>
-<h3 id="top-level-properties">Top-Level Properties</h3>
-<p>For any configuration file property there is really only one exception to
-consider when deriving the name of the property's equivalent environment
-variable or CLI flag: is the property a top-level property? The top-level
-properties are:</p>
-<ul>
-<li><code>logLevel</code></li>
-<li><code>osDrivers</code></li>
-<li><code>storageDrivers</code></li>
-<li><code>volumeDrivers</code></li>
-</ul>
-<p>For any top-level property the name of its equivalent environment variable is
-the name of the property, in all caps, prefixed with <code>REXRAY_</code>. Additionally,
-the name of the property's CLI flag is equivalent to the property name, as is.
-The following table illustrates the transformations:</p>
-<table>
-<thead>
-<tr>
-<th>Property Name</th>
-<th>Environment Variable</th>
-<th>CLI Flag</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>logLevel</code></td>
-<td><code>REXRAY_LOGLEVEL</code></td>
-<td><code>--logLevel</code></td>
-</tr>
-<tr>
-<td><code>osDrivers</code></td>
-<td><code>REXRAY_OSDRIVERS</code></td>
-<td><code>--osDrivers</code></td>
-</tr>
-<tr>
-<td><code>storageDrivers</code></td>
-<td><code>REXRAY_STORAGEDRIVERS</code></td>
-<td><code>--storageDrivers</code></td>
-</tr>
-<tr>
-<td><code>volumeDrivers</code></td>
-<td><code>REXRAY_VOLUMEDRIVERS</code></td>
-<td><code>--volumeDrivers</code></td>
-</tr>
-</tbody>
-</table>
-<h3 id="all-other-properties">All Other Properties</h3>
-<p>The other properties that might appear in the <code>REX-Ray</code> configuration file all
-fall under some type of heading. For example, a possible configuration of the
-Amazon Web Services (AWS) Elastic Compute Cloud (EC2) storage driver might look
-like this:</p>
-<pre><code class="yaml">aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
-    region:    USNW
-</code></pre>
-
-<p>For any property that's nested, the rule for environment variables is as
-follows:</p>
-<ul>
-<li>Each nested level becomes a part of the environment variable name followed
-    by an underscore <code>_</code> except for the terminating part.</li>
-<li>The entire environment variable name is uppercase.</li>
-</ul>
-<p>Nested properties follow these rules for CLI flags:</p>
-<ul>
-<li>The root level's first character is lower-cased with the rest of the root
-    level's text left unaltered.</li>
-<li>The remaining levels' first characters are all upper-cased with the the
-    remaining text of that level left unaltered.</li>
-<li>All levels are then concatenated together.</li>
-</ul>
-<p>The following table illustrates the transformations:</p>
-<table>
-<thead>
-<tr>
-<th>Property Name</th>
-<th>Environment Variable</th>
-<th>CLI Flag</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>aws.accessKey</code></td>
-<td><code>AWS_ACCESSKEY</code></td>
-<td><code>--awsAccessKey</code></td>
-</tr>
-<tr>
-<td><code>aws.secretKey</code></td>
-<td><code>AWS_SECRETKEY</code></td>
-<td><code>--awsSecretKey</code></td>
-</tr>
-<tr>
-<td><code>aws.region</code></td>
-<td><code>AWS_REGION</code></td>
-<td><code>--awsRegion</code></td>
-</tr>
-</tbody>
-</table>
-<h3 id="string-arrays">String Arrays</h3>
-<p>Please note that properties that are represented as arrays in a configuration
-file, such as the <code>osDrivers</code>, <code>storageDrivers</code>, and <code>volumeDrivers</code> above, are
-not arrays, but multi-valued strings where a space acts as a delimiter. This is
-because the Viper project
-<a href="https://github.com/spf13/viper/issues/112">does not bind</a> Go StringSlices
-(string arrays) correctly to <a href="https://github.com/spf13/pflag">PFlags</a>.</p>
-<p>For example, this is how one would specify the storage drivers <code>ec2</code> and
-<code>xtremio</code> in a configuration file:</p>
-<pre><code class="yaml">storageDrivers:
-    - ec2
-    - xtremio
-</code></pre>
-
-<p>However, to specify the same values in an environment variable,
-<code>REXRAY_STORAGEDRIVERS="ec2 xtremio"</code>, and as a CLI flag,
-<code>--storageDrivers="ec2 xtremio"</code>.</p>
 <h2 id="logging">Logging</h2>
 <p>The <code>REX-Ray</code> log level determines the level of verbosity emitted by the
 internal logger. The default level is <code>warn</code>, but there are three other levels

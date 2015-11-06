@@ -188,7 +188,7 @@
         
             <li><a href="#overview">Overview</a></li>
         
-            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#configuration-options">Configuration Options</a></li>
         
             <li><a href="#activating-the-driver">Activating the Driver</a></li>
         
@@ -205,21 +205,54 @@
 <h2 id="overview">Overview</h2>
 <p>The XtremIO registers a storage driver named <code>xtremio</code> with the <code>REX-Ray</code>
 driver manager and is used to connect and manage XtremIO storage.</p>
-<h2 id="configuration">Configuration</h2>
-<p>The following is an example configuration of the XtremIO driver.</p>
-<pre><code class="yaml">xtremio:
-    endpoint:         https://domain.com/xtremio
-    userName:         admin
-    password:         mypassword
-    insecure:         false
-    deviceMapper:     false
-    multipath:        true
-    remoteManagement: false
-</code></pre>
-
-<p>For information on the equivalent environment variable and CLI flag names
-please see the section on how non top-level configuration properties are
-<a href="../config/#all-other-properties">transformed</a>.</p>
+<h2 id="configuration-options">Configuration Options</h2>
+<p>The following are the configuration options for the <code>xtremio</code> storage driver.</p>
+<table>
+<thead>
+<tr>
+<th>EnvVar</th>
+<th>YAML</th>
+<th>CLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GOXTREMIO_ENDPOINT</code></td>
+<td><code>xtremIoEndpoint</code></td>
+<td><code>--xtremIoEndpoint</code></td>
+</tr>
+<tr>
+<td><code>GOXTREMIO_USERNAME</code></td>
+<td><code>xtremIoUserName</code></td>
+<td><code>--xtremIoUserName</code></td>
+</tr>
+<tr>
+<td><code>GOXTREMIO_PASSWORD</code></td>
+<td><code>xtremIoPassword</code></td>
+<td><code>--xtremIoPassword</code></td>
+</tr>
+<tr>
+<td><code>GOXTREMIO_INSECURE</code></td>
+<td><code>xtremIoInsecure</code></td>
+<td><code>--xtremIoInsecure</code></td>
+</tr>
+<tr>
+<td><code>GOXTREMIO_DM</code></td>
+<td><code>xtremIoDeviceMapper</code></td>
+<td><code>--xtremIoDeviceMapper</code></td>
+</tr>
+<tr>
+<td><code>GOXTREMIO_MULTIPATH</code></td>
+<td><code>xtremIoMultipath</code></td>
+<td><code>--xtremIoMultipath</code></td>
+</tr>
+<tr>
+<td><code>GOXTREMIO_REMOTEMANAGEMENT</code></td>
+<td><code>xtremIoRemoteManagement</code></td>
+<td><code>--xtremIoRemoteManagement</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="activating-the-driver">Activating the Driver</h2>
 <p>To activate the XtremIO driver please follow the instructions for
 <a href="../../user-guide/config#activating-storage-drivers">activating storage drivers</a>,

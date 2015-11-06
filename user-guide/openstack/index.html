@@ -188,7 +188,7 @@
         
             <li><a href="#overview">Overview</a></li>
         
-            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#configuration-options">Configuration Options</a></li>
         
             <li><a href="#activating-the-driver">Activating the Driver</a></li>
         
@@ -206,24 +206,69 @@
 <p>The OpenStack driver registers a storage driver named <code>openstack</code> with the
 <code>REX-Ray</code> driver manager and is used to connect and manage storage on OpenStack
 instances.</p>
-<h2 id="configuration">Configuration</h2>
-<p>The following is an example configuration of the OpenStack driver.</p>
-<pre><code class="yaml">openstack:
-    authURL:              https://domain.com/openstack
-    userID:               0
-    userName:             admin
-    password:             mypassword
-    tenantID:             0
-    tenantName:           customer
-    domainID:             0
-    domainName:           corp
-    regionName:           USNW
-    availabilityZoneName: Gold
-</code></pre>
-
-<p>For information on the equivalent environment variable and CLI flag names
-please see the section on how non top-level configuration properties are
-<a href="../config/#all-other-properties">transformed</a>.</p>
+<h2 id="configuration-options">Configuration Options</h2>
+<p>The following are the configuration options for the <code>openstack</code> storage driver.</p>
+<table>
+<thead>
+<tr>
+<th>EnvVar</th>
+<th>YAML</th>
+<th>CLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OS_AUTH_URL</code></td>
+<td><code>openstackAuthUrl</code></td>
+<td><code>--openstackAuthUrl</code></td>
+</tr>
+<tr>
+<td><code>OS_USERID</code></td>
+<td><code>openstackUserId</code></td>
+<td><code>--openstackUserId</code></td>
+</tr>
+<tr>
+<td><code>OS_USERNAME</code></td>
+<td><code>openstackUserName</code></td>
+<td><code>--openstackUserName</code></td>
+</tr>
+<tr>
+<td><code>OS_PASSWORD</code></td>
+<td><code>openstackPassword</code></td>
+<td><code>--openstackPassword</code></td>
+</tr>
+<tr>
+<td><code>OS_TENANT_ID</code></td>
+<td><code>openstackTenantId</code></td>
+<td><code>--openstackTenantId</code></td>
+</tr>
+<tr>
+<td><code>OS_TENANT_NAME</code></td>
+<td><code>openstackTenantName</code></td>
+<td><code>--openstackTenantName</code></td>
+</tr>
+<tr>
+<td><code>OS_DOMAIN_ID</code></td>
+<td><code>openstackDomainId</code></td>
+<td><code>--openstackDomainId</code></td>
+</tr>
+<tr>
+<td><code>OS_DOMAIN_NAME</code></td>
+<td><code>openstackDomainName</code></td>
+<td><code>--openstackDomainName</code></td>
+</tr>
+<tr>
+<td><code>OS_REGION_NAME</code></td>
+<td><code>openstackRegionName</code></td>
+<td><code>--openstackRegionName</code></td>
+</tr>
+<tr>
+<td><code>OS_AVAILABILITY_ZONE_NAME</code></td>
+<td><code>openstackAvailabilityZoneName</code></td>
+<td><code>--openstackAvailabilityZoneName</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="activating-the-driver">Activating the Driver</h2>
 <p>To activate the OpenStack driver please follow the instructions for
 <a href="../../user-guide/config#activating-storage-drivers">activating storage drivers</a>,

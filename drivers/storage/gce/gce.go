@@ -204,6 +204,9 @@ func (d *driver) GetVolume(
 	}
 	var attachments []*core.VolumeAttachment
 	instances, err := d.client.Instances.List(d.project, d.zone).Do()
+	if err != nil {
+		return []*core.Volume{}, err
+	}
 	for _, instance := range instances.Items {
 		for _, disk := range instance.Disks {
 			attachment := &core.VolumeAttachment{
@@ -254,7 +257,28 @@ func (d *driver) GetVolume(
 func (d *driver) GetVolumeAttach(
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	log.WithField("provider", providerName).Debug("GetVolumeAttach")
-	return nil, nil
+	var attachments []*core.VolumeAttachment
+	query := d.client.Instances.List(d.project, d.zone)
+	if instanceID != "" {
+		query.Filter(fmt.Sprintf("id eq %s", instanceID))
+	}
+	instances, err := query.Do()
+	if err != nil {
+		return []*core.Volume{}, err
+	}
+	for _, instance := range instances.Items {
+		for _, disk := range instance.Disks {
+			attachment := &core.VolumeAttachment{
+				InstanceID: strconv.FormatUint(instance.Id, 10),
+				DeviceName: disk.DeviceName,
+				Status:     disk.Mode,
+				VolumeID:   disk.Source,
+			}
+			attachments = append(attachments, attachment)
+
+		}
+	}
+
 }
 
 func (d *driver) waitSnapshotComplete(snapshotID string) error {

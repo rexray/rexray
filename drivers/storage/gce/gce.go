@@ -423,6 +423,7 @@ func (d *driver) AttachVolume(
 	if err != nil {
 		return nil, err
 	}
+	instanceID = instance.Name
 	log.WithField("provider", providerName).Debugf("AttachVolume %s %s", volumeID, instance.Name)
 	query := d.client.Disks.List(d.project, d.zone)
 	query.Filter(fmt.Sprintf("name eq %s", volumeID))

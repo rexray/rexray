@@ -263,7 +263,7 @@ func (d *driver) CreateVolume(
 		"volumeID":         volumeID,
 		"snapshotID":       snapshotID,
 		"volumeType":       volumeType,
-		"availabilityZone": availabilityZone}).Info("CreateVolume")
+		"availabilityZone": availabilityZone}).Debug("CreateVolume")
 
 	if availabilityZone == "" {
 		availabilityZone = d.zone
@@ -405,24 +405,15 @@ func (d *driver) GetVolumeAttach(
 	return attachments, nil
 }
 
-func (d *driver) waitSnapshotComplete(snapshotID string) error {
-	return nil
-}
-
-func (d *driver) waitVolumeComplete(volumeID string) error {
-	return nil
-}
-
-func (d *driver) waitVolumeAttach(volumeID, instanceID string) error {
-	return nil
-}
-
-func (d *driver) waitVolumeDetach(volumeID string) error {
-	return nil
-}
 
 func (d *driver) RemoveVolume(volumeID string) error {
-	return nil
+		log.WithFields(log.Fields{
+		"volumeID":         volumeID
+		}).Debug("RemoveVolume")
+
+	_, err := d.client.Disks.Delete(d.project, d.zone, volumeID).Do()
+	return err
+
 }
 
 func (d *driver) AttachVolume(

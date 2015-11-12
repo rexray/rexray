@@ -385,7 +385,7 @@ func (d *driver) GetVolumeAttach(
 	var attachments []*core.VolumeAttachment
 	query := d.client.Instances.List(d.project, d.zone)
 	if instanceID != "" {
-		query.Filter(fmt.Sprintf("id eq %s", instanceID))
+		query.Filter(fmt.Sprintf("name eq %s", instanceID))
 	}
 	instances, err := query.Do()
 	if err != nil {

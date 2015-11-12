@@ -153,18 +153,19 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 func (d *driver) GetInstance() (*core.Instance, error) {
 	log.WithField("provider", providerName).Debug("GetInstance")
 	query := d.client.Instances.List(d.project, d.zone)
-	query.Filter(fmt.Sprintf("id eq %s", d.currentInstanceId))
 	instances, err := query.Do()
 	if err != nil {
 		return nil, err
 	}
 	for _, instance := range instances.Items {
-		return &core.Instance{
-			ProviderName: "gce",
-			InstanceID:   strconv.FormatUint(instance.Id, 10),
-			Region:       instance.Zone,
-			Name:         instance.Name,
-		}, nil
+		if strconv.FormatUint(instance.Id, 10) == d.currentInstanceId {
+			return &core.Instance{
+				ProviderName: "gce",
+				InstanceID:   strconv.FormatUint(instance.Id, 10),
+				Region:       instance.Zone,
+				Name:         instance.Name,
+			}, nil
+		}
 
 	}
 	return nil, nil

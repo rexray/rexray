@@ -10,6 +10,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
 	"io/ioutil"
+	"net"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,10 +21,11 @@ const providerName = "gce"
 
 // The GCE storage driver.
 type driver struct {
-	client  *compute.Service
-	r       *core.RexRay
-	zone    string
-	project string
+	currentInstanceId string
+	client            *compute.Service
+	r                 *core.RexRay
+	zone              string
+	project           string
 }
 
 func ef() errors.Fields {
@@ -62,6 +65,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	serviceAccountJSON, err := ioutil.ReadFile(d.r.Config.GetString("gce.keyfile"))
 	if err != nil {
 		log.WithField("provider", providerName).Fatalf("Could not read service account credentials file, %s => {%s}", d.r.Config.GetString("gce.keyfile"), err)
+		return err
 	}
 
 	config, err := google.JWTConfigFromJSON(serviceAccountJSON,
@@ -73,9 +77,34 @@ func (d *driver) Init(r *core.RexRay) error {
 		log.WithField("provider", providerName).Fatalf("Could not create compute client => {%s}", err)
 	}
 	d.client = client
+	d.currentInstanceId = getCurrentInstanceId()
 	log.WithField("provider", providerName).Info("storage driver initialized")
-
 	return nil
+}
+
+func getCurrentInstanceId() (string, error) {
+	conn, err := net.DialTimeout("tcp", "metadata.google.internal:80", 50*time.Millisecond)
+	if err != nil {
+		return "", fmt.Errorf("Error: %v\n", err)
+	}
+	defer conn.Close()
+
+	url := "http://metadata.google.internal/computeMetadata/v1/instance/id"
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Metadata-Flavor", "Google")
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("Error: %v\n", err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Error: %v\n", err)
+	}
+	return data, nil
 }
 
 func (d *driver) Name() string {
@@ -91,7 +120,6 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 		return []*core.BlockDevice{}, err
 	}
 	for _, disk := range disks.Items {
-		log.WithField("provider", providerName).Debugf("%s", disk.SelfLink)
 		diskMap[disk.SelfLink] = disk
 	}
 
@@ -102,7 +130,6 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	var ret []*core.BlockDevice
 	for _, instance := range instances.Items {
 		for _, disk := range instance.Disks {
-			log.WithField("provider", providerName).Debugf("%s", disk.Source)
 			ret = append(ret, &core.BlockDevice{
 				ProviderName: "gce",
 				InstanceID:   strconv.FormatUint(instance.Id, 10),
@@ -120,6 +147,24 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 
 func (d *driver) GetInstance() (*core.Instance, error) {
 	log.WithField("provider", providerName).Debug("GetInstance")
+	var attachments []*core.VolumeAttachment
+	query := d.client.Instances.List(d.project, d.zone)
+	query.Filter(fmt.Sprintf("id eq %s", d.currentInstanceId))
+	instances, err := query.Do()
+	if err != nil {
+		return []*core.Instance{}, err
+	}
+	var ret []*core.Instance
+	for _, instance := range instances.Items {
+		return &core.Instance{
+			ProviderName: "gce",
+			InstanceID:   strconv.FormatUint(instance.Id, 10),
+			Region:       instance.Zone,
+			Region:       instance.Status,
+			NetworkName:  instance.Name,
+		}),nil
+
+	}
 	return nil, nil
 }
 

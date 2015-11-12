@@ -301,7 +301,7 @@ func (d *driver) CreateVolume(
 			}
 		}
 	}
-	volume, err := d.GetVolume(strconv.FormatUint(createdVolume.TargetId, 10), "")
+	volume, err := d.GetVolume(volumeName, "")
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +321,7 @@ func (d *driver) GetVolume(
 
 	query := d.client.Disks.List(d.project, d.zone)
 	if volumeID != "" {
-		query.Filter(fmt.Sprintf("id eq %s", volumeID))
+		query.Filter(fmt.Sprintf("name eq %s", volumeID))
 	}
 	if volumeName != "" {
 		query.Filter(fmt.Sprintf("name eq %s", volumeName))
@@ -363,7 +363,7 @@ func (d *driver) GetVolume(
 		}
 		volumeSD := &core.Volume{
 			Name:             disk.Name,
-			VolumeID:         strconv.FormatUint(disk.Id, 10),
+			VolumeID:         disk.Name,
 			AvailabilityZone: disk.Zone,
 			Status:           disk.Status,
 			VolumeType:       disk.Kind,
@@ -407,10 +407,7 @@ func (d *driver) GetVolumeAttach(
 
 
 func (d *driver) RemoveVolume(volumeID string) error {
-		log.WithFields(log.Fields{
-		"volumeID":         volumeID
-		}).Debug("RemoveVolume")
-
+	log.WithField("provider", providerName).Debugf("RemoveVolume :%s", volumeID)
 	_, err := d.client.Disks.Delete(d.project, d.zone, volumeID).Do()
 	return err
 

@@ -106,12 +106,10 @@ func getCurrentInstanceId() (string, error) {
 
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	n := bytes.Index(data, []byte{0})
-	return string(data[:n]), nil
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	s := buf.String()
+	return s, nil
 }
 
 func (d *driver) Name() string {

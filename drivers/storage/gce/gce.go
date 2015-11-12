@@ -1,6 +1,7 @@
 package gce
 
 import (
+	"bytes"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/emccode/rexray/core"
@@ -15,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const providerName = "gce"
@@ -77,7 +79,11 @@ func (d *driver) Init(r *core.RexRay) error {
 		log.WithField("provider", providerName).Fatalf("Could not create compute client => {%s}", err)
 	}
 	d.client = client
-	d.currentInstanceId = getCurrentInstanceId()
+	instanceId, err := getCurrentInstanceId()
+	if err != nil {
+		return err
+	}
+	d.currentInstanceId = instanceId
 	log.WithField("provider", providerName).Info("storage driver initialized")
 	return nil
 }
@@ -85,7 +91,7 @@ func (d *driver) Init(r *core.RexRay) error {
 func getCurrentInstanceId() (string, error) {
 	conn, err := net.DialTimeout("tcp", "metadata.google.internal:80", 50*time.Millisecond)
 	if err != nil {
-		return "", fmt.Errorf("Error: %v\n", err)
+		return "", err
 	}
 	defer conn.Close()
 
@@ -102,9 +108,10 @@ func getCurrentInstanceId() (string, error) {
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("Error: %v\n", err)
+		return "", err
 	}
-	return data, nil
+	n := bytes.Index(data, []byte{0})
+	return string(data[:n]), nil
 }
 
 func (d *driver) Name() string {
@@ -147,22 +154,19 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 
 func (d *driver) GetInstance() (*core.Instance, error) {
 	log.WithField("provider", providerName).Debug("GetInstance")
-	var attachments []*core.VolumeAttachment
 	query := d.client.Instances.List(d.project, d.zone)
 	query.Filter(fmt.Sprintf("id eq %s", d.currentInstanceId))
 	instances, err := query.Do()
 	if err != nil {
-		return []*core.Instance{}, err
+		return nil, err
 	}
-	var ret []*core.Instance
 	for _, instance := range instances.Items {
 		return &core.Instance{
 			ProviderName: "gce",
 			InstanceID:   strconv.FormatUint(instance.Id, 10),
 			Region:       instance.Zone,
-			Region:       instance.Status,
-			NetworkName:  instance.Name,
-		}),nil
+			Name:         instance.Name,
+		}, nil
 
 	}
 	return nil, nil

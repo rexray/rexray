@@ -258,7 +258,28 @@ func (d *driver) CreateVolume(
 	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
 	log.WithField("provider", providerName).Debug("CreateVolume")
-	return nil, nil
+	disk := &compute.Disk{
+		Name:   "test",
+		Zone:   availabilityZone,
+		Type:   "https://www.googleapis.com/compute/v1/projects/gce-dev-1060/zones/europe-west1-b/diskTypes/pd-standard",
+		SizeGb: size,
+	}
+	createdVolume, err := d.client.Disks.Insert(d.project, d.zone, disk).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("%v", createdVolume)
+	return &core.Volume{
+		Name:             createdVolume.Name,
+		VolumeID:         strconv.FormatUint(createdVolume.Id, 10),
+		AvailabilityZone: createdVolume.Zone,
+		Status:           createdVolume.Status,
+		VolumeType:       createdVolume.Kind,
+		NetworkName:      createdVolume.SelfLink,
+		IOPS:             0,
+		Size:             strconv.FormatInt(size, 10),
+	}, nil
 
 }
 

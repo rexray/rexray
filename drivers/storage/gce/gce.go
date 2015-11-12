@@ -119,9 +119,25 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 }
 
 func (d *driver) GetInstance() (*core.Instance, error) {
-	log.WithField("provider", providerName).Debug("GetInstance")
-	return nil, nil
-}
+  log.WithField("provider", providerName).Debug("GetInstance")
+    var attachments []*core.VolumeAttachment
+    query := d.client.Instances.List(d.project, d.zone)
+    instances, err := query.Do()
+    if err != nil {
+     	return nil, err
+      }
+  var ret []*core.Instance
+    for _, instance := range instances.Items {
+	ret = append(ret, &core.Instance{
+	  ProviderName: "gce",
+	      InstanceID:   strconv.FormatUint(instance.Id, 10),
+	      Region:       instance.Zone,
+	      Name:  instance.Name,
+	      })
+	
+      }
+  return ret, nil
+    }
 
 func (d *driver) CreateSnapshot(
 	runAsync bool,

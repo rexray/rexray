@@ -83,8 +83,39 @@ func (d *driver) Name() string {
 }
 
 func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
-	log.WithField("provider", providerName).Debug("GetVolumeMapping")
-	return nil, nil
+  log.WithField("provider", providerName).Debug("GetVolumeMapping")
+    
+    diskMap := make(map[string]*compute.Disk)
+    disks, err := d.client.Disks.List(d.project, d.zone).Do()
+    if err != nil {
+	return []*core.BlockDevice{}, err
+      }
+  for _, disk := range disks.Items {
+      log.WithField("provider", providerName).Debugf("%s",disk.SelfLink)
+      diskMap[disk.SelfLink] = disk
+    }
+
+    instances, err := d.client.Instances.List(d.project, d.zone).Do()
+    if err != nil {
+	return []*core.BlockDevice{}, err
+      }
+  var ret []*core.BlockDevice
+  for _, instance := range instances.Items {
+      for _, disk := range instance.Disks {
+      log.WithField("provider", providerName).Debugf("%s",disk.Source)
+	  ret = append(ret, &core.BlockDevice {
+	    ProviderName: "gce",
+		InstanceID: strconv.FormatUint(instance.Id, 10),
+		VolumeID: strconv.FormatUint(diskMap[disk.Source].Id, 10),
+		DeviceName: disk.DeviceName,
+		Region: diskMap[disk.Source].Zone,
+		Status: diskMap[disk.Source].Status,
+		NetworkName: disk.Source,
+	    })
+	
+	}
+    }
+  return ret, nil
 }
 
 func (d *driver) GetInstance() (*core.Instance, error) {
@@ -256,7 +287,7 @@ func (d *driver) GetVolume(
 
 func (d *driver) GetVolumeAttach(
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
-	log.WithField("provider", providerName).Debug("GetVolumeAttach")
+	log.WithField("provider", providerName).Debugf("GetVolumeAttach :%s %s",volumeID,instanceID)
 	var attachments []*core.VolumeAttachment
 	query := d.client.Instances.List(d.project, d.zone)
 	if instanceID != "" {
@@ -264,7 +295,7 @@ func (d *driver) GetVolumeAttach(
 	}
 	instances, err := query.Do()
 	if err != nil {
-		return []*core.Volume{}, err
+		return []*core.VolumeAttachment{}, err
 	}
 	for _, instance := range instances.Items {
 		for _, disk := range instance.Disks {
@@ -278,7 +309,7 @@ func (d *driver) GetVolumeAttach(
 
 		}
 	}
-
+	return attachments , nil
 }
 
 func (d *driver) waitSnapshotComplete(snapshotID string) error {

@@ -319,13 +319,6 @@ func (d *driver) GetVolume(
 	volumeID, volumeName string) ([]*core.Volume, error) {
 	log.WithField("provider", providerName).Debugf("GetVolume :%s %s", volumeID, volumeName)
 
-	query := d.client.Disks.List(d.project, d.zone)
-	if volumeID != "" {
-		query.Filter(fmt.Sprintf("name eq %s", volumeID))
-	}
-	if volumeName != "" {
-		query.Filter(fmt.Sprintf("name eq %s", volumeName))
-	}
 	var attachments []*core.VolumeAttachment
 	instances, err := d.client.Instances.List(d.project, d.zone).Do()
 	if err != nil {
@@ -344,6 +337,13 @@ func (d *driver) GetVolume(
 		}
 	}
 
+	query := d.client.Disks.List(d.project, d.zone)
+	if volumeID != "" {
+		query.Filter(fmt.Sprintf("name eq %s", volumeID))
+	}
+	if volumeName != "" {
+		query.Filter(fmt.Sprintf("name eq %s", volumeName))
+	}
 	disks, err := query.Do()
 	if err != nil {
 		return []*core.Volume{}, err
@@ -405,7 +405,6 @@ func (d *driver) GetVolumeAttach(
 	return attachments, nil
 }
 
-
 func (d *driver) RemoveVolume(volumeID string) error {
 	log.WithField("provider", providerName).Debugf("RemoveVolume :%s", volumeID)
 	_, err := d.client.Disks.Delete(d.project, d.zone, volumeID).Do()
@@ -417,7 +416,27 @@ func (d *driver) AttachVolume(
 	runAsync bool,
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	log.WithField("provider", providerName).Debug("AttachVolume")
-	return nil, nil
+	query := d.client.Disks.List(d.project, d.zone)
+	query.Filter(fmt.Sprintf("name eq %s", volumeID))
+	disks, err := query.Do()
+	if err != nil {
+		return nil, err
+	}
+	if len(disks.Items) != 1 {
+		return nil, errors.New("No available device")
+	}
+
+	disk := &compute.AttachedDisk{
+		AutoDelete: false,
+		Boot:       false,
+		Source:     disks.Items[0].SelfLink,
+	}
+	_, err = d.client.Instances.AttachDisk(d.project, d.zone, instanceID, disk).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return d.GetVolumeAttach("", instanceID)
 
 }
 

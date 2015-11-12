@@ -415,7 +415,14 @@ func (d *driver) RemoveVolume(volumeID string) error {
 func (d *driver) AttachVolume(
 	runAsync bool,
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
-	log.WithField("provider", providerName).Debug("AttachVolume")
+	if instanceID == "" {
+		instanceID = d.currentInstanceId
+	}
+	instance, err := d.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	log.WithField("provider", providerName).Debugf("AttachVolume %s %s", volumeID, instance.Name)
 	query := d.client.Disks.List(d.project, d.zone)
 	query.Filter(fmt.Sprintf("name eq %s", volumeID))
 	disks, err := query.Do()

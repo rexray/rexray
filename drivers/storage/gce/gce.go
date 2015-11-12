@@ -257,9 +257,19 @@ func getLocalDevices() (deviceNames []string, err error) {
 func (d *driver) CreateVolume(
 	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
-	log.WithField("provider", providerName).Debug("CreateVolume")
+	log.WithFields(log.Fields{
+		"provider":         providerName,
+		"volumeName":       volumeName,
+		"volumeID":         volumeID,
+		"snapshotID":       snapshotID,
+		"volumeType":       volumeType,
+		"availabilityZone": availabilityZone}).Info("CreateVolume")
+
+	if availabilityZone == "" {
+		availabilityZone = d.zone
+	}
 	disk := &compute.Disk{
-		Name:   "test",
+		Name:   volumeName,
 		Zone:   availabilityZone,
 		Type:   "https://www.googleapis.com/compute/v1/projects/gce-dev-1060/zones/europe-west1-b/diskTypes/pd-standard",
 		SizeGb: size,
@@ -268,19 +278,34 @@ func (d *driver) CreateVolume(
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("%v", createdVolume)
-	return &core.Volume{
-		Name:             createdVolume.Name,
-		VolumeID:         strconv.FormatUint(createdVolume.Id, 10),
-		AvailabilityZone: createdVolume.Zone,
-		Status:           createdVolume.Status,
-		VolumeType:       createdVolume.Kind,
-		NetworkName:      createdVolume.SelfLink,
-		IOPS:             0,
-		Size:             strconv.FormatInt(size, 10),
-	}, nil
-
+	opName := createdVolume.Name
+	if !runAsync {
+	OpLoop:
+		for {
+			time.Sleep(100 * time.Millisecond)
+			op, err := d.client.ZoneOperations.Get(d.project, d.zone, opName).Do()
+			if err != nil {
+				return nil, err
+			}
+			switch op.Status {
+			case "PENDING", "RUNNING":
+				continue
+			case "DONE":
+				if op.Error != nil {
+					return nil, err
+				}
+				break OpLoop
+			default:
+				log.WithField("provider", providerName).Fatalf("Unknown status %q: %+v", op.Status, op)
+				return nil, nil
+			}
+		}
+	}
+	volume, err := d.GetVolume(strconv.FormatUint(createdVolume.TargetId, 10), "")
+	if err != nil {
+		return nil, err
+	}
+	return volume[0], nil
 }
 
 func (d *driver) createVolumeCreateSnapshot(

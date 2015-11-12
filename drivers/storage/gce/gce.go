@@ -452,8 +452,36 @@ func (d *driver) AttachVolume(
 func (d *driver) DetachVolume(
 	runAsync bool,
 	volumeID, blank string) error {
-	log.WithField("provider", providerName).Debug("DetachVolume")
-	return nil
+	if instanceID == "" {
+		instanceID = d.currentInstanceId
+	}
+	instance, err := d.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	instanceID = instance.Name
+	log.WithField("provider", providerName).Debugf("DetachVolume %s %s", volumeID, instance.Name)
+	query := d.client.Disks.List(d.project, d.zone)
+	query.Filter(fmt.Sprintf("name eq %s", volumeID))
+	disks, err := query.Do()
+	if err != nil {
+		return nil, err
+	}
+	if len(disks.Items) != 1 {
+		return nil, errors.New("No available device")
+	}
+
+	disk := &compute.AttachedDisk{
+		AutoDelete: false,
+		Boot:       false,
+		Source:     disks.Items[0].SelfLink,
+	}
+	_, err = d.client.Instances.DetachDisk(d.project, d.zone, instanceID, disk).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return d.GetVolumeAttach("", instanceID)
 }
 
 func (d *driver) CopySnapshot(runAsync bool,

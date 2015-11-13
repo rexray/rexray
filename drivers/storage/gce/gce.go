@@ -357,9 +357,15 @@ volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 		Boot:       false,
 		Source:     disks.Items[0].SelfLink,
 	}
-	_, err = d.client.Instances.AttachDisk(d.project, d.zone, instanceID, disk).Do()
+	operation, err := d.client.Instances.AttachDisk(d.project, d.zone, instanceID, disk).Do()
 	if err != nil {
 		return nil, err
+	}
+	if(!runAsync) {
+		err := d.waitUntilOperationIsFinished(operation)
+		if err !=nil {
+			return nil, err
+		}
 	}
 
 	return d.GetVolumeAttach("", instanceID)
@@ -386,9 +392,15 @@ volumeID, blank string) error {
 	}
 	attachements, err := d.GetVolumeAttach(volumeID, instanceID)
 	for _, attachement := range attachements {
-		_, err = d.client.Instances.DetachDisk(d.project, d.zone, instanceID, attachement.DeviceName).Do()
+		operation, err := d.client.Instances.DetachDisk(d.project, d.zone, instanceID, attachement.DeviceName).Do()
 		if err != nil {
 			return err
+		}
+		if(!runAsync) {
+			err := d.waitUntilOperationIsFinished(operation)
+			if err !=nil {
+				return err
+			}
 		}
 	}
 

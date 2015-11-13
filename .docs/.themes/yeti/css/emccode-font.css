@@ -1,0 +1,35 @@
+@charset "UTF-8";
+
+@font-face {
+    font-family: "emccode";
+    src:url("../fonts/emccode.eot");
+    src:url("../fonts/emccode.eot?#iefix") format("embedded-opentype"),
+        url("../fonts/emccode.woff") format("woff"),
+        url("../fonts/emccode.ttf") format("truetype"),
+        url("../fonts/emccode.svg#emccode") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
+
+[data-icon]:before {
+    font-family: "emccode" !important;
+}
+
+[class^="icon-"]:before,
+[class*=" icon-"]:before {
+    font-family: "emccode" !important;
+}
+
+.icon-emccode-logo:before {
+    content: "e";
+    vertical-align: middle;
+}
+
+.icon-emccode-logo:after {
+    content: " EMC{code}";
+}
+
+.icon-rexray-logo:before {
+    content: "r";
+    vertical-align: middle;
+}

@@ -1,0 +1,15 @@
+site_name: LibStorage
+site_url: https://github.com/emccode/libstorage
+repo_url: https://github.com/emccode/libstorage.git
+docs_dir: .docs
+site_dir: .site
+theme_dir: .docs/.themes/yeti
+#site_favicon: favicon.png
+
+pages:
+- Home: index.md
+- User Guide:
+     - Model: user-guide/model.md
+- About:
+    - Contributing: about/contributing.md
+    - License: about/license.md

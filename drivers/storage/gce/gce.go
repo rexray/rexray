@@ -18,23 +18,6 @@ import (
 )
 
 const providerName = "gce"
-func ef() errors.Fields {
-	return errors.Fields{
-		"provider": providerName,
-	}
-}
-
-func eff(fields errors.Fields) map[string]interface{} {
-	errFields := map[string]interface{}{
-		"provider": providerName,
-	}
-	if fields != nil {
-		for k, v := range fields {
-			errFields[k] = v
-		}
-	}
-	return errFields
-}
 
 // The GCE storage driver.
 type driver struct {
@@ -44,6 +27,7 @@ type driver struct {
 	zone              string
 	project           string
 }
+
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
@@ -88,7 +72,7 @@ func (d *driver) Init(r *core.RexRay) error {
 }
 
 func getCurrentInstanceId() (string, error) {
-	conn, err := net.DialTimeout("tcp", "metadata.google.internal:80", 50*time.Millisecond)
+	conn, err := net.DialTimeout("tcp", "metadata.google.internal:80", 50 * time.Millisecond)
 	if err != nil {
 		return "", err
 	}
@@ -171,8 +155,8 @@ func (d *driver) GetInstance() (*core.Instance, error) {
 }
 
 func (d *driver) CreateSnapshot(
-	runAsync bool,
-	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
+runAsync bool,
+snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
 	log.WithField("provider", providerName).Debug("CreateSnapshot")
 	return nil, nil
@@ -180,7 +164,7 @@ func (d *driver) CreateSnapshot(
 }
 
 func (d *driver) GetSnapshot(
-	volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
+volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
 
 	log.WithField("provider", providerName).Debug("GetSnapshot")
 	return nil, nil
@@ -190,9 +174,12 @@ func (d *driver) RemoveSnapshot(snapshotID string) error {
 	log.WithField("provider", providerName).Debug("RemoveSnapshot")
 	return nil
 }
+func (d *driver) GetDeviceNextAvailable() (string, error) {
+	return "", nil
+}
 func (d *driver) waitUntilOperationIsFinished(operation *compute.Operation) error {
 	opName := operation.Name
-OpLoop:
+	OpLoop:
 	for {
 		time.Sleep(100 * time.Millisecond)
 		op, err := d.client.ZoneOperations.Get(d.project, d.zone, opName).Do()
@@ -215,8 +202,8 @@ OpLoop:
 	return nil
 }
 func (d *driver) CreateVolume(
-	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
-	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
+runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
+IOPS, size int64, availabilityZone string) (*core.Volume, error) {
 	log.WithFields(log.Fields{
 		"provider":         providerName,
 		"volumeName":       volumeName,
@@ -263,7 +250,7 @@ func (d *driver) getVolumesAttachedToInstance(instances []*compute.Instance) []*
 	return attachments
 }
 func (d *driver) GetVolume(
-	volumeID, volumeName string) ([]*core.Volume, error) {
+volumeID, volumeName string) ([]*core.Volume, error) {
 	log.WithField("provider", providerName).Debugf("GetVolume :%s %s", volumeID, volumeName)
 
 	instances, err := d.client.Instances.List(d.project, d.zone).Do()
@@ -323,7 +310,7 @@ func (d *driver) convertGCEAttachedDisk(instanceName string, disk *compute.Attac
 }
 
 func (d *driver) GetVolumeAttach(
-	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	log.WithField("provider", providerName).Debugf("GetVolumeAttach :%s %s", volumeID, instanceID)
 	query := d.client.Instances.List(d.project, d.zone)
 	if instanceID != "" {
@@ -344,8 +331,8 @@ func (d *driver) RemoveVolume(volumeID string) error {
 }
 
 func (d *driver) AttachVolume(
-	runAsync bool,
-	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+runAsync bool,
+volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	if instanceID == "" {
 		instanceID = d.currentInstanceId
 	}
@@ -380,8 +367,8 @@ func (d *driver) AttachVolume(
 }
 
 func (d *driver) DetachVolume(
-	runAsync bool,
-	volumeID, blank string) error {
+runAsync bool,
+volumeID, blank string) error {
 	instance, err := d.GetInstance()
 	if err != nil {
 		return err
@@ -399,11 +386,9 @@ func (d *driver) DetachVolume(
 	}
 	attachements, err := d.GetVolumeAttach(volumeID, instanceID)
 	for _, attachement := range attachements {
-		if attachement.VolumeID == volumeID && attachement.InstanceID == instanceID {
-			_, err = d.client.Instances.DetachDisk(d.project, d.zone, instanceID, attachement.DeviceName).Do()
-			if err != nil {
-				return err
-			}
+		_, err = d.client.Instances.DetachDisk(d.project, d.zone, instanceID, attachement.DeviceName).Do()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -411,8 +396,8 @@ func (d *driver) DetachVolume(
 }
 
 func (d *driver) CopySnapshot(runAsync bool,
-	volumeID, snapshotID, snapshotName, destinationSnapshotName,
-	destinationRegion string) (*core.Snapshot, error) {
+volumeID, snapshotID, snapshotName, destinationSnapshotName,
+destinationRegion string) (*core.Snapshot, error) {
 	log.WithField("provider", providerName).Debug("CopySnapshot")
 	return nil, nil
 }

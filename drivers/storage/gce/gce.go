@@ -13,9 +13,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -28,24 +26,6 @@ type driver struct {
 	r                 *core.RexRay
 	zone              string
 	project           string
-}
-
-func ef() errors.Fields {
-	return errors.Fields{
-		"provider": providerName,
-	}
-}
-
-func eff(fields errors.Fields) map[string]interface{} {
-	errFields := map[string]interface{}{
-		"provider": providerName,
-	}
-	if fields != nil {
-		for k, v := range fields {
-			errFields[k] = v
-		}
-	}
-	return errFields
 }
 
 func init() {
@@ -192,69 +172,6 @@ func (d *driver) RemoveSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (d *driver) GetDeviceNextAvailable() (string, error) {
-	letters := []string{
-		"a", "b", "c", "d", "e", "f", "g", "h",
-		"i", "j", "k", "l", "m", "n", "o", "p"}
-
-	blockDeviceNames := make(map[string]bool)
-
-	blockDeviceMapping, err := d.GetVolumeMapping()
-	if err != nil {
-		return "", err
-	}
-
-	for _, blockDevice := range blockDeviceMapping {
-		re, _ := regexp.Compile(`^/dev/xvd([a-z])`)
-		res := re.FindStringSubmatch(blockDevice.DeviceName)
-		if len(res) > 0 {
-			blockDeviceNames[res[1]] = true
-		}
-	}
-
-	localDevices, err := getLocalDevices()
-	if err != nil {
-		return "", err
-	}
-
-	for _, localDevice := range localDevices {
-		re, _ := regexp.Compile(`^xvd([a-z])`)
-		res := re.FindStringSubmatch(localDevice)
-		if len(res) > 0 {
-			blockDeviceNames[res[1]] = true
-		}
-	}
-
-	for _, letter := range letters {
-		if !blockDeviceNames[letter] {
-			nextDeviceName := "/dev/xvd" + letter
-			log.Println("Got next device name: " + nextDeviceName)
-			return nextDeviceName, nil
-		}
-	}
-	return "", errors.New("No available device")
-}
-
-func getLocalDevices() (deviceNames []string, err error) {
-	file := "/proc/partitions"
-	contentBytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		return []string{}, err
-	}
-
-	content := string(contentBytes)
-
-	lines := strings.Split(content, "\n")
-	for _, line := range lines[2:] {
-		fields := strings.Fields(line)
-		if len(fields) == 4 {
-			deviceNames = append(deviceNames, fields[3])
-		}
-	}
-
-	return deviceNames, nil
-}
-
 func (d *driver) CreateVolume(
 	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
@@ -307,13 +224,6 @@ func (d *driver) CreateVolume(
 		return nil, err
 	}
 	return volume[0], nil
-}
-
-func (d *driver) createVolumeCreateSnapshot(
-	volumeID string, snapshotID string) (string, error) {
-	log.WithField("provider", providerName).Debug("CreateVolumeCreateSnapshot")
-	return "", nil
-
 }
 
 func (d *driver) GetVolume(
@@ -452,36 +362,32 @@ func (d *driver) AttachVolume(
 func (d *driver) DetachVolume(
 	runAsync bool,
 	volumeID, blank string) error {
-	if instanceID == "" {
-		instanceID = d.currentInstanceId
-	}
 	instance, err := d.GetInstance()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	instanceID = instance.Name
+	instanceID := instance.Name
 	log.WithField("provider", providerName).Debugf("DetachVolume %s %s", volumeID, instance.Name)
 	query := d.client.Disks.List(d.project, d.zone)
 	query.Filter(fmt.Sprintf("name eq %s", volumeID))
 	disks, err := query.Do()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if len(disks.Items) != 1 {
-		return nil, errors.New("No available device")
+		return errors.New("No available device")
+	}
+	attachements, err := d.GetVolumeAttach(volumeID, instanceID)
+	for _, attachement := range attachements {
+		if attachement.VolumeID == volumeID && attachement.InstanceID == instanceID {
+			_, err = d.client.Instances.DetachDisk(d.project, d.zone, instanceID, attachement.DeviceName).Do()
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	disk := &compute.AttachedDisk{
-		AutoDelete: false,
-		Boot:       false,
-		Source:     disks.Items[0].SelfLink,
-	}
-	_, err = d.client.Instances.DetachDisk(d.project, d.zone, instanceID, disk).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	return d.GetVolumeAttach("", instanceID)
+	return nil
 }
 
 func (d *driver) CopySnapshot(runAsync bool,

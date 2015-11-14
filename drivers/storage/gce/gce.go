@@ -436,7 +436,7 @@ volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 		}
 	}
 
-	return d.GetVolumeAttach("", instanceID)
+	return d.GetVolumeAttach(volumeID, instanceID)
 
 }
 

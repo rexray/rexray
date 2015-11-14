@@ -13,7 +13,9 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -27,7 +29,6 @@ type driver struct {
 	zone              string
 	project           string
 }
-
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
@@ -72,7 +73,7 @@ func (d *driver) Init(r *core.RexRay) error {
 }
 
 func getCurrentInstanceId() (string, error) {
-	conn, err := net.DialTimeout("tcp", "metadata.google.internal:80", 50 * time.Millisecond)
+	conn, err := net.DialTimeout("tcp", "metadata.google.internal:80", 50*time.Millisecond)
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +123,7 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 				ProviderName: "gce",
 				InstanceID:   instance.Name,
 				VolumeID:     diskMap[disk.Source].Name,
-				DeviceName:   disk.DeviceName,
+				DeviceName:   fmt.Sprintf("/dev/disk/by-id/google-%s", disk.DeviceName),
 				Region:       diskMap[disk.Source].Zone,
 				Status:       diskMap[disk.Source].Status,
 				NetworkName:  disk.Source,
@@ -155,8 +156,8 @@ func (d *driver) GetInstance() (*core.Instance, error) {
 }
 
 func (d *driver) CreateSnapshot(
-runAsync bool,
-snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
+	runAsync bool,
+	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
 	log.WithField("provider", providerName).Debug("CreateSnapshot")
 	return nil, nil
@@ -164,7 +165,7 @@ snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 }
 
 func (d *driver) GetSnapshot(
-volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
+	volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
 
 	log.WithField("provider", providerName).Debug("GetSnapshot")
 	return nil, nil
@@ -174,12 +175,71 @@ func (d *driver) RemoveSnapshot(snapshotID string) error {
 	log.WithField("provider", providerName).Debug("RemoveSnapshot")
 	return nil
 }
+func getLocalDevices() (deviceNames []string, err error) {
+	file := "/proc/partitions"
+	contentBytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return []string{}, err
+	}
+
+	content := string(contentBytes)
+
+	lines := strings.Split(content, "\n")
+	for _, line := range lines[2:] {
+		fields := strings.Fields(line)
+		if len(fields) == 4 {
+			deviceNames = append(deviceNames, fields[3])
+		}
+	}
+
+	return deviceNames, nil
+}
+
 func (d *driver) GetDeviceNextAvailable() (string, error) {
-	return "", nil
+	letters := []string{
+		"a", "b", "c", "d", "e", "f", "g", "h",
+		"i", "j", "k", "l", "m", "n", "o", "p"}
+
+	blockDeviceNames := make(map[string]bool)
+
+	blockDeviceMapping, err := d.GetVolumeMapping()
+	if err != nil {
+		return "", err
+	}
+
+	for _, blockDevice := range blockDeviceMapping {
+		re, _ := regexp.Compile(`^/dev/sd([a-z])`)
+		res := re.FindStringSubmatch(blockDevice.DeviceName)
+		if len(res) > 0 {
+			blockDeviceNames[res[1]] = true
+		}
+	}
+
+	localDevices, err := getLocalDevices()
+	if err != nil {
+		return "", err
+	}
+
+	for _, localDevice := range localDevices {
+		re, _ := regexp.Compile(`^sd([a-z])`)
+		res := re.FindStringSubmatch(localDevice)
+		if len(res) > 0 {
+			blockDeviceNames[res[1]] = true
+		}
+	}
+
+	for _, letter := range letters {
+		if !blockDeviceNames[letter] {
+			nextDeviceName := "/dev/sd" + letter
+			log.Println("Got next device name: " + nextDeviceName)
+			return nextDeviceName, nil
+		}
+	}
+	return "", errors.New("No available device")
 }
 func (d *driver) waitUntilOperationIsFinished(operation *compute.Operation) error {
 	opName := operation.Name
-	OpLoop:
+OpLoop:
 	for {
 		time.Sleep(100 * time.Millisecond)
 		op, err := d.client.ZoneOperations.Get(d.project, d.zone, opName).Do()
@@ -202,8 +262,8 @@ func (d *driver) waitUntilOperationIsFinished(operation *compute.Operation) erro
 	return nil
 }
 func (d *driver) CreateVolume(
-runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
-IOPS, size int64, availabilityZone string) (*core.Volume, error) {
+	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
+	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
 	log.WithFields(log.Fields{
 		"provider":         providerName,
 		"volumeName":       volumeName,
@@ -250,7 +310,7 @@ func (d *driver) getVolumesAttachedToInstance(instances []*compute.Instance) []*
 	return attachments
 }
 func (d *driver) GetVolume(
-volumeID, volumeName string) ([]*core.Volume, error) {
+	volumeID, volumeName string) ([]*core.Volume, error) {
 	log.WithField("provider", providerName).Debugf("GetVolume :%s %s", volumeID, volumeName)
 
 	instances, err := d.client.Instances.List(d.project, d.zone).Do()
@@ -277,7 +337,7 @@ volumeID, volumeName string) ([]*core.Volume, error) {
 			if attachment.VolumeID == disk.SelfLink {
 				diskAttachments = append(diskAttachments, &core.VolumeAttachment{
 					InstanceID: attachment.InstanceID,
-					DeviceName: attachment.DeviceName,
+					DeviceName: fmt.Sprintf("/dev/disk/by-id/google-%s", attachment.DeviceName),
 					Status:     attachment.Status,
 					VolumeID:   strconv.FormatUint(disk.Id, 10),
 				})
@@ -303,14 +363,14 @@ volumeID, volumeName string) ([]*core.Volume, error) {
 func (d *driver) convertGCEAttachedDisk(instanceName string, disk *compute.AttachedDisk) *core.VolumeAttachment {
 	return &core.VolumeAttachment{
 		InstanceID: instanceName,
-		DeviceName: disk.DeviceName,
+		DeviceName: fmt.Sprintf("/dev/disk/by-id/google-%s", disk.DeviceName),
 		Status:     disk.Mode,
 		VolumeID:   disk.Source,
 	}
 }
 
 func (d *driver) GetVolumeAttach(
-volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	log.WithField("provider", providerName).Debugf("GetVolumeAttach :%s %s", volumeID, instanceID)
 	query := d.client.Instances.List(d.project, d.zone)
 	if instanceID != "" {
@@ -331,8 +391,8 @@ func (d *driver) RemoveVolume(volumeID string) error {
 }
 
 func (d *driver) AttachVolume(
-runAsync bool,
-volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	runAsync bool,
+	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	if instanceID == "" {
 		instanceID = d.currentInstanceId
 	}
@@ -361,9 +421,9 @@ volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	if err != nil {
 		return nil, err
 	}
-	if(!runAsync) {
+	if !runAsync {
 		err := d.waitUntilOperationIsFinished(operation)
-		if err !=nil {
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -373,8 +433,8 @@ volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 }
 
 func (d *driver) DetachVolume(
-runAsync bool,
-volumeID, blank string) error {
+	runAsync bool,
+	volumeID, blank string) error {
 	instance, err := d.GetInstance()
 	if err != nil {
 		return err
@@ -396,9 +456,9 @@ volumeID, blank string) error {
 		if err != nil {
 			return err
 		}
-		if(!runAsync) {
+		if !runAsync {
 			err := d.waitUntilOperationIsFinished(operation)
-			if err !=nil {
+			if err != nil {
 				return err
 			}
 		}
@@ -408,8 +468,8 @@ volumeID, blank string) error {
 }
 
 func (d *driver) CopySnapshot(runAsync bool,
-volumeID, snapshotID, snapshotName, destinationSnapshotName,
-destinationRegion string) (*core.Snapshot, error) {
+	volumeID, snapshotID, snapshotName, destinationSnapshotName,
+	destinationRegion string) (*core.Snapshot, error) {
 	log.WithField("provider", providerName).Debug("CopySnapshot")
 	return nil, nil
 }

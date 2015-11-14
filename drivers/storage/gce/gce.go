@@ -452,7 +452,8 @@ func (d *driver) DetachVolume(
 	}
 	attachements, err := d.GetVolumeAttach(volumeID, instanceID)
 	for _, attachement := range attachements {
-		operation, err := d.client.Instances.DetachDisk(d.project, d.zone, instanceID, attachement.DeviceName).Do()
+		diskName := strings.Replace(attachement.VolumeID,fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/",d.project,d.zone),"",-1)
+		operation, err := d.client.Instances.DetachDisk(d.project, d.zone, instanceID, diskName).Do()
 		if err != nil {
 			return err
 		}

@@ -388,7 +388,7 @@ volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 	if err != nil {
 		return []*core.VolumeAttachment{}, err
 	}
-	return d.getVolumesAttachedToInstance(instances.Items,volumeID);
+	return d.getVolumesAttachedToInstance(instances.Items,volumeID),nil;
 }
 
 func (d *driver) RemoveVolume(volumeID string) error {

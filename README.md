@@ -1,84 +1,102 @@
 # libStorage
-`libStorage` provides a vendor agnostic storage orchestration model,
-API, and reference client and server implementations.
+`libStorage` provides a vendor agnostic storage orchestration model, API, and
+reference client and server implementations.
 
-The design represents the knowledge we have gained from building storage orchestration tools in the past with a design goal architecturally aligned towards embedding functionality in appropriate `tools` and `storage platforms`.  **This will allow for tools to natively consume storage without extra dependencies and enable common features**.
+## Overview
+`libStorage` enables storage consumption by leveraging methods commonly
+available, locally and/or externally, to an operating system (OS).
 
-## Summary
-`libStorage` will enable common methods for consuming storage capabilities that may be present in a `local` or `external` fashion to an operating system.  These capabilities will be focused on container runtimes and storage orchestration tools including and relevant to `Docker` and `Mesos`, but additionally available abstractly for more general usage.
+### The Past
+The `libStorage` project and its architecture represents a culmination of
+experience gained from the project authors' building of
+[several](https://www.emc.com/cloud-virtualization/virtual-storage-integrator.htm)
+different
+[storage](https://www.emc.com/storage/storage-analytics.htm)
+orchestration [tools](https://github.com/emccode/rexray). While created using
+different languages and targeting disparate storage platforms, all the tools
+were architecturally aligned and embedded functionality directly inside the
+tools and affected storage platforms.
 
-Additionally the common capabilities should be available across:
-- Operating Systems
-- Storage Platforms
-- Hardware Platforms
-- Virtualization Platforms
+This shared design goal enabled tools that natively consumed storage, sans
+external dependencies.
 
-The client side implementation will be focused on `operating system` activities and include minimal dependencies to avoid unnecessarily bloating runtimes and tools.
+### The Present
+Today `libStorage` focuses on adding value to container runtimes and storage
+orchestration tools such as `Docker` and `Mesos`, however the `libStorage`
+framework is available abstractly for more general usage across:
 
-## Storage Orchestration Tool Architecture Today
-Today there are a lot of storage orchestration and abstraction tools that are present and relevant to container runtimes.  These tools tend to represent a model where the tool must be installed and running as a process locally within an operating system alongside a container runtime to function.
+* Operating systems
+* Storage platforms
+* Hardware platforms
+* Virtualization platforms
 
-![Storage Orchestration Tool Architecture Today](/images/architecture-today.png "Storage Orchestration Tool Architecture Today")
+The client side implementation, focused on operating system activities,
+has a minimal set of dependencies in order to avoid a large, runtime footprint.
 
-*The solid green lines represent active communication paths.  The dotted black lines represent passive paths.  The orange volume represents a operating system device and volume path available to the container runtime.*
+## Storage Orchestration Tools Today
+Today there are many storage orchestration and abstraction tools relevant to
+to container runtimes. These tools often must be installed locally and run
+alongside the container runtime.
+
+![Storage Orchestration Tool Architecture Today](/.docs/.themes/yeti/img/architecture-today.png "Storage Orchestration Tool Architecture Today")
+
+*The solid green lines represent active communication paths. The dotted black
+lines represent passive paths. The orange volume represents a operating system
+device and volume path available to the container runtime.*
 
 ## libStorage Embedded Architecture
-Embedding `libStorage` client and server components will enable `container runtimes` to communicate directly with `storage platforms`.  This represents the ideal architecture with minimal operational dependencies to support volumes for containers.
+Embedding `libStorage` client and server components enable container
+runtimes to communicate directly with storage platforms, the ideal
+architecture. This design requires minimal operational dependencies and is
+still able to provide volume management for container runtimes.
 
-![libStorage Embedded Architecture](/images/architecture-embeddedlibstorage.png "libStorage Embedded Architecture")
+![libStorage Embedded Architecture](/.docs/.themes/yeti/img/architecture-embeddedlibstorage.png "libStorage Embedded Architecture")
 
 ## libStorage Centralized Architecture
-In a centralized architecture, the `libStorage` server can be ran as a service.  In this case, the storage platform does not have the capability to communicate using the `libStorage API`, or it cannot advertise the `libStorage server`.  The `libStorage` endpoint is advertised by a tool like [REX-Ray](https://github.com/emccode/rexray), ran from anywhere, who is responsible for all control plane operations to the storage platform along with maintaing escalated credentials for these platforms.  All client based processes within the operating system are still embedded in the container runtime.
+In a centralized architecture, `libStorage` is hosted as a service, acting as a
+go-between for container runtimes and backend storage platforms.
 
-![libStorage Centralized Architecture](/images/architecture-centralized.png "libStorage Centralized Architecture")
+The `libStorage` endpoint is advertised by a tool like [REX-Ray](https://github.com/emccode/rexray), run from anywhere, and is
+responsible for all control plane operations to the storage platform along with
+maintaining escalated credentials for these platforms. All client based
+processes within the operating system are still embedded in the container
+runtime.
 
-## libStorage De-Centralized Architecture
-This architecture is similar to the centralized, except the `libStorage` server is ran as a process on each operating system alongside the container runtime.
+![libStorage Centralized Architecture](/.docs/.themes/yeti/img/architecture-centralized.png "libStorage Centralized Architecture")
 
-![libStorage De-Centralized Architecture](/images/architecture-decentralized.png "libStorage De-Centralized Architecture")
+## libStorage Decentralized Architecture
+Similar to the centralized architecture, this implementation design involves
+running a separate `libStorage` process alongside each container runtime, across
+one or several hosts.
 
+![libStorage De-Centralized Architecture](/.docs/.themes/yeti/img/architecture-decentralized.png "libStorage De-Centralized Architecture")
 
 ## API
-Central to `libStorage` is the `HTTP/JSON` API.  It defines the control plane calls that occur between the `client` and `server` which can be written in any language.
-
+Central to `libStorage` is the `HTTP`/`JSON` API. It defines the control plane
+calls that occur between the client and server. While the `libStorage` package
+includes reference implementations of the client and server written using Go,
+both the client and server could be written using any language as long as both
+adhere to the published `libStorage` API.
 
 ## Client
-The `libStorage client` initially will be written in Go and compatible with C++.  It will be focused on:
-- Implementing client API of libStorage
-- Operating System
-  - Device
-    - Discovery
-    - Format
-    - Mount
-  - Layered Filesystems
-   - Create/Remove
+The `libStorage` client is responsible for discovering a host's instance ID
+and the next, available device name. The client's reference implementation is
+written using Go and is compatible with C++.
 
-The design goal focuses on characteristics of:
- - Being lightweight
- - Minimal dependencies
- - Minimize obsolescense
+The design goal of the client is to be lightweight, portable, and avoid
+obsolescence by minimizing dependencies and focusing on deferring as much of
+the logic as possible to the server.
 
 ## Server
-The `libStorage server` initially will also be written in Go.  It will be focused on:
-- Implementing server API of libStorage
-- Returning storage platform requests to storage orchestration package
-
+The `libStorage` server implements the `libStorage` API and is responsible for
+coordinating requests between clients and backend orchestration packages. The
+server's reference implementation is also written using Go.
 
 ## Model
-The LibStorage model defines several data structures that are easily
-represented using Go structs or a portable format such as JSON.
+The `libStorage` [model](http://libstorage.rtfd.org/en/latest/user-guide/model/)
+defines several data structures that are easily represented using Go structs or
+a portable format such as JSON.
 
-## Documentation for LibStorage
-`WORK IN PROGRESS`
-
-[![Docs](https://readthedocs.org/projects/libstorage/badge/?version=latest)](http://libstorage.readthedocs.org)
-You will find complete documentation for `LibStorage` at [libstorage.readthedocs.org](http://libstorage.readthedocs.org).
-
-
-## Licensing
-Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License. You may obtain a copy of the License at <http://www.apache.org/licenses/LICENSE-2.0>
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-## Support
-If you have questions relating to the project, please either post [Github Issues](https://github.com/emccode/libstorage/issues), join our Slack channel available by signup through [community.emc.com](https://community.emccode.com) and post questions into `#projects` or `#support`, or reach out to the maintainers directly.  The code and documentation are released with no warranties or SLAs and are intended to be supported through a community driven process.
+## Documentation [![Docs](https://readthedocs.org/projects/libstorage/badge/?version=latest)](http://libstorage.readthedocs.org)
+The `libStorage` documentation is available at
+[libstorage.rtfd.org](http://libstorage.rtfd.org).

@@ -20,23 +20,6 @@ import (
 )
 
 const providerName = "gce"
-func ef() errors.Fields {
-	return errors.Fields{
-		"provider": providerName,
-	}
-}
-
-func eff(fields errors.Fields) map[string]interface{} {
-	errFields := map[string]interface{}{
-		"provider": providerName,
-	}
-	if fields != nil {
-		for k, v := range fields {
-			errFields[k] = v
-		}
-	}
-	return errFields
-}
 
 // The GCE storage driver.
 type driver struct {

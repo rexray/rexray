@@ -199,7 +199,7 @@ func (c *Config) ReadConfig(in io.Reader) error {
 		return errors.New("config reader is nil")
 	}
 
-	c.v.ReadConfigNoNil(in)
+	c.v.MergeConfig(in)
 
 	return nil
 }

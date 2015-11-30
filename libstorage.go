@@ -35,6 +35,7 @@ package libstorage
 
 import (
 	"github.com/akutz/gofig"
+	"golang.org/x/net/context"
 
 	"github.com/emccode/libstorage/client"
 	"github.com/emccode/libstorage/driver"
@@ -56,7 +57,7 @@ func RegisterDriver(driverName string, ctor driver.NewDriver) {
 // If the config parameter is nil a default instance is created. The
 // libStorage service is served at the address specified by the configuration
 // property libstorage.host.
-func Serve(config *gofig.Config) error {
+func Serve(config gofig.Config) error {
 	return service.Serve(config)
 }
 
@@ -66,23 +67,38 @@ func Serve(config *gofig.Config) error {
 // If the config parameter is nil a default instance is created. The
 // function dials the libStorage service specified by the configuration
 // property libstorage.host.
-func Dial(config *gofig.Config) (client.Client, error) {
-	return client.Dial(config)
+func Dial(ctx context.Context, config gofig.Config) (client.Client, error) {
+	return client.Dial(ctx, config)
 }
 
 func registerGofigDefaults() {
 	r := gofig.NewRegistration("libStorage")
 	r.Key(gofig.String, "", "", "", "libstorage.host")
+	r.Key(gofig.String, "", "", "", "libstorage.server")
 	r.Key(gofig.String, "", "", "", "libstorage.drivers")
+	r.Key(gofig.String, "", "warn", "", "libstorage.logLevel")
+
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.enabled")
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.client")
 	r.Key(gofig.String, "", "local=127.0.0.1", "", "libstorage.profiles.groups")
+
 	r.Key(gofig.Int, "", 60, "", "libstorage.service.readtimeout")
 	r.Key(gofig.Int, "", 60, "", "libstorage.service.writetimeout")
+
+	r.Key(gofig.String, "", "/usr/local/bin", "", "libstorage.client.tooldir")
+	r.Key(gofig.String, "", "warn", "", "libstorage.client.logLevel")
+	r.Key(gofig.Bool, "", false, "", "libstorage.client.http.logging.enabled")
+	r.Key(gofig.String, "", "", "", "libstorage.client.http.logging.out")
+	r.Key(gofig.String, "", "", "", "libstorage.client.http.logging.err")
+	r.Key(gofig.Bool, "", false, "", "libstorage.client.http.logging.logrequest")
+	r.Key(gofig.Bool, "", false, "", "libstorage.client.http.logging.logresponse")
+
+	r.Key(gofig.String, "", "warn", "", "libstorage.service.logLevel")
 	r.Key(gofig.Bool, "", false, "", "libstorage.service.http.logging.enabled")
 	r.Key(gofig.String, "", "", "", "libstorage.service.http.logging.out")
 	r.Key(gofig.String, "", "", "", "libstorage.service.http.logging.err")
 	r.Key(gofig.Bool, "", false, "", "libstorage.service.http.logging.logrequest")
 	r.Key(gofig.Bool, "", false, "", "libstorage.service.http.logging.logresponse")
+
 	gofig.Register(r)
 }

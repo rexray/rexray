@@ -1,4 +1,4 @@
-package model
+package api
 
 // InstanceID identifies a host to a remote storage platform.
 type InstanceID struct {
@@ -147,15 +147,15 @@ type Volume struct {
 type VolumeAttachment struct {
 	// The name of the device on which the volume to which the object is
 	// attached is mounted.
-	DeviceName string
+	DeviceName string `json:"deviceName"`
 
 	// The ID of the instance on which the volume to which the attachment
 	// belongs is mounted.
-	InstanceID *InstanceID
+	InstanceID *InstanceID `json:"instanceID"`
 
 	// The status of the attachment.
-	Status string
+	Status string `json:"status"`
 
 	// The ID of the volume to which the attachment belongs.
-	VolumeID string
+	VolumeID string `json:"volumeID"`
 }

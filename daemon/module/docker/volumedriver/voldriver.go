@@ -12,11 +12,11 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/emccode/rexray/daemon/module"
-
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
+
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/errors"
+	"github.com/emccode/rexray/daemon/module"
 	"github.com/emccode/rexray/util"
 )
 
@@ -71,9 +71,9 @@ func newMod(id int32, cfg *module.Config) (module.Module, error) {
 const driverName = "dockervolumedriver"
 
 var (
-	errMissingHost      = errors.New("Missing host parameter")
-	errBadHostSpecified = errors.New("Bad host specified, ie. unix:///run/docker/plugins/rexray.sock or tcp://127.0.0.1:8080")
-	errBadProtocol      = errors.New("Bad protocol specified with host, ie. unix:// or tcp://")
+	errMissingHost      = goof.New("Missing host parameter")
+	errBadHostSpecified = goof.New("Bad host specified, ie. unix:///run/docker/plugins/rexray.sock or tcp://127.0.0.1:8080")
+	errBadProtocol      = goof.New("Bad protocol specified with host, ie. unix:// or tcp://")
 )
 
 type pluginRequest struct {
@@ -91,17 +91,17 @@ func (m *mod) Start() error {
 	const validProtoPatt = "(?i)^unix|tcp$"
 	isProtoValid, matchProtoErr := regexp.MatchString(validProtoPatt, proto)
 	if matchProtoErr != nil {
-		return errors.WithFieldsE(errors.Fields{
+		return goof.WithFieldsE(goof.Fields{
 			"protocol":       proto,
 			"validProtoPatt": validProtoPatt,
 		}, "error matching protocol", matchProtoErr)
 	}
 	if !isProtoValid {
-		return errors.WithField("protocol", proto, "invalid protocol")
+		return goof.WithField("protocol", proto, "invalid protocol")
 	}
 
 	if err := m.r.InitDrivers(); err != nil {
-		return errors.WithFieldsE(errors.Fields{
+		return goof.WithFieldsE(goof.Fields{
 			"m":   m,
 			"m.r": m.r,
 		}, "error initializing drivers", err)

@@ -7,12 +7,12 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 
 	"github.com/emccode/goscaleio"
 	types "github.com/emccode/goscaleio/types/v1"
 
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/errors"
 )
 
 const providerName = "ScaleIO"
@@ -27,13 +27,13 @@ type driver struct {
 	r                *core.RexRay
 }
 
-func ef() errors.Fields {
-	return errors.Fields{
+func ef() goof.Fields {
+	return goof.Fields{
 		"provider": providerName,
 	}
 }
 
-func eff(fields errors.Fields) map[string]interface{} {
+func eff(fields goof.Fields) map[string]interface{} {
 	errFields := map[string]interface{}{
 		"provider": providerName,
 	}
@@ -69,7 +69,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		d.endpoint(),
 		d.insecure(),
 		d.useCerts()); err != nil {
-		return errors.WithFieldsE(fields, "error constructing new client", err)
+		return goof.WithFieldsE(fields, "error constructing new client", err)
 	}
 
 	if _, err := d.client.Authenticate(
@@ -81,7 +81,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		if d.password() != "" {
 			fields["password"] = "******"
 		}
-		return errors.WithFieldsE(fields, "error authenticating", err)
+		return goof.WithFieldsE(fields, "error authenticating", err)
 	}
 
 	if d.system, err = d.client.FindSystem(
@@ -89,7 +89,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		d.systemName(), ""); err != nil {
 		fields["systemId"] = d.systemID()
 		fields["systemName"] = d.systemName()
-		return errors.WithFieldsE(fields, "error finding system", err)
+		return goof.WithFieldsE(fields, "error finding system", err)
 	}
 
 	var pd *types.ProtectionDomain
@@ -98,7 +98,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		d.protectionDomainName(), ""); err != nil {
 		fields["domainId"] = d.protectionDomainID()
 		fields["domainName"] = d.protectionDomainName()
-		return errors.WithFieldsE(fields,
+		return goof.WithFieldsE(fields,
 			"error finding protection domain", err)
 	}
 	d.protectionDomain = goscaleio.NewProtectionDomain(d.client)
@@ -110,21 +110,21 @@ func (d *driver) Init(r *core.RexRay) error {
 		d.storagePoolName(), ""); err != nil {
 		fields["storagePoolId"] = d.storagePoolID()
 		fields["storagePoolName"] = d.storagePoolName()
-		return errors.WithFieldsE(fields, "error finding storage pool", err)
+		return goof.WithFieldsE(fields, "error finding storage pool", err)
 	}
 	d.storagePool = goscaleio.NewStoragePool(d.client)
 	d.storagePool.StoragePool = sp
 
 	var sdcGUID string
 	if sdcGUID, err = goscaleio.GetSdcLocalGUID(); err != nil {
-		return errors.WithFieldsE(fields, "error getting sdc local guid", err)
+		return goof.WithFieldsE(fields, "error getting sdc local guid", err)
 	}
 
 	if d.sdc, err = d.system.FindSdc(
 		"SdcGuid",
 		strings.ToUpper(sdcGUID)); err != nil {
 		fields["sdcGuid"] = sdcGUID
-		return errors.WithFieldsE(fields, "error finding sdc", err)
+		return goof.WithFieldsE(fields, "error finding sdc", err)
 	}
 
 	log.WithField("provider", providerName).Info("storage driver initialized")
@@ -165,7 +165,7 @@ func (d *driver) getBlockDevices() ([]*goscaleio.SdcMappedVolume, error) {
 	volumeMaps, err := goscaleio.GetLocalVolumeMap()
 	if err != nil {
 		return []*goscaleio.SdcMappedVolume{},
-			errors.WithFieldsE(ef(), "error getting local volume map", err)
+			goof.WithFieldsE(ef(), "error getting local volume map", err)
 	}
 	return volumeMaps, nil
 }
@@ -174,7 +174,7 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	blockDevices, err := d.getBlockDevices()
 	if err != nil {
 		return nil,
-			errors.WithFieldsE(ef(), "error getting block devices", err)
+			goof.WithFieldsE(ef(), "error getting block devices", err)
 	}
 
 	var BlockDevices []*core.BlockDevice
@@ -273,12 +273,12 @@ func (d *driver) GetVolumeAttach(
 
 	if volumeID == "" {
 		return []*core.VolumeAttachment{},
-			errors.WithFields(fields, "volumeId is required")
+			goof.WithFields(fields, "volumeId is required")
 	}
 	volume, err := d.GetVolume(volumeID, "")
 	if err != nil {
 		return []*core.VolumeAttachment{},
-			errors.WithFieldsE(fields, "error getting volume", err)
+			goof.WithFieldsE(fields, "error getting volume", err)
 	}
 
 	if instanceID != "" {
@@ -430,21 +430,21 @@ func (d *driver) RemoveVolume(volumeID string) error {
 	})
 
 	if volumeID == "" {
-		return errors.WithFields(fields, "volumeId is required")
+		return goof.WithFields(fields, "volumeId is required")
 	}
 
 	var err error
 	var volumes []*types.Volume
 
 	if volumes, err = d.getVolume(volumeID, "", false); err != nil {
-		return errors.WithFieldsE(fields, "error getting volume", err)
+		return goof.WithFieldsE(fields, "error getting volume", err)
 	}
 
 	targetVolume := goscaleio.NewVolume(d.client)
 	targetVolume.Volume = volumes[0]
 
 	if err = targetVolume.RemoveVolume("ONLY_ME"); err != nil {
-		return errors.WithFieldsE(fields, "error removing volume", err)
+		return goof.WithFieldsE(fields, "error removing volume", err)
 	}
 
 	log.WithFields(fields).Debug("removed volume")
@@ -475,7 +475,7 @@ func (d *driver) AttachVolume(
 	})
 
 	if volumeID == "" {
-		return nil, errors.WithFields(fields, "volumeId is required")
+		return nil, goof.WithFields(fields, "volumeId is required")
 	}
 
 	mapVolumeSdcParam := &types.MapVolumeSdcParam{
@@ -486,11 +486,11 @@ func (d *driver) AttachVolume(
 
 	volumes, err := d.getVolume(volumeID, "", false)
 	if err != nil {
-		return nil, errors.WithFieldsE(fields, "error getting volume", err)
+		return nil, goof.WithFieldsE(fields, "error getting volume", err)
 	}
 
 	if len(volumes) == 0 {
-		return nil, errors.WithFields(fields, "no volumes returned")
+		return nil, goof.WithFields(fields, "no volumes returned")
 	}
 
 	targetVolume := goscaleio.NewVolume(d.client)
@@ -498,19 +498,19 @@ func (d *driver) AttachVolume(
 
 	err = targetVolume.MapVolumeSdc(mapVolumeSdcParam)
 	if err != nil {
-		return nil, errors.WithFieldsE(fields, "error mapping volume sdc", err)
+		return nil, goof.WithFieldsE(fields, "error mapping volume sdc", err)
 	}
 
 	_, err = waitMount(volumes[0].ID)
 	if err != nil {
 		fields["volumeId"] = volumes[0].ID
-		return nil, errors.WithFieldsE(
+		return nil, goof.WithFieldsE(
 			fields, "error waiting on volume to mount", err)
 	}
 
 	volumeAttachment, err := d.GetVolumeAttach(volumeID, instanceID)
 	if err != nil {
-		return nil, errors.WithFieldsE(
+		return nil, goof.WithFieldsE(
 			fields, "error getting volume attachments", err)
 	}
 
@@ -532,16 +532,16 @@ func (d *driver) DetachVolume(
 	})
 
 	if volumeID == "" {
-		return errors.WithFields(fields, "volumeId is required")
+		return goof.WithFields(fields, "volumeId is required")
 	}
 
 	volumes, err := d.getVolume(volumeID, "", false)
 	if err != nil {
-		return errors.WithFieldsE(fields, "error getting volume", err)
+		return goof.WithFieldsE(fields, "error getting volume", err)
 	}
 
 	if len(volumes) == 0 {
-		return errors.WithFields(fields, "no volumes returned")
+		return goof.WithFields(fields, "no volumes returned")
 	}
 
 	targetVolume := goscaleio.NewVolume(d.client)
@@ -556,7 +556,7 @@ func (d *driver) DetachVolume(
 	// need to detect if unmounted first
 	err = targetVolume.UnmapVolumeSdc(unmapVolumeSdcParam)
 	if err != nil {
-		return errors.WithFieldsE(fields, "error unmapping volume sdc", err)
+		return goof.WithFieldsE(fields, "error unmapping volume sdc", err)
 	}
 
 	log.WithFields(log.Fields{
@@ -570,7 +570,7 @@ func (d *driver) CopySnapshot(
 	volumeID, snapshotID,
 	snapshotName, destinationSnapshotName,
 	destinationRegion string) (*core.Snapshot, error) {
-	return nil, errors.New("This driver does not implement CopySnapshot")
+	return nil, goof.New("This driver does not implement CopySnapshot")
 }
 
 func waitMount(volumeID string) (*goscaleio.SdcMappedVolume, error) {
@@ -588,7 +588,7 @@ func waitMount(volumeID string) (*goscaleio.SdcMappedVolume, error) {
 		for {
 			sdcMappedVolumes, err := goscaleio.GetLocalVolumeMap()
 			if err != nil {
-				errorCh <- errors.WithFieldE(
+				errorCh <- goof.WithFieldE(
 					"provider", providerName,
 					"problem getting local volume mappings", err)
 				return
@@ -624,7 +624,7 @@ func waitMount(volumeID string) (*goscaleio.SdcMappedVolume, error) {
 	case err := <-errorCh:
 		return &goscaleio.SdcMappedVolume{}, err
 	case <-timeout:
-		return &goscaleio.SdcMappedVolume{}, errors.WithFields(
+		return &goscaleio.SdcMappedVolume{}, goof.WithFields(
 			ef(), "timed out waiting for mount")
 	}
 

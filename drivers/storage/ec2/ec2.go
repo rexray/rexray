@@ -12,6 +12,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/core/errors"
@@ -28,13 +29,13 @@ type driver struct {
 	r                *core.RexRay
 }
 
-func ef() errors.Fields {
-	return errors.Fields{
+func ef() goof.Fields {
+	return goof.Fields{
 		"provider": providerName,
 	}
 }
 
-func eff(fields errors.Fields) map[string]interface{} {
+func eff(fields goof.Fields) map[string]interface{} {
 	errFields := map[string]interface{}{
 		"provider": providerName,
 	}
@@ -61,7 +62,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	var err error
 	d.instanceDocument, err = getInstanceIdendityDocument()
 	if err != nil {
-		return errors.WithFields(ef(), "error getting instance id doc")
+		return goof.WithFields(ef(), "error getting instance id doc")
 	}
 
 	auth := aws.Auth{
@@ -348,7 +349,7 @@ func (d *driver) GetDeviceNextAvailable() (string, error) {
 			return nextDeviceName, nil
 		}
 	}
-	return "", errors.New("No available device")
+	return "", goof.New("No available device")
 }
 
 func getLocalDevices() (deviceNames []string, err error) {
@@ -767,7 +768,7 @@ func (d *driver) CopySnapshot(runAsync bool,
 	destinationRegion string) (*core.Snapshot, error) {
 
 	if volumeID == "" && snapshotID == "" && snapshotName == "" {
-		return nil, errors.New("Missing volumeID, snapshotID, or snapshotName")
+		return nil, goof.New("Missing volumeID, snapshotID, or snapshotName")
 	}
 
 	snapshots, err := d.getSnapshot(volumeID, snapshotID, snapshotName)

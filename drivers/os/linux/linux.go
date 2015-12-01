@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/goof"
 	"github.com/docker/docker/pkg/mount"
 	"github.com/opencontainers/runc/libcontainer/label"
 
@@ -54,7 +55,7 @@ func (d *driver) GetMounts(
 	if mountPoint == "" && deviceName == "" {
 		return mounts, nil
 	} else if mountPoint != "" && deviceName != "" {
-		return nil, errors.New("Cannot specify mountPoint and deviceName")
+		return nil, goof.New("Cannot specify mountPoint and deviceName")
 	}
 
 	var matchedMounts []*mount.Info
@@ -131,7 +132,7 @@ func (d *driver) Format(
 					deviceName, err)
 			}
 		default:
-			return errors.New("Unsupported FS")
+			return goof.New("Unsupported FS")
 		}
 	}
 

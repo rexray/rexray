@@ -15,6 +15,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 	xtio "github.com/emccode/goxtremio"
 
 	"github.com/emccode/rexray/core"
@@ -33,13 +34,13 @@ type driver struct {
 	r            *core.RexRay
 }
 
-func ef() errors.Fields {
-	return errors.Fields{
+func ef() goof.Fields {
+	return goof.Fields{
 		"provider": providerName,
 	}
 }
 
-func eff(fields errors.Fields) map[string]interface{} {
+func eff(fields goof.Fields) map[string]interface{} {
 	errFields := map[string]interface{}{
 		"provider": providerName,
 	}
@@ -81,7 +82,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	}
 
 	if !isXtremIOAttached() && !d.remoteManagement() {
-		return errors.WithFields(fields, "device not detected")
+		return goof.WithFields(fields, "device not detected")
 	}
 
 	var err error
@@ -91,7 +92,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		d.insecure(),
 		d.userName(),
 		d.password()); err != nil {
-		return errors.WithFieldsE(fields,
+		return goof.WithFieldsE(fields,
 			"error creating xtremio client", err)
 	}
 
@@ -145,7 +146,7 @@ func getIQN() (string, error) {
 			return split[1], nil
 		}
 	}
-	return "", errors.New("IQN not found")
+	return "", goof.New("IQN not found")
 }
 
 func (d *driver) Name() string {
@@ -742,7 +743,7 @@ func (d *driver) AttachVolume(
 
 func (d *driver) getLunMaps(initiatorName, volumeID string) (xtio.Refs, error) {
 	if initiatorName == "" {
-		return nil, errors.New("Missing initiatorName")
+		return nil, goof.New("Missing initiatorName")
 	}
 
 	initiatorGroup, err := d.client.GetInitiatorGroup("", initiatorName)

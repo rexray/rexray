@@ -8,9 +8,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/util"
 )
 
@@ -46,7 +46,7 @@ func (d *driver) Init(r *core.RexRay) error {
 
 func getVolumeMountPath(name string) (string, error) {
 	if name == "" {
-		return "", errors.New("Missing volume name")
+		return "", goof.New("Missing volume name")
 	}
 
 	return fmt.Sprintf("%s/%s", mountDirectoryPath, name), nil
@@ -85,7 +85,7 @@ func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType 
 	}
 
 	if len(volAttachments) == 0 {
-		return "", errors.New("Volume did not attach")
+		return "", goof.New("Volume did not attach")
 	}
 
 	mounts, err := d.r.OS.GetMounts(volAttachments[0].DeviceName, "")
@@ -174,10 +174,10 @@ func (d *driver) getInstance() (*core.Instance, error) {
 
 	switch {
 	case len(instances) == 0:
-		return nil, errors.New("No instances")
+		return nil, goof.New("No instances")
 	case len(instances) > 1:
 		return nil,
-			errors.New("Too many instances returned, limit the storagedrivers")
+			goof.New("Too many instances returned, limit the storagedrivers")
 	}
 
 	return instances[0], nil
@@ -187,7 +187,7 @@ func (d *driver) prefixToMountUnmount(
 	volumeName,
 	volumeID string) ([]*core.Volume, []*core.VolumeAttachment, *core.Instance, error) {
 	if volumeName == "" && volumeID == "" {
-		return nil, nil, nil, errors.New("Missing volume name or ID")
+		return nil, nil, nil, goof.New("Missing volume name or ID")
 	}
 
 	var instance *core.Instance
@@ -203,9 +203,9 @@ func (d *driver) prefixToMountUnmount(
 
 	switch {
 	case len(vols) == 0:
-		return nil, nil, nil, errors.New("No volumes returned by name")
+		return nil, nil, nil, goof.New("No volumes returned by name")
 	case len(vols) > 1:
-		return nil, nil, nil, errors.New("Multiple volumes returned by name")
+		return nil, nil, nil, goof.New("Multiple volumes returned by name")
 	}
 
 	var volAttachments []*core.VolumeAttachment
@@ -224,7 +224,7 @@ func (d *driver) Path(volumeName, volumeID string) (string, error) {
 		"volumeID":   volumeID,
 		"driverName": d.Name()}).Info("getting path to volume")
 	if volumeName == "" && volumeID == "" {
-		return "", errors.New("Missing volume name or ID")
+		return "", goof.New("Missing volume name or ID")
 	}
 
 	instances, err := d.r.Storage.GetInstances()
@@ -234,9 +234,9 @@ func (d *driver) Path(volumeName, volumeID string) (string, error) {
 
 	switch {
 	case len(instances) == 0:
-		return "", errors.New("No instances")
+		return "", goof.New("No instances")
 	case len(instances) > 1:
-		return "", errors.New("Too many instances returned, limit the storagedrivers")
+		return "", goof.New("Too many instances returned, limit the storagedrivers")
 	}
 
 	volumes, err := d.r.Storage.GetVolume(volumeID, volumeName)
@@ -246,9 +246,9 @@ func (d *driver) Path(volumeName, volumeID string) (string, error) {
 
 	switch {
 	case len(volumes) == 0:
-		return "", errors.New("No volumes returned by name")
+		return "", goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return "", errors.New("Multiple volumes returned by name")
+		return "", goof.New("Multiple volumes returned by name")
 	}
 
 	volumeAttachment, err := d.r.Storage.GetVolumeAttach(volumes[0].VolumeID, instances[0].InstanceID)
@@ -280,7 +280,7 @@ func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 		"driverName": d.Name()}).Info("creating volume")
 
 	if volumeName == "" {
-		return errors.New("Missing volume name")
+		return goof.New("Missing volume name")
 	}
 
 	var err error
@@ -376,10 +376,10 @@ func (d *driver) createInitVolume(
 
 	switch {
 	case len(volumes) == 0:
-		return nil, errors.WithField(
+		return nil, goof.WithField(
 			"optVolumeName", optVolumeName, "No volumes returned")
 	case len(volumes) > 1:
-		return nil, errors.WithField(
+		return nil, goof.WithField(
 			"optVolumeName", optVolumeName, "Too many volumes returned")
 	}
 
@@ -409,10 +409,10 @@ func (d *driver) createGetSnapshot(
 
 	switch {
 	case len(snapshots) == 0:
-		return nil, errors.WithField(
+		return nil, goof.WithField(
 			"optSnapshotName", optSnapshotName, "No snapshots returned")
 	case len(snapshots) > 1:
-		return nil, errors.WithField(
+		return nil, goof.WithField(
 			"optSnapshotName", optSnapshotName, "Too many snapshots returned")
 	}
 
@@ -429,9 +429,9 @@ func (d *driver) createGetInstance() error {
 
 	switch {
 	case len(instances) == 0:
-		return errors.New("No instances")
+		return goof.New("No instances")
 	case len(instances) > 1:
-		return errors.New(
+		return goof.New(
 			"Too many instances returned, limit the storagedrivers")
 	}
 
@@ -454,7 +454,7 @@ func (d *driver) createGetVolumes(
 	case len(volumes) == 1 && !overwriteFs:
 		return volumes, overwriteFs, nil
 	case len(volumes) > 1:
-		return nil, overwriteFs, errors.WithField(
+		return nil, overwriteFs, goof.WithField(
 			"volumeName", volumeName, "Too many volumes returned")
 	}
 
@@ -550,7 +550,7 @@ func (d *driver) Remove(volumeName string) error {
 		"driverName": d.Name()}).Info("removing volume")
 
 	if volumeName == "" {
-		return errors.New("Missing volume name")
+		return goof.New("Missing volume name")
 	}
 
 	instances, err := d.r.Storage.GetInstances()
@@ -560,9 +560,9 @@ func (d *driver) Remove(volumeName string) error {
 
 	switch {
 	case len(instances) == 0:
-		return errors.New("No instances")
+		return goof.New("No instances")
 	case len(instances) > 1:
-		return errors.New("Too many instances returned, limit the storagedrivers")
+		return goof.New("Too many instances returned, limit the storagedrivers")
 	}
 
 	volumes, err := d.r.Storage.GetVolume("", volumeName)
@@ -572,9 +572,9 @@ func (d *driver) Remove(volumeName string) error {
 
 	switch {
 	case len(volumes) == 0:
-		return errors.New("No volumes returned by name")
+		return goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return errors.New("Multiple volumes returned by name")
+		return goof.New("Multiple volumes returned by name")
 	}
 
 	err = d.Unmount("", volumes[0].VolumeID)
@@ -604,9 +604,9 @@ func (d *driver) Attach(volumeName, instanceID string) (string, error) {
 
 	switch {
 	case len(volumes) == 0:
-		return "", errors.New("No volumes returned by name")
+		return "", goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return "", errors.New("Multiple volumes returned by name")
+		return "", goof.New("Multiple volumes returned by name")
 	}
 
 	_, err = d.r.Storage.AttachVolume(true, volumes[0].VolumeID, instanceID)
@@ -651,9 +651,9 @@ func (d *driver) NetworkName(volumeName, instanceID string) (string, error) {
 
 	switch {
 	case len(volumes) == 0:
-		return "", errors.New("No volumes returned by name")
+		return "", goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return "", errors.New("Multiple volumes returned by name")
+		return "", goof.New("Multiple volumes returned by name")
 	}
 
 	volumeAttachment, err := d.r.Storage.GetVolumeAttach(
@@ -663,7 +663,7 @@ func (d *driver) NetworkName(volumeName, instanceID string) (string, error) {
 	}
 
 	if len(volumeAttachment) == 0 {
-		return "", errors.New("Volume not attached")
+		return "", goof.New("Volume not attached")
 	}
 
 	volumes, err = d.r.Storage.GetVolume("", volumeName)

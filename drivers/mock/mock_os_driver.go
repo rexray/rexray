@@ -1,8 +1,9 @@
 package mock
 
 import (
+	"github.com/akutz/goof"
+
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/errors"
 )
 
 type mockOSDriver struct {
@@ -28,7 +29,7 @@ func (m *mockOSDriver) Init(r *core.RexRay) error {
 }
 
 func (m *badMockOSDriver) Init(r *core.RexRay) error {
-	return errors.New("init error")
+	return goof.New("init error")
 }
 
 func (m *mockOSDriver) Name() string {

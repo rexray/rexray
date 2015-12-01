@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/akutz/goof"
 	"github.com/kardianos/osext"
 
-	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/core/version"
 )
 
@@ -407,7 +407,7 @@ func GetLocalIP() (ip string) {
 func ParseAddress(addr string) (proto string, path string, err error) {
 	m := netAddrRx.FindStringSubmatch(addr)
 	if m == nil {
-		return "", "", errors.WithField("address", addr, "invalid address")
+		return "", "", goof.WithField("address", addr, "invalid address")
 	}
 	return m[1], m[2], nil
 }

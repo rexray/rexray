@@ -10,8 +10,8 @@ import (
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/goof"
 
-	"github.com/emccode/rexray/core/errors"
 	rrdaemon "github.com/emccode/rexray/daemon"
 	"github.com/emccode/rexray/util"
 )
@@ -240,7 +240,7 @@ func (c *CLI) restart() {
 
 func checkOpPerms(op string) error {
 	if os.Geteuid() != 0 {
-		return errors.Newf("REX-Ray can only be %s by root", op)
+		return goof.Newf("REX-Ray can only be %s by root", op)
 	}
 
 	return nil

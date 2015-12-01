@@ -7,9 +7,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/goof"
 
 	"github.com/akutz/gofig"
-	"github.com/emccode/rexray/core/errors"
 )
 
 // Module is the interface to which types adhere in order to participate as
@@ -169,7 +169,7 @@ func InitializeModule(
 
 	mt, modTypeExists := modTypes[modTypeID]
 	if !modTypeExists {
-		return nil, errors.WithFields(lf, "unknown module type")
+		return nil, goof.WithFields(lf, "unknown module type")
 	}
 
 	lf["typeName"] = mt.Name
@@ -244,7 +244,7 @@ func GetModuleInstance(modInstID int32) (*Instance, error) {
 
 	if !modExists {
 		return nil,
-			errors.WithField("id", modInstID, "unknown module instance")
+			goof.WithField("id", modInstID, "unknown module instance")
 	}
 
 	return mod, nil
@@ -261,7 +261,7 @@ func StartModule(modInstID int32) error {
 	mod, modExists := modInstances[modInstID]
 
 	if !modExists {
-		return errors.WithFields(lf, "unknown module instance")
+		return goof.WithFields(lf, "unknown module instance")
 	}
 
 	lf["id"] = mod.ID
@@ -284,18 +284,18 @@ func StartModule(modInstID int32) error {
 				mod.TypeID, mod.ID, mod.Name, mod.Config.Address)
 
 			if r == nil {
-				startError <- errors.New(errMsg)
+				startError <- goof.New(errMsg)
 				return
 			}
 
 			switch x := r.(type) {
 			case string:
 				lf["inner"] = x
-				startError <- errors.WithFields(lf, m)
+				startError <- goof.WithFields(lf, m)
 			case error:
-				startError <- errors.WithFieldsE(lf, m, x)
+				startError <- goof.WithFieldsE(lf, m, x)
 			default:
-				startError <- errors.WithFields(lf, m)
+				startError <- goof.WithFields(lf, m)
 			}
 		}()
 

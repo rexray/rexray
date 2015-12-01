@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"fmt"
+	"github.com/akutz/goof"
 )
 
 // RexRayErrCode is a REX-Ray error code value.
@@ -160,19 +160,14 @@ var (
 	ErrRunAsyncFromVolume = ErrRexRay(ErrCodeRunAsyncFromVolume)
 )
 
-// RexRayErr is the default error type for REX-Ray errors.
-type RexRayErr struct {
-	Code RexRayErrCode
-}
-
 // ErrRexRay creates a new instance of a RexRayErr with a given error code.
-func ErrRexRay(code RexRayErrCode) *RexRayErr {
-	return &RexRayErr{code}
+func ErrRexRay(code RexRayErrCode) error {
+	return goof.New(errCodeToString(code))
 }
 
 // Error returns the string version of the error code.
-func (e *RexRayErr) Error() string {
-	switch e.Code {
+func errCodeToString(code RexRayErrCode) string {
+	switch code {
 	case ErrCodeNoOSDetected,
 		ErrCodeNoVolumesDetected,
 		ErrCodeNoStorageDetected,
@@ -180,18 +175,18 @@ func (e *RexRayErr) Error() string {
 		ErrCodeNoVolumeDrivers,
 		ErrCodeNoStorageDrivers,
 		ErrCodeNoVolumesReturned:
-		return e.errorNo()
+		return errCodeNoToString(code)
 	case ErrCodeDriverBlockDeviceDiscovery,
 		ErrCodeDriverInstanceDiscovery,
 		ErrCodeDriverVolumeDiscovery,
 		ErrCodeDriverSnapshotDiscovery:
-		return e.errorFailed()
+		return errCodeFailedToString(code)
 	case ErrCodeMultipleDriversDetected,
 		ErrCodeMultipleVolumesReturned:
-		return e.errorMulitple()
+		return errCodeMultiToString(code)
 	case ErrCodeUnknownOS,
 		ErrCodeUnknownFileSystem:
-		return e.errorUnknown()
+		return errCodeUnknownToString(code)
 	case ErrCodeMissingVolumeID:
 		return "missing volume ID"
 	case ErrCodeLocalVolumeMaps:
@@ -205,8 +200,8 @@ func (e *RexRayErr) Error() string {
 	}
 }
 
-func (e *RexRayErr) errorFailed() string {
-	switch e.Code {
+func errCodeFailedToString(code RexRayErrCode) string {
+	switch code {
 	case ErrCodeDriverBlockDeviceDiscovery:
 		return "driver block device discovery failed"
 	case ErrCodeDriverInstanceDiscovery:
@@ -220,8 +215,8 @@ func (e *RexRayErr) errorFailed() string {
 	}
 }
 
-func (e *RexRayErr) errorNo() string {
-	switch e.Code {
+func errCodeNoToString(code RexRayErrCode) string {
+	switch code {
 	case ErrCodeNoOSDetected:
 		return "no OS detected"
 	case ErrCodeNoVolumesDetected:
@@ -241,8 +236,8 @@ func (e *RexRayErr) errorNo() string {
 	}
 }
 
-func (e *RexRayErr) errorMulitple() string {
-	switch e.Code {
+func errCodeMultiToString(code RexRayErrCode) string {
+	switch code {
 	case ErrCodeMultipleDriversDetected:
 		return "multiple drivers detected"
 	case ErrCodeMultipleVolumesReturned:
@@ -252,8 +247,8 @@ func (e *RexRayErr) errorMulitple() string {
 	}
 }
 
-func (e *RexRayErr) errorUnknown() string {
-	switch e.Code {
+func errCodeUnknownToString(code RexRayErrCode) string {
+	switch code {
 	case ErrCodeUnknownOS:
 		return "unknown OS"
 	case ErrCodeUnknownFileSystem:
@@ -261,81 +256,4 @@ func (e *RexRayErr) errorUnknown() string {
 	default:
 		return "unknown error"
 	}
-}
-
-// Error is a structure that implements the Go Error interface as well as the
-// Golf interface for extended log information capabilities.
-type Error struct {
-	fields map[string]interface{}
-}
-
-// Fields is a type alias for a map of interfaces.
-type Fields map[string]interface{}
-
-// Error returns the error message.
-func (e *Error) Error() string {
-	return e.fields["message"].(string)
-}
-
-// PlayGolf lets the logrus framework know that Error supports the Golf
-// framework.
-func (e *Error) PlayGolf() bool {
-	return true
-}
-
-// GolfExportedFields returns the fields to use when playing golf.
-func (e *Error) GolfExportedFields() map[string]interface{} {
-	return e.fields
-}
-
-// New returns a new error object initialized with the provided message.
-func New(message string) error {
-	return &Error{Fields{"message": message}}
-}
-
-// Newf returns a new error object initialized with the messages created by
-// formatting the format string with the provided arguments.
-func Newf(format string, a ...interface{}) error {
-	return &Error{Fields{"message": fmt.Sprintf(format, a)}}
-}
-
-// WithError returns a new error object initialized with the provided message
-// and inner error.
-func WithError(message string, inner error) error {
-	return WithFieldsE(nil, message, inner)
-}
-
-// WithField returns a new error object initialized with the provided field
-// name, value, and error message.
-func WithField(key string, val interface{}, message string) error {
-	return WithFields(Fields{key: val}, message)
-}
-
-// WithFieldE returns a new error object initialized with the provided field
-// name, value, error message, and inner error.
-func WithFieldE(key string, val interface{}, message string, inner error) error {
-	return WithFieldsE(Fields{key: val}, message, inner)
-}
-
-// WithFields returns a new error object initialized with the provided fields
-// and error message.
-func WithFields(fields map[string]interface{}, message string) error {
-	return WithFieldsE(fields, message, nil)
-}
-
-// WithFieldsE returns a new error object initialized with the provided fields,
-// error message, and inner error.
-func WithFieldsE(fields map[string]interface{}, message string, inner error) error {
-
-	if fields == nil {
-		fields = Fields{}
-	}
-
-	if inner != nil {
-		fields["inner"] = inner
-	}
-
-	fields["message"] = message
-
-	return &Error{fields}
 }

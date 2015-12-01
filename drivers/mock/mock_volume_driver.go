@@ -1,8 +1,9 @@
 package mock
 
 import (
+	"github.com/akutz/goof"
+
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/errors"
 )
 
 const mockVolDriverName = "mockVolumeDriver"
@@ -31,7 +32,7 @@ func (m *mockVolDriver) Init(r *core.RexRay) error {
 }
 
 func (m *badMockVolDriver) Init(r *core.RexRay) error {
-	return errors.New("init error")
+	return goof.New("init error")
 }
 
 func (m *mockVolDriver) Name() string {

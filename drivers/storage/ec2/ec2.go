@@ -11,9 +11,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 	"github.com/goamz/goamz/aws"
 	"github.com/goamz/goamz/ec2"
@@ -48,7 +48,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
-	config.Register(configRegistration())
+	gofig.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -835,10 +835,10 @@ func (d *driver) CopySnapshot(runAsync bool,
 	return snapshot[0], nil
 }
 
-func configRegistration() *config.Registration {
-	r := config.NewRegistration("Amazon EC2")
-	r.Key(config.String, "", "", "", "aws.accessKey")
-	r.Key(config.String, "", "", "", "aws.secretKey")
-	r.Key(config.String, "", "", "", "aws.region")
+func configRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("Amazon EC2")
+	r.Key(gofig.String, "", "", "", "aws.accessKey")
+	r.Key(gofig.String, "", "", "", "aws.secretKey")
+	r.Key(gofig.String, "", "", "", "aws.region")
 	return r
 }

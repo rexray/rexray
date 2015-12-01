@@ -13,8 +13,8 @@ import (
 
 	"github.com/emccode/rexray/daemon/module"
 
+	"github.com/akutz/gofig"
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/util"
 )
@@ -50,7 +50,7 @@ func init() {
 
 	mc := &module.Config{
 		Address: modAddress,
-		Config:  config.New(),
+		Config:  gofig.New(),
 	}
 
 	module.RegisterModule(modName, true, newModule, []*module.Config{mc})

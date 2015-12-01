@@ -12,8 +12,8 @@ list storage for a guest hosted on Amazon Web Services (AWS) with `REX-Ray`:
 
 ```bash
 $ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESS_KEY=access_key
-$ export AWS_SECRET_KEY=secret_key
+$ export AWS_ACCESSKEY=access_key
+$ export AWS_SECRETKEY=secret_key
 $ rexray volume get
 
 - providername: ec2

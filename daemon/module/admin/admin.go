@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/emccode/rexray/core/config"
+	"github.com/akutz/gofig"
 	"github.com/emccode/rexray/daemon/module"
 	"github.com/emccode/rexray/util"
 	"github.com/gorilla/handlers"
@@ -169,7 +169,7 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 		"config":  cfgJSON,
 	}).Debug("received module instance post request")
 
-	cfg, cfgErr := config.FromJSON(cfgJSON)
+	cfg, cfgErr := gofig.FromJSON(cfgJSON)
 	if cfgErr != nil {
 		w.Write(getJSONError("Error unmarshalling config json", nil))
 		log.Printf("Error unmarshalling config json\n")

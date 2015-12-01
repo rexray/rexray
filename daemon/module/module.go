@@ -8,7 +8,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/rexray/core/config"
+	"github.com/akutz/gofig"
 	"github.com/emccode/rexray/core/errors"
 )
 
@@ -60,8 +60,8 @@ func GetModOptVal(opts map[string]string, key string) string {
 
 // Config is a struct used to configure a module.
 type Config struct {
-	Address string         `json:"address"`
-	Config  *config.Config `json:"config,omitempty"`
+	Address string       `json:"address"`
+	Config  gofig.Config `json:"config,omitempty"`
 }
 
 // Type is a struct that describes a module type

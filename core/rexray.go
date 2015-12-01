@@ -3,13 +3,13 @@ package core
 import (
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/rexray/core/config"
+	"github.com/akutz/gofig"
 	"github.com/emccode/rexray/util"
 )
 
 // RexRay is the library's entrance type and storage management platform.
 type RexRay struct {
-	Config  *config.Config
+	Config  gofig.Config
 	OS      OSDriverManager
 	Volume  VolumeDriverManager
 	Storage StorageDriverManager
@@ -18,10 +18,10 @@ type RexRay struct {
 
 // New creates a new REX-Ray instance and configures it with the
 // provided configuration instance.
-func New(conf *config.Config) *RexRay {
+func New(conf gofig.Config) *RexRay {
 
 	if conf == nil {
-		conf = config.New()
+		conf = gofig.New()
 	}
 
 	r := &RexRay{
@@ -44,13 +44,13 @@ func (r *RexRay) InitDrivers() error {
 	vd := map[string]VolumeDriver{}
 	sd := map[string]StorageDriver{}
 
-	log.Info(r.Config.Get("osDrivers"))
-	log.Info(r.Config.Get("volumeDrivers"))
-	log.Info(r.Config.Get("storageDrivers"))
+	log.Info(r.Config.Get("rexray.osDrivers"))
+	log.Info(r.Config.Get("rexray.volumeDrivers"))
+	log.Info(r.Config.Get("rexray.storageDrivers"))
 
-	osDrivers := r.Config.GetStringSlice("osDrivers")
-	volDrivers := r.Config.GetStringSlice("volumeDrivers")
-	storDrivers := r.Config.GetStringSlice("storageDrivers")
+	osDrivers := r.Config.GetStringSlice("rexray.osDrivers")
+	volDrivers := r.Config.GetStringSlice("rexray.volumeDrivers")
+	storDrivers := r.Config.GetStringSlice("rexray.storageDrivers")
 
 	log.WithFields(log.Fields{
 		"osDrivers":      osDrivers,

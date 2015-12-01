@@ -6,12 +6,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 
 	"github.com/emccode/goscaleio"
 	types "github.com/emccode/goscaleio/types/v1"
 
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 )
 
@@ -47,7 +47,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
-	config.Register(configRegistration())
+	gofig.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -678,19 +678,19 @@ func (d *driver) storagePoolName() string {
 	return d.r.Config.GetString("scaleio.storagePoolName")
 }
 
-func configRegistration() *config.Registration {
-	r := config.NewRegistration("ScaleIO")
-	r.Key(config.String, "", "", "", "scaleio.endpoint")
-	r.Key(config.Bool, "", false, "", "scaleio.insecure")
-	r.Key(config.Bool, "", false, "", "scaleio.useCerts")
-	r.Key(config.String, "", "", "", "scaleio.userID")
-	r.Key(config.String, "", "", "", "scaleio.userName")
-	r.Key(config.String, "", "", "", "scaleio.password")
-	r.Key(config.String, "", "", "", "scaleio.systemID")
-	r.Key(config.String, "", "", "", "scaleio.systemName")
-	r.Key(config.String, "", "", "", "scaleio.protectionDomainID")
-	r.Key(config.String, "", "", "", "scaleio.protectionDomainName")
-	r.Key(config.String, "", "", "", "scaleio.storagePoolID")
-	r.Key(config.String, "", "", "", "scaleio.storagePoolName")
+func configRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("ScaleIO")
+	r.Key(gofig.String, "", "", "", "scaleio.endpoint")
+	r.Key(gofig.Bool, "", false, "", "scaleio.insecure")
+	r.Key(gofig.Bool, "", false, "", "scaleio.useCerts")
+	r.Key(gofig.String, "", "", "", "scaleio.userID")
+	r.Key(gofig.String, "", "", "", "scaleio.userName")
+	r.Key(gofig.String, "", "", "", "scaleio.password")
+	r.Key(gofig.String, "", "", "", "scaleio.systemID")
+	r.Key(gofig.String, "", "", "", "scaleio.systemName")
+	r.Key(gofig.String, "", "", "", "scaleio.protectionDomainID")
+	r.Key(gofig.String, "", "", "", "scaleio.protectionDomainName")
+	r.Key(gofig.String, "", "", "", "scaleio.storagePoolID")
+	r.Key(gofig.String, "", "", "", "scaleio.storagePoolName")
 	return r
 }

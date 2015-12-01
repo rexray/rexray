@@ -5,8 +5,9 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
+
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 )
 
 const (
@@ -53,7 +54,7 @@ func RegisterMockDrivers() {
 	core.RegisterDriver(MockOSDriverName, newOSDriver)
 	core.RegisterDriver(MockVolDriverName, newVolDriver)
 	core.RegisterDriver(MockStorDriverName, newStorDriver)
-	config.Register(mockRegistration())
+	gofig.Register(mockRegistration())
 }
 
 // RegisterBadMockDrivers registers the bad mock drivers.
@@ -64,17 +65,17 @@ func RegisterBadMockDrivers() {
 	core.RegisterDriver(BadMockStorDriverName, newBadStorDriver)
 }
 
-func mockRegistration() *config.Registration {
-	r := config.NewRegistration("Mock Provider")
+func mockRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("Mock Provider")
 	r.Yaml(`mockProvider:
     userName: admin
     useCerts: true
     docker:
         minVolSize: 16
 `)
-	r.Key(config.String, "", "admin", "", "mockProvider.userName")
-	r.Key(config.String, "", "", "", "mockProvider.password")
-	r.Key(config.Bool, "", false, "", "mockProvider.useCerts")
-	r.Key(config.Int, "", 16, "", "mockProvider.docker.minVolSize")
+	r.Key(gofig.String, "", "admin", "", "mockProvider.userName")
+	r.Key(gofig.String, "", "", "", "mockProvider.password")
+	r.Key(gofig.Bool, "", false, "", "mockProvider.useCerts")
+	r.Key(gofig.Int, "", 16, "", "mockProvider.docker.minVolSize")
 	return r
 }

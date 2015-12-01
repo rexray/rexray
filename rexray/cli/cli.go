@@ -254,7 +254,7 @@ func (c *CLI) updateLogLevel() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	log.WithField("logLevel", c.logLevel()).Debug("updated log level")
+	log.WithField("rexrayLogLevel", c.logLevel()).Debug("updated log level")
 }
 
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
@@ -401,9 +401,9 @@ func (c *CLI) isModuleCmd(cmd *cobra.Command) bool {
 }
 
 func (c *CLI) logLevel() string {
-	return c.r.Config.GetString("logLevel")
+	return c.r.Config.GetString("rexray.logLevel")
 }
 
 func (c *CLI) host() string {
-	return c.r.Config.GetString("host")
+	return c.r.Config.GetString("rexray.host")
 }

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/util"
 )
@@ -29,7 +29,7 @@ var (
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
-	config.Register(configRegistration())
+	gofig.Register(configRegistration())
 	mountDirectoryPath = util.LibFilePath("volumes")
 	os.MkdirAll(mountDirectoryPath, 0755)
 }
@@ -674,11 +674,11 @@ func (d *driver) NetworkName(volumeName, instanceID string) (string, error) {
 	return volumes[0].NetworkName, nil
 }
 
-func configRegistration() *config.Registration {
-	r := config.NewRegistration("Docker")
-	r.Key(config.String, "", "", "", "docker.volumeType")
-	r.Key(config.Int, "", 0, "", "docker.iops")
-	r.Key(config.Int, "", 0, "", "docker.size")
-	r.Key(config.String, "", "", "", "docker.availabilityZone")
+func configRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("Docker")
+	r.Key(gofig.String, "", "", "", "docker.volumeType")
+	r.Key(gofig.Int, "", 0, "", "docker.iops")
+	r.Key(gofig.Int, "", 0, "", "docker.size")
+	r.Key(gofig.String, "", "", "", "docker.availabilityZone")
 	return r
 }

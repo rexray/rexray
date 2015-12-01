@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/akutz/gofig"
+
 	"github.com/emccode/rexray"
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/drivers/mock"
 	"github.com/emccode/rexray/util"
@@ -22,10 +23,10 @@ func TestMain(m *testing.M) {
 }
 
 func getRexRay() (*core.RexRay, error) {
-	c := config.New()
-	c.Set("osDrivers", []string{mock.MockOSDriverName})
-	c.Set("volumeDrivers", []string{mock.MockVolDriverName})
-	c.Set("storageDrivers", []string{mock.MockStorDriverName})
+	c := gofig.New()
+	c.Set("rexray.osDrivers", []string{mock.MockOSDriverName})
+	c.Set("rexray.volumeDrivers", []string{mock.MockVolDriverName})
+	c.Set("rexray.storageDrivers", []string{mock.MockStorDriverName})
 	r := core.New(c)
 
 	if err := r.InitDrivers(); err != nil {
@@ -36,10 +37,10 @@ func getRexRay() (*core.RexRay, error) {
 }
 
 func getRexRayNoDrivers() (*core.RexRay, error) {
-	c := config.New()
-	c.Set("osDrivers", []string{""})
-	c.Set("volumeDrivers", []string{""})
-	c.Set("storageDrivers", []string{""})
+	c := gofig.New()
+	c.Set("rexray.osDrivers", []string{""})
+	c.Set("rexray.volumeDrivers", []string{""})
+	c.Set("rexray.storageDrivers", []string{""})
 	r := core.New(c)
 	r.InitDrivers()
 	return r, nil
@@ -56,9 +57,9 @@ func TestNewWithConfig(t *testing.T) {
 
 func TestNewWithNilConfig(t *testing.T) {
 	r := core.New(nil)
-	r.Config.Set("osDrivers", []string{mock.MockOSDriverName})
-	r.Config.Set("volumeDrivers", []string{mock.MockVolDriverName})
-	r.Config.Set("storageDrivers", []string{mock.MockStorDriverName})
+	r.Config.Set("rexray.osDrivers", []string{mock.MockOSDriverName})
+	r.Config.Set("rexray.volumeDrivers", []string{mock.MockVolDriverName})
+	r.Config.Set("rexray.storageDrivers", []string{mock.MockStorDriverName})
 
 	if err := r.InitDrivers(); err != nil {
 		t.Fatal(err)
@@ -85,10 +86,10 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewNoOSDrivers(t *testing.T) {
-	c := config.New()
-	c.Set("osDrivers", []string{})
-	c.Set("volumeDrivers", []string{mock.MockVolDriverName})
-	c.Set("storageDrivers", []string{mock.MockStorDriverName})
+	c := gofig.New()
+	c.Set("rexray.osDrivers", []string{})
+	c.Set("rexray.volumeDrivers", []string{mock.MockVolDriverName})
+	c.Set("rexray.storageDrivers", []string{mock.MockStorDriverName})
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoOSDrivers {
 		t.Fatal(err)
@@ -96,10 +97,10 @@ func TestNewNoOSDrivers(t *testing.T) {
 }
 
 func TestNewNoVolumeDrivers(t *testing.T) {
-	c := config.New()
-	c.Set("osDrivers", []string{mock.MockOSDriverName})
-	c.Set("volumeDrivers", []string{})
-	c.Set("storageDrivers", []string{mock.MockStorDriverName})
+	c := gofig.New()
+	c.Set("rexray.osDrivers", []string{mock.MockOSDriverName})
+	c.Set("rexray.volumeDrivers", []string{})
+	c.Set("rexray.storageDrivers", []string{mock.MockStorDriverName})
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoVolumeDrivers {
 		t.Fatal(err)
@@ -107,10 +108,10 @@ func TestNewNoVolumeDrivers(t *testing.T) {
 }
 
 func TestNewNoStorageDrivers(t *testing.T) {
-	c := config.New()
-	c.Set("osDrivers", []string{mock.MockOSDriverName})
-	c.Set("volumeDrivers", []string{mock.MockVolDriverName})
-	c.Set("storageDrivers", []string{})
+	c := gofig.New()
+	c.Set("rexray.osDrivers", []string{mock.MockOSDriverName})
+	c.Set("rexray.volumeDrivers", []string{mock.MockVolDriverName})
+	c.Set("rexray.storageDrivers", []string{})
 	r := core.New(c)
 	if err := r.InitDrivers(); err != errors.ErrNoStorageDrivers {
 		t.Fatal(err)
@@ -277,11 +278,13 @@ func assertDriverNames(t *testing.T, r *core.RexRay) {
 	}
 }
 
-var yamlConfig1 = []byte(`logLevel: error
-osDrivers:
-- mockOSDriver
-volumeDrivers:
-- mockVolumeDriver
-storageDrivers:
-- mockStorageDriver
+var yamlConfig1 = []byte(`
+rexray:
+  logLevel: error
+  osDrivers:
+  - mockOSDriver
+  volumeDrivers:
+  - mockVolumeDriver
+  storageDrivers:
+  - mockStorageDriver
 `)

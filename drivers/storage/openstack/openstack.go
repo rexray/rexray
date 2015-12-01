@@ -12,9 +12,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 
 	"github.com/rackspace/gophercloud"
@@ -60,7 +60,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
-	config.Register(configRegistration())
+	gofig.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -140,13 +140,13 @@ func (d *driver) newCmd(name string, args ...string) *exec.Cmd {
 	return newCmd(d.r.Config, name, args...)
 }
 
-func newCmd(c *config.Config, name string, args ...string) *exec.Cmd {
+func newCmd(c gofig.Config, name string, args ...string) *exec.Cmd {
 	cmd := exec.Command(name, args...)
 	cmd.Env = c.EnvVars()
 	return cmd
 }
 
-func getInstanceID(c *config.Config) (string, error) {
+func getInstanceID(c gofig.Config) (string, error) {
 	cmd := newCmd(c, "/usr/sbin/dmidecode")
 	cmdOut, err := cmd.Output()
 
@@ -250,7 +250,7 @@ func (d *driver) getBlockDevices(
 
 }
 
-func getInstanceRegion(cfg *config.Config) (string, error) {
+func getInstanceRegion(cfg gofig.Config) (string, error) {
 	cmd := newCmd(
 		cfg, "/usr/bin/xenstore-read",
 		"vm-data/provider_data/region")
@@ -983,17 +983,17 @@ func (d *driver) availabilityZoneName() string {
 	return d.r.Config.GetString("openstack.availabilityZoneName")
 }
 
-func configRegistration() *config.Registration {
-	r := config.NewRegistration("Openstack")
-	r.Key(config.String, "", "", "", "openstack.authURL")
-	r.Key(config.String, "", "", "", "openstack.userID")
-	r.Key(config.String, "", "", "", "openstack.userName")
-	r.Key(config.String, "", "", "", "openstack.password")
-	r.Key(config.String, "", "", "", "openstack.tenantID")
-	r.Key(config.String, "", "", "", "openstack.tenantName")
-	r.Key(config.String, "", "", "", "openstack.domainID")
-	r.Key(config.String, "", "", "", "openstack.domainName")
-	r.Key(config.String, "", "", "", "openstack.regionName")
-	r.Key(config.String, "", "", "", "openstack.availabilityZoneName")
+func configRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("Openstack")
+	r.Key(gofig.String, "", "", "", "openstack.authURL")
+	r.Key(gofig.String, "", "", "", "openstack.userID")
+	r.Key(gofig.String, "", "", "", "openstack.userName")
+	r.Key(gofig.String, "", "", "", "openstack.password")
+	r.Key(gofig.String, "", "", "", "openstack.tenantID")
+	r.Key(gofig.String, "", "", "", "openstack.tenantName")
+	r.Key(gofig.String, "", "", "", "openstack.domainID")
+	r.Key(gofig.String, "", "", "", "openstack.domainName")
+	r.Key(gofig.String, "", "", "", "openstack.regionName")
+	r.Key(gofig.String, "", "", "", "openstack.availabilityZoneName")
 	return r
 }

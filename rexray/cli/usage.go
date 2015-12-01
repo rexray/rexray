@@ -84,7 +84,7 @@ func (c *CLI) globalFlags(cmd *cobra.Command) *flag.FlagSet {
 }
 
 func (c *CLI) driverFlags() *flag.FlagSet {
-	return c.r.Config.FlagSets["Driver Flags"]
+	return c.r.Config.FlagSets()["Driver Flags"]
 }
 
 func (c *CLI) sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
@@ -121,7 +121,7 @@ func (c *CLI) additionalFlags() *flag.FlagSet {
 
 func (c *CLI) additionalFlagSets() map[string]*flag.FlagSet {
 	afs := map[string]*flag.FlagSet{}
-	for fsn, fs := range c.r.Config.FlagSets {
+	for fsn, fs := range c.r.Config.FlagSets() {
 		if fsn == "Global Flags" || fsn == "Driver Flags" {
 			continue
 		}

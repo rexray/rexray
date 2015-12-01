@@ -14,10 +14,10 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 	xtio "github.com/emccode/goxtremio"
 
 	"github.com/emccode/rexray/core"
-	"github.com/emccode/rexray/core/config"
 	"github.com/emccode/rexray/core/errors"
 )
 
@@ -53,7 +53,7 @@ func eff(fields errors.Fields) map[string]interface{} {
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
-	config.Register(configRegistration())
+	gofig.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
@@ -849,14 +849,14 @@ func (d *driver) remoteManagement() bool {
 	return d.r.Config.GetBool("xtremio.remoteManagement")
 }
 
-func configRegistration() *config.Registration {
-	r := config.NewRegistration("XtremIO")
-	r.Key(config.String, "", "", "", "xtremio.endpoint")
-	r.Key(config.Bool, "", false, "", "xtremio.insecure")
-	r.Key(config.String, "", "", "", "xtremio.userName")
-	r.Key(config.String, "", "", "", "xtremio.password")
-	r.Key(config.Bool, "", false, "", "xtremio.deviceMapper")
-	r.Key(config.Bool, "", false, "", "xtremio.multipath")
-	r.Key(config.Bool, "", false, "", "xtremio.remoteManagement")
+func configRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("XtremIO")
+	r.Key(gofig.String, "", "", "", "xtremio.endpoint")
+	r.Key(gofig.Bool, "", false, "", "xtremio.insecure")
+	r.Key(gofig.String, "", "", "", "xtremio.userName")
+	r.Key(gofig.String, "", "", "", "xtremio.password")
+	r.Key(gofig.Bool, "", false, "", "xtremio.deviceMapper")
+	r.Key(gofig.Bool, "", false, "", "xtremio.multipath")
+	r.Key(gofig.Bool, "", false, "", "xtremio.remoteManagement")
 	return r
 }

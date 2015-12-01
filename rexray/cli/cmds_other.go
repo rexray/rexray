@@ -66,7 +66,7 @@ func (c *CLI) initOtherFlags() {
 		"verbose", "v", false, "Print verbose help information")
 
 	// add the flag sets
-	for _, fs := range c.r.Config.FlagSets {
+	for _, fs := range c.r.Config.FlagSets() {
 		c.c.PersistentFlags().AddFlagSet(fs)
 	}
 

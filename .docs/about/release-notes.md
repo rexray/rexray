@@ -208,8 +208,8 @@ users. The commands are now categorized into logical groups:
     Global Flags:
       -c, --config="/Users/akutz/.rexray/config.yaml": The REX-Ray configuration file
       -?, --help[=false]: Help for rexray
-      -h, --host="tcp://:7979": The REX-Ray service address
-      -l, --logLevel="info": The log level (panic, fatal, error, warn, info, debug)
+      -h, --rexrayHost="tcp://:7979": The REX-Ray service address
+      -l, --rexrayLogLevel="info": The log level (panic, fatal, error, warn, info, debug)
       -v, --verbose[=false]: Print verbose help information
 
     Use "rexray [command] --help" for more information about a command.

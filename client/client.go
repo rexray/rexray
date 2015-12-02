@@ -188,7 +188,7 @@ func Dial(
 		return nil, goof.WithField("netProto", netProto, "tcp protocol only")
 	}
 
-	c.url = fmt.Sprintf("http://%s/libStorage/%s", laddr, serverName)
+	c.url = fmt.Sprintf("http://%s/libStorage/servers/%s", laddr, serverName)
 	log.WithField("url", c.url).Debug("got libStorage service URL")
 
 	if err := c.initClientTool(ctx); err != nil {

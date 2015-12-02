@@ -11,6 +11,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 
 	rrdaemon "github.com/emccode/rexray/daemon"
 	"github.com/emccode/rexray/util"
@@ -23,7 +24,7 @@ func (c *CLI) start() {
 
 	pidFile := util.PidFilePath()
 
-	if util.FileExists(pidFile) {
+	if gotil.FileExists(pidFile) {
 		pid, pidErr := util.ReadPidFile()
 		if pidErr != nil {
 			fmt.Printf("Error reading REX-Ray PID file at %s\n", pidFile)
@@ -139,12 +140,12 @@ func (c *CLI) startDaemon() {
 }
 
 func (c *CLI) tryToStartDaemon() {
-	_, _, thisAbsPath := util.GetThisPathParts()
+	_, _, thisAbsPath := gotil.GetThisPathParts()
 
 	fmt.Print("Starting REX-Ray...")
 
 	signal := make(chan byte)
-	client := fmt.Sprintf("%s/%s.sock", os.TempDir(), util.RandomString(32))
+	client := fmt.Sprintf("%s/%s.sock", os.TempDir(), gotil.RandomString(32))
 	log.WithField("client", client).Debug("trying to start service")
 
 	l, lErr := net.Listen("unix", client)
@@ -200,7 +201,7 @@ func (c *CLI) tryToStartDaemon() {
 func stop() {
 	checkOpPerms("stopped")
 
-	if !util.FileExists(util.PidFilePath()) {
+	if !gotil.FileExists(util.PidFilePath()) {
 		fmt.Println("REX-Ray is already stopped")
 		panic(1)
 	}
@@ -220,7 +221,7 @@ func stop() {
 }
 
 func (c *CLI) status() {
-	if !util.FileExists(util.PidFilePath()) {
+	if !gotil.FileExists(util.PidFilePath()) {
 		fmt.Println("REX-Ray is stopped")
 		return
 	}
@@ -231,7 +232,7 @@ func (c *CLI) status() {
 func (c *CLI) restart() {
 	checkOpPerms("restarted")
 
-	if util.FileExists(util.PidFilePath()) {
+	if gotil.FileExists(util.PidFilePath()) {
 		stop()
 	}
 

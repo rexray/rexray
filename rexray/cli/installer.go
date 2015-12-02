@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gotil"
 
 	"github.com/emccode/rexray/util"
 )
@@ -25,7 +26,7 @@ const (
 func install() {
 	checkOpPerms("installed")
 
-	_, _, exeFile := util.GetThisPathParts()
+	_, _, exeFile := gotil.GetThisPathParts()
 
 	if runtime.GOOS == "linux" {
 		switch getInitSystemType() {
@@ -52,7 +53,7 @@ func isRpmInstall(exePath string, pkgName *string) bool {
 		return false
 	}
 	log.WithField("output", soutput).Debug("rpm install query result")
-	*pkgName = util.Trim(soutput)
+	*pkgName = gotil.Trim(soutput)
 
 	log.WithFields(log.Fields{
 		"exePath": exePath,
@@ -74,7 +75,7 @@ func isDebInstall(exePath string, pkgName *string) bool {
 		return false
 	}
 	log.WithField("output", soutput).Debug("deb install query result")
-	*pkgName = strings.Split(util.Trim(soutput), ":")[0]
+	*pkgName = strings.Split(gotil.Trim(soutput), ":")[0]
 
 	log.WithFields(log.Fields{
 		"exePath": exePath,
@@ -110,7 +111,7 @@ func uninstallDeb(pkgName string) bool {
 func uninstall(pkgManager bool) {
 	checkOpPerms("uninstalled")
 
-	_, _, binFile := util.GetThisPathParts()
+	_, _, binFile := gotil.GetThisPathParts()
 
 	// if the uninstall command was executed manually we should check to see
 	// if this file is owned by a package manager and remove it that way if so
@@ -164,15 +165,15 @@ func getInitSystemCmd() string {
 }
 
 func getInitSystemType() int {
-	if util.FileExistsInPath("systemctl") {
+	if gotil.FileExistsInPath("systemctl") {
 		return SystemD
 	}
 
-	if util.FileExistsInPath("update-rc.d") {
+	if gotil.FileExistsInPath("update-rc.d") {
 		return UpdateRcD
 	}
 
-	if util.FileExistsInPath("chkconfig") {
+	if gotil.FileExistsInPath("chkconfig") {
 		return ChkConfig
 	}
 

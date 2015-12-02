@@ -13,10 +13,10 @@ import (
 
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/daemon/module"
-	"github.com/emccode/rexray/util"
 )
 
 const (
@@ -40,7 +40,7 @@ type mod struct {
 func init() {
 	//tcpAddr := fmt.Sprintf("tcp://:%d", ModPort)
 
-	_, fsPath, parseAddrErr := util.ParseAddress(modAddress)
+	_, fsPath, parseAddrErr := gotil.ParseAddress(modAddress)
 	if parseAddrErr != nil {
 		panic(parseAddrErr)
 	}
@@ -93,7 +93,7 @@ type pluginRequest struct {
 
 func (m *mod) Start() error {
 
-	proto, addr, parseAddrErr := util.ParseAddress(m.Address())
+	proto, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {
 		return parseAddrErr
 	}

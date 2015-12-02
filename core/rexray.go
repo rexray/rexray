@@ -4,7 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/akutz/gofig"
-	"github.com/emccode/rexray/util"
+	"github.com/akutz/gotil"
 )
 
 // RexRay is the library's entrance type and storage management platform.
@@ -61,7 +61,7 @@ func (r *RexRay) InitDrivers() error {
 	for n, d := range r.drivers {
 		switch td := d.(type) {
 		case OSDriver:
-			if util.StringInSlice(n, osDrivers) {
+			if gotil.StringInSlice(n, osDrivers) {
 				if err := d.Init(r); err != nil {
 					log.WithFields(log.Fields{
 						"driverName": n,
@@ -71,7 +71,7 @@ func (r *RexRay) InitDrivers() error {
 				od[n] = td
 			}
 		case VolumeDriver:
-			if util.StringInSlice(n, volDrivers) {
+			if gotil.StringInSlice(n, volDrivers) {
 				if err := d.Init(r); err != nil {
 					log.WithFields(log.Fields{
 						"driverName": n,
@@ -81,7 +81,7 @@ func (r *RexRay) InitDrivers() error {
 				vd[n] = td
 			}
 		case StorageDriver:
-			if util.StringInSlice(n, storDrivers) {
+			if gotil.StringInSlice(n, storDrivers) {
 				if err := d.Init(r); err != nil {
 					log.WithFields(log.Fields{
 						"driverName": n,

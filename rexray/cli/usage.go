@@ -8,7 +8,7 @@ import (
 	"text/template"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/emccode/rexray/util"
+	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -16,10 +16,10 @@ import (
 func (c *CLI) initUsageTemplates() {
 
 	var ut string
-	utPath := fmt.Sprintf("%s/.rexray/usage.template", util.HomeDir())
+	utPath := fmt.Sprintf("%s/.rexray/usage.template", gotil.HomeDir())
 	log.WithField("path", utPath).Debug("usage template path")
 
-	if util.FileExists(utPath) {
+	if gotil.FileExists(utPath) {
 		dat, err := ioutil.ReadFile(utPath)
 		if err != nil {
 			panic(err)

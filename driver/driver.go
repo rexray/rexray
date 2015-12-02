@@ -18,6 +18,13 @@ type Driver interface {
 	// Init initializes the driver.
 	Init() error
 
+	// GetNextAvailableDeviceName gets the driver's NextAvailableDeviceName
+	// information.
+	GetNextAvailableDeviceName(
+		ctx context.Context,
+		args *api.GetNextAvailableDeviceNameArgs) (
+		*api.NextAvailableDeviceName, error)
+
 	// GetVolumeMapping lists the block devices that are attached to the
 	GetVolumeMapping(
 		ctx context.Context,
@@ -90,25 +97,15 @@ type Driver interface {
 		ctx context.Context,
 		args *api.CopySnapshotArgs) (*api.Snapshot, error)
 
-	// GetClientToolName gets the file name of the tool this driver provides
-	// to be executed on the client-side in order to discover a client's
-	// instance ID and next, available device name.
+	// GetClientTool gets the client tool provided by the driver. This tool is
+	// executed on the client-side of the connection in order to discover
+	// information only available to the client, such as the client's instance
+	// ID or a local device map.
 	//
-	// Use the function GetClientTool to get the actual tool.
-	GetClientToolName(
-		ctx context.Context,
-		args *api.GetClientToolNameArgs) (string, error)
-
-	// GetClientTool gets the file  for the tool this driver provides
-	// to be executed on the client-side in order to discover a client's
-	// instance ID and next, available device name.
-	//
-	// This function returns a byte array that will be either a binary file
+	// The client tool is returned as a byte array that's either a binary file
 	// or a unicode-encoded, plain-text script file. Use the file extension
 	// of the client tool's file name to determine the file type.
-	//
-	// The function GetClientToolName can be used to get the file name.
 	GetClientTool(
 		ctx context.Context,
-		args *api.GetClientToolArgs) ([]byte, error)
+		args *api.GetClientToolArgs) (*api.ClientTool, error)
 }

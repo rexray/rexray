@@ -24,6 +24,32 @@ type Instance struct {
 	Region string `json:"region"`
 }
 
+// NextAvailableDeviceName assists the libStorage client in determining the
+// next available device name by providing the driver's device prefix and
+// optional pattern.
+//
+// For example, the Amazon Web Services (AWS) device prefix is "xvd" and its
+// pattern is "[a-z]". These two values would be used to determine on an EC2
+// instance where "/dev/xvda" and "/dev/xvdb" are in use that the next
+// available device name is "/dev/xvdc".
+//
+// If the Ignore field is set to true then the client logic does not invoke the
+// GetNextAvailableDeviceName function prior to submitting an AttachVolume
+// request to the server.
+type NextAvailableDeviceName struct {
+	// Ignore is a flag that indicates whether the client logic should invoke
+	// the GetNextAvailableDeviceName function prior to submitting an
+	// AttachVolume request to the server.
+	Ignore bool `json:"ignore"`
+
+	// Prefix is the first part of a device path's value after the "/dev/"
+	// porition. For example, the prefix in "/dev/xvda" is "xvd".
+	Prefix string `json:"prefix"`
+
+	// Pattern is the regex to match the part of a device path after the prefix.
+	Pattern string `json:"pattern"`
+}
+
 // MountInfo reveals information about a particular mounted filesystem. This
 // struct is populated from the content in the /proc/<pid>/mountinfo file.
 type MountInfo struct {
@@ -158,4 +184,20 @@ type VolumeAttachment struct {
 
 	// The ID of the volume to which the attachment belongs.
 	VolumeID string `json:"volumeID"`
+}
+
+// ClientTool contains information about a client tool executor, such as
+// its name and MD5 checksum.
+type ClientTool struct {
+	// Data is a byte array that's either a binary file or a unicode-encoded,
+	// plain-text script file. Use the file extension of the client tool's file
+	// name to determine the file type.
+	Data []byte `json:"data"`
+
+	// MD5Checksum is the MD5 checksum of the tool. This can be used to
+	// determine if a local copy of the tool needs to be updated.
+	MD5Checksum string `json:"md5checksum"`
+
+	// Name is the file name of the tool, including the file extension.
+	Name string `json:"name"`
 }

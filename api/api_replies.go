@@ -1,8 +1,16 @@
 package api
 
-// GetDriverNamesReply is the reply from the GetDriverNames function.
-type GetDriverNamesReply struct {
-	DriverNames []string `json:"driverNames"`
+// GetServiceInfoReply is the reply from the GetServiceInfo function.
+type GetServiceInfoReply struct {
+	Name              string   `json:"name"`
+	Driver            string   `json:"driver"`
+	RegisteredDrivers []string `json:"registeredDrivers"`
+}
+
+// GetNextAvailableDeviceNameReply is the reply from the
+// GetNextAvailableDeviceName function.
+type GetNextAvailableDeviceNameReply struct {
+	Next *NextAvailableDeviceName `json:"next"`
 }
 
 // GetVolumeMappingReply is the reply from the GetVolumeMapping function.
@@ -62,12 +70,7 @@ type CopySnapshotReply struct {
 	Snapshot *Snapshot `json:"snapshot"`
 }
 
-// GetClientToolNameReply is the reply from the GetClientToolName function.
-type GetClientToolNameReply struct {
-	ClientToolName string `json:"clientToolName"`
-}
-
 // GetClientToolReply is the reply from the GetClientTool function.
 type GetClientToolReply struct {
-	ClientTool []byte `json:"clientTool"`
+	ClientTool *ClientTool `json:"clientTool"`
 }

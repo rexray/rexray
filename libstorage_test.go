@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/akutz/gotil"
 	"github.com/stretchr/testify/assert"
-	gocontext "golang.org/x/net/context"
 
 	"github.com/emccode/libstorage/api"
 	"github.com/emccode/libstorage/client"
@@ -19,6 +20,9 @@ import (
 )
 
 const (
+	localDevicesFile = "/tmp/libstorage/partitions"
+	clientToolDir    = "/tmp/libstorage/bin"
+
 	testServer1Name = "testServer1"
 	testServer2Name = "testServer2"
 	testServer3Name = "testServer3"
@@ -66,6 +70,14 @@ libstorage:
     enabled: true
     groups:
     - local=127.0.0.1
+  client:
+    tooldir: %s
+    localdevicesfile: %s
+    http:
+      logging:
+        enabled: false
+        logrequest: false
+        logresponse: false
   service:
     http:
       logging:
@@ -75,18 +87,20 @@ libstorage:
     servers:
       %s:
         libstorage:
-          drivers:
-          - %s
+          driver: %s
+          profiles:
+            enabled: true
+            groups:
+            - remote=127.0.0.1
       %s:
         libstorage:
-          drivers:
-          - %s
+          driver: %s
       %s:
         libstorage:
-          drivers:
-          - %s
+          driver: %s
 `,
 		host, server,
+		clientToolDir, localDevicesFile,
 		testServer1Name, mockDriver1Name,
 		testServer2Name, mockDriver2Name,
 		testServer3Name, mockDriver3Name)
@@ -101,7 +115,7 @@ libstorage:
 
 func mustGetClient(
 	config gofig.Config,
-	t *testing.T) (gocontext.Context, client.Client) {
+	t *testing.T) (context.Context, client.Client) {
 	if config == nil {
 		config = getConfig("", "", t)
 	}
@@ -118,57 +132,49 @@ func mustGetClient(
 }
 
 func TestMain(m *testing.M) {
+	os.MkdirAll(clientToolDir, 0755)
+	ioutil.WriteFile(localDevicesFile, localDevicesFileBuf, 0644)
+
 	if os.Getenv("LIBSTORAGE_DEBUG") != "" {
 		log.SetLevel(log.DebugLevel)
+		os.Setenv("LIBSTORAGE_SERVICE_HTTP_LOGGING_ENABLED", "true")
+		os.Setenv("LIBSTORAGE_SERVICE_HTTP_LOGGING_LOGREQUEST", "true")
+		os.Setenv("LIBSTORAGE_SERVICE_HTTP_LOGGING_LOGRESPONSE", "true")
+		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_ENABLED", "true")
+		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_LOGREQUEST", "true")
+		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_LOGRESPONSE", "true")
 	}
 	RegisterDriver(mockDriver1Name, newMockDriver1)
 	RegisterDriver(mockDriver2Name, newMockDriver2)
 	RegisterDriver(mockDriver3Name, newMockDriver3)
-	os.Exit(m.Run())
+
+	exitCode := m.Run()
+
+	os.RemoveAll(clientToolDir)
+	os.RemoveAll(localDevicesFile)
+	os.Exit(exitCode)
 }
 
-func TestGetRegisteredDriverNames(t *testing.T) {
-	testGetRegisteredDriverNames(testServer1Name, t)
-	testGetRegisteredDriverNames(testServer2Name, t)
-	testGetRegisteredDriverNames(testServer3Name, t)
+func TestGetServiceInfo(t *testing.T) {
+	testGetServiceInfo(testServer1Name, mockDriver1Name, t)
+	testGetServiceInfo(testServer2Name, mockDriver2Name, t)
+	testGetServiceInfo(testServer3Name, mockDriver3Name, t)
 }
 
-func testGetRegisteredDriverNames(server string, t *testing.T) {
+func testGetServiceInfo(server, driver string, t *testing.T) {
 	config := getConfig("", server, t)
 	ctx, c := mustGetClient(config, t)
-	args := &api.GetDriverNamesArgs{}
-	driverNames, err := c.GetRegisteredDriverNames(ctx, args)
+	args := &api.GetServiceInfoArgs{}
+	info, err := c.GetServiceInfo(ctx, args)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, 3, len(driverNames))
-	assert.Contains(t, driverNames, mockDriver1Name)
-	assert.Contains(t, driverNames, mockDriver2Name)
-	assert.Contains(t, driverNames, mockDriver3Name)
-}
-
-func TestGetInitializedDriverNamesServerAndDriver1(t *testing.T) {
-	testGetInitializedDriverNames(testServer1Name, mockDriver1Name, t)
-}
-
-func TestGetInitializedDriverNamesServerAndDriver2(t *testing.T) {
-	testGetInitializedDriverNames(testServer2Name, mockDriver2Name, t)
-}
-
-func TestGetInitializedDriverNamesServerAndDriver3(t *testing.T) {
-	testGetInitializedDriverNames(testServer3Name, mockDriver3Name, t)
-}
-
-func testGetInitializedDriverNames(server, driver string, t *testing.T) {
-	config := getConfig("", server, t)
-	ctx, c := mustGetClient(config, t)
-	args := &api.GetDriverNamesArgs{}
-	driverNames, err := c.GetInitializedDriverNames(ctx, args)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, 1, len(driverNames))
-	assert.Contains(t, driverNames, driver)
+	assert.Equal(t, server, info.Name)
+	assert.Equal(t, driver, info.Driver)
+	assert.Equal(t, 3, len(info.RegisteredDrivers))
+	assert.True(t, gotil.StringInSlice(mockDriver1Name, info.RegisteredDrivers))
+	assert.True(t, gotil.StringInSlice(mockDriver2Name, info.RegisteredDrivers))
+	assert.True(t, gotil.StringInSlice(mockDriver3Name, info.RegisteredDrivers))
 }
 
 func TestGetVolumeMappingServerAndDriver1(t *testing.T) {
@@ -193,7 +199,7 @@ func testGetVolumeMapping(server, driver string, t *testing.T) {
 	}
 	assert.Equal(t, 1, len(bds))
 	bd := bds[0]
-	assert.Equal(t, driver+"Device", bd.DeviceName)
+	assert.Equal(t, getDeviceName(driver), bd.DeviceName)
 	assert.Equal(t, driver+"Provider", bd.ProviderName)
 	assert.Equal(t, driver+"Region", bd.Region)
 	assertInstanceID(t, driver, bd.InstanceID)
@@ -202,23 +208,24 @@ func testGetVolumeMapping(server, driver string, t *testing.T) {
 func TestGetNextAvailableDeviceNameServerAndDriver1(t *testing.T) {
 	testGetNextAvailableDeviceName(testServer1Name, mockDriver1Name, t)
 }
+
+func TestGetNextAvailableDeviceNameServerAndDriver2(t *testing.T) {
+	testGetNextAvailableDeviceName(testServer2Name, mockDriver2Name, t)
+}
+
+func TestGetNextAvailableDeviceNameServerAndDriver3(t *testing.T) {
+	testGetNextAvailableDeviceName(testServer3Name, mockDriver3Name, t)
+}
+
 func testGetNextAvailableDeviceName(server, driver string, t *testing.T) {
 	config := getConfig("", server, t)
 	ctx, c := mustGetClient(config, t)
-	name, err := c.GetNextAvailableDeviceName(ctx)
+	name, err := c.GetNextAvailableDeviceName(
+		ctx, &api.GetNextAvailableDeviceNameArgs{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("nextAvailableDeviceName=%s", name)
-}
-
-func TestGetClientToolName(t *testing.T) {
-	ctx, c := mustGetClient(nil, t)
-	args := &api.GetClientToolNameArgs{}
-	_, err := c.GetClientToolName(ctx, args)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Equal(t, name, getNextDeviceName(driver))
 }
 
 func TestGetClientTool(t *testing.T) {
@@ -277,11 +284,22 @@ func (m *mockDriver) Name() string {
 	return m.name
 }
 
+func (m *mockDriver) GetNextAvailableDeviceName(
+	ctx context.Context,
+	args *api.GetNextAvailableDeviceNameArgs) (
+	*api.NextAvailableDeviceName, error) {
+	return &api.NextAvailableDeviceName{
+		Prefix:  "xvd",
+		Pattern: `\w`,
+		Ignore:  getDeviceIgnore(m.name),
+	}, nil
+}
+
 func (m *mockDriver) GetVolumeMapping(
 	ctx context.Context,
 	args *api.GetVolumeMappingArgs) ([]*api.BlockDevice, error) {
 	return []*api.BlockDevice{&api.BlockDevice{
-		DeviceName:   m.pwn("Device"),
+		DeviceName:   getDeviceName(m.name),
 		ProviderName: m.pwn("Provider"),
 		InstanceID:   m.iid(),
 		Region:       m.pwn("Region"),
@@ -377,15 +395,17 @@ func (m *mockDriver) CopySnapshot(
 	}, nil
 }
 
-func (m *mockDriver) GetClientToolName(
-	ctx context.Context,
-	args *api.GetClientToolNameArgs) (string, error) {
-	return m.pwn("-clientTool.sh"), nil
-}
-
 func (m *mockDriver) GetClientTool(
 	ctx context.Context,
-	args *api.GetClientToolArgs) ([]byte, error) {
+	args *api.GetClientToolArgs) (*api.ClientTool, error) {
+
+	clientTool := &api.ClientTool{
+		Name: m.pwn("-clientTool.sh"),
+	}
+
+	if args.Optional.OmitBinary {
+		return clientTool, nil
+	}
 
 	jsonBuf, err := json.Marshal(m.iid())
 	if err != nil {
@@ -401,5 +421,54 @@ func (m *mockDriver) GetClientTool(
 	    ;;
 	esac
 `, string(jsonBuf))
-	return []byte(script), nil
+
+	clientTool.Data = []byte(script)
+	return clientTool, nil
 }
+
+func getDeviceName(driver string) string {
+	var deviceName string
+	switch driver {
+	case mockDriver1Name:
+		deviceName = "/dev/xvdb"
+	case mockDriver2Name:
+		deviceName = "/dev/xvda"
+	case mockDriver3Name:
+		deviceName = "/dev/xvdc"
+	}
+	return deviceName
+}
+
+func getNextDeviceName(driver string) string {
+	var deviceName string
+	switch driver {
+	case mockDriver1Name:
+		deviceName = "/dev/xvdc"
+	case mockDriver3Name:
+		deviceName = "/dev/xvdb"
+	}
+	return deviceName
+}
+
+func getDeviceIgnore(driver string) bool {
+	if driver == mockDriver2Name {
+		return true
+	}
+	return false
+}
+
+var localDevicesFileBuf = []byte(`
+major minor  #blocks  name
+
+  11        0    4050944 sr0
+   8        0   67108864 sda
+   8        1     512000 sda1
+   8        2   66595840 sda2
+ 253        0    4079616 dm-0
+ 253        1   42004480 dm-1
+ 253        2   20508672 dm-2
+ 1024       1   20508672 xvda
+   7        0  104857600 loop0
+   7        1    2097152 loop1
+ 253        3  104857600 dm-3
+`)

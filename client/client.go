@@ -17,39 +17,39 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 	gjson "github.com/gorilla/rpc/json"
 	"golang.org/x/net/context"
 	"golang.org/x/net/context/ctxhttp"
 
 	"github.com/emccode/libstorage/api"
-	"github.com/emccode/libstorage/util"
 )
 
 var (
 	netProtoRx = regexp.MustCompile("(?i)tcp")
+
+	letters = []string{
+		"a", "b", "c", "d", "e", "f", "g", "h",
+		"i", "j", "k", "l", "m", "n", "o", "p"}
 )
 
-// Client is the reference implementation of the libStorage client.
+// Client is the interface for Golang libStorage clients.
 type Client interface {
 
 	// GetInstanceID gets the instance ID.
 	GetInstanceID(ctx context.Context) (*api.InstanceID, error)
 
 	// GetNextAvailableDeviceName gets the name of the next available device.
-	GetNextAvailableDeviceName(ctx context.Context) (string, error)
-
-	// GetRegisteredDriverNames gets the names of the registered drivers.
-	GetRegisteredDriverNames(
+	GetNextAvailableDeviceName(
 		ctx context.Context,
-		args *api.GetDriverNamesArgs) ([]string, error)
+		args *api.GetNextAvailableDeviceNameArgs) (string, error)
 
-	// GetInitializedDriverNames gets the names of the initialized drivers.
-	GetInitializedDriverNames(
+	// GetServiceInfo returns information about the service.
+	GetServiceInfo(
 		ctx context.Context,
-		args *api.GetDriverNamesArgs) ([]string, error)
+		args *api.GetServiceInfoArgs) (*api.GetServiceInfoReply, error)
 
 	// GetVolumeMapping lists the block devices that are attached to the
-	// instance.
 	GetVolumeMapping(
 		ctx context.Context,
 		args *api.GetVolumeMappingArgs) ([]*api.BlockDevice, error)
@@ -103,13 +103,13 @@ type Client interface {
 		args *api.RemoveVolumeArgs) error
 
 	// AttachVolume returns a list of VolumeAttachments is sync/async that will
-	// attach a volume to an instance based on volumeID and instanceID.
+	// attach a volume to an instance based on volumeID and ctx.
 	AttachVolume(
 		ctx context.Context,
 		args *api.AttachVolumeArgs) ([]*api.VolumeAttachment, error)
 
 	// DetachVolume is sync/async that will detach the volumeID from the local
-	// instance or the instanceID.
+	// instance or the ctx.
 	DetachVolume(
 		ctx context.Context,
 		args *api.DetachVolumeArgs) error
@@ -121,30 +121,19 @@ type Client interface {
 		ctx context.Context,
 		args *api.CopySnapshotArgs) (*api.Snapshot, error)
 
-	// GetClientToolName gets the file name of the tool this driver provides
-	// to be executed on the client-side in order to discover a client's
-	// instance ID and next, available device name.
+	// GetClientTool gets the client tool provided by the driver. This tool is
+	// executed on the client-side of the connection in order to discover
+	// information only available to the client, such as the client's instance
+	// ID or a local device map.
 	//
-	// Use the function GetClientTool to get the actual tool.
-	GetClientToolName(
-		ctx context.Context,
-		args *api.GetClientToolNameArgs) (string, error)
-
-	// GetClientTool gets the file  for the tool this driver provides
-	// to be executed on the client-side in order to discover a client's
-	// instance ID and next, available device name.
-	//
-	// This function returns a byte array that will be either a binary file
+	// The client tool is returned as a byte array that's either a binary file
 	// or a unicode-encoded, plain-text script file. Use the file extension
 	// of the client tool's file name to determine the file type.
-	//
-	// The function GetClientToolName can be used to get the file name.
 	GetClientTool(
 		ctx context.Context,
-		args *api.GetClientToolArgs) ([]byte, error)
+		args *api.GetClientToolArgs) (*api.ClientTool, error)
 }
 
-// Client is the reference client implementation for libStorage.
 type client struct {
 	config           gofig.Config
 	url              string
@@ -154,6 +143,7 @@ type client struct {
 	clientToolPath   string
 	logRequests      bool
 	logResponses     bool
+	nextDevice       *api.NextAvailableDeviceName
 }
 
 // Dial opens a connection to a remote libStorage serice and returns the client
@@ -189,7 +179,7 @@ func Dial(
 		ctx = context.Background()
 	}
 
-	netProto, laddr, err := util.ParseAddress(host)
+	netProto, laddr, err := gotil.ParseAddress(host)
 	if err != nil {
 		return nil, err
 	}
@@ -209,112 +199,84 @@ func Dial(
 		return nil, err
 	}
 
+	if err := c.initNextAvailableDeviceName(ctx); err != nil {
+		return nil, err
+	}
+
 	log.WithField("url", c.url).Debug("successfuly dialed libStorage service")
 	return c, nil
 }
 
-func (c *client) initClientTool(ctx context.Context) error {
-
-	toolName, err := c.GetClientToolName(ctx, &api.GetClientToolNameArgs{})
-	if err != nil {
+func (c *client) initNextAvailableDeviceName(ctx context.Context) error {
+	args := &api.GetNextAvailableDeviceNameArgs{}
+	reply := &api.GetNextAvailableDeviceNameReply{}
+	if err := c.post(
+		ctx, "GetNextAvailableDeviceName", args, reply); err != nil {
 		return err
 	}
-
-	if util.FileExistsInPath(toolName) {
-		c.clientToolPath = toolName
-		log.WithField("path", c.clientToolPath).Debug(
-			"client tool exists in path")
-		return nil
-	}
-
-	toolBuf, err := c.GetClientTool(ctx, &api.GetClientToolArgs{})
-	if err != nil {
-		return err
-	}
-
-	toolDir := c.config.GetString("libstorage.client.tooldir")
-	toolPath := fmt.Sprintf("%s/%s", toolDir, toolName)
-	log.WithField("path", toolPath).Debug("writing client tool")
-
-	if err := ioutil.WriteFile(toolPath, toolBuf, 0755); err != nil {
-		return err
-	}
-
-	c.clientToolPath = toolPath
-	log.WithField("path", c.clientToolPath).Debug(
-		"client tool path initialized")
-	return nil
-}
-
-func (c *client) initInstanceID(ctx context.Context) error {
-
-	log.Debug("begin get libStorage instanceID")
-
-	iidJSON, err := c.execClientToolInstanceID(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(iidJSON, &c.instanceID)
-	if err != nil {
-		return err
-	}
-	c.instanceIDJSON = string(iidJSON)
-	c.instanceIDBase64 = base64.URLEncoding.EncodeToString(iidJSON)
-
-	log.WithFields(log.Fields{
-		"instanceID":       c.instanceID,
-		"instanceIDJSON":   c.instanceIDJSON,
-		"instanceIDBase64": c.instanceIDBase64,
-	}).Debug("end get libStorage instanceID")
+	c.nextDevice = reply.Next
 	return nil
 }
 
 func (c *client) GetNextAvailableDeviceName(
-	ctx context.Context) (string, error) {
-	out, err := c.execClientToolNextDevID(ctx)
+	ctx context.Context,
+	args *api.GetNextAvailableDeviceNameArgs) (string, error) {
+
+	if c.nextDevice.Ignore {
+		return "", nil
+	}
+
+	blockDevices, err := c.GetVolumeMapping(ctx, &api.GetVolumeMappingArgs{})
 	if err != nil {
 		return "", err
 	}
-	return string(out), nil
-}
 
-func (c *client) execClientToolInstanceID(
-	ctx context.Context) ([]byte, error) {
-	log.WithField("path", c.clientToolPath).Debug(
-		"executing client tool GetInstanceID")
-	return exec.Command(c.clientToolPath, "GetInstanceID").Output()
-}
+	lettersInUse := map[string]bool{}
 
-func (c *client) execClientToolNextDevID(ctx context.Context) ([]byte, error) {
-
-	log.WithField("path", c.clientToolPath).Debug(
-		"executing client tool GetNextAvailableDeviceName")
-
-	bds, err := c.GetVolumeMapping(ctx, &api.GetVolumeMappingArgs{})
-	if err != nil {
-		return nil, err
+	var rx *regexp.Regexp
+	if c.nextDevice.Pattern == "" {
+		rx = regexp.MustCompile(
+			fmt.Sprintf(`^/dev/%s([a-z])$`, c.nextDevice.Prefix))
+	} else {
+		rx = regexp.MustCompile(
+			fmt.Sprintf(
+				`^/dev/%s(%s)$`, c.nextDevice.Prefix, c.nextDevice.Pattern))
 	}
 
-	bdsJSON, err := json.MarshalIndent(bds, "", "  ")
-	if err != nil {
-		return nil, err
+	for _, d := range blockDevices {
+		m := rx.FindStringSubmatch(d.DeviceName)
+		if len(m) > 0 {
+			lettersInUse[m[1]] = true
+		}
 	}
 
-	env := os.Environ()
-	env = append(env, fmt.Sprintf("BLOCK_DEVICES_JSON=%s", string(bdsJSON)))
+	localDevices, err := c.getLocalDevices(c.nextDevice.Prefix)
+	if err != nil {
+		return "", err
+	}
 
-	cmd := exec.Command(c.clientToolPath, "GetNextAvailableDeviceName")
-	cmd.Env = env
-	return cmd.Output()
+	for _, d := range localDevices {
+		m := rx.FindStringSubmatch(d)
+		if len(m) > 0 {
+			lettersInUse[m[1]] = true
+		}
+	}
+
+	for _, l := range letters {
+		if !lettersInUse[l] {
+			n := fmt.Sprintf("/dev/%s%s", c.nextDevice.Prefix, l)
+			log.WithField("name", n).Debug("got next available device name")
+			return n, nil
+		}
+	}
+
+	return "", nil
 }
 
-// GetInstanceID gets the instance ID.
 func (c *client) GetInstanceID(ctx context.Context) (*api.InstanceID, error) {
 	return c.instanceID, nil
 }
 
-// GetVolumeMapping lists the block devices that are attached to the instance.
 func (c *client) GetVolumeMapping(
 	ctx context.Context,
 	args *api.GetVolumeMappingArgs) ([]*api.BlockDevice, error) {
@@ -325,7 +287,6 @@ func (c *client) GetVolumeMapping(
 	return reply.BlockDevices, nil
 }
 
-// GetInstance retrieves the local instance.
 func (c *client) GetInstance(
 	ctx context.Context,
 	args *api.GetInstanceArgs) (*api.Instance, error) {
@@ -336,8 +297,6 @@ func (c *client) GetInstance(
 	return reply.Instance, nil
 }
 
-// GetVolume returns all volumes for the instance based on either volumeID
-// or volumeName that are available to the instance.
 func (c *client) GetVolume(
 	ctx context.Context,
 	args *api.GetVolumeArgs) ([]*api.Volume, error) {
@@ -412,6 +371,9 @@ func (c *client) RemoveVolume(
 func (c *client) AttachVolume(
 	ctx context.Context,
 	args *api.AttachVolumeArgs) ([]*api.VolumeAttachment, error) {
+	if args.Required.NextDeviceName == "" {
+
+	}
 	reply := &api.AttachVolumeReply{}
 	if err := c.post(ctx, "AttachVolume", args, reply); err != nil {
 		return nil, err
@@ -439,55 +401,19 @@ func (c *client) CopySnapshot(
 	return reply.Snapshot, nil
 }
 
-// GetRegisteredDriverNames gets the names of the registered drivers.
-func (c *client) GetRegisteredDriverNames(
+func (c *client) GetServiceInfo(
 	ctx context.Context,
-	args *api.GetDriverNamesArgs) ([]string, error) {
-	reply := &api.GetDriverNamesReply{}
-	if err := c.post(ctx, "GetRegisteredDriverNames", args, reply); err != nil {
+	args *api.GetServiceInfoArgs) (*api.GetServiceInfoReply, error) {
+	reply := &api.GetServiceInfoReply{}
+	if err := c.post(ctx, "GetServiceInfo", args, reply); err != nil {
 		return nil, err
 	}
-	return reply.DriverNames, nil
+	return reply, nil
 }
 
-// GetInitializedDriverNames gets the names of the initialized drivers.
-func (c *client) GetInitializedDriverNames(
-	ctx context.Context,
-	args *api.GetDriverNamesArgs) ([]string, error) {
-	reply := &api.GetDriverNamesReply{}
-	if err := c.post(ctx, "GetInitializedDriverNames", args, reply); err != nil {
-		return nil, err
-	}
-	return reply.DriverNames, nil
-}
-
-// GetClientToolName gets the file name of the tool this driver provides
-// to be executed on the client-side in order to discover a client's
-// instance ID and next, available device name.
-//
-// Use the function GetClientTool to get the actual tool.
-func (c *client) GetClientToolName(
-	ctx context.Context,
-	args *api.GetClientToolNameArgs) (string, error) {
-	reply := &api.GetClientToolNameReply{}
-	if err := c.post(ctx, "GetClientToolName", args, reply); err != nil {
-		return "", err
-	}
-	return reply.ClientToolName, nil
-}
-
-// GetClientTool gets the file  for the tool this driver provides
-// to be executed on the client-side in order to discover a client's
-// instance ID and next, available device name.
-//
-// This function returns a byte array that will be either a binary file
-// or a unicode-encoded, plain-text script file. Use the file extension
-// of the client tool's file name to determine the file type.
-//
-// The function GetClientToolName can be used to get the file name.
 func (c *client) GetClientTool(
 	ctx context.Context,
-	args *api.GetClientToolArgs) ([]byte, error) {
+	args *api.GetClientToolArgs) (*api.ClientTool, error) {
 	reply := &api.GetClientToolReply{}
 	if err := c.post(ctx, "GetClientTool", args, reply); err != nil {
 		return nil, err
@@ -583,7 +509,7 @@ func (c *client) logRequest(
 		return
 	}
 
-	util.WriteIndented(w, buf)
+	gotil.WriteIndented(w, buf)
 }
 
 func (c *client) logResponse(
@@ -603,5 +529,122 @@ func (c *client) logResponse(
 		return
 	}
 
-	util.WriteIndented(w, buf)
+	gotil.WriteIndented(w, buf)
+}
+
+func (c *client) execClientToolInstanceID(
+	ctx context.Context) ([]byte, error) {
+	log.WithField("path", c.clientToolPath).Debug(
+		"executing client tool GetInstanceID")
+	return exec.Command(c.clientToolPath, "GetInstanceID").Output()
+}
+
+func (c *client) execClientToolNextDevID(ctx context.Context) ([]byte, error) {
+
+	log.WithField("path", c.clientToolPath).Debug(
+		"executing client tool GetNextAvailableDeviceName")
+
+	bds, err := c.GetVolumeMapping(ctx, &api.GetVolumeMappingArgs{})
+	if err != nil {
+		return nil, err
+	}
+
+	bdsJSON, err := json.MarshalIndent(bds, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	env := os.Environ()
+	env = append(env, fmt.Sprintf("BLOCK_DEVICES_JSON=%s", string(bdsJSON)))
+
+	cmd := exec.Command(c.clientToolPath, "GetNextAvailableDeviceName")
+	cmd.Env = env
+	return cmd.Output()
+}
+
+func (c *client) initClientTool(ctx context.Context) error {
+
+	args := &api.GetClientToolArgs{
+		Optional: api.GetClientToolArgsOptional{
+			OmitBinary: true,
+		},
+	}
+	clientTool, err := c.GetClientTool(ctx, args)
+	if err != nil {
+		return err
+	}
+
+	if gotil.FileExistsInPath(clientTool.Name) {
+		c.clientToolPath = clientTool.Name
+		log.WithField("path", c.clientToolPath).Debug(
+			"client tool exists in path")
+		return nil
+	}
+
+	args.Optional.OmitBinary = false
+	clientTool, err = c.GetClientTool(ctx, args)
+	if err != nil {
+		return err
+	}
+
+	toolDir := c.config.GetString("libstorage.client.tooldir")
+	toolPath := fmt.Sprintf("%s/%s", toolDir, clientTool.Name)
+	log.WithField("path", toolPath).Debug("writing client tool")
+
+	if err := ioutil.WriteFile(
+		toolPath, clientTool.Data, 0755); err != nil {
+		return err
+	}
+
+	c.clientToolPath = toolPath
+	log.WithField("path", c.clientToolPath).Debug(
+		"client tool path initialized")
+	return nil
+}
+
+func (c *client) initInstanceID(ctx context.Context) error {
+
+	log.Debug("begin get libStorage instanceID")
+
+	iidJSON, err := c.execClientToolInstanceID(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(iidJSON, &c.instanceID)
+	if err != nil {
+		return err
+	}
+	c.instanceIDJSON = string(iidJSON)
+	c.instanceIDBase64 = base64.URLEncoding.EncodeToString(iidJSON)
+
+	log.WithFields(log.Fields{
+		"instanceID":       c.instanceID,
+		"instanceIDJSON":   c.instanceIDJSON,
+		"instanceIDBase64": c.instanceIDBase64,
+	}).Debug("end get libStorage instanceID")
+	return nil
+}
+
+func (c *client) getLocalDevices(prefix string) ([]string, error) {
+
+	path := c.config.GetString("libstorage.client.localdevicesfile")
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	deviceNames := []string{}
+	scan := bufio.NewScanner(bytes.NewReader(buf))
+
+	rx := regexp.MustCompile(fmt.Sprintf(`^.+?\s(%s\w+)$`, prefix))
+	for scan.Scan() {
+		l := scan.Text()
+		m := rx.FindStringSubmatch(l)
+		if len(m) > 0 {
+			deviceNames = append(deviceNames, fmt.Sprintf("/dev/%s", m[1]))
+		}
+	}
+
+	return deviceNames, nil
 }

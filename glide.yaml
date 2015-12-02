@@ -4,7 +4,11 @@ import:
     ref:     master
     repo:    https://github.com/akutz/gofig
     vcs:     git
-  - package: github.com/spf13/viper
-    ref:     317ec73d0d7507658ee3be15866b445d6d921848
-    repo:    https://github.com/akutz/viper.git
+  - package: github.com/akutz/gotil
+    ref:     master
+    repo:    https://github.com/akutz/gotil
+    vcs:     git
+  - package: github.com/akutz/goof
+    ref:     master
+    repo:    https://github.com/akutz/goof
     vcs:     git

@@ -7,12 +7,12 @@ import (
 	golog "log"
 	"net"
 	"net/http"
-	"regexp"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/rpc"
@@ -20,11 +20,13 @@ import (
 
 	"github.com/emccode/libstorage/api"
 	"github.com/emccode/libstorage/service/server/handlers"
-	"github.com/emccode/libstorage/util"
 )
 
 var (
-	noInstanceIDMethodRx = regexp.MustCompile(`(?i)^libStorage.(?:GetClientTool(?:Name)?)$`)
+	noInstanceIDMethods = []string{
+		"libStorage.GetServiceInfo",
+		"libStorage.GetClientTool",
+	}
 )
 
 // ServiceInfo is information used to serve a service.
@@ -112,7 +114,7 @@ func initServers(
 	for _, si := range serviceInfo {
 		s := rpc.NewServer()
 		s.RegisterBeforeFunc(func(i *rpc.RequestInfo) {
-			if !noInstanceIDMethodRx.MatchString(i.Method) {
+			if !gotil.StringInSlice(i.Method, noInstanceIDMethods) {
 				initInstanceID(i.Request)
 			}
 		})
@@ -141,7 +143,7 @@ func getNetInfo(config gofig.Config) (
 	}
 
 	var netProto string
-	if netProto, laddr, err = util.ParseAddress(host); err != nil {
+	if netProto, laddr, err = gotil.ParseAddress(host); err != nil {
 		return
 	}
 

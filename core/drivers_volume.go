@@ -136,7 +136,7 @@ func (r *vdm) Mount(
 	overwriteFs bool, newFsType string, preempt bool) (string, error) {
 	for _, d := range r.drivers {
 		if !preempt {
-			preempt = r.rexray.Config.GetBool("rexray.volume.mountPreempt")
+			preempt = r.rexray.Config.GetBool("rexray.volume.mount.preempt")
 		}
 
 		return d.Mount(volumeName, volumeID, overwriteFs, newFsType, preempt)

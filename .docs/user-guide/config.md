@@ -270,7 +270,8 @@ rexray:
   storageDrivers:
   - openstack
   volume:
-    mountPreempt: true
+    mount:
+      preempt: true
 openStack:
   authUrl: https://authUrl:35357/v2.0/
   username: username

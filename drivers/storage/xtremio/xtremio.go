@@ -101,10 +101,12 @@ func (d *driver) Init(r *core.RexRay) error {
 	if !d.remoteManagement() {
 		var iqn string
 		if iqn, err = getIQN(); err != nil {
-			return err
+			return goof.WithFieldsE(fields,
+				"error getting IQN", err)
 		}
 		if d.initiator, err = d.client.GetInitiator("", iqn); err != nil {
-			return err
+			return goof.WithFieldsE(fields,
+				"error getting initiator", err)
 		}
 	}
 
@@ -136,7 +138,7 @@ var isXtremIOAttached = func() bool {
 func getIQN() (string, error) {
 	data, err := ioutil.ReadFile("/etc/iscsi/initiatorname.iscsi")
 	if err != nil {
-		return "", err
+		return "", goof.WithError("problem reading /etc/iscsi/initiatorname.iscsi", err)
 	}
 
 	result := string(data)
@@ -406,17 +408,22 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 }
 
 func (d *driver) getVolume(volumeID, volumeName string) ([]xtio.Volume, error) {
+	fields := eff(map[string]interface{}{
+		"volumeID":   volumeID,
+		"volumeName": volumeName,
+	})
+
 	var volumes []xtio.Volume
 	if volumeID != "" || volumeName != "" {
 		volume, err := d.client.GetVolume(volumeID, volumeName)
 		if err != nil {
-			return nil, err
+			return nil, goof.WithFieldsE(fields, "error getting volume", err)
 		}
 		volumes = append(volumes, volume)
 	} else {
 		allVolumes, err := d.client.GetVolumes()
 		if err != nil {
-			return nil, err
+			return nil, goof.WithFieldsE(fields, "error getting volumes", err)
 		}
 		for _, volume := range allVolumes {
 			hrefFields := strings.Split(volume.Href, "/")
@@ -502,6 +509,13 @@ func (d *driver) CreateVolume(
 	volumeName, volumeID, snapshotID, NUvolumeType string,
 	NUIOPS, size int64, NUavailabilityZone string) (*core.Volume, error) {
 
+	fields := eff(map[string]interface{}{
+		"volumeID":   volumeID,
+		"volumeName": volumeName,
+		"snapshotID": snapshotID,
+		"size":       size,
+	})
+
 	var volumes []*core.Volume
 	if volumeID == "" && snapshotID == "" {
 		req := &xtio.NewVolumeOptions{
@@ -510,7 +524,7 @@ func (d *driver) CreateVolume(
 		}
 		res, err := d.client.NewVolume(req)
 		if err != nil {
-			return nil, err
+			return nil, goof.WithFieldsE(fields, "error creating new volume", err)
 		}
 
 		index := getIndex(res.Links[0].Href)
@@ -548,9 +562,13 @@ func (d *driver) CreateVolume(
 }
 
 func (d *driver) RemoveVolume(volumeID string) error {
+	fields := eff(map[string]interface{}{
+		"volumeID": volumeID,
+	})
+
 	err := d.client.DeleteVolume(volumeID, "")
 	if err != nil {
-		return err
+		return goof.WithFieldsE(fields, "error deleting volume", err)
 	}
 
 	log.Println("Deleted Volume: " + volumeID)
@@ -661,7 +679,7 @@ func (d *driver) CreateSnapshot(
 
 	volume, err := d.client.GetVolume(volumeID, "")
 	if err != nil {
-		return nil, err
+		return nil, goof.WithFieldE("volumeID", volumeID, "error getting volume", err)
 	}
 
 	//getfolder of volume
@@ -687,7 +705,7 @@ func (d *driver) CreateSnapshot(
 func (d *driver) RemoveSnapshot(snapshotID string) error {
 	err := d.client.DeleteSnapshot(snapshotID, "")
 	if err != nil {
-		return err
+		return goof.WithFieldE("snapshotID", snapshotID, "error deleting snapshot", err)
 	}
 
 	return nil
@@ -732,15 +750,15 @@ func (d *driver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 			if d.multipath() {
 				_, err := exec.Command("/sbin/multipath").Output()
 				if err != nil {
-					errorCh <- fmt.Errorf(
+					errorCh <- goof.Newf(
 						"Error refreshing multipath: %s", err)
 				}
 			}
 
 			blockDevices, err := d.GetVolumeMapping()
 			if err != nil {
-				errorCh <- fmt.Errorf(
-					"XtremIO: problem getting local block devices: %s", err)
+				errorCh <- goof.Newf(
+					"problem getting local block devices: %s", err)
 				return
 			}
 
@@ -762,7 +780,7 @@ func (d *driver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 	case err := <-errorCh:
 		return nil, err
 	case <-timeout:
-		return nil, fmt.Errorf("XtremIO: timed out waiting for mount")
+		return nil, goof.New("timed out waiting for mount")
 	}
 
 }
@@ -915,7 +933,7 @@ func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, notus
 
 		index := getIndex(lunMaps[0].Href)
 		if err = d.client.DeleteLunMap(index, ""); err != nil {
-			return err
+			return goof.WithFieldE("index", index, "error deleting lun map", err)
 		}
 	}
 

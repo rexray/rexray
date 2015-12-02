@@ -12,6 +12,6 @@ func init() {
 
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Volume")
-	r.Key(gofig.Bool, "", false, "", "rexray.volume.mountPreempt")
+	r.Key(gofig.Bool, "", false, "", "rexray.volume.mount.preempt", "preempt")
 	return r
 }

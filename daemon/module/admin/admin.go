@@ -3,7 +3,6 @@ package admin
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	golog "log"
 	"net/http"
@@ -11,11 +10,13 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
-	"github.com/emccode/rexray/daemon/module"
-	"github.com/emccode/rexray/util"
+	"github.com/akutz/gotil"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+
+	"github.com/emccode/rexray/daemon/module"
 )
 
 const (
@@ -64,20 +65,20 @@ func loadAsset(path, defaultValue string) string {
 		os.Getenv("GOPATH"),
 		path)
 
-	if util.FileExists(devPath) {
+	if gotil.FileExists(devPath) {
 		v, _ := ioutil.ReadFile(devPath)
 		log.Printf("Loaded %s from %s\n", path, devPath)
 		return string(v)
 	}
 
-	exeDir, _, _ := util.GetThisPathParts()
+	exeDir, _, _ := gotil.GetThisPathParts()
 
 	relPath := fmt.Sprintf(
 		"%s/html/%s",
 		exeDir,
 		path)
 
-	if util.FileExists(relPath) {
+	if gotil.FileExists(relPath) {
 		v, _ := ioutil.ReadFile(devPath)
 		log.Printf("Loaded %s from %s\n", path, relPath)
 		return string(v)
@@ -344,7 +345,7 @@ func (m *mod) Start() error {
 	r.Handle("/",
 		handlers.LoggingHandler(stdOut, http.HandlerFunc(indexHandler)))
 
-	_, addr, parseAddrErr := util.ParseAddress(m.Address())
+	_, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {
 		return parseAddrErr
 	}

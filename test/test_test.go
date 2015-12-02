@@ -8,12 +8,12 @@ import (
 	"testing"
 
 	"github.com/akutz/gofig"
+	"github.com/akutz/gotil"
 
 	"github.com/emccode/rexray"
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/core/errors"
 	"github.com/emccode/rexray/drivers/mock"
-	"github.com/emccode/rexray/util"
 )
 
 func TestMain(m *testing.M) {
@@ -159,7 +159,7 @@ func TestNewWithConfigFile(t *testing.T) {
 }
 
 func TestNewWithBadConfigFilePath(t *testing.T) {
-	if _, err := rexray.NewWithConfigFile(util.RandomString(10)); err == nil {
+	if _, err := rexray.NewWithConfigFile(gotil.RandomString(10)); err == nil {
 		t.Fatal("expected error from bad config file path")
 	}
 }
@@ -207,13 +207,13 @@ func TestDriverNames(t *testing.T) {
 	}
 
 	for _, n := range allDriverNames {
-		if !util.StringInSlice(n, regDriverNames) {
+		if !gotil.StringInSlice(n, regDriverNames) {
 			t.Fail()
 		}
 	}
 
 	for _, n := range regDriverNames {
-		if !util.StringInSlice(n, allDriverNames) {
+		if !gotil.StringInSlice(n, allDriverNames) {
 			t.Fail()
 		}
 	}
@@ -249,13 +249,13 @@ func TestRexRayDriverNames(t *testing.T) {
 	}
 
 	for _, n := range allDriverNames {
-		if !util.StringInSlice(n, regDriverNames) {
+		if !gotil.StringInSlice(n, regDriverNames) {
 			t.Fail()
 		}
 	}
 
 	for _, n := range regDriverNames {
-		if !util.StringInSlice(n, allDriverNames) {
+		if !gotil.StringInSlice(n, allDriverNames) {
 			t.Fail()
 		}
 	}

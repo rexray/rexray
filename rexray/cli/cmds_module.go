@@ -7,9 +7,8 @@ import (
 	"net/url"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
-
-	"github.com/emccode/rexray/util"
 )
 
 func (c *CLI) initModuleCmdsAndFlags() {
@@ -32,7 +31,7 @@ func (c *CLI) initModuleCmds() {
 		Short: "List the available module types and their IDs",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.host())
+			_, addr, addrErr := gotil.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}
@@ -71,7 +70,7 @@ func (c *CLI) initModuleCmds() {
 		Short:   "List the running module instances",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.host())
+			_, addr, addrErr := gotil.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}
@@ -101,7 +100,7 @@ func (c *CLI) initModuleCmds() {
 		Short:   "Create a new module instance",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.host())
+			_, addr, addrErr := gotil.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}
@@ -156,7 +155,7 @@ func (c *CLI) initModuleCmds() {
 		Short: "Starts a module instance",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := util.ParseAddress(c.host())
+			_, addr, addrErr := gotil.ParseAddress(c.host())
 			if addrErr != nil {
 				panic(addrErr)
 			}

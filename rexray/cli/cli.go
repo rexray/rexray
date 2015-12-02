@@ -8,14 +8,13 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	glog "github.com/akutz/golf/logrus"
+	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"gopkg.in/yaml.v1"
 
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/rexray/cli/term"
-	"github.com/emccode/rexray/util"
-
-	"gopkg.in/yaml.v1"
 )
 
 func init() {
@@ -259,7 +258,7 @@ func (c *CLI) updateLogLevel() {
 
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
-	if c.cfgFile != "" && util.FileExists(c.cfgFile) {
+	if c.cfgFile != "" && gotil.FileExists(c.cfgFile) {
 		if err := c.r.Config.ReadConfigFile(c.cfgFile); err != nil {
 			panic(err)
 		}

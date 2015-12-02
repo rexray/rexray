@@ -61,7 +61,8 @@ func Serve(
 			serviceInfo[name].server.ServeHTTP(w, req)
 		})
 	loggingHandler := handlers.NewLoggingHandler(httpHandler, config)
-	r.Handle("/libStorage/{name}", gcontext.ClearHandler(loggingHandler))
+	r.Handle("/libStorage/servers/{name}",
+		gcontext.ClearHandler(loggingHandler))
 
 	hs := &http.Server{
 		Addr:           laddr,

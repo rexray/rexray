@@ -22,6 +22,7 @@ import (
 	"github.com/rackspace/gophercloud/openstack"
 	"github.com/rackspace/gophercloud/openstack/blockstorage/v1/snapshots"
 	"github.com/rackspace/gophercloud/openstack/blockstorage/v1/volumes"
+	"github.com/rackspace/gophercloud/openstack/blockstorage/v2/extensions/volumeactions"
 	"github.com/rackspace/gophercloud/openstack/compute/v2/extensions/volumeattach"
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 )
@@ -32,13 +33,14 @@ const (
 )
 
 type driver struct {
-	provider           *gophercloud.ProviderClient
-	client             *gophercloud.ServiceClient
-	clientBlockStorage *gophercloud.ServiceClient
-	region             string
-	availabilityZone   string
-	instanceID         string
-	r                  *core.RexRay
+	provider             *gophercloud.ProviderClient
+	client               *gophercloud.ServiceClient
+	clientBlockStorage   *gophercloud.ServiceClient
+	clientBlockStoragev2 *gophercloud.ServiceClient
+	region               string
+	availabilityZone     string
+	instanceID           string
+	r                    *core.RexRay
 }
 
 func ef() goof.Fields {
@@ -127,6 +129,15 @@ func (d *driver) Init(r *core.RexRay) error {
 		return goof.WithFieldsE(fields,
 			"error getting newBlockStorageV1", err)
 	}
+
+	fmt.Println(fmt.Sprintf("%v", d.clientBlockStorage))
+
+	if d.clientBlockStoragev2, err = openstack.NewBlockStorageV2(d.provider,
+		gophercloud.EndpointOpts{Region: d.region}); err != nil {
+		return goof.WithFieldsE(fields,
+			"error getting newBlockStorageV2", err)
+	}
+	fmt.Println(fmt.Sprintf("%v", d.clientBlockStoragev2))
 
 	log.WithField("provider", providerName).Info("storage driver initialized")
 
@@ -811,7 +822,7 @@ func getLocalDevices() (deviceNames []string, err error) {
 }
 
 func (d *driver) AttachVolume(
-	runAsync bool, volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	runAsync bool, volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
 	fields := eff(map[string]interface{}{
 		"runAsync":   runAsync,
@@ -823,6 +834,12 @@ func (d *driver) AttachVolume(
 	if err != nil {
 		return nil, goof.WithFieldsE(
 			fields, "error getting next available device", err)
+	}
+
+	if force {
+		if err := d.DetachVolume(false, volumeID, "", true); err != nil {
+			return nil, err
+		}
 	}
 
 	options := &volumeattach.CreateOpts{
@@ -855,7 +872,7 @@ func (d *driver) AttachVolume(
 }
 
 func (d *driver) DetachVolume(
-	runAsync bool, volumeID, instanceID string) error {
+	runAsync bool, volumeID, instanceID string, force bool) error {
 
 	fields := eff(map[string]interface{}{
 		"runAsync":   runAsync,
@@ -871,11 +888,25 @@ func (d *driver) DetachVolume(
 		return goof.WithFieldsE(fields, "error getting volume", err)
 	}
 
+	if len(volume) == 0 {
+		return goof.WithFields(fields, "no volumes returned")
+	}
+
+	if len(volume[0].Attachments) == 0 {
+		return nil
+	}
+
 	fields["instanceId"] = volume[0].Attachments[0].InstanceID
-	resp := volumeattach.Delete(
-		d.client, volume[0].Attachments[0].InstanceID, volumeID)
-	if resp.Err != nil {
-		return goof.WithFieldsE(fields, "error deleting volume", err)
+	if force {
+		if resp := volumeactions.ForceDetach(d.clientBlockStoragev2, volumeID); resp.Err != nil {
+			log.Info(fmt.Sprintf("%+v", resp.Err))
+			return goof.WithFieldsE(fields, "error forcing detach volume", resp.Err)
+		}
+	} else {
+		if resp := volumeattach.Delete(
+			d.client, volume[0].Attachments[0].InstanceID, volumeID); resp.Err != nil {
+			return goof.WithFieldsE(fields, "error detaching volume", resp.Err)
+		}
 	}
 
 	if !runAsync {

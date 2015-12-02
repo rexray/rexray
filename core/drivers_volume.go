@@ -19,7 +19,7 @@ type VolumeDriver interface {
 	// the FS based on newFsType if it is detected that there is no FS present.
 	Mount(
 		volumeName, volumeID string,
-		overwriteFs bool, newFsType string) (string, error)
+		overwriteFs bool, newFsType string, preempt bool) (string, error)
 
 	// Unmount will unmount the specified volume by volumeName or volumeID.
 	Unmount(volumeName, volumeID string) error
@@ -35,11 +35,11 @@ type VolumeDriver interface {
 
 	// Attach will attach a volume based on volumeName to the instance of
 	// instanceID.
-	Attach(volumeName, instanceID string) (string, error)
+	Attach(volumeName, instanceID string, force bool) (string, error)
 
 	// Detach will detach a volume based on volumeName to the instance of
 	// instanceID.
-	Detach(volumeName, instanceID string) error
+	Detach(volumeName, instanceID string, force bool) error
 
 	// NetworkName will return an identifier of a volume that is relevant when
 	// corelating a local device to a device that is the volumeName to the
@@ -133,9 +133,13 @@ func (r *vdm) DetachAll(instanceID string) error {
 // the FS based on newFsType if it is detected that there is no FS present.
 func (r *vdm) Mount(
 	volumeName, volumeID string,
-	overwriteFs bool, newFsType string) (string, error) {
+	overwriteFs bool, newFsType string, preempt bool) (string, error) {
 	for _, d := range r.drivers {
-		return d.Mount(volumeName, volumeID, overwriteFs, newFsType)
+		if !preempt {
+			preempt = r.rexray.Config.GetBool("rexray.volume.mountPreempt")
+		}
+
+		return d.Mount(volumeName, volumeID, overwriteFs, newFsType, preempt)
 	}
 	return "", errors.ErrNoVolumesDetected
 }
@@ -174,18 +178,18 @@ func (r *vdm) Remove(volumeName string) error {
 
 // Attach will attach a volume based on volumeName to the instance of
 // instanceID.
-func (r *vdm) Attach(volumeName, instanceID string) (string, error) {
+func (r *vdm) Attach(volumeName, instanceID string, force bool) (string, error) {
 	for _, d := range r.drivers {
-		return d.Attach(volumeName, instanceID)
+		return d.Attach(volumeName, instanceID, force)
 	}
 	return "", errors.ErrNoVolumesDetected
 }
 
 // Detach will detach a volume based on volumeName to the instance of
 // instanceID.
-func (r *vdm) Detach(volumeName, instanceID string) error {
+func (r *vdm) Detach(volumeName, instanceID string, force bool) error {
 	for _, d := range r.drivers {
-		return d.Detach(volumeName, instanceID)
+		return d.Detach(volumeName, instanceID, force)
 	}
 	return errors.ErrNoVolumesDetected
 }

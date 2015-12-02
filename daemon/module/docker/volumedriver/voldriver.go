@@ -257,7 +257,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		mountPath, err := m.r.Volume.Mount(pr.Name, "", false, "")
+		mountPath, err := m.r.Volume.Mount(pr.Name, "", false, "", false)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err).Error("/VolumeDriver.Mount: error mounting volume")

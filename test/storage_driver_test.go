@@ -387,7 +387,7 @@ func TestStorageDriverAttachVolume(t *testing.T) {
 	}
 	d := <-r.Storage.Drivers()
 	if _, err := d.AttachVolume(
-		false, "", ""); err != nil {
+		false, "", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -398,7 +398,7 @@ func TestStorageDriverManagerAttachVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := r.Storage.AttachVolume(
-		false, "", ""); err != nil {
+		false, "", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -409,7 +409,7 @@ func TestStorageDriverManagerAttachVolumeNoDrivers(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := r.Storage.AttachVolume(
-		false, "", ""); err != errors.ErrNoStorageDetected {
+		false, "", "", false); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
 }
@@ -421,7 +421,7 @@ func TestStorageDriverDetachVolume(t *testing.T) {
 	}
 	d := <-r.Storage.Drivers()
 	if err := d.DetachVolume(
-		false, "", ""); err != nil {
+		false, "", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -432,7 +432,7 @@ func TestStorageDriverManagerDetachVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := r.Storage.DetachVolume(
-		false, "", ""); err != nil {
+		false, "", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -443,7 +443,7 @@ func TestStorageDriverManagerDetachVolumeNoDrivers(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := r.Storage.DetachVolume(
-		false, "", ""); err != errors.ErrNoStorageDetected {
+		false, "", "", false); err != errors.ErrNoStorageDetected {
 		t.Fatal(err)
 	}
 }

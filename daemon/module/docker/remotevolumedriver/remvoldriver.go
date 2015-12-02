@@ -269,7 +269,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		networkName, err := m.r.Volume.Attach(pr.Name, pr.InstanceID)
+		networkName, err := m.r.Volume.Attach(pr.Name, pr.InstanceID, false)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return
@@ -291,7 +291,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		err := m.r.Volume.Detach(pr.Name, pr.InstanceID)
+		err := m.r.Volume.Detach(pr.Name, pr.InstanceID, false)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			return

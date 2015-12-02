@@ -26,12 +26,14 @@ const providerName = "XtremIO"
 
 // The XtremIO storage driver.
 type driver struct {
-	client       *xtio.Client
-	initiator    xtio.Initiator
-	volumesSig   string
-	lunMapsSig   string
-	volumesByNaa map[string]xtio.Volume
-	r            *core.RexRay
+	client           *xtio.Client
+	initiator        xtio.Initiator
+	volumesSig       string
+	lunMapsSig       string
+	initiatorsSig    string
+	volumesByNaa     map[string]xtio.Volume
+	initiatorsByName map[string]xtio.Initiator
+	r                *core.RexRay
 }
 
 func ef() goof.Fields {
@@ -183,6 +185,21 @@ func (d *driver) getLunMapsSig() (string, error) {
 	return strings.Join(lunMapsNameHref, ";"), err
 }
 
+func (d *driver) getInitiatorsSig() (string, error) {
+	inits, err := d.client.GetInitiators()
+	if err != nil {
+		return "", err
+	}
+
+	var initsNameHref sort.StringSlice
+	for _, init := range inits {
+		initsNameHref = append(initsNameHref,
+			fmt.Sprintf("%s-%s", init.Name, init.Href))
+	}
+	initsNameHref.Sort()
+	return strings.Join(initsNameHref, ";"), err
+}
+
 func (d *driver) isVolumesSigEqual() (bool, string, error) {
 	volumesSig, err := d.getVolumesSig()
 	if err != nil {
@@ -203,6 +220,56 @@ func (d *driver) isLunMapsSigEqual() (bool, string, error) {
 		return true, lunMapsSig, nil
 	}
 	return false, lunMapsSig, nil
+}
+
+func (d *driver) isInitiatorsSigEqual() (bool, string, error) {
+	initiatorsSig, err := d.getInitiatorsSig()
+	if err != nil {
+		return false, "", err
+	}
+	if initiatorsSig == d.initiatorsSig {
+		return true, initiatorsSig, nil
+	}
+	return false, initiatorsSig, nil
+}
+
+func (d *driver) updateInitiatorMap() error {
+	initiators, err := d.client.GetInitiators()
+	if err != nil {
+		return err
+	}
+
+	d.initiatorsByName = make(map[string]xtio.Initiator)
+
+	for _, initiator := range initiators {
+		index := getIndex(initiator.Href)
+		initiatorDetail, err := d.client.GetInitiator(index, "")
+		if err != nil {
+			return err
+		}
+		d.initiatorsByName[initiatorDetail.Name] = initiatorDetail
+	}
+
+	return nil
+}
+
+func (d *driver) updateInitiatorsSig() error {
+	checkSig, initiatorsSig, err := d.isInitiatorsSigEqual()
+	if err != nil {
+		return err
+	}
+
+	if checkSig {
+		return nil
+	}
+
+	if err := d.updateInitiatorMap(); err != nil {
+		return err
+	}
+
+	d.initiatorsSig = initiatorsSig
+
+	return nil
 }
 
 func (d *driver) updateVolumesSig() error {
@@ -370,27 +437,42 @@ func (d *driver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) 
 		return nil, err
 	}
 
-	localVolumeMappings, err := d.GetVolumeMapping()
+	mapDiskByID, err := d.getLocalDeviceByID()
 	if err != nil {
 		return nil, err
 	}
 
-	blockDeviceMap := make(map[string]*core.BlockDevice)
-	for _, volume := range localVolumeMappings {
-		blockDeviceMap[volume.VolumeID] = volume
+	if err := d.updateInitiatorsSig(); err != nil {
+		return nil, err
+	}
+
+	if err := d.updateVolumesSig(); err != nil {
+		return nil, err
 	}
 
 	var volumesSD []*core.Volume
 	for _, volume := range volumes {
+		blockDeviceName, _ := mapDiskByID[volume.NaaName]
 		var attachmentsSD []*core.VolumeAttachment
-		if _, exists := blockDeviceMap[strconv.Itoa(volume.Index)]; exists {
-			attachmentSD := &core.VolumeAttachment{
-				VolumeID:   strconv.Itoa(volume.Index),
-				InstanceID: strconv.Itoa(d.initiator.Index),
-				DeviceName: blockDeviceMap[strconv.Itoa(volume.Index)].DeviceName,
-				Status:     "",
+		for _, level1 := range volume.LunMappingList {
+			for _, level2 := range level1 {
+				var initiatorIndex int
+				if reflect.TypeOf(level2).String() == "[]interface {}" {
+					initiatorName := level2.([]interface{})[1].(string)
+					if initiator, ok := d.initiatorsByName[initiatorName]; ok {
+						initiatorIndex = initiator.Index
+					}
+				}
+				if initiatorIndex != 0 {
+					attachmentSD := &core.VolumeAttachment{
+						VolumeID:   strconv.Itoa(volume.Index),
+						InstanceID: strconv.Itoa(initiatorIndex),
+						DeviceName: blockDeviceName,
+						Status:     "",
+					}
+					attachmentsSD = append(attachmentsSD, attachmentSD)
+				}
 			}
-			attachmentsSD = append(attachmentsSD, attachmentSD)
 		}
 
 		var az string
@@ -687,10 +769,27 @@ func (d *driver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 
 func (d *driver) AttachVolume(
 	runAsync bool,
-	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
 	if volumeID == "" {
 		return nil, errors.ErrMissingVolumeID
+	}
+
+	volumes, err := d.GetVolume(volumeID, "")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) == 0 {
+		return nil, errors.ErrNoVolumesReturned
+	}
+
+	if len(volumes[0].Attachments) > 0 && !force {
+		return nil, goof.New("Volume already attached to another host")
+	} else if len(volumes[0].Attachments) > 0 && force {
+		if err := d.DetachVolume(false, volumeID, "", true); err != nil {
+			return nil, err
+		}
 	}
 
 	// doing a lookup here for intiator name as IG name, so limited to IG name
@@ -770,12 +869,12 @@ func (d *driver) getLunMaps(initiatorName, volumeID string) (xtio.Refs, error) {
 	return refs, nil
 }
 
-func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string) error {
+func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, notused bool) error {
 	if volumeID == "" {
 		return errors.ErrMissingVolumeID
 	}
 
-	volumes, err := d.getVolume(volumeID, "")
+	volumes, err := d.GetVolume(volumeID, "")
 	if err != nil {
 		return err
 	}
@@ -785,26 +884,39 @@ func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string) error
 	}
 
 	if d.multipath() {
-		_, err := exec.Command("/sbin/multipath", "-f",
-			fmt.Sprintf("3%s", volumes[0].NaaName)).Output()
-		if err != nil {
-			return fmt.Errorf("Error removing multipath: %s", err)
+		_, _ = exec.Command("/sbin/multipath", "-f",
+			fmt.Sprintf("3%s", volumes[0].NetworkName)).Output()
+	}
+
+	if err := d.updateInitiatorsSig(); err != nil {
+		return err
+	}
+
+	mapInitiatorNamesByID := make(map[string]string)
+	for _, initiator := range d.initiatorsByName {
+		mapInitiatorNamesByID[strconv.Itoa(initiator.Index)] = initiator.Name
+	}
+
+	for _, attachment := range volumes[0].Attachments {
+		var initiatorName string
+		var ok bool
+		if initiatorName, ok = mapInitiatorNamesByID[attachment.InstanceID]; !ok {
+			continue
 		}
-	}
+		lunMaps, err := d.getLunMaps(
+			initiatorName, attachment.VolumeID)
+		if err != nil {
+			return err
+		}
 
-	lunMaps, err := d.getLunMaps(
-		d.initiator.Name, strconv.Itoa(volumes[0].Index))
-	if err != nil {
-		return err
-	}
+		if len(lunMaps) == 0 {
+			continue
+		}
 
-	if len(lunMaps) == 0 {
-		return nil
-	}
-
-	index := getIndex(lunMaps[0].Href)
-	if err = d.client.DeleteLunMap(index, ""); err != nil {
-		return err
+		index := getIndex(lunMaps[0].Href)
+		if err = d.client.DeleteLunMap(index, ""); err != nil {
+			return err
+		}
 	}
 
 	log.Println("Detached volume", volumeID)

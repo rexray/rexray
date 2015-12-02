@@ -41,7 +41,7 @@ func (m *mockVolDriver) Name() string {
 
 func (m *mockVolDriver) Mount(
 	volumeName, volumeID string,
-	overwriteFs bool, newFsType string) (string, error) {
+	overwriteFs bool, newFsType string, preempt bool) (string, error) {
 	return "", nil
 }
 
@@ -61,11 +61,11 @@ func (m *mockVolDriver) Remove(volumeName string) error {
 	return nil
 }
 
-func (m *mockVolDriver) Attach(volumeName, instanceID string) (string, error) {
+func (m *mockVolDriver) Attach(volumeName, instanceID string, force bool) (string, error) {
 	return "", nil
 }
 
-func (m *mockVolDriver) Detach(volumeName, instanceID string) error {
+func (m *mockVolDriver) Detach(volumeName, instanceID string, force bool) error {
 	return nil
 }
 

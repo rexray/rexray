@@ -702,7 +702,7 @@ func (d *driver) RemoveVolume(volumeID string) error {
 
 func (d *driver) AttachVolume(
 	runAsync bool,
-	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
 	if volumeID == "" {
 		return nil, errors.ErrMissingVolumeID
@@ -711,6 +711,12 @@ func (d *driver) AttachVolume(
 	nextDeviceName, err := d.GetDeviceNextAvailable()
 	if err != nil {
 		return nil, err
+	}
+
+	if force {
+		if err := d.DetachVolume(false, volumeID, "", true); err != nil {
+			return nil, err
+		}
 	}
 
 	_, err = d.ec2Instance.AttachVolume(
@@ -740,13 +746,22 @@ func (d *driver) AttachVolume(
 
 func (d *driver) DetachVolume(
 	runAsync bool,
-	volumeID, blank string) error {
+	volumeID, blank string, force bool) error {
 
 	if volumeID == "" {
 		return errors.ErrMissingVolumeID
 	}
 
-	_, err := d.ec2Instance.DetachVolume(volumeID)
+	volumes, err := d.getVolume(volumeID, "")
+	if err != nil {
+		return err
+	}
+
+	if volumes[0].Status == "available" {
+		return nil
+	}
+
+	_, err = d.ec2Instance.DetachVolume(volumeID, force)
 	if err != nil {
 		return err
 	}

@@ -176,11 +176,11 @@ type StorageDriver interface {
 	// AttachVolume returns a list of VolumeAttachments is sync/async that will
 	// attach a volume to an instance based on volumeID and instanceID.
 	AttachVolume(
-		runAsync bool, volumeID, instanceID string) ([]*VolumeAttachment, error)
+		runAsync bool, volumeID, instanceID string, force bool) ([]*VolumeAttachment, error)
 
 	// DetachVolume is sync/async that will detach the volumeID from the local
 	// instance or the instanceID.
-	DetachVolume(runAsync bool, volumeID string, instanceID string) error
+	DetachVolume(runAsync bool, volumeID string, instanceID string, force bool) error
 
 	// CopySnapshot is a sync/async and returns a snapshot that will copy a
 	// snapshot based on volumeID/snapshotID/snapshotName and create a new
@@ -370,18 +370,18 @@ func (r *sdm) RemoveVolume(volumeID string) error {
 
 func (r *sdm) AttachVolume(
 	runAsync bool,
-	volumeID, instanceID string) ([]*VolumeAttachment, error) {
+	volumeID, instanceID string, force bool) ([]*VolumeAttachment, error) {
 	for _, d := range r.drivers {
-		return d.AttachVolume(runAsync, volumeID, instanceID)
+		return d.AttachVolume(runAsync, volumeID, instanceID, force)
 	}
 	return nil, errors.ErrNoStorageDetected
 }
 
 func (r *sdm) DetachVolume(
 	runAsync bool,
-	volumeID, instanceID string) error {
+	volumeID, instanceID string, force bool) error {
 	for _, d := range r.drivers {
-		return d.DetachVolume(runAsync, volumeID, instanceID)
+		return d.DetachVolume(runAsync, volumeID, instanceID, force)
 	}
 	return errors.ErrNoStorageDetected
 }

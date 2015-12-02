@@ -100,12 +100,12 @@ func (m *mockStorDriver) GetDeviceNextAvailable() (string, error) {
 }
 
 func (m *mockStorDriver) AttachVolume(
-	runAsync bool, volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	runAsync bool, volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 	return nil, nil
 }
 
 func (m *mockStorDriver) DetachVolume(
-	runAsync bool, volumeID string, instanceID string) error {
+	runAsync bool, volumeID string, instanceID string, force bool) error {
 	return nil
 }
 

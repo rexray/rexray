@@ -466,7 +466,7 @@ func (d *driver) GetDeviceNextAvailable() (string, error) {
 
 func (d *driver) AttachVolume(
 	runAsync bool,
-	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
 	fields := eff(map[string]interface{}{
 		"runAsync":   runAsync,
@@ -476,6 +476,12 @@ func (d *driver) AttachVolume(
 
 	if volumeID == "" {
 		return nil, goof.WithFields(fields, "volumeId is required")
+	}
+
+	if force {
+		if err := d.DetachVolume(false, volumeID, "", true); err != nil {
+			return nil, err
+		}
 	}
 
 	mapVolumeSdcParam := &types.MapVolumeSdcParam{
@@ -523,7 +529,7 @@ func (d *driver) AttachVolume(
 }
 
 func (d *driver) DetachVolume(
-	runAsync bool, volumeID string, blank string) error {
+	runAsync bool, volumeID string, blank string, force bool) error {
 
 	fields := eff(map[string]interface{}{
 		"runAsync": runAsync,
@@ -551,6 +557,10 @@ func (d *driver) DetachVolume(
 		SdcID:                d.sdc.Sdc.ID,
 		IgnoreScsiInitiators: "true",
 		AllSdcs:              "",
+	}
+
+	if force {
+		unmapVolumeSdcParam.AllSdcs = "true"
 	}
 
 	// need to detect if unmounted first

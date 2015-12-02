@@ -58,7 +58,7 @@ func (d *driver) Name() string {
 }
 
 // Mount will perform the steps to get an existing Volume with or without a fileystem mounted to a guest
-func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType string) (string, error) {
+func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType string, preempt bool) (string, error) {
 	log.WithFields(log.Fields{
 		"volumeName":  volumeName,
 		"volumeID":    volumeID,
@@ -78,7 +78,7 @@ func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType 
 
 	if len(volAttachments) == 0 {
 		volAttachments, err = d.r.Storage.AttachVolume(
-			false, vols[0].VolumeID, instance.InstanceID)
+			false, vols[0].VolumeID, instance.InstanceID, preempt)
 		if err != nil {
 			return "", err
 		}
@@ -159,7 +159,7 @@ func (d *driver) Unmount(volumeName, volumeID string) error {
 		}
 	}
 
-	err = d.r.Storage.DetachVolume(false, vols[0].VolumeID, "")
+	err = d.r.Storage.DetachVolume(false, vols[0].VolumeID, "", false)
 	if err != nil {
 		return err
 	}
@@ -337,7 +337,7 @@ func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 	}
 
 	if newFsType != "" || overwriteFs {
-		_, err = d.Mount(volumeName, "", overwriteFs, newFsType)
+		_, err = d.Mount(volumeName, "", overwriteFs, newFsType, false)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"volumeName":  volumeName,
@@ -591,7 +591,7 @@ func (d *driver) Remove(volumeName string) error {
 }
 
 // Attach will attach a volume to an instance
-func (d *driver) Attach(volumeName, instanceID string) (string, error) {
+func (d *driver) Attach(volumeName, instanceID string, force bool) (string, error) {
 	log.WithFields(log.Fields{
 		"volumeName": volumeName,
 		"instanceID": instanceID,
@@ -609,7 +609,7 @@ func (d *driver) Attach(volumeName, instanceID string) (string, error) {
 		return "", goof.New("Multiple volumes returned by name")
 	}
 
-	_, err = d.r.Storage.AttachVolume(true, volumes[0].VolumeID, instanceID)
+	_, err = d.r.Storage.AttachVolume(true, volumes[0].VolumeID, instanceID, force)
 	if err != nil {
 		return "", err
 	}
@@ -623,7 +623,7 @@ func (d *driver) Attach(volumeName, instanceID string) (string, error) {
 }
 
 // Remove will remove a remote volume
-func (d *driver) Detach(volumeName, instanceID string) error {
+func (d *driver) Detach(volumeName, instanceID string, force bool) error {
 	log.WithFields(log.Fields{
 		"volumeName": volumeName,
 		"instanceID": instanceID,
@@ -634,7 +634,7 @@ func (d *driver) Detach(volumeName, instanceID string) error {
 		return err
 	}
 
-	return d.r.Storage.DetachVolume(true, volume[0].VolumeID, instanceID)
+	return d.r.Storage.DetachVolume(true, volume[0].VolumeID, instanceID, force)
 }
 
 // NetworkName will return relevant information about how a volume can be discovered on an OS

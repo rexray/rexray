@@ -4,20 +4,14 @@ import (
 	"net/http"
 )
 
-// ServiceEndpoint is the libStorage API service-side endpoing.
+// ServiceEndpoint is the interface for the libStorage service/API.
 type ServiceEndpoint interface {
 
-	// GetRegisteredDriverNames gets the names of the registered drivers.
-	GetRegisteredDriverNames(
+	// GetServiceInfo returns information about the service.
+	GetServiceInfo(
 		req *http.Request,
-		args *GetDriverNamesArgs,
-		reply *GetDriverNamesReply) error
-
-	// GetInitializedDriverNames gets the names of the initialized drivers.
-	GetInitializedDriverNames(
-		req *http.Request,
-		args *GetDriverNamesArgs,
-		reply *GetDriverNamesReply) error
+		args *GetServiceInfoArgs,
+		reply *GetServiceInfoReply) error
 
 	// GetVolumeMapping lists the block devices that are attached to the
 	// instance.
@@ -31,6 +25,13 @@ type ServiceEndpoint interface {
 		req *http.Request,
 		args *GetInstanceArgs,
 		reply *GetInstanceReply) error
+
+	// GetNextAvailableDeviceName gets the driver's NextAvailableDeviceName
+	// information.
+	GetNextAvailableDeviceName(
+		req *http.Request,
+		args *GetNextAvailableDeviceNameArgs,
+		reply *GetNextAvailableDeviceNameReply) error
 
 	// GetVolume returns all volumes for the instance based on either volumeID
 	// or volumeName that are available to the instance.
@@ -104,25 +105,14 @@ type ServiceEndpoint interface {
 		args *CopySnapshotArgs,
 		reply *CopySnapshotReply) error
 
-	// GetClientToolName gets the file name of the tool this driver provides
-	// to be executed on the client-side in order to discover a client's
-	// instance ID and next, available device name.
+	// GetClientTool gets the client tool provided by the driver. This tool is
+	// executed on the client-side of the connection in order to discover
+	// information only available to the client, such as the client's instance
+	// ID or a local device map.
 	//
-	// Use the function GetClientTool to get the actual tool.
-	GetClientToolName(
-		req *http.Request,
-		args *GetClientToolNameArgs,
-		reply *GetClientToolNameReply) error
-
-	// GetClientTool gets the file  for the tool this driver provides
-	// to be executed on the client-side in order to discover a client's
-	// instance ID and next, available device name.
-	//
-	// This function returns a byte array that will be either a binary file
+	// The client tool is returned as a byte array that's either a binary file
 	// or a unicode-encoded, plain-text script file. Use the file extension
 	// of the client tool's file name to determine the file type.
-	//
-	// The function GetClientToolName can be used to get the file name.
 	GetClientTool(
 		req *http.Request,
 		args *GetClientToolArgs,

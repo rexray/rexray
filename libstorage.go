@@ -76,7 +76,6 @@ func registerGofigDefaults() {
 	r.Key(gofig.String, "", "", "", "libstorage.host")
 	r.Key(gofig.String, "", "", "", "libstorage.server")
 	r.Key(gofig.String, "", "", "", "libstorage.drivers")
-	r.Key(gofig.String, "", "warn", "", "libstorage.logLevel")
 
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.enabled")
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.client")
@@ -85,20 +84,26 @@ func registerGofigDefaults() {
 	r.Key(gofig.Int, "", 60, "", "libstorage.service.readtimeout")
 	r.Key(gofig.Int, "", 60, "", "libstorage.service.writetimeout")
 
+	r.Key(gofig.String, "",
+		"/proc/partitions", "", "libstorage.client.localdevicesfile")
+
 	r.Key(gofig.String, "", "/usr/local/bin", "", "libstorage.client.tooldir")
-	r.Key(gofig.String, "", "warn", "", "libstorage.client.logLevel")
 	r.Key(gofig.Bool, "", false, "", "libstorage.client.http.logging.enabled")
 	r.Key(gofig.String, "", "", "", "libstorage.client.http.logging.out")
 	r.Key(gofig.String, "", "", "", "libstorage.client.http.logging.err")
-	r.Key(gofig.Bool, "", false, "", "libstorage.client.http.logging.logrequest")
-	r.Key(gofig.Bool, "", false, "", "libstorage.client.http.logging.logresponse")
+	r.Key(gofig.Bool, "",
+		false, "", "libstorage.client.http.logging.logrequest")
+	r.Key(gofig.Bool, "",
+		false, "", "libstorage.client.http.logging.logresponse")
 
-	r.Key(gofig.String, "", "warn", "", "libstorage.service.logLevel")
 	r.Key(gofig.Bool, "", false, "", "libstorage.service.http.logging.enabled")
 	r.Key(gofig.String, "", "", "", "libstorage.service.http.logging.out")
 	r.Key(gofig.String, "", "", "", "libstorage.service.http.logging.err")
-	r.Key(gofig.Bool, "", false, "", "libstorage.service.http.logging.logrequest")
-	r.Key(gofig.Bool, "", false, "", "libstorage.service.http.logging.logresponse")
+
+	r.Key(gofig.Bool, "",
+		false, "", "libstorage.service.http.logging.logrequest")
+	r.Key(gofig.Bool, "",
+		false, "", "libstorage.service.http.logging.logresponse")
 
 	gofig.Register(r)
 }

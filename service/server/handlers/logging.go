@@ -16,8 +16,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
-
-	"github.com/emccode/libstorage/util"
+	"github.com/akutz/gotil"
 )
 
 const (
@@ -146,7 +145,7 @@ func logRequest(
 	fmt.Fprint(w, "    -------------------------- ")
 	fmt.Fprint(w, "HTTP REQUEST (SERVER)")
 	fmt.Fprintln(w, " --------------------------")
-	util.WriteIndented(w, reqDump)
+	gotil.WriteIndented(w, reqDump)
 }
 
 func logResponse(
@@ -162,7 +161,7 @@ func logResponse(
 		fmt.Fprintf(w, "    %s=%s\n", k, strings.Join(v, ","))
 	}
 	fmt.Fprintln(w, "")
-	util.WriteIndented(w, rec.Body.Bytes())
+	gotil.WriteIndented(w, rec.Body.Bytes())
 }
 
 // buildCommonLogLine builds a log entry for req in Apache Common Log Format.

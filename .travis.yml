@@ -1,0 +1,14 @@
+language: go
+go:
+  - 1.5.1
+before_install:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+  - go get github.com/Masterminds/glide
+install:
+  - go get -d $(glide nv)
+  - glide up
+script:
+  - go install $(glide nv)
+  - .build/test.sh

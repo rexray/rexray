@@ -1,24 +1,46 @@
 package api
 
 /*******************************************************************************
-**                              GetDriverNames
+**                              GetServiceInfo
 *******************************************************************************/
 
-// GetDriverNamesArgs are the arguments expected by the GetDriverNames function.
-type GetDriverNamesArgs struct {
+// GetServiceInfoArgs are the arguments expected by the GetServiceInfo function.
+type GetServiceInfoArgs struct {
 	Extensions map[string]interface{}     `json:"extensions"`
-	Optional   GetDriverNamesArgsOptional `json:"optional"`
-	Required   GetDriverNamesArgsRequired `json:"required"`
+	Optional   GetServiceInfoArgsOptional `json:"optional"`
+	Required   GetServiceInfoArgsRequired `json:"required"`
 }
 
-// GetDriverNamesArgsRequired are the required arguments expected by the
-// GetDriverNames function.
-type GetDriverNamesArgsRequired struct {
+// GetServiceInfoArgsRequired are the required arguments expected by the
+// GetServiceInfoArgs function.
+type GetServiceInfoArgsRequired struct {
 }
 
-// GetDriverNamesArgsOptional are the optional arguments expected by the
-// GetDriverNames function.
-type GetDriverNamesArgsOptional struct {
+// GetServiceInfoArgsOptional are the optional arguments expected by the
+// GetServiceInfoArgs function.
+type GetServiceInfoArgsOptional struct {
+}
+
+/*******************************************************************************
+**                        GetNextAvailableDeviceName
+*******************************************************************************/
+
+// GetNextAvailableDeviceNameArgs are the arguments expected by the
+// GetNextAvailableDeviceName function.
+type GetNextAvailableDeviceNameArgs struct {
+	Extensions map[string]interface{}                 `json:"extensions"`
+	Optional   GetNextAvailableDeviceNameArgsOptional `json:"optional"`
+	Required   GetNextAvailableDeviceNameArgsRequired `json:"required"`
+}
+
+// GetNextAvailableDeviceNameArgsRequired are the required arguments
+// expected by the GetNextAvailableDeviceName function.
+type GetNextAvailableDeviceNameArgsRequired struct {
+}
+
+// GetNextAvailableDeviceNameArgsOptional are the optional arguments
+// expected by the GetNextAvailableDeviceName function.
+type GetNextAvailableDeviceNameArgsOptional struct {
 }
 
 /*******************************************************************************
@@ -302,28 +324,6 @@ type CopySnapshotArgsOptional struct {
 }
 
 /*******************************************************************************
-**                              GetClientToolName
-*******************************************************************************/
-
-// GetClientToolNameArgs are the arguments expected by the GetClientToolName
-// function.
-type GetClientToolNameArgs struct {
-	Extensions map[string]interface{}        `json:"extensions"`
-	Optional   GetClientToolNameArgsOptional `json:"optional"`
-	Required   GetClientToolNameArgsRequired `json:"required"`
-}
-
-// GetClientToolNameArgsRequired are the required arguments expected by the
-// GetClientToolName function.
-type GetClientToolNameArgsRequired struct {
-}
-
-// GetClientToolNameArgsOptional are the optional arguments expected by the
-// GetClientToolName function.
-type GetClientToolNameArgsOptional struct {
-}
-
-/*******************************************************************************
 **                                GetClientTool
 *******************************************************************************/
 
@@ -342,4 +342,5 @@ type GetClientToolArgsRequired struct {
 // GetClientToolArgsOptional are the optional arguments expected by the
 // GetClientTool function.
 type GetClientToolArgsOptional struct {
+	OmitBinary bool `json:"omitBinary"`
 }

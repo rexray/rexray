@@ -48,3 +48,7 @@ import:
     ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
     repo:    https://github.com/akutz/yaml.git
     vcs:     git
+  - package: google.golang.org/api/compute/v1
+    ref:     fd081149e482b10c55262756934088ffe3197ea3
+    repo:    https://github.com/google/google-api-go-client.git
+    vcs:     git

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	golog "log"
 	"net"
 	"net/http"
@@ -31,9 +32,9 @@ var (
 
 // ServiceInfo is information used to serve a service.
 type ServiceInfo struct {
-	Name    string
-	Service api.ServiceEndpoint
-	Config  gofig.Config
+	Name    string              `json:"name"`
+	Service api.ServiceEndpoint `json:"-"`
+	Config  gofig.Config        `json:"config"`
 	server  *rpc.Server
 }
 
@@ -53,16 +54,47 @@ func Serve(
 	}
 	log.WithField("host", host).Debug("ready to listen")
 
+	doLogs := config.GetBool("libstorage.server.http.logging.enabled")
+	var stdOut, stdErr io.WriteCloser
+	if doLogs {
+		stdOut = handlers.GetLogIO(
+			"libstorage.server.http.logging.out", config)
+		stdErr = handlers.GetLogIO(
+			"libstorage.server.http.logging.err", config)
+	}
+
 	r := mux.NewRouter()
-	httpHandler := http.HandlerFunc(
+	var configHandler, serversHandler http.Handler
+
+	configHandler = http.HandlerFunc(
+		func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Header().Add("Content-Type", "application/json")
+
+			configJSON, _ := json.MarshalIndent(config, "", "  ")
+			w.Write(configJSON)
+		})
+
+	serversHandler = http.HandlerFunc(
 		func(w http.ResponseWriter, req *http.Request) {
 			vars := mux.Vars(req)
 			name := vars["name"]
 			serviceInfo[name].server.ServeHTTP(w, req)
 		})
-	loggingHandler := handlers.NewLoggingHandler(httpHandler, config)
-	r.Handle("/libStorage/servers/{name}",
-		gcontext.ClearHandler(loggingHandler))
+
+	if doLogs {
+		configHandler = handlers.NewLoggingHandler(
+			stdOut, stdErr, configHandler, config)
+
+		serversHandler = handlers.NewLoggingHandler(
+			stdOut, stdErr, serversHandler, config)
+	}
+
+	r.Handle("/libStorage/config",
+		gcontext.ClearHandler(configHandler))
+
+	r.Handle("/libStorage/services/{name}",
+		gcontext.ClearHandler(serversHandler))
 
 	hs := &http.Server{
 		Addr:           laddr,
@@ -72,14 +104,17 @@ func Serve(
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	if loggingHandler.Enabled {
-		hs.ErrorLog = golog.New(loggingHandler.StdErr, "", 0)
+	if doLogs {
+		hs.ErrorLog = golog.New(stdErr, "", 0)
 	}
 
 	go func() {
 		defer func() {
-			if err := loggingHandler.Close(); err != nil {
-				log.Error(err)
+			if stdOut != nil {
+				stdOut.Close()
+			}
+			if stdErr != nil {
+				stdErr.Close()
 			}
 
 			r := recover()
@@ -101,7 +136,8 @@ func Serve(
 
 	if updatedHost != host {
 		host = updatedHost
-		config.Set("libstorage.host", host)
+		lsmap := config.Get("libstorage").(map[string]interface{})
+		lsmap["host"] = host
 	}
 	log.WithField("host", host).Debug("listening")
 
@@ -178,7 +214,7 @@ func initInstanceID(req *http.Request) {
 }
 
 func getReadTimeout(config gofig.Config) time.Duration {
-	t := config.GetInt("libstorage.service.readtimeout")
+	t := config.GetInt("libstorage.server.readtimeout")
 	if t == 0 {
 		return 60
 	}
@@ -186,7 +222,7 @@ func getReadTimeout(config gofig.Config) time.Duration {
 }
 
 func getWriteTimeout(config gofig.Config) time.Duration {
-	t := config.GetInt("libstorage.service.writetimeout")
+	t := config.GetInt("libstorage.server.writetimeout")
 	if t == 0 {
 		return 60
 	}

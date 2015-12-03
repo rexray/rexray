@@ -74,15 +74,11 @@ func Dial(ctx context.Context, config gofig.Config) (client.Client, error) {
 func registerGofigDefaults() {
 	r := gofig.NewRegistration("libStorage")
 	r.Key(gofig.String, "", "", "", "libstorage.host")
-	r.Key(gofig.String, "", "", "", "libstorage.server")
-	r.Key(gofig.String, "", "", "", "libstorage.drivers")
-
+	r.Key(gofig.String, "", "", "", "libstorage.service")
+	r.Key(gofig.String, "", "", "", "libstorage.driver")
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.enabled")
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.client")
 	r.Key(gofig.String, "", "local=127.0.0.1", "", "libstorage.profiles.groups")
-
-	r.Key(gofig.Int, "", 60, "", "libstorage.service.readtimeout")
-	r.Key(gofig.Int, "", 60, "", "libstorage.service.writetimeout")
 
 	r.Key(gofig.String, "",
 		"/proc/partitions", "", "libstorage.client.localdevicesfile")
@@ -96,14 +92,16 @@ func registerGofigDefaults() {
 	r.Key(gofig.Bool, "",
 		false, "", "libstorage.client.http.logging.logresponse")
 
-	r.Key(gofig.Bool, "", false, "", "libstorage.service.http.logging.enabled")
-	r.Key(gofig.String, "", "", "", "libstorage.service.http.logging.out")
-	r.Key(gofig.String, "", "", "", "libstorage.service.http.logging.err")
+	r.Key(gofig.Int, "", 60, "", "libstorage.server.readtimeout")
+	r.Key(gofig.Int, "", 60, "", "libstorage.server.writetimeout")
+	r.Key(gofig.Bool, "", false, "", "libstorage.server.http.logging.enabled")
+	r.Key(gofig.String, "", "", "", "libstorage.server.http.logging.out")
+	r.Key(gofig.String, "", "", "", "libstorage.server.http.logging.err")
 
 	r.Key(gofig.Bool, "",
-		false, "", "libstorage.service.http.logging.logrequest")
+		false, "", "libstorage.server.http.logging.logrequest")
 	r.Key(gofig.Bool, "",
-		false, "", "libstorage.service.http.logging.logresponse")
+		false, "", "libstorage.server.http.logging.logresponse")
 
 	gofig.Register(r)
 }

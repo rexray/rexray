@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
 
@@ -23,9 +24,9 @@ const (
 	localDevicesFile = "/tmp/libstorage/partitions"
 	clientToolDir    = "/tmp/libstorage/bin"
 
-	testServer1Name = "testServer1"
-	testServer2Name = "testServer2"
-	testServer3Name = "testServer3"
+	testServer1Name = "testService1"
+	testServer2Name = "testService2"
+	testServer3Name = "testService3"
 
 	mockDriver1Name = "mockDriver1"
 	mockDriver2Name = "mockDriver2"
@@ -54,18 +55,19 @@ func newMockDriver3(config gofig.Config) driver.Driver {
 	return d
 }
 
-func getConfig(host, server string, t *testing.T) gofig.Config {
+func getConfig(host, service string, t *testing.T) gofig.Config {
 	if host == "" {
 		host = "tcp://127.0.0.1:0"
 	}
-	if server == "" {
-		server = "testServer2"
+	if service == "" {
+		service = testServer2Name
 	}
 	config := gofig.New()
 	configYaml := fmt.Sprintf(`
 libstorage:
   host: %s
-  server: %s
+  service: %s
+  driver: invalidDriverName
   profiles:
     enabled: true
     groups:
@@ -73,18 +75,8 @@ libstorage:
   client:
     tooldir: %s
     localdevicesfile: %s
-    http:
-      logging:
-        enabled: false
-        logrequest: false
-        logresponse: false
-  service:
-    http:
-      logging:
-        enabled: false
-        logrequest: false
-        logresponse: false
-    servers:
+  server:
+    services:
       %s:
         libstorage:
           driver: %s
@@ -99,13 +91,12 @@ libstorage:
         libstorage:
           driver: %s
 `,
-		host, server,
+		host, service,
 		clientToolDir, localDevicesFile,
 		testServer1Name, mockDriver1Name,
 		testServer2Name, mockDriver2Name,
 		testServer3Name, mockDriver3Name)
 
-	t.Log(configYaml)
 	configYamlBuf := []byte(configYaml)
 	if err := config.ReadConfig(bytes.NewReader(configYamlBuf)); err != nil {
 		panic(err)
@@ -155,21 +146,45 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+func TestGetServiceConfig(t *testing.T) {
+	config := getConfig("", "", t)
+	if err := Serve(config); err != nil {
+		t.Fatalf("error serving libStorage service %v", err)
+	}
+
+	host := config.GetString("libstorage.host")
+	_, laddr, err := gotil.ParseAddress(host)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	url := fmt.Sprintf("http://%s/libStorage/config", laddr)
+	res, err := http.Get(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
 func TestGetServiceInfo(t *testing.T) {
 	testGetServiceInfo(testServer1Name, mockDriver1Name, t)
 	testGetServiceInfo(testServer2Name, mockDriver2Name, t)
 	testGetServiceInfo(testServer3Name, mockDriver3Name, t)
 }
 
-func testGetServiceInfo(server, driver string, t *testing.T) {
-	config := getConfig("", server, t)
+func testGetServiceInfo(service, driver string, t *testing.T) {
+	config := getConfig("", service, t)
 	ctx, c := mustGetClient(config, t)
 	args := &api.GetServiceInfoArgs{}
 	info, err := c.GetServiceInfo(ctx, args)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, server, info.Name)
+	assert.Equal(t, service, info.Name)
 	assert.Equal(t, driver, info.Driver)
 	assert.Equal(t, 3, len(info.RegisteredDrivers))
 	assert.True(t, gotil.StringInSlice(mockDriver1Name, info.RegisteredDrivers))
@@ -189,8 +204,8 @@ func TestGetVolumeMappingServerAndDriver3(t *testing.T) {
 	testGetVolumeMapping(testServer3Name, mockDriver3Name, t)
 }
 
-func testGetVolumeMapping(server, driver string, t *testing.T) {
-	config := getConfig("", server, t)
+func testGetVolumeMapping(service, driver string, t *testing.T) {
+	config := getConfig("", service, t)
 	ctx, c := mustGetClient(config, t)
 	args := &api.GetVolumeMappingArgs{}
 	bds, err := c.GetVolumeMapping(ctx, args)
@@ -217,8 +232,8 @@ func TestGetNextAvailableDeviceNameServerAndDriver3(t *testing.T) {
 	testGetNextAvailableDeviceName(testServer3Name, mockDriver3Name, t)
 }
 
-func testGetNextAvailableDeviceName(server, driver string, t *testing.T) {
-	config := getConfig("", server, t)
+func testGetNextAvailableDeviceName(service, driver string, t *testing.T) {
+	config := getConfig("", service, t)
 	ctx, c := mustGetClient(config, t)
 	name, err := c.GetNextAvailableDeviceName(
 		ctx, &api.GetNextAvailableDeviceNameArgs{})

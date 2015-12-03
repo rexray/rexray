@@ -168,11 +168,12 @@ func Dial(
 	}
 	log.WithField("host", host).Debug("got libStorage host")
 
-	serverName := config.GetString("libstorage.server")
-	if serverName == "" {
-		return nil, goof.New("libstorage.server is required")
+	serviceName := config.GetString("libstorage.service.name")
+	if serviceName == "" {
+		return nil, goof.New("libstorage.service.name is required")
 	}
-	log.WithField("server", serverName).Debug("got libStorage server name")
+	log.WithField(
+		"serviceName", serviceName).Debug("got libStorage serviceName name")
 
 	if ctx == nil {
 		log.Debug("created empty context for dialer")
@@ -188,7 +189,7 @@ func Dial(
 		return nil, goof.WithField("netProto", netProto, "tcp protocol only")
 	}
 
-	c.url = fmt.Sprintf("http://%s/libStorage/servers/%s", laddr, serverName)
+	c.url = fmt.Sprintf("http://%s/libStorage/services/%s", laddr, serviceName)
 	log.WithField("url", c.url).Debug("got libStorage service URL")
 
 	if err := c.initClientTool(ctx); err != nil {

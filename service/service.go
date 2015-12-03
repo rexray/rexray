@@ -61,15 +61,15 @@ func Serve(config gofig.Config) error {
 
 	si := map[string]*server.ServiceInfo{}
 
-	servers := config.Get("libstorage.service.servers")
-	serversMap := servers.(map[string]interface{})
-	log.WithField("count", len(serversMap)).Debug("got servers map")
+	services := config.Get("libstorage.server.services")
+	servicesMap := services.(map[string]interface{})
+	log.WithField("count", len(servicesMap)).Debug("got services map")
 
-	for name := range serversMap {
-		log.WithField("name", name).Debug("processing server config")
+	for name := range servicesMap {
+		log.WithField("name", name).Debug("processing service config")
 
-		scope := fmt.Sprintf("libstorage.service.servers.%s", name)
-		log.WithField("scope", scope).Debug("getting scoped config for server")
+		scope := fmt.Sprintf("libstorage.server.services.%s", name)
+		log.WithField("scope", scope).Debug("getting scoped config for service")
 		sc := config.Scope(scope)
 
 		service, err := newService(name, sc)

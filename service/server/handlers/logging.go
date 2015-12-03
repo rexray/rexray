@@ -26,35 +26,32 @@ const (
 // LoggingHandler is an HTTP logging handler for the libStorage service
 // endpoint.
 type LoggingHandler struct {
-	Enabled      bool
-	LogRequests  bool
-	LogResponses bool
-	StdOut       io.WriteCloser
-	StdErr       io.WriteCloser
-
-	handler http.Handler
-	config  gofig.Config
+	logRequests  bool
+	logResponses bool
+	stdOut       io.WriteCloser
+	stdErr       io.WriteCloser
+	handler      http.Handler
+	config       gofig.Config
 }
 
 // NewLoggingHandler instantiates a new instance of the LoggingHandler type.
 func NewLoggingHandler(
+	stdOut, stdErr io.WriteCloser,
 	handler http.Handler,
 	config gofig.Config) *LoggingHandler {
 
 	h := &LoggingHandler{
 		handler: handler,
 		config:  config,
+		stdOut:  stdOut,
+		stdErr:  stdErr,
 	}
 
-	h.Enabled = config.GetBool("libstorage.service.http.logging.enabled")
-	if h.Enabled {
-		h.StdOut = GetLogIO(
-			"libstorage.service.http.logging.out", config)
-		h.LogRequests = config.GetBool(
-			"libstorage.service.http.logging.logrequest")
-		h.LogResponses = config.GetBool(
-			"libstorage.service.http.logging.logresponse")
-	}
+	h.logRequests = config.GetBool(
+		"libstorage.server.http.logging.logrequest")
+	h.logResponses = config.GetBool(
+		"libstorage.server.http.logging.logresponse")
+
 	return h
 }
 
@@ -81,14 +78,9 @@ func GetLogIO(
 
 // ServeHTTP serves the HTTP request and writes the response.
 func (h *LoggingHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if !h.Enabled {
-		h.handler.ServeHTTP(w, req)
-		return
-	}
-
 	var err error
 	var reqDump []byte
-	if h.LogRequests {
+	if h.logRequests {
 		if reqDump, err = httputil.DumpRequest(req, true); err != nil {
 			log.Error(err)
 		}
@@ -97,11 +89,11 @@ func (h *LoggingHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	rec := httptest.NewRecorder()
 	h.handler.ServeHTTP(rec, req)
 
-	logRequest(h.LogRequests, h.StdOut, rec, req, reqDump)
-	if h.LogResponses {
-		fmt.Fprintln(h.StdOut, "")
-		logResponse(h.StdOut, rec, req)
-		fmt.Fprintln(h.StdOut, "")
+	logRequest(h.logRequests, h.stdOut, rec, req, reqDump)
+	if h.logResponses {
+		fmt.Fprintln(h.stdOut, "")
+		logResponse(h.stdOut, rec, req)
+		fmt.Fprintln(h.stdOut, "")
 	}
 
 	w.WriteHeader(rec.Code)
@@ -109,21 +101,6 @@ func (h *LoggingHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.Header()[k] = v
 	}
 	w.Write(rec.Body.Bytes())
-}
-
-// Close closes the resources associated with the handler.
-func (h *LoggingHandler) Close() error {
-	if h.StdOut != nil {
-		if err := h.StdOut.Close(); err != nil {
-			return err
-		}
-	}
-	if h.StdErr != nil {
-		if err := h.StdErr.Close(); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func logRequest(

@@ -256,3 +256,34 @@ supported:
 Docker   | docker
 
 The volume driver `docker` is automatically activated.
+
+### Pre-emptive Volume Mount
+There is a capability to pre-emptively detach any existing attachments to other
+instances before attempting a mount.  This will enable use cases for
+availability where another instance must be able to take control of a volume
+without the current owner instance being involved.  The operation is considered
+equivalent to a power off of the existing instance for the device.
+
+Example configuration file follows:
+```yaml
+rexray:
+  storageDrivers:
+  - openstack
+  volume:
+    mount:
+      preempt: true
+openStack:
+  authUrl: https://authUrl:35357/v2.0/
+  username: username
+  password: password
+  tenantName: tenantName
+  regionName: regionName
+```
+
+Driver|Supported
+------|---------
+EC2|Yes
+OpenStack|With Cinder v2
+ScaleIO|Yes
+Rackspace|No
+XtremIO|Yes

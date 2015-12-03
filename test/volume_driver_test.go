@@ -101,7 +101,7 @@ func TestVolumeDriverMount(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := <-r.Volume.Drivers()
-	if _, err := d.Mount("", "", false, ""); err != nil {
+	if _, err := d.Mount("", "", false, "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -111,7 +111,7 @@ func TestVolumeDriverManagerMount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.Volume.Mount("", "", false, ""); err != nil {
+	if _, err := r.Volume.Mount("", "", false, "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -121,7 +121,7 @@ func TestVolumeDriverManagerMountNoDrivers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.Volume.Mount("", "", false, ""); err != errors.ErrNoVolumesDetected {
+	if _, err := r.Volume.Mount("", "", false, "", false); err != errors.ErrNoVolumesDetected {
 		t.Fatal(err)
 	}
 }
@@ -256,7 +256,7 @@ func TestVolumeDriverAttach(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := <-r.Volume.Drivers()
-	if _, err := d.Attach("", ""); err != nil {
+	if _, err := d.Attach("", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -266,7 +266,7 @@ func TestVolumeDriverManagerAttach(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.Volume.Attach("", ""); err != nil {
+	if _, err := r.Volume.Attach("", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -276,7 +276,7 @@ func TestVolumeDriverManagerAttachNoDrivers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.Volume.Attach("", ""); err != errors.ErrNoVolumesDetected {
+	if _, err := r.Volume.Attach("", "", false); err != errors.ErrNoVolumesDetected {
 		t.Fatal(err)
 	}
 }
@@ -287,7 +287,7 @@ func TestVolumeDriverDetach(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := <-r.Volume.Drivers()
-	if err := d.Detach("", ""); err != nil {
+	if err := d.Detach("", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -297,7 +297,7 @@ func TestVolumeDriverManagerDetach(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := r.Volume.Detach("", ""); err != nil {
+	if err := r.Volume.Detach("", "", false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -307,7 +307,7 @@ func TestVolumeDriverManagerDetachNoDrivers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := r.Volume.Detach("", ""); err != errors.ErrNoVolumesDetected {
+	if err := r.Volume.Detach("", "", false); err != errors.ErrNoVolumesDetected {
 		t.Fatal(err)
 	}
 }

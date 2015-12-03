@@ -126,7 +126,7 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			volumeAttachment, err := c.r.Storage.AttachVolume(
-				c.runAsync, c.volumeID, c.instanceID)
+				c.runAsync, c.volumeID, c.instanceID, c.force)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -151,7 +151,7 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			err := c.r.Storage.DetachVolume(
-				c.runAsync, c.volumeID, c.instanceID)
+				c.runAsync, c.volumeID, c.instanceID, c.force)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -169,7 +169,7 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			mountPath, err := c.r.Volume.Mount(
-				c.volumeName, c.volumeID, c.overwriteFs, c.fsType)
+				c.volumeName, c.volumeID, c.overwriteFs, c.fsType, false)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -242,9 +242,11 @@ func (c *CLI) initVolumeFlags() {
 	c.volumeAttachCmd.Flags().BoolVar(&c.runAsync, "runasync", false, "runasync")
 	c.volumeAttachCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
 	c.volumeAttachCmd.Flags().StringVar(&c.instanceID, "instanceid", "", "instanceid")
+	c.volumeAttachCmd.Flags().BoolVar(&c.force, "force", false, "force")
 	c.volumeDetachCmd.Flags().BoolVar(&c.runAsync, "runasync", false, "runasync")
 	c.volumeDetachCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
 	c.volumeDetachCmd.Flags().StringVar(&c.instanceID, "instanceid", "", "instanceid")
+	c.volumeDetachCmd.Flags().BoolVar(&c.force, "force", false, "force")
 	c.volumeMountCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
 	c.volumeMountCmd.Flags().StringVar(&c.volumeName, "volumename", "", "volumename")
 	c.volumeMountCmd.Flags().BoolVar(&c.overwriteFs, "overwritefs", false, "overwritefs")

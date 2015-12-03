@@ -774,7 +774,7 @@ func getLocalDevices() (deviceNames []string, err error) {
 }
 
 func (d *driver) AttachVolume(
-	runAsync bool, volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
+	runAsync bool, volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
 	fields := eff(map[string]interface{}{
 		"runAsync":   runAsync,
@@ -818,7 +818,7 @@ func (d *driver) AttachVolume(
 }
 
 func (d *driver) DetachVolume(
-	runAsync bool, volumeID, instanceID string) error {
+	runAsync bool, volumeID, instanceID string, force bool) error {
 
 	fields := eff(map[string]interface{}{
 		"runAsync":   runAsync,

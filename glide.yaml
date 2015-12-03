@@ -13,7 +13,7 @@ import:
     repo:    https://github.com/akutz/viper.git
     vcs:     git
   - package: github.com/goamz/goamz
-    ref:     d864e94f00efde9785b51e0d9f9e3ed04e2e6ecd
+    ref:     5c85623a00092be41b679e53ef47772cf8ded1da
     repo:    https://github.com/clintonskitson/goamz
     vcs:     git
   - package: github.com/emccode/goscaleio
@@ -47,4 +47,8 @@ import:
   - package: gopkg.in/yaml.v2
     ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
     repo:    https://github.com/akutz/yaml.git
+    vcs:     git
+  - package: github.com/rackspace/gophercloud
+    ref:     30f929fcb1c65ef891c9bf548dbac1690c3f32e7
+    repo:    https://github.com/clintonskitson/gophercloud.git
     vcs:     git

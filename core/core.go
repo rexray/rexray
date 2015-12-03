@@ -1,19 +1,11 @@
 package core
 
 import (
-	"fmt"
-
 	"github.com/akutz/gofig"
-
-	"github.com/emccode/rexray/util"
 )
 
 func init() {
 	initDrivers()
-
-	gofig.SetGlobalConfigPath(util.EtcDirPath())
-	gofig.SetUserConfigPath(fmt.Sprintf("%s/.rexray", util.HomeDir()))
-
 	gofig.Register(globalRegistration())
 	gofig.Register(driverRegistration())
 }

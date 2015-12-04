@@ -10,6 +10,7 @@ It is available as a standalone process today and in the future (0.3) as a distr
 Irrespective of platform, `REX-Ray` provides common functionality for the following.
 - AWS EC2 (EBS)
 - OpenStack (Cinder)
+- EMC Isilon
 - EMC ScaleIO
 - EMC VMAX
 - EMC XtremIO

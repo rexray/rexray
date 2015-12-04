@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/mount"
@@ -131,6 +132,10 @@ func (r *odm) Mount(
 	return errors.ErrNoOSDetected
 }
 
+func (r *odm) isNfsDevice(device string) bool {
+	return strings.Contains(device, ":")
+}
+
 func (r *odm) Format(
 	deviceName, fsType string, overwriteFs bool) error {
 	for _, d := range r.drivers {
@@ -140,6 +145,10 @@ func (r *odm) Format(
 			"overwriteFs": overwriteFs,
 			"driverName":  d.Name()}).Info(
 			"formatting if blank or overwriteFs specified")
+		if r.isNfsDevice(deviceName) {
+			return nil
+		}
+
 		return d.Format(deviceName, fsType, overwriteFs)
 	}
 	return errors.ErrNoOSDetected

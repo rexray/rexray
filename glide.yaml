@@ -64,3 +64,7 @@ import:
     ref:     39eb25ef96221a595aea883ffded341d37750d51
     repo:    https://github.com/emccode/govmax
     vcs:     git
+  - package: github.com/emccode/goisilon
+    ref:     957085e0572a42cb7c318eb02a462dfe4001fc27
+    repo:    https://github.com/emccode/goisilon
+    vcs:     git

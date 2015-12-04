@@ -12,6 +12,7 @@ pages:
     - Installation: user-guide/installation.md
     - Configuration: user-guide/config.md
     - 'Amazon EC2': user-guide/ec2.md
+    - Google Compute Engine: user-guide/gce.md
     - OpenStack: user-guide/openstack.md
     - Rackspace: user-guide/rackspace.md
     - ScaleIO: user-guide/scaleio.md

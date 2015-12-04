@@ -120,7 +120,7 @@ func (d *driver) Format(
 	if overwriteFs || !fsDetected {
 		switch newFsType {
 		case "ext4":
-			if err := exec.Command("mkfs.ext4", deviceName).Run(); err != nil {
+			if err := exec.Command("mkfs.ext4", "-F", deviceName).Run(); err != nil {
 				return fmt.Errorf(
 					"Problem creating filesystem on %s with error %s",
 					deviceName, err)

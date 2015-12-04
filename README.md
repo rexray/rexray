@@ -12,6 +12,7 @@ Irrespective of platform, `REX-Ray` provides common functionality for the follow
 - OpenStack (Cinder)
 - EMC ScaleIO
 - EMC XtremIO
+- Google Compute Engine (GCE)
 - ..more coming
 
 ## Operating System Support
@@ -36,8 +37,8 @@ The following command will install the REX-Ray client-server tool.  If using `Ce
 
 ```bash
 $ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESS_KEY=access_key
-$ export AWS_SECRET_KEY=secret_key
+$ export AWS_ACCESSKEY=access_key
+$ export AWS_SECRETKEY=secret_key
 $ rexray volume get
 
 - providername: ec2
@@ -53,8 +54,8 @@ Additionally, it can be ran as a service to support `Docker`, `Mesos`, and other
 
 ```bash
 $ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESS_KEY=access_key
-$ export AWS_SECRET_KEY=secret_key
+$ export AWS_ACCESSKEY=access_key
+$ export AWS_SECRETKEY=secret_key
 $ rexray service start
 Starting REX-Ray...SUCESS!
 

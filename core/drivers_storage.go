@@ -248,7 +248,7 @@ func (r *sdm) GetVolumeMapping() ([]*BlockDevice, error) {
 	for _, driver := range r.drivers {
 		blockDevices, err := driver.GetVolumeMapping()
 		if err != nil {
-			return []*BlockDevice{}, errors.ErrDriverBlockDeviceDiscovery
+			return []*BlockDevice{}, err
 		}
 
 		if len(blockDevices) > 0 {

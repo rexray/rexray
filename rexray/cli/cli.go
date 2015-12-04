@@ -253,7 +253,7 @@ func (c *CLI) updateLogLevel() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	log.WithField("rexrayLogLevel", c.logLevel()).Debug("updated log level")
+	log.WithField("logLevel", c.logLevel()).Debug("updated log level")
 }
 
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {

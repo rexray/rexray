@@ -173,10 +173,10 @@ func (c *CLI) tryToStartDaemon() {
 	cmdArgs := []string{
 		"start",
 		fmt.Sprintf("--client=%s", client),
-		fmt.Sprintf("--rexrayLogLevel=%v", c.logLevel())}
+		fmt.Sprintf("--logLevel=%v", c.logLevel())}
 
 	if c.host() != "" {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--rexrayHost=%s", c.host()))
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", c.host()))
 	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)

@@ -25,9 +25,11 @@ rexray:
     logLevel: warn
 `)
 	r.Key(gofig.String, "h", "tcp://:7979",
-		"The REX-Ray host", "rexray.host")
+		"The REX-Ray host", "rexray.host",
+		"host")
 	r.Key(gofig.String, "l", "warn",
-		"The log level (error, warn, info, debug)", "rexray.logLevel")
+		"The log level (error, warn, info, debug)", "rexray.logLevel",
+		"logLevel")
 	return r
 }
 
@@ -43,10 +45,13 @@ rexray:
     - docker
 `)
 	r.Key(gofig.String, "", "linux",
-		"The OS drivers to consider", "rexray.osDrivers")
+		"The OS drivers to consider", "rexray.osDrivers",
+		"osDrivers")
 	r.Key(gofig.String, "", "",
-		"The storage drivers to consider", "rexray.storageDrivers")
+		"The storage drivers to consider", "rexray.storageDrivers",
+		"storageDrivers")
 	r.Key(gofig.String, "", "docker",
-		"The volume drivers to consider", "rexray.volumeDrivers")
+		"The volume drivers to consider", "rexray.volumeDrivers",
+		"volumeDrivers")
 	return r
 }

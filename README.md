@@ -11,6 +11,7 @@ Irrespective of platform, `REX-Ray` provides common functionality for the follow
 - AWS EC2 (EBS)
 - OpenStack (Cinder)
 - EMC ScaleIO
+- EMC VMAX
 - EMC XtremIO
 - Google Compute Engine (GCE)
 - ..more coming

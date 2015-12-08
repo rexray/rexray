@@ -42,7 +42,7 @@ Below is a full `rexray.yml` file that works with ScaleIO.
 rexray:
   storageDrivers:
   - scaleio
-rackspace:
+scaleio:
   endpoint: endpoint
   insecure: true
   userName: username

@@ -27,7 +27,7 @@ please see the section on how non top-level configuration properties are
 [transformed](./config/#all-other-properties).
 
 ## Activating the Driver
-To activate the XtremIO driver please follow the instructions for
+To activate the GCE driver please follow the instructions for
 [activating storage drivers](/user-guide/config#activating-storage-drivers),
 using `gce` as the driver name.
 

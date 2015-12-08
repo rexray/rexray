@@ -32,7 +32,7 @@ To activate the XtremIO driver please follow the instructions for
 using `xtremio` as the driver name.
 
 ## Examples
-Below is a full `rexray.yml` file that works with ScaleIO.
+Below is a full `rexray.yml` file that works with XtremIO.
 
 ```yaml
 rexray:

@@ -13,6 +13,7 @@ pages:
     - Configuration: user-guide/config.md
     - 'Amazon EC2': user-guide/ec2.md
     - Google Compute Engine: user-guide/gce.md
+    - Isilon: user-guide/isilon.md
     - OpenStack: user-guide/openstack.md
     - Rackspace: user-guide/rackspace.md
     - ScaleIO: user-guide/scaleio.md

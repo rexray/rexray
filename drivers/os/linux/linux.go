@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
@@ -75,8 +76,29 @@ func (d *driver) Unmount(mountPoint string) error {
 	return mount.Unmount(mountPoint)
 }
 
+func (d *driver) isNfsDevice(device string) bool {
+	return strings.Contains(device, ":")
+}
+
+func (d *driver) nfsMount(device, target string) error {
+	command := exec.Command("mount", device, target)
+	output, err := command.CombinedOutput()
+	if err != nil {
+		return goof.WithError(fmt.Sprintf("failed mounting: %s", output), err)
+	}
+
+	return nil
+}
+
 func (d *driver) Mount(
 	device, target, mountOptions, mountLabel string) error {
+
+	if d.isNfsDevice(device) {
+		if err := d.nfsMount(device, target); err != nil {
+			return err
+		}
+		return nil
+	}
 
 	fsType, err := probeFsType(device)
 	if err != nil {

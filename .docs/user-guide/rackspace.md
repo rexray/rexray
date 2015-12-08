@@ -30,3 +30,16 @@ To activate the Rackspace driver please follow the instructions for
 using `rackspace` as the driver name.
 
 ## Examples
+Below is a full `rexray.yml` file that works with Rackspace.
+
+```yaml
+rexray:
+  storageDrivers:
+  - rackspace
+rackspace:
+  authUrl: https://keystoneHost:35357/v2.0/
+  username: username
+  password: password
+  tenantName: tenantName
+  regionName: regionName
+```

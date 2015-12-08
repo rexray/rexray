@@ -36,3 +36,16 @@ To activate the OpenStack driver please follow the instructions for
 using `openstack` as the driver name.
 
 ## Examples
+Below is a full `rexray.yml` file that works with Openstack.
+
+```yaml
+rexray:
+  storageDrivers:
+  - openstack
+rackspace:
+  authUrl: https://keystoneHost:35357/v2.0/
+  username: username
+  password: password
+  tenantName: tenantName
+  regionName: regionName
+```

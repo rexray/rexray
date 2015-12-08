@@ -36,3 +36,18 @@ To activate the ScaleIO driver please follow the instructions for
 using `scaleio` as the driver name.
 
 ## Examples
+Below is a full `rexray.yml` file that works with ScaleIO.
+
+```yaml
+rexray:
+  storageDrivers:
+  - scaleio
+rackspace:
+  endpoint: endpoint
+  insecure: true
+  userName: username
+  password: password
+  systemName: tenantName
+  protectionDomainName: protectionDomainName
+  storagePoolName: storagePoolName
+```

@@ -147,15 +147,17 @@ Nested properties follow these rules for CLI flags:
   * The remaining levels' first characters are all upper-cased with the the
     remaining text of that level left unaltered.
   * All levels are then concatenated together.
+  * See the verbose help for exact global flags using `rexray --help -v`
+    as they may be chopped to minimize verbosity.
 
 The following table illustrates the transformations:
 
 Property Name | Environment Variable | CLI Flag
 --------------|----------------------|-------------
-`rexray.logLevel`    | `REXRAY_LOGLEVEL`    | `--rexrayLogLevel`
-`rexray.osDrivers`   | `REXRAY_OSDRIVERS`   | `--rexrayOsDrivers`
-`rexray.storageDrivers`    | `REXRAY_STORAGEDRIVERS`   | `--rexrayStorageDrivers`
-`rexray.volumeDrivers`    | `REXRAY_VOLUMEDRIVERS`   | `--rexrayVolumeDrivers`
+`rexray.logLevel`    | `REXRAY_LOGLEVEL`    | `--logLevel`
+`rexray.osDrivers`   | `REXRAY_OSDRIVERS`   | `--osDrivers`
+`rexray.storageDrivers`    | `REXRAY_STORAGEDRIVERS`   | `--storageDrivers`
+`rexray.volumeDrivers`    | `REXRAY_VOLUMEDRIVERS`   | `--volumeDrivers`
 
 Another example is a possible configuration of the Amazon Web Services (AWS)
 Elastic Compute Cloud (EC2) storage driver:
@@ -193,7 +195,7 @@ rexray:
 
 However, to specify the same values in an environment variable,
 `REXRAY_STORAGEDRIVERS="ec2 xtremio"`, and as a CLI flag,
-`--rexrayStorageDrivers="ec2 xtremio"`.
+`--storageDrivers="ec2 xtremio"`.
 
 ## Logging
 The `REX-Ray` log level determines the level of verbosity emitted by the

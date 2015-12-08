@@ -203,8 +203,8 @@ _deps:
 			$(PRINT_STATUS); \
 		printf "  ...downloading go dependencies..."; \
 			cd $(BASEDIR); \
+			$(GLIDE) up 2> /dev/null; \
 			go get -d $(GOFLAGS) $(NV); \
-			$(GLIDE) -q up 2> /dev/null; \
 			$(PRINT_STATUS); \
 	fi
 

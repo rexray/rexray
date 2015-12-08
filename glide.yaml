@@ -52,11 +52,11 @@ import:
     ref:     30f929fcb1c65ef891c9bf548dbac1690c3f32e7
     repo:    https://github.com/clintonskitson/gophercloud.git
     vcs:     git
-  - package: google.golang.org/api/compute/v1
-    ref:     fd081149e482b10c55262756934088ffe3197ea3
-    repo:    https://github.com/google/google-api-go-client.git
-    vcs:     git
   - package: golang.org/x/net
     ref:     master
     repo:    https://github.com/golang/net
+    vcs:     git
+  - package: google.golang.org/api/compute/v1
+    ref:     fd081149e482b10c55262756934088ffe3197ea3
+    repo:    https://github.com/google/google-api-go-client.git
     vcs:     git

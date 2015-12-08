@@ -42,7 +42,7 @@ Below is a full `rexray.yml` file that works with Openstack.
 rexray:
   storageDrivers:
   - openstack
-rackspace:
+openstack:
   authUrl: https://keystoneHost:35357/v2.0/
   username: username
   password: password

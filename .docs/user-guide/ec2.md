@@ -30,3 +30,13 @@ To activate the EC2 driver please follow the instructions for
 using `ec2` as the driver name.
 
 ## Examples
+Below is a full `rexray.yml` file that works with Openstack.
+
+```yaml
+rexray:
+  storageDrivers:
+  - ec2
+aws:
+    accessKey: MyAccessKey
+    secretKey: MySecretKey
+```

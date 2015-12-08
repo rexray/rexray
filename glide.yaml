@@ -60,3 +60,7 @@ import:
     ref:     master
     repo:    https://github.com/golang/net
     vcs:     git
+  - package: github.com/emccode/govmax
+    ref:     39eb25ef96221a595aea883ffded341d37750d51
+    repo:    https://github.com/emccode/govmax
+    vcs:     git

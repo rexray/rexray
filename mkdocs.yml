@@ -16,6 +16,7 @@ pages:
     - OpenStack: user-guide/openstack.md
     - Rackspace: user-guide/rackspace.md
     - ScaleIO: user-guide/scaleio.md
+    - VMAX: user-guide/vmax.md
     - XtremIO: user-guide/xtremio.md
     - Docker: user-guide/docker.md
     - Mesos: user-guide/mesos.md

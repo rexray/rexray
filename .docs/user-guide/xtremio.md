@@ -32,3 +32,34 @@ To activate the XtremIO driver please follow the instructions for
 using `xtremio` as the driver name.
 
 ## Examples
+Below is a full `rexray.yml` file that works with ScaleIO.
+
+```yaml
+rexray:
+  storageDrivers:
+  - xtremio
+xtremio:
+  endpoint: endpoint
+  insecure: true
+  username: admin
+  password: password
+  multipath: true
+```
+
+## Pre-Requisites
+### Install
+The driver currently is built for iSCSI operations with XtremIO.  It is expected
+that connectivity between the host and XIO has been established.  The following
+packages can be used for this.  `open-scsi` provides the iSCSI connectivity.
+`multipath-tools` enables multi-path behavior and relates to the `multipath`
+flag if installed.
+
+- `apt-get install open-iscsi`
+- `apt-get install multipath-tools`
+- `iscsiadm -m discovery -t st -p 192.168.1.61`
+- `iscsiadm -m node -l`
+
+### XIO
+Once a login has occured, then you should be able to create a initiator
+group for this iSCSI IQN.  You can leverage default naming for the initiator
+and group.

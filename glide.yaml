@@ -68,3 +68,7 @@ import:
     ref:     957085e0572a42cb7c318eb02a462dfe4001fc27
     repo:    https://github.com/emccode/goisilon
     vcs:     git
+  - package: github.com/appropriate/go-virtualboxclient
+    ref:     967c729a049434d84c4a6d2e5c650f7c57257060
+    repo:    https://github.com/clintonskitson/go-virtualboxclient
+    vcs:     git

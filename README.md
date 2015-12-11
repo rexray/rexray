@@ -15,6 +15,7 @@ Irrespective of platform, `REX-Ray` provides common functionality for the follow
 - EMC VMAX
 - EMC XtremIO
 - Google Compute Engine (GCE)
+- VirtualBox
 - ..more coming
 
 ## Operating System Support

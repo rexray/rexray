@@ -200,6 +200,7 @@ func TestDriverNames(t *testing.T) {
 		"openstack",
 		"rackspace",
 		"scaleio",
+		"virtualbox",
 		"vmax",
 		"xtremio",
 	}
@@ -245,6 +246,7 @@ func TestRexRayDriverNames(t *testing.T) {
 		"openstack",
 		"rackspace",
 		"scaleio",
+		"virtualbox",
 		"vmax",
 		"xtremio",
 	}

@@ -65,7 +65,7 @@ import:
     repo:    https://github.com/emccode/govmax
     vcs:     git
   - package: github.com/emccode/goisilon
-    ref:     957085e0572a42cb7c318eb02a462dfe4001fc27
+    ref:     8fe0089f4a45139a15caf5e2fb8fa60074f36876
     repo:    https://github.com/emccode/goisilon
     vcs:     git
   - package: github.com/appropriate/go-virtualboxclient

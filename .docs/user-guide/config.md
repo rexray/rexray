@@ -284,7 +284,7 @@ openStack:
 
 Driver|Supported
 ------|---------
-EC2|Yes
+EC2|Yes, HVM only
 OpenStack|With Cinder v2
 ScaleIO|Yes
 Rackspace|No

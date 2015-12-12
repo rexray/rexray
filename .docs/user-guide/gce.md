@@ -45,7 +45,3 @@ gce:
 ## Configurable Items
 The following items are configurable specific to this driver.
 - [volumeTypes](https://cloud.google.com/compute/docs/reference/latest/diskTypes/list)
-
-## Limitations
-- Debian 8.2 forced mounts via pre-emption results in Input/Output error until
-remounted

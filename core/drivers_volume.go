@@ -2,8 +2,9 @@ package core
 
 import (
 	"bytes"
-
+	log "github.com/Sirupsen/logrus"
 	"github.com/emccode/rexray/core/errors"
+	"sync"
 )
 
 // VolumeOpts is a map of options used when creating a new volume
@@ -67,14 +68,17 @@ type VolumeDriverManager interface {
 }
 
 type vdm struct {
-	rexray  *RexRay
-	drivers map[string]VolumeDriver
+	rexray       *RexRay
+	drivers      map[string]VolumeDriver
+	m            sync.Mutex
+	mapUsedCount map[string]*int
 }
 
 func (r *vdm) Init(rexray *RexRay) error {
 	if len(r.drivers) == 0 {
 		return errors.ErrNoVolumeDrivers
 	}
+	r.mapUsedCount = make(map[string]*int)
 	return nil
 }
 
@@ -128,6 +132,73 @@ func (r *vdm) DetachAll(instanceID string) error {
 	return errors.ErrNoVolumesDetected
 }
 
+func (r *vdm) countUse(volumeName string) {
+	r.m.Lock()
+	if c, ok := r.mapUsedCount[volumeName]; ok {
+		*c++
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"count":      *c,
+		}).Info("set count to")
+		r.m.Unlock()
+	} else {
+		r.m.Unlock()
+		r.countInit(volumeName)
+		r.countUse(volumeName)
+	}
+}
+
+func (r *vdm) countInit(volumeName string) {
+	r.m.Lock()
+	defer r.m.Unlock()
+
+	var c int
+	c = 0
+	r.mapUsedCount[volumeName] = &c
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"count":      c,
+	}).Info("initialized count")
+}
+
+func (r *vdm) countRelease(volumeName string) {
+	r.m.Lock()
+	defer r.m.Unlock()
+	if c, ok := r.mapUsedCount[volumeName]; ok {
+		*c--
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"count":      *c,
+		}).Info("released count")
+	}
+}
+
+func (r *vdm) countExists(volumeName string) bool {
+	_, exists := r.mapUsedCount[volumeName]
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"exists":     exists,
+	}).Info("status of count")
+
+	return exists
+}
+
+func (r *vdm) countReset(volumeName string) bool {
+	r.m.Lock()
+	defer r.m.Unlock()
+
+	c, _ := r.mapUsedCount[volumeName]
+	if c != nil && *c < 2 {
+		log.WithFields(log.Fields{
+			"volumeName": volumeName,
+			"count":      *c,
+		}).Info("count reset")
+		*c = 0
+		return true
+	}
+	return false
+}
+
 // Mount will return a mount point path when specifying either a volumeName
 // or volumeID.  If a overwriteFs boolean is specified it will overwrite
 // the FS based on newFsType if it is detected that there is no FS present.
@@ -136,10 +207,17 @@ func (r *vdm) Mount(
 	overwriteFs bool, newFsType string, preempt bool) (string, error) {
 	for _, d := range r.drivers {
 		if !preempt {
-			preempt = r.rexray.Config.GetBool("rexray.volume.mount.preempt")
+			preempt = r.preempt()
 		}
 
-		return d.Mount(volumeName, volumeID, overwriteFs, newFsType, preempt)
+		mp, err := d.Mount(volumeName, volumeID, overwriteFs, newFsType, preempt)
+		if err != nil {
+			return "", err
+		}
+
+		r.countUse(volumeName)
+
+		return mp, nil
 	}
 	return "", errors.ErrNoVolumesDetected
 }
@@ -147,7 +225,13 @@ func (r *vdm) Mount(
 // Unmount will unmount the specified volume by volumeName or volumeID.
 func (r *vdm) Unmount(volumeName, volumeID string) error {
 	for _, d := range r.drivers {
-		return d.Unmount(volumeName, volumeID)
+		if r.ignoreUsedCount() || r.countReset(volumeName) || !r.countExists(volumeName) {
+			r.countInit(volumeName)
+			return d.Unmount(volumeName, volumeID)
+		} else {
+			r.countRelease(volumeName)
+			return nil
+		}
 	}
 	return errors.ErrNoVolumesDetected
 }
@@ -163,6 +247,7 @@ func (r *vdm) Path(volumeName, volumeID string) (string, error) {
 // Create will create a new volume with the volumeName and opts.
 func (r *vdm) Create(volumeName string, opts VolumeOpts) error {
 	for _, d := range r.drivers {
+		r.countInit(volumeName)
 		return d.Create(volumeName, opts)
 	}
 	return errors.ErrNoVolumesDetected
@@ -202,4 +287,12 @@ func (r *vdm) NetworkName(volumeName, instanceID string) (string, error) {
 		return d.NetworkName(volumeName, instanceID)
 	}
 	return "", errors.ErrNoVolumesDetected
+}
+
+func (r *vdm) preempt() bool {
+	return r.rexray.Config.GetBool("rexray.volume.mount.preempt")
+}
+
+func (r *vdm) ignoreUsedCount() bool {
+	return r.rexray.Config.GetBool("rexray.volume.unmount.ignoreusedcount")
 }

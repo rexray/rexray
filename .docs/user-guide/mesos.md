@@ -5,11 +5,44 @@ Pooling storage has never been easier...
 ---
 
 ### Overview
+`Mesos` currently includes two containerizer options for tasks.  The first is
+the `Docker` containizer that leverages a Docker runtime to run containers.  In
+this case, refer to the
+[Docker](/user-guide/docker.md) page for more information.  Otherwise,
+the Mesos containerizer is used and the following is important for it.
+
 `Mesos 0.23+` includes modules that enables extensibility for different
-portions the architecture.  The [dvdcli](https://github.com/emccode/dvdcli) and [mesos-module-dvdi](https://github.com/emccode/mesos-module-dvdi) projects enable external volume support with Mesos.
+portions the architecture.  The [dvdcli](https://github.com/emccode/dvdcli) and
+[mesos-module-dvdi](https://github.com/emccode/mesos-module-dvdi) projects
+enable external volume support with Mesos.
 
 ## Examples
-REX-Ray must be running as a service to serve requests from Docker.  This can be done by running `rexray start`.  
+Below is an example `config.yml` file that can be used.  In this case we are
+showing a `virtualbox` driver configuration, but you can use anything here.  We
+do suggest two optional options for the `messos-module-dvdi`.  Setting the
+`volume.mount.preempt` flag ensures any host can pre-empt control of a volume
+from other hosts.  The `volume.unmount.ignoreusedcount` ensures that
+`mesos-module-dvdi` is authoritative when it comes to deciding when to unmount
+volumes.
+
+```yaml
+rexray:
+  storageDrivers:
+  - virtualbox
+  volume:
+    mount:
+      preempt: true
+    unmount:
+      ignoreusedcount: true
+virtualbox:
+  endpoint: http://yourlaptop:18083
+  volumePath: /Users/youruser/VirtualBox Volumes
+  controllerName: SATA
+```      
+
+REX-Ray must be running as a service to serve requests from Docker.  This can
+be done by running `rexray start`.  Make sure you restart REX-Ray if you make
+configuration changes.
 
     root@ubuntu:/home/ubuntu# ./rexray start
     Starting REX-Ray...SUCESS!

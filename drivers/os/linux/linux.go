@@ -100,6 +100,10 @@ func (d *driver) Mount(
 		return nil
 	}
 
+	if err := d.Unmount(target); err != nil {
+		return err
+	}
+
 	fsType, err := probeFsType(device)
 	if err != nil {
 		return err

@@ -657,6 +657,11 @@ func (d *driver) waitVolumeAttach(volumeID, instanceID string) error {
 		if err != nil {
 			return err
 		}
+
+		if len(volume) == 0 {
+			break
+		}
+
 		if volume[0].Status == "attached" {
 			break
 		}

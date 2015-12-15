@@ -285,10 +285,13 @@ openStack:
 
 Driver|Supported
 ------|---------
-EC2|Yes, HVM only
+EC2|Yes, no Ubuntu support
+Isilon|Not yet
 OpenStack|With Cinder v2
 ScaleIO|Yes
 Rackspace|No
+VirtualBox|Yes
+VMAX|Not yet
 XtremIO|Yes
 
 ## Volume Unmount

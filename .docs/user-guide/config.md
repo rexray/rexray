@@ -259,7 +259,8 @@ Docker   | docker
 
 The volume driver `docker` is automatically activated.
 
-### Pre-emptive Volume Mount
+## Volume Mount
+### Pre-Emptive
 There is a capability to pre-emptively detach any existing attachments to other
 instances before attempting a mount.  This will enable use cases for
 availability where another instance must be able to take control of a volume
@@ -289,3 +290,32 @@ OpenStack|With Cinder v2
 ScaleIO|Yes
 Rackspace|No
 XtremIO|Yes
+
+## Volume Unmount
+### Ignore Used Count
+By default accounting takes place during operations that are performed
+on `Mount`, `Unmount`, and other operations.  This only has impact when running
+as a service through the HTTP/JSON interface since the counts are persisted
+in memory.  The purpose of respecting the `Used Count` is to ensure that a
+volume is not unmounted until the unmount requests have equaled the mount
+requests.  
+
+In the `Docker` use case if there are multiple containers sharing a volume
+on the same host, the the volume will not be unmounted until the last container
+is stopped.  
+
+The following setting should only be used if you wish to *disable* this
+functionality.  This would make sense if the accounting is being done from
+higher layers and all unmount operations should proceed without control.
+```yaml
+rexray:
+  volume:
+    unmount:
+      ignoreUsedCount: true
+```
+
+Currently a reset of the service will cause the counts to be reset.  This
+will cause issues if *multiple containers* are sharing a volume.  If you are
+sharing volumes, it is recommended that you reset the service along with the
+accompanying container runtime (if this setting is false) to ensure they are
+synchronized.  

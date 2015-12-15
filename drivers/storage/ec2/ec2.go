@@ -376,6 +376,15 @@ func (d *driver) CreateVolume(
 	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
 
+	volumes, err := d.GetVolume("", volumeName)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) > 0 {
+		return nil, goof.WithField("volumeName", volumeName, "volume name already exists")
+	}
+
 	resp, err := d.createVolume(
 		runAsync, volumeName, volumeID, snapshotID, volumeType,
 		IOPS, size, availabilityZone)
@@ -384,7 +393,7 @@ func (d *driver) CreateVolume(
 		return nil, err
 	}
 
-	volumes, err := d.GetVolume(resp.VolumeId, "")
+	volumes, err = d.GetVolume(resp.VolumeId, "")
 	if err != nil {
 		return nil, err
 	}

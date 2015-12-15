@@ -32,7 +32,7 @@ The following items are configurable specific to this driver.
  - `nfsHost` is the configurable host used when mounting exports
 
 ## Activating the Driver
-To activate the XtremIO driver please follow the instructions for
+To activate the Isilon driver please follow the instructions for
 [activating storage drivers](/user-guide/config#activating-storage-drivers),
 using `isilon` as the driver name.
 

@@ -192,7 +192,7 @@ func (c *CLI) tryToStartDaemon() {
 	}
 
 	pid, _ := util.ReadPidFile()
-	fmt.Printf("SUCESS!\n\n")
+	fmt.Printf("SUCCESS!\n\n")
 	fmt.Printf("  The REX-Ray daemon is now running at PID %d. To\n", pid)
 	fmt.Printf("  shutdown the daemon execute the following command:\n\n")
 	fmt.Printf("    sudo %s stop\n\n", thisAbsPath)

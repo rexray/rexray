@@ -60,7 +60,7 @@ $ export REXRAY_STORAGEDRIVERS=ec2
 $ export AWS_ACCESSKEY=access_key
 $ export AWS_SECRETKEY=secret_key
 $ rexray service start
-Starting REX-Ray...SUCESS!
+Starting REX-Ray...SUCCESS!
 
   The REX-Ray daemon is now running at PID XX. To
   shutdown the daemon execute the following command:

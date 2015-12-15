@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/docker/docker/pkg/mount"
 	"github.com/opencontainers/runc/libcontainer/label"
@@ -21,6 +22,7 @@ const providerName = "linux"
 
 func init() {
 	core.RegisterDriver(providerName, newDriver)
+	gofig.Register(configRegistration())
 }
 
 type driver struct {
@@ -90,13 +92,25 @@ func (d *driver) nfsMount(device, target string) error {
 	return nil
 }
 
+func (d *driver) fileModeMountPath() (fileMode os.FileMode) {
+	return os.FileMode(d.volumeFileMode())
+}
+
 func (d *driver) Mount(
 	device, target, mountOptions, mountLabel string) error {
 
 	if d.isNfsDevice(device) {
+		if err := d.Unmount(target); err != nil {
+			return err
+		}
+
 		if err := d.nfsMount(device, target); err != nil {
 			return err
 		}
+
+		os.MkdirAll(d.volumeMountPath(target), d.fileModeMountPath())
+		os.Chmod(d.volumeMountPath(target), d.fileModeMountPath())
+
 		return nil
 	}
 
@@ -118,6 +132,9 @@ func (d *driver) Mount(
 	if err := mount.Mount(device, target, fsType, options); err != nil {
 		return fmt.Errorf("Couldn't mount directory %s at %s: %s", device, target, err)
 	}
+
+	os.MkdirAll(d.volumeMountPath(target), d.fileModeMountPath())
+	os.Chmod(d.volumeMountPath(target), d.fileModeMountPath())
 
 	return nil
 }
@@ -212,4 +229,23 @@ func probeFsType(device string) (string, error) {
 	}
 
 	return "", errors.ErrUnknownFileSystem
+}
+
+func (d *driver) volumeMountPath(target string) string {
+	return fmt.Sprintf("%s%s", target, d.volumeRootPath())
+}
+
+func (d *driver) volumeFileMode() int {
+	return d.r.Config.GetInt("linux.volume.filemode")
+}
+
+func (d *driver) volumeRootPath() string {
+	return d.r.Config.GetString("linux.volume.rootpath")
+}
+
+func configRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("Linux")
+	r.Key(gofig.Int, "", 0700, "", "linux.volume.filemode")
+	r.Key(gofig.String, "", "/data", "", "linux.volume.rootpath")
+	return r
 }

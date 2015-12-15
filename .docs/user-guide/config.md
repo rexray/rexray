@@ -319,3 +319,32 @@ will cause issues if *multiple containers* are sharing a volume.  If you are
 sharing volumes, it is recommended that you reset the service along with the
 accompanying container runtime (if this setting is false) to ensure they are
 synchronized.  
+
+## Volume Path (0.3.1)
+When volumes are mounted there can be an additional path that is specified to
+be created and passed as the valid mount point.  This is required for certain
+applications that do not want to place data from the root of a mount point.  
+The default is the `/data` path.  If a value is set by `linux.volume.rootPath`,
+then the default will be overwritten.
+
+If upgrading to 0.3.1 then you can either set this to an empty value, or move
+the internal directory in your existing volumes to `/data`.
+
+```yaml
+rexray:
+linux:
+  volume:
+    rootPath: /data
+```
+
+## Volume FileMode (0.3.1)
+The permissions of the `linux.volume.rootPath` can be set to default values.  At
+each mount, the permissions will be written based on this value.  The default
+is to include the `0700` mode.
+
+```yaml
+rexray:
+linux:
+  volume:
+    fileMode: 0700
+```

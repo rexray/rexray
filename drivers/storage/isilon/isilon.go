@@ -30,14 +30,12 @@ type driver struct {
 }
 
 func ef() goof.Fields {
-	log.Println("Start ef()")
 	return goof.Fields{
 		"provider": providerName,
 	}
 }
 
 func eff(fields goof.Fields) map[string]interface{} {
-	log.Println("Start eff()")
 	errFields := map[string]interface{}{
 		"provider": providerName,
 	}
@@ -50,20 +48,15 @@ func eff(fields goof.Fields) map[string]interface{} {
 }
 
 func init() {
-	log.Println("Start init()")
-
 	core.RegisterDriver(providerName, newDriver)
 	gofig.Register(configRegistration())
 }
 
 func newDriver() core.Driver {
-	log.Println("Start newDriver()")
 	return &driver{}
 }
 
 func (d *driver) Init(r *core.RexRay) error {
-	log.Println("Start Init()")
-
 	d.r = r
 
 	fields := eff(map[string]interface{}{
@@ -103,7 +96,6 @@ func (d *driver) Init(r *core.RexRay) error {
 var scsiDeviceVendors []string
 
 func walkDevices(path string, f os.FileInfo, err error) error {
-	log.Println("Start walkDevices()")
 	vendorFilePath := fmt.Sprintf("%s/device/vendor", path)
 	// fmt.Printf("vendorFilePath: %+v\n", string(vendorFilePath))
 	data, _ := ioutil.ReadFile(vendorFilePath)
@@ -112,7 +104,6 @@ func walkDevices(path string, f os.FileInfo, err error) error {
 }
 
 var isIsilonAttached = func() bool {
-	log.Println("Start isIsilonAttached()")
 	return true
 	filepath.Walk("/sys/class/scsi_device/", walkDevices)
 	for _, vendor := range scsiDeviceVendors {
@@ -124,13 +115,10 @@ var isIsilonAttached = func() bool {
 }
 
 func (d *driver) Name() string {
-	log.Println("Start Name()")
 	return providerName
 }
 
 func (d *driver) GetInstance() (*core.Instance, error) {
-	log.Println("Start GetInstance()")
-
 	return &core.Instance{}, nil
 
 	//	instance := &core.Instance{
@@ -149,8 +137,6 @@ func (d *driver) nfsMountPath(mountPath string) string {
 }
 
 func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
-	log.Println("Start GetVolumeMapping()")
-
 	exports, err := d.client.GetVolumeExports()
 	if err != nil {
 		return nil, err
@@ -174,7 +160,6 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 }
 
 func (d *driver) getVolume(volumeID, volumeName string) ([]isi.Volume, error) {
-	log.Println("Start getVolume()")
 	var volumes []isi.Volume
 	if volumeID != "" || volumeName != "" {
 		volume, err := d.client.GetVolume(volumeID, volumeName)
@@ -196,8 +181,6 @@ func (d *driver) getVolume(volumeID, volumeName string) ([]isi.Volume, error) {
 }
 
 func (d *driver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) {
-	log.Println("Start GetVolume()")
-
 	volumes, err := d.getVolume(volumeID, volumeName)
 	if err != nil {
 		return nil, err
@@ -257,7 +240,6 @@ func (d *driver) CreateVolume(
 }
 
 func (d *driver) RemoveVolume(volumeID string) error {
-	log.Println("Start RemoveVolume()")
 	err := d.client.DeleteVolume(volumeID)
 	if err != nil {
 		return err
@@ -274,7 +256,6 @@ func (d *driver) GetSnapshot(
 }
 
 func getIndex(href string) string {
-	log.Println("Start getIndex()")
 	hrefFields := strings.Split(href, "/")
 	return hrefFields[len(hrefFields)-1]
 }
@@ -290,7 +271,6 @@ func (d *driver) RemoveSnapshot(snapshotID string) error {
 }
 
 func (d *driver) GetVolumeAttach(volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
-	log.Println("Start GetVolumeAttach()")
 	if volumeID == "" {
 		return []*core.VolumeAttachment{}, errors.ErrMissingVolumeID
 	}
@@ -316,7 +296,6 @@ func (d *driver) GetVolumeAttach(volumeID, instanceID string) ([]*core.VolumeAtt
 func (d *driver) AttachVolume(
 	notused bool,
 	volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
-	log.Println("Start AttachVolume()")
 
 	if volumeID == "" {
 		return nil, errors.ErrMissingVolumeID
@@ -345,7 +324,6 @@ func (d *driver) AttachVolume(
 }
 
 func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, force bool) error {
-	log.Println("Start DetachVolume()")
 	if volumeID == "" {
 		return errors.ErrMissingVolumeID
 	}
@@ -371,12 +349,10 @@ func (d *driver) CopySnapshot(
 	runAsync bool,
 	volumeID, snapshotID, snapshotName,
 	destinationSnapshotName, destinationRegion string) (*core.Snapshot, error) {
-	log.Println("Start CopySnapshot()")
 	return nil, errors.ErrNotImplemented
 }
 
 func (d *driver) GetDeviceNextAvailable() (string, error) {
-	log.Println("Start GetDeviceNextAvailable()")
 	return "", errors.ErrNotImplemented
 }
 
@@ -405,7 +381,6 @@ func (d *driver) nfsHost() string {
 }
 
 func configRegistration() *gofig.Registration {
-	log.Println("Start configRegistration()")
 	r := gofig.NewRegistration("Isilon")
 	r.Key(gofig.String, "", "", "", "isilon.endpoint")
 	r.Key(gofig.Bool, "", false, "", "isilon.insecure")

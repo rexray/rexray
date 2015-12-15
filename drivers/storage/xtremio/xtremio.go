@@ -345,6 +345,7 @@ func (d *driver) getLocalDeviceByID() (map[string]string, error) {
 			mapDiskByID[naaName] = devPath
 		}
 	}
+
 	return mapDiskByID, nil
 }
 
@@ -736,6 +737,15 @@ func (d *driver) GetVolumeAttach(volumeID, instanceID string) ([]*core.VolumeAtt
 
 func (d *driver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 
+	volumes, err := d.GetVolume(volumeID, "")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) == 0 {
+		return nil, goof.New("no volumes returned")
+	}
+
 	timeout := make(chan bool, 1)
 	go func() {
 		time.Sleep(10 * time.Second)
@@ -748,11 +758,9 @@ func (d *driver) waitAttach(volumeID string) (*core.BlockDevice, error) {
 		log.Println("XtremIO: waiting for volume attach")
 		for {
 			if d.multipath() {
-				_, err := exec.Command("/sbin/multipath").Output()
-				if err != nil {
-					errorCh <- goof.Newf(
-						"Error refreshing multipath: %s", err)
-				}
+				_, _ = exec.Command("/sbin/multipath", "-f",
+					fmt.Sprintf("3%s", volumes[0].NetworkName)).Output()
+				_, _ = exec.Command("/sbin/multipath").Output()
 			}
 
 			blockDevices, err := d.GetVolumeMapping()

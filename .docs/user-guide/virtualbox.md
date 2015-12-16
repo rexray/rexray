@@ -70,6 +70,9 @@ virtualbox:
 ```
 
 ## Caveats
+- The VBoxWebSrv SOAP API changed between v4 and v5.  This functionality
+  works against `4.3.28` and likely other v4 versions only.  We are
+  investigating support for same features under v5.
 - This driver was developed against Ubuntu 14.04.3 but should work with
   others.
 - Snapshot and create volume from volume functionality is not available

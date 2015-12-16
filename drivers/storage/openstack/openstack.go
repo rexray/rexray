@@ -130,14 +130,11 @@ func (d *driver) Init(r *core.RexRay) error {
 			"error getting newBlockStorageV1", err)
 	}
 
-	fmt.Println(fmt.Sprintf("%v", d.clientBlockStorage))
-
 	if d.clientBlockStoragev2, err = openstack.NewBlockStorageV2(d.provider,
 		gophercloud.EndpointOpts{Region: d.region}); err != nil {
 		return goof.WithFieldsE(fields,
 			"error getting newBlockStorageV2", err)
 	}
-	fmt.Println(fmt.Sprintf("%v", d.clientBlockStoragev2))
 
 	log.WithField("provider", providerName).Info("storage driver initialized")
 

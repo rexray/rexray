@@ -100,9 +100,6 @@ func (d *driver) Mount(
 	device, target, mountOptions, mountLabel string) error {
 
 	if d.isNfsDevice(device) {
-		if err := d.Unmount(target); err != nil {
-			return err
-		}
 
 		if err := d.nfsMount(device, target); err != nil {
 			return err
@@ -112,10 +109,6 @@ func (d *driver) Mount(
 		os.Chmod(d.volumeMountPath(target), d.fileModeMountPath())
 
 		return nil
-	}
-
-	if err := d.Unmount(target); err != nil {
-		return err
 	}
 
 	fsType, err := probeFsType(device)

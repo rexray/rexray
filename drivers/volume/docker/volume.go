@@ -77,6 +77,14 @@ func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType 
 	}
 
 	if len(volAttachments) == 0 {
+		mp, err := getVolumeMountPath(vols[0].Name)
+		if err != nil {
+			return "", err
+		}
+
+		log.Debug("performing precautionary unmount")
+		_ = d.r.OS.Unmount(mp)
+
 		volAttachments, err = d.r.Storage.AttachVolume(
 			false, vols[0].VolumeID, instance.InstanceID, preempt)
 		if err != nil {
@@ -86,6 +94,10 @@ func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType 
 
 	if len(volAttachments) == 0 {
 		return "", goof.New("Volume did not attach")
+	}
+
+	if volAttachments[0].DeviceName == "" {
+		return "", goof.New("no device name returned")
 	}
 
 	mounts, err := d.r.OS.GetMounts(volAttachments[0].DeviceName, "")

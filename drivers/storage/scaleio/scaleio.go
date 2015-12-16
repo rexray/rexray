@@ -554,20 +554,18 @@ func (d *driver) DetachVolume(
 	targetVolume.Volume = volumes[0]
 
 	unmapVolumeSdcParam := &types.UnmapVolumeSdcParam{
-		SdcID:                d.sdc.Sdc.ID,
+		SdcID:                "",
 		IgnoreScsiInitiators: "true",
 		AllSdcs:              "",
 	}
 
 	if force {
 		unmapVolumeSdcParam.AllSdcs = "true"
+	} else {
+		unmapVolumeSdcParam.SdcID = d.sdc.Sdc.ID
 	}
 
-	// need to detect if unmounted first
-	err = targetVolume.UnmapVolumeSdc(unmapVolumeSdcParam)
-	if err != nil {
-		return goof.WithFieldsE(fields, "error unmapping volume sdc", err)
-	}
+	_ = targetVolume.UnmapVolumeSdc(unmapVolumeSdcParam)
 
 	log.WithFields(log.Fields{
 		"provider": providerName,

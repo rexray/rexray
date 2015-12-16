@@ -30,7 +30,7 @@ div.col-md-9 h1:first-of-type {
     text-shadow: 2px 2px 3px rgba(0, 0, 0, .25);
 }
 
-div.col-md-9 p:first-of-type {
+div.col-md-9 > p:first-of-type {
     text-align: center;
     text-shadow: 2px 2px 3px rgba(0, 0, 0, .15);
 }

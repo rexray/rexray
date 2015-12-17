@@ -121,7 +121,7 @@ $ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
   --name temp01 busybox
 $ docker exec temp01 "touch /mystore/myfile"
 $ docker exec temp01 "ls /mystore"
-$ docker stop temp01 && docker rm temp01
+$ docker rm -f temp01
 ```
 
 From `EC2b`, create a new container that mounts the pre-existing volume and
@@ -131,6 +131,9 @@ $ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
   --name temp01 busybox
 $ docker exec temp01 "ls /mystore"
 ```
+
+Congratulations, you have used `REX-Ray` to provide persistence for stateless
+containers!
 
 Examples using MongoDB, Postgres, and more with persistent storage can be found
 at [Application Examples](/user-guide/application/).

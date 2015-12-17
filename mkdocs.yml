@@ -19,6 +19,7 @@ pages:
 - User Guide:
     - Installation: user-guide/installation.md
     - Configuration: user-guide/config.md
+    - Applications: user-guide/application.md
     - Storage Providers:
         - Amazon EC2: user-guide/storage-providers/ec2.md
         - Google Compute Engine: user-guide/storage-providers/gce.md

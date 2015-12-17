@@ -6,21 +6,31 @@ site_dir: .site
 theme_dir: .docs/.themes/yeti
 site_favicon: favicon.png
 
+extra_javascript:
+    - js/jquery.smartmenus.min.js
+    - js/jquery.smartmenus.bootstrap.min.js
+extra_css:
+    - css/sm-core-css.css
+    - css/jquery.smartmenus.bootstrap.css
+    - css/emccode-font.css
+
 pages:
 - Home: index.md
 - User Guide:
     - Installation: user-guide/installation.md
     - Configuration: user-guide/config.md
-    - 'Amazon EC2': user-guide/ec2.md
-    - Google Compute Engine: user-guide/gce.md
-    - Isilon: user-guide/isilon.md
-    - OpenStack: user-guide/openstack.md
-    - Rackspace: user-guide/rackspace.md
-    - ScaleIO: user-guide/scaleio.md
-    - VMAX: user-guide/vmax.md
-    - XtremIO: user-guide/xtremio.md
-    - Docker: user-guide/docker.md
-    - Mesos: user-guide/mesos.md
+    - Storage Providers:
+        - Amazon EC2: user-guide/storage-providers/ec2.md
+        - Google Compute Engine: user-guide/storage-providers/gce.md
+        - Isilon: user-guide/storage-providers/isilon.md
+        - OpenStack: user-guide/storage-providers/openstack.md
+        - Rackspace: user-guide/storage-providers/rackspace.md
+        - ScaleIO: user-guide/storage-providers/scaleio.md
+        - VMAX: user-guide/storage-providers/vmax.md
+        - XtremIO: user-guide/storage-providers/xtremio.md
+    - Third-Party Integration:
+        - Docker: user-guide/third-party/docker.md
+        - Mesos: user-guide/third-party/mesos.md
 - Developers Guide:
     - Project Guidelines: dev-guide/project-guidelines.md
     - Build Reference: dev-guide/build-reference.md

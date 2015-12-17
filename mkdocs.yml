@@ -18,6 +18,7 @@ pages:
 - Home: index.md
 - User Guide:
     - Installation: user-guide/installation.md
+    - Automation: user-guide/automation.md
     - Configuration: user-guide/config.md
     - Applications: user-guide/application.md
     - Storage Providers:

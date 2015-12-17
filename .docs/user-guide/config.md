@@ -66,42 +66,7 @@ if `REX-Ray` is being started as a service, then `sudo` is likely being used,
 which means that `$HOME/.rexray/config.yml` won't point to *your* home
 directory, but rather `/root/.rexray/config.yml`.
 
-This is an example configuration with the default configuration for the general
-options as described in the following section:
-
-```yaml
-rexray:
-    logLevel: warn
-    osDrivers:
-    - linux
-    volumeDrivers:
-    - docker
-```
-
-## Configuration Files
-There are two `REX-Ray` configuration files - global and user:
-
-* `/etc/rexray/config.yml`
-* `$HOME/.rexray/config.yml`
-
-Please note that while the user configuration file is located inside the user's
-home directory, this is the directory of the user that starts `REX-Ray`. And
-if `REX-Ray` is being started as a service, then `sudo` is likely being used,
-which means that `$HOME/.rexray/config.yml` won't point to *your* home
-directory, but rather `/root/.rexray/config.yml`.
-
-This is an example configuration with the default configuration for the general
-options as described in the following section:
-
-```yaml
-rexray:
-    logLevel: warn
-    osDrivers:
-    - linux
-    storageDrivers:
-    volumeDrivers:
-    - docker
-```
+The next section has an example configuration with the default configuration.
 
 ## Configuration Properties
 The section [Configuration Methods](#configuration-methods) mentions there are
@@ -197,7 +162,7 @@ However, to specify the same values in an environment variable,
 `REXRAY_STORAGEDRIVERS="ec2 xtremio"`, and as a CLI flag,
 `--storageDrivers="ec2 xtremio"`.
 
-## Logging
+## Logging Configuration
 The `REX-Ray` log level determines the level of verbosity emitted by the
 internal logger. The default level is `warn`, but there are three other levels
 as well:
@@ -222,6 +187,13 @@ rexray volume get -l debug
 ```bash
 env REXRAY_LOGLEVEL=debug rexray volume get
 ```
+
+## Driver Configuration
+There are three types of drivers:
+
+  1. OS Drivers
+  2. Storage Drivers
+  3. Volume Drivers
 
 ### OS Drivers
 Operating system (OS) drivers enable `REX-Ray` to manage storage on
@@ -259,8 +231,11 @@ Docker   | docker
 
 The volume driver `docker` is automatically activated.
 
-## Volume Mount
-### Pre-Emptive
+## Volume Configuration
+This section describes various global configuration options related to
+operations such as mounting and unmounting volumes.
+
+### Pre-Emption
 There is a capability to pre-emptively detach any existing attachments to other
 instances before attempting a mount.  This will enable use cases for
 availability where another instance must be able to take control of a volume
@@ -294,7 +269,6 @@ VirtualBox|Yes
 VMAX|Not yet
 XtremIO|Yes
 
-## Volume Unmount
 ### Ignore Used Count
 By default accounting takes place during operations that are performed
 on `Mount`, `Unmount`, and other operations.  This only has impact when running
@@ -323,7 +297,7 @@ sharing volumes, it is recommended that you reset the service along with the
 accompanying container runtime (if this setting is false) to ensure they are
 synchronized.  
 
-## Volume Path (0.3.1)
+### Volume Path (0.3.1)
 When volumes are mounted there can be an additional path that is specified to
 be created and passed as the valid mount point.  This is required for certain
 applications that do not want to place data from the root of a mount point.  
@@ -340,7 +314,7 @@ linux:
     rootPath: /data
 ```
 
-## Volume FileMode (0.3.1)
+### Volume FileMode (0.3.1)
 The permissions of the `linux.volume.rootPath` can be set to default values.  At
 each mount, the permissions will be written based on this value.  The default
 is to include the `0700` mode.

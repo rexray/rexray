@@ -3,89 +3,154 @@
 Openly serious about storage
 
 ---
+`REX-Ray` delivers persistent storage access for container runtimes including
+those provided by Docker, Mesos and others. It is designed to enable advanced
+storage functionality across common storage, virtualization and cloud platforms.
 
-`REX-Ray` provides visibility and management of external/underlying storage
-via guest storage introspection. Available as a Go package, CLI tool, and Linux
-service, and with built-in third-party support for tools such as `Docker`,
-`REX-Ray` is easily integrated into any workflow. For example, here's how to
-list storage for a guest hosted on Amazon Web Services (AWS) with `REX-Ray`:
-
-```bash
-$ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESSKEY=access_key
-$ export AWS_SECRETKEY=secret_key
-$ rexray volume get
-
-- providername: ec2
-  instanceid: i-695bb6ab
-  volumeid: vol-dedbadc3
-  devicename: /dev/sda1
-  region: us-west-1
-  status: attached
-```
-
+<br>
 ## Overview
-Today `REX-Ray` supports the following storage providers:
+REX-Ray is an abstraction layer between storage endpoints and container
+platforms. The administration and orchestration of various storage platforms
+can all be performed using the same set of commands.
 
-* [Amazon Elastic Computer Cloud (EC2)](https://aws.amazon.com/ec2/)
-* [Openstack on Rackspace](http://www.rackspace.com/en-us/cloud/openstack)
-* [Rackspace](http://www.rackspace.com)
-* [ScaleIO](http://www.emc.com/storage/scaleio/index.htm)
-* [XtremIO](http://xtremio.com/) (with Multipath & Device Mapper support)
+### Storage Provider Support
 
-`REX-Ray` also supports integration with the following platforms:
+Storage provider support for the following storage platforms:
 
-* [Docker](https://docs.docker.com/extend/plugins_volume/)
+Provider              | Storage Platform(s)
+----------------------|-------------------------
+Amazon EC2            | EBS
+Google Compute Engine | Disk
+Open Stack            | Cinder
+EMC                   | ScaleIO, XtremIO, VMAX, Isilon
+Virtual Box           | Virtual Media
 
 ### Operating System Support
-`REX-Ray` currently supports the following operating systems:
 
-OS      | Command Line | As Service
---------|--------------|-----------
-Linux   | Yes          | Yes
-OS X    | Yes          | No
-Windows | No           | No
+OS support for the following operating systems:
 
-## Getting Started
-This section will help you get started using `REX-Ray`.
+OS       | Command Line | As Service
+---------|--------------|-----------
+Ubuntu   | Yes          | Yes
+Debian   | Yes          | Yes
+RedHat   | Yes          | Yes
+CentOS   | Yes          | Yes
+CoreOS   | Yes          | Yes
+OS X     | Yes          | No
+Windows  | No           | No
+
+### Container Platform Support
+
+Integration support documented with the following platforms:
+
+Platform            | Use
+------------------|-------------------------
+Docker            | [Volume Driver Plugin](/user-guide/docker/)
+Mesos             | [Volume Driver Isolator module](/user-guide/mesos/)
+Mesos + Docker    | [Volume Driver Plugin](/user-guide/mesos/)
+
+<br>
+## Quick Start (using Docker)
+This section will help you get REX-Ray up and running quickly. For more advanced
+configurations including
+[core properties](/user-guide/config/#configuration-properties) and additional
+storage providers use the `User Guide` menu in the tool-bar.
 
 ### Installing REX-Ray
-The following command will download the most recent, stable build of `REX-Ray`
-and install it to `/usr/bin/rexray.` On Linux systems `REX-Ray` will also be
-registered as either a SystemD or SystemV service.
+The following command will download the most recent, stable build of REX-Ray
+and install it to `/usr/bin/rexray` on Linux systems. REX-Ray will be
+registered as either a SystemD or SystemV service depending upon the OS.
 
 ```bash
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
 ```
 
-`REX-Ray` can also be installed from
-[a pre-built binary](./user-guide/installation.md#install-a-pre-built-binary), an RPM or DEB
-package, or by
-[building it from source](./user-guide/installation.md#build-and-install-from-source).
-
-Once installed, `REX-Ray` can be used by simply typing `rexray` on the command
-line, but in order for `REX-Ray` to do much more than print out help text,
-configuration is necessary:
-
 ### Configuring REX-Ray
-The first step to getting started is [configuring `REX-Ray`](/user-guide/config/)!
+Create a configuration file on the host at `/etc/rexray` in YAML format called
+`rexray.yml` (this file can be created with `vi` or transferred over via `scp`
+  or `ftp`). Here is a simple example for using Amazon EC2:
+```
+rexray:
+  storageDrivers:
+  - ec2
+aws:
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
+```
 
-### Configuring Storage Providers
-* [Amazon Elastic Computer Cloud (EC2)](/user-guide/ec2/)
-* [Rackspace](/user-guide/rackspace/)
-* [ScaleIO](/user-guide/scaleio/)
-* [OpenStack](/user-guide/openstack/)
-* [XtremIO](/user-guide/xtremio/)
+From here, REX-Ray can now be used as a command line tool. View the commands
+available:
+```bash
+$ rexray --help
+```
 
-### Configuring External Integration
-* [Docker](/user-guide/docker/)
-* [Mesos](/user-guide/mesos/)
+To verify the configuration file is being accessed and the AWS Keys are being
+used, list volumes that can be accessed:
+```bash
+$ rexray volume ls
+```
 
+If there is an error, use the `-l debug` flag and consult debugging instructions
+ located under [Getting Help](/#getting-help). If nothing is returned using `ls`
+, then everything is functioning as expected
+
+### Start REX-Ray as a Service
+Container platforms rely on REX-Ray to be running as a service to function
+properly. For instance, Docker communicates to the REX-Ray Volume Driver through
+a Unix socket file.
+
+```bash
+$ rexray start
+```
+
+### Example of REX-Ray with Docker
+Docker 1.9.1+ is recommended to use REX-Ray as a
+[Docker Volume Driver Plugin](https://docs.docker.com/extend/plugins_volume/).
+
+The following example uses two Amazon EC2 Virtual Machines, `EC2a` and `EC2b`,
+that reside within the same Availability Zone.
+
+From `EC2a`, create a new volume called `hellopersistence`. After the new volume
+ is created, mount the volume to the host and container using the
+ `--volume-driver` and `-v` flag in the `docker run` command. Create a new file
+called `myfile` using `docker exec` that will be persisted throughout the
+example. Lastly, stop and remove the container so it no longer exists:
+```bash
+$ docker volume create --driver rexray --opt size=10 --name hellopersistence
+$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+  --name temp01 busybox
+$ docker exec temp01 "touch /mystore/myfile"
+$ docker exec temp01 "ls /mystore"
+$ docker stop temp01 && docker rm temp01
+```
+
+From `EC2b`, create a new container that mounts the pre-existing volume and
+verify `myfile` that was originally created from host `EC2a` has persisted.
+```bash
+$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+  --name temp01 busybox
+$ docker exec temp01 "ls /mystore"
+```
+
+Examples using MongoDB, Postgres, and more with persistent storage can be found
+at [Application Examples](/user-guide/application/).
+
+<br>
 ## Getting Help
-To get help with REX-Ray, please use the
-[discussion group](https://groups.google.com/forum/#!forum/emccode-users),
-[GitHub issues](https://github.com/emccode/rexray/issues), or tagging questions
-with **EMC** at [StackOverflow](https://stackoverflow.com).
 
+### Debug
+Use the `debug` flag after any command to get verbose output.
+`rexray create -l debug`.
+
+### GitHub and Slack
+To get help with REX-Ray, please use
+[GitHub issues](https://github.com/emccode/rexray/issues) or join the active
+conversation on the
+[EMC {code} Community Slack Team](http://community.emccode.com/) in
+the #project-rexray channel
+
+### License
 The code and documentation are released with no warranties or SLAs and are
-intended to be supported through a community driven process.
+intended to be supported through a community driven process. Licensed under the
+Apache License, Version 2.0 (the “License”)
+([License](/about/license/#rex-ray-license))

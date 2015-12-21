@@ -51,5 +51,4 @@ deploy:
 cache:
   apt: true
   directories:
-    - $GOPATH/pkg
     - $HOME/.opt

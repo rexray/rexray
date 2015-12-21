@@ -29,6 +29,7 @@ only.  Ensure that your VM has *pre-created* this controller and it is
 named `SATA`.  Otherwise the `controllerName` field must be populated
 with the name of the controller you wish to use.
 
+VirtualBox 5.0.10+ must be used.
 
 ## Configuration
 The following is an example configuration of the VirtualBox driver.  
@@ -75,5 +76,6 @@ virtualbox:
   investigating support for same features under v5.
 - This driver was developed against Ubuntu 14.04.3 but should work with
   others.
-- Snapshot and create volume from volume functionality is not available
-  since VirtualBox does not support volume snapshots directly.
+- Snapshot and create volume from volume functionality is not
+  available yet with this driver.
+- The driver supports VirtualBox 5.0.10+

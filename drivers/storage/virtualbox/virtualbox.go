@@ -292,12 +292,21 @@ func (d *driver) CreateVolume(
 
 	size = size * 1024 * 1024 * 1024
 
+	volumes, err := d.GetVolume("", volumeName)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) > 0 {
+		return nil, goof.WithField(volumeName, "volumeName", "volume exists already")
+	}
+
 	volume, err := d.createVolume(volumeName, size)
 	if err != nil {
 		return nil, goof.WithFieldsE(fields, "error creating new volume", err)
 	}
 
-	volumes, err := d.GetVolume(volume.ID, "")
+	volumes, err = d.GetVolume(volume.ID, "")
 	if err != nil {
 		return nil, err
 	}
@@ -464,7 +473,7 @@ func (d *driver) createVolume(name string, size int64) (*vbox.Medium, error) {
 	d.checkSession()
 
 	if name == "" {
-		return nil, goof.New("name in empty")
+		return nil, goof.New("name is empty")
 	}
 
 	return d.virtualbox.CreateMedium("vmdk", d.storageLocation(name), size)

@@ -26,6 +26,7 @@ pages:
         - OpenStack: user-guide/storage-providers/openstack.md
         - Rackspace: user-guide/storage-providers/rackspace.md
         - ScaleIO: user-guide/storage-providers/scaleio.md
+        - VirtualBox: user-guide/storage-providers/virtualbox.md
         - VMAX: user-guide/storage-providers/vmax.md
         - XtremIO: user-guide/storage-providers/xtremio.md
     - Third-Party Integration:

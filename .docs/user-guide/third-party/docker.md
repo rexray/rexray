@@ -66,8 +66,8 @@ snapshotName|Create from an existing snapshot name
 snapshotID|Create from an existing snapshot ID
 
 ### Caveats
-If you restart the REX-Ray instance while volumes are mounted with Docker,
-then you should also be resetting Docker.  The volume mount accounting will
-be out of sync unless REX-Ray this happens.  In the case of sharing volumes
-between containers, problems will arise when stopping the first container since
-the volume will be unmounted pre-maturely.
+If you restart the REX-Ray instance while volumes *are shared between
+Docker containers* then problems may arise when stopping one of the containers
+sharing the volume.  It is suggested that you avoid stopping these containers
+at this point until all containers sharing the volumes can be stopped.  This
+will enable the unmount process to proceed cleanly.

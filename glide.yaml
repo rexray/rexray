@@ -49,7 +49,7 @@ import:
     repo:    https://github.com/akutz/yaml.git
     vcs:     git
   - package: github.com/rackspace/gophercloud
-    ref:     30f929fcb1c65ef891c9bf548dbac1690c3f32e7
+    ref:     42196eaf5b93739d335921404bb7c5f2205fceb3
     repo:    https://github.com/clintonskitson/gophercloud.git
     vcs:     git
   - package: google.golang.org/api/compute/v1

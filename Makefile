@@ -1,6 +1,18 @@
 # configure make
 export MAKEFLAGS := $(MAKEFLAGS) --no-print-directory -k
 
+# MAKE_LOG_LEVEL can be 0=quiet, 1=error, 2=verbose
+MAKE_LOG_LEVEL ?= 0
+ifeq ($(MAKE_LOG_LEVEL),0)
+	MAKE_LOG_FD := &> /dev/null
+else
+ifeq ($(MAKE_LOG_LEVEL),1)
+	MAKE_LOG_FD := 1> /dev/null
+else
+	MAKE_LOG_FD :=
+endif
+endif
+
 # store the current working directory
 CWD := $(shell pwd)
 
@@ -201,9 +213,11 @@ _deps:
 		printf "  ...installing glide..."; \
 		go get github.com/Masterminds/glide; \
 			$(PRINT_STATUS); \
-		printf "  ...downloading go dependencies..."; \
+		printf "  ...glide up..."; \
 			cd $(BASEDIR); \
-			$(GLIDE) up 2> /dev/null; \
+			$(GLIDE) up $(MAKE_LOG_FD); \
+			$(PRINT_STATUS); \
+		printf "  ...go get..."; \
 			go get -d $(GOFLAGS) $(NV); \
 			$(PRINT_STATUS); \
 	fi

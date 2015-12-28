@@ -203,7 +203,8 @@ func (m *mod) buildMux() *http.ServeMux {
 		err := m.r.Volume.Create(pr.Name, pr.Opts)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Create: error creating volume")
+			log.WithField("error", err.Error()).Error("/VolumeDriver.Create: error creating volume")
+			log.Error(err)
 			return
 		}
 
@@ -222,7 +223,8 @@ func (m *mod) buildMux() *http.ServeMux {
 		err := m.r.Volume.Remove(pr.Name)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Remove: error removing volume")
+			log.WithField("error", err.Error()).Error("/VolumeDriver.Remove: error removing volume")
+			log.Error(err)
 			return
 		}
 
@@ -241,7 +243,8 @@ func (m *mod) buildMux() *http.ServeMux {
 		mountPath, err := m.r.Volume.Path(pr.Name, "")
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Path: error returning path")
+			log.WithField("error", err.Error()).Error("/VolumeDriver.Path: error returning path")
+			log.Error(err)
 			return
 		}
 
@@ -260,7 +263,8 @@ func (m *mod) buildMux() *http.ServeMux {
 		mountPath, err := m.r.Volume.Mount(pr.Name, "", false, "", false)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Mount: error mounting volume")
+			log.WithField("error", err.Error()).Error("/VolumeDriver.Mount: error mounting volume")
+			log.Error(err)
 			return
 		}
 
@@ -279,7 +283,8 @@ func (m *mod) buildMux() *http.ServeMux {
 		err := m.r.Volume.Unmount(pr.Name, "")
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Unmount: error unmounting volume")
+			log.WithField("error", err.Error()).Error("/VolumeDriver.Unmount: error unmounting volume")
+			log.Error(err)
 			return
 		}
 

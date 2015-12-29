@@ -184,6 +184,7 @@ func (d *driver) getAuthOptions() gophercloud.AuthOptions {
 		TenantName:       d.tenantName(),
 		DomainID:         d.domainID(),
 		DomainName:       d.domainName(),
+		AllowReauth:      true,
 	}
 }
 

@@ -18,6 +18,54 @@ You can determine your currently installed version using `rexray version`:
     Commit: 36ccc425faeab49d792eda4851e3d72a85744874
     Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
+## Version 0.3.1 (2015-12-30)
+
+### New Features
+* Support for VirtualBox ([#209](https://github.com/emccode/rexray/issues/209))
+* Added Developer's Guide ([#226](https://github.com/emccode/rexray/issues/226))
+
+### Enhancements
+* Mount/Unmount Accounting ([#212](https://github.com/emccode/rexray/issues/212))
+* Support for Sub-Path Volume Mounts / Permissions ([#215](https://github.com/emccode/rexray/issues/215))
+
+### Milestone Issues
+This release also includes many other small enhancements and bug fixes. For a
+complete list click [here](https://github.com/emccode/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.1).
+
+### Downloads
+Click [here](https://dl.bintray.com/emccode/rexray/stable/0.3.1/) for the 0.3.1
+binaries.
+
+## Version 0.3.0 (2015-12-08)
+
+### New Features
+* Pre-Emption support ([#190](https://github.com/emccode/rexray/issues/190))
+* Support for VMAX ([#197](https://github.com/emccode/rexray/issues/197))
+* Support for Isilon ([#198](https://github.com/emccode/rexray/issues/198))
+* Support for Google Compute Engine (GCE) ([#194](https://github.com/emccode/rexray/issues/194))
+
+### Enhancements
+* Added driver example configurations ([#201](https://github.com/emccode/rexray/issues/201))
+* New configuration file format ([#188](https://github.com/emccode/rexray/issues/188))
+
+### Tweaks
+* Chopped flags `--rexrayLogLevel` becomes `logLevel` ([#196](https://github.com/emccode/rexray/issues/196))
+
+### Pre-Emption Support
+Pre-Emption is an important feature when using persistent volumes and container
+schedulers.  Without pre-emption, the default behavior of the storage drivers is
+to deny the attaching operation if the volume is already mounted elsewhere.  
+If it is desired that a host should be able to pre-empt from other hosts, then
+this feature can be used to enable any host to pre-empt from another.
+
+### Milestone Issues
+This release also includes many other small enhancements and bug fixes. For a
+complete list click [here](https://github.com/emccode/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.0).
+
+### Downloads
+Click [here](https://dl.bintray.com/emccode/rexray/stable/0.3.0/) for the 0.3.0
+binaries.
+
 ## Version 0.2.1 (2015-10-27)
 REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,
 and continued foundation changes for future features.

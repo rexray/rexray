@@ -27,7 +27,9 @@ authentication disabled by running
 Hot-Plugging is required, which limits the usefulness of this driver to `SATA`
 only.  Ensure that your VM has *pre-created* this controller and it is
 named `SATA`.  Otherwise the `controllerName` field must be populated
-with the name of the controller you wish to use.
+with the name of the controller you wish to use.  The port count must be set
+manually as it cannot be increased when the VMs are on.  A count of `30`
+is sugggested.
 
 VirtualBox 5.0.10+ must be used.
 

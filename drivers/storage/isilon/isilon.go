@@ -234,7 +234,8 @@ func (d *driver) getSize(volumeID, volumeName string) (int64, error) {
 		if err != nil {
 			return 0, nil
 		}
-		return quota.Thresholds.Hard, nil
+		// PAPI returns the size in bytes, REX-Ray uses gigs
+		return quota.Thresholds.Hard / bytesPerGb, nil
 	}
 
 	return 0, errors.ErrMissingVolumeID
@@ -279,7 +280,7 @@ func (d *driver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) 
 		volumeSD := &core.Volume{
 			Name:             volume.Name,
 			VolumeID:         volume.Name,
-			Size:             strconv.FormatInt(volSize/bytesPerGb, 10),
+			Size:             strconv.FormatInt(volSize, 10),
 			AvailabilityZone: "",
 			NetworkName:      d.client.Path(volume.Name),
 			Attachments:      attachmentsSD,
@@ -295,29 +296,74 @@ func (d *driver) CreateVolume(
 	volumeName, volumeID, snapshotID, NUvolumeType string,
 	NUIOPS, size int64, NUavailabilityZone string) (*core.Volume, error) {
 
+	var err error
+
 	fields := eff(map[string]interface{}{
 		"volumeName": volumeName,
 		"volumeId":   volumeID,
+		"snapshotId": snapshotID,
+		"size":       size,
 	})
 
 	log.WithFields(fields).Debug("Creating volume")
 
-	if volumeID == "" && volumeName == "" {
-		return nil, goof.New("Cannot create a volume.  No volume name or ID provided")
-	}
 	if volumeName == "" {
-		volumeName = volumeID
+		return nil, goof.New("Cannot create a volume.  No volume name provided")
 	}
-	_, err := d.client.CreateVolume(volumeName)
-	if err != nil {
-		return nil, goof.WithFieldsE(
-			eff(goof.Fields{"volumeName": volumeName}), "Error creating volume", err)
+	if volumeID != "" {
+		// a volume id was passed in.  copy that volume into the new one
+		// instead of creating an empty volume.
+		_, err = d.client.CopyVolume(volumeID, volumeName)
+		if err != nil {
+			return nil, goof.WithFieldsE(
+				eff(goof.Fields{"volumeName": volumeName}), "Error copying volume", err)
+		}
+		if size < 1 {
+			// get the size from the existing volume
+			size, err = d.getSize(volumeID, "")
+			if err != nil {
+				return nil, goof.WithFieldsE(
+					eff(goof.Fields{"volumeName": volumeName}), "Error reading size of existing volume", err)
+			}
+		}
+	} else if snapshotID != "" {
+		// a snapshot id was passed in.  copy the volume out of the given
+		// snapshot into the new one instead of creating an empty one.
+		_, err = d.client.CopySnapshot(-1, snapshotID, volumeName)
+		if err != nil {
+			return nil, goof.WithFieldsE(
+				eff(goof.Fields{"volumeName": volumeName}), "Error creating volume from snapshot", err)
+		}
+		if size < 1 {
+			// get the size from the volume in the snapshot
+			snapshots, err := d.GetSnapshot("", snapshotID, snapshotID)
+			if err != nil {
+				return nil, goof.WithFieldsE(
+					eff(goof.Fields{"volumeName": volumeName}), fmt.Sprintf("Error creating volume from snapshot.  Can't query snapshot with id: (%s) (%s)", snapshotID, err), err)
+			}
+			if len(snapshots) <= 0 {
+				return nil, goof.WithFieldsE(
+					eff(goof.Fields{"volumeName": volumeName}), fmt.Sprintf("Error creating volume from snapshot.  No snapshot with id: (%s)", snapshotID), err)
+			}
+			size, err = d.getSize("", snapshots[0].VolumeID)
+			if err != nil {
+				return nil, goof.WithFieldsE(
+					eff(goof.Fields{"volumeName": volumeName}), "Error finding size for volume from snapshot", err)
+			}
+		}
+	} else {
+		_, err = d.client.CreateVolume(volumeName)
+		if err != nil {
+			return nil, goof.WithFieldsE(
+				eff(goof.Fields{"volumeName": volumeName}), "Error creating volume", err)
+		}
 	}
 
 	// Set or update the quota for volume
 	if d.quotas() {
 		quota, err := d.client.GetQuota(volumeName)
 		if quota == nil {
+			// PAPI uses bytes for it's size units, but REX-Ray uses gigs
 			err = d.client.SetQuotaSize(volumeName, size*bytesPerGb)
 			if err != nil {
 				// TODO: not sure how to handle this situation.  Delete created volume
@@ -326,6 +372,7 @@ func (d *driver) CreateVolume(
 					eff(goof.Fields{"volumeName": volumeName}), "Error setting quota for new volume", err)
 			}
 		} else {
+			// PAPI uses bytes for it's size units, but REX-Ray uses gigs
 			err = d.client.UpdateQuotaSize(volumeName, size*bytesPerGb)
 			if err != nil {
 				// TODO: not sure how to handle this situation.  Delete created volume
@@ -336,7 +383,7 @@ func (d *driver) CreateVolume(
 		}
 	}
 
-	volumes, _ := d.GetVolume(volumeID, volumeName)
+	volumes, _ := d.GetVolume("", volumeName)
 	if volumes == nil || err != nil {
 		return nil, goof.WithFieldsE(
 			eff(goof.Fields{"volumeName": volumeName}), "Error getting volume", err)
@@ -364,7 +411,72 @@ func (d *driver) RemoveVolume(volumeID string) error {
 //GetSnapshot returns snapshots from a volume or a specific snapshot
 func (d *driver) GetSnapshot(
 	volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
-	return nil, nil
+
+	var snapshotsSD []*core.Snapshot
+
+	if snapshotID != "" || snapshotName != "" {
+		idInt, err := strconv.ParseInt(snapshotID, 10, 64)
+		if err != nil {
+			idInt = -1
+		}
+		snapshot, err := d.client.GetSnapshot(idInt, snapshotName)
+		if err != nil {
+			return nil, err
+		}
+		if snapshot == nil {
+			return nil, nil
+		}
+
+		volumeName := d.client.NameFromPath(snapshot.Path)
+		if volumeID != "" && volumeID != volumeName {
+			return nil, goof.New(fmt.Sprintf("Snapshot volume name does not match volumeID: Snapshot volume: (%s) volumeID: (%s)", volumeName, volumeID))
+		}
+		size, err := d.getSize("", volumeName)
+		if err != nil {
+			return nil, err
+		}
+
+		snapshotSD := &core.Snapshot{
+			Name:        snapshot.Name,
+			VolumeID:    volumeName,
+			SnapshotID:  strconv.FormatInt(snapshot.Id, 10),
+			VolumeSize:  strconv.FormatInt(size, 10),
+			StartTime:   strconv.FormatInt(snapshot.Created, 10),
+			Description: "",
+			Status:      snapshot.State,
+		}
+		snapshotsSD = append(snapshotsSD, snapshotSD)
+	} else if volumeID != "" {
+
+		snapshots, err := d.client.GetSnapshotsByPath(volumeID)
+		if err != nil {
+			return nil, err
+		}
+		if snapshots == nil {
+			return nil, nil
+		}
+
+		for _, snapshot := range snapshots {
+			volumeName := d.client.NameFromPath(snapshot.Path)
+			size, err := d.getSize("", volumeName)
+			if err != nil {
+				return nil, err
+			}
+
+			snapshotSD := &core.Snapshot{
+				Name:        snapshot.Name,
+				VolumeID:    volumeName,
+				SnapshotID:  strconv.FormatInt(snapshot.Id, 10),
+				VolumeSize:  strconv.FormatInt(size, 10),
+				StartTime:   strconv.FormatInt(snapshot.Created, 10),
+				Description: "",
+				Status:      snapshot.State,
+			}
+			snapshotsSD = append(snapshotsSD, snapshotSD)
+		}
+	}
+
+	return snapshotsSD, nil
 }
 
 func getIndex(href string) string {
@@ -375,11 +487,49 @@ func getIndex(href string) string {
 func (d *driver) CreateSnapshot(
 	notUsed bool,
 	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
-	return nil, nil
+
+	if volumeID == "" {
+		return []*core.Snapshot{}, errors.ErrMissingVolumeID
+	}
+	volume, err := d.GetVolume(volumeID, "")
+	if err != nil {
+		return []*core.Snapshot{}, err
+	}
+
+	snapshot, err := d.client.CreateSnapshot(volume[0].Name, snapshotName)
+	if err != nil {
+		return []*core.Snapshot{}, err
+	}
+	if snapshot == nil {
+		return nil, nil
+	}
+
+	var snapshotsSD []*core.Snapshot
+	size, err := d.getSize(volumeID, "")
+	if err != nil {
+		return nil, err
+	}
+
+	snapshotSD := &core.Snapshot{
+		Name:        snapshot.Name,
+		VolumeID:    volumeID,
+		SnapshotID:  strconv.FormatInt(snapshot.Id, 10),
+		VolumeSize:  strconv.FormatInt(size, 64),
+		StartTime:   strconv.FormatInt(snapshot.Created, 10),
+		Description: "",
+		Status:      snapshot.State,
+	}
+	snapshotsSD = append(snapshotsSD, snapshotSD)
+
+	return snapshotsSD, nil
 }
 
 func (d *driver) RemoveSnapshot(snapshotID string) error {
-	return nil
+	idInt, err := strconv.ParseInt(snapshotID, 10, 64)
+	if err != nil {
+		return err
+	}
+	return d.client.RemoveSnapshot(idInt, "")
 }
 
 func (d *driver) GetVolumeAttach(volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
@@ -484,7 +634,7 @@ func (d *driver) CopySnapshot(
 	runAsync bool,
 	volumeID, snapshotID, snapshotName,
 	destinationSnapshotName, destinationRegion string) (*core.Snapshot, error) {
-	return nil, errors.ErrNotImplemented
+	return nil, goof.New("This driver does not implement CopySnapshot")
 }
 
 func (d *driver) GetDeviceNextAvailable() (string, error) {

@@ -67,7 +67,7 @@ $ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
 
 ### Configuring REX-Ray
 Create a configuration file on the host at `/etc/rexray` in YAML format called
-`rexray.yml` (this file can be created with `vi` or transferred over via `scp`
+`config.yml` (this file can be created with `vi` or transferred over via `scp`
   or `ftp`). Here is a simple example for using Amazon EC2:
 ```
 rexray:

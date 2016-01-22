@@ -390,7 +390,7 @@ case "$1" in
   status)
     {{.RexrayBin}} status
     ;;
-  retart)
+  restart)
     {{.RexrayBin}} restart
     ;;
   reload)

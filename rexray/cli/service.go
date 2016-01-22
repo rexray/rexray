@@ -28,10 +28,24 @@ func (c *CLI) start() {
 		pid, pidErr := util.ReadPidFile()
 		if pidErr != nil {
 			fmt.Printf("Error reading REX-Ray PID file at %s\n", pidFile)
-		} else {
-			fmt.Printf("REX-Ray already running at PID %d\n", pid)
+			panic(1)
 		}
-		panic(1)
+
+		rrproc, err := findProcess(pid)
+		if err != nil {
+			fmt.Printf("Error finding process for PID %d", pid)
+			panic(1)
+		}
+
+		if rrproc != nil {
+			fmt.Printf("REX-Ray already running at PID %d\n", pid)
+			panic(1)
+		}
+
+		if err := os.RemoveAll(pidFile); err != nil {
+			fmt.Println("Error removing REX-Ray PID file")
+			panic(1)
+		}
 	}
 
 	if c.fg || c.client != "" {

@@ -3,12 +3,11 @@ package isilon
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
-	//	"reflect"
 
-	//	"sort"
-	//	"strconv"
+	"strconv"
 	"strings"
 
 	isi "github.com/emccode/goisilon"
@@ -22,6 +21,8 @@ import (
 )
 
 const providerName = "Isilon"
+const bytesPerGb = int64(1024 * 1024 * 1024)
+const idDelimiter = "/"
 
 // The Isilon storage driver.
 type driver struct {
@@ -62,8 +63,10 @@ func (d *driver) Init(r *core.RexRay) error {
 	fields := eff(map[string]interface{}{
 		"endpoint":   d.endpoint(),
 		"userName":   d.userName(),
+		"group":      d.group(),
 		"insecure":   d.insecure(),
 		"volumePath": d.volumePath(),
+		"dataSubnet": d.dataSubnet(),
 	})
 
 	if d.password() == "" {
@@ -82,6 +85,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		d.endpoint(),
 		d.insecure(),
 		d.userName(),
+		d.group(),
 		d.password(),
 		d.volumePath()); err != nil {
 		return goof.WithFieldsE(fields,
@@ -118,18 +122,54 @@ func (d *driver) Name() string {
 	return providerName
 }
 
+// Create an instance ID from a list of client IP addresses
+func createInstanceId(clients []string) string {
+	return strings.Join(clients, idDelimiter)
+}
+
+// Parse an instance ID into a list of client IP addresses
+func parseInstanceId(id string) []string {
+	return strings.Split(id, idDelimiter)
+}
+
 func (d *driver) GetInstance() (*core.Instance, error) {
-	return &core.Instance{}, nil
 
-	//	instance := &core.Instance{
-	//		ProviderName: providerName,
-	//		InstanceID:   strconv.Itoa(initiator.Index),
-	//		Region:       "",
-	//		Name:         initiator.Name,
-	//	}
+	// parse the data subnet
+	_, dataSubnet, err := net.ParseCIDR(d.dataSubnet())
+	if err != nil {
+		return nil, goof.WithFieldsE(
+			eff(goof.Fields{"dataSubnet": d.dataSubnet()}), "Invalid data subnet", err)
+	}
 
-	// log.Println("Got Instance: " + fmt.Sprintf("%+v", instance))
-	//	return instance, nil
+	// find all local IP addresses on the data subnet
+	ipList, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil, goof.WithError("No Network Interface Addresses", err)
+	}
+	var idList []string
+	for _, addr := range ipList {
+		ip, _, err := net.ParseCIDR(addr.String())
+		if err != nil {
+			return nil, err
+		}
+		if dataSubnet.Contains(ip) == true {
+			idList = append(idList, ip.String())
+		}
+	}
+
+	if len(idList) == 0 {
+		return nil, goof.WithFieldsE(
+			eff(goof.Fields{"dataSubnet": d.dataSubnet()}), "No IPs in the data subnet", err)
+	}
+
+	instance := &core.Instance{
+		ProviderName: providerName,
+		InstanceID:   createInstanceId(idList),
+		Region:       "",
+		Name:         "",
+	}
+
+	return instance, nil
 }
 
 func (d *driver) nfsMountPath(mountPath string) string {
@@ -144,9 +184,10 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 
 	var BlockDevices []*core.BlockDevice
 	for _, export := range exports {
+
 		device := &core.BlockDevice{
 			ProviderName: providerName,
-			InstanceID:   "",
+			InstanceID:   createInstanceId(export.Clients),
 			Region:       "",
 			DeviceName:   d.nfsMountPath(export.ExportPath),
 			VolumeID:     export.Volume.Name,
@@ -180,6 +221,26 @@ func (d *driver) getVolume(volumeID, volumeName string) ([]isi.Volume, error) {
 	return volumes, nil
 }
 
+func (d *driver) getSize(volumeID, volumeName string) (int64, error) {
+	if d.quotas() == false {
+		return 0, nil
+	}
+
+	if volumeID != "" {
+		volumeName = volumeID
+	}
+	if volumeName != "" {
+		quota, err := d.client.GetQuota(volumeName)
+		if err != nil {
+			return 0, nil
+		}
+		return quota.Thresholds.Hard, nil
+	}
+
+	return 0, errors.ErrMissingVolumeID
+
+}
+
 func (d *driver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) {
 	volumes, err := d.getVolume(volumeID, volumeName)
 	if err != nil {
@@ -205,20 +266,22 @@ func (d *driver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) 
 		var attachmentsSD []*core.VolumeAttachment
 		if _, exists := blockDeviceMap[volume.Name]; exists {
 			attachmentSD := &core.VolumeAttachment{
-				VolumeID: volume.Name,
-				//				InstanceID: strconv.Itoa(d.initiator.Index),
+				VolumeID:   volume.Name,
+				InstanceID: blockDeviceMap[volume.Name].InstanceID,
 				DeviceName: blockDeviceMap[volume.Name].DeviceName,
 				Status:     "",
 			}
 			attachmentsSD = append(attachmentsSD, attachmentSD)
 		}
 
+		volSize, _ := d.getSize(volume.Name, volume.Name)
+
 		volumeSD := &core.Volume{
 			Name:             volume.Name,
 			VolumeID:         volume.Name,
-			Size:             "", //strconv.Itoa(volSize / 1024 / 1024),
+			Size:             strconv.FormatInt(volSize/bytesPerGb, 10),
 			AvailabilityZone: "",
-			NetworkName:      d.client.Path(volume.Name), //volume.NaaName,
+			NetworkName:      d.client.Path(volume.Name),
 			Attachments:      attachmentsSD,
 		}
 		volumesSD = append(volumesSD, volumeSD)
@@ -231,21 +294,70 @@ func (d *driver) CreateVolume(
 	notUsed bool,
 	volumeName, volumeID, snapshotID, NUvolumeType string,
 	NUIOPS, size int64, NUavailabilityZone string) (*core.Volume, error) {
-	log.Println("Start CreateVolume() (", volumeName, ") (", volumeID, ")")
 
-	newIsiVolume, _ := d.client.CreateVolume(volumeName)
-	volumes, _ := d.GetVolume(newIsiVolume.Name, newIsiVolume.Name)
+	fields := eff(map[string]interface{}{
+		"volumeName": volumeName,
+		"volumeId":   volumeID,
+	})
+
+	log.WithFields(fields).Debug("Creating volume")
+
+	if volumeID == "" && volumeName == "" {
+		return nil, goof.New("Cannot create a volume.  No volume name or ID provided")
+	}
+	if volumeName == "" {
+		volumeName = volumeID
+	}
+	_, err := d.client.CreateVolume(volumeName)
+	if err != nil {
+		return nil, goof.WithFieldsE(
+			eff(goof.Fields{"volumeName": volumeName}), "Error creating volume", err)
+	}
+
+	// Set or update the quota for volume
+	if d.quotas() {
+		quota, err := d.client.GetQuota(volumeName)
+		if quota == nil {
+			err = d.client.SetQuotaSize(volumeName, size*bytesPerGb)
+			if err != nil {
+				// TODO: not sure how to handle this situation.  Delete created volume
+				// and return an error?  Ignore and continue?
+				return nil, goof.WithFieldsE(
+					eff(goof.Fields{"volumeName": volumeName}), "Error setting quota for new volume", err)
+			}
+		} else {
+			err = d.client.UpdateQuotaSize(volumeName, size*bytesPerGb)
+			if err != nil {
+				// TODO: not sure how to handle this situation.  Delete created volume
+				// and return an error?  Ignore and continue?
+				return nil, goof.WithFieldsE(
+					eff(goof.Fields{"volumeName": volumeName}), "Error updating quota for existing volume", err)
+			}
+		}
+	}
+
+	volumes, _ := d.GetVolume(volumeID, volumeName)
+	if volumes == nil || err != nil {
+		return nil, goof.WithFieldsE(
+			eff(goof.Fields{"volumeName": volumeName}), "Error getting volume", err)
+	}
 
 	return volumes[0], nil
 }
 
 func (d *driver) RemoveVolume(volumeID string) error {
+	if d.quotas() {
+		err := d.client.ClearQuota(volumeID)
+		if err != nil {
+			return err
+		}
+	}
+
 	err := d.client.DeleteVolume(volumeID)
 	if err != nil {
 		return err
 	}
 
-	log.Println("Deleted Volume: " + volumeID)
 	return nil
 }
 
@@ -280,15 +392,13 @@ func (d *driver) GetVolumeAttach(volumeID, instanceID string) ([]*core.VolumeAtt
 	}
 
 	if instanceID != "" {
-		var attached bool
 		for _, volumeAttachment := range volume[0].Attachments {
 			if volumeAttachment.InstanceID == instanceID {
 				return volume[0].Attachments, nil
 			}
 		}
-		if !attached {
-			return []*core.VolumeAttachment{}, nil
-		}
+		// not attached
+		return []*core.VolumeAttachment{}, nil
 	}
 	return volume[0].Attachments, nil
 }
@@ -297,21 +407,47 @@ func (d *driver) AttachVolume(
 	notused bool,
 	volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
+	// sanity check the input
 	if volumeID == "" {
 		return nil, errors.ErrMissingVolumeID
 	}
-
+	if instanceID == "" {
+		return nil, goof.New("Missing Instance ID")
+	}
+	// ensure the volume exists and is exported
 	volumes, err := d.GetVolume(volumeID, "")
 	if err != nil {
 		return nil, err
 	}
-
 	if len(volumes) == 0 {
 		return nil, errors.ErrNoVolumesReturned
 	}
-
 	if err := d.client.ExportVolume(volumeID); err != nil {
 		return nil, goof.WithError("problem exporting volume", err)
+	}
+	// see if anyone is attached already
+	clients, err := d.client.GetExportClients(volumeID)
+	if err != nil {
+		return nil, goof.WithError("problem getting export client", err)
+	}
+
+	// clear out any existing clients if necessary.  if force is false and
+	// we have existing clients, we need to exit.
+	if len(clients) > 0 {
+		if force == false {
+			return nil, goof.New("Volume already attached to another host")
+		}
+
+		// remove all clients
+		err = d.client.ClearExportClients(volumeID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = d.client.SetExportClients(volumeID, parseInstanceId(instanceID))
+	if err != nil {
+		return nil, err
 	}
 
 	volumeAttachment, err := d.GetVolumeAttach(volumeID, instanceID)
@@ -323,7 +459,7 @@ func (d *driver) AttachVolume(
 
 }
 
-func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, force bool) error {
+func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, notused bool) error {
 	if volumeID == "" {
 		return errors.ErrMissingVolumeID
 	}
@@ -341,7 +477,6 @@ func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, force
 		return goof.WithError("problem unexporting volume", err)
 	}
 
-	log.Println("Detached volume", volumeID)
 	return nil
 }
 
@@ -368,6 +503,10 @@ func (d *driver) userName() string {
 	return d.r.Config.GetString("isilon.userName")
 }
 
+func (d *driver) group() string {
+	return d.r.Config.GetString("isilon.group")
+}
+
 func (d *driver) password() string {
 	return d.r.Config.GetString("isilon.password")
 }
@@ -380,13 +519,24 @@ func (d *driver) nfsHost() string {
 	return d.r.Config.GetString("isilon.nfsHost")
 }
 
+func (d *driver) dataSubnet() string {
+	return d.r.Config.GetString("isilon.dataSubnet")
+}
+
+func (d *driver) quotas() bool {
+	return d.r.Config.GetBool("isilon.quotas")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Isilon")
 	r.Key(gofig.String, "", "", "", "isilon.endpoint")
 	r.Key(gofig.Bool, "", false, "", "isilon.insecure")
 	r.Key(gofig.String, "", "", "", "isilon.userName")
+	r.Key(gofig.String, "", "", "", "isilon.group")
 	r.Key(gofig.String, "", "", "", "isilon.password")
 	r.Key(gofig.String, "", "", "", "isilon.volumePath")
 	r.Key(gofig.String, "", "", "", "isilon.nfsHost")
+	r.Key(gofig.String, "", "", "", "isilon.dataSubnet")
+	r.Key(gofig.Bool, "", false, "", "isilon.quotas")
 	return r
 }

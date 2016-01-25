@@ -199,11 +199,39 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 
 func (d *driver) getVolume(
 	volumeID, volumeName string, getSnapshots bool) ([]*types.Volume, error) {
-	volumes, err := d.storagePool.GetVolume("", volumeID, "", volumeName, getSnapshots)
+	volumes, err := d.client.GetVolume("", volumeID, "", volumeName, getSnapshots)
 	if err != nil {
 		return nil, err
 	}
 	return volumes, nil
+}
+
+func (d *driver) getStoragePoolIDs() (map[string]*types.StoragePool, error) {
+	storagePools, err := d.client.GetStoragePool("")
+	if err != nil {
+		return nil, err
+	}
+
+	mapPoolID := make(map[string]*types.StoragePool)
+
+	for _, pool := range storagePools {
+		mapPoolID[pool.ID] = pool
+	}
+	return mapPoolID, nil
+}
+
+func (d *driver) getProtectionDomainIDs() (map[string]*types.ProtectionDomain, error) {
+	protectionDomains, err := d.system.GetProtectionDomain("")
+	if err != nil {
+		return nil, err
+	}
+
+	mapProtectionDomainID := make(map[string]*types.ProtectionDomain)
+
+	for _, protectionDomain := range protectionDomains {
+		mapProtectionDomainID[protectionDomain.ID] = protectionDomain
+	}
+	return mapProtectionDomainID, nil
 }
 
 func (d *driver) GetVolume(
@@ -212,6 +240,37 @@ func (d *driver) GetVolume(
 	sdcMappedVolumes, err := goscaleio.GetLocalVolumeMap()
 	if err != nil {
 		return []*core.Volume{}, err
+	}
+
+	mapStoragePoolName, err := d.getStoragePoolIDs()
+	if err != nil {
+		return nil, err
+	}
+
+	mapProtectionDomainName, err := d.getProtectionDomainIDs()
+	if err != nil {
+		return nil, err
+	}
+
+	getStoragePoolName := func(ID string) string {
+		if pool, ok := mapStoragePoolName[ID]; ok {
+			return pool.Name
+		}
+		return ""
+	}
+
+	getProtectionDomainName := func(poolID string) string {
+		var ok bool
+		var pool *types.StoragePool
+
+		if pool, ok = mapStoragePoolName[poolID]; !ok {
+			return ""
+		}
+
+		if protectionDomain, ok := mapProtectionDomainName[pool.ProtectionDomainID]; ok {
+			return protectionDomain.Name
+		}
+		return ""
 	}
 
 	sdcDeviceMap := make(map[string]*goscaleio.SdcMappedVolume)
@@ -250,9 +309,9 @@ func (d *driver) GetVolume(
 		volumeSD := &core.Volume{
 			Name:             volume.Name,
 			VolumeID:         volume.ID,
-			AvailabilityZone: d.protectionDomain.ProtectionDomain.ID,
+			AvailabilityZone: getProtectionDomainName(volume.StoragePoolID),
 			Status:           "",
-			VolumeType:       volume.StoragePoolID,
+			VolumeType:       getStoragePoolName(volume.StoragePoolID),
 			IOPS:             IOPS,
 			Size:             strconv.Itoa(volume.SizeInKb / 1024 / 1024),
 			Attachments:      attachmentsSD,
@@ -334,6 +393,25 @@ func (d *driver) CreateSnapshot(
 	notUsed bool,
 	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
+	fields := eff(map[string]interface{}{
+		"volumeID":     volumeID,
+		"snapshotName": snapshotName,
+		"description":  description,
+	})
+
+	if snapshotName == "" {
+		return nil, goof.New("no snapshot name specified")
+	}
+
+	volumes, err := d.GetVolume("", snapshotName)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) > 0 {
+		return nil, goof.WithFieldsE(fields, "volume name already exists", err)
+	}
+
 	snapshotDef := &types.SnapshotDef{
 		VolumeID:     volumeID,
 		SnapshotName: snapshotName,
@@ -345,19 +423,18 @@ func (d *driver) CreateSnapshot(
 		SnapshotDefs: snapshotDefs,
 	}
 
-	var err error
 	var snapshot []*core.Snapshot
 	var snapshotVolumes *types.SnapshotVolumesResp
 
 	if snapshotVolumes, err =
 		d.system.CreateSnapshotConsistencyGroup(
 			snapshotVolumesParam); err != nil {
-		return nil, err
+		return nil, goof.WithFieldsE(fields, "failed to create snapshot", err)
 	}
 
 	if snapshot, err = d.GetSnapshot(
 		"", snapshotVolumes.VolumeIDList[0], ""); err != nil {
-		return nil, err
+		return nil, goof.WithFieldsE(fields, "error getting new snapshot", err)
 	}
 
 	log.WithFields(log.Fields{
@@ -372,12 +449,22 @@ func (d *driver) createVolume(
 	volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*types.VolumeResp, error) {
 
+	fields := eff(map[string]interface{}{
+		"volumeID":         volumeID,
+		"volumeName":       volumeName,
+		"snapshotID":       snapshotID,
+		"volumeType":       volumeType,
+		"IOPS":             IOPS,
+		"size":             size,
+		"availabilityZone": availabilityZone,
+	})
+
 	snapshot := &core.Snapshot{}
 	if volumeID != "" {
 		snapshotInt, err := d.CreateSnapshot(
 			true, volumeName, volumeID, "created for createVolume")
 		if err != nil {
-			return &types.VolumeResp{}, err
+			return nil, goof.WithFieldsE(fields, "error creating volume from snapshot", err)
 		}
 		snapshot = snapshotInt[0]
 		return &types.VolumeResp{ID: snapshot.SnapshotID}, nil
@@ -386,12 +473,17 @@ func (d *driver) createVolume(
 	volumeParam := &types.VolumeParam{
 		Name:           volumeName,
 		VolumeSizeInKb: strconv.Itoa(int(size) * 1024 * 1024),
-		VolumeType:     volumeType,
+		VolumeType:     d.thinOrThick(),
 	}
 
-	volumeResp, err := d.storagePool.CreateVolume(volumeParam)
+	if volumeType == "" {
+		volumeType = d.storagePool.StoragePool.Name
+		fields["volumeType"] = volumeType
+	}
+
+	volumeResp, err := d.client.CreateVolume(volumeParam, volumeType)
 	if err != nil {
-		return &types.VolumeResp{}, err
+		return nil, goof.WithFieldsE(fields, "error creating volume", err)
 	}
 
 	return volumeResp, nil
@@ -402,6 +494,19 @@ func (d *driver) CreateVolume(
 	volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
 
+	if volumeName == "" {
+		return nil, goof.New("no volume name specified")
+	}
+
+	volumes, err := d.GetVolume("", volumeName)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) > 0 {
+		return nil, goof.WithField("volumeName", volumeName, "volume name already exists")
+	}
+
 	resp, err := d.createVolume(
 		notUsed, volumeName, volumeID, snapshotID,
 		volumeType, IOPS, size, availabilityZone)
@@ -410,7 +515,7 @@ func (d *driver) CreateVolume(
 		return nil, err
 	}
 
-	volumes, err := d.GetVolume(resp.ID, "")
+	volumes, err = d.GetVolume(resp.ID, "")
 	if err != nil {
 		return nil, err
 	}
@@ -686,6 +791,14 @@ func (d *driver) storagePoolName() string {
 	return d.r.Config.GetString("scaleio.storagePoolName")
 }
 
+func (d *driver) thinOrThick() string {
+	thinOrThick := d.r.Config.GetString("scaleio.thinOrThick")
+	if thinOrThick == "" {
+		return "ThinProvisioned"
+	}
+	return thinOrThick
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("ScaleIO")
 	r.Key(gofig.String, "", "", "", "scaleio.endpoint")
@@ -700,5 +813,6 @@ func configRegistration() *gofig.Registration {
 	r.Key(gofig.String, "", "", "", "scaleio.protectionDomainName")
 	r.Key(gofig.String, "", "", "", "scaleio.storagePoolID")
 	r.Key(gofig.String, "", "", "", "scaleio.storagePoolName")
+	r.Key(gofig.String, "", "", "", "scaleio.thinOrThick")
 	return r
 }

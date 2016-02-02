@@ -45,9 +45,9 @@ Integration support documented with the following platforms:
 
 Platform            | Use
 ------------------|-------------------------
-Docker            | [Volume Driver Plugin](/user-guide/docker/)
-Mesos             | [Volume Driver Isolator module](/user-guide/mesos/)
-Mesos + Docker    | [Volume Driver Plugin](/user-guide/mesos/)
+Docker            | [Volume Driver Plugin](/user-guide/third-party/docker/)
+Mesos             | [Volume Driver Isolator module](/user-guide/third-party/mesos/)
+Mesos + Docker    | [Volume Driver Plugin](/user-guide/third-party/mesos/)
 
 <br>
 ## Quick Start (using Docker)

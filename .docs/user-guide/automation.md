@@ -14,7 +14,32 @@ orchestration tools below.  Optionally, Docker is also listed in some examples.
 
 <br>
 ## Ansible
-ToDo
+With Ansible, installing the latest REX-Ray binaries can be accomplished by
+including the `codenrhoden.rexray` role from Ansible Galaxy.  The role accepts
+all the necessary variables to properly fill out your `config.yml` file.
+
+Install the role from Galaxy:
+
+```shell
+ansible-galaxy install codenrhoden.rexray
+```
+
+Example playbook for installing REX-Ray on GCE Docker hosts:
+
+```yaml
+- hosts: gce_docker_hosts
+  roles:
+  - { role: codenrhoden.rexray,
+      rexray_service: true,
+      rexray_storage_drivers: [gce],
+      rexray_gce_keyfile: "/opt/gce_keyfile" }
+```
+
+Run the playbook:
+
+```shell
+ansible-playbook -i <inventory> playbook.yml
+```
 
 <br>
 ## AWS CloudFormation

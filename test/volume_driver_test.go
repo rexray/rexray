@@ -188,6 +188,67 @@ func TestVolumeDriverManagerPathNoDrivers(t *testing.T) {
 	}
 }
 
+func TestVolumeDriverGet(t *testing.T) {
+	r, err := getRexRay()
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := <-r.Volume.Drivers()
+	if _, err := d.Get(""); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestVolumeDriverManagerGet(t *testing.T) {
+	r, err := getRexRay()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Volume.Get(""); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestVolumeDriverManagerGetNoDrivers(t *testing.T) {
+	r, err := getRexRayNoDrivers()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Volume.Get(""); err != errors.ErrNoVolumesDetected {
+		t.Fatal(err)
+	}
+}
+
+func TestVolumeDriverList(t *testing.T) {
+	r, err := getRexRay()
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := <-r.Volume.Drivers()
+	if _, err := d.List(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestVolumeDriverManagerList(t *testing.T) {
+	r, err := getRexRay()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Volume.List(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestVolumeDriverManagerListNoDrivers(t *testing.T) {
+	r, err := getRexRayNoDrivers()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Volume.List(); err != errors.ErrNoVolumesDetected {
+		t.Fatal(err)
+	}
+}
 func TestVolumeDriverCreate(t *testing.T) {
 	r, err := getRexRay()
 	if err != nil {

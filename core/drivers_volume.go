@@ -10,6 +10,9 @@ import (
 // VolumeOpts is a map of options used when creating a new volume
 type VolumeOpts map[string]string
 
+// Volume is a map of a volume
+type VolumeMap map[string]string
+
 // VolumeDriver is the interface implemented by types that provide volume
 // introspection and management.
 type VolumeDriver interface {
@@ -33,6 +36,12 @@ type VolumeDriver interface {
 
 	// Remove will remove a volume of volumeName.
 	Remove(volumeName string) error
+
+	// Get will return a specific volume
+	Get(volumeName string) (VolumeMap, error)
+
+	// List will return all volumes
+	List() ([]VolumeMap, error)
 
 	// Attach will attach a volume based on volumeName to the instance of
 	// instanceID.
@@ -242,6 +251,22 @@ func (r *vdm) Path(volumeName, volumeID string) (string, error) {
 		return d.Path(volumeName, volumeID)
 	}
 	return "", errors.ErrNoVolumesDetected
+}
+
+// Get will return a specific volume
+func (r *vdm) Get(volumeName string) (VolumeMap, error) {
+	for _, d := range r.drivers {
+		return d.Get(volumeName)
+	}
+	return nil, errors.ErrNoVolumesDetected
+}
+
+// Get will return all volumes
+func (r *vdm) List() ([]VolumeMap, error) {
+	for _, d := range r.drivers {
+		return d.List()
+	}
+	return nil, errors.ErrNoVolumesDetected
 }
 
 // Create will create a new volume with the volumeName and opts.

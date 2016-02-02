@@ -61,6 +61,14 @@ func (m *mockVolDriver) Remove(volumeName string) error {
 	return nil
 }
 
+func (m *mockVolDriver) Get(volumeName string) (core.VolumeMap, error) {
+	return nil, nil
+}
+
+func (m *mockVolDriver) List() ([]core.VolumeMap, error) {
+	return nil, nil
+}
+
 func (m *mockVolDriver) Attach(volumeName, instanceID string, force bool) (string, error) {
 	return "", nil
 }

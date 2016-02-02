@@ -9,6 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/docker/docker/pkg/mount"
 
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/util"
@@ -600,6 +601,115 @@ func (d *driver) Remove(volumeName string) error {
 	}
 
 	return nil
+}
+
+func (d *driver) Get(volumeName string) (core.VolumeMap, error) {
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"driverName": d.Name()}).Info("getting volume")
+
+	if volumeName == "" {
+		return nil, goof.New("Missing volume name")
+	}
+
+	volumes, err := d.get(volumeName)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) == 0 {
+		return nil, goof.New("no volumes returned")
+	}
+
+	return volumes[0], nil
+}
+
+func (d *driver) get(volumeName string) ([]core.VolumeMap, error) {
+	instances, err := d.r.Storage.GetInstances()
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case len(instances) == 0:
+		return nil, goof.New("No instances")
+	case len(instances) > 1:
+		return nil, goof.New("Too many instances returned, limit the storagedrivers")
+	}
+
+	volumes, err := d.r.Storage.GetVolume("", volumeName)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case len(volumes) == 0:
+		return nil, goof.New("No volumes returned")
+	case len(volumes) > 1 && volumeName != "":
+		return nil, goof.New("too many volumes returned")
+	}
+
+	var volList []core.VolumeMap
+
+Volumes:
+	for _, volume := range volumes {
+		if len(volume.Attachments) == 0 {
+			volList = append(volList, core.VolumeMap{
+				"Name": volume.Name,
+			})
+			continue Volumes
+		}
+
+		var attachment *core.VolumeAttachment
+	Attachments:
+		for _, att := range volume.Attachments {
+			if att.InstanceID == instances[0].InstanceID {
+				attachment = att
+				break Attachments
+			}
+		}
+
+		if attachment == nil {
+			volList = append(volList, core.VolumeMap{
+				"Name": volume.Name,
+			})
+			continue Volumes
+		}
+
+		allMounts, err := d.r.OS.GetMounts("", "")
+		if err != nil {
+			return nil, err
+		}
+
+		var mounts []*mount.Info
+		for _, mount := range allMounts {
+			if mount.Source == attachment.DeviceName {
+				mounts = append(mounts, mount)
+			}
+		}
+
+		if len(mounts) == 0 {
+			volList = append(volList, core.VolumeMap{
+				"Name": volume.Name,
+			})
+			continue Volumes
+		}
+
+		volList = append(volList, core.VolumeMap{
+			"Name":       volume.Name,
+			"Mountpoint": d.volumeMountPath(mounts[0].Mountpoint),
+		})
+
+	}
+	return volList, nil
+}
+
+// List will list all volumes
+func (d *driver) List() ([]core.VolumeMap, error) {
+	log.WithFields(log.Fields{
+		"driverName": d.Name()}).Info("listing volumes")
+
+	return d.get("")
 }
 
 // Attach will attach a volume to an instance

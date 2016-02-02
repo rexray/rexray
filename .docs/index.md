@@ -104,7 +104,7 @@ $ rexray start
 ```
 
 ### Example of REX-Ray with Docker
-Docker 1.9.1+ is recommended to use REX-Ray as a
+Docker 1.10+ is recommended to use REX-Ray as a
 [Docker Volume Driver Plugin](https://docs.docker.com/extend/plugins_volume/).
 
 The following example uses two Amazon EC2 Virtual Machines, `EC2a` and `EC2b`,

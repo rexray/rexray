@@ -99,4 +99,8 @@ ToDo
 
 <br>
 ## Vagrant
-ToDo
+Using Vagrant is a great option to deploy pre-configured REX-Ray nodes including
+Docker using the VirtualBox driver.  All volume requests are handled using
+VirtualBox's Virtual Media.
+
+[here](https://github.com/emccode/vagrant/tree/master/rexray).

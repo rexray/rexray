@@ -2,22 +2,18 @@ package module
 
 import (
 	"fmt"
+	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/goof"
-
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 )
 
 // Module is the interface to which types adhere in order to participate as
 // daemon modules.
 type Module interface {
-
-	// Id gets the module's unique identifier.
-	ID() int32
 
 	// Start starts the module.
 	Start() error
@@ -37,16 +33,13 @@ type Module interface {
 }
 
 // Init initializes the module.
-type Init func(id int32, config *Config) (Module, error)
+type Init func(config *Config) (Module, error)
 
 var (
-	nextModTypeID     int32
-	nextModInstanceID int32
-
-	modTypes    map[int32]*Type
+	modTypes    map[string]*Type
 	modTypesRwl sync.RWMutex
 
-	modInstances    map[int32]*Instance
+	modInstances    map[string]*Instance
 	modInstancesRwl sync.RWMutex
 )
 
@@ -60,24 +53,23 @@ func GetModOptVal(opts map[string]string, key string) string {
 
 // Config is a struct used to configure a module.
 type Config struct {
-	Address string       `json:"address"`
-	Config  gofig.Config `json:"config,omitempty"`
+	Name        string       `json:"name"`
+	Type        string       `json:"type"`
+	Description string       `json:"description"`
+	Address     string       `json:"address"`
+	Config      gofig.Config `json:"config,omitempty"`
 }
 
 // Type is a struct that describes a module type
 type Type struct {
-	ID               int32     `json:"id"`
-	Name             string    `json:"name"`
-	IgnoreFailOnInit bool      `json:"-"`
-	InitFunc         Init      `json:"-"`
-	DefaultConfigs   []*Config `json:"defaultConfigs"`
+	Name     string `json:"name"`
+	InitFunc Init   `json:"-"`
 }
 
 // Instance is a struct that describes a module instance
 type Instance struct {
-	ID          int32   `json:"id"`
 	Type        *Type   `json:"-"`
-	TypeID      int32   `json:"typeId"`
+	TypeName    string  `json:"typeName"`
 	Inst        Module  `json:"-"`
 	Name        string  `json:"name"`
 	Config      *Config `json:"config,omitempty"`
@@ -86,10 +78,29 @@ type Instance struct {
 }
 
 func init() {
-	nextModTypeID = 0
-	nextModInstanceID = 0
-	modTypes = make(map[int32]*Type)
-	modInstances = make(map[int32]*Instance)
+	modTypes = map[string]*Type{}
+	modInstances = map[string]*Instance{}
+	initConfig()
+}
+
+func initConfig() {
+	cfg := gofig.NewRegistration("Module")
+	cfg.Yaml(`
+rexray:
+    modules:
+        default-admin:
+            type:     admin
+            desc:     The default admin module.
+            host:     tcp://127.0.0.1:7979
+            disabled: false
+        default-docker:
+            type:     docker
+            desc:     The default docker module.
+            host:     unix:///run/docker/plugins/rexray.sock
+            spec:     /etc/docker/plugins/rexray.spec
+            disabled: false
+`)
+	gofig.Register(cfg)
 }
 
 // Types returns a channel that receives the registered module types.
@@ -132,92 +143,82 @@ func Instances() <-chan *Instance {
 
 // InitializeDefaultModules initializes the default modules.
 func InitializeDefaultModules() error {
-	modTypesRwl.Lock()
-	defer modTypesRwl.Unlock()
+	modTypesRwl.RLock()
+	defer modTypesRwl.RUnlock()
 
-	for id, mt := range modTypes {
-		if mt.DefaultConfigs != nil {
-			for _, mc := range mt.DefaultConfigs {
-				_, initErr := InitializeModule(id, mc)
-				if initErr != nil {
-					if mt.IgnoreFailOnInit {
-						log.WithField("error", initErr).Warn(
-							"ignoring initialization failure")
-					} else {
-						return initErr
-					}
-				}
-			}
+	c := gofig.New()
+	modConfigs, err := getConfiguredModules(c)
+	if err != nil {
+		return err
+	}
+
+	for _, mc := range modConfigs {
+		mod, err := InitializeModule(mc)
+		if err != nil {
+			return err
 		}
+		func() {
+			modInstancesRwl.Lock()
+			defer modInstancesRwl.Unlock()
+			modInstances[mod.Name] = mod
+		}()
 	}
 
 	return nil
 }
 
 // InitializeModule initializes a module.
-func InitializeModule(
-	modTypeID int32,
-	modConfig *Config) (*Instance, error) {
+func InitializeModule(modConfig *Config) (*Instance, error) {
 
 	modInstancesRwl.Lock()
 	defer modInstancesRwl.Unlock()
 
+	typeName := strings.ToLower(modConfig.Type)
+
 	lf := log.Fields{
-		"typeId":  modTypeID,
-		"address": modConfig.Address,
+		"typeName": typeName,
+		"address":  modConfig.Address,
 	}
 
-	mt, modTypeExists := modTypes[modTypeID]
+	mt, modTypeExists := modTypes[typeName]
 	if !modTypeExists {
 		return nil, goof.WithFields(lf, "unknown module type")
 	}
 
-	lf["typeName"] = mt.Name
-	lf["ignoreFailOnInit"] = mt.IgnoreFailOnInit
-
-	modInstID := atomic.AddInt32(&nextModInstanceID, 1)
-	mod, initErr := mt.InitFunc(modInstID, modConfig)
+	mod, initErr := mt.InitFunc(modConfig)
 	if initErr != nil {
-		atomic.AddInt32(&nextModInstanceID, -1)
 		return nil, initErr
 	}
 
+	modName := mod.Name()
+
 	modInst := &Instance{
-		ID:          modInstID,
 		Type:        mt,
-		TypeID:      mt.ID,
+		TypeName:    typeName,
 		Inst:        mod,
-		Name:        mod.Name(),
+		Name:        modName,
 		Config:      modConfig,
 		Description: mod.Description(),
 	}
-	modInstances[modInstID] = modInst
+	modInstances[modName] = modInst
 
-	lf["id"] = modInstID
+	lf["name"] = modName
 	log.WithFields(lf).Info("initialized module instance")
 
 	return modInst, nil
 }
 
-// RegisterModule registers a module.
-func RegisterModule(
-	name string,
-	ignoreFailOnInit bool,
-	initFunc Init,
-	defaultConfigs []*Config) int32 {
+// RegisterModule registers a module type.
+func RegisterModule(name string, initFunc Init) {
+
 	modTypesRwl.Lock()
 	defer modTypesRwl.Unlock()
 
-	modTypeID := atomic.AddInt32(&nextModTypeID, 1)
-	modTypes[modTypeID] = &Type{
-		ID:               modTypeID,
-		Name:             name,
-		IgnoreFailOnInit: ignoreFailOnInit,
-		InitFunc:         initFunc,
-		DefaultConfigs:   defaultConfigs,
+	name = strings.ToLower(name)
+	modTypes[name] = &Type{
+		Name:     name,
+		InitFunc: initFunc,
 	}
-
-	return modTypeID
 }
 
 // StartDefaultModules starts the default modules.
@@ -225,8 +226,8 @@ func StartDefaultModules() error {
 	modInstancesRwl.RLock()
 	defer modInstancesRwl.RUnlock()
 
-	for id := range modInstances {
-		startErr := StartModule(id)
+	for name := range modInstances {
+		startErr := StartModule(name)
 		if startErr != nil {
 			return startErr
 		}
@@ -235,37 +236,37 @@ func StartDefaultModules() error {
 	return nil
 }
 
-// GetModuleInstance gets the module instance with the provided instance ID.
-func GetModuleInstance(modInstID int32) (*Instance, error) {
+// GetModuleInstance gets the module instance with the provided name.
+func GetModuleInstance(name string) (*Instance, error) {
 	modInstancesRwl.RLock()
 	defer modInstancesRwl.RUnlock()
 
-	mod, modExists := modInstances[modInstID]
+	name = strings.ToLower(name)
+	mod, modExists := modInstances[name]
 
 	if !modExists {
 		return nil,
-			goof.WithField("id", modInstID, "unknown module instance")
+			goof.WithField("name", name, "unknown module instance")
 	}
 
 	return mod, nil
 }
 
-// StartModule starts the module with the provided instance ID.
-func StartModule(modInstID int32) error {
+// StartModule starts the module with the provided instance name.
+func StartModule(name string) error {
 
 	modInstancesRwl.RLock()
 	defer modInstancesRwl.RUnlock()
 
-	lf := map[string]interface{}{"id": modInstID}
+	name = strings.ToLower(name)
+	lf := map[string]interface{}{"name": name}
 
-	mod, modExists := modInstances[modInstID]
+	mod, modExists := modInstances[name]
 
 	if !modExists {
 		return goof.WithFields(lf, "unknown module instance")
 	}
 
-	lf["id"] = mod.ID
-	lf["typeId"] = mod.Type.ID
 	lf["typeName"] = mod.Type.Name
 	lf["address"] = mod.Config.Address
 
@@ -280,8 +281,8 @@ func StartModule(modInstID int32) error {
 			m := "error starting module"
 
 			errMsg := fmt.Sprintf(
-				"Error starting module type %d, %d-%s at %s",
-				mod.TypeID, mod.ID, mod.Name, mod.Config.Address)
+				"Error starting module type=%s, instance=%s at %s",
+				mod.TypeName, mod.Name, mod.Config.Address)
 
 			if r == nil {
 				startError <- goof.New(errMsg)
@@ -323,4 +324,51 @@ func StartModule(modInstID int32) error {
 	}
 
 	return nil
+}
+
+func getConfiguredModules(c gofig.Config) ([]*Config, error) {
+
+	mods := c.Get("rexray.modules")
+	modMap, ok := mods.(map[string]interface{})
+	if !ok {
+		return nil, goof.New("invalid format rexray.modules")
+	}
+	log.WithField("count", len(modMap)).Debug("got modules map")
+
+	modConfigs := []*Config{}
+
+	for name := range modMap {
+		name = strings.ToLower(name)
+
+		log.WithField("name", name).Debug("processing module config")
+
+		scope := fmt.Sprintf("rexray.modules.%s", name)
+		log.WithField("scope", scope).Debug("getting scoped config for module")
+		sc := c.Scope(scope)
+
+		disabled := sc.GetBool("disabled")
+		if disabled {
+			log.WithField("name", name).Debug("ignoring disabled module config")
+			continue
+		}
+
+		mc := &Config{
+			Name:        name,
+			Type:        strings.ToLower(sc.GetString("type")),
+			Description: sc.GetString("desc"),
+			Address:     sc.GetString("host"),
+			Config:      sc,
+		}
+
+		log.WithFields(log.Fields{
+			"name": mc.Name,
+			"type": mc.Type,
+			"desc": mc.Description,
+			"addr": mc.Address,
+		}).Info("created new mod config")
+
+		modConfigs = append(modConfigs, mc)
+	}
+
+	return modConfigs, nil
 }

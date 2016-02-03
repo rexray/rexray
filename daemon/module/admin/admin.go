@@ -20,13 +20,10 @@ import (
 )
 
 const (
-	modPort        = 7979
-	modName        = "AdminModule"
-	modDescription = "The REX-Ray admin module"
+	modName = "admin"
 )
 
 type mod struct {
-	id   int32
 	name string
 	addr string
 	desc string
@@ -38,24 +35,15 @@ type jsonError struct {
 }
 
 func init() {
-	addr := fmt.Sprintf("tcp://:%d", modPort)
-	mc := &module.Config{
-		Address: addr,
-	}
-	module.RegisterModule(modName, false, newModule, []*module.Config{mc})
+	module.RegisterModule(modName, newModule)
 }
 
-func newModule(id int32, config *module.Config) (module.Module, error) {
+func newModule(c *module.Config) (module.Module, error) {
 	return &mod{
-		id:   id,
-		name: modName,
-		desc: modDescription,
-		addr: config.Address,
+		name: c.Name,
+		desc: c.Description,
+		addr: c.Address,
 	}, nil
-}
-
-func (m *mod) ID() int32 {
-	return m.id
 }
 
 func loadAsset(path, defaultValue string) string {
@@ -158,16 +146,18 @@ func moduleInstGetHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
-	typeID := req.FormValue("typeId")
+	name := req.FormValue("name")
+	typeName := req.FormValue("typeName")
 	address := req.FormValue("address")
 	cfgJSON := req.FormValue("config")
 	start := req.FormValue("start")
 
 	log.WithFields(log.Fields{
-		"typeId":  typeID,
-		"address": address,
-		"start":   start,
-		"config":  cfgJSON,
+		"name":     name,
+		"typeName": typeName,
+		"address":  address,
+		"start":    start,
+		"config":   cfgJSON,
 	}).Debug("received module instance post request")
 
 	cfg, cfgErr := gofig.FromJSON(cfgJSON)
@@ -178,28 +168,21 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	modConfig := &module.Config{
+		Name:    name,
+		Type:    typeName,
 		Address: address,
 		Config:  cfg,
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	if typeID == "" || address == "" {
-		w.Write(getJSONError("Fields typeId and address are required", nil))
-		log.Printf("Fields typeId and address are required\n")
+	if typeName == "" || address == "" {
+		w.Write(getJSONError("Fields typeName and address are required", nil))
+		log.Printf("Fields typeName and address are required\n")
 		return
 	}
 
-	typeIDInt, typeIDIntErr := strconv.ParseInt(typeID, 10, 32)
-	if typeIDIntErr != nil {
-		w.Write(getJSONError("Error parsing typeId", typeIDIntErr))
-		log.Printf("Error parsing typeId ERR: %v\n", typeIDIntErr)
-		return
-	}
-
-	typeIDInt32 := int32(typeIDInt)
-
-	modInst, initErr := module.InitializeModule(typeIDInt32, modConfig)
+	modInst, initErr := module.InitializeModule(modConfig)
 	if initErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("Error initializing module ERR: %v\n", initErr)
@@ -219,7 +202,7 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if startBool {
-		startErr := module.StartModule(modInst.ID)
+		startErr := module.StartModule(modInst.Name)
 		if startErr != nil {
 			w.Write(getJSONError("Error starting module", startErr))
 			log.Printf("Error starting module ERR: %v\n", startErr)
@@ -255,27 +238,17 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	vars := mux.Vars(req)
-	id := vars["id"]
-	if id == "" {
-		w.Write(getJSONError("The URL should include the module instance ID", nil))
-		log.Printf("The URL should include the module instance ID\n")
+	name := vars["name"]
+	if name == "" {
+		w.Write(getJSONError("The URL should include the module instance name", nil))
+		log.Printf("The URL should include the module instance name\n")
 		return
 	}
 
-	idInt, idIntErr := strconv.ParseInt(id, 10, 32)
-
-	if idIntErr != nil {
-		w.Write(getJSONError("Error parsing id", idIntErr))
-		log.Printf("Error parsing id ERR: %v\n", idIntErr)
-		return
-	}
-
-	idInt32 := int32(idInt)
-
-	modInst, modInstErr := module.GetModuleInstance(idInt32)
+	modInst, modInstErr := module.GetModuleInstance(name)
 	if modInstErr != nil {
-		w.Write(getJSONError("Unknown module id", modInstErr))
-		log.Printf("Unknown module id ERR: %v\n", modInstErr)
+		w.Write(getJSONError("Unknown module name", modInstErr))
+		log.Printf("Unknown module name ERR: %v\n", modInstErr)
 		return
 	}
 
@@ -291,7 +264,7 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	startErr := module.StartModule(idInt32)
+	startErr := module.StartModule(name)
 
 	if startErr != nil {
 		w.Write(getJSONError("Error starting moudle", startErr))
@@ -330,7 +303,7 @@ func (m *mod) Start() error {
 
 	r.Handle("/r/module/instances",
 		handlers.LoggingHandler(stdOut, http.HandlerFunc(moduleInstHandler)))
-	r.Handle("/r/module/instances/{id}/start",
+	r.Handle("/r/module/instances/{name}/start",
 		handlers.LoggingHandler(stdOut, http.HandlerFunc(moduleInstStartHandler)))
 	r.Handle("/r/module/types",
 		handlers.LoggingHandler(stdOut, http.HandlerFunc(moduleTypeHandler)))

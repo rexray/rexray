@@ -9,10 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
@@ -21,54 +21,58 @@ import (
 )
 
 const (
-	modAddress     = "unix:///run/docker/plugins/rexray.sock"
-	modPort        = 7980
-	modName        = "DockerVolumeDriverModule"
-	modDescription = "The REX-Ray Docker VolumeDriver module"
+	modName = "docker"
 )
 
 type mod struct {
-	id   int32
 	r    *core.RexRay
 	name string
 	addr string
 	desc string
 }
 
+var (
+	separators  = regexp.MustCompile(`[ &_=+:]`)
+	dashes      = regexp.MustCompile(`[\-]+`)
+	illegalPath = regexp.MustCompile(`[^[:alnum:]\~\-\./]`)
+)
+
 func init() {
-	//tcpAddr := fmt.Sprintf("tcp://:%d", ModPort)
-
-	_, fsPath, parseAddrErr := gotil.ParseAddress(modAddress)
-	if parseAddrErr != nil {
-		panic(parseAddrErr)
-	}
-
-	fsPathDir := filepath.Dir(fsPath)
-	os.MkdirAll(fsPathDir, 0755)
-
-	mc := &module.Config{
-		Address: modAddress,
-		Config:  gofig.New(),
-	}
-
-	module.RegisterModule(modName, true, newMod, []*module.Config{mc})
+	module.RegisterModule(modName, newModule)
 }
 
-func (m *mod) ID() int32 {
-	return m.id
-}
+func newModule(c *module.Config) (module.Module, error) {
 
-func newMod(id int32, cfg *module.Config) (module.Module, error) {
+	host := strings.Trim(c.Address, " ")
+
+	if host == "" {
+		if c.Name == "default-docker" {
+			host = "unix:///run/docker/plugins/rexray.sock"
+		} else {
+			fname := cleanName(c.Name)
+			host = fmt.Sprintf("unix:///run/docker/plugins/%s.sock", fname)
+		}
+	}
+
+	c.Address = host
+
 	return &mod{
-		id:   id,
-		r:    core.New(cfg.Config),
-		name: modName,
-		desc: modDescription,
-		addr: cfg.Address,
+		r:    core.New(c.Config),
+		name: c.Name,
+		desc: c.Description,
+		addr: host,
 	}, nil
 }
 
-const driverName = "dockervolumedriver"
+func cleanName(s string) string {
+	s = strings.Trim(strings.ToLower(s), " ")
+	s = separators.ReplaceAllString(s, "-")
+	s = illegalPath.ReplaceAllString(s, "")
+	s = dashes.ReplaceAllString(s, "-")
+	return s
+}
+
+const driverName = "docker"
 
 var (
 	errMissingHost      = goof.New("Missing host parameter")
@@ -86,6 +90,11 @@ func (m *mod) Start() error {
 	proto, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {
 		return parseAddrErr
+	}
+
+	if proto == "unix" {
+		dir := filepath.Dir(addr)
+		os.MkdirAll(dir, 0755)
 	}
 
 	const validProtoPatt = "(?i)^unix|tcp$"
@@ -158,10 +167,22 @@ func (m *mod) Start() error {
 		}
 	}()
 
-	writeSpecErr := ioutil.WriteFile(
-		"/etc/docker/plugins/rexray.spec", []byte(specPath), 0644)
-	if writeSpecErr != nil {
-		return writeSpecErr
+	spec := m.r.Config.GetString("spec")
+	if spec == "" {
+		if m.name == "default-docker" {
+			spec = "/etc/docker/plugins/rexray.spec"
+		} else {
+			fname := cleanName(m.name)
+			spec = fmt.Sprintf("/etc/docker/plugins/%s.spec", fname)
+		}
+	}
+
+	log.WithField("path", spec).Debug("docker voldriver spec file")
+
+	if !gotil.FileExists(spec) {
+		if err := ioutil.WriteFile(spec, []byte(specPath), 0644); err != nil {
+			return err
+		}
 	}
 
 	return nil

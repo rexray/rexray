@@ -2,8 +2,9 @@ package volume
 
 import (
 	// loads the volume drivers
-	"github.com/akutz/gofig"
 	_ "github.com/emccode/rexray/drivers/volume/docker"
+
+	"github.com/akutz/gofig"
 )
 
 func init() {

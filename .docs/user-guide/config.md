@@ -231,6 +231,233 @@ Docker   | docker
 
 The volume driver `docker` is automatically activated.
 
+## Module Configuration
+This section reviews exposing multiple, differently configured endpoints by
+using modules.
+
+### Default Modules
+If not explicitly specified in a configuration source, `REX-Ray` always
+considers the following, default modules:
+
+```yaml
+rexray:
+    modules:
+        default-admin:
+            type:     admin
+            desc:     The default admin module.
+            host:     tcp://127.0.0.1:7979
+            disabled: false
+        default-docker:
+            type:     docker
+            desc:     The default docker module.
+            host:     unix:///run/docker/plugins/rexray.sock
+            spec:     /etc/docker/plugins/rexray.spec
+            disabled: false
+```
+
+The first module, `default-admin`, is used by the CLI to communicate with the
+REX-Ray service API. For security reasons the `default-admin` module is bound
+to the loopback IP address by default.
+
+The second default module, `default-docker`, exposes `REX-Ray` as a Docker
+Volume Plug-in via the specified sock and spec files.
+
+### Additional Modules
+It's also possible to create additional modules via the configuration file:
+
+```yaml
+rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type: docker
+            desc: A second docker module.
+            host: unix:///run/docker/plugins/isilon2.sock
+            spec: /etc/docker/plugins/isilon2.spec
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+```
+
+The above example defines three modules:
+
+1. `default-admin`
+2. `default-docker`
+3. `isilon2`
+
+The first two, default modules are not included in the configuration file as
+they are implicit. The only reason to define them explicitly is to override
+their properties, a feature discussed in the next section.
+
+Ignoring the `default-admin` module, the `default-docker` and `isilon2` modules
+are both Docker modules as indicated by a module's `type` property. Just like
+the `default-docker` module, the custom module `isilon2` is configured to use
+the default isilon settings from the root key, `isilon`. Therefore the modules
+`default-docker` and `isilon2` are configured exactly the same except for they
+are exposed via different sock and spec files.
+
+### Inferred Properties
+The following example is nearly identical to the previous one except this
+example is missing the `host`, `spec`, `desc`, and `disabled` properties for
+the `isilon2` module:
+
+```yaml
+rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type: docker
+            desc: A second docker module.
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+```
+
+A module is not required to provide a description (`desc`), and `disabled` will
+always default to `false` unless explicitly specified as `true`. Docker modules
+(`type: docker`) will also infer the values of the `host` and `spec`
+properties if they are not explicitly provided. Because the name of the
+module above is `isilon2` and the `host` and `spec` properties are not defined,
+those values will be automatically set to
+`unix:///run/docker/plugins/isilon2.sock` and `/etc/docker/plugins/isilon2.spec`
+respectively.
+
+### Overriding Defaults
+It is also possible to override a default module's configuration. What if it's
+determined the `default-admin` module should be accessible externally and the
+`default-docker` module should use a different sock file? Simply override those
+keys and only those keys:
+
+```yaml
+rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        default-admin:
+            host: tcp://:7979
+        default-docker:
+            host: unix:///run/docker/plugins/isilon1.sock
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+```
+
+### Overriding Inherited Properties
+In all of the module configuration examples so far there has been a root key
+named `isilon` that provides the settings for the storage driver used by the
+modules. Thanks to scoped configuration support and inherited properties, it's
+also quite simple to provide adjustments to a default configuration at the
+module level. For example, imagine the `isilon2` module should load a driver
+that points to a different `volumePath`?
+
+```yaml
+rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type:       docker
+            isilon:
+                volumePath: /rexray/isilon2
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+```
+
+The above example will load two Docker modules, the `default-docker` module and
+the `isilon2` module. The `default-docker` module's `isilon.volumePath` will be
+set to `/rexray/default` whereas the `isilon2` module's `isilon.volumePath` is
+overridden and set to `/rexray/isilon2`.
+
+Any key path structure can be duplicated under the module's name, and the value
+at the terminus of that path will be used in place of any inherited value.
+Another example is overriding the type of storage driver used by the `isilon2`
+module. There may be a case where the `isilon2` module needs to use an
+enhanced version of the `isilon` storage driver but still use the same
+configuration:
+
+```yaml
+rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type:       docker
+            rexray:
+                storageDrivers:
+                - isilonEnhanced
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+```
+
+The above example recreates the key path structure `rexray.storageDrivers`
+beneath the key path structure `rexray.modules.isilon2`. Whenever any query is
+made for `rexray.storageDrivers` inside the `isilon2` module, the value
+`[]string{"isilonEnhanced"}` is returned instead of `[]string{"isilon"}`.
+
+### Disabling Modules
+Both default and custom modules can be disabled by setting the key `disabled` to
+true inside a module definition:
+
+```yaml
+rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        default-docker:
+            disabled: true
+        isilon2:
+            type:     docker
+        isilon3:
+            type:     docker
+            disabled: true
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+```
+
+The above example disables the `default-docker` and `isilon3` modules such that
+`isilon2` is the only Docker module loaded.
+
 ## Volume Configuration
 This section describes various global configuration options related to
 operations such as mounting and unmounting volumes.

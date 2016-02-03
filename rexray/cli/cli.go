@@ -95,8 +95,8 @@ type CLI struct {
 	mountLabel              string
 	fsType                  string
 	overwriteFs             bool
-	moduleTypeID            int32
-	moduleInstanceID        int32
+	moduleTypeName          string
+	moduleInstanceName      string
 	moduleInstanceAddress   string
 	moduleInstanceStart     bool
 	moduleConfig            []string
@@ -266,6 +266,8 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 	}
 
 	c.updateLogLevel()
+
+	c.r.Config = c.r.Config.Scope("rexray.modules.default-docker")
 
 	if isHelpFlag(cmd) {
 		cmd.Help()

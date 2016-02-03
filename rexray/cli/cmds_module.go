@@ -105,12 +105,11 @@ func (c *CLI) initModuleCmds() {
 				panic(addrErr)
 			}
 
-			if c.moduleTypeID == -1 || c.moduleInstanceAddress == "" {
+			if c.moduleTypeName == "" || c.moduleInstanceAddress == "" {
 				cmd.Usage()
 				return
 			}
 
-			modTypeIDStr := fmt.Sprintf("%d", c.moduleTypeID)
 			modInstStartStr := fmt.Sprintf("%v", c.moduleInstanceStart)
 
 			u := fmt.Sprintf("http://%s/r/module/instances", addr)
@@ -121,19 +120,21 @@ func (c *CLI) initModuleCmds() {
 			}
 
 			log.WithFields(log.Fields{
-				"url":     u,
-				"typeId":  modTypeIDStr,
-				"address": c.moduleInstanceAddress,
-				"start":   modInstStartStr,
-				"config":  cfgJSON}).Debug("post create module instance")
+				"url":      u,
+				"name":     c.moduleInstanceName,
+				"typeName": c.moduleTypeName,
+				"address":  c.moduleInstanceAddress,
+				"start":    modInstStartStr,
+				"config":   cfgJSON}).Debug("post create module instance")
 
 			client := &http.Client{}
 			resp, respErr := client.PostForm(u,
 				url.Values{
-					"typeId":  {modTypeIDStr},
-					"address": {c.moduleInstanceAddress},
-					"start":   {modInstStartStr},
-					"config":  {cfgJSON},
+					"name":     {c.moduleInstanceName},
+					"typeName": {c.moduleTypeName},
+					"address":  {c.moduleInstanceAddress},
+					"start":    {modInstStartStr},
+					"config":   {cfgJSON},
 				})
 			if respErr != nil {
 				panic(respErr)
@@ -160,13 +161,13 @@ func (c *CLI) initModuleCmds() {
 				panic(addrErr)
 			}
 
-			if c.moduleInstanceID == -1 {
+			if c.moduleInstanceName == "" {
 				cmd.Usage()
 				return
 			}
 
 			u := fmt.Sprintf(
-				"http://%s/r/module/instances/%d/start", addr, c.moduleInstanceID)
+				"http://%s/r/module/instances/%s/start", addr, c.moduleInstanceName)
 
 			client := &http.Client{}
 			resp, respErr := client.Get(u)
@@ -187,8 +188,11 @@ func (c *CLI) initModuleCmds() {
 }
 
 func (c *CLI) initModuleFlags() {
-	c.moduleInstancesCreateCmd.Flags().Int32VarP(&c.moduleTypeID, "id",
-		"i", -1, "The ID of the module type to instance")
+	c.moduleInstancesCreateCmd.Flags().StringVarP(&c.moduleTypeName, "typeName",
+		"t", "", "The name of the module type to instance")
+
+	c.moduleInstancesCreateCmd.Flags().StringVarP(&c.moduleInstanceName, "name",
+		"n", "", "The name of the new module instance")
 
 	c.moduleInstancesCreateCmd.Flags().StringVarP(&c.moduleInstanceAddress,
 		"address", "a", "",
@@ -203,6 +207,6 @@ func (c *CLI) initModuleFlags() {
 		"A comma-seperated string of key=value pairs used by some module "+
 			"types for custom configuraitons.")
 
-	c.moduleInstancesStartCmd.Flags().Int32VarP(&c.moduleInstanceID, "id",
-		"i", -1, "The ID of the module instance to start")
+	c.moduleInstancesStartCmd.Flags().StringVarP(&c.moduleInstanceName, "name",
+		"n", "", "The name of the module instance to start")
 }

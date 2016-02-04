@@ -7,7 +7,7 @@ Build, ship, run on storage made easy
 ### Overview
 `REX-Ray` has a `Docker Volume Driver` which is compatible with 1.7+.
 
-It is suggested that you are running `Docker 1.9.1+` with `REX-Ray` especially
+It is suggested that you are running `Docker 1.10+` with `REX-Ray` especially
 if you are sharing volumes between containers.
 
 ## Examples

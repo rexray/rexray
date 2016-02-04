@@ -209,7 +209,7 @@ func (m *mod) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/Plugin.Activate", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, `{"Implements": ["VolumeDriver"]}`)
 	})
 
@@ -229,7 +229,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, `{}`)
 	})
 
@@ -249,7 +249,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, `{}`)
 	})
 
@@ -269,7 +269,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, fmt.Sprintf("{\"Mountpoint\": \"%s\"}", mountPath))
 	})
 
@@ -289,7 +289,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, fmt.Sprintf("{\"Mountpoint\": \"%s\"}", mountPath))
 	})
 
@@ -309,8 +309,48 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		w.Header().Set("Content-Type", "appplication/vnd.docker.plugins.v1+json")
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, `{}`)
+	})
+
+	mux.HandleFunc("/VolumeDriver.Get", func(w http.ResponseWriter, r *http.Request) {
+		var pr pluginRequest
+		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			log.WithField("error", err).Error("/VolumeDriver.Path: error decoding json")
+			return
+		}
+
+		vol, err := m.r.Volume.Get(pr.Name)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			log.WithField("error", err.Error()).Error("/VolumeDriver.Get: error getting volume")
+			log.Error(err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
+		json.NewEncoder(w).Encode(map[string]core.VolumeMap{"Volume": vol})
+	})
+
+	mux.HandleFunc("/VolumeDriver.List", func(w http.ResponseWriter, r *http.Request) {
+		var pr pluginRequest
+		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			log.WithField("error", err).Error("/VolumeDriver.Path: error decoding json")
+			return
+		}
+
+		volList, err := m.r.Volume.List()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			log.WithField("error", err.Error()).Error("/VolumeDriver.Get: error listing volumes")
+			log.Error(err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
+		json.NewEncoder(w).Encode(map[string][]core.VolumeMap{"Volumes": volList})
 	})
 
 	return mux

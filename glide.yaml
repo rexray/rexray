@@ -20,7 +20,7 @@ import:
     repo:    https://github.com/clintonskitson/goamz
     vcs:     git
   - package: github.com/emccode/goscaleio
-    ref:     fb0ebb20c2c30f850dc838e54019c7bc403d53fd
+    ref:     29678665e99b627013b8b9f2727bbdaed79bbd05
     repo:    https://github.com/emccode/goscaleio.git
     vcs:     git
   - package: github.com/emccode/goxtremio

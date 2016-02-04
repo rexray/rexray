@@ -45,6 +45,7 @@ We explicitly support the following operating system distributions.
 - CentOS
 - CoreOS
 - OSX
+- TinyLinux (boot2docker)
 
 ## Installation
 The following command will install the REX-Ray client-server tool.  If using

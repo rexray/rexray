@@ -36,6 +36,7 @@ Debian   | Yes          | Yes
 RedHat   | Yes          | Yes
 CentOS   | Yes          | Yes
 CoreOS   | Yes          | Yes
+TinyLinux (boot2docker)| Yes          | Yes
 OS X     | Yes          | No
 Windows  | No           | No
 

@@ -39,9 +39,38 @@ func newDriver() core.Driver {
 	return &driver{}
 }
 
+func ef() goof.Fields {
+	return goof.Fields{
+		"provider": providerName,
+	}
+}
+
+func eff(fields goof.Fields) map[string]interface{} {
+	errFields := map[string]interface{}{
+		"provider": providerName,
+	}
+	if fields != nil {
+		for k, v := range fields {
+			errFields[k] = v
+		}
+	}
+	return errFields
+}
+
 func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
-	log.WithField("provider", providerName).Info("volume driver initialized")
+
+	fields := eff(map[string]interface{}{
+		"volumeType":       d.volumeType(),
+		"iops":             d.iops(),
+		"size":             d.size(),
+		"availabilityZone": d.availabilityZone(),
+		"volumeRootPath":   d.volumeRootPath(),
+		"provider":         providerName,
+	})
+
+	log.WithFields(fields).Info("docker volume driver initialized")
+
 	return nil
 }
 
@@ -111,8 +140,8 @@ func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType 
 	}
 
 	switch {
-	case os.Getenv("REXRAY_DOCKER_VOLUMETYPE") != "":
-		newFsType = os.Getenv("REXRAY_DOCKER_VOLUMETYPE")
+	case d.volumeType() != "":
+		newFsType = d.volumeType()
 	case newFsType == "":
 		newFsType = "ext4"
 	}
@@ -336,10 +365,10 @@ func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 		snapshotID = snapFrom.SnapshotID
 	}
 
-	volumeType := createInitVolumeType(volumeOpts, volFrom)
-	IOPS := createInitIOPS(volumeOpts, volFrom)
-	size := createInitSize(volumeOpts, volFrom, snapFrom)
-	availabilityZone := createInitAvailabilityZone(volumeOpts)
+	volumeType := d.createInitVolumeType(volumeOpts, volFrom)
+	IOPS := d.createInitIOPS(volumeOpts, volFrom)
+	size := d.createInitSize(volumeOpts, volFrom, snapFrom)
+	availabilityZone := d.createInitAvailabilityZone(volumeOpts)
 
 	if len(volumes) == 0 {
 		if _, err = d.r.Storage.CreateVolume(
@@ -474,32 +503,32 @@ func (d *driver) createGetVolumes(
 	return volumes, overwriteFs, nil
 }
 
-func createInitVolumeType(volumeOpts core.VolumeOpts, volume *core.Volume) string {
+func (d *driver) createInitVolumeType(volumeOpts core.VolumeOpts, volume *core.Volume) string {
 	var ok bool
 	var volumeType string
 	if volumeType, ok = volumeOpts["volumetype"]; ok {
 		return volumeType
 	} else if volume != nil {
 		return volume.VolumeType
-	} else if volumeType, ok = createInitEnv("REXRAY_DOCKER_VOLUMETYPE"); ok {
+	} else if volumeType, ok = d.createInitEnv(d.volumeType()); ok {
 		return volumeType
 	}
 	return ""
 }
 
-func createInitIOPS(volumeOpts core.VolumeOpts, volume *core.Volume) int64 {
-	if ok, i := createInitInt64("iops", "", volumeOpts); ok {
+func (d *driver) createInitIOPS(volumeOpts core.VolumeOpts, volume *core.Volume) int64 {
+	if ok, i := d.createInitInt64("iops", "", volumeOpts); ok {
 		return i
 	} else if volume != nil {
 		return volume.IOPS
-	} else if ok, i := createInitInt64("", "REXRAY_DOCKER_IOPS", volumeOpts); ok {
+	} else if ok, i := d.createInitInt64("", d.iops(), volumeOpts); ok {
 		return i
 	}
 	return 0
 }
 
-func createInitSize(volumeOpts core.VolumeOpts, volume *core.Volume, snapshot *core.Snapshot) int64 {
-	if ok, i := createInitInt64("size", "", volumeOpts); ok {
+func (d *driver) createInitSize(volumeOpts core.VolumeOpts, volume *core.Volume, snapshot *core.Snapshot) int64 {
+	if ok, i := d.createInitInt64("size", "", volumeOpts); ok {
 		return i
 	} else if volume != nil {
 		sizei, _ := strconv.Atoi(volume.Size)
@@ -507,53 +536,53 @@ func createInitSize(volumeOpts core.VolumeOpts, volume *core.Volume, snapshot *c
 	} else if snapshot != nil {
 		sizei, _ := strconv.Atoi(snapshot.VolumeSize)
 		return int64(sizei)
-	} else if ok, i := createInitInt64("", "REXRAY_DOCKER_SIZE", volumeOpts); ok {
+	} else if ok, i := d.createInitInt64("", d.size(), volumeOpts); ok {
 		return i
 	}
+
 	return defaultVolumeSize
 }
 
-func createInitInt64(
+func (d *driver) createInitInt64(
 	optKey, envVar string,
 	volumeOpts core.VolumeOpts) (bool, int64) {
-	var k bool
-	var i int
-	var s string
-	var e string
-	if s, k = volumeOpts[optKey]; k {
-		i, _ = strconv.Atoi(s)
-	} else if envVar != "" {
-		if e, k = createInitEnv(envVar); !k {
-			return false, 0
-		}
-		i, _ = strconv.Atoi(e)
-	} else {
-		return false, 0
+
+	atoi := func(v string) int64 {
+		sizei, _ := strconv.Atoi(v)
+		return int64(sizei)
 	}
-	return true, int64(i)
+
+	if envVar != "" {
+		return true, atoi(envVar)
+	}
+
+	if s, k := volumeOpts[optKey]; k {
+		return true, atoi(s)
+	}
+
+	return false, 0
 }
 
-func createInitEnv(e string) (string, bool) {
-	envVal := os.Getenv(e)
+func (d *driver) createInitEnv(envVal string) (string, bool) {
 	if envVal == "" {
 		return "", false
 	}
 	return envVal, true
 }
 
-func createInitAvailabilityZone(volumeOpts core.VolumeOpts) string {
-	return createInitString(
-		"availabilityzone", "REXRAY_DOCKER_AVAILABILITYZONE", volumeOpts)
+func (d *driver) createInitAvailabilityZone(volumeOpts core.VolumeOpts) string {
+	return d.createInitString(
+		"availabilityzone", d.availabilityZone(), volumeOpts)
 }
 
-func createInitString(optKey, envVar string,
+func (d *driver) createInitString(optKey, envVar string,
 	volumeOpts core.VolumeOpts) string {
 	var ok bool
 	var s string
 	if s, ok = volumeOpts[optKey]; ok {
 		return s
 	}
-	return os.Getenv(envVar)
+	return d.availabilityZone()
 }
 
 // Remove will remove a remote volume
@@ -804,11 +833,27 @@ func (d *driver) volumeRootPath() string {
 	return d.r.Config.GetString("linux.volume.rootPath")
 }
 
+func (d *driver) volumeType() string {
+	return d.r.Config.GetString("docker.volumeType")
+}
+
+func (d *driver) iops() string {
+	return d.r.Config.GetString("docker.iops")
+}
+
+func (d *driver) size() string {
+	return d.r.Config.GetString("docker.size")
+}
+
+func (d *driver) availabilityZone() string {
+	return d.r.Config.GetString("docker.availabilityZone")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Docker")
 	r.Key(gofig.String, "", "", "", "docker.volumeType")
-	r.Key(gofig.Int, "", 0, "", "docker.iops")
-	r.Key(gofig.Int, "", 0, "", "docker.size")
+	r.Key(gofig.String, "", "", "", "docker.iops")
+	r.Key(gofig.String, "", "", "", "docker.size")
 	r.Key(gofig.String, "", "", "", "docker.availabilityZone")
 	r.Key(gofig.String, "", "/data", "", "linux.volume.rootpath")
 	return r

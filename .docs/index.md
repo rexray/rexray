@@ -3,46 +3,59 @@
 Openly serious about storage
 
 ---
-`REX-Ray` delivers persistent storage access for container runtimes including
-those provided by Docker, Mesos and others. It is designed to enable advanced
-storage functionality across common storage, virtualization and cloud platforms.
+`REX-Ray` delivers persistent storage access for container runtimes, such as
+Docker and Mesos, and provides an easy interface for enabling advanced storage
+functionality across common storage, virtualization and cloud platforms. For
+example, here's how to list storage for a guest hosted on Amazon Web Services
+(AWS) with `REX-Ray`:
 
-<br>
+```bash
+$ export REXRAY_STORAGEDRIVERS=ec2
+$ export AWS_ACCESSKEY=access_key
+$ export AWS_SECRETKEY=secret_key
+$ rexray volume get
+
+- providername: ec2
+  instanceid: i-695bb6ab
+  volumeid: vol-dedbadc3
+  devicename: /dev/sda1
+  region: us-west-1
+  status: attached
+```
+
 ## Overview
-REX-Ray is an abstraction layer between storage endpoints and container
+`REX-Ray` is an abstraction layer between storage endpoints and container
 platforms. The administration and orchestration of various storage platforms
 can all be performed using the same set of commands.
 
 ### Storage Provider Support
-
-Storage provider support for the following storage platforms:
+The following storage providers and platforms are supported by `REX-Ray`.
 
 Provider              | Storage Platform(s)
 ----------------------|-------------------------
-Amazon EC2            | EBS
-Google Compute Engine | Disk
-Open Stack            | Cinder
-EMC                   | ScaleIO, XtremIO, VMAX, Isilon
-Virtual Box           | Virtual Media
+[Amazon EC2](/user-guide/storage-providers/ec2/) | EBS
+[Google Compute Engine](/user-guide/storage-providers/gce) | Disk
+[Open Stack](/user-guide/storage-providers/openstack) | Cinder
+[Rackspace](/user-guide/storage-providers/rackspace) | Cinder
+EMC                   | [ScaleIO](/user-guide/storage-providers/scaleio), [XtremIO](/user-guide/storage-providers/xtremio), [VMAX](/user-guide/storage-providers/vmax), [Isilon](/user-guide/storage-providers/isilon)
+[Virtual Box](/user-guide/storage-providers/virtualbox)          | Virtual Media
 
 ### Operating System Support
+The following operating systems (OS) are supported by `REX-Ray`:
 
-OS support for the following operating systems:
-
-OS       | Command Line | As Service
----------|--------------|-----------
-Ubuntu   | Yes          | Yes
-Debian   | Yes          | Yes
-RedHat   | Yes          | Yes
-CentOS   | Yes          | Yes
-CoreOS   | Yes          | Yes
+OS             | Command Line | Service
+---------------|--------------|-----------
+Ubuntu 12+     | Yes          | Yes
+Debian 6+      | Yes          | Yes
+RedHat         | Yes          | Yes
+CentOS 6+      | Yes          | Yes
+CoreOS         | Yes          | Yes
 TinyLinux (boot2docker)| Yes          | Yes
-OS X     | Yes          | No
-Windows  | No           | No
+OS X Yosemite+ | Yes          | No
+Windows        | No           | No
 
 ### Container Platform Support
-
-Integration support documented with the following platforms:
+`REX-Ray` currently supports the following container platforms:
 
 Platform            | Use
 ------------------|-------------------------
@@ -50,8 +63,7 @@ Docker            | [Volume Driver Plugin](/user-guide/third-party/docker/)
 Mesos             | [Volume Driver Isolator module](/user-guide/third-party/mesos/)
 Mesos + Docker    | [Volume Driver Plugin](/user-guide/third-party/mesos/)
 
-<br>
-## Quick Start (using Docker)
+## Getting Started
 This section will help you get REX-Ray up and running quickly. For more advanced
 configurations including
 [core properties](/user-guide/config/#configuration-properties) and additional
@@ -104,7 +116,7 @@ a Unix socket file.
 $ rexray start
 ```
 
-### Example of REX-Ray with Docker
+### REX-Ray with Docker
 Docker 1.10+ is recommended to use REX-Ray as a
 [Docker Volume Driver Plugin](https://docs.docker.com/extend/plugins_volume/).
 
@@ -139,22 +151,22 @@ containers!
 Examples using MongoDB, Postgres, and more with persistent storage can be found
 at [Application Examples](/user-guide/application/).
 
-<br>
 ## Getting Help
+Having issues? No worries, let's figure it out together.
 
 ### Debug
-Use the `debug` flag after any command to get verbose output.
-`rexray create -l debug`.
+The `debug` flag can be appended to any command in order to get verbose output:
+
+```
+$ rexray volume -l debug
+```
+
+The above command will list all of the volumes visible to `REX-Ray` with debug
+logging enabled.
 
 ### GitHub and Slack
-To get help with REX-Ray, please use
+And if you need a little extra help, please don't hesitate to use
 [GitHub issues](https://github.com/emccode/rexray/issues) or join the active
 conversation on the
 [EMC {code} Community Slack Team](http://community.emccode.com/) in
 the #project-rexray channel
-
-### License
-The code and documentation are released with no warranties or SLAs and are
-intended to be supported through a community driven process. Licensed under the
-Apache License, Version 2.0 (the “License”)
-([License](/about/license/#rex-ray-license))

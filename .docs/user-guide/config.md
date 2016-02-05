@@ -1,10 +1,226 @@
-#Configuring REX-Ray
+# Configuring REX-Ray
 
 Tweak this, turn that, peek behind the curtain...
 
 ---
 
-## Data Directories
+## Overview
+This page reviews how to configure `REX-Ray` to suit any environment, beginning
+with the the most common use cases, exploring recommended guidelines, and
+finally, delving into the details of more advanced settings.
+
+## Basic Configuration
+This section outlines the most common configuration scenarios encountered by
+`REX-Ray`'s users.
+
+A typical configuration occurs by creating the file `/etc/rexray/config.yml`.
+This is the global settings file for `REX-Ray`, and is used whether the
+program is used as a command line interface (CLI) application or started as a
+background service. Please see the [advanced section](/user-guide/config#advanced-configuration)
+for more information and options regarding configuration.
+
+### Example sans Modules
+The following example is a YAML configuration for the VirtualBox driver.
+
+```
+rexray:
+  logLevel: warn
+  storageDrivers:
+  - virtualbox
+docker:
+  size: 1
+virtualbox:
+  endpoint:       http://10.0.2.2:18083
+  tls:            false
+  volumePath:     $HOME/Repos/vagrant/rexray/Volumes
+  controllerName: SATA
+```
+
+Settings occur in three primary areas:
+
+ 1. `rexray`
+ 2. `docker`
+ 3. `virtualbox`
+
+The `rexray` section contains all properties specific to `REX-Ray`. The
+YAML property path `rexray.storageDrivers` lists the names of the storage
+drivers loaded by `REX-Ray`. In this case, only the `virtualbox` storage
+driver is loaded. All of the `rexray` properties are
+[documented](#configuration-properties) below.
+
+The `docker` section defines properties specific to Docker. The property
+`docker.size` defines in gigabytes the default size for a new Docker volume.
+The complete list of properties for the `docker` section are described on the
+[Schedulers page](/user-guide/schedulers#docker).
+
+Finally, the `virtualbox` section configures the VirtualBox driver loaded by
+`REX-Ray`, as indicated via the `rexray.storageDrivers` property). The
+Storage Drivers page has information about the configuration details of
+[each driver](/user-guide/storage-providers), including
+[VirtualBox](/user-guide/storage-providers#virtualbox).
+
+### Example with Modules
+Modules enable a single `REX-Ray` instance to present multiple personalities or
+volume endpoints, serving hosts that require access to multiple storage
+platforms.
+
+#### Defining Modules
+The following example demonstrates a basic configuration that presents two
+modules using the VirtualBox driver.
+
+```
+rexray:
+  logLevel: warn
+  storageDrivers:
+  - virtualbox
+  modules:
+    default-docker:
+      type: docker
+      desc: "The default docker module."
+      host: "unix:///run/docker/plugins/vb1.sock"
+      docker:
+        size: 1
+      virtualbox:
+        endpoint:      http://10.0.2.2:18083
+        tls:           false
+        volumePath:    "$HOME/Repos/vagrant/rexray/Volumes"
+        controllerName: SATA
+    vb2-module:
+      type: docker
+      desc: "The second docker module."
+      host: "unix:///run/docker/plugins/vb2.sock"
+      docker:
+        size: 1
+      virtualbox:
+        endpoint:      http://10.0.2.2:18083
+        tls:           false
+        volumePath:    "$HOME/Repos/vagrant/rexray/Volumes"
+        controllerName: SATA
+```
+
+Like the previous example that did not use modules, this example begins by
+defining the root section `rexray`. Unlike the previous example, the `docker`
+and  `virtualbox` sections are no longer at the root. Instead the section
+`rexray.modules` is defined. The `modules` key in the `rexray` section is
+where all modules are configured. Each key that is a child of `modules`
+represents the name of a module.
+
+The above example defines two modules:
+
+ 1. `default-module`
+
+    This is a special module, and it's always defined, even if not explicitly
+    listed. In the previous example without modules, the `docker` and
+    `virtualbox` sections at the root actually informed the configuration of
+    the implicit `default-docker` module. In this example the explicit
+    declaration of the `default-docker` module enables several of its
+    properties to be overridden and given desired values. The Advanced
+    Configuration section has more information on
+    [Default Modules](#default-modules).
+
+ 2. `vb2-module`
+
+    This is a new, custom module configured almost identically to the
+    `default-module` with the exception of a unique host address as defined
+    by the module's `host` key.
+
+Notice that both modules share many of the same properties and values. In fact,
+when defining both modules, the top-level `docker` and `virtualbox` sections
+were simply copied into each module as sub-sections. This is perfectly valid
+as any configuration path that begins from the root of the `REX-Ray`
+configuration file can be duplicated beginning as a child of a module
+definition. This allows global settings to be overridden just for a specific
+modules.
+
+As noted, each module shares identical values with the exception of the module's
+name and host. The host is the address used by Docker to communicate with
+`REX-Ray`. The base name of the socket file specified in the address can be
+used with `docker --volume-driver=`. With the current example the value of the
+`--volume-driver` parameter would be either `vb1` of `vb2`.
+
+#### Modules and Inherited Properties
+There is also another way to write the previous example while reducing the
+number of repeated, identical properties shared by two modules.
+
+```
+rexray:
+  logLevel: warn
+  storageDrivers:
+  - virtualbox
+  modules:
+    default-docker:
+      host: "unix:///run/docker/plugins/vb1.sock"
+      docker:
+        size: 1
+    vb2:
+      type: docker
+virtualbox:
+  endpoint:      http://10.0.2.2:18083
+  tls:           false
+  volumePath:    "$HOME/Repos/vagrant/rexray/Volumes"
+  controllerName: SATA
+```
+
+The above example may look strikingly different than the previous one, but it's
+actually the same with just a few tweaks.
+
+While there are still two modules defined, the second one has been renamed from
+`vb2-module` to `vb2`. The change is a more succinct way to represent the same
+intent, and it also provides a nice side-effect. If the `host` key is omitted
+from a Docker module, the value for the `host` key is automatically generated
+using the module's name. Therefore since there is no `host` key for the `vb2`
+module, the value will be `unix:///run/docker/plugins/vb2.sock`.
+
+Additionally, `virtualbox` sections from each module definition have been
+removed and now only a single, global `virtualbox` section is present at the
+root. When accessing properties, a module will first attempt to access a
+property defined in the context of the module, but if that fails the property
+lookup will resolve against globally defined keys as well.
+
+Finally, please also note that the `docker` section has **not** been promoted
+back to a global property set, and is in fact still located in the context of
+the `default-docker` module. This means that create volume requests sent to the
+`default-docker` module will result in 1GB volumes by default whereas create
+volume requests handled by the `vb2` module will result in 16GB volumes (since
+16GB is the default value for the `docker.size` property).
+
+### Logging
+The `-l|--logLevel` option or `rexray.logLevel` configuration key can be set
+to any of the following values to increase or decrease the verbosity of the
+information logged to the console or the `REX-Ray` log file (defaults to
+`/var/log/rexray/rexray.log`).
+
+- panic
+- fatal
+- error
+- warn
+- info
+- debug
+
+### Troubleshooting
+The command `rexray env` can be used to print out the runtime interpretation
+of the environment, including configured properties, in order to help diagnose
+configuration issues.
+
+```
+$ rexray env | grep DEFAULT-DOCKER
+REXRAY_MODULES_DEFAULT-DOCKER_TYPE=docker
+REXRAY_MODULES_DEFAULT-DOCKER_DISABLED=false
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_CONTROLLERNAME=SATA
+REXRAY_MODULES_DEFAULT-DOCKER_DESC=The default docker module.
+REXRAY_MODULES_DEFAULT-DOCKER_HOST=unix:///run/docker/plugins/vb1.sock
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_ENDPOINT=http://10.0.2.2:18083
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_VOLUMEPATH=$HOME/Repos/vagrant/rexray/Volumes
+REXRAY_MODULES_DEFAULT-DOCKER_DOCKER_SIZE=1
+REXRAY_MODULES_DEFAULT-DOCKER_SPEC=/etc/docker/plugins/rexray.spec
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_TLS=false
+```
+
+## Advanced Configuration
+The following sections detail every last aspect of how `REX-Ray` works and can
+be configured.
+
+### Data Directories
 The first time `REX-Ray` is executed it will create several directories if
 they do not already exist:
 
@@ -42,7 +258,7 @@ a file located inside of `/etc/rexray`, but it should be noted that if
 `REXRAY_HOME` is set the location of the global configuration file can be
 changed.
 
-## Configuration Methods
+### Configuration Methods
 There are three ways to configure `REX-Ray`:
 
 * Command line options
@@ -54,7 +270,7 @@ options set in multiple locations that may override one another. Values set
 via CLI flags have the highest order of precedence, followed by values set by
 environment variables, followed, finally, by values set in configuration files.
 
-## Configuration Files
+### Configuration Files
 There are two `REX-Ray` configuration files - global and user:
 
 * `/etc/rexray/config.yml`
@@ -68,7 +284,7 @@ directory, but rather `/root/.rexray/config.yml`.
 
 The next section has an example configuration with the default configuration.
 
-## Configuration Properties
+### Configuration Properties
 The section [Configuration Methods](#configuration-methods) mentions there are
 three ways to configure REX-Ray: config files, environment variables, and the
 command line. However, this section will illuminate the relationship between the
@@ -140,7 +356,7 @@ Property Name | Environment Variable | CLI Flag
 `aws.secretKey`   | `AWS_SECRETKEY`   | `--awsSecretKey`
 `aws.region`    | `AWS_REGION`   | `--awsRegion`
 
-### String Arrays
+#### String Arrays
 Please note that properties that are represented as arrays in a configuration
 file, such as the `rexray.osDrivers`, `rexray.storageDrivers`, and
 `rexray.volumeDrivers` above, are not arrays, but multi-valued strings where a
@@ -162,7 +378,7 @@ However, to specify the same values in an environment variable,
 `REXRAY_STORAGEDRIVERS="ec2 xtremio"`, and as a CLI flag,
 `--storageDrivers="ec2 xtremio"`.
 
-## Logging Configuration
+### Logging Configuration
 The `REX-Ray` log level determines the level of verbosity emitted by the
 internal logger. The default level is `warn`, but there are three other levels
 as well:
@@ -188,14 +404,14 @@ rexray volume get -l debug
 env REXRAY_LOGLEVEL=debug rexray volume get
 ```
 
-## Driver Configuration
+### Driver Configuration
 There are three types of drivers:
 
   1. OS Drivers
   2. Storage Drivers
   3. Volume Drivers
 
-### OS Drivers
+#### OS Drivers
 Operating system (OS) drivers enable `REX-Ray` to manage storage on
 the underlying OS. Currently the following OS drivers are supported:
 
@@ -206,21 +422,25 @@ Linux   | linux
 The OS driver `linux` is automatically activated when `REX-Ray` is running on
 the Linux OS.
 
-### Storage Drivers
+#### Storage Drivers
 Storage drivers enable `REX-Ray` to communicate with direct-attached or remote
 storage systems. Currently the following storage drivers are supported:
 
  Driver | Driver Name
 --------|------------
-Amazon EC2 | ec2
-OpenStack | openstack
-Rackspace | rackspace
-ScaleIO | scaleio
-XtremIO | xtremio
+[Amazon EC2](/user-guide/storage-providers#amazon-ec2) | ec2
+[Google Compute Engine](/user-guide/storage-providers#google-compute-engine) | gce
+[Isilon](/user-guide/storage-providers#isilon) | isilon
+[OpenStack](/user-guide/storage-providers#openstack) | openstack
+[Rackspace](/user-guide/storage-providers#rackspace) | rackspace
+[ScaleIO](/user-guide/storage-providers#scaleio) | scaleio
+[VirtualBox](/user-guide/storage-providers#virtualbox) | virtualbox
+[VMAX](/user-guide/storage-providers#vmax) | vmax
+[XtremIO](/user-guide/storage-providers#xtremio) | xtremio
 
 The `rexray.storageDrivers` property can be used to activate storage drivers..
 
-### Volume Drivers
+#### Volume Drivers
 Volume drivers enable `REX-Ray` to manage volumes for consumers of the storage,
 such as `Docker` or `Mesos`. Currently the following volume drivers are
 supported:
@@ -231,11 +451,11 @@ Docker   | docker
 
 The volume driver `docker` is automatically activated.
 
-## Module Configuration
+### Module Configuration
 This section reviews exposing multiple, differently configured endpoints by
 using modules.
 
-### Default Modules
+#### Default Modules
 If not explicitly specified in a configuration source, `REX-Ray` always
 considers the following, default modules:
 
@@ -262,7 +482,7 @@ to the loopback IP address by default.
 The second default module, `default-docker`, exposes `REX-Ray` as a Docker
 Volume Plug-in via the specified sock and spec files.
 
-### Additional Modules
+#### Additional Modules
 It's also possible to create additional modules via the configuration file:
 
 ```yaml
@@ -303,7 +523,7 @@ the default isilon settings from the root key, `isilon`. Therefore the modules
 `default-docker` and `isilon2` are configured exactly the same except for they
 are exposed via different sock and spec files.
 
-### Inferred Properties
+#### Inferred Properties
 The following example is nearly identical to the previous one except this
 example is missing the `host`, `spec`, `desc`, and `disabled` properties for
 the `isilon2` module:
@@ -336,7 +556,7 @@ those values will be automatically set to
 `unix:///run/docker/plugins/isilon2.sock` and `/etc/docker/plugins/isilon2.spec`
 respectively.
 
-### Overriding Defaults
+#### Overriding Defaults
 It is also possible to override a default module's configuration. What if it's
 determined the `default-admin` module should be accessible externally and the
 `default-docker` module should use a different sock file? Simply override those
@@ -362,7 +582,7 @@ isilon:
     dataSubnet: 172.17.177.0/24
 ```
 
-### Overriding Inherited Properties
+#### Overriding Inherited Properties
 In all of the module configuration examples so far there has been a root key
 named `isilon` that provides the settings for the storage driver used by the
 modules. Thanks to scoped configuration support and inherited properties, it's
@@ -428,7 +648,7 @@ beneath the key path structure `rexray.modules.isilon2`. Whenever any query is
 made for `rexray.storageDrivers` inside the `isilon2` module, the value
 `[]string{"isilonEnhanced"}` is returned instead of `[]string{"isilon"}`.
 
-### Disabling Modules
+#### Disabling Modules
 Both default and custom modules can be disabled by setting the key `disabled` to
 true inside a module definition:
 
@@ -458,12 +678,12 @@ isilon:
 The above example disables the `default-docker` and `isilon3` modules such that
 `isilon2` is the only Docker module loaded.
 
-## Volume Configuration
+### Volume Configuration
 This section describes various global configuration options related to
 operations such as mounting and unmounting volumes.
 
-### Pre-Emption
-There is a capability to pre-emptively detach any existing attachments to other
+#### Preemption
+There is a capability to preemptively detach any existing attachments to other
 instances before attempting a mount.  This will enable use cases for
 availability where another instance must be able to take control of a volume
 without the current owner instance being involved.  The operation is considered
@@ -496,7 +716,7 @@ VirtualBox|Yes
 VMAX|Not yet
 XtremIO|Yes
 
-### Ignore Used Count
+#### Ignore Used Count
 By default accounting takes place during operations that are performed
 on `Mount`, `Unmount`, and other operations.  This only has impact when running
 as a service through the HTTP/JSON interface since the counts are persisted
@@ -524,7 +744,7 @@ sharing volumes, it is recommended that you reset the service along with the
 accompanying container runtime (if this setting is false) to ensure they are
 synchronized.  
 
-### Volume Path (0.3.1)
+#### Volume Path (0.3.1)
 When volumes are mounted there can be an additional path that is specified to
 be created and passed as the valid mount point.  This is required for certain
 applications that do not want to place data from the root of a mount point.  
@@ -541,7 +761,7 @@ linux:
     rootPath: /data
 ```
 
-### Volume FileMode (0.3.1)
+#### Volume FileMode (0.3.1)
 The permissions of the `linux.volume.rootPath` can be set to default values.  At
 each mount, the permissions will be written based on this value.  The default
 is to include the `0700` mode.

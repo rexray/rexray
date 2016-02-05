@@ -5,35 +5,17 @@ docs_dir: .docs
 site_dir: .site
 theme_dir: .docs/.themes/yeti
 site_favicon: favicon.png
-
-extra_javascript:
-    - js/jquery.smartmenus.min.js
-    - js/jquery.smartmenus.bootstrap.min.js
 extra_css:
-    - css/sm-core-css.css
-    - css/jquery.smartmenus.bootstrap.css
     - css/emccode-font.css
-
+    - css/hX.css
 pages:
 - Home: index.md
 - User Guide:
     - Installation: user-guide/installation.md
-    - Automation: user-guide/automation.md
     - Configuration: user-guide/config.md
+    - Storage Providers: user-guide/storage-providers.md
+    - Schedulers: user-guide/schedulers.md
     - Applications: user-guide/application.md
-    - Storage Providers:
-        - Amazon EC2: user-guide/storage-providers/ec2.md
-        - Google Compute Engine: user-guide/storage-providers/gce.md
-        - Isilon: user-guide/storage-providers/isilon.md
-        - OpenStack: user-guide/storage-providers/openstack.md
-        - Rackspace: user-guide/storage-providers/rackspace.md
-        - ScaleIO: user-guide/storage-providers/scaleio.md
-        - VirtualBox: user-guide/storage-providers/virtualbox.md
-        - VMAX: user-guide/storage-providers/vmax.md
-        - XtremIO: user-guide/storage-providers/xtremio.md
-    - Third-Party Integration:
-        - Docker: user-guide/third-party/docker.md
-        - Mesos: user-guide/third-party/mesos.md
 - Developers Guide:
     - Project Guidelines: dev-guide/project-guidelines.md
     - Build Reference: dev-guide/build-reference.md

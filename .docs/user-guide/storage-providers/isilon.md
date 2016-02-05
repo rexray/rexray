@@ -71,6 +71,8 @@ It is expected that the `volumePath` exists already within the Isilon system.  T
 
 If `quotas` are enabled, a SmartQuotas license must also be enabled on the Isilon cluster for the capacity size functionality of REX-Ray to work.
 
+A SnapshotIQ license must be enabled on the Isilon cluster for the snapshot functionality of REX-Ray to work.
+
 ## Caveats
 
 - This driver currently ignores the `--volumeType` flag.
@@ -79,5 +81,6 @@ If `quotas` are enabled, a SmartQuotas license must also be enabled on the Isilo
 	- Platform API (ISI_PRIV_LOGIN_PAPI)
 	- NFS (ISI_PRIV_NFS)
 	- Restore (ISI_PRIV_IFS_RESTORE)
-	- Quota (ISI_PRIV_QUOTA)    (if `quotas` are enabled)
+	- Quota (ISI_PRIV_QUOTA)          (if `quotas` are enabled)
+	- Snapshot (ISI_PRIV_SNAPSHOT)    (if snapshots are used)
 

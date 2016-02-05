@@ -26,7 +26,7 @@ Version  | Description
 ---------|------------
 [Unstable](https://dl.bintray.com/emccode/rexray/unstable/latest/) | The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.
 [Staged](https://dl.bintray.com/emccode/rexray/staged/latest/) | The most up-to-date, release candidate REX-Ray binaries.
-[Stable]((https://dl.bintray.com/emccode/rexray/stable/latest/)) | The most up-to-date, stable REX-Ray binaries.
+[Stable](https://dl.bintray.com/emccode/rexray/stable/latest/) | The most up-to-date, stable REX-Ray binaries.
 
 ### Build and install from source
 `REX-Ray` is also fairly simple to build from source, especially if you have `Docker` installed:

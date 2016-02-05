@@ -59,9 +59,9 @@ Windows        | No           | No
 
 Platform            | Use
 ------------------|-------------------------
-Docker            | [Volume Driver Plugin](/user-guide/third-party/docker/)
-Mesos             | [Volume Driver Isolator module](/user-guide/third-party/mesos/)
-Mesos + Docker    | [Volume Driver Plugin](/user-guide/third-party/mesos/)
+Docker            | [Volume Driver Plugin](/user-guide/schedulers#docker)
+Mesos             | [Volume Driver Isolator module](/user-guide/schedulers#mesos)
+Mesos + Docker    | [Volume Driver Plugin](/user-guide/schedulers#mesos)
 
 ## Getting Started
 This section will help you get REX-Ray up and running quickly. For more advanced

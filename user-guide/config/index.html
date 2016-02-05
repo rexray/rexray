@@ -15,13 +15,9 @@
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
-        <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/emccode-font.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/highlight.css" rel="stylesheet">
+        <link href="../../css/emccode-font.css" rel="stylesheet">
+        <link href="../../css/hX.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -30,6 +26,14 @@
         <![endif]-->
 
         
+
+        <!-- scroll fix -->
+        <script>
+            //var shiftWindow = function() { scrollBy(0, -40) };
+            //if (location.hash) shiftWindow();
+            //window.addEventListener("hashchange", shiftWindow);
+        </script>
+
     </head>
 
     <body>
@@ -70,57 +74,113 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="../installation/">Installation</a>
                         </li>
                     
-                        
                         <li class="active">
                             <a href="./">Configuration</a>
                         </li>
                     
-                        
-                        <li role="separator" class="divider"></li>
-                        
                         <li >
-                            <a href="../ec2/">Amazon EC2</a>
+                            <a href="../storage-providers/">Storage Providers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../openstack/">OpenStack</a>
+                            <a href="../schedulers/">Schedulers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../rackspace/">Rackspace</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../scaleio/">ScaleIO</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../xtremio/">XtremIO</a>
-                        </li>
-                    
-                        
-                        <li role="separator" class="divider"></li>
-                        
-                        <li >
-                            <a href="../docker/">Docker</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../mesos/">Mesos</a>
+                            <a href="../application/">Applications</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">User Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../installation/">Installation</a>
+                        </li>
+                    
+                    
+                    
+                        <li class="active">
+                            <a href="./">Configuration</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../storage-providers/">Storage Providers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../schedulers/">Schedulers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../application/">Applications</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developers Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+                <!--
+                smart menus
+                <li><a href="#">Developers Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             
@@ -128,23 +188,46 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="../../about/contributing/">Contributing</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../../about/license/">License</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../../about/release-notes/">Release Notes</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">About <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../about/contributing/">Contributing</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../about/license/">License</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../about/release-notes/">Release Notes</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             </ul>
@@ -157,7 +240,7 @@
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../ec2/">
+                    <a rel="prev" href="../storage-providers/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -181,24 +264,130 @@
     </div>
 </div>
         <div class="container ">
-            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            <div class="col-md-3"><div id="sidenav" class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
         <li class="main active"><a href="#configuring-rex-ray">Configuring REX-Ray</a></li>
         
-            <li><a href="#data-directories">Data Directories</a></li>
+            <li><a href="#overview">Overview</a>
+            
+            </li>
         
-            <li><a href="#configuration-methods">Configuration Methods</a></li>
+            <li><a href="#basic-configuration">Basic Configuration</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#example-sans-modules">Example sans Modules</a><!--
+                -->
+                </li>
+                
+                <li><a href="#example-with-modules">Example with Modules</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#defining-modules">Defining Modules</a></li>
+                    
+                    <li><a href="#modules-and-inherited-properties">Modules and Inherited Properties</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                <li><a href="#logging">Logging</a><!--
+                -->
+                </li>
+                
+                <li><a href="#troubleshooting">Troubleshooting</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
-            <li><a href="#configuration-files">Configuration Files</a></li>
-        
-            <li><a href="#logging">Logging</a></li>
-        
-            <li><a href="#os-drivers">OS Drivers</a></li>
-        
-            <li><a href="#storage-drivers">Storage Drivers</a></li>
-        
-            <li><a href="#volume-drivers">Volume Drivers</a></li>
+            <li><a href="#advanced-configuration">Advanced Configuration</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#data-directories">Data Directories</a><!--
+                -->
+                </li>
+                
+                <li><a href="#configuration-methods">Configuration Methods</a><!--
+                -->
+                </li>
+                
+                <li><a href="#configuration-files">Configuration Files</a><!--
+                -->
+                </li>
+                
+                <li><a href="#configuration-properties">Configuration Properties</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#string-arrays">String Arrays</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                <li><a href="#logging-configuration">Logging Configuration</a><!--
+                -->
+                </li>
+                
+                <li><a href="#driver-configuration">Driver Configuration</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#os-drivers">OS Drivers</a></li>
+                    
+                    <li><a href="#storage-drivers">Storage Drivers</a></li>
+                    
+                    <li><a href="#volume-drivers">Volume Drivers</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                <li><a href="#module-configuration">Module Configuration</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#default-modules">Default Modules</a></li>
+                    
+                    <li><a href="#additional-modules">Additional Modules</a></li>
+                    
+                    <li><a href="#inferred-properties">Inferred Properties</a></li>
+                    
+                    <li><a href="#overriding-defaults">Overriding Defaults</a></li>
+                    
+                    <li><a href="#overriding-inherited-properties">Overriding Inherited Properties</a></li>
+                    
+                    <li><a href="#disabling-modules">Disabling Modules</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                <li><a href="#volume-configuration">Volume Configuration</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#preemption">Preemption</a></li>
+                    
+                    <li><a href="#ignore-used-count">Ignore Used Count</a></li>
+                    
+                    <li><a href="#volume-path-031">Volume Path (0.3.1)</a></li>
+                    
+                    <li><a href="#volume-filemode-031">Volume FileMode (0.3.1)</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
     
     </ul>
@@ -208,7 +397,201 @@
 <h1 id="configuring-rex-ray">Configuring REX-Ray</h1>
 <p>Tweak this, turn that, peek behind the curtain...</p>
 <hr />
-<h2 id="data-directories">Data Directories</h2>
+<h2 id="overview">Overview</h2>
+<p>This page reviews how to configure <code>REX-Ray</code> to suit any environment, beginning
+with the the most common use cases, exploring recommended guidelines, and
+finally, delving into the details of more advanced settings.</p>
+<h2 id="basic-configuration">Basic Configuration</h2>
+<p>This section outlines the most common configuration scenarios encountered by
+<code>REX-Ray</code>'s users.</p>
+<p>A typical configuration occurs by creating the file <code>/etc/rexray/config.yml</code>.
+This is the global settings file for <code>REX-Ray</code>, and is used whether the
+program is used as a command line interface (CLI) application or started as a
+background service. Please see the <a href="../../user-guide/config#advanced-configuration">advanced section</a>
+for more information and options regarding configuration.</p>
+<h3 id="example-sans-modules">Example sans Modules</h3>
+<p>The following example is a YAML configuration for the VirtualBox driver.</p>
+<pre><code>rexray:
+  logLevel: warn
+  storageDrivers:
+  - virtualbox
+docker:
+  size: 1
+virtualbox:
+  endpoint:       http://10.0.2.2:18083
+  tls:            false
+  volumePath:     $HOME/Repos/vagrant/rexray/Volumes
+  controllerName: SATA
+</code></pre>
+
+<p>Settings occur in three primary areas:</p>
+<ol>
+<li><code>rexray</code></li>
+<li><code>docker</code></li>
+<li><code>virtualbox</code></li>
+</ol>
+<p>The <code>rexray</code> section contains all properties specific to <code>REX-Ray</code>. The
+YAML property path <code>rexray.storageDrivers</code> lists the names of the storage
+drivers loaded by <code>REX-Ray</code>. In this case, only the <code>virtualbox</code> storage
+driver is loaded. All of the <code>rexray</code> properties are
+<a href="#configuration-properties">documented</a> below.</p>
+<p>The <code>docker</code> section defines properties specific to Docker. The property
+<code>docker.size</code> defines in gigabytes the default size for a new Docker volume.
+The complete list of properties for the <code>docker</code> section are described on the
+<a href="../../user-guide/schedulers#docker">Schedulers page</a>.</p>
+<p>Finally, the <code>virtualbox</code> section configures the VirtualBox driver loaded by
+<code>REX-Ray</code>, as indicated via the <code>rexray.storageDrivers</code> property). The
+Storage Drivers page has information about the configuration details of
+<a href="../../user-guide/storage-providers">each driver</a>, including
+<a href="../../user-guide/storage-providers#virtualbox">VirtualBox</a>.</p>
+<h3 id="example-with-modules">Example with Modules</h3>
+<p>Modules enable a single <code>REX-Ray</code> instance to present multiple personalities or
+volume endpoints, serving hosts that require access to multiple storage
+platforms.</p>
+<h4 id="defining-modules">Defining Modules</h4>
+<p>The following example demonstrates a basic configuration that presents two
+modules using the VirtualBox driver.</p>
+<pre><code>rexray:
+  logLevel: warn
+  storageDrivers:
+  - virtualbox
+  modules:
+    default-docker:
+      type: docker
+      desc: &quot;The default docker module.&quot;
+      host: &quot;unix:///run/docker/plugins/vb1.sock&quot;
+      docker:
+        size: 1
+      virtualbox:
+        endpoint:      http://10.0.2.2:18083
+        tls:           false
+        volumePath:    &quot;$HOME/Repos/vagrant/rexray/Volumes&quot;
+        controllerName: SATA
+    vb2-module:
+      type: docker
+      desc: &quot;The second docker module.&quot;
+      host: &quot;unix:///run/docker/plugins/vb2.sock&quot;
+      docker:
+        size: 1
+      virtualbox:
+        endpoint:      http://10.0.2.2:18083
+        tls:           false
+        volumePath:    &quot;$HOME/Repos/vagrant/rexray/Volumes&quot;
+        controllerName: SATA
+</code></pre>
+
+<p>Like the previous example that did not use modules, this example begins by
+defining the root section <code>rexray</code>. Unlike the previous example, the <code>docker</code>
+and  <code>virtualbox</code> sections are no longer at the root. Instead the section
+<code>rexray.modules</code> is defined. The <code>modules</code> key in the <code>rexray</code> section is
+where all modules are configured. Each key that is a child of <code>modules</code>
+represents the name of a module.</p>
+<p>The above example defines two modules:</p>
+<ol>
+<li>
+<p><code>default-module</code></p>
+<p>This is a special module, and it's always defined, even if not explicitly
+listed. In the previous example without modules, the <code>docker</code> and
+<code>virtualbox</code> sections at the root actually informed the configuration of
+the implicit <code>default-docker</code> module. In this example the explicit
+declaration of the <code>default-docker</code> module enables several of its
+properties to be overridden and given desired values. The Advanced
+Configuration section has more information on
+<a href="#default-modules">Default Modules</a>.</p>
+</li>
+<li>
+<p><code>vb2-module</code></p>
+<p>This is a new, custom module configured almost identically to the
+<code>default-module</code> with the exception of a unique host address as defined
+by the module's <code>host</code> key.</p>
+</li>
+</ol>
+<p>Notice that both modules share many of the same properties and values. In fact,
+when defining both modules, the top-level <code>docker</code> and <code>virtualbox</code> sections
+were simply copied into each module as sub-sections. This is perfectly valid
+as any configuration path that begins from the root of the <code>REX-Ray</code>
+configuration file can be duplicated beginning as a child of a module
+definition. This allows global settings to be overridden just for a specific
+modules.</p>
+<p>As noted, each module shares identical values with the exception of the module's
+name and host. The host is the address used by Docker to communicate with
+<code>REX-Ray</code>. The base name of the socket file specified in the address can be
+used with <code>docker --volume-driver=</code>. With the current example the value of the
+<code>--volume-driver</code> parameter would be either <code>vb1</code> of <code>vb2</code>.</p>
+<h4 id="modules-and-inherited-properties">Modules and Inherited Properties</h4>
+<p>There is also another way to write the previous example while reducing the
+number of repeated, identical properties shared by two modules.</p>
+<pre><code>rexray:
+  logLevel: warn
+  storageDrivers:
+  - virtualbox
+  modules:
+    default-docker:
+      host: &quot;unix:///run/docker/plugins/vb1.sock&quot;
+      docker:
+        size: 1
+    vb2:
+      type: docker
+virtualbox:
+  endpoint:      http://10.0.2.2:18083
+  tls:           false
+  volumePath:    &quot;$HOME/Repos/vagrant/rexray/Volumes&quot;
+  controllerName: SATA
+</code></pre>
+
+<p>The above example may look strikingly different than the previous one, but it's
+actually the same with just a few tweaks.</p>
+<p>While there are still two modules defined, the second one has been renamed from
+<code>vb2-module</code> to <code>vb2</code>. The change is a more succinct way to represent the same
+intent, and it also provides a nice side-effect. If the <code>host</code> key is omitted
+from a Docker module, the value for the <code>host</code> key is automatically generated
+using the module's name. Therefore since there is no <code>host</code> key for the <code>vb2</code>
+module, the value will be <code>unix:///run/docker/plugins/vb2.sock</code>.</p>
+<p>Additionally, <code>virtualbox</code> sections from each module definition have been
+removed and now only a single, global <code>virtualbox</code> section is present at the
+root. When accessing properties, a module will first attempt to access a
+property defined in the context of the module, but if that fails the property
+lookup will resolve against globally defined keys as well.</p>
+<p>Finally, please also note that the <code>docker</code> section has <strong>not</strong> been promoted
+back to a global property set, and is in fact still located in the context of
+the <code>default-docker</code> module. This means that create volume requests sent to the
+<code>default-docker</code> module will result in 1GB volumes by default whereas create
+volume requests handled by the <code>vb2</code> module will result in 16GB volumes (since
+16GB is the default value for the <code>docker.size</code> property).</p>
+<h3 id="logging">Logging</h3>
+<p>The <code>-l|--logLevel</code> option or <code>rexray.logLevel</code> configuration key can be set
+to any of the following values to increase or decrease the verbosity of the
+information logged to the console or the <code>REX-Ray</code> log file (defaults to
+<code>/var/log/rexray/rexray.log</code>).</p>
+<ul>
+<li>panic</li>
+<li>fatal</li>
+<li>error</li>
+<li>warn</li>
+<li>info</li>
+<li>debug</li>
+</ul>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<p>The command <code>rexray env</code> can be used to print out the runtime interpretation
+of the environment, including configured properties, in order to help diagnose
+configuration issues.</p>
+<pre><code>$ rexray env | grep DEFAULT-DOCKER
+REXRAY_MODULES_DEFAULT-DOCKER_TYPE=docker
+REXRAY_MODULES_DEFAULT-DOCKER_DISABLED=false
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_CONTROLLERNAME=SATA
+REXRAY_MODULES_DEFAULT-DOCKER_DESC=The default docker module.
+REXRAY_MODULES_DEFAULT-DOCKER_HOST=unix:///run/docker/plugins/vb1.sock
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_ENDPOINT=http://10.0.2.2:18083
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_VOLUMEPATH=$HOME/Repos/vagrant/rexray/Volumes
+REXRAY_MODULES_DEFAULT-DOCKER_DOCKER_SIZE=1
+REXRAY_MODULES_DEFAULT-DOCKER_SPEC=/etc/docker/plugins/rexray.spec
+REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_TLS=false
+</code></pre>
+
+<h2 id="advanced-configuration">Advanced Configuration</h2>
+<p>The following sections detail every last aspect of how <code>REX-Ray</code> works and can
+be configured.</p>
+<h3 id="data-directories">Data Directories</h3>
 <p>The first time <code>REX-Ray</code> is executed it will create several directories if
 they do not already exist:</p>
 <ul>
@@ -241,16 +624,18 @@ directories in the process:</p>
 a file located inside of <code>/etc/rexray</code>, but it should be noted that if
 <code>REXRAY_HOME</code> is set the location of the global configuration file can be
 changed.</p>
-<h2 id="configuration-methods">Configuration Methods</h2>
+<h3 id="configuration-methods">Configuration Methods</h3>
 <p>There are three ways to configure <code>REX-Ray</code>:</p>
 <ul>
-<li>Configuration files</li>
-<li>Environment variables</li>
 <li>Command line options</li>
+<li>Environment variables</li>
+<li>Configuration files</li>
 </ul>
 <p>The order of the items above is also the order of precedence when considering
-options set in multiple locations that may override one another.</p>
-<h2 id="configuration-files">Configuration Files</h2>
+options set in multiple locations that may override one another. Values set
+via CLI flags have the highest order of precedence, followed by values set by
+environment variables, followed, finally, by values set in configuration files.</p>
+<h3 id="configuration-files">Configuration Files</h3>
 <p>There are two <code>REX-Ray</code> configuration files - global and user:</p>
 <ul>
 <li><code>/etc/rexray/config.yml</code></li>
@@ -261,14 +646,134 @@ home directory, this is the directory of the user that starts <code>REX-Ray</cod
 if <code>REX-Ray</code> is being started as a service, then <code>sudo</code> is likely being used,
 which means that <code>$HOME/.rexray/config.yml</code> won't point to <em>your</em> home
 directory, but rather <code>/root/.rexray/config.yml</code>.</p>
-<p>This is an example configuration with the default configuration for the general
-options as described in the following section:</p>
-<pre><code class="yaml">logLevel: warn
-osDrivers: linux
-volumeDrivers: docker
+<p>The next section has an example configuration with the default configuration.</p>
+<h3 id="configuration-properties">Configuration Properties</h3>
+<p>The section <a href="#configuration-methods">Configuration Methods</a> mentions there are
+three ways to configure REX-Ray: config files, environment variables, and the
+command line. However, this section will illuminate the relationship between the
+names of the configuration file properties, environment variables, and CLI
+flags.</p>
+<p>These are the global configuration properties with their default values as
+represented in a a YAML configuration file:</p>
+<pre><code class="yaml">rexray:
+    logLevel: warn
+    osDrivers:
+    - linux
+    storageDrivers:
+    volumeDrivers:
+    - docker
 </code></pre>
 
-<h2 id="logging">Logging</h2>
+<p>The property <code>rexray.logLevel</code> is a string and the properties
+<code>rexray.osDrivers</code>, <code>rexray.storageDrivers</code>, and <code>rexray.volumeDrivers</code> are all
+arrays of strings. These values can also be set via environment variables or the
+command line, but to do so requires knowing the names of the environment
+variables or CLI flags to use. Luckily those are very easy to figure out just
+by knowing the property names.</p>
+<p>All properties that might appear in the <code>REX-Ray</code> configuration file
+fall under some type of heading. For example, take the default configuration
+above.</p>
+<p>The rule for environment variables is as follows:</p>
+<ul>
+<li>Each nested level becomes a part of the environment variable name followed
+    by an underscore <code>_</code> except for the terminating part.</li>
+<li>The entire environment variable name is uppercase.</li>
+</ul>
+<p>Nested properties follow these rules for CLI flags:</p>
+<ul>
+<li>The root level's first character is lower-cased with the rest of the root
+    level's text left unaltered.</li>
+<li>The remaining levels' first characters are all upper-cased with the the
+    remaining text of that level left unaltered.</li>
+<li>All levels are then concatenated together.</li>
+<li>See the verbose help for exact global flags using <code>rexray --help -v</code>
+    as they may be chopped to minimize verbosity.</li>
+</ul>
+<p>The following table illustrates the transformations:</p>
+<table>
+<thead>
+<tr>
+<th>Property Name</th>
+<th>Environment Variable</th>
+<th>CLI Flag</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rexray.logLevel</code></td>
+<td><code>REXRAY_LOGLEVEL</code></td>
+<td><code>--logLevel</code></td>
+</tr>
+<tr>
+<td><code>rexray.osDrivers</code></td>
+<td><code>REXRAY_OSDRIVERS</code></td>
+<td><code>--osDrivers</code></td>
+</tr>
+<tr>
+<td><code>rexray.storageDrivers</code></td>
+<td><code>REXRAY_STORAGEDRIVERS</code></td>
+<td><code>--storageDrivers</code></td>
+</tr>
+<tr>
+<td><code>rexray.volumeDrivers</code></td>
+<td><code>REXRAY_VOLUMEDRIVERS</code></td>
+<td><code>--volumeDrivers</code></td>
+</tr>
+</tbody>
+</table>
+<p>Another example is a possible configuration of the Amazon Web Services (AWS)
+Elastic Compute Cloud (EC2) storage driver:</p>
+<pre><code class="yaml">aws:
+    accessKey: MyAccessKey
+    secretKey: MySecretKey
+    region:    USNW
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th>Property Name</th>
+<th>Environment Variable</th>
+<th>CLI Flag</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aws.accessKey</code></td>
+<td><code>AWS_ACCESSKEY</code></td>
+<td><code>--awsAccessKey</code></td>
+</tr>
+<tr>
+<td><code>aws.secretKey</code></td>
+<td><code>AWS_SECRETKEY</code></td>
+<td><code>--awsSecretKey</code></td>
+</tr>
+<tr>
+<td><code>aws.region</code></td>
+<td><code>AWS_REGION</code></td>
+<td><code>--awsRegion</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="string-arrays">String Arrays</h4>
+<p>Please note that properties that are represented as arrays in a configuration
+file, such as the <code>rexray.osDrivers</code>, <code>rexray.storageDrivers</code>, and
+<code>rexray.volumeDrivers</code> above, are not arrays, but multi-valued strings where a
+space acts as a delimiter. This is because the Viper project
+<a href="https://github.com/spf13/viper/issues/112">does not bind</a> Go StringSlices
+(string arrays) correctly to <a href="https://github.com/spf13/pflag">PFlags</a>.</p>
+<p>For example, this is how one would specify the storage drivers <code>ec2</code> and
+<code>xtremio</code> in a configuration file:</p>
+<pre><code class="yaml">rexray:
+    storageDrivers:
+    - ec2
+    - xtremio
+</code></pre>
+
+<p>However, to specify the same values in an environment variable,
+<code>REXRAY_STORAGEDRIVERS="ec2 xtremio"</code>, and as a CLI flag,
+<code>--storageDrivers="ec2 xtremio"</code>.</p>
+<h3 id="logging-configuration">Logging Configuration</h3>
 <p>The <code>REX-Ray</code> log level determines the level of verbosity emitted by the
 internal logger. The default level is <code>warn</code>, but there are three other levels
 as well:</p>
@@ -298,24 +803,6 @@ as well:</p>
 </tr>
 </tbody>
 </table>
-<p>The log level can be set by environment variable, a configuration file, or via
-the command line:</p>
-<table>
-<thead>
-<tr>
-<th>Environment Variable</th>
-<th>Config File Property</th>
-<th>CLI Flag(s)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>REXRAY_LOGLEVEL</code></td>
-<td><code>logLevel</code></td>
-<td><code>--logLevel</code>, <code>-l</code></td>
-</tr>
-</tbody>
-</table>
 <p>For example, the following two commands may look slightly different, but they
 are functionally the same, both printing a list of volumes using the <code>debug</code>
 log level:</p>
@@ -327,11 +814,16 @@ log level:</p>
 <pre><code class="bash">env REXRAY_LOGLEVEL=debug rexray volume get
 </code></pre>
 
-<h2 id="os-drivers">OS Drivers</h2>
+<h3 id="driver-configuration">Driver Configuration</h3>
+<p>There are three types of drivers:</p>
+<ol>
+<li>OS Drivers</li>
+<li>Storage Drivers</li>
+<li>Volume Drivers</li>
+</ol>
+<h4 id="os-drivers">OS Drivers</h4>
 <p>Operating system (OS) drivers enable <code>REX-Ray</code> to manage storage on
-the underlying OS.</p>
-<h3 id="os-driver-types">OS Driver Types</h3>
-<p>Currently the following OS drivers are supported:</p>
+the underlying OS. Currently the following OS drivers are supported:</p>
 <table>
 <thead>
 <tr>
@@ -346,49 +838,11 @@ the underlying OS.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="automatic-os-drivers">Automatic OS Drivers</h3>
 <p>The OS driver <code>linux</code> is automatically activated when <code>REX-Ray</code> is running on
 the Linux OS.</p>
-<h3 id="activating-os-drivers">Activating OS Drivers</h3>
-<p>While all drivers are automatically registered, they are not all automatically
-activated. OS drivers can be activated by by environment variable, a
-configuration file, or via the command line:</p>
-<table>
-<thead>
-<tr>
-<th>Environment Variable</th>
-<th>Config File Property</th>
-<th>CLI Flag(s)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>REXRAY_OSDRIVERS</code></td>
-<td><code>osDrivers</code></td>
-<td><code>--osDrivers</code></td>
-</tr>
-</tbody>
-</table>
-<p>The environment variable and CLI flag both expect a space-delimited list of
-OS driver names such as:</p>
-<pre><code class="bash">env REXRAY_OSDRIVERS=linux rexray volume get
-</code></pre>
-
-<p>or</p>
-<pre><code class="bash">rexray volume get --osDrivers=linux
-</code></pre>
-
-<p>However, when specifying the <code>osDrivers</code> option in a configuration file, since
-the option is multi-valued, it would look like the following:</p>
-<pre><code class="yaml">osDrivers:
-- linux
-</code></pre>
-
-<h2 id="storage-drivers">Storage Drivers</h2>
+<h4 id="storage-drivers">Storage Drivers</h4>
 <p>Storage drivers enable <code>REX-Ray</code> to communicate with direct-attached or remote
-storage systems.</p>
-<h3 id="storage-driver-types">Storage Driver Types</h3>
-<p>Currently the following storage drivers are supported:</p>
+storage systems. Currently the following storage drivers are supported:</p>
 <table>
 <thead>
 <tr>
@@ -398,70 +852,48 @@ storage systems.</p>
 </thead>
 <tbody>
 <tr>
-<td>Amazon EC2</td>
+<td><a href="../../user-guide/storage-providers#amazon-ec2">Amazon EC2</a></td>
 <td>ec2</td>
 </tr>
 <tr>
-<td>OpenStack</td>
+<td><a href="../../user-guide/storage-providers#google-compute-engine">Google Compute Engine</a></td>
+<td>gce</td>
+</tr>
+<tr>
+<td><a href="../../user-guide/storage-providers#isilon">Isilon</a></td>
+<td>isilon</td>
+</tr>
+<tr>
+<td><a href="../../user-guide/storage-providers#openstack">OpenStack</a></td>
 <td>openstack</td>
 </tr>
 <tr>
-<td>Rackspace</td>
+<td><a href="../../user-guide/storage-providers#rackspace">Rackspace</a></td>
 <td>rackspace</td>
 </tr>
 <tr>
-<td>ScaleIO</td>
+<td><a href="../../user-guide/storage-providers#scaleio">ScaleIO</a></td>
 <td>scaleio</td>
 </tr>
 <tr>
-<td>XtremIO</td>
+<td><a href="../../user-guide/storage-providers#virtualbox">VirtualBox</a></td>
+<td>virtualbox</td>
+</tr>
+<tr>
+<td><a href="../../user-guide/storage-providers#vmax">VMAX</a></td>
+<td>vmax</td>
+</tr>
+<tr>
+<td><a href="../../user-guide/storage-providers#xtremio">XtremIO</a></td>
 <td>xtremio</td>
 </tr>
 </tbody>
 </table>
-<h3 id="automatic-storage-drivers">Automatic Storage Drivers</h3>
-<p>No storage drivers are automatically activated.</p>
-<h3 id="activating-storage-drivers">Activating Storage Drivers</h3>
-<p>While all drivers are automatically registered, not all are automatically
-activated. Storage drivers can be activated by by environment variable, a
-configuration file, or via the command line:</p>
-<table>
-<thead>
-<tr>
-<th>Environment Variable</th>
-<th>Config File Property</th>
-<th>CLI Flag(s)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>REXRAY_STORAGEDRIVERS</code></td>
-<td><code>storageDrivers</code></td>
-<td><code>--storageDrivers</code></td>
-</tr>
-</tbody>
-</table>
-<p>The environment variable and CLI flag both expect a space-delimited list of
-storage driver names such as:</p>
-<pre><code class="bash">env REXRAY_STORAGEDRIVERS=&quot;ec2 xtremio&quot; rexray volume get
-</code></pre>
-
-<p>or</p>
-<pre><code class="bash">rexray volume get --osDrivers=&quot;ec2 xtremio&quot;
-</code></pre>
-
-<p>However, when specifying the <code>storageDrivers</code> option in a configuration file,
-since the option is multi-valued, it would look like the following:</p>
-<pre><code class="yaml">storageDrivers:
-- ec2
-- xtremio
-</code></pre>
-
-<h2 id="volume-drivers">Volume Drivers</h2>
+<p>The <code>rexray.storageDrivers</code> property can be used to activate storage drivers..</p>
+<h4 id="volume-drivers">Volume Drivers</h4>
 <p>Volume drivers enable <code>REX-Ray</code> to manage volumes for consumers of the storage,
-such as <code>Docker</code> or <code>Mesos</code>.</p>
-<h3 id="volume-driver-types">Volume Driver Types</h3>
-<p>Currently the following volume drivers are supported:</p>
+such as <code>Docker</code> or <code>Mesos</code>. Currently the following volume drivers are
+supported:</p>
 <table>
 <thead>
 <tr>
@@ -476,41 +908,323 @@ such as <code>Docker</code> or <code>Mesos</code>.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="automatic-volume-drivers">Automatic Volume Drivers</h3>
 <p>The volume driver <code>docker</code> is automatically activated.</p>
-<h3 id="activating-volume-drivers">Activating Volume Drivers</h3>
-<p>While all drivers are automatically registered, they are not all automatically
-activated. Volume drivers can be activated by by environment variable, a
-configuration file, or via the command line:</p>
+<h3 id="module-configuration">Module Configuration</h3>
+<p>This section reviews exposing multiple, differently configured endpoints by
+using modules.</p>
+<h4 id="default-modules">Default Modules</h4>
+<p>If not explicitly specified in a configuration source, <code>REX-Ray</code> always
+considers the following, default modules:</p>
+<pre><code class="yaml">rexray:
+    modules:
+        default-admin:
+            type:     admin
+            desc:     The default admin module.
+            host:     tcp://127.0.0.1:7979
+            disabled: false
+        default-docker:
+            type:     docker
+            desc:     The default docker module.
+            host:     unix:///run/docker/plugins/rexray.sock
+            spec:     /etc/docker/plugins/rexray.spec
+            disabled: false
+</code></pre>
+
+<p>The first module, <code>default-admin</code>, is used by the CLI to communicate with the
+REX-Ray service API. For security reasons the <code>default-admin</code> module is bound
+to the loopback IP address by default.</p>
+<p>The second default module, <code>default-docker</code>, exposes <code>REX-Ray</code> as a Docker
+Volume Plug-in via the specified sock and spec files.</p>
+<h4 id="additional-modules">Additional Modules</h4>
+<p>It's also possible to create additional modules via the configuration file:</p>
+<pre><code class="yaml">rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type: docker
+            desc: A second docker module.
+            host: unix:///run/docker/plugins/isilon2.sock
+            spec: /etc/docker/plugins/isilon2.spec
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+</code></pre>
+
+<p>The above example defines three modules:</p>
+<ol>
+<li><code>default-admin</code></li>
+<li><code>default-docker</code></li>
+<li><code>isilon2</code></li>
+</ol>
+<p>The first two, default modules are not included in the configuration file as
+they are implicit. The only reason to define them explicitly is to override
+their properties, a feature discussed in the next section.</p>
+<p>Ignoring the <code>default-admin</code> module, the <code>default-docker</code> and <code>isilon2</code> modules
+are both Docker modules as indicated by a module's <code>type</code> property. Just like
+the <code>default-docker</code> module, the custom module <code>isilon2</code> is configured to use
+the default isilon settings from the root key, <code>isilon</code>. Therefore the modules
+<code>default-docker</code> and <code>isilon2</code> are configured exactly the same except for they
+are exposed via different sock and spec files.</p>
+<h4 id="inferred-properties">Inferred Properties</h4>
+<p>The following example is nearly identical to the previous one except this
+example is missing the <code>host</code>, <code>spec</code>, <code>desc</code>, and <code>disabled</code> properties for
+the <code>isilon2</code> module:</p>
+<pre><code class="yaml">rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type: docker
+            desc: A second docker module.
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+</code></pre>
+
+<p>A module is not required to provide a description (<code>desc</code>), and <code>disabled</code> will
+always default to <code>false</code> unless explicitly specified as <code>true</code>. Docker modules
+(<code>type: docker</code>) will also infer the values of the <code>host</code> and <code>spec</code>
+properties if they are not explicitly provided. Because the name of the
+module above is <code>isilon2</code> and the <code>host</code> and <code>spec</code> properties are not defined,
+those values will be automatically set to
+<code>unix:///run/docker/plugins/isilon2.sock</code> and <code>/etc/docker/plugins/isilon2.spec</code>
+respectively.</p>
+<h4 id="overriding-defaults">Overriding Defaults</h4>
+<p>It is also possible to override a default module's configuration. What if it's
+determined the <code>default-admin</code> module should be accessible externally and the
+<code>default-docker</code> module should use a different sock file? Simply override those
+keys and only those keys:</p>
+<pre><code class="yaml">rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        default-admin:
+            host: tcp://:7979
+        default-docker:
+            host: unix:///run/docker/plugins/isilon1.sock
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+</code></pre>
+
+<h4 id="overriding-inherited-properties">Overriding Inherited Properties</h4>
+<p>In all of the module configuration examples so far there has been a root key
+named <code>isilon</code> that provides the settings for the storage driver used by the
+modules. Thanks to scoped configuration support and inherited properties, it's
+also quite simple to provide adjustments to a default configuration at the
+module level. For example, imagine the <code>isilon2</code> module should load a driver
+that points to a different <code>volumePath</code>?</p>
+<pre><code class="yaml">rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type:       docker
+            isilon:
+                volumePath: /rexray/isilon2
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+</code></pre>
+
+<p>The above example will load two Docker modules, the <code>default-docker</code> module and
+the <code>isilon2</code> module. The <code>default-docker</code> module's <code>isilon.volumePath</code> will be
+set to <code>/rexray/default</code> whereas the <code>isilon2</code> module's <code>isilon.volumePath</code> is
+overridden and set to <code>/rexray/isilon2</code>.</p>
+<p>Any key path structure can be duplicated under the module's name, and the value
+at the terminus of that path will be used in place of any inherited value.
+Another example is overriding the type of storage driver used by the <code>isilon2</code>
+module. There may be a case where the <code>isilon2</code> module needs to use an
+enhanced version of the <code>isilon</code> storage driver but still use the same
+configuration:</p>
+<pre><code class="yaml">rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        isilon2:
+            type:       docker
+            rexray:
+                storageDrivers:
+                - isilonEnhanced
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+</code></pre>
+
+<p>The above example recreates the key path structure <code>rexray.storageDrivers</code>
+beneath the key path structure <code>rexray.modules.isilon2</code>. Whenever any query is
+made for <code>rexray.storageDrivers</code> inside the <code>isilon2</code> module, the value
+<code>[]string{"isilonEnhanced"}</code> is returned instead of <code>[]string{"isilon"}</code>.</p>
+<h4 id="disabling-modules">Disabling Modules</h4>
+<p>Both default and custom modules can be disabled by setting the key <code>disabled</code> to
+true inside a module definition:</p>
+<pre><code class="yaml">rexray:
+    storageDrivers:
+    - isilon
+    modules:
+        default-docker:
+            disabled: true
+        isilon2:
+            type:     docker
+        isilon3:
+            type:     docker
+            disabled: true
+isilon:
+    endpoint:   https://172.17.177.230:8080
+    insecure:   true
+    username:   root
+    password:   P@ssword1!
+    volumePath: /rexray/default
+    nfsHost:    172.17.177.230
+    quotas:     true
+    dataSubnet: 172.17.177.0/24
+</code></pre>
+
+<p>The above example disables the <code>default-docker</code> and <code>isilon3</code> modules such that
+<code>isilon2</code> is the only Docker module loaded.</p>
+<h3 id="volume-configuration">Volume Configuration</h3>
+<p>This section describes various global configuration options related to
+operations such as mounting and unmounting volumes.</p>
+<h4 id="preemption">Preemption</h4>
+<p>There is a capability to preemptively detach any existing attachments to other
+instances before attempting a mount.  This will enable use cases for
+availability where another instance must be able to take control of a volume
+without the current owner instance being involved.  The operation is considered
+equivalent to a power off of the existing instance for the device.</p>
+<p>Example configuration file follows:</p>
+<pre><code class="yaml">rexray:
+  storageDrivers:
+  - openstack
+  volume:
+    mount:
+      preempt: true
+openStack:
+  authUrl: https://authUrl:35357/v2.0/
+  username: username
+  password: password
+  tenantName: tenantName
+  regionName: regionName
+</code></pre>
+
 <table>
 <thead>
 <tr>
-<th>Environment Variable</th>
-<th>Config File Property</th>
-<th>CLI Flag(s)</th>
+<th>Driver</th>
+<th>Supported</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>REXRAY_VOLUMEDRIVERS</code></td>
-<td><code>volumeDrivers</code></td>
-<td><code>--volumeDrivers</code></td>
+<td>EC2</td>
+<td>Yes, no Ubuntu support</td>
+</tr>
+<tr>
+<td>Isilon</td>
+<td>Not yet</td>
+</tr>
+<tr>
+<td>OpenStack</td>
+<td>With Cinder v2</td>
+</tr>
+<tr>
+<td>ScaleIO</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Rackspace</td>
+<td>No</td>
+</tr>
+<tr>
+<td>VirtualBox</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>VMAX</td>
+<td>Not yet</td>
+</tr>
+<tr>
+<td>XtremIO</td>
+<td>Yes</td>
 </tr>
 </tbody>
 </table>
-<p>The environment variable and CLI flag both expect a space-delimited list of
-volume driver names such as:</p>
-<pre><code class="bash">env REXRAY_VOLUMEDRIVERS=docker rexray volume get
+<h4 id="ignore-used-count">Ignore Used Count</h4>
+<p>By default accounting takes place during operations that are performed
+on <code>Mount</code>, <code>Unmount</code>, and other operations.  This only has impact when running
+as a service through the HTTP/JSON interface since the counts are persisted
+in memory.  The purpose of respecting the <code>Used Count</code> is to ensure that a
+volume is not unmounted until the unmount requests have equaled the mount
+requests.  </p>
+<p>In the <code>Docker</code> use case if there are multiple containers sharing a volume
+on the same host, the the volume will not be unmounted until the last container
+is stopped.  </p>
+<p>The following setting should only be used if you wish to <em>disable</em> this
+functionality.  This would make sense if the accounting is being done from
+higher layers and all unmount operations should proceed without control.</p>
+<pre><code class="yaml">rexray:
+  volume:
+    unmount:
+      ignoreUsedCount: true
 </code></pre>
 
-<p>or</p>
-<pre><code class="bash">rexray volume get --volumeDrivers=docker
+<p>Currently a reset of the service will cause the counts to be reset.  This
+will cause issues if <em>multiple containers</em> are sharing a volume.  If you are
+sharing volumes, it is recommended that you reset the service along with the
+accompanying container runtime (if this setting is false) to ensure they are
+synchronized.  </p>
+<h4 id="volume-path-031">Volume Path (0.3.1)</h4>
+<p>When volumes are mounted there can be an additional path that is specified to
+be created and passed as the valid mount point.  This is required for certain
+applications that do not want to place data from the root of a mount point.<br />
+The default is the <code>/data</code> path.  If a value is set by <code>linux.volume.rootPath</code>,
+then the default will be overwritten.</p>
+<p>If upgrading to 0.3.1 then you can either set this to an empty value, or move
+the internal directory in your existing volumes to <code>/data</code>.</p>
+<pre><code class="yaml">rexray:
+linux:
+  volume:
+    rootPath: /data
 </code></pre>
 
-<p>However, when specifying the <code>volumeDrivers</code> option in a configuration file,
-since the option is multi-valued, it would look like the following:</p>
-<pre><code class="yaml">volumeDrivers:
-- docker
+<h4 id="volume-filemode-031">Volume FileMode (0.3.1)</h4>
+<p>The permissions of the <code>linux.volume.rootPath</code> can be set to default values.  At
+each mount, the permissions will be written based on this value.  The default
+is to include the <code>0700</code> mode.</p>
+<pre><code class="yaml">rexray:
+linux:
+  volume:
+    fileMode: 0700
 </code></pre></div>
         </div>
 
@@ -518,9 +1232,12 @@ since the option is multi-valued, it would look like the following:</p>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
+        <!--
         <script src="../../.themes/yeti/js/base.js"></script>
         <script src="../../.themes/yeti/js/bootstrap-3.0.3.min.js"></script>
         <script src="../../.themes/yeti/js/highlight.pack.js"></script>
         <script src="../../.themes/yeti/js/jquery-1.10.2.min.js"></script>
+        -->
     </body>
+
 </html>

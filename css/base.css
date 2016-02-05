@@ -30,7 +30,7 @@ div.col-md-9 h1:first-of-type {
     text-shadow: 2px 2px 3px rgba(0, 0, 0, .25);
 }
 
-div.col-md-9 p:first-of-type {
+div.col-md-9 > p:first-of-type {
     text-align: center;
     text-shadow: 2px 2px 3px rgba(0, 0, 0, .15);
 }
@@ -124,6 +124,11 @@ div.source-links {
     padding-bottom: 3px;
     padding-left: 30px;
     font-size: 90%;
+}
+
+.bs-sidebar .nav .nav .nav > li > a {
+    font-size: 80%;
+    padding-left: 40px;
 }
 
 /* Show and affix the side nav when space allows it */

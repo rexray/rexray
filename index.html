@@ -15,13 +15,9 @@
         <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="./css/highlight.css">
-        <link href="./css/emccode-font.css" rel="stylesheet">
         <link href="./css/base.css" rel="stylesheet">
-        <link href="./.themes/yeti/css/base.css" rel="stylesheet">
-        <link href="./.themes/yeti/css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="./.themes/yeti/css/emccode-font.css" rel="stylesheet">
-        <link href="./.themes/yeti/css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="./.themes/yeti/css/highlight.css" rel="stylesheet">
+        <link href="./css/emccode-font.css" rel="stylesheet">
+        <link href="./css/hX.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -30,6 +26,14 @@
         <![endif]-->
 
         
+
+        <!-- scroll fix -->
+        <script>
+            //var shiftWindow = function() { scrollBy(0, -40) };
+            //if (location.hash) shiftWindow();
+            //window.addEventListener("hashchange", shiftWindow);
+        </script>
+
     </head>
 
     <body>
@@ -70,57 +74,113 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="user-guide/installation/">Installation</a>
                         </li>
                     
-                        
                         <li >
                             <a href="user-guide/config/">Configuration</a>
                         </li>
                     
-                        
-                        <li role="separator" class="divider"></li>
-                        
                         <li >
-                            <a href="user-guide/ec2/">Amazon EC2</a>
+                            <a href="user-guide/storage-providers/">Storage Providers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="user-guide/openstack/">OpenStack</a>
+                            <a href="user-guide/schedulers/">Schedulers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="user-guide/rackspace/">Rackspace</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="user-guide/scaleio/">ScaleIO</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="user-guide/xtremio/">XtremIO</a>
-                        </li>
-                    
-                        
-                        <li role="separator" class="divider"></li>
-                        
-                        <li >
-                            <a href="user-guide/docker/">Docker</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="user-guide/mesos/">Mesos</a>
+                            <a href="user-guide/application/">Applications</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">User Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="user-guide/installation/">Installation</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="user-guide/config/">Configuration</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="user-guide/storage-providers/">Storage Providers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="user-guide/schedulers/">Schedulers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="user-guide/application/">Applications</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developers Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                        <li >
+                            <a href="dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                        <li >
+                            <a href="dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+                <!--
+                smart menus
+                <li><a href="#">Developers Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             
@@ -128,23 +188,46 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="about/contributing/">Contributing</a>
                         </li>
                     
-                        
                         <li >
                             <a href="about/license/">License</a>
                         </li>
                     
-                        
                         <li >
                             <a href="about/release-notes/">Release Notes</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">About <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="about/contributing/">Contributing</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="about/license/">License</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="about/release-notes/">Release Notes</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             </ul>
@@ -181,16 +264,70 @@
     </div>
 </div>
         <div class="container index">
-            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            <div class="col-md-3"><div id="sidenav" class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
         <li class="main active"><a href="#rex-ray">REX-Ray</a></li>
         
-            <li><a href="#overview">Overview</a></li>
+            <li><a href="#overview">Overview</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#storage-provider-support">Storage Provider Support</a><!--
+                -->
+                </li>
+                
+                <li><a href="#operating-system-support">Operating System Support</a><!--
+                -->
+                </li>
+                
+                <li><a href="#container-platform-support">Container Platform Support</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
-            <li><a href="#getting-started">Getting Started</a></li>
+            <li><a href="#getting-started">Getting Started</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#installing-rex-ray">Installing REX-Ray</a><!--
+                -->
+                </li>
+                
+                <li><a href="#configuring-rex-ray">Configuring REX-Ray</a><!--
+                -->
+                </li>
+                
+                <li><a href="#start-rex-ray-as-a-service">Start REX-Ray as a Service</a><!--
+                -->
+                </li>
+                
+                <li><a href="#rex-ray-with-docker">REX-Ray with Docker</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
-            <li><a href="#getting-help">Getting Help</a></li>
+            <li><a href="#getting-help">Getting Help</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#debug">Debug</a><!--
+                -->
+                </li>
+                
+                <li><a href="#github-and-slack">GitHub and Slack</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
     
     </ul>
@@ -200,14 +337,14 @@
 <h1 id="rex-ray">REX-Ray</h1>
 <p>Openly serious about storage</p>
 <hr />
-<p><code>REX-Ray</code> provides visibility and management of external/underlying storage
-via guest storage introspection. Available as a Go package, CLI tool, and Linux
-service, and with built-in third-party support for tools such as <code>Docker</code>,
-<code>REX-Ray</code> is easily integrated into any workflow. For example, here's how to
-list storage for a guest hosted on Amazon Web Services (AWS) with <code>REX-Ray</code>:</p>
+<p><code>REX-Ray</code> delivers persistent storage access for container runtimes, such as
+Docker and Mesos, and provides an easy interface for enabling advanced storage
+functionality across common storage, virtualization and cloud platforms. For
+example, here's how to list storage for a guest hosted on Amazon Web Services
+(AWS) with <code>REX-Ray</code>:</p>
 <pre><code class="bash">$ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESS_KEY=access_key
-$ export AWS_SECRET_KEY=secret_key
+$ export AWS_ACCESSKEY=access_key
+$ export AWS_SECRETKEY=secret_key
 $ rexray volume get
 
 - providername: ec2
@@ -219,36 +356,88 @@ $ rexray volume get
 </code></pre>
 
 <h2 id="overview">Overview</h2>
-<p>Today <code>REX-Ray</code> supports the following storage providers:</p>
-<ul>
-<li><a href="https://aws.amazon.com/ec2/">Amazon Elastic Computer Cloud (EC2)</a></li>
-<li><a href="http://www.rackspace.com/en-us/cloud/openstack">Openstack on Rackspace</a></li>
-<li><a href="http://www.rackspace.com">Rackspace</a></li>
-<li><a href="http://www.emc.com/storage/scaleio/index.htm">ScaleIO</a></li>
-<li><a href="http://xtremio.com/">XtremIO</a> (with Multipath &amp; Device Mapper support)</li>
-</ul>
-<p><code>REX-Ray</code> also supports integration with the following platforms:</p>
-<ul>
-<li><a href="https://docs.docker.com/extend/plugins_volume/">Docker</a></li>
-</ul>
+<p><code>REX-Ray</code> is an abstraction layer between storage endpoints and container
+platforms. The administration and orchestration of various storage platforms
+can all be performed using the same set of commands.</p>
+<h3 id="storage-provider-support">Storage Provider Support</h3>
+<p>The following storage providers and platforms are supported by <code>REX-Ray</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Storage Platform(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./user-guide/storage-providers/ec2/">Amazon EC2</a></td>
+<td>EBS</td>
+</tr>
+<tr>
+<td><a href="./user-guide/storage-providers/gce">Google Compute Engine</a></td>
+<td>Disk</td>
+</tr>
+<tr>
+<td><a href="./user-guide/storage-providers/openstack">Open Stack</a></td>
+<td>Cinder</td>
+</tr>
+<tr>
+<td><a href="./user-guide/storage-providers/rackspace">Rackspace</a></td>
+<td>Cinder</td>
+</tr>
+<tr>
+<td>EMC</td>
+<td><a href="./user-guide/storage-providers/scaleio">ScaleIO</a>, <a href="./user-guide/storage-providers/xtremio">XtremIO</a>, <a href="./user-guide/storage-providers/vmax">VMAX</a>, <a href="./user-guide/storage-providers/isilon">Isilon</a></td>
+</tr>
+<tr>
+<td><a href="./user-guide/storage-providers/virtualbox">Virtual Box</a></td>
+<td>Virtual Media</td>
+</tr>
+</tbody>
+</table>
 <h3 id="operating-system-support">Operating System Support</h3>
-<p><code>REX-Ray</code> currently supports the following operating systems:</p>
+<p>The following operating systems (OS) are supported by <code>REX-Ray</code>:</p>
 <table>
 <thead>
 <tr>
 <th>OS</th>
 <th>Command Line</th>
-<th>As Service</th>
+<th>Service</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Linux</td>
+<td>Ubuntu 12+</td>
 <td>Yes</td>
 <td>Yes</td>
 </tr>
 <tr>
-<td>OS X</td>
+<td>Debian 6+</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>RedHat</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>CentOS 6+</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>CoreOS</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>TinyLinux (boot2docker)</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>OS X Yosemite+</td>
 <td>Yes</td>
 <td>No</td>
 </tr>
@@ -259,53 +448,130 @@ $ rexray volume get
 </tr>
 </tbody>
 </table>
+<h3 id="container-platform-support">Container Platform Support</h3>
+<p><code>REX-Ray</code> currently supports the following container platforms:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker</td>
+<td><a href="./user-guide/third-party/docker/">Volume Driver Plugin</a></td>
+</tr>
+<tr>
+<td>Mesos</td>
+<td><a href="./user-guide/third-party/mesos/">Volume Driver Isolator module</a></td>
+</tr>
+<tr>
+<td>Mesos + Docker</td>
+<td><a href="./user-guide/third-party/mesos/">Volume Driver Plugin</a></td>
+</tr>
+</tbody>
+</table>
 <h2 id="getting-started">Getting Started</h2>
-<p>This section will help you get started using <code>REX-Ray</code>.</p>
+<p>This section will help you get REX-Ray up and running quickly. For more advanced
+configurations including
+<a href="./user-guide/config/#configuration-properties">core properties</a> and additional
+storage providers use the <code>User Guide</code> menu in the tool-bar.</p>
 <h3 id="installing-rex-ray">Installing REX-Ray</h3>
-<p>The following command will download the most recent, stable build of <code>REX-Ray</code>
-and install it to <code>/usr/bin/rexray.</code> On Linux systems <code>REX-Ray</code> will also be
-registered as either a SystemD or SystemV service.</p>
-<pre><code class="bash">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+<p>The following command will download the most recent, stable build of REX-Ray
+and install it to <code>/usr/bin/rexray</code> on Linux systems. REX-Ray will be
+registered as either a SystemD or SystemV service depending upon the OS.</p>
+<pre><code class="bash">$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
 </code></pre>
 
-<p><code>REX-Ray</code> can also be installed from
-<a href="user-guide/installation/#install-a-pre-built-binary">a pre-built binary</a>, an RPM or DEB
-package, or by
-<a href="user-guide/installation/#build-and-install-from-source">building it from source</a>.</p>
-<p>Once installed, <code>REX-Ray</code> can be used by simply typing <code>rexray</code> on the command
-line, but in order for <code>REX-Ray</code> to do much more than print out help text,
-configuration is necessary:</p>
 <h3 id="configuring-rex-ray">Configuring REX-Ray</h3>
-<p>The first step to getting started is <a href="./user-guide/config/">configuring <code>REX-Ray</code></a>!</p>
-<h3 id="configuring-storage-providers">Configuring Storage Providers</h3>
-<ul>
-<li><a href="./user-guide/ec2/">Amazon Elastic Computer Cloud (EC2)</a></li>
-<li><a href="./user-guide/rackspace/">Rackspace</a></li>
-<li><a href="./user-guide/scaleio/">ScaleIO</a></li>
-<li><a href="./user-guide/openstack/">OpenStack</a></li>
-<li><a href="./user-guide/xtremio/">XtremIO</a></li>
-</ul>
-<h3 id="configuring-external-integration">Configuring External Integration</h3>
-<ul>
-<li><a href="./user-guide/docker/">Docker</a></li>
-<li><a href="./user-guide/mesos/">Mesos</a></li>
-</ul>
+<p>Create a configuration file on the host at <code>/etc/rexray</code> in YAML format called
+<code>config.yml</code> (this file can be created with <code>vi</code> or transferred over via <code>scp</code>
+  or <code>ftp</code>). Here is a simple example for using Amazon EC2:</p>
+<pre><code>rexray:
+  storageDrivers:
+  - ec2
+aws:
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
+</code></pre>
+
+<p>From here, REX-Ray can now be used as a command line tool. View the commands
+available:</p>
+<pre><code class="bash">$ rexray --help
+</code></pre>
+
+<p>To verify the configuration file is being accessed and the AWS Keys are being
+used, list volumes that can be accessed:</p>
+<pre><code class="bash">$ rexray volume ls
+</code></pre>
+
+<p>If there is an error, use the <code>-l debug</code> flag and consult debugging instructions
+ located under <a href="./#getting-help">Getting Help</a>. If nothing is returned using <code>ls</code>
+, then everything is functioning as expected</p>
+<h3 id="start-rex-ray-as-a-service">Start REX-Ray as a Service</h3>
+<p>Container platforms rely on REX-Ray to be running as a service to function
+properly. For instance, Docker communicates to the REX-Ray Volume Driver through
+a Unix socket file.</p>
+<pre><code class="bash">$ rexray start
+</code></pre>
+
+<h3 id="rex-ray-with-docker">REX-Ray with Docker</h3>
+<p>Docker 1.10+ is recommended to use REX-Ray as a
+<a href="https://docs.docker.com/extend/plugins_volume/">Docker Volume Driver Plugin</a>.</p>
+<p>The following example uses two Amazon EC2 Virtual Machines, <code>EC2a</code> and <code>EC2b</code>,
+that reside within the same Availability Zone.</p>
+<p>From <code>EC2a</code>, create a new volume called <code>hellopersistence</code>. After the new volume
+ is created, mount the volume to the host and container using the
+ <code>--volume-driver</code> and <code>-v</code> flag in the <code>docker run</code> command. Create a new file
+called <code>myfile</code> using <code>docker exec</code> that will be persisted throughout the
+example. Lastly, stop and remove the container so it no longer exists:</p>
+<pre><code class="bash">$ docker volume create --driver rexray --opt size=10 --name hellopersistence
+$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+  --name temp01 busybox
+$ docker exec temp01 &quot;touch /mystore/myfile&quot;
+$ docker exec temp01 &quot;ls /mystore&quot;
+$ docker rm -f temp01
+</code></pre>
+
+<p>From <code>EC2b</code>, create a new container that mounts the pre-existing volume and
+verify <code>myfile</code> that was originally created from host <code>EC2a</code> has persisted.</p>
+<pre><code class="bash">$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+  --name temp01 busybox
+$ docker exec temp01 &quot;ls /mystore&quot;
+</code></pre>
+
+<p>Congratulations, you have used <code>REX-Ray</code> to provide persistence for stateless
+containers!</p>
+<p>Examples using MongoDB, Postgres, and more with persistent storage can be found
+at <a href="./user-guide/application/">Application Examples</a>.</p>
 <h2 id="getting-help">Getting Help</h2>
-<p>To get help with REX-Ray, please use the
-<a href="https://groups.google.com/forum/#!forum/emccode-users">discussion group</a>,
-<a href="https://github.com/emccode/rexray/issues">GitHub issues</a>, or tagging questions
-with <strong>EMC</strong> at <a href="https://stackoverflow.com">StackOverflow</a>.</p>
-<p>The code and documentation are released with no warranties or SLAs and are
-intended to be supported through a community driven process.</p></div>
+<p>Having issues? No worries, let's figure it out together.</p>
+<h3 id="debug">Debug</h3>
+<p>The <code>debug</code> flag can be appended to any command in order to get verbose output:</p>
+<pre><code>$ rexray volume -l debug
+</code></pre>
+
+<p>The above command will list all of the volumes visible to <code>REX-Ray</code> with debug
+logging enabled.</p>
+<h3 id="github-and-slack">GitHub and Slack</h3>
+<p>And if you need a little extra help, please don't hesitate to use
+<a href="https://github.com/emccode/rexray/issues">GitHub issues</a> or join the active
+conversation on the
+<a href="http://community.emccode.com/">EMC {code} Community Slack Team</a> in
+the #project-rexray channel</p></div>
         </div>
 
         <script src="./js/jquery-1.10.2.min.js"></script>
         <script src="./js/bootstrap-3.0.3.min.js"></script>
         <script src="./js/highlight.pack.js"></script>
         <script src="./js/base.js"></script>
+        <!--
         <script src="./.themes/yeti/js/base.js"></script>
         <script src="./.themes/yeti/js/bootstrap-3.0.3.min.js"></script>
         <script src="./.themes/yeti/js/highlight.pack.js"></script>
         <script src="./.themes/yeti/js/jquery-1.10.2.min.js"></script>
+        -->
     </body>
+
 </html>

@@ -15,13 +15,9 @@
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
-        <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/emccode-font.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/highlight.css" rel="stylesheet">
+        <link href="../../css/emccode-font.css" rel="stylesheet">
+        <link href="../../css/hX.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -30,6 +26,14 @@
         <![endif]-->
 
         
+
+        <!-- scroll fix -->
+        <script>
+            //var shiftWindow = function() { scrollBy(0, -40) };
+            //if (location.hash) shiftWindow();
+            //window.addEventListener("hashchange", shiftWindow);
+        </script>
+
     </head>
 
     <body>
@@ -70,57 +74,113 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="../../user-guide/installation/">Installation</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../../user-guide/config/">Configuration</a>
                         </li>
                     
-                        
-                        <li role="separator" class="divider"></li>
-                        
                         <li >
-                            <a href="../../user-guide/ec2/">Amazon EC2</a>
+                            <a href="../../user-guide/storage-providers/">Storage Providers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../../user-guide/openstack/">OpenStack</a>
+                            <a href="../../user-guide/schedulers/">Schedulers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../../user-guide/rackspace/">Rackspace</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../../user-guide/scaleio/">ScaleIO</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../../user-guide/xtremio/">XtremIO</a>
-                        </li>
-                    
-                        
-                        <li role="separator" class="divider"></li>
-                        
-                        <li >
-                            <a href="../../user-guide/docker/">Docker</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../../user-guide/mesos/">Mesos</a>
+                            <a href="../../user-guide/application/">Applications</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">User Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/installation/">Installation</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/config/">Configuration</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/storage-providers/">Storage Providers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/schedulers/">Schedulers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/application/">Applications</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developers Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+                <!--
+                smart menus
+                <li><a href="#">Developers Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             
@@ -128,23 +188,46 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li class="active">
                             <a href="./">Contributing</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../license/">License</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../release-notes/">Release Notes</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">About <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li class="active">
+                            <a href="./">Contributing</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../license/">License</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../release-notes/">Release Notes</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             </ul>
@@ -152,7 +235,7 @@
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li >
-                    <a rel="next" href="../../user-guide/mesos/">
+                    <a rel="next" href="../../dev-guide/release-process/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
@@ -181,20 +264,30 @@
     </div>
 </div>
         <div class="container ">
-            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            <div class="col-md-3"><div id="sidenav" class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
         <li class="main active"><a href="#contributing-to-rex-ray">Contributing to REX-Ray</a></li>
         
-            <li><a href="#reporting-an-issue">Reporting an Issue</a></li>
+            <li><a href="#reporting-an-issue">Reporting an Issue</a>
+            
+            </li>
         
-            <li><a href="#testing-the-development-version">Testing the Development Version</a></li>
+            <li><a href="#testing-the-development-version">Testing the Development Version</a>
+            
+            </li>
         
-            <li><a href="#installing-for-development">Installing for Development</a></li>
+            <li><a href="#installing-for-development">Installing for Development</a>
+            
+            </li>
         
-            <li><a href="#running-the-tests">Running the tests</a></li>
+            <li><a href="#running-the-tests">Running the tests</a>
+            
+            </li>
         
-            <li><a href="#submitting-pull-requests">Submitting Pull Requests</a></li>
+            <li><a href="#submitting-pull-requests">Submitting Pull Requests</a>
+            
+            </li>
         
     
     </ul>
@@ -257,9 +350,12 @@ most likely need to have tests and documentation if it is a new feature.</p></di
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
+        <!--
         <script src="../../.themes/yeti/js/base.js"></script>
         <script src="../../.themes/yeti/js/bootstrap-3.0.3.min.js"></script>
         <script src="../../.themes/yeti/js/highlight.pack.js"></script>
         <script src="../../.themes/yeti/js/jquery-1.10.2.min.js"></script>
+        -->
     </body>
+
 </html>

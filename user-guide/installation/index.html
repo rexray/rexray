@@ -15,13 +15,9 @@
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
-        <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/emccode-font.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/highlight.css" rel="stylesheet">
+        <link href="../../css/emccode-font.css" rel="stylesheet">
+        <link href="../../css/hX.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -30,6 +26,14 @@
         <![endif]-->
 
         
+
+        <!-- scroll fix -->
+        <script>
+            //var shiftWindow = function() { scrollBy(0, -40) };
+            //if (location.hash) shiftWindow();
+            //window.addEventListener("hashchange", shiftWindow);
+        </script>
+
     </head>
 
     <body>
@@ -70,57 +74,113 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li class="active">
                             <a href="./">Installation</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../config/">Configuration</a>
                         </li>
                     
-                        
-                        <li role="separator" class="divider"></li>
-                        
                         <li >
-                            <a href="../ec2/">Amazon EC2</a>
+                            <a href="../storage-providers/">Storage Providers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../openstack/">OpenStack</a>
+                            <a href="../schedulers/">Schedulers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../rackspace/">Rackspace</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../scaleio/">ScaleIO</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../xtremio/">XtremIO</a>
-                        </li>
-                    
-                        
-                        <li role="separator" class="divider"></li>
-                        
-                        <li >
-                            <a href="../docker/">Docker</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../mesos/">Mesos</a>
+                            <a href="../application/">Applications</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">User Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li class="active">
+                            <a href="./">Installation</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../config/">Configuration</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../storage-providers/">Storage Providers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../schedulers/">Schedulers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../application/">Applications</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developers Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+                <!--
+                smart menus
+                <li><a href="#">Developers Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             
@@ -128,23 +188,46 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="../../about/contributing/">Contributing</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../../about/license/">License</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../../about/release-notes/">Release Notes</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">About <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../about/contributing/">Contributing</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../about/license/">License</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../about/release-notes/">Release Notes</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             </ul>
@@ -181,16 +264,62 @@
     </div>
 </div>
         <div class="container ">
-            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            <div class="col-md-3"><div id="sidenav" class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
         <li class="main active"><a href="#installation">Installation</a></li>
         
-            <li><a href="#install-via-curl">Install via curl</a></li>
+            <li><a href="#overview">Overview</a>
+            
+            </li>
         
-            <li><a href="#install-a-pre-built-binary">Install a pre-built binary</a></li>
+            <li><a href="#manual-installs">Manual Installs</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#install-via-curl">Install via curl</a><!--
+                -->
+                </li>
+                
+                <li><a href="#install-a-pre-built-binary">Install a pre-built binary</a><!--
+                -->
+                </li>
+                
+                <li><a href="#build-and-install-from-source">Build and install from source</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
-            <li><a href="#build-and-install-from-source">Build and install from source</a></li>
+            <li><a href="#automated-installs">Automated Installs</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#ansible">Ansible</a><!--
+                -->
+                </li>
+                
+                <li><a href="#aws-cloudformation">AWS CloudFormation</a><!--
+                -->
+                </li>
+                
+                <li><a href="#docker-machine-virtualbox">Docker Machine (VirtualBox)</a><!--
+                -->
+                </li>
+                
+                <li><a href="#openstack-heat">OpenStack Heat</a><!--
+                -->
+                </li>
+                
+                <li><a href="#vagrant">Vagrant</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
     
     </ul>
@@ -200,26 +329,48 @@
 <h1 id="installation">Installation</h1>
 <p>Getting the bits, bit by bit</p>
 <hr />
-<h2 id="install-via-curl">Install via curl</h2>
-<p>The following command will download the most recent, stable build of <code>REX-Ray</code> and install it to <code>/usr/bin/rexray.</code> On Linux systems <code>REX-Ray</code> will also be registered as either a SystemD or SystemV service.</p>
-<pre><code class="bash">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+<h2 id="overview">Overview</h2>
+<p>There are several different methods available for installing <code>REX-Ray</code>.</p>
+<h2 id="manual-installs">Manual Installs</h2>
+<p>Manual installations are in contrast to batch, automated installations.</p>
+<h3 id="install-via-curl">Install via curl</h3>
+<p>The following command will download the most recent, stable build of <code>REX-Ray</code>
+and install it to <code>/usr/bin/rexray.</code> On Linux systems <code>REX-Ray</code> will also be
+registered as either a SystemD or SystemV service.</p>
+<pre><code class="shell">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
 </code></pre>
 
-<h2 id="install-a-pre-built-binary">Install a pre-built binary</h2>
+<h3 id="install-a-pre-built-binary">Install a pre-built binary</h3>
 <p>There are also pre-built binaries available for the various release types.</p>
-<h3 id="unstable"><a href="https://dl.bintray.com/emccode/rexray/unstable/latest/"> <img alt="Download" src="https://api.bintray.com/packages/emccode/rexray/unstable/images/download.svg" /> </a> Unstable</h3>
-<p>The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.</p>
-<h3 id="staged"><a href="https://dl.bintray.com/emccode/rexray/staged/latest/"> <img alt="Download" src="https://api.bintray.com/packages/emccode/rexray/staged/images/download.svg" /> </a> Staged</h3>
-<p>The most up-to-date, release candidate REX-Ray binaries.</p>
-<h3 id="stable"><a href="https://dl.bintray.com/emccode/rexray/stable/latest/"> <img alt="Download" src="https://api.bintray.com/packages/emccode/rexray/stable/images/download.svg" /> </a> Stable</h3>
-<p>The most up-to-date, stable REX-Ray binaries.</p>
-<h2 id="build-and-install-from-source">Build and install from source</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://dl.bintray.com/emccode/rexray/unstable/latest/">Unstable</a></td>
+<td>The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.</td>
+</tr>
+<tr>
+<td><a href="https://dl.bintray.com/emccode/rexray/staged/latest/">Staged</a></td>
+<td>The most up-to-date, release candidate REX-Ray binaries.</td>
+</tr>
+<tr>
+<td><a href="../(https://dl.bintray.com/emccode/rexray/stable/latest/)">Stable</a></td>
+<td>The most up-to-date, stable REX-Ray binaries.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="build-and-install-from-source">Build and install from source</h3>
 <p><code>REX-Ray</code> is also fairly simple to build from source, especially if you have <code>Docker</code> installed:</p>
-<pre><code class="bash">SRC=$(mktemp -d 2&gt; /dev/null || mktemp -d -t rexray 2&gt; /dev/null) &amp;&amp; cd $SRC &amp;&amp; docker run --rm -it -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c &quot;git clone https://github.com/emccode/rexray.git . &amp;&amp; make build-all”
+<pre><code class="shell">SRC=$(mktemp -d 2&gt; /dev/null || mktemp -d -t rexray 2&gt; /dev/null) &amp;&amp; cd $SRC &amp;&amp; docker run --rm -it -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c &quot;git clone https://github.com/emccode/rexray.git . &amp;&amp; make build-all”
 </code></pre>
 
 <p>If you'd prefer to not use <code>Docker</code> to build <code>REX-Ray</code> then all you need is Go 1.5:</p>
-<pre><code class="bash"># clone the rexray repo
+<pre><code class="shell"># clone the rexray repo
 git clone https://github.com/emccode/rexray.git
 
 # change directories into the freshly-cloned repo
@@ -231,20 +382,170 @@ make build-all
 
 <p>After either of the above methods for building <code>REX-Ray</code> there should be a <code>.bin</code> directory in the current directory, and inside <code>.bin</code> will be binaries for Linux-i386, Linux-x86-64,
 and Darwin-x86-64.</p>
-<pre><code class="bash">[0]akutz@poppy:tmp.SJxsykQwp7$ ls .bin/*/rexray
+<pre><code class="shell">[0]akutz@poppy:tmp.SJxsykQwp7$ ls .bin/*/rexray
 -rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Darwin-x86_64/rexray*
 -rwxr-xr-x. 1 root 12M Sep 17 10:36 .bin/Linux-i386/rexray*
 -rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Linux-x86_64/rexray*
-</code></pre></div>
+</code></pre>
+
+<h2 id="automated-installs">Automated Installs</h2>
+<p>Because REX-Ray is simple to install using the <code>curl</code> script, installation
+using configuration management tools is relatively easy as well. However,
+there are a few areas that may prove to be tricky, such as writing the
+configuration file.</p>
+<p>This section provides examples of automated installations using common
+configuration management and orchestration tools.</p>
+<h3 id="ansible">Ansible</h3>
+<p>With Ansible, installing the latest REX-Ray binaries can be accomplished by
+including the <code>codenrhoden.rexray</code> role from Ansible Galaxy.  The role accepts
+all the necessary variables to properly fill out your <code>config.yml</code> file.</p>
+<p>Install the role from Galaxy:</p>
+<pre><code class="shell">ansible-galaxy install codenrhoden.rexray
+</code></pre>
+
+<p>Example playbook for installing REX-Ray on GCE Docker hosts:</p>
+<pre><code class="yaml">- hosts: gce_docker_hosts
+  roles:
+  - { role: codenrhoden.rexray,
+      rexray_service: true,
+      rexray_storage_drivers: [gce],
+      rexray_gce_keyfile: &quot;/opt/gce_keyfile&quot; }
+</code></pre>
+
+<p>Run the playbook:</p>
+<pre><code class="shell">ansible-playbook -i &lt;inventory&gt; playbook.yml
+</code></pre>
+
+<h3 id="aws-cloudformation">AWS CloudFormation</h3>
+<p>With CloudFormation, the installation of the latest Docker and REX-Ray binaries
+can be passed to the orchestrator using the 'UserData' property in a
+CloudFormation template. While the payload could also be provided as raw user
+data via the AWS GUI, it would not sustain scalable automation.</p>
+<pre><code class="json">&quot;Properties&quot;: {
+  &quot;UserData&quot;: {
+    &quot;Fn::Base64&quot;: {
+      &quot;Fn::Join&quot;: [&quot;&quot;, [
+        &quot;#!/bin/bash -xe\n&quot;,
+        &quot;apt-get update\n&quot;,
+        &quot;apt-get -y install python-setuptools\n&quot;,
+        &quot;easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n&quot;,
+        &quot;ln -s /usr/local/lib/python2.7/dist-packages/aws_cfn_bootstrap-1.4-py2.7.egg/init/ubuntu/cfn-hup /etc/init.d/cfn-hup\n&quot;,
+        &quot;chmod +x /etc/init.d/cfn-hup\n&quot;,
+        &quot;update-rc.d cfn-hup defaults\n &quot;,
+        &quot;service cfn-hup start\n&quot;,
+        &quot;/usr/local/bin/cfn-init --stack &quot;, {
+          &quot;Ref&quot;: &quot;AWS::StackName&quot;
+        }, &quot; --resource RexrayInstance &quot;, &quot; --configsets InstallAndRun --region &quot;, {
+          &quot;Ref&quot;: &quot;AWS::Region&quot;
+        }, &quot;\n&quot;,
+
+        &quot;# Install the latest Docker..\n&quot;,
+        &quot;/usr/bin/curl -o /tmp/install-docker.sh https://get.docker.com/\n&quot;,
+        &quot;chmod +x /tmp/install-docker.sh\n&quot;,
+        &quot;/tmp/install-docker.sh\n&quot;,
+
+        &quot;# add the ubuntu user to the docker group..\n&quot;,
+        &quot;/usr/sbin/usermod -G docker ubuntu\n&quot;,
+
+        &quot;# Install the latest REX-ray\n&quot;,
+        &quot;/usr/bin/curl -ssL -o /tmp/install-rexray.sh https://dl.bintray.com/emccode/rexray/install\n&quot;,
+        &quot;chmod +x /tmp/install-rexray.sh\n&quot;,
+        &quot;/tmp/install-rexray.sh\n&quot;,
+        &quot;chgrp docker /etc/rexray/config.yml\n&quot;,
+        &quot;reboot\n&quot;
+      ]]
+    }
+  }
+}
+</code></pre>
+
+<h3 id="docker-machine-virtualbox">Docker Machine (VirtualBox)</h3>
+<p>SSH can be used to remotely deploy REX-Ray to a Docker Machine. While the
+following example used VirtualBox as the underlying storage platform, the
+provided <code>config.yml</code> file <em>could</em> be modified to use any of the supported
+drivers.</p>
+<ol>
+<li>
+<p>SSH into the Docker machine and install REX-Ray.</p>
+<pre><code>$ docker-machine ssh testing1 \
+"curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -"
+</code></pre>
+</li>
+<li>
+<p>Install the udev extras package. This step is only required for versions of
+   boot2docker older than 1.10.</p>
+<pre><code>$ docker-machine ssh testing1 \
+"wget http://tinycorelinux.net/6.x/x86_64/tcz/udev-extra.tcz \
+&amp;&amp; tce-load -i udev-extra.tcz &amp;&amp; sudo udevadm trigger"
+</code></pre>
+</li>
+<li>
+<p>Create a basic REX-Ray configuration file inside the Docker machine.</p>
+<p><strong>Note</strong>: It is recommended to replace the <code>volumePath</code> parameter with the
+local path VirtualBox uses to store its virtual media disk files.</p>
+<pre><code>$ docker-machine ssh testing1 \
+    "sudo tee -a /etc/rexray/config.yml &lt;&lt; EOF
+    rexray:
+      storageDrivers:
+      - virtualbox
+      volume:
+        mount:
+          preempt: false
+    virtualbox:
+      endpoint: http://10.0.2.2:18083
+      tls: false
+      volumePath: /Users/YourUser/VirtualBox Volumes
+      controllerName: SATA
+    "
+</code></pre>
+</li>
+<li>
+<p>Finally, start the <code>REX-Ray</code> service inside the Docker machine.</p>
+<pre><code>$ docker-machine ssh testing1 "sudo rexray start"
+</code></pre>
+</li>
+</ol>
+<h3 id="openstack-heat">OpenStack Heat</h3>
+<p>Using OpenStack Heat, in the HOT template format (yaml):</p>
+<pre><code class="yaml">resources:
+  my_server:
+    type: OS::Nova::Server
+    properties:
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            /usr/bin/curl -o /tmp/install-docker.sh https://get.docker.com
+            chmod +x /tmp/install-docker.sh
+            /tmp/install-docker.sh
+            /usr/sbin/usermod -G docker ubuntu
+            /usr/bin/curl -ssL -o /tmp/install-rexray.sh https://dl.bintray.com/emccode/rexray/install
+            chmod +x /tmp/install-rexray.sh
+            /tmp/install-rexray.sh
+            chgrp docker /etc/rexray/config.yml
+          params:
+            dummy: &quot;&quot;
+</code></pre>
+
+<h3 id="vagrant">Vagrant</h3>
+<p>Using Vagrant is a great option to deploy pre-configured <code>REX-Ray</code> nodes,
+including Docker, using the VirtualBox driver. All volume requests are handled
+using VirtualBox's Virtual Media.</p>
+<p>A Vagrant environment and instructions using it are provided
+<a href="https://github.com/emccode/vagrant/tree/master/rexray">here</a>.</p></div>
         </div>
 
         <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
+        <!--
         <script src="../../.themes/yeti/js/base.js"></script>
         <script src="../../.themes/yeti/js/bootstrap-3.0.3.min.js"></script>
         <script src="../../.themes/yeti/js/highlight.pack.js"></script>
         <script src="../../.themes/yeti/js/jquery-1.10.2.min.js"></script>
+        -->
     </body>
+
 </html>

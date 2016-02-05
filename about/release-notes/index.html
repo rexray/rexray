@@ -15,13 +15,9 @@
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
-        <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/base.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/emccode-font.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../.themes/yeti/css/highlight.css" rel="stylesheet">
+        <link href="../../css/emccode-font.css" rel="stylesheet">
+        <link href="../../css/hX.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -30,6 +26,14 @@
         <![endif]-->
 
         
+
+        <!-- scroll fix -->
+        <script>
+            //var shiftWindow = function() { scrollBy(0, -40) };
+            //if (location.hash) shiftWindow();
+            //window.addEventListener("hashchange", shiftWindow);
+        </script>
+
     </head>
 
     <body>
@@ -70,57 +74,113 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="../../user-guide/installation/">Installation</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../../user-guide/config/">Configuration</a>
                         </li>
                     
-                        
-                        <li role="separator" class="divider"></li>
-                        
                         <li >
-                            <a href="../../user-guide/ec2/">Amazon EC2</a>
+                            <a href="../../user-guide/storage-providers/">Storage Providers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../../user-guide/openstack/">OpenStack</a>
+                            <a href="../../user-guide/schedulers/">Schedulers</a>
                         </li>
                     
-                        
                         <li >
-                            <a href="../../user-guide/rackspace/">Rackspace</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../../user-guide/scaleio/">ScaleIO</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../../user-guide/xtremio/">XtremIO</a>
-                        </li>
-                    
-                        
-                        <li role="separator" class="divider"></li>
-                        
-                        <li >
-                            <a href="../../user-guide/docker/">Docker</a>
-                        </li>
-                    
-                        
-                        <li >
-                            <a href="../../user-guide/mesos/">Mesos</a>
+                            <a href="../../user-guide/application/">Applications</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">User Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/installation/">Installation</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/config/">Configuration</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/storage-providers/">Storage Providers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/schedulers/">Schedulers</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/application/">Applications</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developers Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+                <!--
+                smart menus
+                <li><a href="#">Developers Guide <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/project-guidelines/">Project Guidelines</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/build-reference/">Build Reference</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../dev-guide/release-process/">Release Process</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             
@@ -128,23 +188,46 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        
                         <li >
                             <a href="../contributing/">Contributing</a>
                         </li>
                     
-                        
                         <li >
                             <a href="../license/">License</a>
                         </li>
                     
-                        
                         <li class="active">
                             <a href="./">Release Notes</a>
                         </li>
                     
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">About <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    
+                    
+                        <li >
+                            <a href="../contributing/">Contributing</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../license/">License</a>
+                        </li>
+                    
+                    
+                    
+                        <li class="active">
+                            <a href="./">Release Notes</a>
+                        </li>
+                    
+                    
+                    </ul>
+                </li>
+                -->
             
             
             </ul>
@@ -181,16 +264,118 @@
     </div>
 </div>
         <div class="container ">
-            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            <div class="col-md-3"><div id="sidenav" class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
         <li class="main active"><a href="#release-notes">Release Notes</a></li>
         
-            <li><a href="#upgrading">Upgrading</a></li>
+            <li><a href="#upgrading">Upgrading</a>
+            
+            </li>
         
-            <li><a href="#version-021-2015-10-27">Version 0.2.1 (2015-10-27)</a></li>
+            <li><a href="#version-031-2015-12-30">Version 0.3.1 (2015-12-30)</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#new-features">New Features</a><!--
+                -->
+                </li>
+                
+                <li><a href="#enhancements">Enhancements</a><!--
+                -->
+                </li>
+                
+                <li><a href="#milestone-issues">Milestone Issues</a><!--
+                -->
+                </li>
+                
+                <li><a href="#downloads">Downloads</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
-            <li><a href="#version-020-2015-09-30">Version 0.2.0 (2015-09-30)</a></li>
+            <li><a href="#version-030-2015-12-08">Version 0.3.0 (2015-12-08)</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#new-features_1">New Features</a><!--
+                -->
+                </li>
+                
+                <li><a href="#enhancements_1">Enhancements</a><!--
+                -->
+                </li>
+                
+                <li><a href="#tweaks">Tweaks</a><!--
+                -->
+                </li>
+                
+                <li><a href="#pre-emption-support">Pre-Emption Support</a><!--
+                -->
+                </li>
+                
+                <li><a href="#milestone-issues_1">Milestone Issues</a><!--
+                -->
+                </li>
+                
+                <li><a href="#downloads_1">Downloads</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
+        
+            <li><a href="#version-021-2015-10-27">Version 0.2.1 (2015-10-27)</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#new-features_2">New Features</a><!--
+                -->
+                </li>
+                
+                <li><a href="#enhancements_2">Enhancements</a><!--
+                -->
+                </li>
+                
+                <li><a href="#tweaks_1">Tweaks</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
+        
+            <li><a href="#version-020-2015-09-30">Version 0.2.0 (2015-09-30)</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#installation-sysv-systemd-support">Installation, SysV, SystemD Support</a><!--
+                -->
+                </li>
+                
+                <li><a href="#single-service">Single Service</a><!--
+                -->
+                </li>
+                
+                <li><a href="#admin-module-http-json-api">Admin Module &amp; HTTP JSON API</a><!--
+                -->
+                </li>
+                
+                <li><a href="#command-line-interface">Command Line Interface</a><!--
+                -->
+                </li>
+                
+                <li><a href="#travis-ci-support">Travis-CI Support</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
         
     
     </ul>
@@ -206,21 +391,67 @@
 <p>You can determine your currently installed version using <code>rexray version</code>:</p>
 <pre><code>$ rexray version
 Binary: /usr/local/bin/rexray
-SemVer: 0.2.0
-OsArch: Darwin-x86_64
-Branch: v0.2.0
-Commit: b018a3be05b54a110728d3669213e3d8f65de197
-Formed: Wed, 30 Sep 2015 16:29:15 CDT
+SemVer: 0.2.1
+OsArch: Linux-x86_64
+Branch: master
+Commit: 36ccc425faeab49d792eda4851e3d72a85744874
+Formed: Tue, 27 Oct 2015 12:54:19 CDT
 </code></pre>
+<h2 id="version-031-2015-12-30">Version 0.3.1 (2015-12-30)</h2>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li>Support for VirtualBox (<a href="https://github.com/emccode/rexray/issues/209">#209</a>)</li>
+<li>Added Developer's Guide (<a href="https://github.com/emccode/rexray/issues/226">#226</a>)</li>
+</ul>
+<h3 id="enhancements">Enhancements</h3>
+<ul>
+<li>Mount/Unmount Accounting (<a href="https://github.com/emccode/rexray/issues/212">#212</a>)</li>
+<li>Support for Sub-Path Volume Mounts / Permissions (<a href="https://github.com/emccode/rexray/issues/215">#215</a>)</li>
+</ul>
+<h3 id="milestone-issues">Milestone Issues</h3>
+<p>This release also includes many other small enhancements and bug fixes. For a
+complete list click <a href="https://github.com/emccode/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.1">here</a>.</p>
+<h3 id="downloads">Downloads</h3>
+<p>Click <a href="https://dl.bintray.com/emccode/rexray/stable/0.3.1/">here</a> for the 0.3.1
+binaries.</p>
+<h2 id="version-030-2015-12-08">Version 0.3.0 (2015-12-08)</h2>
+<h3 id="new-features_1">New Features</h3>
+<ul>
+<li>Pre-Emption support (<a href="https://github.com/emccode/rexray/issues/190">#190</a>)</li>
+<li>Support for VMAX (<a href="https://github.com/emccode/rexray/issues/197">#197</a>)</li>
+<li>Support for Isilon (<a href="https://github.com/emccode/rexray/issues/198">#198</a>)</li>
+<li>Support for Google Compute Engine (GCE) (<a href="https://github.com/emccode/rexray/issues/194">#194</a>)</li>
+</ul>
+<h3 id="enhancements_1">Enhancements</h3>
+<ul>
+<li>Added driver example configurations (<a href="https://github.com/emccode/rexray/issues/201">#201</a>)</li>
+<li>New configuration file format (<a href="https://github.com/emccode/rexray/issues/188">#188</a>)</li>
+</ul>
+<h3 id="tweaks">Tweaks</h3>
+<ul>
+<li>Chopped flags <code>--rexrayLogLevel</code> becomes <code>logLevel</code> (<a href="https://github.com/emccode/rexray/issues/196">#196</a>)</li>
+</ul>
+<h3 id="pre-emption-support">Pre-Emption Support</h3>
+<p>Pre-Emption is an important feature when using persistent volumes and container
+schedulers.  Without pre-emption, the default behavior of the storage drivers is
+to deny the attaching operation if the volume is already mounted elsewhere.<br />
+If it is desired that a host should be able to pre-empt from other hosts, then
+this feature can be used to enable any host to pre-empt from another.</p>
+<h3 id="milestone-issues_1">Milestone Issues</h3>
+<p>This release also includes many other small enhancements and bug fixes. For a
+complete list click <a href="https://github.com/emccode/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.0">here</a>.</p>
+<h3 id="downloads_1">Downloads</h3>
+<p>Click <a href="https://dl.bintray.com/emccode/rexray/stable/0.3.0/">here</a> for the 0.3.0
+binaries.</p>
 <h2 id="version-021-2015-10-27">Version 0.2.1 (2015-10-27)</h2>
 <p>REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,
 and continued foundation changes for future features.</p>
-<h3 id="new-features">New Features</h3>
+<h3 id="new-features_2">New Features</h3>
 <ul>
 <li>Support for OpenStack (<a href="https://github.com/emccode/rexray/issues/111">#111</a>)</li>
 <li>Create volume from volume using existing settings (<a href="https://github.com/emccode/rexray/issues/129">#129</a>)</li>
 </ul>
-<h3 id="enhancements">Enhancements</h3>
+<h3 id="enhancements_2">Enhancements</h3>
 <ul>
 <li>A+ <a href="http://goreportcard.com/report/emccode/rexray">GoReport Card</a></li>
 <li>A+ <a href="https://coveralls.io/github/emccode/rexray?branch=master">Code Coverage</a></li>
@@ -229,7 +460,7 @@ and continued foundation changes for future features.</p>
 <li>New documentation at http://rexray.readthedocs.org (<a href="https://github.com/emccode/rexray/issues/145">#145</a>)</li>
 <li>More foundation updates</li>
 </ul>
-<h3 id="tweaks">Tweaks</h3>
+<h3 id="tweaks_1">Tweaks</h3>
 <ul>
 <li>Command aliases for <code>get</code> and <code>delete</code> - <code>ls</code> and <code>rm</code> (<a href="https://github.com/emccode/rexray/issues/107">#107</a>)</li>
 </ul>
@@ -406,9 +637,12 @@ environment variable <code>GO15VENDOREXPERIMENT</code> to <code>1</code>.</p></d
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
+        <!--
         <script src="../../.themes/yeti/js/base.js"></script>
         <script src="../../.themes/yeti/js/bootstrap-3.0.3.min.js"></script>
         <script src="../../.themes/yeti/js/highlight.pack.js"></script>
         <script src="../../.themes/yeti/js/jquery-1.10.2.min.js"></script>
+        -->
     </body>
+
 </html>

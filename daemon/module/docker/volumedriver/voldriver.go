@@ -56,8 +56,11 @@ func newModule(c *module.Config) (module.Module, error) {
 
 	c.Address = host
 
+	r := core.New(c.Config)
+	r.Context = c.Name
+
 	return &mod{
-		r:    core.New(c.Config),
+		r:    r,
 		name: c.Name,
 		desc: c.Description,
 		addr: host,

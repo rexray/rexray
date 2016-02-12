@@ -13,6 +13,7 @@ type RexRay struct {
 	OS      OSDriverManager
 	Volume  VolumeDriverManager
 	Storage StorageDriverManager
+	Context string
 	drivers map[string]Driver
 }
 

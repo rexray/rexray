@@ -16,6 +16,7 @@ import (
 )
 
 const providerName = "ScaleIO"
+const cc = 31
 
 // The ScaleIO storage driver.
 type driver struct {
@@ -197,8 +198,18 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	return BlockDevices, nil
 }
 
+func shrink(n string) string {
+	if len(n) > cc {
+		return n[:cc]
+	}
+	return n
+}
+
 func (d *driver) getVolume(
 	volumeID, volumeName string, getSnapshots bool) ([]*types.Volume, error) {
+
+	volumeName = shrink(volumeName)
+
 	volumes, err := d.client.GetVolume("", volumeID, "", volumeName, getSnapshots)
 	if err != nil {
 		return nil, err
@@ -448,6 +459,8 @@ func (d *driver) createVolume(
 	notUsed bool,
 	volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*types.VolumeResp, error) {
+
+	volumeName = shrink(volumeName)
 
 	fields := eff(map[string]interface{}{
 		"volumeID":         volumeID,

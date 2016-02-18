@@ -324,13 +324,10 @@ The `availabilityZone` field represents the ScaleIO Protection Domain.
 - Edit the `/opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties`
 file and append the proper MDM IP addresses to the following `mdm.ip.addresses=`
 parameter.
-- Update the `gw_password` parameter and run the following command.
-```bash
-java -jar /opt/emc/scaleio/gateway/webapps/ROOT/resources/install-CLI.jar \
-  --reset_password 'gw_password' \
-  --config_file /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties
-```
+- By default the password is the same as your administrative MDM password.
 - Start the gateway `service scaleio-gateway start`.
+ - With 1.32 we have noticed a restart of the gateway may be necessary as well
+after an initial install with `service scaleio-gateway restart`. 
 
 ### Activating the Driver
 To activate the ScaleIO driver please follow the instructions for

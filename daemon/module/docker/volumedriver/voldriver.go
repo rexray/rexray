@@ -56,7 +56,16 @@ func newModule(c *module.Config) (module.Module, error) {
 
 	c.Address = host
 
-	r := core.New(c.Config)
+	cc, err := c.Config.Copy()
+	if err != nil {
+		return nil, err
+	}
+
+	if !cc.GetBool("rexray.volume.path.disableCache") {
+		cc.Set("rexray.volume.path.cache", true)
+	}
+
+	r := core.New(cc)
 	r.Context = c.Name
 
 	return &mod{

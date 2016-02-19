@@ -688,6 +688,11 @@ func (d *driver) get(volumeName string) ([]core.VolumeMap, error) {
 
 	var volList []core.VolumeMap
 
+	allMounts, err := d.r.OS.GetMounts("", "")
+	if err != nil {
+		return nil, err
+	}
+
 Volumes:
 	for _, volume := range volumes {
 		if len(volume.Attachments) == 0 {
@@ -711,11 +716,6 @@ Volumes:
 				"Name": volume.Name,
 			})
 			continue Volumes
-		}
-
-		allMounts, err := d.r.OS.GetMounts("", "")
-		if err != nil {
-			return nil, err
 		}
 
 		var mounts []*mount.Info

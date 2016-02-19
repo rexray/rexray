@@ -744,7 +744,23 @@ sharing volumes, it is recommended that you reset the service along with the
 accompanying container runtime (if this setting is false) to ensure they are
 synchronized.  
 
-#### Volume Path (0.3.1)
+#### Volume Path Disable Cache (0.3.2)
+In order to minimize the impact to return `Path` requests, a caching
+capability has been introduced by default. A `List` request will cause the
+returned volumes and paths to be evaluated and those with active mounts are
+recorded. Subsequent `Path` requests for volumes that have no recorded mounts
+will not result in active path lookups. Once the mount counter is initialized or
+a `List` operation occurs where a mount is recorded, the volume will be looked
+up for future `Path` operations.
+
+```yaml
+rexray:
+  volume:
+    path:
+      disableCache: true
+```
+
+#### Volume Root Path (0.3.1)
 When volumes are mounted there can be an additional path that is specified to
 be created and passed as the valid mount point.  This is required for certain
 applications that do not want to place data from the root of a mount point.  

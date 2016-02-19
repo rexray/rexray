@@ -62,17 +62,22 @@ func newDriver() core.Driver {
 func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
+	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
+		"keyFile":    d.keyFile(),
+	})
+
 	var err error
 
 	if d.zone, err = getCurrentZone(); err != nil {
-		return goof.WithError("error getting current zone", err)
+		return goof.WithFieldsE(fields, "error getting current zone", err)
 	}
 	if d.project, err = getCurrentProjectID(); err != nil {
-		return goof.WithError("error getting current project ID", err)
+		return goof.WithFieldsE(fields, "error getting current project ID", err)
 	}
-	serviceAccountJSON, err := ioutil.ReadFile(d.r.Config.GetString("gce.keyfile"))
+	serviceAccountJSON, err := ioutil.ReadFile(d.keyFile())
 	if err != nil {
-		log.WithField("provider", providerName).Fatalf("Could not read service account credentials file, %s => {%s}", d.r.Config.GetString("gce.keyfile"), err)
+		log.WithFields(fields).Fatalf("Could not read service account credentials file, %s => {%s}", d.keyFile(), err)
 		return err
 	}
 
@@ -80,24 +85,24 @@ func (d *driver) Init(r *core.RexRay) error {
 		compute.ComputeScope,
 	)
 	if err != nil {
-		goof.WithFieldE("provider", providerName, "could not create JWT Config From JSON", err)
+		log.WithFields(fields).Fatalf("could not create JWT Config From JSON => {%s}", err)
 		return err
 	}
 
 	client, err := compute.New(config.Client(context.Background()))
 	if err != nil {
-		log.WithField("provider", providerName).Fatalf("Could not create compute client => {%s}", err)
+		log.WithFields(fields).Fatalf("Could not create compute client => {%s}", err)
 		return err
 	}
 
 	d.client = client
 	instanceID, err := getCurrentInstanceID()
 	if err != nil {
-		log.WithField("provider", providerName).Fatalf("Could not get current  instance => {%s}", err)
+		log.WithFields(fields).Fatalf("Could not get current  instance => {%s}", err)
 		return err
 	}
 	d.currentInstanceID = instanceID
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 	return nil
 }
 
@@ -145,7 +150,6 @@ func (d *driver) Name() string {
 }
 
 func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
-	log.WithField("provider", providerName).Debug("GetVolumeMapping")
 
 	diskMap := make(map[string]*compute.Disk)
 	disks, err := d.client.Disks.List(d.project, d.zone).Do()
@@ -198,7 +202,6 @@ func (d *driver) getInstances() (*compute.InstanceList, error) {
 }
 
 func (d *driver) GetInstance() (*core.Instance, error) {
-	log.WithField("provider", providerName).Debug("GetInstance")
 
 	instance, err := d.getInstance()
 	if err != nil {
@@ -217,8 +220,6 @@ func (d *driver) CreateSnapshot(
 	runAsync bool,
 	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
-	log.WithField("provider", providerName).Debug("CreateSnapshot")
-
 	volumes, err := d.GetVolume(volumeID, "")
 
 	if len(volumes) == 0 {
@@ -233,12 +234,6 @@ func (d *driver) CreateSnapshot(
 	if err != nil {
 		return nil, err
 	}
-
-	log.WithFields(log.Fields{
-		"runAsync":     runAsync,
-		"snapshotName": snapshotName,
-		"volumeId":     volumeID,
-		"description":  description}).Debug("created snapshot")
 
 	return snapshot, nil
 
@@ -267,8 +262,6 @@ func (d *driver) createSnapshot(runAsync bool, snapshotName string, volume *core
 
 func (d *driver) GetSnapshot(
 	volumeID, snapshotID, snapshotName string) ([]*core.Snapshot, error) {
-
-	log.WithField("provider", providerName).Debug("GetSnapshot")
 
 	var diskList *compute.DiskList
 	if volumeID != "" {
@@ -319,7 +312,6 @@ func (d *driver) getSnapshot(volumeID, snapshotID, snapshotName string) (*comput
 }
 
 func (d *driver) RemoveSnapshot(snapshotID string) error {
-	log.WithField("provider", providerName).Debug("RemoveSnapshot :%s", snapshotID)
 	if _, err := d.client.Snapshots.Delete(d.project, snapshotID).Do(); err != nil {
 		return goof.WithError("problem removing snapshot", err)
 	}
@@ -378,14 +370,6 @@ OpLoop:
 func (d *driver) CreateVolume(
 	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
-	log.WithFields(log.Fields{
-		"provider":         providerName,
-		"volumeName":       volumeName,
-		"volumeID":         volumeID,
-		"snapshotID":       snapshotID,
-		"volumeType":       volumeType,
-		"size":             size,
-		"availabilityZone": availabilityZone}).Debug("CreateVolume")
 
 	if availabilityZone == "" {
 		availabilityZone = d.zone
@@ -487,7 +471,6 @@ func (d *driver) getVolume(volumeName, volumeID string) (*compute.DiskList, erro
 func (d *driver) GetVolume(
 	volumeID, volumeName string) ([]*core.Volume, error) {
 
-	log.WithField("provider", providerName).Debugf("GetVolume :%s %s", volumeID, volumeName)
 	instanceList, err := d.getInstances()
 	if err != nil {
 		return nil, err
@@ -555,7 +538,7 @@ func (d *driver) convertGCEAttachedDisk(instanceID string, disk *compute.Attache
 
 func (d *driver) GetVolumeAttach(
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
-	log.WithField("provider", providerName).Debugf("GetVolumeAttach :%s %s", volumeID, instanceID)
+
 	query := d.client.Instances.List(d.project, d.zone)
 	if instanceID != "" {
 		query.Filter(fmt.Sprintf("name eq '%s'", instanceID))
@@ -579,7 +562,6 @@ func (d *driver) GetVolumeAttach(
 }
 
 func (d *driver) RemoveVolume(volumeID string) error {
-	log.WithField("provider", providerName).Debugf("RemoveVolume :%s", volumeID)
 	if _, err := d.client.Disks.Delete(d.project, d.zone, volumeID).Do(); err != nil {
 		return goof.WithError("problem removing volume", err)
 	}
@@ -589,8 +571,6 @@ func (d *driver) RemoveVolume(volumeID string) error {
 func (d *driver) AttachVolume(
 	runAsync bool,
 	volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
-
-	log.WithField("provider", providerName).Debugf("AttachVolume %s %s", volumeID, instanceID)
 
 	if volumeID == "" {
 		return nil, errors.ErrMissingVolumeID
@@ -650,6 +630,7 @@ func (d *driver) DetachVolume(
 	volumeID, instanceID string, force bool) error {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"runAsync":   runAsync,
 		"volumeId":   volumeID,
 		"instanceId": instanceID,
@@ -689,8 +670,11 @@ func (d *driver) DetachVolume(
 func (d *driver) CopySnapshot(runAsync bool,
 	volumeID, snapshotID, snapshotName, destinationSnapshotName,
 	destinationRegion string) (*core.Snapshot, error) {
-	log.WithField("provider", providerName).Debug("CopySnapshot")
 	return nil, nil
+}
+
+func (d *driver) keyFile() string {
+	return d.r.Config.GetString("gce.keyfile")
 }
 
 func configRegistration() *gofig.Registration {

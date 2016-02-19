@@ -86,9 +86,10 @@ func (r *odm) GetMounts(
 	deviceName, mountPoint string) (MountInfoArray, error) {
 	for _, d := range r.drivers {
 		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
 			"deviceName": deviceName,
 			"mountPoint": mountPoint,
-			"driverName": d.Name()}).Info("getting mounts")
+			"driverName": d.Name()}).Info("odm.GetMounts")
 		mounts, err := d.GetMounts(deviceName, mountPoint)
 		if err != nil {
 			return nil, err
@@ -101,8 +102,9 @@ func (r *odm) GetMounts(
 func (r *odm) Mounted(mountPoint string) (bool, error) {
 	for _, d := range r.drivers {
 		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
 			"mountPoint": mountPoint,
-			"driverName": d.Name()}).Info("checking filesystem mount")
+			"driverName": d.Name()}).Info("odm.Mounted")
 		return d.Mounted(mountPoint)
 	}
 	return false, errors.ErrNoOSDetected
@@ -111,8 +113,9 @@ func (r *odm) Mounted(mountPoint string) (bool, error) {
 func (r *odm) Unmount(mountPoint string) error {
 	for _, d := range r.drivers {
 		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
 			"mountPoint": mountPoint,
-			"driverName": d.Name()}).Info("unmounting filesystem")
+			"driverName": d.Name()}).Info("odm.Unmount")
 		return d.Unmount(mountPoint)
 	}
 	return errors.ErrNoOSDetected
@@ -122,11 +125,12 @@ func (r *odm) Mount(
 	device, target, mountOptions, mountLabel string) error {
 	for _, d := range r.drivers {
 		log.WithFields(log.Fields{
+			"moduleName":   r.rexray.Context,
 			"device":       device,
 			"target":       target,
 			"mountOptions": mountOptions,
 			"mountLabel":   mountLabel,
-			"driverName":   d.Name()}).Info("mounting filesystem")
+			"driverName":   d.Name()}).Info("odm.Mount")
 		return d.Mount(device, target, mountOptions, mountLabel)
 	}
 	return errors.ErrNoOSDetected
@@ -140,11 +144,12 @@ func (r *odm) Format(
 	deviceName, fsType string, overwriteFs bool) error {
 	for _, d := range r.drivers {
 		log.WithFields(log.Fields{
+			"moduleName":  r.rexray.Context,
 			"deviceName":  deviceName,
 			"fsType":      fsType,
 			"overwriteFs": overwriteFs,
 			"driverName":  d.Name()}).Info(
-			"formatting if blank or overwriteFs specified")
+			"odm.Format")
 		if r.isNfsDevice(deviceName) {
 			return nil
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/emccode/rexray/core/errors"
 )
 
@@ -316,6 +317,9 @@ func (r *sdm) GetInstances() ([]*Instance, error) {
 
 func (r *sdm) GetInstance() (*Instance, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name()}).Info("sdm.GetInstance")
 		return d.GetInstance()
 	}
 	return nil, errors.ErrNoStorageDetected
@@ -323,6 +327,11 @@ func (r *sdm) GetInstance() (*Instance, error) {
 
 func (r *sdm) GetVolume(volumeID, volumeName string) ([]*Volume, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName,
+			"volumeID":   volumeID}).Info("sdm.GetVolume")
 		return d.GetVolume(volumeID, volumeName)
 	}
 	return nil, errors.ErrNoStorageDetected
@@ -330,6 +339,12 @@ func (r *sdm) GetVolume(volumeID, volumeName string) ([]*Volume, error) {
 
 func (r *sdm) GetSnapshot(volumeID, snapshotID, snapshotName string) ([]*Snapshot, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName":   r.rexray.Context,
+			"driverName":   d.Name(),
+			"volumeID":     volumeID,
+			"snapshotID":   snapshotID,
+			"snapshotName": snapshotName}).Info("sdm.GetSnapshot")
 		return d.GetSnapshot(volumeID, snapshotID, snapshotName)
 	}
 	return nil, errors.ErrNoStorageDetected
@@ -338,6 +353,13 @@ func (r *sdm) GetSnapshot(volumeID, snapshotID, snapshotName string) ([]*Snapsho
 func (r *sdm) CreateSnapshot(runAsync bool,
 	snapshotName, volumeID, description string) ([]*Snapshot, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName":   r.rexray.Context,
+			"driverName":   d.Name(),
+			"runAsync":     runAsync,
+			"snapshotName": snapshotName,
+			"volumeID":     volumeID,
+			"description":  description}).Info("sdm.CreateSnapshot")
 		return d.CreateSnapshot(runAsync, snapshotName, volumeID, description)
 	}
 	return nil, errors.ErrNoStorageDetected
@@ -345,6 +367,11 @@ func (r *sdm) CreateSnapshot(runAsync bool,
 
 func (r *sdm) RemoveSnapshot(snapshotID string) error {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"snapshotID": snapshotID}).Info("sdm.RemoveSnapshot")
+
 		return d.RemoveSnapshot(snapshotID)
 	}
 	return errors.ErrNoStorageDetected
@@ -354,6 +381,17 @@ func (r *sdm) CreateVolume(runAsync bool,
 	volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64, availabilityZone string) (*Volume, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName":       r.rexray.Context,
+			"driverName":       d.Name(),
+			"runAsync":         runAsync,
+			"volumeName":       volumeName,
+			"volumeID":         volumeID,
+			"snapshotID":       snapshotID,
+			"volumeType":       volumeType,
+			"IOPS":             IOPS,
+			"size":             size,
+			"availabilityZone": availabilityZone}).Info("sdm.CreateVolume")
 		return d.CreateVolume(
 			runAsync, volumeName, volumeID, snapshotID, volumeType,
 			IOPS, size, availabilityZone)
@@ -363,6 +401,10 @@ func (r *sdm) CreateVolume(runAsync bool,
 
 func (r *sdm) RemoveVolume(volumeID string) error {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeID":   volumeID}).Info("sdm.RemoveVolume")
 		return d.RemoveVolume(volumeID)
 	}
 	return errors.ErrNoStorageDetected
@@ -372,6 +414,13 @@ func (r *sdm) AttachVolume(
 	runAsync bool,
 	volumeID, instanceID string, force bool) ([]*VolumeAttachment, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"runAsync":   runAsync,
+			"volumeID":   volumeID,
+			"instanceID": instanceID,
+			"force":      force}).Info("sdm.AttachVolume")
 		return d.AttachVolume(runAsync, volumeID, instanceID, force)
 	}
 	return nil, errors.ErrNoStorageDetected
@@ -381,6 +430,12 @@ func (r *sdm) DetachVolume(
 	runAsync bool,
 	volumeID, instanceID string, force bool) error {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"runAsync":   runAsync,
+			"volumeID":   volumeID,
+			"instanceID": instanceID}).Info("sdm.DetachVolume")
 		return d.DetachVolume(runAsync, volumeID, instanceID, force)
 	}
 	return errors.ErrNoStorageDetected
@@ -389,6 +444,11 @@ func (r *sdm) DetachVolume(
 func (r *sdm) GetVolumeAttach(
 	volumeID, instanceID string) ([]*VolumeAttachment, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeID":   volumeID,
+			"instanceID": instanceID}).Info("sdm.GetVolumeAttach")
 		return d.GetVolumeAttach(volumeID, instanceID)
 	}
 	return nil, errors.ErrNoStorageDetected
@@ -399,6 +459,14 @@ func (r *sdm) CopySnapshot(
 	volumeID, snapshotID, snapshotName,
 	targetSnapshotName, targetRegion string) (*Snapshot, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName":         r.rexray.Context,
+			"driverName":         d.Name(),
+			"runAsync":           runAsync,
+			"snapshotID":         snapshotID,
+			"snapshotName":       snapshotName,
+			"targetSnapshotName": targetSnapshotName,
+			"targetRegion":       targetRegion}).Info("sdm.CopySnapshot")
 		return d.CopySnapshot(runAsync, volumeID, snapshotID, snapshotName,
 			targetSnapshotName, targetRegion)
 	}
@@ -407,6 +475,9 @@ func (r *sdm) CopySnapshot(
 
 func (r *sdm) GetDeviceNextAvailable() (string, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name()}).Info("sdm.GetDeviceNextAvailable")
 		return d.GetDeviceNextAvailable()
 	}
 	return "", errors.ErrNoStorageDetected

@@ -61,6 +61,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	fields := eff(map[string]interface{}{
+		"moduleName":       d.r.Context,
 		"volumeType":       d.volumeType(),
 		"iops":             d.iops(),
 		"size":             d.size(),
@@ -90,6 +91,7 @@ func (d *driver) Name() string {
 // Mount will perform the steps to get an existing Volume with or without a fileystem mounted to a guest
 func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType string, preempt bool) (string, error) {
 	log.WithFields(log.Fields{
+		"moduleName":  d.r.Context,
 		"volumeName":  volumeName,
 		"volumeID":    volumeID,
 		"overwriteFs": overwriteFs,
@@ -172,6 +174,7 @@ func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType 
 func (d *driver) Unmount(volumeName, volumeID string) error {
 
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"volumeID":   volumeID,
 		"driverName": d.Name()}).Info("unmounting volume")
@@ -262,6 +265,7 @@ func (d *driver) prefixToMountUnmount(
 // Path returns the mounted path of the volume
 func (d *driver) Path(volumeName, volumeID string) (string, error) {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"volumeID":   volumeID,
 		"driverName": d.Name()}).Info("getting path to volume")
@@ -317,6 +321,7 @@ func (d *driver) Path(volumeName, volumeID string) (string, error) {
 // Create will create a remote volume
 func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"volumeOpts": volumeOpts,
 		"driverName": d.Name()}).Info("creating volume")
@@ -382,6 +387,7 @@ func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 		_, err = d.Mount(volumeName, "", overwriteFs, newFsType, false)
 		if err != nil {
 			log.WithFields(log.Fields{
+				"moduleName":  d.r.Context,
 				"volumeName":  volumeName,
 				"overwriteFs": overwriteFs,
 				"newFsType":   newFsType,
@@ -588,6 +594,7 @@ func (d *driver) createInitString(optKey, envVar string,
 // Remove will remove a remote volume
 func (d *driver) Remove(volumeName string) error {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"driverName": d.Name()}).Info("removing volume")
 
@@ -634,6 +641,7 @@ func (d *driver) Remove(volumeName string) error {
 
 func (d *driver) Get(volumeName string) (core.VolumeMap, error) {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"driverName": d.Name()}).Info("getting volume")
 
@@ -736,6 +744,7 @@ Volumes:
 // List will list all volumes
 func (d *driver) List() ([]core.VolumeMap, error) {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"driverName": d.Name()}).Info("listing volumes")
 
 	return d.get("")
@@ -744,6 +753,7 @@ func (d *driver) List() ([]core.VolumeMap, error) {
 // Attach will attach a volume to an instance
 func (d *driver) Attach(volumeName, instanceID string, force bool) (string, error) {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"instanceID": instanceID,
 		"driverName": d.Name()}).Info("attaching volume")
@@ -776,6 +786,7 @@ func (d *driver) Attach(volumeName, instanceID string, force bool) (string, erro
 // Remove will remove a remote volume
 func (d *driver) Detach(volumeName, instanceID string, force bool) error {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"instanceID": instanceID,
 		"driverName": d.Name()}).Info("detaching volume")
@@ -791,6 +802,7 @@ func (d *driver) Detach(volumeName, instanceID string, force bool) error {
 // NetworkName will return relevant information about how a volume can be discovered on an OS
 func (d *driver) NetworkName(volumeName, instanceID string) (string, error) {
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"instanceID": instanceID,
 		"driverName": d.Name()}).Info("returning network name")

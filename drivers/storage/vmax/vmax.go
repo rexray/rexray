@@ -69,11 +69,12 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	fields := eff(map[string]interface{}{
-		"userName": d.userName(),
-		"smisHost": d.smisHost(),
-		"smisPort": d.smisPort(),
-		"insecure": d.insecure(),
-		"sid":      d.sid(),
+		"moduleName": d.r.Context,
+		"userName":   d.userName(),
+		"smisHost":   d.smisHost(),
+		"smisPort":   d.smisPort(),
+		"insecure":   d.insecure(),
+		"sid":        d.sid(),
 	})
 
 	if d.password() == "" {
@@ -97,9 +98,10 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.volPrefix = d.volumePrefix()
 
 	vmFields := eff(map[string]interface{}{
-		"userName": d.vmhUserName(),
-		"smisHost": d.vmhHost(),
-		"insecure": d.vmhInsecure(),
+		"moduleName": d.r.Context,
+		"userName":   d.vmhUserName(),
+		"smisHost":   d.vmhHost(),
+		"insecure":   d.vmhInsecure(),
 	})
 
 	if d.vmh, err = govmax.NewVMHost(
@@ -114,7 +116,7 @@ func (d *driver) Init(r *core.RexRay) error {
 
 	d.instanceID = d.vmh.Vm.Reference().Value
 
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -363,7 +365,8 @@ func (d *driver) CreateVolume(
 
 func (d *driver) RemoveVolume(volumeID string) error {
 	fields := eff(map[string]interface{}{
-		"volumeID": volumeID,
+		"moduleName": d.r.Context,
+		"volumeID":   volumeID,
 	})
 
 	deleteVolumeRequest := &govmax.DeleteVolReq{
@@ -392,7 +395,6 @@ func (d *driver) RemoveVolume(volumeID string) error {
 		return err
 	}
 
-	log.Println("Deleted Volume: " + volumeID)
 	return nil
 }
 
@@ -588,7 +590,9 @@ func (d *driver) AttachVolume(
 		return nil, goof.New("local device not found for volume")
 	}
 
-	log.WithFields(log.Fields{"deviceName": deviceName}).Println("discovered device")
+	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
+		"deviceName": deviceName}).Info("discovered device")
 
 	volumeAttachment, err := d.GetVolumeAttach(volumeID, instanceID)
 	if err != nil {
@@ -688,7 +692,6 @@ func (d *driver) DetachVolume(runAsync bool, volumeID string, blank string, notu
 		return goof.WithError("error detaching volume from storage group", err)
 	}
 
-	log.Println("Detached volume", volumeID)
 	return nil
 }
 

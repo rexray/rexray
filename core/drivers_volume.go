@@ -146,6 +146,7 @@ func (r *vdm) countUse(volumeName string) {
 	if c, ok := r.mapUsedCount[volumeName]; ok {
 		*c++
 		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
 			"volumeName": volumeName,
 			"count":      *c,
 		}).Info("set count to")
@@ -165,6 +166,7 @@ func (r *vdm) countInit(volumeName string) {
 	c = 0
 	r.mapUsedCount[volumeName] = &c
 	log.WithFields(log.Fields{
+		"moduleName": r.rexray.Context,
 		"volumeName": volumeName,
 		"count":      c,
 	}).Info("initialized count")
@@ -176,6 +178,7 @@ func (r *vdm) countRelease(volumeName string) {
 	if c, ok := r.mapUsedCount[volumeName]; ok {
 		*c--
 		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
 			"volumeName": volumeName,
 			"count":      *c,
 		}).Info("released count")
@@ -185,6 +188,7 @@ func (r *vdm) countRelease(volumeName string) {
 func (r *vdm) countExists(volumeName string) bool {
 	_, exists := r.mapUsedCount[volumeName]
 	log.WithFields(log.Fields{
+		"moduleName": r.rexray.Context,
 		"volumeName": volumeName,
 		"exists":     exists,
 	}).Info("status of count")
@@ -199,6 +203,7 @@ func (r *vdm) countReset(volumeName string) bool {
 	c, _ := r.mapUsedCount[volumeName]
 	if c != nil && *c < 2 {
 		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
 			"volumeName": volumeName,
 			"count":      *c,
 		}).Info("count reset")
@@ -215,6 +220,15 @@ func (r *vdm) Mount(
 	volumeName, volumeID string,
 	overwriteFs bool, newFsType string, preempt bool) (string, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName":  r.rexray.Context,
+			"driverName":  d.Name(),
+			"volumeName":  volumeName,
+			"volumeID":    volumeID,
+			"overwriteFs": overwriteFs,
+			"newFsType":   newFsType,
+			"preempt":     preempt}).Info("vdm.Mount")
+
 		if !preempt {
 			preempt = r.preempt()
 		}
@@ -234,6 +248,12 @@ func (r *vdm) Mount(
 // Unmount will unmount the specified volume by volumeName or volumeID.
 func (r *vdm) Unmount(volumeName, volumeID string) error {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName,
+			"volumeID":   volumeID}).Info("vdm.Unmount")
+
 		if r.ignoreUsedCount() || r.countReset(volumeName) || !r.countExists(volumeName) {
 			r.countInit(volumeName)
 			return d.Unmount(volumeName, volumeID)
@@ -248,6 +268,12 @@ func (r *vdm) Unmount(volumeName, volumeID string) error {
 // Path will return the mounted path of the volumeName or volumeID.
 func (r *vdm) Path(volumeName, volumeID string) (string, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName,
+			"volumeID":   volumeID}).Info("vdm.Path")
+
 		return d.Path(volumeName, volumeID)
 	}
 	return "", errors.ErrNoVolumesDetected
@@ -256,6 +282,11 @@ func (r *vdm) Path(volumeName, volumeID string) (string, error) {
 // Get will return a specific volume
 func (r *vdm) Get(volumeName string) (VolumeMap, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName}).Info("vdm.Get")
+
 		return d.Get(volumeName)
 	}
 	return nil, errors.ErrNoVolumesDetected
@@ -264,6 +295,10 @@ func (r *vdm) Get(volumeName string) (VolumeMap, error) {
 // Get will return all volumes
 func (r *vdm) List() ([]VolumeMap, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name()}).Info("vdm.List")
+
 		return d.List()
 	}
 	return nil, errors.ErrNoVolumesDetected
@@ -272,6 +307,12 @@ func (r *vdm) List() ([]VolumeMap, error) {
 // Create will create a new volume with the volumeName and opts.
 func (r *vdm) Create(volumeName string, opts VolumeOpts) error {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName,
+			"opts":       opts}).Info("vdm.Create")
+
 		r.countInit(volumeName)
 		return d.Create(volumeName, opts)
 	}
@@ -281,6 +322,11 @@ func (r *vdm) Create(volumeName string, opts VolumeOpts) error {
 // Remove will remove a volume of volumeName.
 func (r *vdm) Remove(volumeName string) error {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName}).Info("vdm.Remove")
+
 		return d.Remove(volumeName)
 	}
 	return errors.ErrNoVolumesDetected
@@ -290,6 +336,13 @@ func (r *vdm) Remove(volumeName string) error {
 // instanceID.
 func (r *vdm) Attach(volumeName, instanceID string, force bool) (string, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName,
+			"instanceID": instanceID,
+			"force":      force}).Info("vdm.Attach")
+
 		return d.Attach(volumeName, instanceID, force)
 	}
 	return "", errors.ErrNoVolumesDetected
@@ -299,6 +352,12 @@ func (r *vdm) Attach(volumeName, instanceID string, force bool) (string, error) 
 // instanceID.
 func (r *vdm) Detach(volumeName, instanceID string, force bool) error {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName,
+			"instanceID": instanceID,
+			"force":      force}).Info("vdm.Detach")
 		return d.Detach(volumeName, instanceID, force)
 	}
 	return errors.ErrNoVolumesDetected
@@ -309,6 +368,11 @@ func (r *vdm) Detach(volumeName, instanceID string, force bool) error {
 // local instanceID.
 func (r *vdm) NetworkName(volumeName, instanceID string) (string, error) {
 	for _, d := range r.drivers {
+		log.WithFields(log.Fields{
+			"moduleName": r.rexray.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName,
+			"instanceID": instanceID}).Info("vdm.NetworkName")
 		return d.NetworkName(volumeName, instanceID)
 	}
 	return "", errors.ErrNoVolumesDetected

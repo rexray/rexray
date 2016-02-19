@@ -59,6 +59,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	fields := eff(map[string]interface{}{
+		"moduleName":           d.r.Context,
 		"endpoint":             d.endpoint(),
 		"userName":             d.userName(),
 		"tls":                  d.tls(),
@@ -95,7 +96,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		d.machine = m
 	}
 
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -284,6 +285,7 @@ func (d *driver) CreateVolume(
 	NUIOPS, size int64, NUavailabilityZone string) (*core.Volume, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"volumeID":   volumeID,
 		"volumeName": volumeName,
 		"snapshotID": snapshotID,
@@ -298,7 +300,7 @@ func (d *driver) CreateVolume(
 	}
 
 	if len(volumes) > 0 {
-		return nil, goof.WithField(volumeName, "volumeName", "volume exists already")
+		return nil, goof.WithFields(fields, "volume exists already")
 	}
 
 	volume, err := d.createVolume(volumeName, size)
@@ -324,7 +326,8 @@ func (d *driver) RemoveVolume(volumeID string) error {
 	d.checkSession()
 
 	fields := eff(map[string]interface{}{
-		"volumeID": volumeID,
+		"moduleName": d.r.Context,
+		"volumeID":   volumeID,
 	})
 
 	err := d.virtualbox.RemoveMedium(volumeID)
@@ -412,7 +415,10 @@ func (d *driver) AttachVolume(
 	}
 
 	if err := d.attachVolume(volumeID, ""); err != nil {
-		return nil, goof.WithFieldE("volumeID", volumeID, "error attaching volume", err)
+		return nil, goof.WithFieldsE(
+			log.Fields{
+				"moduleName": d.r.Context,
+				"volumeID":   volumeID}, "error attaching volume", err)
 	}
 
 	d.rescanScsiHosts()
@@ -441,7 +447,10 @@ func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, notus
 	}
 
 	if err = d.detachVolume(volumeID, ""); err != nil {
-		return goof.WithFieldE("volumeID", volumeID, "error detaching volume", err)
+		return goof.WithFieldsE(
+			log.Fields{
+				"moduleName": d.r.Context,
+				"volumeID":   volumeID}, "error detaching volume", err)
 	}
 
 	log.Println("Detached volume", volumeID)

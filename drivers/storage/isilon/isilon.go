@@ -61,6 +61,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"endpoint":   d.endpoint(),
 		"userName":   d.userName(),
 		"group":      d.group(),
@@ -92,7 +93,7 @@ func (d *driver) Init(r *core.RexRay) error {
 			"error creating isilon client", err)
 	}
 
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -138,7 +139,9 @@ func (d *driver) GetInstance() (*core.Instance, error) {
 	_, dataSubnet, err := net.ParseCIDR(d.dataSubnet())
 	if err != nil {
 		return nil, goof.WithFieldsE(
-			eff(goof.Fields{"dataSubnet": d.dataSubnet()}), "Invalid data subnet", err)
+			eff(goof.Fields{
+				"moduleName": d.r.Context,
+				"dataSubnet": d.dataSubnet()}), "Invalid data subnet", err)
 	}
 
 	// find all local IP addresses on the data subnet
@@ -159,7 +162,9 @@ func (d *driver) GetInstance() (*core.Instance, error) {
 
 	if len(idList) == 0 {
 		return nil, goof.WithFieldsE(
-			eff(goof.Fields{"dataSubnet": d.dataSubnet()}), "No IPs in the data subnet", err)
+			eff(goof.Fields{
+				"moduleName": d.r.Context,
+				"dataSubnet": d.dataSubnet()}), "No IPs in the data subnet", err)
 	}
 
 	instance := &core.Instance{
@@ -299,6 +304,7 @@ func (d *driver) CreateVolume(
 	var err error
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"volumeName": volumeName,
 		"volumeId":   volumeID,
 		"snapshotId": snapshotID,
@@ -316,14 +322,18 @@ func (d *driver) CreateVolume(
 		_, err = d.client.CopyVolume(volumeID, volumeName)
 		if err != nil {
 			return nil, goof.WithFieldsE(
-				eff(goof.Fields{"volumeName": volumeName}), "Error copying volume", err)
+				eff(goof.Fields{
+					"moduleName": d.r.Context,
+					"volumeName": volumeName}), "Error copying volume", err)
 		}
 		if size < 1 {
 			// get the size from the existing volume
 			size, err = d.getSize(volumeID, "")
 			if err != nil {
 				return nil, goof.WithFieldsE(
-					eff(goof.Fields{"volumeName": volumeName}), "Error reading size of existing volume", err)
+					eff(goof.Fields{
+						"moduleName": d.r.Context,
+						"volumeName": volumeName}), "Error reading size of existing volume", err)
 			}
 		}
 	} else if snapshotID != "" {
@@ -332,30 +342,40 @@ func (d *driver) CreateVolume(
 		_, err = d.client.CopySnapshot(-1, snapshotID, volumeName)
 		if err != nil {
 			return nil, goof.WithFieldsE(
-				eff(goof.Fields{"volumeName": volumeName}), "Error creating volume from snapshot", err)
+				eff(goof.Fields{
+					"moduleName": d.r.Context,
+					"volumeName": volumeName}), "Error creating volume from snapshot", err)
 		}
 		if size < 1 {
 			// get the size from the volume in the snapshot
 			snapshots, err := d.GetSnapshot("", snapshotID, snapshotID)
 			if err != nil {
 				return nil, goof.WithFieldsE(
-					eff(goof.Fields{"volumeName": volumeName}), fmt.Sprintf("Error creating volume from snapshot.  Can't query snapshot with id: (%s) (%s)", snapshotID, err), err)
+					eff(goof.Fields{
+						"moduleName": d.r.Context,
+						"volumeName": volumeName}), fmt.Sprintf("Error creating volume from snapshot.  Can't query snapshot with id: (%s) (%s)", snapshotID, err), err)
 			}
 			if len(snapshots) <= 0 {
 				return nil, goof.WithFieldsE(
-					eff(goof.Fields{"volumeName": volumeName}), fmt.Sprintf("Error creating volume from snapshot.  No snapshot with id: (%s)", snapshotID), err)
+					eff(goof.Fields{
+						"moduleName": d.r.Context,
+						"volumeName": volumeName}), fmt.Sprintf("Error creating volume from snapshot.  No snapshot with id: (%s)", snapshotID), err)
 			}
 			size, err = d.getSize("", snapshots[0].VolumeID)
 			if err != nil {
 				return nil, goof.WithFieldsE(
-					eff(goof.Fields{"volumeName": volumeName}), "Error finding size for volume from snapshot", err)
+					eff(goof.Fields{
+						"moduleName": d.r.Context,
+						"volumeName": volumeName}), "Error finding size for volume from snapshot", err)
 			}
 		}
 	} else {
 		_, err = d.client.CreateVolume(volumeName)
 		if err != nil {
 			return nil, goof.WithFieldsE(
-				eff(goof.Fields{"volumeName": volumeName}), "Error creating volume", err)
+				eff(goof.Fields{
+					"moduleName": d.r.Context,
+					"volumeName": volumeName}), "Error creating volume", err)
 		}
 	}
 
@@ -369,7 +389,9 @@ func (d *driver) CreateVolume(
 				// TODO: not sure how to handle this situation.  Delete created volume
 				// and return an error?  Ignore and continue?
 				return nil, goof.WithFieldsE(
-					eff(goof.Fields{"volumeName": volumeName}), "Error setting quota for new volume", err)
+					eff(goof.Fields{
+						"moduleName": d.r.Context,
+						"volumeName": volumeName}), "Error setting quota for new volume", err)
 			}
 		} else {
 			// PAPI uses bytes for it's size units, but REX-Ray uses gigs
@@ -378,7 +400,9 @@ func (d *driver) CreateVolume(
 				// TODO: not sure how to handle this situation.  Delete created volume
 				// and return an error?  Ignore and continue?
 				return nil, goof.WithFieldsE(
-					eff(goof.Fields{"volumeName": volumeName}), "Error updating quota for existing volume", err)
+					eff(goof.Fields{
+						"moduleName": d.r.Context,
+						"volumeName": volumeName}), "Error updating quota for existing volume", err)
 			}
 		}
 	}
@@ -386,7 +410,9 @@ func (d *driver) CreateVolume(
 	volumes, _ := d.GetVolume("", volumeName)
 	if volumes == nil || err != nil {
 		return nil, goof.WithFieldsE(
-			eff(goof.Fields{"volumeName": volumeName}), "Error getting volume", err)
+			eff(goof.Fields{
+				"moduleName": d.r.Context,
+				"volumeName": volumeName}), "Error getting volume", err)
 	}
 
 	return volumes[0], nil

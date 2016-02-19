@@ -58,9 +58,10 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	fields := eff(map[string]interface{}{
-		"endpoint": d.endpoint(),
-		"insecure": d.insecure(),
-		"useCerts": d.useCerts(),
+		"moduleName": d.r.Context,
+		"endpoint":   d.endpoint(),
+		"insecure":   d.insecure(),
+		"useCerts":   d.useCerts(),
 	})
 
 	var err error
@@ -127,7 +128,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		return goof.WithFieldsE(fields, "error finding sdc", err)
 	}
 
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -155,8 +156,9 @@ func (d *driver) GetInstance() (*core.Instance, error) {
 	}
 
 	log.WithFields(log.Fields{
-		"provider": providerName,
-		"instance": instance,
+		"moduleName": d.r.Context,
+		"provider":   providerName,
+		"instance":   instance,
 	}).Debug("got instance")
 	return instance, nil
 }
@@ -165,7 +167,9 @@ func (d *driver) getBlockDevices() ([]*goscaleio.SdcMappedVolume, error) {
 	volumeMaps, err := goscaleio.GetLocalVolumeMap()
 	if err != nil {
 		return []*goscaleio.SdcMappedVolume{},
-			goof.WithFieldsE(ef(), "error getting local volume map", err)
+			goof.WithFieldsE(eff(map[string]interface{}{
+				"moduleName": d.r.Context,
+			}), "error getting local volume map", err)
 	}
 	return volumeMaps, nil
 }
@@ -174,7 +178,9 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	blockDevices, err := d.getBlockDevices()
 	if err != nil {
 		return nil,
-			goof.WithFieldsE(ef(), "error getting block devices", err)
+			goof.WithFieldsE(eff(map[string]interface{}{
+				"moduleName": d.r.Context,
+			}), "error getting block devices", err)
 	}
 
 	var BlockDevices []*core.BlockDevice
@@ -191,6 +197,7 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	}
 
 	log.WithFields(log.Fields{
+		"moduleName":   d.r.Context,
 		"provider":     providerName,
 		"blockDevices": BlockDevices,
 	}).Debug("got block device mappings")
@@ -326,6 +333,7 @@ func (d *driver) GetVolumeAttach(
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"volumeId":   volumeID,
 		"instanceId": instanceID,
 	})
@@ -383,8 +391,9 @@ func (d *driver) GetSnapshot(
 	}
 
 	log.WithFields(log.Fields{
-		"provider":  providerName,
-		"snapshots": snapshotsInt,
+		"moduleName": d.r.Context,
+		"provider":   providerName,
+		"snapshots":  snapshotsInt,
 	}).Debug("got snapshots")
 	return snapshotsInt, nil
 }
@@ -394,6 +403,7 @@ func (d *driver) CreateSnapshot(
 	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName":   d.r.Context,
 		"volumeID":     volumeID,
 		"snapshotName": snapshotName,
 		"description":  description,
@@ -438,8 +448,9 @@ func (d *driver) CreateSnapshot(
 	}
 
 	log.WithFields(log.Fields{
-		"provider": providerName,
-		"snapshot": snapshot}).Debug("created snapshot")
+		"moduleName": d.r.Context,
+		"provider":   providerName,
+		"snapshot":   snapshot}).Debug("created snapshot")
 	return snapshot, nil
 
 }
@@ -450,6 +461,7 @@ func (d *driver) createVolume(
 	IOPS, size int64, availabilityZone string) (*types.VolumeResp, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName":       d.r.Context,
 		"volumeID":         volumeID,
 		"volumeName":       volumeName,
 		"snapshotID":       snapshotID,
@@ -495,7 +507,9 @@ func (d *driver) CreateVolume(
 	IOPS, size int64, availabilityZone string) (*core.Volume, error) {
 
 	if volumeName == "" {
-		return nil, goof.New("no volume name specified")
+		return nil, goof.WithFields(eff(map[string]interface{}{
+			"moduleName": d.r.Context}),
+			"no volume name specified")
 	}
 
 	volumes, err := d.GetVolume("", volumeName)
@@ -504,7 +518,10 @@ func (d *driver) CreateVolume(
 	}
 
 	if len(volumes) > 0 {
-		return nil, goof.WithField("volumeName", volumeName, "volume name already exists")
+		return nil, goof.WithFields(eff(map[string]interface{}{
+			"moduleName": d.r.Context,
+			"volumeName": volumeName}),
+			"volume name already exists")
 	}
 
 	resp, err := d.createVolume(
@@ -521,8 +538,9 @@ func (d *driver) CreateVolume(
 	}
 
 	log.WithFields(log.Fields{
-		"provider": providerName,
-		"volume":   volumes[0],
+		"moduleName": d.r.Context,
+		"provider":   providerName,
+		"volume":     volumes[0],
 	}).Debug("created volume")
 	return volumes[0], nil
 
@@ -531,7 +549,8 @@ func (d *driver) CreateVolume(
 func (d *driver) RemoveVolume(volumeID string) error {
 
 	fields := eff(map[string]interface{}{
-		"volumeId": volumeID,
+		"moduleName": d.r.Context,
+		"volumeId":   volumeID,
 	})
 
 	if volumeID == "" {
@@ -574,6 +593,7 @@ func (d *driver) AttachVolume(
 	volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"runAsync":   runAsync,
 		"volumeId":   volumeID,
 		"instanceId": instanceID,
@@ -612,7 +632,7 @@ func (d *driver) AttachVolume(
 		return nil, goof.WithFieldsE(fields, "error mapping volume sdc", err)
 	}
 
-	_, err = waitMount(volumes[0].ID)
+	_, err = d.waitMount(volumes[0].ID)
 	if err != nil {
 		fields["volumeId"] = volumes[0].ID
 		return nil, goof.WithFieldsE(
@@ -626,6 +646,7 @@ func (d *driver) AttachVolume(
 	}
 
 	log.WithFields(log.Fields{
+		"moduleName": d.r.Context,
 		"provider":   providerName,
 		"volumeId":   volumeID,
 		"instanceId": instanceID,
@@ -637,9 +658,10 @@ func (d *driver) DetachVolume(
 	runAsync bool, volumeID string, blank string, force bool) error {
 
 	fields := eff(map[string]interface{}{
-		"runAsync": runAsync,
-		"volumeId": volumeID,
-		"blank":    blank,
+		"moduleName": d.r.Context,
+		"runAsync":   runAsync,
+		"volumeId":   volumeID,
+		"blank":      blank,
 	})
 
 	if volumeID == "" {
@@ -673,8 +695,9 @@ func (d *driver) DetachVolume(
 	_ = targetVolume.UnmapVolumeSdc(unmapVolumeSdcParam)
 
 	log.WithFields(log.Fields{
-		"provider": providerName,
-		"volumeId": volumeID}).Debug("detached volume")
+		"moduleName": d.r.Context,
+		"provider":   providerName,
+		"volumeId":   volumeID}).Debug("detached volume")
 	return nil
 }
 
@@ -686,7 +709,7 @@ func (d *driver) CopySnapshot(
 	return nil, goof.New("This driver does not implement CopySnapshot")
 }
 
-func waitMount(volumeID string) (*goscaleio.SdcMappedVolume, error) {
+func (d *driver) waitMount(volumeID string) (*goscaleio.SdcMappedVolume, error) {
 
 	timeout := make(chan bool, 1)
 	go func() {
@@ -729,9 +752,10 @@ func waitMount(volumeID string) (*goscaleio.SdcMappedVolume, error) {
 	select {
 	case sdcMappedVolume := <-successCh:
 		log.WithFields(log.Fields{
-			"provider": providerName,
-			"volumeId": sdcMappedVolume.VolumeID,
-			"volume":   sdcMappedVolume.SdcDevice,
+			"moduleName": d.r.Context,
+			"provider":   providerName,
+			"volumeId":   sdcMappedVolume.VolumeID,
+			"volume":     sdcMappedVolume.SdcDevice,
 		}).Debug("got sdcMappedVolume")
 		return sdcMappedVolume, nil
 	case err := <-errorCh:

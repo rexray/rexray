@@ -69,6 +69,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.volumesByNaa = map[string]xtio.Volume{}
 
 	fields := eff(map[string]interface{}{
+		"moduleName":       d.r.Context,
 		"endpoint":         d.endpoint(),
 		"userName":         d.userName(),
 		"deviceMapper":     d.deviceMapper(),
@@ -110,7 +111,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		}
 	}
 
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -410,6 +411,7 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 
 func (d *driver) getVolume(volumeID, volumeName string) ([]xtio.Volume, error) {
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"volumeID":   volumeID,
 		"volumeName": volumeName,
 	})
@@ -511,6 +513,7 @@ func (d *driver) CreateVolume(
 	NUIOPS, size int64, NUavailabilityZone string) (*core.Volume, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"volumeID":   volumeID,
 		"volumeName": volumeName,
 		"snapshotID": snapshotID,
@@ -564,7 +567,8 @@ func (d *driver) CreateVolume(
 
 func (d *driver) RemoveVolume(volumeID string) error {
 	fields := eff(map[string]interface{}{
-		"volumeID": volumeID,
+		"moduleName": d.r.Context,
+		"volumeID":   volumeID,
 	})
 
 	err := d.client.DeleteVolume(volumeID, "")
@@ -572,7 +576,6 @@ func (d *driver) RemoveVolume(volumeID string) error {
 		return goof.WithFieldsE(fields, "error deleting volume", err)
 	}
 
-	log.Println("Deleted Volume: " + volumeID)
 	return nil
 }
 
@@ -945,7 +948,6 @@ func (d *driver) DetachVolume(notUsed bool, volumeID string, blank string, notus
 		}
 	}
 
-	log.Println("Detached volume", volumeID)
 	return nil
 }
 

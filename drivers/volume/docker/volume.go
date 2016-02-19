@@ -61,6 +61,7 @@ func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
 	fields := eff(map[string]interface{}{
+		"moduleName":       d.r.Context,
 		"volumeType":       d.volumeType(),
 		"iops":             d.iops(),
 		"size":             d.size(),
@@ -386,6 +387,7 @@ func (d *driver) Create(volumeName string, volumeOpts core.VolumeOpts) error {
 		_, err = d.Mount(volumeName, "", overwriteFs, newFsType, false)
 		if err != nil {
 			log.WithFields(log.Fields{
+				"moduleName":  d.r.Context,
 				"volumeName":  volumeName,
 				"overwriteFs": overwriteFs,
 				"newFsType":   newFsType,

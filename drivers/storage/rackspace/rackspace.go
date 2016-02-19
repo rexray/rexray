@@ -67,16 +67,18 @@ func newDriver() core.Driver {
 
 func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
-	fields := ef()
+
+	fields := eff(map[string]interface{}{})
 	var err error
 
-	if d.instanceID, err = getInstanceID(d.r.Config); err != nil {
+	if d.instanceID, err = d.getInstanceID(d.r.Config); err != nil {
 		return err
 	}
 
+	fields["moduleName"] = d.r.Context
 	fields["instanceId"] = d.instanceID
 
-	if d.region, err = getInstanceRegion(d.r.Config); err != nil {
+	if d.region, err = d.getInstanceRegion(d.r.Config); err != nil {
 		return err
 	}
 
@@ -114,7 +116,7 @@ func (d *driver) Init(r *core.RexRay) error {
 			"error getting newBlockStorageV1", err)
 	}
 
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -133,7 +135,7 @@ func newCmd(c gofig.Config, name string, args ...string) *exec.Cmd {
 	return cmd
 }
 
-func getInstanceID(c gofig.Config) (string, error) {
+func (d *driver) getInstanceID(c gofig.Config) (string, error) {
 
 	cmd := newCmd(c, "/usr/bin/xenstore-read", "name")
 	cmdOut, err := cmd.Output()
@@ -141,9 +143,10 @@ func getInstanceID(c gofig.Config) (string, error) {
 	if err != nil {
 		return "",
 			goof.WithFields(eff(goof.Fields{
-				"cmd.Path": cmd.Path,
-				"cmd.Args": cmd.Args,
-				"cmd.Out":  cmdOut,
+				"moduleName": d.r.Context,
+				"cmd.Path":   cmd.Path,
+				"cmd.Args":   cmd.Args,
+				"cmd.Out":    cmdOut,
 			}), "error getting instance id")
 	}
 
@@ -177,7 +180,9 @@ func (d *driver) getInstance() (*servers.Server, error) {
 	server, err := servers.Get(d.client, d.instanceID).Extract()
 	if err != nil {
 		return nil,
-			goof.WithFieldsE(ef(), "error getting server instance", err)
+			goof.WithFieldsE(eff(map[string]interface{}{
+				"moduleName": d.r.Context,
+			}), "error getting server instance", err)
 	}
 
 	return server, nil
@@ -187,7 +192,9 @@ func (d *driver) GetInstance() (*core.Instance, error) {
 	server, err := d.getInstance()
 	if err != nil {
 		return nil,
-			goof.WithFieldsE(ef(), "error getting driver instance", err)
+			goof.WithFieldsE(eff(map[string]interface{}{
+				"moduleName": d.r.Context,
+			}), "error getting driver instance", err)
 	}
 
 	instance := &core.Instance{
@@ -205,6 +212,7 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 	if err != nil {
 		return nil,
 			goof.WithFieldsE(eff(goof.Fields{
+				"moduleName": d.r.Context,
 				"instanceId": d.instanceID,
 			}), "error getting block devices", err)
 	}
@@ -237,6 +245,7 @@ func (d *driver) getBlockDevices(
 	if err != nil {
 		return []volumeattach.VolumeAttachment{},
 			goof.WithFieldsE(eff(goof.Fields{
+				"moduleName": d.r.Context,
 				"instanceId": instanceID}),
 				"error extracting volume attachments", err)
 	}
@@ -245,7 +254,7 @@ func (d *driver) getBlockDevices(
 
 }
 
-func getInstanceRegion(cfg gofig.Config) (string, error) {
+func (d *driver) getInstanceRegion(cfg gofig.Config) (string, error) {
 	cmd := newCmd(
 		cfg, "/usr/bin/xenstore-read",
 		"vm-data/provider_data/region")
@@ -254,9 +263,10 @@ func getInstanceRegion(cfg gofig.Config) (string, error) {
 	if err != nil {
 		return "",
 			goof.WithFields(eff(goof.Fields{
-				"cmd.Path": cmd.Path,
-				"cmd.Args": cmd.Args,
-				"cmd.Out":  cmdOut,
+				"moduleName": d.r.Context,
+				"cmd.Path":   cmd.Path,
+				"cmd.Args":   cmd.Args,
+				"cmd.Out":    cmdOut,
 			}), "error getting instance region")
 	}
 
@@ -267,14 +277,16 @@ func getInstanceRegion(cfg gofig.Config) (string, error) {
 func (d *driver) getVolume(
 	volumeID, volumeName string) (volumesRet []volumes.Volume, err error) {
 
+	fields := eff(goof.Fields{
+		"moduleName": d.r.Context,
+		"volumeId":   volumeID,
+		"volumeName": volumeName})
+
 	if volumeID != "" {
 		volume, err := volumes.Get(d.clientBlockStorage, volumeID).Extract()
 		if err != nil {
 			return []volumes.Volume{},
-				goof.WithFieldsE(eff(goof.Fields{
-					"volumeId":   volumeID,
-					"volumeName": volumeName}),
-					"error getting volumes", err)
+				goof.WithFieldsE(fields, "error getting volumes", err)
 		}
 		volumesRet = append(volumesRet, *volume)
 	} else {
@@ -285,18 +297,12 @@ func (d *driver) getVolume(
 		allPages, err := volumes.List(d.clientBlockStorage, listOpts).AllPages()
 		if err != nil {
 			return []volumes.Volume{},
-				goof.WithFieldsE(eff(goof.Fields{
-					"volumeId":   volumeID,
-					"volumeName": volumeName}),
-					"error listing volumes", err)
+				goof.WithFieldsE(fields, "error listing volumes", err)
 		}
 		volumesRet, err = volumes.ExtractVolumes(allPages)
 		if err != nil {
 			return []volumes.Volume{},
-				goof.WithFieldsE(eff(goof.Fields{
-					"volumeId":   volumeID,
-					"volumeName": volumeName}),
-					"error extracting volumes", err)
+				goof.WithFieldsE(fields, "error extracting volumes", err)
 		}
 
 		var volumesRetFiltered []volumes.Volume
@@ -326,6 +332,7 @@ func (d *driver) GetVolume(
 	if err != nil {
 		return []*core.Volume{},
 			goof.WithFieldsE(eff(goof.Fields{
+				"moduleName": d.r.Context,
 				"volumeId":   volumeID,
 				"volumeName": volumeName}),
 				"error getting volume", err)
@@ -364,6 +371,7 @@ func (d *driver) GetVolumeAttach(
 	volumeID, instanceID string) ([]*core.VolumeAttachment, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"volumeId":   volumeID,
 		"instanceId": instanceID,
 	})
@@ -398,6 +406,7 @@ func (d *driver) getSnapshot(
 	snapshotName string) (allSnapshots []snapshots.Snapshot, err error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName":   d.r.Context,
 		"volumeId":     volumeID,
 		"snapshotId":   snapshotID,
 		"snapshotName": snapshotName,
@@ -440,6 +449,7 @@ func (d *driver) GetSnapshot(
 	if err != nil {
 		return nil,
 			goof.WithFieldsE(eff(goof.Fields{
+				"moduleName":   d.r.Context,
 				"volumeId":     volumeID,
 				"snapshotId":   snapshotID,
 				"snapshotName": snapshotName}),
@@ -468,6 +478,7 @@ func (d *driver) CreateSnapshot(
 	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName":   d.r.Context,
 		"runAsync":     runAsync,
 		"snapshotName": snapshotName,
 		"volumeId":     volumeID,
@@ -502,12 +513,6 @@ func (d *driver) CreateSnapshot(
 		return nil, err
 	}
 
-	log.WithFields(log.Fields{
-		"runAsync":     runAsync,
-		"snapshotName": snapshotName,
-		"volumeId":     volumeID,
-		"description":  description}).Debug("created snapshot")
-
 	return snapshot, nil
 
 }
@@ -515,11 +520,10 @@ func (d *driver) CreateSnapshot(
 func (d *driver) RemoveSnapshot(snapshotID string) error {
 	resp := snapshots.Delete(d.clientBlockStorage, snapshotID)
 	if resp.Err != nil {
-		return goof.WithFieldE(
-			"snapshotId", snapshotID, "error removing snapshot", resp.Err)
+		return goof.WithFieldsE(goof.Fields{
+			"moduleName": d.r.Context,
+			"snapshotId": snapshotID}, "error removing snapshot", resp.Err)
 	}
-
-	log.WithField("snapshotId", snapshotID).Debug("removed snapshot")
 
 	return nil
 }
@@ -535,6 +539,7 @@ func (d *driver) CreateVolume(
 	availabilityZone string) (*core.Volume, error) {
 
 	fields := map[string]interface{}{
+		"moduleName":       d.r.Context,
 		"provider":         providerName,
 		"runAsync":         runAsync,
 		"volumeName":       volumeName,
@@ -579,7 +584,7 @@ func (d *driver) CreateVolume(
 	}
 
 	if !runAsync {
-		log.Debug("waiting for volume creation to complete")
+		log.WithFields(fields).Info("waiting for volume creation to complete")
 		err = volumes.WaitForStatus(d.clientBlockStorage, resp.ID, "available", 120)
 		if err != nil {
 			return nil,
@@ -634,6 +639,7 @@ func (d *driver) createVolumeHandleSnapshotID(
 	sizeInt, err := strconv.Atoi(volSize)
 	if err != nil {
 		f := goof.Fields{
+			"moduleName": d.r.Context,
 			"volumeSize": volSize,
 		}
 		for k, v := range fields {
@@ -669,6 +675,7 @@ func (d *driver) createVolumeHandleVolumeID(
 	sizeInt, err := strconv.Atoi(volSize)
 	if err != nil {
 		f := goof.Fields{
+			"moduleName": d.r.Context,
 			"volumeSize": volSize,
 		}
 		for k, v := range fields {
@@ -698,7 +705,8 @@ func (d *driver) createVolumeHandleVolumeID(
 
 func (d *driver) RemoveVolume(volumeID string) error {
 	fields := eff(map[string]interface{}{
-		"volumeId": volumeID,
+		"moduleName": d.r.Context,
+		"volumeId":   volumeID,
 	})
 	if volumeID == "" {
 		return goof.WithFields(fields, "volumeId is required")
@@ -777,6 +785,7 @@ func (d *driver) AttachVolume(
 	runAsync bool, volumeID, instanceID string, force bool) ([]*core.VolumeAttachment, error) {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"runAsync":   runAsync,
 		"volumeId":   volumeID,
 		"instanceId": instanceID,
@@ -821,6 +830,7 @@ func (d *driver) DetachVolume(
 	runAsync bool, volumeID, instanceID string, force bool) error {
 
 	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
 		"runAsync":   runAsync,
 		"volumeId":   volumeID,
 		"instanceId": instanceID,
@@ -857,7 +867,8 @@ func (d *driver) DetachVolume(
 func (d *driver) waitVolumeAttach(volumeID string) error {
 
 	fields := eff(map[string]interface{}{
-		"volumeId": volumeID,
+		"moduleName": d.r.Context,
+		"volumeId":   volumeID,
 	})
 
 	if volumeID == "" {
@@ -880,7 +891,8 @@ func (d *driver) waitVolumeAttach(volumeID string) error {
 func (d *driver) waitVolumeDetach(volumeID string) error {
 
 	fields := eff(map[string]interface{}{
-		"volumeId": volumeID,
+		"moduleName": d.r.Context,
+		"volumeId":   volumeID,
 	})
 
 	if volumeID == "" {

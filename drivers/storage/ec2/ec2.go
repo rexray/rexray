@@ -59,6 +59,17 @@ func newDriver() core.Driver {
 func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
+	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
+		"accessKey":  d.accessKey(),
+	})
+
+	if d.secretKey() == "" {
+		fields["secretKey"] = ""
+	} else {
+		fields["secretKey"] = "******"
+	}
+
 	var err error
 	d.instanceDocument, err = getInstanceIdendityDocument()
 	if err != nil {
@@ -66,10 +77,10 @@ func (d *driver) Init(r *core.RexRay) error {
 	}
 
 	auth := aws.Auth{
-		AccessKey: d.r.Config.GetString("aws.accessKey"),
-		SecretKey: d.r.Config.GetString("aws.secretKey"),
+		AccessKey: d.accessKey(),
+		SecretKey: d.secretKey(),
 	}
-	region := d.r.Config.GetString("aws.region")
+	region := d.region()
 	if region == "" {
 		region = d.instanceDocument.Region
 	}
@@ -78,7 +89,7 @@ func (d *driver) Init(r *core.RexRay) error {
 		aws.Regions[region],
 	)
 
-	log.WithField("provider", providerName).Info("storage driver initialized")
+	log.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -305,7 +316,6 @@ func (d *driver) RemoveSnapshot(snapshotID string) error {
 		return err
 	}
 
-	log.Println("Removed Snapshot: " + snapshotID)
 	return nil
 }
 
@@ -345,7 +355,10 @@ func (d *driver) GetDeviceNextAvailable() (string, error) {
 	for _, letter := range letters {
 		if !blockDeviceNames[letter] {
 			nextDeviceName := "/dev/xvd" + letter
-			log.Println("Got next device name: " + nextDeviceName)
+			log.WithFields(log.Fields{
+				"moduleName":     d.r.Context,
+				"driverName":     d.Name(),
+				"nextDeviceName": nextDeviceName}).Info("got next device name")
 			return nextDeviceName, nil
 		}
 	}
@@ -382,7 +395,10 @@ func (d *driver) CreateVolume(
 	}
 
 	if len(volumes) > 0 {
-		return nil, goof.WithField("volumeName", volumeName, "volume name already exists")
+		return nil, goof.WithFields(goof.Fields{
+			"moduleName": d.r.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName}, "volume name already exists")
 	}
 
 	resp, err := d.createVolume(
@@ -509,7 +525,13 @@ func (d *driver) createVolumeWait(
 	if runAsync {
 		return
 	}
-	log.Println("Waiting for volume creation to complete")
+	log.WithFields(log.Fields{
+		"moduleName":    d.r.Context,
+		"driverName":    d.Name(),
+		"runAsync":      runAsync,
+		"snapshotID":    snapshotID,
+		"volumeID":      volumeID,
+		"resp.VolumeId": resp.VolumeId}).Info("waiting for volume creation to complete")
 	if err = d.waitVolumeComplete(resp.VolumeId); err != nil {
 		return
 	}
@@ -710,7 +732,6 @@ func (d *driver) RemoveVolume(volumeID string) error {
 		return err
 	}
 
-	log.Println("Deleted Volume: " + volumeID)
 	return nil
 }
 
@@ -741,7 +762,14 @@ func (d *driver) AttachVolume(
 	}
 
 	if !runAsync {
-		log.Println("Waiting for volume attachment to complete")
+		log.WithFields(log.Fields{
+			"moduleName": d.r.Context,
+			"driverName": d.Name(),
+			"runAsync":   runAsync,
+			"volumeID":   volumeID,
+			"instanceID": instanceID,
+			"force":      force}).Info("waiting for volume attachment to complete")
+
 		err = d.waitVolumeAttach(volumeID, instanceID)
 		if err != nil {
 			return nil, err
@@ -753,8 +781,6 @@ func (d *driver) AttachVolume(
 		return nil, err
 	}
 
-	log.Println(fmt.Sprintf(
-		"Attached volume %s to instance %s", volumeID, instanceID))
 	return volumeAttachment, nil
 }
 
@@ -781,7 +807,13 @@ func (d *driver) DetachVolume(
 	}
 
 	if !runAsync {
-		log.Println("Waiting for volume detachment to complete")
+		log.WithFields(log.Fields{
+			"moduleName": d.r.Context,
+			"driverName": d.Name(),
+			"runAsync":   runAsync,
+			"volumeID":   volumeID,
+			"force":      force}).Info("waiting for volume detachment to complete")
+
 		err = d.waitVolumeDetach(volumeID)
 		if err != nil {
 			return err
@@ -823,8 +855,8 @@ func (d *driver) CopySnapshot(runAsync bool,
 	resp := &ec2.CopySnapshotResp{}
 
 	auth := aws.Auth{
-		AccessKey: d.r.Config.GetString("aws.accessKey"),
-		SecretKey: d.r.Config.GetString("aws.secretKey")}
+		AccessKey: d.accessKey(),
+		SecretKey: d.secretKey()}
 	destec2Instance := ec2.New(
 		auth,
 		aws.Regions[destinationRegion],
@@ -850,7 +882,12 @@ func (d *driver) CopySnapshot(runAsync bool,
 	}
 
 	if !runAsync {
-		log.Println("Waiting for snapshot copy to complete")
+		log.WithFields(log.Fields{
+			"moduleName":      d.r.Context,
+			"driverName":      d.Name(),
+			"runAsync":        runAsync,
+			"resp.SnapshotId": resp.SnapshotId}).Info("waiting for snapshot to complete")
+
 		err = d.waitSnapshotComplete(resp.SnapshotId)
 		if err != nil {
 			return nil, err
@@ -863,6 +900,18 @@ func (d *driver) CopySnapshot(runAsync bool,
 	}
 
 	return snapshot[0], nil
+}
+
+func (d *driver) accessKey() string {
+	return d.r.Config.GetString("aws.accessKey")
+}
+
+func (d *driver) secretKey() string {
+	return d.r.Config.GetString("aws.secretKey")
+}
+
+func (d *driver) region() string {
+	return d.r.Config.GetString("aws.region")
 }
 
 func configRegistration() *gofig.Registration {

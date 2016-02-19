@@ -410,23 +410,18 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 }
 
 func (d *driver) getVolume(volumeID, volumeName string) ([]xtio.Volume, error) {
-	fields := eff(map[string]interface{}{
-		"moduleName": d.r.Context,
-		"volumeID":   volumeID,
-		"volumeName": volumeName,
-	})
 
 	var volumes []xtio.Volume
 	if volumeID != "" || volumeName != "" {
 		volume, err := d.client.GetVolume(volumeID, volumeName)
 		if err != nil {
-			return nil, goof.WithFieldsE(fields, "error getting volume", err)
+			return nil, err
 		}
 		volumes = append(volumes, volume)
 	} else {
 		allVolumes, err := d.client.GetVolumes()
 		if err != nil {
-			return nil, goof.WithFieldsE(fields, "error getting volumes", err)
+			return nil, err
 		}
 		for _, volume := range allVolumes {
 			hrefFields := strings.Split(volume.Href, "/")
@@ -439,25 +434,30 @@ func (d *driver) getVolume(volumeID, volumeName string) ([]xtio.Volume, error) {
 }
 
 func (d *driver) GetVolume(volumeID, volumeName string) ([]*core.Volume, error) {
+	fields := eff(map[string]interface{}{
+		"moduleName": d.r.Context,
+		"volumeID":   volumeID,
+		"volumeName": volumeName,
+	})
 
 	volumes, err := d.getVolume(volumeID, volumeName)
 	if err != nil && err.Error() == "obj_not_found" {
 		return []*core.Volume{}, nil
 	} else if err != nil {
-		return nil, err
+		return nil, goof.WithFieldsE(fields, "error getting volumes", err)
 	}
 
 	mapDiskByID, err := d.getLocalDeviceByID()
 	if err != nil {
-		return nil, err
+		return nil, goof.WithFieldsE(fields, "error getting local device by ID", err)
 	}
 
 	if err := d.updateInitiatorsSig(); err != nil {
-		return nil, err
+		return nil, goof.WithFieldsE(fields, "error updating initiators signatures", err)
 	}
 
 	if err := d.updateVolumesSig(); err != nil {
-		return nil, err
+		return nil, goof.WithFieldsE(fields, "error updating volumes signature", err)
 	}
 
 	var volumesSD []*core.Volume

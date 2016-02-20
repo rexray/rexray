@@ -235,12 +235,33 @@ func stop() {
 }
 
 func (c *CLI) status() {
-	if !gotil.FileExists(util.PidFilePath()) {
+
+	pidFile := util.PidFilePath()
+
+	if !gotil.FileExists(pidFile) {
 		fmt.Println("REX-Ray is stopped")
 		return
 	}
-	pid, _ := util.ReadPidFile()
-	fmt.Printf("REX-Ray is running at pid %d\n", pid)
+
+	pid, pidErr := util.ReadPidFile()
+	if pidErr != nil {
+		fmt.Printf("Error reading REX-Ray PID file at %s\n", pidFile)
+		panic(1)
+	}
+
+	rrproc, err := findProcess(pid)
+
+	if err != nil || rrproc == nil {
+		if err := os.RemoveAll(pidFile); err != nil {
+			fmt.Println("Error removing stale REX-Ray PID file")
+			panic(1)
+		}
+		fmt.Println("REX-Ray is stopped")
+		return
+	}
+
+	fmt.Printf("REX-Ray is running at PID %d\n", pid)
+	return
 }
 
 func (c *CLI) restart() {

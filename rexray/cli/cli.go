@@ -3,10 +3,12 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 	glog "github.com/akutz/golf/logrus"
 	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
@@ -15,6 +17,7 @@ import (
 
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/rexray/cli/term"
+	"github.com/emccode/rexray/util"
 )
 
 func init() {
@@ -119,6 +122,37 @@ const (
 	lightBlueBg = lightBlue + 10
 )
 
+func validateConfig(path string) {
+	if !gotil.FileExists(path) {
+		return
+	}
+
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(
+			os.Stderr, "rexray: error reading config: %s\n%v\n", path, err)
+		os.Exit(1)
+	}
+
+	s := string(buf)
+
+	if _, err := gofig.ValidateYAMLString(s); err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"rexray: invalid config: %s\n\n  %v\n\n", path, err)
+		fmt.Fprint(
+			os.Stderr,
+			"paste the contents between ---BEGIN--- and ---END---\n")
+		fmt.Fprint(
+			os.Stderr,
+			"into http://www.yamllint.com/ to discover the issue\n\n")
+		fmt.Fprintln(os.Stderr, "---BEGIN---")
+		fmt.Fprintln(os.Stderr, s)
+		fmt.Fprintln(os.Stderr, "---END---")
+		os.Exit(1)
+	}
+}
+
 // New returns a new CLI using the current process's arguments.
 func New() *CLI {
 	return NewWithArgs(os.Args[1:]...)
@@ -126,6 +160,9 @@ func New() *CLI {
 
 // NewWithArgs returns a new CLI using the specified arguments.
 func NewWithArgs(a ...string) *CLI {
+
+	validateConfig(util.EtcFilePath("config.yml"))
+	validateConfig(fmt.Sprintf("%s/.rexray/config.yml", gotil.HomeDir()))
 
 	s := "REX-Ray:\n" +
 		"  A guest-based storage introspection tool that enables local\n" +
@@ -259,6 +296,7 @@ func (c *CLI) updateLogLevel() {
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	if c.cfgFile != "" && gotil.FileExists(c.cfgFile) {
+		validateConfig(c.cfgFile)
 		if err := c.r.Config.ReadConfigFile(c.cfgFile); err != nil {
 			panic(err)
 		}

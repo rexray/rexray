@@ -18,6 +18,38 @@ You can determine your currently installed version using `rexray version`:
     Commit: 36ccc425faeab49d792eda4851e3d72a85744874
     Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
+## Version 0.3.2 (TBA)
+
+### New Features
+* Support for Docker 1.10 and Volume Plugin Interface 1.2 ([#273](https://github.com/emccode/rexray/issues/273))
+* Stale PID File Prevents Service Start ([#258](https://github.com/emccode/rexray/issues/258))
+* Module/Personality Support ([#275](https://github.com/emccode/rexray/issues/275))
+* Isilon Preemption ([#231](https://github.com/emccode/rexray/issues/231))
+* Isilon Snapshots ([#260](https://github.com/emccode/rexray/issues/260))
+* boot2Docker Support ([#263](https://github.com/emccode/rexray/issues/263))
+* ScaleIO Dynamic Storage Pool Support ([#267](https://github.com/emccode/rexray/issues/267))
+
+### Enhancements
+* ScaleIO volume name limitation ([#304](https://github.com/emccode/rexray/issues/304))
+* Docker cache volumes for path operations ([#306](https://github.com/emccode/rexray/issues/306))
+* Config file validation ([#312](https://github.com/emccode/rexray/pull/312))
+* Better logging ([#296](https://github.com/emccode/rexray/pull/296))
+* Documentation Updates ([#285](https://github.com/emccode/rexray/issues/285))
+
+### Bug Fixes
+* ScaleIO re-authentication issue ([#303](https://github.com/emccode/rexray/issues/303))
+* Docker XtremIO create volume issue ([#307](https://github.com/emccode/rexray/issues/307))
+* Service status is reported correctly ([#310](https://github.com/emccode/rexray/pull/310))
+
+### Updates
+* Go 1.6 ([#308](https://github.com/emccode/rexray/pull/308))
+
+### Thank You
+* Dan Forrest
+* Kapil Jain
+* Alex Kamalov
+
+
 ## Version 0.3.1 (2015-12-30)
 
 ### New Features

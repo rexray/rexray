@@ -130,19 +130,19 @@ called `myfile` using `docker exec` that will be persisted throughout the
 example. Lastly, stop and remove the container so it no longer exists:
 ```bash
 $ docker volume create --driver rexray --opt size=10 --name hellopersistence
-$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+$ docker run -tid --volume-driver=rexray -v hellopersistence:/mystore \
   --name temp01 busybox
-$ docker exec temp01 "touch /mystore/myfile"
-$ docker exec temp01 "ls /mystore"
+$ docker exec temp01 touch /mystore/myfile
+$ docker exec temp01 ls /mystore
 $ docker rm -f temp01
 ```
 
 From `EC2b`, create a new container that mounts the pre-existing volume and
 verify `myfile` that was originally created from host `EC2a` has persisted.
 ```bash
-$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+$ docker run -tid --volume-driver=rexray -v hellopersistence:/mystore \
   --name temp01 busybox
-$ docker exec temp01 "ls /mystore"
+$ docker exec temp01 ls /mystore
 ```
 
 Congratulations, you have used `REX-Ray` to provide persistence for stateless

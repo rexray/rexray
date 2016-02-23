@@ -88,6 +88,14 @@ func (r *vdm) Init(rexray *RexRay) error {
 		return errors.ErrNoVolumeDrivers
 	}
 	r.mapUsedCount = make(map[string]*int)
+
+	log.WithField("pathCache", r.pathCache()).
+		Debug("checking volume path cache setting")
+
+	if r.pathCache() {
+		_, _ = r.List()
+	}
+
 	return nil
 }
 
@@ -186,12 +194,19 @@ func (r *vdm) countRelease(volumeName string) {
 }
 
 func (r *vdm) countExists(volumeName string) bool {
-	_, exists := r.mapUsedCount[volumeName]
-	log.WithFields(log.Fields{
+	fields := log.Fields{
 		"moduleName": r.rexray.Context,
 		"volumeName": volumeName,
-		"exists":     exists,
-	}).Info("status of count")
+	}
+
+	var c *int
+	var exists bool
+	if c, exists = r.mapUsedCount[volumeName]; exists {
+		fields["count"] = *c
+	}
+	fields["exists"] = exists
+
+	log.WithFields(fields).Info("status of count")
 
 	return exists
 }
@@ -268,11 +283,22 @@ func (r *vdm) Unmount(volumeName, volumeID string) error {
 // Path will return the mounted path of the volumeName or volumeID.
 func (r *vdm) Path(volumeName, volumeID string) (string, error) {
 	for _, d := range r.drivers {
-		log.WithFields(log.Fields{
+		fields := log.Fields{
 			"moduleName": r.rexray.Context,
 			"driverName": d.Name(),
 			"volumeName": volumeName,
-			"volumeID":   volumeID}).Info("vdm.Path")
+			"volumeID":   volumeID}
+
+		log.WithFields(fields).Info("vdm.Path")
+
+		if !r.pathCache() {
+			return d.Path(volumeName, volumeID)
+		}
+
+		if _, ok := r.mapUsedCount[volumeName]; !ok {
+			log.WithFields(fields).Debug("skipping path lookup")
+			return "", nil
+		}
 
 		return d.Path(volumeName, volumeID)
 	}
@@ -292,6 +318,13 @@ func (r *vdm) Get(volumeName string) (VolumeMap, error) {
 	return nil, errors.ErrNoVolumesDetected
 }
 
+func (volMap *VolumeMap) get(key string) (string, *VolumeMap) {
+	if val, ok := (*volMap)[key]; ok && val != "" {
+		return val, volMap
+	}
+	return "", nil
+}
+
 // Get will return all volumes
 func (r *vdm) List() ([]VolumeMap, error) {
 	for _, d := range r.drivers {
@@ -299,7 +332,35 @@ func (r *vdm) List() ([]VolumeMap, error) {
 			"moduleName": r.rexray.Context,
 			"driverName": d.Name()}).Info("vdm.List")
 
-		return d.List()
+		list, err := d.List()
+		if err != nil {
+			return nil, err
+		}
+
+		if !r.pathCache() {
+			return list, nil
+		}
+
+		var listNew []VolumeMap
+
+		for _, vol := range list {
+			var name string
+			var gvol *VolumeMap
+			if name, gvol = vol.get("Name"); gvol == nil {
+				continue
+			}
+
+			if _, ok := r.mapUsedCount[name]; !ok {
+				if _, gvol := vol.get("Mountpoint"); gvol != nil {
+					r.countInit(name)
+				}
+			}
+
+			listNew = append(listNew, *gvol)
+		}
+
+		return listNew, nil
+
 	}
 	return nil, errors.ErrNoVolumesDetected
 }
@@ -384,4 +445,8 @@ func (r *vdm) preempt() bool {
 
 func (r *vdm) ignoreUsedCount() bool {
 	return r.rexray.Config.GetBool("rexray.volume.unmount.ignoreusedcount")
+}
+
+func (r *vdm) pathCache() bool {
+	return r.rexray.Config.GetBool("rexray.volume.path.cache")
 }

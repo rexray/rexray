@@ -10,15 +10,17 @@ This page reviews the scheduling systems supported by `REX-Ray`.
 ## Docker
 `REX-Ray` has a `Docker Volume Driver` which is compatible with 1.7+.
 
-It is suggested that you are running `Docker 1.10+` with `REX-Ray` especially
-if you are sharing volumes between containers.
+It is suggested that you are running `Docker 1.10.2+` with `REX-Ray` especially
+if you are sharing volumes between containers, or you want interactive
+volume commands through `docker volume`.
 
-### Examples
+### Example Configuration
 Below is an example `config.yml` that can be used.  The `volume.mount.preempt`
 is an optional parameter here which enables any host to take control of a
 volume irrespective of whether other hosts are using the volume.  If this is
-set to `false` then mostly plugins ensure `safeety` first for locking the
-volume.
+set to `false` then plugins should ensure `safety` first by locking the
+volume from to the current owner host. We also specify `docker.size` which will
+create all new volumes at the specified size in GB.
 
 ```yaml
 rexray:
@@ -27,25 +29,52 @@ rexray:
   volume:
     mount:
       preempt: true
+docker:
+  size: 1
 virtualbox:
   endpoint: http://yourlaptop:18083
   volumePath: /Users/youruser/VirtualBox Volumes
   controllerName: SATA
 ```
 
+#### Extra Global Parameters
+These are all valid parameters that can be configured for the service.
+
+parameter|description
+------|-----------
+docker.size|Size in GB
+docker.iops|IOPS
+docker.volumeType|Type of Volume or Storage Pool
+docker.fsType|Type of filesystem for new volumes (ext4/xfs)
+docker.availabilityZone|Extensible parameter per storage driver
+linux.volume.rootPath|The path within the volume to private mount (/data)
+rexray.volume.mount.preempt|Forcefully take control of volumes when requested
+
+### Starting Volume Driver
+
 REX-Ray must be running as a service to serve requests from Docker. This can be
 done by running `rexray start`.  Make sure you restart REX-Ray if you make
 configuration changes.
 
-    $ ./rexray start
+    $ sudo rexray start
     Starting REX-Ray...SUCESS!
 
       The REX-Ray daemon is now running at PID 18141. To
       shutdown the daemon execute the following command:
 
-        sudo /home/ubuntu/rexray stop
+        sudo rexray stop
 
 Following this you can now leverage volumes with Docker.
+
+### Creating and Using Volumes
+There are two ways to interact with volumes. You can use the `docker run`
+command in combination with `--volume-driver` for new volumes, or
+specify `-v volumeName` by itself for existing volumes. The `--volumes-from`
+will also work when sharing existing volumes with a new container.
+
+The `docker volume` sub-command
+enables complete management to create, remove, and list existing volumes. All
+volumes are returned from the underlying storage platform.
 
   1. Run containers with volumes (1.7+)
 
@@ -55,7 +84,7 @@ Following this you can now leverage volumes with Docker.
 
         docker volume create --driver=rexray --opt=size=5 --name=test
 
-### Extra Options
+### Extra Volume Create Options
 option|description
 ------|-----------
 size|Size in GB

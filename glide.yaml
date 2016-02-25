@@ -1,5 +1,9 @@
 package: github.com/emccode/rexray
 import:
+  - package: github.com/Sirupsen/logrus
+    ref:     feature/logrus-aware-types
+    repo:    https://github.com/akutz/logrus
+    vcs:     git
   - package: github.com/akutz/goof
     ref:     master
     vcs:     git

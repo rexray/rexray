@@ -42,7 +42,7 @@ You can determine your currently installed version using `rexray version`:
 * Service status is reported correctly ([#310](https://github.com/emccode/rexray/pull/310))
 
 ### Updates
-* Go 1.6 ([#308](https://github.com/emccode/rexray/pull/308))
+* ~~Go 1.6 ([#308](https://github.com/emccode/rexray/pull/308))~~
 
 ### Thank You
 * Dan Forrest

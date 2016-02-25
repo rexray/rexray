@@ -680,6 +680,8 @@ func (d *driver) get(volumeName string) ([]core.VolumeMap, error) {
 	}
 
 	switch {
+	case len(volumes) == 0 && volumeName == "":
+		return nil, nil
 	case len(volumes) == 0:
 		return nil, goof.New("No volumes returned")
 	case len(volumes) > 1 && volumeName != "":

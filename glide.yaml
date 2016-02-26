@@ -19,9 +19,9 @@ import:
     ref:     support/rexray
     repo:    https://github.com/akutz/viper.git
     vcs:     git
-  - package: github.com/goamz/goamz
-    ref:     5c85623a00092be41b679e53ef47772cf8ded1da
-    repo:    https://github.com/clintonskitson/goamz
+  - name:    github.com/aws/aws-sdk-go
+    ref:     aac89266a9bc98ecbf440bb675e9dc95a94d8dc6
+    repo:    https://github.com/aws/aws-sdk-go.git
     vcs:     git
   - package: github.com/emccode/goscaleio
     ref:     37a71bf801a533473f94e4d4dcee2372c141e261

@@ -30,6 +30,7 @@ You can determine your currently installed version using `rexray version`:
 * ScaleIO Dynamic Storage Pool Support ([#267](https://github.com/emccode/rexray/issues/267))
 
 ### Enhancements
+* Improved installation documentation ([#331](https://github.com/emccode/rexray/issues/331))
 * ScaleIO volume name limitation ([#304](https://github.com/emccode/rexray/issues/304))
 * Docker cache volumes for path operations ([#306](https://github.com/emccode/rexray/issues/306))
 * Config file validation ([#312](https://github.com/emccode/rexray/pull/312))
@@ -37,6 +38,7 @@ You can determine your currently installed version using `rexray version`:
 * Documentation Updates ([#285](https://github.com/emccode/rexray/issues/285))
 
 ### Bug Fixes
+* Fixes issue with daemon process getting cleaned as part of SystemD Cgroup ([#327](https://github.com/emccode/rexray/issues/327))
 * Fixes regression in 0.3.2 RC3/RC4 resulting in no log file ([#319](https://github.com/emccode/rexray/issues/319))
 * Fixes no volumes returned on empty list ([#322](https://github.com/emccode/rexray/issues/322))
 * Fixes "Unsupported FS" when mounting/unmounting with EC2 ([#321](https://github.com/emccode/rexray/issues/321))

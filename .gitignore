@@ -1,3 +1,12 @@
+.site/
+site/
+.build/*/
+.build/*-filtered.json
+vendor/
+.project
+glide.lock
+.gomk/tmp
+
 glide.lock
 .site/
 site/

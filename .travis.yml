@@ -11,8 +11,14 @@ addons:
 before_script:
   - source .build/dependencies.sh
 
+install:
+  - make deps
+
 script:
-  - make build-all test rpm-all deb-all deploy-prep
+  - make -j 1 install-all
+  - make test-build
+  - make test
+  - make cover
 
 notifications:
   - slack: $SLACK_BUILDS

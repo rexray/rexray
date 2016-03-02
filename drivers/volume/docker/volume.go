@@ -142,8 +142,8 @@ func (d *driver) Mount(volumeName, volumeID string, overwriteFs bool, newFsType 
 	}
 
 	switch {
-	case d.volumeType() != "":
-		newFsType = d.volumeType()
+	case d.fsType() != "":
+		newFsType = d.fsType()
 	case newFsType == "":
 		newFsType = "ext4"
 	}
@@ -680,6 +680,8 @@ func (d *driver) get(volumeName string) ([]core.VolumeMap, error) {
 	}
 
 	switch {
+	case len(volumes) == 0 && volumeName == "":
+		return nil, nil
 	case len(volumes) == 0:
 		return nil, goof.New("No volumes returned")
 	case len(volumes) > 1 && volumeName != "":
@@ -861,8 +863,13 @@ func (d *driver) availabilityZone() string {
 	return d.r.Config.GetString("docker.availabilityZone")
 }
 
+func (d *driver) fsType() string {
+	return d.r.Config.GetString("docker.fsType")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Docker")
+	r.Key(gofig.String, "", "", "", "docker.fsType")
 	r.Key(gofig.String, "", "", "", "docker.volumeType")
 	r.Key(gofig.String, "", "", "", "docker.iops")
 	r.Key(gofig.String, "", "", "", "docker.size")

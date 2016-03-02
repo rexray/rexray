@@ -5,34 +5,66 @@ Getting the bits, bit by bit
 ---
 
 ## Overview
-There are several different methods available for installing `REX-Ray`.
+There are several different methods available for installing `REX-Ray`. It
+is written in Go, so there are typically no dependencies that must be installed
+alongside its single binary file. The manual methods can be extremely simple
+through tools like `curl`. You also have the opportunity to perform install
+steps individually. Following the manual installs, [configuration](/user-guide/config/)
+must take place.
+
+We also provide some great automation examples using tools like `Ansible` and
+`Puppet`. These approaches will perform the whole process including configuring
+the REX-Ray for you.
 
 ## Manual Installs
 Manual installations are in contrast to batch, automated installations.
 
+Make sure that before installing REX-Ray that you have uninstalled any previous
+versions. A `rexray uninstall` can assist with this where appropriate.
+
+Following an installation and configuration, you can use REX-Ray interactively
+through commands like `rexray volume`. Noticeably different from this is having
+REX-Ray integrate with Container Engines such as Docker. This requires that
+you run `rexray start` or relevant service start command like
+`systemctl start rexray`.
+
+
 ### Install via curl
 The following command will download the most recent, stable build of `REX-Ray`
-and install it to `/usr/bin/rexray.` On Linux systems `REX-Ray` will also be
-registered as either a SystemD or SystemV service.
+and install it to `/usr/bin/rexray` or `/opt/bin/rexray`. On Linux systems
+`REX-Ray` will also be registered as either a SystemD or SystemV service.
+
+There is an optional flag to choose which version to install. Notice how we
+specify `stable`, see the additional version names below that are also valid.
 
 ```shell
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable
 ```
 
 ### Install a pre-built binary
-There are also pre-built binaries available for the various release types.
+There are a handful of necessary manual steps to properly install REX-Ray
+from pre-built binaries.
 
-Version  | Description
----------|------------
-[Unstable](https://dl.bintray.com/emccode/rexray/unstable/latest/) | The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.
-[Staged](https://dl.bintray.com/emccode/rexray/staged/latest/) | The most up-to-date, release candidate REX-Ray binaries.
-[Stable](https://dl.bintray.com/emccode/rexray/stable/latest/) | The most up-to-date, stable REX-Ray binaries.
+1. Download the proper binary. There are also pre-built binaries available for
+the various release types.
+
+    Version  | Description
+    ---------|------------
+    [Unstable](https://dl.bintray.com/emccode/rexray/unstable/latest/) | The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.
+    [Staged](https://dl.bintray.com/emccode/rexray/staged/latest/) | The most up-to-date, release candidate REX-Ray binaries.
+    [Stable](https://dl.bintray.com/emccode/rexray/stable/latest/) | The most up-to-date, stable REX-Ray binaries.
+
+2. Uncompress and move the binary to the proper location. Preferably `/usr/bin`
+should be where REX-Ray is moved, but this path is not required.
+3. Install as a service with `rexray install`. This will register itself
+with SystemD or SystemV for proper initialization.
 
 ### Build and install from source
-`REX-Ray` is also fairly simple to build from source, especially if you have `Docker` installed:
+`REX-Ray` is also fairly simple to build from source, especially if you have
+`Docker` installed:
 
 ```shell
-SRC=$(mktemp -d 2> /dev/null || mktemp -d -t rexray 2> /dev/null) && cd $SRC && docker run --rm -it -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c "git clone https://github.com/emccode/rexray.git . && make build-all”
+SRC=$(mktemp -d 2> /dev/null || mktemp -d -t rexray 2> /dev/null) && cd $SRC && docker run --rm -it -e GO15VENDOREXPERIMENT=1 -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c "git clone https://github.com/emccode/rexray.git -b master . && make build-all”
 ```
 
 If you'd prefer to not use `Docker` to build `REX-Ray` then all you need is Go 1.5:
@@ -75,7 +107,7 @@ all the necessary variables to properly fill out your `config.yml` file.
 Install the role from Galaxy:
 
 ```shell
-ansible-galaxy install codenrhoden.rexray
+ansible-galaxy install emccode.rexray
 ```
 
 Example playbook for installing REX-Ray on GCE Docker hosts:
@@ -83,7 +115,7 @@ Example playbook for installing REX-Ray on GCE Docker hosts:
 ```yaml
 - hosts: gce_docker_hosts
   roles:
-  - { role: codenrhoden.rexray,
+  - { role: emccode.rexray,
       rexray_service: true,
       rexray_storage_drivers: [gce],
       rexray_gce_keyfile: "/opt/gce_keyfile" }

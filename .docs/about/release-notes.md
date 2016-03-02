@@ -37,12 +37,15 @@ You can determine your currently installed version using `rexray version`:
 * Documentation Updates ([#285](https://github.com/emccode/rexray/issues/285))
 
 ### Bug Fixes
+* Fixes regression in 0.3.2 RC3/RC4 resulting in no log file ([#319](https://github.com/emccode/rexray/issues/319))
+* Fixes no volumes returned on empty list ([#322](https://github.com/emccode/rexray/issues/322))
+* Fixes "Unsupported FS" when mounting/unmounting with EC2 ([#321](https://github.com/emccode/rexray/issues/321))
 * ScaleIO re-authentication issue ([#303](https://github.com/emccode/rexray/issues/303))
 * Docker XtremIO create volume issue ([#307](https://github.com/emccode/rexray/issues/307))
 * Service status is reported correctly ([#310](https://github.com/emccode/rexray/pull/310))
 
 ### Updates
-* Go 1.6 ([#308](https://github.com/emccode/rexray/pull/308))
+* <del>Go 1.6 ([#308](https://github.com/emccode/rexray/pull/308))</del>
 
 ### Thank You
 * Dan Forrest

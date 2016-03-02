@@ -349,14 +349,14 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Path: error decoding json")
+			log.WithField("error", err).Error("/VolumeDriver.List: error decoding json")
 			return
 		}
 
 		volList, err := m.r.Volume.List()
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.Get: error listing volumes")
+			log.WithField("error", err.Error()).Error("/VolumeDriver.List: error listing volumes")
 			log.Error(err)
 			return
 		}

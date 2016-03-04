@@ -527,18 +527,18 @@ that reside within the same Availability Zone.</p>
 called <code>myfile</code> using <code>docker exec</code> that will be persisted throughout the
 example. Lastly, stop and remove the container so it no longer exists:</p>
 <pre><code class="bash">$ docker volume create --driver rexray --opt size=10 --name hellopersistence
-$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+$ docker run -tid --volume-driver=rexray -v hellopersistence:/mystore \
   --name temp01 busybox
-$ docker exec temp01 &quot;touch /mystore/myfile&quot;
-$ docker exec temp01 &quot;ls /mystore&quot;
+$ docker exec temp01 touch /mystore/myfile
+$ docker exec temp01 ls /mystore
 $ docker rm -f temp01
 </code></pre>
 
 <p>From <code>EC2b</code>, create a new container that mounts the pre-existing volume and
 verify <code>myfile</code> that was originally created from host <code>EC2a</code> has persisted.</p>
-<pre><code class="bash">$ docker run -d --volume-driver=rexray -v hellopersistence:/mystore \
+<pre><code class="bash">$ docker run -tid --volume-driver=rexray -v hellopersistence:/mystore \
   --name temp01 busybox
-$ docker exec temp01 &quot;ls /mystore&quot;
+$ docker exec temp01 ls /mystore
 </code></pre>
 
 <p>Congratulations, you have used <code>REX-Ray</code> to provide persistence for stateless

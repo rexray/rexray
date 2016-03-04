@@ -377,7 +377,9 @@
                     
                     <li><a href="#ignore-used-count">Ignore Used Count</a></li>
                     
-                    <li><a href="#volume-path-031">Volume Path (0.3.1)</a></li>
+                    <li><a href="#volume-path-disable-cache-032">Volume Path Disable Cache (0.3.2)</a></li>
+                    
+                    <li><a href="#volume-root-path-031">Volume Root Path (0.3.1)</a></li>
                     
                     <li><a href="#volume-filemode-031">Volume FileMode (0.3.1)</a></li>
                     
@@ -1203,7 +1205,21 @@ will cause issues if <em>multiple containers</em> are sharing a volume.  If you 
 sharing volumes, it is recommended that you reset the service along with the
 accompanying container runtime (if this setting is false) to ensure they are
 synchronized.  </p>
-<h4 id="volume-path-031">Volume Path (0.3.1)</h4>
+<h4 id="volume-path-disable-cache-032">Volume Path Disable Cache (0.3.2)</h4>
+<p>In order to minimize the impact to return <code>Path</code> requests, a caching
+capability has been introduced by default. A <code>List</code> request will cause the
+returned volumes and paths to be evaluated and those with active mounts are
+recorded. Subsequent <code>Path</code> requests for volumes that have no recorded mounts
+will not result in active path lookups. Once the mount counter is initialized or
+a <code>List</code> operation occurs where a mount is recorded, the volume will be looked
+up for future <code>Path</code> operations.</p>
+<pre><code class="yaml">rexray:
+  volume:
+    path:
+      disableCache: true
+</code></pre>
+
+<h4 id="volume-root-path-031">Volume Root Path (0.3.1)</h4>
 <p>When volumes are mounted there can be an additional path that is specified to
 be created and passed as the valid mount point.  This is required for certain
 applications that do not want to place data from the root of a mount point.<br />

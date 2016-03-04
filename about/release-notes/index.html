@@ -273,7 +273,7 @@
             
             </li>
         
-            <li><a href="#version-031-2015-12-30">Version 0.3.1 (2015-12-30)</a>
+            <li><a href="#version-032-2016-03-04">Version 0.3.2 (2016-03-04)</a>
             
                 <ul class="nav nav-stacked">
                 
@@ -282,6 +282,34 @@
                 </li>
                 
                 <li><a href="#enhancements">Enhancements</a><!--
+                -->
+                </li>
+                
+                <li><a href="#bug-fixes">Bug Fixes</a><!--
+                -->
+                </li>
+                
+                <li><a href="#updates">Updates</a><!--
+                -->
+                </li>
+                
+                <li><a href="#thank-you">Thank You</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
+        
+            <li><a href="#version-031-2015-12-30">Version 0.3.1 (2015-12-30)</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#new-features_1">New Features</a><!--
+                -->
+                </li>
+                
+                <li><a href="#enhancements_1">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -301,11 +329,11 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#new-features_1">New Features</a><!--
+                <li><a href="#new-features_2">New Features</a><!--
                 -->
                 </li>
                 
-                <li><a href="#enhancements_1">Enhancements</a><!--
+                <li><a href="#enhancements_2">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -333,11 +361,11 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#new-features_2">New Features</a><!--
+                <li><a href="#new-features_3">New Features</a><!--
                 -->
                 </li>
                 
-                <li><a href="#enhancements_2">Enhancements</a><!--
+                <li><a href="#enhancements_3">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -397,13 +425,53 @@ Branch: master
 Commit: 36ccc425faeab49d792eda4851e3d72a85744874
 Formed: Tue, 27 Oct 2015 12:54:19 CDT
 </code></pre>
-<h2 id="version-031-2015-12-30">Version 0.3.1 (2015-12-30)</h2>
+<h2 id="version-032-2016-03-04">Version 0.3.2 (2016-03-04)</h2>
 <h3 id="new-features">New Features</h3>
+<ul>
+<li>Support for Docker 1.10 and Volume Plugin Interface 1.2 (<a href="https://github.com/emccode/rexray/issues/273">#273</a>)</li>
+<li>Stale PID File Prevents Service Start (<a href="https://github.com/emccode/rexray/issues/258">#258</a>)</li>
+<li>Module/Personality Support (<a href="https://github.com/emccode/rexray/issues/275">#275</a>)</li>
+<li>Isilon Preemption (<a href="https://github.com/emccode/rexray/issues/231">#231</a>)</li>
+<li>Isilon Snapshots (<a href="https://github.com/emccode/rexray/issues/260">#260</a>)</li>
+<li>boot2Docker Support (<a href="https://github.com/emccode/rexray/issues/263">#263</a>)</li>
+<li>ScaleIO Dynamic Storage Pool Support (<a href="https://github.com/emccode/rexray/issues/267">#267</a>)</li>
+</ul>
+<h3 id="enhancements">Enhancements</h3>
+<ul>
+<li>Improved installation documentation (<a href="https://github.com/emccode/rexray/issues/331">#331</a>)</li>
+<li>ScaleIO volume name limitation (<a href="https://github.com/emccode/rexray/issues/304">#304</a>)</li>
+<li>Docker cache volumes for path operations (<a href="https://github.com/emccode/rexray/issues/306">#306</a>)</li>
+<li>Config file validation (<a href="https://github.com/emccode/rexray/pull/312">#312</a>)</li>
+<li>Better logging (<a href="https://github.com/emccode/rexray/pull/296">#296</a>)</li>
+<li>Documentation Updates (<a href="https://github.com/emccode/rexray/issues/285">#285</a>)</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li>Fixes issue with daemon process getting cleaned as part of SystemD Cgroup (<a href="https://github.com/emccode/rexray/issues/327">#327</a>)</li>
+<li>Fixes regression in 0.3.2 RC3/RC4 resulting in no log file (<a href="https://github.com/emccode/rexray/issues/319">#319</a>)</li>
+<li>Fixes no volumes returned on empty list (<a href="https://github.com/emccode/rexray/issues/322">#322</a>)</li>
+<li>Fixes "Unsupported FS" when mounting/unmounting with EC2 (<a href="https://github.com/emccode/rexray/issues/321">#321</a>)</li>
+<li>ScaleIO re-authentication issue (<a href="https://github.com/emccode/rexray/issues/303">#303</a>)</li>
+<li>Docker XtremIO create volume issue (<a href="https://github.com/emccode/rexray/issues/307">#307</a>)</li>
+<li>Service status is reported correctly (<a href="https://github.com/emccode/rexray/pull/310">#310</a>)</li>
+</ul>
+<h3 id="updates">Updates</h3>
+<ul>
+<li><del>Go 1.6 (<a href="https://github.com/emccode/rexray/pull/308">#308</a>)</del></li>
+</ul>
+<h3 id="thank-you">Thank You</h3>
+<ul>
+<li>Dan Forrest</li>
+<li>Kapil Jain</li>
+<li>Alex Kamalov</li>
+</ul>
+<h2 id="version-031-2015-12-30">Version 0.3.1 (2015-12-30)</h2>
+<h3 id="new-features_1">New Features</h3>
 <ul>
 <li>Support for VirtualBox (<a href="https://github.com/emccode/rexray/issues/209">#209</a>)</li>
 <li>Added Developer's Guide (<a href="https://github.com/emccode/rexray/issues/226">#226</a>)</li>
 </ul>
-<h3 id="enhancements">Enhancements</h3>
+<h3 id="enhancements_1">Enhancements</h3>
 <ul>
 <li>Mount/Unmount Accounting (<a href="https://github.com/emccode/rexray/issues/212">#212</a>)</li>
 <li>Support for Sub-Path Volume Mounts / Permissions (<a href="https://github.com/emccode/rexray/issues/215">#215</a>)</li>
@@ -415,14 +483,14 @@ complete list click <a href="https://github.com/emccode/rexray/pulls?q=is%3Apr+i
 <p>Click <a href="https://dl.bintray.com/emccode/rexray/stable/0.3.1/">here</a> for the 0.3.1
 binaries.</p>
 <h2 id="version-030-2015-12-08">Version 0.3.0 (2015-12-08)</h2>
-<h3 id="new-features_1">New Features</h3>
+<h3 id="new-features_2">New Features</h3>
 <ul>
 <li>Pre-Emption support (<a href="https://github.com/emccode/rexray/issues/190">#190</a>)</li>
 <li>Support for VMAX (<a href="https://github.com/emccode/rexray/issues/197">#197</a>)</li>
 <li>Support for Isilon (<a href="https://github.com/emccode/rexray/issues/198">#198</a>)</li>
 <li>Support for Google Compute Engine (GCE) (<a href="https://github.com/emccode/rexray/issues/194">#194</a>)</li>
 </ul>
-<h3 id="enhancements_1">Enhancements</h3>
+<h3 id="enhancements_2">Enhancements</h3>
 <ul>
 <li>Added driver example configurations (<a href="https://github.com/emccode/rexray/issues/201">#201</a>)</li>
 <li>New configuration file format (<a href="https://github.com/emccode/rexray/issues/188">#188</a>)</li>
@@ -446,12 +514,12 @@ binaries.</p>
 <h2 id="version-021-2015-10-27">Version 0.2.1 (2015-10-27)</h2>
 <p>REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,
 and continued foundation changes for future features.</p>
-<h3 id="new-features_2">New Features</h3>
+<h3 id="new-features_3">New Features</h3>
 <ul>
 <li>Support for OpenStack (<a href="https://github.com/emccode/rexray/issues/111">#111</a>)</li>
 <li>Create volume from volume using existing settings (<a href="https://github.com/emccode/rexray/issues/129">#129</a>)</li>
 </ul>
-<h3 id="enhancements_2">Enhancements</h3>
+<h3 id="enhancements_3">Enhancements</h3>
 <ul>
 <li>A+ <a href="http://goreportcard.com/report/emccode/rexray">GoReport Card</a></li>
 <li>A+ <a href="https://coveralls.io/github/emccode/rexray?branch=master">Code Coverage</a></li>

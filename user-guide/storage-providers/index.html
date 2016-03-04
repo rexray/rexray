@@ -813,15 +813,10 @@ may choose at random which <code>protectionDomain</code> the pool comes from.</p
 <li>Edit the <code>/opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties</code>
 file and append the proper MDM IP addresses to the following <code>mdm.ip.addresses=</code>
 parameter.</li>
-<li>Update the <code>gw_password</code> parameter and run the following command.</li>
-</ul>
-<pre><code class="bash">java -jar /opt/emc/scaleio/gateway/webapps/ROOT/resources/install-CLI.jar \
-  --reset_password 'gw_password' \
-  --config_file /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties
-</code></pre>
-
-<ul>
+<li>By default the password is the same as your administrative MDM password.</li>
 <li>Start the gateway <code>service scaleio-gateway start</code>.</li>
+<li>With 1.32 we have noticed a restart of the gateway may be necessary as well
+after an initial install with <code>service scaleio-gateway restart</code>. </li>
 </ul>
 <h3 id="activating-the-driver_5">Activating the Driver</h3>
 <p>To activate the ScaleIO driver please follow the instructions for

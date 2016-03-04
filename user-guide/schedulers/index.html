@@ -277,11 +277,25 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#examples">Examples</a><!--
+                <li><a href="#example-configuration">Example Configuration</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#extra-global-parameters">Extra Global Parameters</a></li>
+                    
+                </ul>
                 -->
                 </li>
                 
-                <li><a href="#extra-options">Extra Options</a><!--
+                <li><a href="#starting-volume-driver">Starting Volume Driver</a><!--
+                -->
+                </li>
+                
+                <li><a href="#creating-and-using-volumes">Creating and Using Volumes</a><!--
+                -->
+                </li>
+                
+                <li><a href="#extra-volume-create-options">Extra Volume Create Options</a><!--
                 -->
                 </li>
                 
@@ -321,38 +335,91 @@
 <p>This page reviews the scheduling systems supported by <code>REX-Ray</code>.</p>
 <h2 id="docker">Docker</h2>
 <p><code>REX-Ray</code> has a <code>Docker Volume Driver</code> which is compatible with 1.7+.</p>
-<p>It is suggested that you are running <code>Docker 1.10+</code> with <code>REX-Ray</code> especially
-if you are sharing volumes between containers.</p>
-<h3 id="examples">Examples</h3>
+<p>It is suggested that you are running <code>Docker 1.10.2+</code> with <code>REX-Ray</code> especially
+if you are sharing volumes between containers, or you want interactive
+volume commands through <code>docker volume</code>.</p>
+<h3 id="example-configuration">Example Configuration</h3>
 <p>Below is an example <code>config.yml</code> that can be used.  The <code>volume.mount.preempt</code>
 is an optional parameter here which enables any host to take control of a
 volume irrespective of whether other hosts are using the volume.  If this is
-set to <code>false</code> then mostly plugins ensure <code>safeety</code> first for locking the
-volume.</p>
+set to <code>false</code> then plugins should ensure <code>safety</code> first by locking the
+volume from to the current owner host. We also specify <code>docker.size</code> which will
+create all new volumes at the specified size in GB.</p>
 <pre><code class="yaml">rexray:
   storageDrivers:
   - virtualbox
   volume:
     mount:
       preempt: true
+docker:
+  size: 1
 virtualbox:
   endpoint: http://yourlaptop:18083
   volumePath: /Users/youruser/VirtualBox Volumes
   controllerName: SATA
 </code></pre>
 
+<h4 id="extra-global-parameters">Extra Global Parameters</h4>
+<p>These are all valid parameters that can be configured for the service.</p>
+<table>
+<thead>
+<tr>
+<th>parameter</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>docker.size</td>
+<td>Size in GB</td>
+</tr>
+<tr>
+<td>docker.iops</td>
+<td>IOPS</td>
+</tr>
+<tr>
+<td>docker.volumeType</td>
+<td>Type of Volume or Storage Pool</td>
+</tr>
+<tr>
+<td>docker.fsType</td>
+<td>Type of filesystem for new volumes (ext4/xfs)</td>
+</tr>
+<tr>
+<td>docker.availabilityZone</td>
+<td>Extensible parameter per storage driver</td>
+</tr>
+<tr>
+<td>linux.volume.rootPath</td>
+<td>The path within the volume to private mount (/data)</td>
+</tr>
+<tr>
+<td>rexray.volume.mount.preempt</td>
+<td>Forcefully take control of volumes when requested</td>
+</tr>
+</tbody>
+</table>
+<h3 id="starting-volume-driver">Starting Volume Driver</h3>
 <p>REX-Ray must be running as a service to serve requests from Docker. This can be
 done by running <code>rexray start</code>.  Make sure you restart REX-Ray if you make
 configuration changes.</p>
-<pre><code>$ ./rexray start
+<pre><code>$ sudo rexray start
 Starting REX-Ray...SUCESS!
 
   The REX-Ray daemon is now running at PID 18141. To
   shutdown the daemon execute the following command:
 
-    sudo /home/ubuntu/rexray stop
+    sudo rexray stop
 </code></pre>
 <p>Following this you can now leverage volumes with Docker.</p>
+<h3 id="creating-and-using-volumes">Creating and Using Volumes</h3>
+<p>There are two ways to interact with volumes. You can use the <code>docker run</code>
+command in combination with <code>--volume-driver</code> for new volumes, or
+specify <code>-v volumeName</code> by itself for existing volumes. The <code>--volumes-from</code>
+will also work when sharing existing volumes with a new container.</p>
+<p>The <code>docker volume</code> sub-command
+enables complete management to create, remove, and list existing volumes. All
+volumes are returned from the underlying storage platform.</p>
 <ol>
 <li>
 <p>Run containers with volumes (1.7+)</p>
@@ -365,7 +432,7 @@ Starting REX-Ray...SUCESS!
 </code></pre>
 </li>
 </ol>
-<h3 id="extra-options">Extra Options</h3>
+<h3 id="extra-volume-create-options">Extra Volume Create Options</h3>
 <table>
 <thead>
 <tr>

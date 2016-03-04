@@ -1,7 +1,9 @@
+go_import_path: github.com/emccode/rexray
+
 language: go
 
 go:
-  - 1.6
+  - 1.5.1
 
 addons:
   apt:

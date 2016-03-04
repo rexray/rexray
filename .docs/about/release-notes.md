@@ -18,7 +18,7 @@ You can determine your currently installed version using `rexray version`:
     Commit: 36ccc425faeab49d792eda4851e3d72a85744874
     Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
-## Version 0.3.2 (TBA)
+## Version 0.3.2 (2016-03-04)
 
 ### New Features
 * Support for Docker 1.10 and Volume Plugin Interface 1.2 ([#273](https://github.com/emccode/rexray/issues/273))
@@ -30,6 +30,7 @@ You can determine your currently installed version using `rexray version`:
 * ScaleIO Dynamic Storage Pool Support ([#267](https://github.com/emccode/rexray/issues/267))
 
 ### Enhancements
+* Improved installation documentation ([#331](https://github.com/emccode/rexray/issues/331))
 * ScaleIO volume name limitation ([#304](https://github.com/emccode/rexray/issues/304))
 * Docker cache volumes for path operations ([#306](https://github.com/emccode/rexray/issues/306))
 * Config file validation ([#312](https://github.com/emccode/rexray/pull/312))
@@ -37,12 +38,16 @@ You can determine your currently installed version using `rexray version`:
 * Documentation Updates ([#285](https://github.com/emccode/rexray/issues/285))
 
 ### Bug Fixes
+* Fixes issue with daemon process getting cleaned as part of SystemD Cgroup ([#327](https://github.com/emccode/rexray/issues/327))
+* Fixes regression in 0.3.2 RC3/RC4 resulting in no log file ([#319](https://github.com/emccode/rexray/issues/319))
+* Fixes no volumes returned on empty list ([#322](https://github.com/emccode/rexray/issues/322))
+* Fixes "Unsupported FS" when mounting/unmounting with EC2 ([#321](https://github.com/emccode/rexray/issues/321))
 * ScaleIO re-authentication issue ([#303](https://github.com/emccode/rexray/issues/303))
 * Docker XtremIO create volume issue ([#307](https://github.com/emccode/rexray/issues/307))
 * Service status is reported correctly ([#310](https://github.com/emccode/rexray/pull/310))
 
 ### Updates
-* Go 1.6 ([#308](https://github.com/emccode/rexray/pull/308))
+* <del>Go 1.6 ([#308](https://github.com/emccode/rexray/pull/308))</del>
 
 ### Thank You
 * Dan Forrest

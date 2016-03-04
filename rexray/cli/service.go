@@ -17,7 +17,17 @@ import (
 	"github.com/emccode/rexray/util"
 )
 
+var (
+	useSystemDForSCMCmds = gotil.FileExists(util.UnitFilePath) &&
+		getInitSystemType() == SystemD
+)
+
 func (c *CLI) start() {
+	if !c.fg && useSystemDForSCMCmds {
+		startViaSystemD()
+		return
+	}
+
 	checkOpPerms("started")
 
 	log.WithField("os.Args", os.Args).Debug("invoking service start")
@@ -59,6 +69,33 @@ func failOnError(err error) {
 	if err != nil {
 		fmt.Printf("FAILED!\n  %v\n", err)
 		panic(err)
+	}
+}
+
+func startViaSystemD() {
+	execSystemDCmd("start")
+	statusViaSystemD()
+}
+
+func stopViaSystemD() {
+	execSystemDCmd("stop")
+	statusViaSystemD()
+}
+
+func statusViaSystemD() {
+	execSystemDCmd("status")
+}
+
+func execSystemDCmd(cmdType string) {
+	cmd := exec.Command("systemctl", cmdType, "-l", "rexray")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+				panic(status.ExitStatus())
+			}
+		}
 	}
 }
 
@@ -213,6 +250,11 @@ func (c *CLI) tryToStartDaemon() {
 }
 
 func stop() {
+	if useSystemDForSCMCmds {
+		stopViaSystemD()
+		return
+	}
+
 	checkOpPerms("stopped")
 
 	if !gotil.FileExists(util.PidFilePath()) {
@@ -235,6 +277,10 @@ func stop() {
 }
 
 func (c *CLI) status() {
+	if useSystemDForSCMCmds {
+		statusViaSystemD()
+		return
+	}
 
 	pidFile := util.PidFilePath()
 

@@ -18,7 +18,7 @@ You can determine your currently installed version using `rexray version`:
     Commit: 36ccc425faeab49d792eda4851e3d72a85744874
     Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
-## Version 0.3.2 (TBA)
+## Version 0.3.2 (2016-03-04)
 
 ### New Features
 * Support for Docker 1.10 and Volume Plugin Interface 1.2 ([#273](https://github.com/emccode/rexray/issues/273))

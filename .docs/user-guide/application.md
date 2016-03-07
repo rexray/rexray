@@ -8,7 +8,7 @@ Persistence for applications in containers.
 
 This tutorial will serve as a generic guide for taking Docker images found on
 [Docker Hub](http://hub.docker.com) and utilizing persistent external storage
-via `REX-Ray`.  This should provide guidance for certain applications, but also
+via `REX-Ray`. This should provide guidance for certain applications, but also
 generically so you can add persistence properly to other applications.
 
 ## Instructions
@@ -17,8 +17,8 @@ The following are a set of instructions for investigating an existing container
 image to determine how to properly apply persistence.
 
 The first step is to determine which application you are looking to deploy, then
-proceed to its [Docker Hub](http://hub.docker.com) page.  In this example, we
-will be using [PostgreSQL on Docker Hub](https://hub.docker.com/_/postgres/).  
+proceed to its [Docker Hub](http://hub.docker.com) page. In this example, we
+will be using [PostgreSQL on Docker Hub](https://hub.docker.com/_/postgres/).
 
 Most application vendors will post their Dockerfile on the main page for that
 given image. Many of them will also make them available by version minimally via
@@ -27,7 +27,7 @@ the [Dockerfile for version 9.3](https://github.com/docker-library/postgres/blob
 since it happens to be the default version provided with Ubuntu 14.04.
 
 Properly written Dockerfiles will include the proper information that separates
-persistent information from the container image and deployed container.  This is
+persistent information from the container image and deployed container. This is
 visible when the author of the `Dockerfile` includes a ```VOLUME``` statement to
 define where stateful information should be held.
 
@@ -41,7 +41,7 @@ VOLUME /var/lib/postgresql/data
 ```
 
 The single path or paths listed refer to the volumes that should be attached
-when running the container.  Following this you can create a volume and attach
+when running the container. Following this you can create a volume and attach
 it to a container with the `-v` flag.
 
 - [PostgreSQL](https://hub.docker.com/_/postgres/)  

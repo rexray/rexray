@@ -187,5 +187,5 @@ Bumped active dev version to v0.3.1-rc2
 This patch bumps the active dev version to v0.3.1-rc2.
 ```
 
-Once the `VERSION` file change is committed, push the change and open a pull 
+Once the `VERSION` file change is committed, push the change and open a pull
 request to merge into the project.

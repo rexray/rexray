@@ -47,6 +47,23 @@ func eff(fields goof.Fields) map[string]interface{} {
 	return errFields
 }
 
+func authEff(fields goof.Fields, accessKey, secretKey string) map[string]interface{} {
+	errFields := eff(map[string]interface{}{
+		"accessKey": accessKey,
+	})
+	if secretKey == "" {
+		errFields["secretKey"] = ""
+	} else {
+		errFields["secretKey"] = "******"
+	}
+	if fields != nil {
+		for k, v := range fields {
+			errFields[k] = v
+		}
+	}
+	return errFields
+}
+
 func init() {
 	core.RegisterDriver(providerName, newDriver)
 	gofig.Register(configRegistration())
@@ -59,16 +76,11 @@ func newDriver() core.Driver {
 func (d *driver) Init(r *core.RexRay) error {
 	d.r = r
 
-	fields := eff(map[string]interface{}{
-		"moduleName": d.r.Context,
-		"accessKey":  d.accessKey(),
-	})
-
-	if d.secretKey() == "" {
-		fields["secretKey"] = ""
-	} else {
-		fields["secretKey"] = "******"
-	}
+	fields := authEff(
+		map[string]interface{}{"moduleName": d.r.Context},
+		d.accessKey(),
+		d.secretKey(),
+	)
 
 	var err error
 	d.instanceDocument, err = getInstanceIdendityDocument()
@@ -76,10 +88,16 @@ func (d *driver) Init(r *core.RexRay) error {
 		return goof.WithFields(ef(), "error getting instance id doc")
 	}
 
-	auth := aws.Auth{
-		AccessKey: d.accessKey(),
-		SecretKey: d.secretKey(),
+	auth, err := aws.GetAuth(
+		d.accessKey(),
+		d.secretKey(),
+		"",
+		time.Now(),
+	)
+	if err != nil {
+		return goof.WithFieldsE(fields, "error getting AWS credentials", err)
 	}
+
 	region := d.region()
 	if region == "" {
 		region = d.instanceDocument.Region
@@ -854,9 +872,20 @@ func (d *driver) CopySnapshot(runAsync bool,
 	}
 	resp := &ec2.CopySnapshotResp{}
 
-	auth := aws.Auth{
-		AccessKey: d.accessKey(),
-		SecretKey: d.secretKey()}
+	authFields := authEff(
+		map[string]interface{}{"moduleName": d.r.Context},
+		d.accessKey(),
+		d.secretKey(),
+	)
+	auth, err := aws.GetAuth(
+		d.accessKey(),
+		d.secretKey(),
+		"",
+		time.Now(),
+	)
+	if err != nil {
+		return nil, goof.WithFieldsE(authFields, "error getting AWS credentials", err)
+	}
 	destec2Instance := ec2.New(
 		auth,
 		aws.Regions[destinationRegion],

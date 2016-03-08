@@ -270,8 +270,14 @@ rackspace:
 
 ## ScaleIO
 The ScaleIO driver registers a storage driver named `scaleio` with the `REX-Ray`
-driver manager and is used to connect and manage ScaleIO storage.  The ScaleIO
-`REST Gateway` is required for the driver to function.
+driver manager and is used to connect and manage ScaleIO storage.  
+
+
+### Requirements
+ - The ScaleIO `REST Gateway` is required for the driver to function.
+ - REX-Ray must reside on a host that has the SDC client installed. You should
+ be able to run `/opt/emc/scaleio/sdc/bin/drv_cfg --query_guid` and it should
+ return the local SDC GUID.
 
 ### Configuration
 The following is an example with all possible fields configured.  For a running
@@ -327,7 +333,7 @@ parameter.
 - By default the password is the same as your administrative MDM password.
 - Start the gateway `service scaleio-gateway start`.
  - With 1.32 we have noticed a restart of the gateway may be necessary as well
-after an initial install with `service scaleio-gateway restart`. 
+after an initial install with `service scaleio-gateway restart`.
 
 ### Activating the Driver
 To activate the ScaleIO driver please follow the instructions for
@@ -335,12 +341,22 @@ To activate the ScaleIO driver please follow the instructions for
 using `scaleio` as the driver name.
 
 ### Troubleshooting
-Ensure that you are able to open a TCP connection to the gateway with the
+- Verify your parameters for `system`, `protectionDomain`, and
+`storagePool` are correct.
+- Verify that have the ScaleIO SDC service installed with
+`rpm -qa EMC-ScaleIO-sdc`
+- Verify that the following command returns the local SDC GUID
+`/opt/emc/scaleio/sdc/bin/drv_cfg --query_guid`.
+- Ensure that you are able to open a TCP connection to the gateway with the
 address that you will be supplying below in the `gateway_ip` parameter.  For
 example `telnet gateway_ip 443` should open a successful connection.  Removing
 the `EMC-ScaleIO-gateway` package and reinstalling can force re-creation of
 self-signed certs which may help resolve gateway problems.  Also try restarting
 the gateway with `service scaleio-gateway restart`.
+- Ensure that you have the correct authentication credentials for the gateway.
+This can be done with a curl login. You should receive an authentication
+token in return.
+`curl --insecure --user admin:XScaleio123 https://gw_ip:443/api/login`
 
 ### Examples
 Below is a full `config.yml` file that works with ScaleIO.

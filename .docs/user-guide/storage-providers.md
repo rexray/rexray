@@ -14,8 +14,9 @@ EC2 driver is made possible by the
 [goamz project](https://github.com/mitchellh/goamz).
 
 ### Configuration
-The following is an example configuration of the AWS EC2 driver.
+The AWS EC2 driver can be configured several ways. In descending order of precedence:
 
+1. REX-Ray config
 ```yaml
 aws:
     accessKey: MyAccessKey
@@ -26,6 +27,12 @@ aws:
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
 [transformed](./config/#all-other-properties).
+
+1. Shared credentials file: `~/.aws/credentials`, or `C:\Users\USERNAME\.aws\credentials` on Windows
+1. Environment variables: `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+1. IAM Instance Profile
+
+The last three configuration methods are documented [here](https://docs.aws.amazon.com/amazonswf/latest/awsrbflowguide/set-up-creds.html).
 
 ### Activating the Driver
 To activate the EC2 driver please follow the instructions for

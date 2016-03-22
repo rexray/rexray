@@ -24,7 +24,7 @@ GO_LINT_MARKER_PATHS_$2 += $$(GO_LINT_MARKER_FILE_$1)
 $1-lint: $$(GO_LINT_MARKER_FILE_$1)
 $$(GO_LINT_MARKER_FILE_$1): $1 | $$(GOLINT_BIN) $(PRINTF) $(TOUCH)
 	@$$(INDENT)
-	fgt golint $$?
+	$$(GOFGT_BIN) $$(GOLINT_BIN) $$?
 	@$$(call GO_TOUCH_MARKER,$$@)
 
 $$(GO_LINT_MARKER_FILE_$1)-clean: | $$(PRINTF) $$(RM)

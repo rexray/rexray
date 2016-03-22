@@ -17,7 +17,7 @@ GO_CYCLO_MARKER_PATHS_$2 += $$(GO_CYCLO_MARKER_FILE_$1)
 $1-cyclo: $$(GO_CYCLO_MARKER_FILE_$1)
 $$(GO_CYCLO_MARKER_FILE_$1): $1 | $$(GOCYCLO_BIN) $$(TOUCH) $$(PRINTF)
 	@$$(INDENT)
-	gocyclo -over 15 $$?
+	$$(GOCYCLO_BIN) -over 15 $$?
 	@$$(call GO_TOUCH_MARKER,$$@)
 
 $$(GO_CYCLO_MARKER_FILE_$1)-clean: | $$(RM) $$(PRINTF)

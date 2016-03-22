@@ -1,14 +1,15 @@
 package: github.com/emccode/libstorage
 import:
+  - package: github.com/Sirupsen/logrus
+    ref:     feature/logrus-aware-types
+    repo:    https://github.com/akutz/logrus
+    vcs:     git
   - package: github.com/akutz/gofig
-    ref:     master
-    repo:    https://github.com/akutz/gofig
-    vcs:     git
   - package: github.com/akutz/gotil
-    ref:     master
-    repo:    https://github.com/akutz/gotil
-    vcs:     git
   - package: github.com/akutz/goof
-    ref:     master
-    repo:    https://github.com/akutz/goof
+  - package: github.com/akutz/golf
+  - package: github.com/blang/semver
+    ref:     v3.0.1
     vcs:     git
+  - package: github.com/cesanta/validate-json
+  - package: github.com/stretchr/testify

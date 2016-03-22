@@ -125,7 +125,8 @@ type Volume struct {
 	// The name of the volume.
 	Name string `json:"name"`
 
-	// The name of the network on which the volume resides.
+	// NetworkName is the name the device is known by in order to discover
+	// locally.
 	NetworkName string `json:"networkName,omitempty"`
 
 	// The size of the volume.

@@ -99,6 +99,9 @@ INDENT_LEN ?=
 ifeq ($(origin GO_TAGS),undefined)
 GO_TAGS ?= mock driver
 endif
+#ifneq (,$(GO_TAGS))
+#GO_TAGS_FILENAME := $(subst $(SPACE),_,$(GOTAGS))
+#endif
 STRIP_GO_TAGS = $(subst $(COMMA)_,$(COMMA)$(SPACE),$(patsubst -tags%,,$(subst -tags$(SPACE),-tags_,$(subst $(COMMA)$(SPACE),$(COMMA)_,$1))))
 
 # flags to use with go build

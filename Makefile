@@ -4,13 +4,13 @@ include .gomk/go.mk
 
 deps: $(GO_DEPS)
 
-build: deps $(GO_SRC_TOOL_MARKERS) $(GO_BUILD)
+build: $(GO_BUILD)
 
 install: $(GO_INSTALL)
 
-test: $(GO_TEST)
-
 test-build: $(GO_TEST_BUILD)
+
+test: $(GO_TEST)
 
 test-clean: $(GO_TEST_CLEAN)
 
@@ -18,31 +18,32 @@ cover: $(GO_COVER)
 
 cover-clean: $(GO_COVER_CLEAN)
 
-package: $(GO_PACKAGE)
+dist: $(GO_PACKAGE)
 
-package-clean: $(GO_PACKAGE_CLEAN)
+dist-clean: $(GO_PACKAGE_CLEAN)
 
 clean: $(GO_CLEAN)
 
 clobber: $(GO_CLOBBER)
 
 run:
-	go test -tags 'run mock driver' -v
+	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='run mock driver' $(MAKE) install
+	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='run mock driver' $(MAKE) test
 
 run-debug:
-	env LIBSTORAGE_DEBUG=true $(MAKE) run
+	$(ENV) LIBSTORAGE_DEBUG=true $(MAKE) run
 
 run-tls:
-	env LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run
+	$(ENV) LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run
 
 run-tls-debug:
-	env LIBSTORAGE_DEBUG=true LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run
+	$(ENV) LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run-debug
 
 .PHONY: all install build deps \
 		test test-build test-clean \
 		test-mock test-build-mock \
 		cover cover-clean \
-		package package-clean \
+		dist dist-clean \
 		clean clobber \
 		run run-debug run-tls run-tls-debug \
 		$(GO_PHONY)

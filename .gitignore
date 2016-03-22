@@ -1,9 +1,10 @@
+libstorage.paw
 .site/
 site/
-.build/*/
-.build/*-filtered.json
 vendor/
 .project
+glide.lock
+.gomk/tmp
 
 # Created by https://www.gitignore.io
 

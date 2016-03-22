@@ -34,31 +34,49 @@ has a minimal set of dependencies in order to avoid a large, runtime footprint.
 package libstorage
 
 import (
-	"github.com/akutz/gofig"
-	"golang.org/x/net/context"
+	"io"
 
-	"github.com/emccode/libstorage/client"
-	"github.com/emccode/libstorage/driver"
-	"github.com/emccode/libstorage/service"
+	"github.com/akutz/gofig"
+
+	"github.com/emccode/libstorage/api/client"
+	"github.com/emccode/libstorage/api/registry"
+	"github.com/emccode/libstorage/api/server"
+	"github.com/emccode/libstorage/api/types/context"
+	"github.com/emccode/libstorage/api/types/drivers"
 )
 
 func init() {
 	registerGofigDefaults()
 }
 
-// RegisterDriver registers a new Driver with the libStorage service.
-func RegisterDriver(driverName string, ctor driver.NewDriver) {
-	service.RegisterDriver(driverName, ctor)
+// RegisterStorageDriver registers a new StorageDriver with the libStorage
+// service.
+func RegisterStorageDriver(name string, ctor drivers.NewStorageDriver) {
+	registry.RegisterStorageDriver(name, ctor)
 }
 
-// Serve starts the reference implementation of a server hosting an
-// HTTP/JSON service that implements the libStorage API endpoint.
-//
-// If the config parameter is nil a default instance is created. The
-// libStorage service is served at the address specified by the configuration
-// property libstorage.host.
-func Serve(config gofig.Config) error {
-	return service.Serve(config)
+// RegisterOSDriver registers a new StorageDriver with the libStorage
+// service.
+func RegisterOSDriver(name string, ctor drivers.NewOSDriver) {
+	registry.RegisterOSDriver(name, ctor)
+}
+
+// RegisterIntegrationDriver registers a new IntegrationDriver with the
+// libStorage service.
+func RegisterIntegrationDriver(name string, ctor drivers.NewIntegrationDriver) {
+	registry.RegisterIntegrationDriver(name, ctor)
+}
+
+/*
+Serve starts the reference implementation of a server hosting an
+HTTP/JSON service that implements the libStorage API endpoint.
+
+If the config parameter is nil a default instance is created. The
+libStorage service is served at the address specified by the configuration
+property libstorage.host.
+*/
+func Serve(config gofig.Config) (io.Closer, <-chan error) {
+	return server.Serve(config)
 }
 
 // Dial opens a connection to a remote libStorage serice and returns the client

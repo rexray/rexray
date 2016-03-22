@@ -14,29 +14,12 @@ GO_BIN ?= $(GOPATH)/bin
 GO_SRC := $(GOPATH)/src
 GO_PKG := $(GOPATH)/pkg
 
-# the INDENT "function" enables indenting commands prior to them being
-# echoed
-ifeq (,$(INDENT_LEN))
-INDENT_CHARS := ""
-else
-INDENT_CHARS := "$(foreach i,$(INDENT_LEN), )"
-endif
-ifeq (1,$(RECURSIVE))
-INDENT_LEN := "$(strip . . $(INDENT_LEN))"
-endif
-INDENT := printf $(INDENT_CHARS)
-
-GO_VENDOR_DIR := vendor
-$(GO_VENDOR_DIR)-clean:
-	@$(INDENT)
-	$(RM) -f -d $(GO_VENDOR_DIR)
-GO_CLOBBER += $(GO_VENDOR_DIR)-clean
-
-# note that GO_CLEAN should be invoked as part of GO_CLOBBER
-GO_CLOBBER += $(GO_CLEAN)
-
 # the path to the directory that contains the modular gomk makefiles
 GOMK_I := .gomk/include
+
+# text transformation funcs
+LCASE = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
+UCASE = $(subst a,A,$(subst b,B,$(subst c,C,$(subst d,D,$(subst e,E,$(subst f,F,$(subst g,G,$(subst h,H,$(subst i,I,$(subst j,J,$(subst k,K,$(subst l,L,$(subst m,M,$(subst n,N,$(subst o,O,$(subst p,P,$(subst q,Q,$(subst r,R,$(subst s,S,$(subst t,T,$(subst u,U,$(subst v,V,$(subst w,W,$(subst x,X,$(subst y,Y,$(subst z,Z,$1))))))))))))))))))))))))))
 
 ################################################################################
 ##                             STD *NIX UTILS                                 ##
@@ -63,10 +46,38 @@ include $(GOMK_I)/arch.mk \
 		$(GOMK_I)/gnixutils.mk
 
 ################################################################################
+##                               INDENT                                       ##
+################################################################################
+
+# the INDENT "function" enables indenting commands prior to them being
+# echoed
+ifeq (,$(INDENT_LEN))
+INDENT_CHARS := ""
+else
+INDENT_CHARS := "$(foreach i,$(INDENT_LEN), )"
+endif
+ifeq (1,$(RECURSIVE))
+INDENT_LEN := "$(strip . . $(INDENT_LEN))"
+endif
+INDENT := $(PRINTF) $(INDENT_CHARS)
+
+################################################################################
+##                               VENDOR                                       ##
+################################################################################
+GO_VENDOR_DIR := vendor
+$(GO_VENDOR_DIR)-clean: | $(PRINTF) $(RM)
+	@$(INDENT)
+	$(RM) -f -d $(GO_VENDOR_DIR)
+GO_CLOBBER += $(GO_VENDOR_DIR)-clean
+
+# note that GO_CLEAN should be invoked as part of GO_CLOBBER
+GO_CLOBBER += $(GO_CLEAN)
+
+################################################################################
 ##                             GOMK TEMP DIRS                                 ##
 ################################################################################
 GO_MK_TMP_DIR := .gomk/tmp
-$(GO_MK_TMP_DIR)-clobber:
+$(GO_MK_TMP_DIR)-clobber: | $(PRINTF) $(RM)
 	@$(INDENT)
 	$(RM) -f -d $(GO_MK_TMP_DIR)
 GO_CLOBBER += $(GO_MK_TMP_DIR)-clobber
@@ -219,8 +230,8 @@ endif
 # indicate which tools should be executed against the source files
 $$(foreach t,$$(GO_BUILD_DEP_RULES),$$(eval $$(call GO_TOOL_DEF,$1,$$(t),$$(GO_PKG_SOURCE_FILES_$1))))
 
-$$(GO_PKG_SOURCE_FILES_$1):: $$(GO_GET_MARKERS)
-	@$(TOUCH) $$@
+$$(GO_PKG_SOURCE_FILES_$1):: $$(GO_GET_MARKERS) | $$(TOUCH)
+	@$$(TOUCH) $$@
 
 # go install
 $$(GO_PKG_NAME_$1_TARGET_NAME): $$(GO_BUILD_OUTPUT_FILE_$1)
@@ -231,15 +242,15 @@ ifeq (1,$$(GOMK_TOOLS_ENABLE))
 $$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_SRC_TOOL_MARKERS_$1)
 endif
 endif
-$$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_PKG_SOURCE_FILES_$1)
+$$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_PKG_SOURCE_FILES_$1) | $$(PRINTF) $$(MKDIR)
 ifneq (1,$$(GO_PKG_IS_EXE_FILE_$1))
-	@$(INDENT)
+	@$$(INDENT)
 	go build $$(GO_INSTALL_FLAGS_$1) -o $$@ $1
 else
 ifeq (,$$(wildcard $$(dir $$(GO_BUILD_OUTPUT_FILE_$1))))
-	@$(MKDIR) -p $$(@D)
+	@$$(MKDIR) -p $$(@D)
 endif
-	@$(INDENT)
+	@$$(INDENT)
 	go build $$(GO_INSTALL_FLAGS_$1) -o $$@ $1
 endif
 GO_INSTALL += $$(GO_PKG_NAME_$1_TARGET_NAME)
@@ -253,25 +264,25 @@ ifeq (1,$$(GOMK_TOOLS_ENABLE))
 $$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_SRC_TOOL_MARKERS_$1)
 endif
 endif
-$$(GO_BUILD_OUTPUT_TMP_FILE_$1): $$(GO_PKG_SOURCE_FILES_$1)
+$$(GO_BUILD_OUTPUT_TMP_FILE_$1): $$(GO_PKG_SOURCE_FILES_$1) | $$(PRINTF) $$(MKDIR)
 ifeq (,$$(wildcard $$(@D)))
-	@$(MKDIR) -p $$(@D)
+	@$$(MKDIR) -p $$(@D)
 endif
-	@$(INDENT)
+	@$$(INDENT)
 	go build $$(GO_BUILD_FLAGS_$1) -o $$@ $1
 GO_BUILD += $$(GO_PKG_NAME_$1_TARGET_NAME)-build
 
 # go clean
-$$(GO_PKG_NAME_$1_TARGET_NAME)-clean:
-	@$(INDENT)
+$$(GO_PKG_NAME_$1_TARGET_NAME)-clean: | $$(PRINTF) $$(RM) $$(TOUCH)
+	@$$(INDENT)
 	go clean $(GO_CLEAN_FLAGS) $1
 ifneq (,$$(strip $$(GO_BUILD_OUTPUT_FILE_$1)))
-	@$(INDENT)
-	$(RM) -f $$(GO_BUILD_OUTPUT_FILE_$1)
+	@$$(INDENT)
+	$$(RM) -f $$(GO_BUILD_OUTPUT_FILE_$1)
 endif
 ifneq (,$$(strip $$(GO_BUILD_OUTPUT_TMP_FILE_$1)))
-	@$(INDENT)
-	$(RM) -f $$(GO_BUILD_OUTPUT_TMP_FILE_$1)
+	@$$(INDENT)
+	$$(RM) -f $$(GO_BUILD_OUTPUT_TMP_FILE_$1)
 endif
 GO_CLEAN += $$(GO_PKG_NAME_$1_TARGET_NAME)-clean
 
@@ -312,8 +323,9 @@ endif
 $$(GO_PKG_TEST_PATH_$1): $$(GO_PKG_TEST_PATH_FULL_$1)
 $$(GO_PKG_TEST_PATH_FULL_$1):   $$(GO_SRC_TOOL_MARKERS_$1_TEST) \
 								$$(GO_PKG_TEST_FILES_$1) \
-								$$(GO_BUILD_OUTPUT_FILE_$1)
-	@$(INDENT)
+								$$(GO_BUILD_OUTPUT_FILE_$1) \
+								| $$(PRINTF)
+	@$$(INDENT)
 ifeq (,$$(GO_TAGS))
 	go test $$(GO_TEST_BUILD_FLAGS) -cover -c $1 -o $$@ $$(GO_TEST_COVER_PKGS_$1)
 else
@@ -321,19 +333,19 @@ else
 endif
 
 $$(GO_PKG_TEST_$1): $$(GO_PKG_COVER_PROFILE_$1)
-$$(GO_PKG_COVER_PROFILE_$1): $$(GO_PKG_TEST_PATH_FULL_$1)
-	@$(INDENT)
-	$$? $(GO_TEST_RUN_FLAGS) -test.coverprofile $$@
+$$(GO_PKG_COVER_PROFILE_$1): $$(GO_PKG_TEST_PATH_FULL_$1) | $$(PRINTF)
+	@$$(INDENT)
+	$$? $$(GO_TEST_RUN_FLAGS) -test.coverprofile $$@
 
-$$(GO_PKG_TEST_FILES_$1): $$(GO_PKG_SOURCE_FILES_$1)
-	@$(TOUCH) $$@
+$$(GO_PKG_TEST_FILES_$1): $$(GO_PKG_SOURCE_FILES_$1) | $$(PRINTF) $$(TOUCH)
+	@$$(TOUCH) $$@
 
-$$(GO_PKG_TEST_PATH_$1)-clean:
-	@$(INDENT)
-	$(RM) -f $$(GO_PKG_TEST_PATH_FULL_$1) $$(GO_PKG_COVER_PROFILE_$1)
+$$(GO_PKG_TEST_PATH_$1)-clean: | $$(PRINTF) $$(RM)
+	@$$(INDENT)
+	$$(RM) -f $$(GO_PKG_TEST_PATH_FULL_$1) $$(GO_PKG_COVER_PROFILE_$1)
 ifneq (,$$(strip $$(GO_SRC_TOOL_MARKERS_$1)))
-	@$(INDENT)
-	$(RM) -f $$(GO_SRC_TOOL_MARKERS_$1_TEST)
+	@$$(INDENT)
+	$$(RM) -f $$(GO_SRC_TOOL_MARKERS_$1_TEST)
 endif
 
 GO_TEST_BUILD += $$(GO_PKG_TEST_PATH_$1)

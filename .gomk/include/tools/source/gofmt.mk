@@ -10,12 +10,12 @@ GO_FMT_MARKER_FILE_$1 := $$(call GO_TOOL_MARKER,$1,fmt)
 GO_FMT_MARKER_PATHS_$2 += $$(GO_FMT_MARKER_FILE_$1)
 
 $1-fmt: $$(GO_FMT_MARKER_FILE_$1)
-$$(GO_FMT_MARKER_FILE_$1): $1
+$$(GO_FMT_MARKER_FILE_$1): $1 | $$(PRINTF) $$(TOUCH)
 	@$$(INDENT)
 	gofmt -w $$?
 	@$$(call GO_TOUCH_MARKER,$$@)
 
-$$(GO_FMT_MARKER_FILE_$1)-clean:
+$$(GO_FMT_MARKER_FILE_$1)-clean: | $$(PRINTF) $$(RM)
 	@$$(INDENT)
 	$$(RM) -f $$(subst -clean,,$$@)
 GO_PHONY += $$(GO_FMT_MARKER_FILE_$1)-clean

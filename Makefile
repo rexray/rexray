@@ -26,17 +26,17 @@ clean: $(GO_CLEAN)
 
 clobber: $(GO_CLOBBER)
 
-run:
+run: | $(ENV)
 	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='run mock driver' $(MAKE) install
 	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='run mock driver' $(MAKE) test
 
-run-debug:
+run-debug: | $(ENV)
 	$(ENV) LIBSTORAGE_DEBUG=true $(MAKE) run
 
-run-tls:
+run-tls: | $(ENV)
 	$(ENV) LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run
 
-run-tls-debug:
+run-tls-debug: | $(ENV)
 	$(ENV) LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run-debug
 
 .PHONY: all install build deps \

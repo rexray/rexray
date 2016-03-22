@@ -28,13 +28,13 @@ GLIDE_YAML := glide.yaml
 $(GLIDE_LOCK): $(GLIDE_YAML)
 	$(GLIDE_BIN) up
 
-$(GLIDE_LOCK)-clean:
+$(GLIDE_LOCK)-clean: | $(RM)
 	$(RM) -f $(GLIDE_LOCK)
 GO_CLOBBER += $(GLIDE_LOCK)-clean
 
 $(GLIDE_YAML): $(GLIDE_BIN)
 
-$(GLIDE_BIN): | $(GNIX_UTILS)
+$(GLIDE_BIN): | $(MKDIR) $(CURL) $(TAR) $(MKDIR) $(MV)
 	$(MKDIR) -p .glide && \
 		cd .glide && \
 		$(CURL) -S -L -o $(GLIDE_URL_FILE) $(GLIDE_URL) && \
@@ -60,11 +60,11 @@ GO_GET := $(GO_MARKERS_DIR)/go.get
 ifneq (,$(GLIDE_LOCK))
 $(GO_GET): $(GLIDE_LOCK)
 endif
-$(GO_GET): | $(GNIX_UTILS)
+$(GO_GET): | $(TOUCH)
 	go get -v -d -t $(GO_PKG_DIRS)
 	@$(call GO_TOUCH_MARKER,$@)
 
-$(GO_GET)-clean:
+$(GO_GET)-clean: | $(RM)
 	$(RM) -f $(GO_GET)
 GO_CLOBBER += $(GO_GET)-clean
 

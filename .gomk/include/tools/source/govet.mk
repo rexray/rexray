@@ -10,12 +10,12 @@ GO_VET_MARKER_FILE_$1 := $$(call GO_TOOL_MARKER,$1,vet)
 GO_VET_MARKER_PATHS_$2 += $$(GO_VET_MARKER_FILE_$1)
 
 $1-vet: $$(GO_VET_MARKER_FILE_$1)
-$$(GO_VET_MARKER_FILE_$1): $1
+$$(GO_VET_MARKER_FILE_$1): $1 | $(PRINTF) $(ENV) $(TOUCH)
 	@$$(INDENT)
 	$(ENV) GOOS=$(SYS_GOOS) GOARCH=$(SYS_GOARCH) go vet $$?
 	@$$(call GO_TOUCH_MARKER,$$@)
 
-$$(GO_VET_MARKER_FILE_$1)-clean:
+$$(GO_VET_MARKER_FILE_$1)-clean: | $$(PRINTF) $$(RM)
 	@$$(INDENT)
 	$$(RM) -f $$(subst -clean,,$$@)
 GO_PHONY += $$(GO_VET_MARKER_FILE_$1)-clean

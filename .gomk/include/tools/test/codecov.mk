@@ -25,19 +25,19 @@ GO_DEPS += $(GO_COVER_DEPS)
 CODECOV_PROFILE := $(GO_TESTS_DIR)/codecov.out
 CODECOV_MARKER := $(GO_MARKERS_DIR)/go.codecov
 
-$(CODECOV_PROFILE): $(GO_COVER_PROFILES)
-	echo "mode: set" > $@
+$(CODECOV_PROFILE): $(GO_COVER_PROFILES) | $(PRINTF) $(GREP)
+	$(PRINTF) "mode: set\n" > $@
 	$(foreach f,$?,$(GREP) -v "mode: set" $(f) >> $@ &&) true
 
-$(CODECOV_PROFILE)-clean:
+$(CODECOV_PROFILE)-clean: | $(RM)
 	$(RM) -f $(CODECOV_PROFILE)
 
 GO_COVER := $(CODECOV_MARKER)
-$(CODECOV_MARKER): $(CODECOV_PROFILE)
+$(CODECOV_MARKER): $(CODECOV_PROFILE) | $(CURL) $(TOUCH)
 	curl -sSL https://codecov.io/bash | bash -s -- -f $?
 	@$(call GO_TOUCH_MARKER,$@)
 
-$(CODECOV_MARKER)-clean:
+$(CODECOV_MARKER)-clean: | $(RM)
 	$(RM) -f $(CODECOV_MARKER)
 
 GO_COVER_CLEAN := $(CODECOV_PROFILE)-clean $(CODECOV_MARKER)-clean

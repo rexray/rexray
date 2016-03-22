@@ -42,9 +42,9 @@ build-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
 	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) build
 GO_CROSS_BUILD += build-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
 
-package-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) package
-GO_CROSS_PACKAGE += package-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
+dist-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
+	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) dist
+GO_CROSS_DIST += dist-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
 
 clean-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_CLEAN_ONCE)
 	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) clean
@@ -70,12 +70,12 @@ endef
 
 $(foreach bp,$(BUILD_PLATFORMS),$(eval $(call CROSS_RULES,$(bp))))
 GO_PHONY += $(GO_CROSS_INSTALL) $(GO_CROSS_BUILD) \
-			$(GO_CROSS_PACKAGE) $(GO_CROSS_CLEAN)
+			$(GO_CROSS_DIST) $(GO_CROSS_CLEAN)
 
 install-all: $(GO_CROSS_INSTALL)
 build-all: $(GO_CROSS_BUILD)
-package-all: $(GO_CROSS_PACKAGE)
+dist-all: $(GO_CROSS_DIST)
 clean-all: $(GO_CROSS_CLEAN)
-GO_PHONY += install-all build-all package-all clean-all
+GO_PHONY += install-all build-all dist-all clean-all
 
 endif

@@ -5,7 +5,7 @@ IS_GOMK_VERSION_LOADED := 1
 
 VERSION_DEPS := $(SED) $(GREP) $(CAT)
 
-ifneq (,$(wildcard $(VERSION_DEPS)))
+ifeq ($(words $(VERSION_DEPS)),$(words $(wildcard $(VERSION_DEPS))))
 ifneq (,$(wildcard .git))
 
 include $(GOMK_I)/arch.mk

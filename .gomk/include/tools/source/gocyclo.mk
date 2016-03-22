@@ -6,7 +6,7 @@ IS_GOMK_GO_CYCLO_LOADED := 1
 ifeq (1,$(GO_CYCLO_ENABLED))
 
 GOCYCLO_BIN := $(GO_BIN)/gocyclo
-$(GOCYCLO_BIN):
+$(GOCYCLO_BIN): | $(PRINTF)
 	@$(INDENT)
 	go get -v -u github.com/fzipp/gocyclo
 
@@ -15,12 +15,12 @@ GO_CYCLO_MARKER_FILE_$1 := $$(call GO_TOOL_MARKER,$1,cyclo)
 GO_CYCLO_MARKER_PATHS_$2 += $$(GO_CYCLO_MARKER_FILE_$1)
 
 $1-cyclo: $$(GO_CYCLO_MARKER_FILE_$1)
-$$(GO_CYCLO_MARKER_FILE_$1): $1 | $$(GOCYCLO_BIN)
+$$(GO_CYCLO_MARKER_FILE_$1): $1 | $$(GOCYCLO_BIN) $$(TOUCH) $$(PRINTF)
 	@$$(INDENT)
 	gocyclo -over 15 $$?
 	@$$(call GO_TOUCH_MARKER,$$@)
 
-$$(GO_CYCLO_MARKER_FILE_$1)-clean:
+$$(GO_CYCLO_MARKER_FILE_$1)-clean: | $$(RM) $$(PRINTF)
 	@$$(INDENT)
 	$$(RM) -f $$(subst -clean,,$$@)
 GO_PHONY += $$(GO_CYCLO_MARKER_FILE_$1)-clean

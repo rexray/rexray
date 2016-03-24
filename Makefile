@@ -1,4 +1,8 @@
-all: install
+# the space-delimited list of drivers for which to build the libstorage
+# server, client(s), and executor(s)
+DRIVERS := mock
+
+all: build
 
 include .gomk/go.mk
 
@@ -6,7 +10,9 @@ deps: $(GO_DEPS)
 
 build: $(GO_BUILD)
 
-install: $(GO_INSTALL)
+install: $(GO_BUILD)
+
+build-executors: $(LIBSTORAGE_EXECUTORS)
 
 test-build: $(GO_TEST_BUILD)
 
@@ -27,8 +33,8 @@ clean: $(GO_CLEAN)
 clobber: $(GO_CLOBBER)
 
 run: | $(ENV)
-	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='run mock driver' $(MAKE) install
-	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='run mock driver' $(MAKE) test
+	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='$(DRIVERS) driver' $(MAKE)
+	$(ENV) GOMK_TOOLS_ENABLE=1 GO_TAGS='run $(DRIVERS) driver' $(MAKE) test
 
 run-debug: | $(ENV)
 	$(ENV) LIBSTORAGE_DEBUG=true $(MAKE) run
@@ -39,9 +45,7 @@ run-tls: | $(ENV)
 run-tls-debug: | $(ENV)
 	$(ENV) LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run-debug
 
-.PHONY: all install build deps \
-		test test-build test-clean \
-		test-mock test-build-mock \
+.PHONY: all \
 		cover cover-clean \
 		dist dist-clean \
 		clean clobber \

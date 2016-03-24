@@ -34,34 +34,30 @@ endif
 
 ifeq (,$2)
 
-install-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) install
-GO_CROSS_INSTALL += install-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
-
-build-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) build
+build-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS) | $$(ENV)
+	$$(ENV) $$(RECURSIVE_INDENT) GOMK_TOOLS_ENABLE=0 GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) build
 GO_CROSS_BUILD += build-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
 
-dist-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) dist
+#build-executors-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS) | $$(ENV)
+#	$$(ENV) $$(RECURSIVE_INDENT) GOMK_TOOLS_ENABLE=0 GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) build-executors
+#GO_CROSS_BUILD_EXECUTORS += build-executors-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
+
+dist-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS) | $$(ENV)
+	$$(ENV) $$(RECURSIVE_INDENT) GOMK_TOOLS_ENABLE=0 GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) dist
 GO_CROSS_DIST += dist-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
 
-clean-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_CLEAN_ONCE)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) clean
+clean-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_CLEAN_ONCE) | $$(ENV)
+	$$(ENV) $$(RECURSIVE_INDENT) GOMK_TOOLS_ENABLE=0 GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) clean
 GO_CROSS_CLEAN += clean-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
 
 else
 
-$3-install-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) $2 install
-GO_CROSS_INSTALL += $3-install-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
-
-$3-build-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) $2 build
+$3-build-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_DEPS) $$(GO_SRC_TOOL_MARKERS) | $$(ENV)
+	$$(ENV) $$(RECURSIVE_INDENT) GOMK_TOOLS_ENABLE=0 GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) $2 build
 GO_CROSS_BUILD += $3-build-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
 
-$3-clean-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_CLEAN_ONCE)
-	$$(ENV) $$(RECURSIVE_INDENT) GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) $2 clean
+$3-clean-$$(X_GOOS_$1)_$$(X_GOARCH_$1): $$(GO_CLEAN_ONCE) | $$(ENV)
+	$$(ENV) $$(RECURSIVE_INDENT) GOMK_TOOLS_ENABLE=0 GOOS=$$(X_GOOS_$1) GOARCH=$$(X_GOARCH_$1) $$(MAKE) $2 clean
 GO_CROSS_CLEAN += $3-clean-$$(X_GOOS_$1)_$$(X_GOARCH_$1)
 
 endif
@@ -69,13 +65,16 @@ endif
 endef
 
 $(foreach bp,$(BUILD_PLATFORMS),$(eval $(call CROSS_RULES,$(bp))))
-GO_PHONY += $(GO_CROSS_INSTALL) $(GO_CROSS_BUILD) \
+#GO_PHONY += $(GO_CROSS_BUILD) $(GO_CROSS_BUILD_EXECUTORS) \
+
+GO_PHONY += $(GO_CROSS_BUILD) \
 			$(GO_CROSS_DIST) $(GO_CROSS_CLEAN)
 
-install-all: $(GO_CROSS_INSTALL)
 build-all: $(GO_CROSS_BUILD)
+#build-executors-all: $(GO_CROSS_BUILD_EXECUTORS)
 dist-all: $(GO_CROSS_DIST)
 clean-all: $(GO_CROSS_CLEAN)
-GO_PHONY += install-all build-all dist-all clean-all
+#GO_PHONY += build-all build-executors-all dist-all clean-all
+GO_PHONY += build-all dist-all clean-all
 
 endif

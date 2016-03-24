@@ -76,20 +76,25 @@ GO_CLOBBER += $(GO_CLEAN)
 ################################################################################
 ##                             GOMK TEMP DIRS                                 ##
 ################################################################################
-GO_MK_TMP_DIR := .gomk/tmp
-$(GO_MK_TMP_DIR)-clobber: | $(PRINTF) $(RM)
+GOMK_TMP_DIR := .gomk/tmp
+GOMK_TAGGED_TMP_DIR := .gomk/tmp
+ifneq (,$(GO_TAGS))
+GOMK_TAGGED_TMP_DIR := $(GOMK_TMP_DIR)/$(subst $(SPACE),_,$(GO_TAGS))
+endif
+
+$(GOMK_TMP_DIR)-clobber: | $(PRINTF) $(RM)
 	@$(INDENT)
-	$(RM) -f -d $(GO_MK_TMP_DIR)
-GO_CLOBBER += $(GO_MK_TMP_DIR)-clobber
+	$(RM) -f -d $(GOMK_TMP_DIR)
+GO_CLOBBER += $(GOMK_TAGGED_TMP_DIR)-clobber
 
 # indicate where marker files are stored
-GO_MARKERS_DIR := $(GO_MK_TMP_DIR)/markers
+GO_MARKERS_DIR := $(GOMK_TAGGED_TMP_DIR)/markers
 
 # indicate where tests and test coverage output is stored
-GO_TESTS_DIR := $(GO_MK_TMP_DIR)/tests
+GO_TESTS_DIR := $(GOMK_TAGGED_TMP_DIR)/tests
 
 # a temporary build area
-GO_TMP_BUILD_DIR := $(GO_MK_TMP_DIR)/build
+GO_TMP_BUILD_DIR := $(GOMK_TAGGED_TMP_DIR)/build
 GO_TMP_BUILD_BIN_DIR := $(GO_TMP_BUILD_DIR)/bin/$(GOOS)_$(GOARCH)
 GO_TMP_BUILD_PKG_DIR := $(GO_TMP_BUILD_DIR)/pkg/$(GOOS)_$(GOARCH)
 
@@ -108,7 +113,7 @@ include $(GOMK_I)/tools/source/*.mk
 include $(GOMK_I)/tools/pkg/*.mk
 
 # pkg area
-GO_TMP_PKG_DIR := $(GO_MK_TMP_DIR)/pkg/$(V_OS)_$(V_ARCH)
+GO_TMP_PKG_DIR := $(GOMK_TMP_DIR)/pkg/$(V_OS)_$(V_ARCH)
 
 ################################################################################
 ##                                FUNCS                                       ##
@@ -181,17 +186,8 @@ endif
 ifeq (,$$(GO_BUILD_OUTPUT_FILE_$1))
 GO_PKG_ARCHIVE_PATH_$1 := $$(GO_PKG_NAME_$1).a
 GO_PKG_ARCHIVE_PATH_FULL_$1 := $$(GO_PKG_NAME_FULL_$1).a
-GO_BUILD_OUTPUT_FILE_$1 := $$(GO_PROJ_PKG_PARENT_PATH)$$(GO_PKG_ARCHIVE_PATH_FULL_$1)
+GO_BUILD_OUTPUT_FILE_$1 := $$(GO_TMP_BUILD_PKG_DIR)/$$(GO_PKG_ARCHIVE_PATH_FULL_$1)
 endif
-
-ifeq (,$$(GO_BUILD_OUTPUT_TMP_FILE_$1))
-GO_BUILD_OUTPUT_TMP_FILE_$1 := $$(GO_TMP_BUILD_PKG_DIR)/$$(GO_PKG_ARCHIVE_PATH_FULL_$1)
-endif
-
-ifeq (,$$(GO_INSTALL_FLAGS_$1))
-GO_INSTALL_FLAGS_$1 := $$(GO_INSTALL_FLAGS)
-endif
-GO_INSTALL_FLAGS_$1 := $$(call STRIP_GO_TAGS,$$(GO_INSTALL_FLAGS_$1))
 
 ifeq (,$$(GO_BUILD_FLAGS_$1))
 GO_BUILD_FLAGS_$1 := $$(GO_BUILD_FLAGS)
@@ -199,14 +195,16 @@ endif
 GO_BUILD_FLAGS_$1 := $$(call STRIP_GO_TAGS,$$(GO_BUILD_FLAGS_$1))
 
 ifneq (,$$(GO_TAGS))
-GO_INSTALL_FLAGS_$1 += -tags '$$(GO_TAGS)'
 GO_BUILD_FLAGS_$1 += -tags '$$(GO_TAGS)'
 endif
 
 GO_PKG_ALL_SOURCE_FILES_$1 += $$(wildcard $1/*.go)
 GO_PKG_ALL_SOURCE_FILES_$1 := $$(sort $$(GO_PKG_ALL_SOURCE_FILES_$1))
+GO_PKG_ALL_SOURCE_FILES_$1 := $$(filter-out %_generated.go,$$(GO_PKG_ALL_SOURCE_FILES_$1))
 GO_PKG_SOURCE_FILES_$1 := $$(filter-out %_test.go,$$(GO_PKG_ALL_SOURCE_FILES_$1))
 GO_PKG_TEST_FILES_$1 := $$(filter %_test.go,$$(GO_PKG_ALL_SOURCE_FILES_$1))
+
+ifneq (,$$(GO_PKG_ALL_SOURCE_FILES_$1))
 
 # handle possible, duplicate target names
 ifneq ($1,./$$(GO_PROJ_NAME))
@@ -233,7 +231,7 @@ $$(foreach t,$$(GO_BUILD_DEP_RULES),$$(eval $$(call GO_TOOL_DEF,$1,$$(t),$$(GO_P
 $$(GO_PKG_SOURCE_FILES_$1):: $$(GO_GET_MARKERS) | $$(TOUCH)
 	@$$(TOUCH) $$@
 
-# go install
+# go build
 $$(GO_PKG_NAME_$1_TARGET_NAME): $$(GO_BUILD_OUTPUT_FILE_$1)
 ifeq (0,$$(MAKELEVEL))
 $$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_SRC_TOOL_MARKERS_$1)
@@ -242,35 +240,21 @@ ifeq (1,$$(GOMK_TOOLS_ENABLE))
 $$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_SRC_TOOL_MARKERS_$1)
 endif
 endif
+ifneq (,$$(GO_PKG_BUILD_DEPS_$1))
+$$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_PKG_BUILD_DEPS_$1)
+endif
 $$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_PKG_SOURCE_FILES_$1) | $$(PRINTF) $$(MKDIR)
 ifneq (1,$$(GO_PKG_IS_EXE_FILE_$1))
 	@$$(INDENT)
-	go build $$(GO_INSTALL_FLAGS_$1) -o $$@ $1
+	go build $$(GO_BUILD_FLAGS_$1) -o $$@ $1
 else
 ifeq (,$$(wildcard $$(dir $$(GO_BUILD_OUTPUT_FILE_$1))))
 	@$$(MKDIR) -p $$(@D)
 endif
 	@$$(INDENT)
-	go build $$(GO_INSTALL_FLAGS_$1) -o $$@ $1
-endif
-GO_INSTALL += $$(GO_PKG_NAME_$1_TARGET_NAME)
-
-# go build
-$$(GO_PKG_NAME_$1_TARGET_NAME)-build: $$(GO_BUILD_OUTPUT_TMP_FILE_$1)
-ifeq (0,$$(MAKELEVEL))
-$$(GO_BUILD_OUTPUT_TMP_FILE_$1): $$(GO_SRC_TOOL_MARKERS_$1)
-else
-ifeq (1,$$(GOMK_TOOLS_ENABLE))
-$$(GO_BUILD_OUTPUT_FILE_$1): $$(GO_SRC_TOOL_MARKERS_$1)
-endif
-endif
-$$(GO_BUILD_OUTPUT_TMP_FILE_$1): $$(GO_PKG_SOURCE_FILES_$1) | $$(PRINTF) $$(MKDIR)
-ifeq (,$$(wildcard $$(@D)))
-	@$$(MKDIR) -p $$(@D)
-endif
-	@$$(INDENT)
 	go build $$(GO_BUILD_FLAGS_$1) -o $$@ $1
-GO_BUILD += $$(GO_PKG_NAME_$1_TARGET_NAME)-build
+endif
+GO_BUILD += $$(GO_PKG_NAME_$1_TARGET_NAME)
 
 # go clean
 $$(GO_PKG_NAME_$1_TARGET_NAME)-clean: | $$(PRINTF) $$(RM) $$(TOUCH)
@@ -279,10 +263,6 @@ $$(GO_PKG_NAME_$1_TARGET_NAME)-clean: | $$(PRINTF) $$(RM) $$(TOUCH)
 ifneq (,$$(strip $$(GO_BUILD_OUTPUT_FILE_$1)))
 	@$$(INDENT)
 	$$(RM) -f $$(GO_BUILD_OUTPUT_FILE_$1)
-endif
-ifneq (,$$(strip $$(GO_BUILD_OUTPUT_TMP_FILE_$1)))
-	@$$(INDENT)
-	$$(RM) -f $$(GO_BUILD_OUTPUT_TMP_FILE_$1)
 endif
 GO_CLEAN += $$(GO_PKG_NAME_$1_TARGET_NAME)-clean
 
@@ -352,6 +332,8 @@ GO_TEST_BUILD += $$(GO_PKG_TEST_PATH_$1)
 GO_TEST += $$(GO_PKG_TEST_$1)
 GO_TEST_CLEAN += $$(GO_PKG_TEST_PATH_$1)-clean
 GO_CLEAN += $$(GO_PKG_TEST_PATH_$1)-clean
+
+endif
 
 endif
 endef

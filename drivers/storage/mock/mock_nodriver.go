@@ -9,6 +9,10 @@ import (
 	"github.com/emccode/libstorage/api/types/drivers"
 )
 
+func (d *driver) NextDeviceInfo() *types.NextDeviceInfo {
+	return nil
+}
+
 func (d *driver) InstanceInspect(
 	ctx context.Context,
 	opts types.Store) (*types.Instance, error) {

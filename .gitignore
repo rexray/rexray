@@ -5,6 +5,7 @@ vendor/
 .project
 glide.lock
 .gomk/tmp
+api/server/executors/executors_generated.go
 
 # Created by https://www.gitignore.io
 

@@ -55,7 +55,7 @@ endif
 ##                                 GO GET                                     ##
 ################################################################################
 ifeq (1,$(GO_GET_ENABLED))
-GO_GET := $(GO_MARKERS_DIR)/go.get
+GO_GET := $(GOMK_TMP_DIR)/markers/go.get
 
 ifneq (,$(GLIDE_LOCK))
 $(GO_GET): $(GLIDE_LOCK)

@@ -1,5 +1,3 @@
-// +build run
-
 package libstorage
 
 import (
@@ -9,6 +7,7 @@ import (
 )
 
 func TestRun(t *testing.T) {
+	continueIfTestRun(t)
 
 	host := os.Getenv("LIBSTORAGE_TESTRUN_HOST")
 	tls, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_TESTRUN_TLS"))
@@ -18,4 +17,21 @@ func TestRun(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func skipIfTestRun(t *testing.T) {
+	if isTestRun() {
+		t.SkipNow()
+	}
+}
+
+func continueIfTestRun(t *testing.T) {
+	if !isTestRun() {
+		t.SkipNow()
+	}
+}
+
+func isTestRun() bool {
+	b, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_TESTRUN"))
+	return b
 }

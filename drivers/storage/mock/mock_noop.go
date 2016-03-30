@@ -1,3 +1,0 @@
-// +build !mock
-
-package mock

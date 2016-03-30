@@ -1,5 +1,3 @@
-// +build !run
-
 package libstorage
 
 import (
@@ -9,6 +7,7 @@ import (
 )
 
 func TestRoot(t *testing.T) {
+	skipIfTestRun(t)
 
 	tf := func(client client.Client, t *testing.T) {
 		reply, err := client.Root()
@@ -25,6 +24,7 @@ func TestRoot(t *testing.T) {
 }
 
 func TestVolumes(t *testing.T) {
+	skipIfTestRun(t)
 
 	tf := func(client client.Client, t *testing.T) {
 		reply, err := client.Volumes()

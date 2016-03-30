@@ -13,6 +13,9 @@ import (
 )
 
 var (
+	storExecsCtors    = map[string]drivers.NewStorageExecutor{}
+	storExecsCtorsRWL = &sync.RWMutex{}
+
 	storDriverCtors    = map[string]drivers.NewStorageDriver{}
 	storDriverCtorsRWL = &sync.RWMutex{}
 
@@ -31,6 +34,13 @@ func RegisterRouter(router httputils.Router) {
 	routersRWL.Lock()
 	defer routersRWL.Unlock()
 	routers = append(routers, router)
+}
+
+// RegisterStorageExecutor registers a StorageExecutor.
+func RegisterStorageExecutor(name string, ctor drivers.NewStorageExecutor) {
+	storExecsCtorsRWL.Lock()
+	defer storExecsCtorsRWL.Unlock()
+	storExecsCtors[strings.ToLower(name)] = ctor
 }
 
 // RegisterStorageDriver registers a StorageDriver.
@@ -52,6 +62,26 @@ func RegisterIntegrationDriver(name string, ctor drivers.NewIntegrationDriver) {
 	intDriverCtorsRWL.Lock()
 	defer intDriverCtorsRWL.Unlock()
 	intDriverCtors[strings.ToLower(name)] = ctor
+}
+
+// NewStorageExecutor returns a new instance of the executor specified by the
+// executor name.
+func NewStorageExecutor(name string) (drivers.StorageExecutor, error) {
+
+	var ok bool
+	var ctor drivers.NewStorageExecutor
+
+	func() {
+		storExecsCtorsRWL.RLock()
+		defer storExecsCtorsRWL.RUnlock()
+		ctor, ok = storExecsCtors[strings.ToLower(name)]
+	}()
+
+	if !ok {
+		return nil, goof.WithField("executor", name, "invalid executor name")
+	}
+
+	return ctor(), nil
 }
 
 // NewStorageDriver returns a new instance of the driver specified by the
@@ -112,6 +142,21 @@ func NewIntegrationDriver(name string) (drivers.IntegrationDriver, error) {
 	}
 
 	return ctor(), nil
+}
+
+// StorageExecutors returns a channel on which new instances of all registered
+// storage executors can be received.
+func StorageExecutors() <-chan drivers.StorageExecutor {
+	c := make(chan drivers.StorageExecutor)
+	go func() {
+		storExecsCtorsRWL.RLock()
+		defer storExecsCtorsRWL.RUnlock()
+		for _, ctor := range storExecsCtors {
+			c <- ctor()
+		}
+		close(c)
+	}()
+	return c
 }
 
 // StorageDrivers returns a channel on which new instances of all registered

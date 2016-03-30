@@ -1,4 +1,4 @@
-package main
+package executor
 
 import (
 	"encoding/json"
@@ -11,16 +11,14 @@ import (
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types/context"
 	"github.com/emccode/libstorage/api/utils"
-
-	// load the storage drivers
-	_ "github.com/emccode/libstorage/drivers/storage"
 )
 
 var (
 	cmdRx = regexp.MustCompile("(?i)instanceid|nextdevice|localdevices")
 )
 
-func main() {
+// Run runs the executor CLI.
+func Run() {
 
 	args := os.Args
 	if len(args) != 2 {
@@ -33,7 +31,7 @@ func main() {
 	}
 	cmd = strings.ToLower(cmd)
 
-	d := <-registry.StorageDrivers()
+	d := <-registry.StorageExecutors()
 	if d == nil {
 		fmt.Fprintln(os.Stderr, "error: no storage driver available")
 		os.Exit(1)

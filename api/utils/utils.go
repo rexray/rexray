@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"reflect"
+
+	_ "github.com/akutz/golf"
 )
 
 // GetTypePkgPathAndName gets ths type and package path of the provided

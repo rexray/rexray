@@ -1,10 +1,14 @@
 language: go
 go:
-  - 1.5.1
+  - 1.6
 go_import_path: github.com/emccode/libstorage
+before_install:
+  - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
+  - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
 install:
-  - make deps
+  - go get github.com/Masterminds/glide
+  - go get github.com/onsi/gomega
+  - go get github.com/onsi/ginkgo
+  - go get golang.org/x/tools/cmd/cover
 script:
-  - make install
-  - env LIBSTORAGE_DEBUG=true make test
-  - make cover
+  - make -j codecov

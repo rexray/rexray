@@ -5,6 +5,9 @@ import (
 	"github.com/emccode/libstorage/api/types/context"
 )
 
+// NewStorageExecutor is a function that constructs a new StorageExecutors.
+type NewStorageExecutor func() StorageExecutor
+
 // NewStorageDriver is a function that constructs a new StorageDriver.
 type NewStorageDriver func() StorageDriver
 
@@ -35,26 +38,10 @@ type VolumeAttachByIDOpts struct {
 	Opts       types.Store
 }
 
-/*
-StorageDriver is a libStorage driver used by the routes to implement the backend
-functionality.
-
-Functions that inspect a resource or send an operation to a resource should
-always return ErrResourceNotFound if the acted upon resource cannot be found.
-*/
-type StorageDriver interface {
+// StorageExecutor is the client-side functionality for a StorageDriver.
+type StorageExecutor interface {
 	Driver
 
-	// Type returns the type of storage the driver provides.
-	Type() types.StorageType
-
-	// NextDeviceInfo returns the information about the driver's next available
-	// device workflow.
-	NextDeviceInfo() *types.NextDeviceInfo
-
-	/***************************************************************************
-	**                              Executor                                  **
-	***************************************************************************/
 	// InstanceID returns the local system's InstanceID.
 	InstanceID(
 		ctx context.Context,
@@ -69,6 +56,24 @@ type StorageDriver interface {
 	LocalDevices(
 		ctx context.Context,
 		opts types.Store) (map[string]string, error)
+}
+
+/*
+StorageDriver is a libStorage driver used by the routes to implement the backend
+functionality.
+
+Functions that inspect a resource or send an operation to a resource should
+always return ErrResourceNotFound if the acted upon resource cannot be found.
+*/
+type StorageDriver interface {
+	StorageExecutor
+
+	// NextDeviceInfo returns the information about the driver's next available
+	// device workflow.
+	NextDeviceInfo() *types.NextDeviceInfo
+
+	// Type returns the type of storage the driver provides.
+	Type() types.StorageType
 
 	/***************************************************************************
 	**                               Instance                                 **

@@ -8,6 +8,11 @@ import (
 	"github.com/emccode/libstorage/drivers/storage/vfs/executor"
 )
 
+const (
+	// Name is the name of the driver.
+	Name = executor.Name
+)
+
 type driver struct {
 	executor.Executor
 }

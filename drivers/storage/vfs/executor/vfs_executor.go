@@ -2,8 +2,10 @@ package executor
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/akutz/gofig"
+	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
@@ -21,6 +23,8 @@ type Executor struct {
 
 	// Config is the executor's configuration instance.
 	Config gofig.Config
+
+	devFilePath string
 }
 
 func init() {
@@ -35,6 +39,12 @@ func newExecutor() drivers.StorageExecutor {
 
 func (d *Executor) Init(config gofig.Config) error {
 	d.Config = config
+
+	d.devFilePath = fmt.Sprintf("%s/dev", d.RootDir())
+	if !gotil.FileExists(d.devFilePath) {
+
+	}
+
 	return nil
 }
 
@@ -65,23 +75,19 @@ func (d *Executor) NextDevice(
 func (d *Executor) LocalDevices(
 	ctx context.Context,
 	opts types.Store) (map[string]string, error) {
+
 	return nil, nil
 }
 
-func (d *Executor) rootDir() string {
-	return d.Config.GetString("vfs.rootDir")
-}
-
-func (d *Executor) volumesDir() string {
-	return fmt.Sprintf("%s/volumes", d.rootDir())
-}
-
-func (d *Executor) snapshotsDir() string {
-	return fmt.Sprintf("%s/snapshots", d.rootDir())
+// RootDir returns the path to the VFS root directory.
+func (d *Executor) RootDir() string {
+	return d.Config.GetString("vfs.root")
 }
 
 func configRegistration() *gofig.Registration {
+
+	defaultRootDir := fmt.Sprintf("%s/libstorage-vfs", os.TempDir())
 	r := gofig.NewRegistration("VFS")
-	r.Key(gofig.String, "", "", "", "vfs.rootDir")
+	r.Key(gofig.String, "", "", defaultRootDir, "vfs.root")
 	return r
 }

@@ -72,6 +72,7 @@ define IMPORT_PATH_PREPROCS_DEF
 IMPORT_PATH_INFO_$1 := $$(subst ;, ,$2)
 
 DIR_$1 := $1
+IMPORT_PATH_$1 := $$(word 1,$$(IMPORT_PATH_INFO_$1))
 NAME_$1 := $$(word 2,$$(IMPORT_PATH_INFO_$1))
 TARGET_$1 := $$(word 4,$$(IMPORT_PATH_INFO_$1))
 STALE_$1 := $$(word 5,$$(IMPORT_PATH_INFO_$1))
@@ -174,10 +175,12 @@ endif
 
 define IMPORT_PATH_BUILD_DEF
 
+ifneq (,$$(strip $$(SRCS_$1)))
+
 PKG_A_$1 := $$(TARGET_$1)
 PKG_D_$1 := $$(DIR_$1)/$$(NAME_$1).d
 
-DEPS_SRCS_$1 := $$(foreach d,$$(INT_DEPS_$1),$$(SRCS_$$(subst $$(ROOT_IMPORT_PATH),.,$$(d))))
+DEPS_SRCS_$1 := $$(foreach d,$$(INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
 $$(PKG_D_$1): $$(SRCS_$1)
 	$$(file >$$@,$$(PKG_A_$1) $$(PKG_D_$1): $$(DEPS_SRCS_$1))
@@ -201,17 +204,18 @@ $$(PKG_A_$1)-clean:
 GO_BUILD += $$(PKG_A_$1)
 GO_CLEAN += $$(PKG_A_$1)-clean
 
-ifneq (,$$(strip $$(TEST_SRCS_$1)))
+endif
 
 ################################################################################
 ##                               PROJECT TESTS                                ##
 ################################################################################
+ifneq (,$$(strip $$(TEST_SRCS_$1)))
 
 PKG_TA_$1 := $$(DIR_$1)/$$(NAME_$1).test
 PKG_TC_$1 := $$(DIR_$1)/$$(NAME_$1).test.out
 PKG_TD_$1 := $$(DIR_$1)/$$(NAME_$1).test.d
 
-TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(TEST_SRCS_$$(subst $$(ROOT_IMPORT_PATH),.,$$(d))))
+TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
 $$(PKG_TD_$1): $$(TEST_SRCS_$1)
 	$$(file >$$@,$$(PKG_TA_$1) $$(PKG_TD_$1): $$(TEST_DEPS_SRCS_$1))
@@ -222,13 +226,21 @@ GO_CLOBBER += $$(PKG_TD_$1)-clean
 
 -include $$(PKG_TD_$1)
 
-$$(PKG_TA_$1):	$$(PKG_A_$1) $$(TEST_EXT_DEPS_SRCS_$1) \
-				$$(TEST_SRCS_$1) $$(SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
-	go test -cover -c -o $$@ $1
+-include $1/coverage.mk
+COVERPKG_$1 ?= $$(IMPORT_PATH_$1)
 
+ifneq (,$$(strip $$(PKG_A_$1)))
+$$(PKG_TA_$1): $$(PKG_A_$1)
 ifeq (true,$$(STALE_$1))
 GO_PHONY += $$(PKG_TA_$1)
 endif
+endif
+ifneq (,$$(strip $$(SRCS_$1)))
+$$(PKG_TA_$1): $$(SRCS_$1)
+endif
+
+$$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
+	go test -cover -coverpkg '$$(COVERPKG_$1)' -c -o $$@ $1
 
 $$(PKG_TC_$1): $$(PKG_TA_$1)
 	$$(PKG_TA_$1) -test.v -test.coverprofile $$@
@@ -315,25 +327,15 @@ test-debug:
 
 cover: $(GO_COVERAGE)
 
+cover-debug:
+	env LIBSTORAGE_DEBUG=true $(MAKE) cover
+
 clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)
 
-run:
-	@rm -f libstorage.test.out
-	env LIBSTORAGE_TESTRUN=true $(MAKE) libstorage.test.out
-
-run-debug:
-	env LIBSTORAGE_DEBUG=true $(MAKE) run
-
-run-tls:
-	env LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run
-
-run-tls-debug:
-	env LIBSTORAGE_TESTRUN_TLS=true $(MAKE) run-debug
-
 .PHONY: info build \
 		clean clobber \
-		build-tests test test-debug cover cover-clean \
-		run run-debug run-tls run-tls-debug \
+		build-tests test test-debug \
+		cover cover-debug cover-clean \
 		$(GO_PHONY)

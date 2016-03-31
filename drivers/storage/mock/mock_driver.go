@@ -15,6 +15,17 @@ import (
 	"github.com/emccode/libstorage/drivers/storage/mock/executor"
 )
 
+const (
+	// Name1 is the name of the driver.
+	Name1 = executor.Name1
+
+	// Name2 is the name of the driver.
+	Name2 = executor.Name2
+
+	// Name3 is the name of the driver.
+	Name3 = executor.Name3
+)
+
 type driver struct {
 	executor.Executor
 	nextDeviceInfo *types.NextDeviceInfo
@@ -24,21 +35,21 @@ type driver struct {
 }
 
 func init() {
-	registry.RegisterStorageDriver(executor.Name1, newDriver1)
-	registry.RegisterStorageDriver(executor.Name2, newDriver2)
-	registry.RegisterStorageDriver(executor.Name3, newDriver3)
+	registry.RegisterStorageDriver(Name1, newDriver1)
+	registry.RegisterStorageDriver(Name2, newDriver2)
+	registry.RegisterStorageDriver(Name3, newDriver3)
 }
 
 func newDriver1() drivers.StorageDriver {
-	return newDriver(executor.Name1)
+	return newDriver(Name1)
 }
 
 func newDriver2() drivers.StorageDriver {
-	return newDriver(executor.Name2)
+	return newDriver(Name2)
 }
 
 func newDriver3() drivers.StorageDriver {
-	return newDriver(executor.Name3)
+	return newDriver(Name3)
 }
 
 func newDriver(name string) drivers.StorageDriver {
@@ -378,7 +389,7 @@ func (d *driver) pwn(v string) string {
 }
 
 func getDeviceIgnore(driver string) bool {
-	if driver == executor.Name2 {
+	if driver == Name2 {
 		return true
 	}
 	return false
@@ -387,11 +398,11 @@ func getDeviceIgnore(driver string) bool {
 func getDeviceName(driver string) string {
 	var deviceName string
 	switch driver {
-	case executor.Name1:
+	case Name1:
 		deviceName = "/dev/xvdb"
-	case executor.Name2:
+	case Name2:
 		deviceName = "/dev/xvda"
-	case executor.Name3:
+	case Name3:
 		deviceName = "/dev/xvdc"
 	}
 	return deviceName
@@ -400,9 +411,9 @@ func getDeviceName(driver string) string {
 func getNextDeviceName(driver string) string {
 	var deviceName string
 	switch driver {
-	case executor.Name1:
+	case Name1:
 		deviceName = "/dev/xvdc"
-	case executor.Name3:
+	case Name3:
 		deviceName = "/dev/xvdb"
 	}
 	return deviceName

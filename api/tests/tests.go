@@ -14,6 +14,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+	yaml "gopkg.in/yaml.v2"
 
 	apiclient "github.com/emccode/libstorage/api/client"
 	apiserver "github.com/emccode/libstorage/api/server"
@@ -147,6 +148,10 @@ func (th *testHarness) run(
 		return err
 	}
 
+	if jstr, _ := config.ToJSON(); jstr != "" {
+		t.Log(jstr)
+	}
+
 	libstorageConfigMap := map[string]interface{}{
 		"driver": driver,
 		"server": map[string]interface{}{
@@ -158,12 +163,26 @@ func (th *testHarness) run(
 
 	initTestConfigs(libstorageConfigMap)
 
-	config.Set("libstorage", libstorageConfigMap)
+	libstorageConfig := map[string]interface{}{
+		"libstorage": libstorageConfigMap,
+	}
+
+	yamlBuf, err := yaml.Marshal(libstorageConfig)
+	if err != nil {
+		return err
+	}
+	if err := config.ReadConfig(bytes.NewReader(yamlBuf)); err != nil {
+		return err
+	}
 
 	if configBuf != nil {
 		if err := config.ReadConfig(bytes.NewReader(configBuf)); err != nil {
 			return err
 		}
+	}
+
+	if jstr, _ := config.ToJSON(); jstr != "" {
+		t.Log(jstr)
 	}
 
 	configs := []gofig.Config{

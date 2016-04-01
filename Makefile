@@ -11,7 +11,10 @@ DRIVERS ?= mock vfs
 ################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
+5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
 
 # a list of the go 1.6 stdlib pacakges as grepped from https://golang.org/pkg/
 GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
@@ -84,7 +87,13 @@ endif
 SRCS_$1 := $$(subst $$(COMMA), ,$$(word 6,$$(IMPORT_PATH_INFO_$1)))
 SRCS_$1 := $$(wordlist 2,$$(words $$(SRCS_$1)),$$(SRCS_$1))
 SRCS_$1 := $$(addprefix $$(DIR_$1)/,$$(SRCS_$1))
-#$$(info SRCS_$1=$$(SRCS_$1))
+SRCS += $$(SRCS_$1)
+
+ifneq (,$$(strip $$(SRCS_$1)))
+PKG_A_$1 := $$(TARGET_$1)
+PKG_D_$1 := $$(DIR_$1)/$$(NAME_$1).d
+
+ALL_PKGS += $$(PKG_A_$1)
 
 DEPS_$1 := $$(subst $$(COMMA), ,$$(word 8,$$(IMPORT_PATH_INFO_$1)))
 DEPS_$1 := $$(wordlist 2,$$(words $$(DEPS_$1)),$$(DEPS_$1))
@@ -103,12 +112,23 @@ EXT_DEPS_SRCS_$1 := $$(addprefix $$(GOPATH)/src/,$$(addsuffix /*.go,$$(EXT_DEPS_
 EXT_DEPS_SRCS += $$(EXT_DEPS_SRCS_$1)
 
 DEPS_ARKS_$1 := $$(addprefix $$(GOPATH)/pkg/$$(GOOS)_$$(GOARCH)/,$$(addsuffix .a,$$(INT_DEPS_$1)))
+endif
 
 TEST_SRCS_$1 := $$(subst $$(COMMA), ,$$(word 7,$$(IMPORT_PATH_INFO_$1)))
 TEST_SRCS_$1 := $$(wordlist 2,$$(words $$(TEST_SRCS_$1)),$$(TEST_SRCS_$1))
 TEST_SRCS_$1 := $$(addprefix $$(DIR_$1)/,$$(TEST_SRCS_$1))
+TEST_SRCS += $$(TEST_SRCS_$1)
 
 ifneq (,$$(strip $$(TEST_SRCS_$1)))
+PKG_TA_$1 := $$(DIR_$1)/$$(NAME_$1).test
+PKG_TD_$1 := $$(DIR_$1)/$$(NAME_$1).test.d
+PKG_TC_$1 := $$(DIR_$1)/$$(NAME_$1).test.out
+
+ALL_TESTS += $$(PKG_TA_$1)
+
+-include $1/coverage.mk
+TEST_COVERPKG_$1 ?= $$(IMPORT_PATH_$1)
+
 TEST_DEPS_$1 := $$(subst $$(COMMA), ,$$(word 9,$$(IMPORT_PATH_INFO_$1)))
 TEST_DEPS_$1 := $$(wordlist 2,$$(words $$(TEST_DEPS_$1)),$$(TEST_DEPS_$1))
 TEST_DEPS_$1 := $$(filter-out $$(GO_STDLIB),$$(TEST_DEPS_$1))
@@ -128,10 +148,36 @@ TEST_EXT_DEPS_SRCS += $$(TEST_EXT_DEPS_SRCS_$1)
 TEST_DEPS_ARKS_$1 := $$(addprefix $$(GOPATH)/pkg/$$(GOOS)_$$(GOARCH)/,$$(addsuffix .a,$$(TEST_INT_DEPS_$1)))
 endif
 
+ALL_SRCS_$1 += $$(SRCS_$1) $$(TEST_SRCS_$1)
+ALL_SRCS += $$(ALL_SRCS_$1)
+
 endef
 $(foreach i,\
 	$(IMPORT_PATH_INFO),\
 	$(eval $(call IMPORT_PATH_PREPROCS_DEF,$(subst $(ROOT_DIR),.,$(word 3,$(subst ;, ,$(i)))),$(i))))
+
+################################################################################
+##                                  INFO                                      ##
+################################################################################
+info:
+	$(info Project Import Path....$(ROOT_IMPORT_PATH))
+	$(info Project Name...........$(ROOT_IMPORT_NAME))
+	$(info OS / Arch..............$(GOOS)_$(GOARCH))
+ifneq (,$(strip $(SRCS)))
+	$(info Sources................$(patsubst ./%,%,$(firstword $(SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(TEST_SRCS)))
+	$(info Test Sources...........$(patsubst ./%,%,$(firstword $(TEST_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_SRCS)),$(TEST_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+#ifneq (,$(strip $(EXT_DEPS_SRCS)))
+#	$(info Dependency Sources.....$(patsubst ./%,%,$(firstword $(EXT_DEPS_SRCS))))
+#	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(EXT_DEPS_SRCS)),$(EXT_DEPS_SRCS))),\
+#		$(info $(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+#endif
 
 ################################################################################
 ##                               DEPENDENCIES                                 ##
@@ -177,9 +223,6 @@ define IMPORT_PATH_BUILD_DEF
 
 ifneq (,$$(strip $$(SRCS_$1)))
 
-PKG_A_$1 := $$(TARGET_$1)
-PKG_D_$1 := $$(DIR_$1)/$$(NAME_$1).d
-
 DEPS_SRCS_$1 := $$(foreach d,$$(INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
 $$(PKG_D_$1): $$(SRCS_$1)
@@ -211,10 +254,6 @@ endif
 ################################################################################
 ifneq (,$$(strip $$(TEST_SRCS_$1)))
 
-PKG_TA_$1 := $$(DIR_$1)/$$(NAME_$1).test
-PKG_TC_$1 := $$(DIR_$1)/$$(NAME_$1).test.out
-PKG_TD_$1 := $$(DIR_$1)/$$(NAME_$1).test.d
-
 TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
 $$(PKG_TD_$1): $$(TEST_SRCS_$1)
@@ -225,9 +264,6 @@ $$(PKG_TD_$1)-clean:
 GO_CLOBBER += $$(PKG_TD_$1)-clean
 
 -include $$(PKG_TD_$1)
-
--include $1/coverage.mk
-COVERPKG_$1 ?= $$(IMPORT_PATH_$1)
 
 ifneq (,$$(strip $$(PKG_A_$1)))
 $$(PKG_TA_$1): $$(PKG_A_$1)
@@ -240,7 +276,7 @@ $$(PKG_TA_$1): $$(SRCS_$1)
 endif
 
 $$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
-	go test -cover -coverpkg '$$(COVERPKG_$1)' -c -o $$@ $1
+	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
 
 $$(PKG_TC_$1): $$(PKG_TA_$1)
 	$$(PKG_TA_$1) -test.v -test.coverprofile $$@
@@ -310,11 +346,6 @@ GO_PHONY += codecov
 ################################################################################
 ##                                  TARGETS                                   ##
 ################################################################################
-
-info:
-	$(info Project Import Path  - $(ROOT_IMPORT_PATH))
-	$(info Project Name         - $(ROOT_IMPORT_NAME))
-	$(info GOOS_GOARCH          - $(GOOS)_$(GOARCH))
 
 build-tests: $(GO_BUILD_TESTS)
 

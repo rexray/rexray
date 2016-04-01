@@ -12,6 +12,20 @@ import (
 	"github.com/emccode/libstorage/drivers/storage/mock"
 )
 
+var (
+	configYaml = []byte(`
+libstorage:
+  server:
+    services:
+      mock2:
+        libstorage:
+          driver: mock2
+      mock3:
+        libstorage:
+          driver: mock3
+`)
+)
+
 func TestRoot(t *testing.T) {
 
 	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
@@ -22,7 +36,7 @@ func TestRoot(t *testing.T) {
 		apitests.LogAsJSON(reply, t)
 	}
 
-	apitests.Run(t, mock.Name1, nil, tf)
+	apitests.Run(t, mock.Name1, configYaml, tf)
 }
 
 func TestVolumes(t *testing.T) {
@@ -35,5 +49,5 @@ func TestVolumes(t *testing.T) {
 		apitests.LogAsJSON(reply, t)
 	}
 
-	apitests.Run(t, mock.Name1, nil, tf)
+	apitests.Run(t, mock.Name1, configYaml, tf)
 }

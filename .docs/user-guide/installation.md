@@ -246,3 +246,47 @@ using VirtualBox's Virtual Media.
 
 A Vagrant environment and instructions using it are provided
 [here](https://github.com/emccode/vagrant/tree/master/rexray).
+
+### Containerizing REX-Ray (Dockerizing)
+Using `REX-Ray` in a docker container is a great option to quickly get it up and running. The following section discusses the steps to create and launch a docker container that launches `REX-Ray`.
+
+#### Create Docker Container
+
+Here's a Dockerfile for creating a `REX-Ray` image
+
+```
+FROM ubuntu:15.10
+
+RUN apt-get update && apt-get install -y wget
+
+RUN wget https://dl.bintray.com/emccode/rexray/stable/0.3.2/rexray-Linux-x86_64-0.3.2.tar.gz -O rexray.tar.gz && tar -xvzf rexray.tar.gz -C /usr/bin
+
+ENTRYPOINT ["rexray"]
+
+CMD ["--help"]
+
+```
+
+1. Start with a base image (In the example, `ubuntu:15.10` is used)
+2. Add rexray into path - In this case, the image (v0.3.2) is downloaded from bintray
+3. Execute the binary, In this case, the default help message is printed
+
+#### Launch `REX-Ray` container
+
+While launching `REX-Ray` container, the following volumes need to be bind mounted
+
+- `/etc/rexray:/etc/rexray`
+- `/var/lib/rexray:/var/lib/rexray:shared` (the `shared` flag is vital here)
+- `/var/run/rexray:/var/run/rexray`
+- `/var/log/rexray:/var/log/rexray`
+- `/run/docker/plugins:/run/docker/plugins`
+- ... (any others required by drivers, e.g. EBS requires `/dev:/dev`)
+
+The first bind mount is used to present the `config.yml` file to `REX-Ray`. The host path `/etc/rexray/` should have the `config.yml` file in it.
+
+The second bind mount has a special flag (`shared`). The mounts that happen within a container do not propagate by default into the host. i.e. if the `REX-Ray` container mounted a new volume inside `/var/lib/rexray`, it wont show up in the host path `/var/lib/rexray` even if it was bind mounted into the container. The `shared` flag makes it possible to share the mounts across namespaces(container & host). 
+
+NOTE: `shared` bind mounting feature is available in Docker versions 1.10 and above
+
+Once the image is created, and executed, the `rexray` volume driver can be used to persist data in any container.
+e.g. `docker run --volume-driver rexray -v test:/test -it ubuntu:14.04.3` 

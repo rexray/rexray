@@ -77,11 +77,15 @@ func (d *driver) Init(r *core.RexRay) error {
 	if _, err := d.client.Authenticate(
 		&goscaleio.ConfigConnect{
 			d.endpoint(),
+			d.version(),
 			d.userName(),
 			d.password()}); err != nil {
 		fields["userName"] = d.userName()
 		if d.password() != "" {
 			fields["password"] = "******"
+		}
+		if d.version() != "" {
+			fields["version"] = d.version()
 		}
 		return goof.WithFieldsE(fields, "error authenticating", err)
 	}
@@ -836,6 +840,10 @@ func (d *driver) thinOrThick() string {
 	return thinOrThick
 }
 
+func (d *driver) version() string {
+	return d.r.Config.GetString("scaleio.version")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("ScaleIO")
 	r.Key(gofig.String, "", "", "", "scaleio.endpoint")
@@ -851,5 +859,6 @@ func configRegistration() *gofig.Registration {
 	r.Key(gofig.String, "", "", "", "scaleio.storagePoolID")
 	r.Key(gofig.String, "", "", "", "scaleio.storagePoolName")
 	r.Key(gofig.String, "", "", "", "scaleio.thinOrThick")
+	r.Key(gofig.String, "", "", "", "scaleio.version")
 	return r
 }

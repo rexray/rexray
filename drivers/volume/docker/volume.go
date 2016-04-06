@@ -294,7 +294,9 @@ func (d *driver) Path(volumeName, volumeID string) (string, error) {
 	case len(volumes) == 0:
 		return "", goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return "", goof.New("Multiple volumes returned by name")
+		if !d.useFirstVolume() {
+			return "", goof.New("Multiple volumes returned by name")
+		}
 	}
 
 	volumeAttachment, err := d.r.Storage.GetVolumeAttach(volumes[0].VolumeID, instances[0].InstanceID)
@@ -427,8 +429,10 @@ func (d *driver) createInitVolume(
 		return nil, goof.WithField(
 			"optVolumeName", optVolumeName, "No volumes returned")
 	case len(volumes) > 1:
-		return nil, goof.WithField(
-			"optVolumeName", optVolumeName, "Too many volumes returned")
+		if !d.useFirstVolume() {
+			return nil, goof.WithField(
+				"optVolumeName", optVolumeName, "Too many volumes returned")
+		}
 	}
 
 	return volumes[0], nil
@@ -502,8 +506,10 @@ func (d *driver) createGetVolumes(
 	case len(volumes) == 1 && !overwriteFs:
 		return volumes, overwriteFs, nil
 	case len(volumes) > 1:
-		return nil, overwriteFs, goof.WithField(
-			"volumeName", volumeName, "Too many volumes returned")
+		if !d.useFirstVolume() {
+			return nil, overwriteFs, goof.WithField(
+				"volumeName", volumeName, "Too many volumes returned")
+		}
 	}
 
 	return volumes, overwriteFs, nil
@@ -623,7 +629,9 @@ func (d *driver) Remove(volumeName string) error {
 	case len(volumes) == 0:
 		return goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return goof.New("Multiple volumes returned by name")
+		if !d.useFirstVolume() {
+			return goof.New("Multiple volumes returned by name")
+		}
 	}
 
 	err = d.Unmount("", volumes[0].VolumeID)
@@ -685,7 +693,10 @@ func (d *driver) get(volumeName string) ([]core.VolumeMap, error) {
 	case len(volumes) == 0:
 		return nil, goof.New("No volumes returned")
 	case len(volumes) > 1 && volumeName != "":
-		return nil, goof.New("too many volumes returned")
+		if !d.useFirstVolume() {
+			return nil, goof.New("too many volumes returned")
+		}
+		volumes = volumes[:0]
 	}
 
 	var volList []core.VolumeMap
@@ -769,7 +780,9 @@ func (d *driver) Attach(volumeName, instanceID string, force bool) (string, erro
 	case len(volumes) == 0:
 		return "", goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return "", goof.New("Multiple volumes returned by name")
+		if !d.useFirstVolume() {
+			return "", goof.New("Multiple volumes returned by name")
+		}
 	}
 
 	_, err = d.r.Storage.AttachVolume(true, volumes[0].VolumeID, instanceID, force)
@@ -818,7 +831,9 @@ func (d *driver) NetworkName(volumeName, instanceID string) (string, error) {
 	case len(volumes) == 0:
 		return "", goof.New("No volumes returned by name")
 	case len(volumes) > 1:
-		return "", goof.New("Multiple volumes returned by name")
+		if !d.useFirstVolume() {
+			return "", goof.New("Multiple volumes returned by name")
+		}
 	}
 
 	volumeAttachment, err := d.r.Storage.GetVolumeAttach(
@@ -867,6 +882,10 @@ func (d *driver) fsType() string {
 	return d.r.Config.GetString("docker.fsType")
 }
 
+func (d *driver) useFirstVolume() bool {
+	return d.r.Config.GetBool("docker.useFirstVolume")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Docker")
 	r.Key(gofig.String, "", "", "", "docker.fsType")
@@ -874,6 +893,7 @@ func configRegistration() *gofig.Registration {
 	r.Key(gofig.String, "", "", "", "docker.iops")
 	r.Key(gofig.String, "", "", "", "docker.size")
 	r.Key(gofig.String, "", "", "", "docker.availabilityZone")
+	r.Key(gofig.Bool, "", false, "", "docker.useFirstVolume")
 	r.Key(gofig.String, "", "/data", "", "linux.volume.rootpath")
 	return r
 }

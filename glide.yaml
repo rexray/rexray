@@ -24,8 +24,8 @@ import:
     repo:    https://github.com/clintonskitson/goamz
     vcs:     git
   - package: github.com/emccode/goscaleio
-    ref:     37a71bf801a533473f94e4d4dcee2372c141e261
-    repo:    https://github.com/emccode/goscaleio.git
+    ref:     9878e2046d18042cdd09ade9dfeb9dc4f509fefa 
+    repo:    https://github.com/EMC-CMD/goscaleio.git
     vcs:     git
   - package: github.com/emccode/goxtremio
     ref:     89e87d4bdf43837a161fd36ad8dd32e0ce42ae98

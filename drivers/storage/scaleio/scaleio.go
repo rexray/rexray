@@ -76,9 +76,10 @@ func (d *driver) Init(r *core.RexRay) error {
 
 	if _, err := d.client.Authenticate(
 		&goscaleio.ConfigConnect{
-			d.endpoint(),
-			d.userName(),
-			d.password()}); err != nil {
+			Endpoint: d.endpoint(),
+			Username: d.userName(),
+			Password: d.password(),
+		}); err != nil {
 		fields["userName"] = d.userName()
 		if d.password() != "" {
 			fields["password"] = "******"

@@ -319,6 +319,8 @@ func (d *driver) getVolume(
 		"volumeId":   volumeID,
 		"volumeName": volumeName})
 
+	log.WithFields(fields).Info("d.getVolume")
+
 	if volumeID != "" {
 		volume, err := volumes.Get(d.clientBlockStorage, volumeID).Extract()
 		if err != nil {
@@ -382,7 +384,8 @@ func (d *driver) GetVolume(
 			attachmentSD := &core.VolumeAttachment{
 				VolumeID:   attachment["volume_id"].(string),
 				InstanceID: attachment["server_id"].(string),
-				DeviceName: attachment["device"].(string),
+				// never trust the cinder-assigned device name; use /dev/disk/by-id
+				DeviceName: getAttachedDevicePathByID(attachment["volume_id"].(string)),
 				Status:     "",
 			}
 			attachmentsSD = append(attachmentsSD, attachmentSD)
@@ -413,6 +416,8 @@ func (d *driver) GetVolumeAttach(
 		"instanceId": instanceID,
 	})
 
+	log.WithFields(fields).Info("d.GetVolumeAttach")
+
 	if volumeID == "" {
 		return []*core.VolumeAttachment{},
 			goof.WithFields(fields, "volumeId is required")
@@ -427,6 +432,8 @@ func (d *driver) GetVolumeAttach(
 		var attached bool
 		for _, volumeAttachment := range volume[0].Attachments {
 			if volumeAttachment.InstanceID == instanceID {
+				// never trust the cinder-assigned device name; use /dev/disk/by-id
+				volumeAttachment.DeviceName = getAttachedDevicePathByID(volumeAttachment.VolumeID)
 				return volume[0].Attachments, nil
 			}
 		}
@@ -763,42 +770,11 @@ func (d *driver) RemoveVolume(volumeID string) error {
 }
 
 func (d *driver) GetDeviceNextAvailable() (string, error) {
-	letters := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
-	blockDeviceNames := make(map[string]bool)
+	return "", errors.ErrNotImplemented
+}
 
-	blockDeviceMapping, err := d.GetVolumeMapping()
-	if err != nil {
-		return "", err
-	}
-
-	for _, blockDevice := range blockDeviceMapping {
-		re, _ := regexp.Compile(`^/dev/vd([a-z])`)
-		res := re.FindStringSubmatch(blockDevice.DeviceName)
-		if len(res) > 0 {
-			blockDeviceNames[res[1]] = true
-		}
-	}
-
-	localDevices, err := getLocalDevices()
-	if err != nil {
-		return "", err
-	}
-
-	for _, localDevice := range localDevices {
-		re, _ := regexp.Compile(`^vd([a-z])`)
-		res := re.FindStringSubmatch(localDevice)
-		if len(res) > 0 {
-			blockDeviceNames[res[1]] = true
-		}
-	}
-
-	for _, letter := range letters {
-		if !blockDeviceNames[letter] {
-			nextDeviceName := "/dev/vd" + letter
-			return nextDeviceName, nil
-		}
-	}
-	return "", goof.New("No available device")
+func getAttachedDevicePathByID(volumeID string) string {
+	return fmt.Sprintf("/dev/disk/by-id/virtio-%s", volumeID[:20])
 }
 
 func getLocalDevices() (deviceNames []string, err error) {
@@ -833,20 +809,18 @@ func (d *driver) AttachVolume(
 		"instanceId": instanceID,
 	})
 
-	nextDeviceName, err := d.GetDeviceNextAvailable()
-	if err != nil {
-		return nil, goof.WithFieldsE(
-			fields, "error getting next available device", err)
-	}
+	log.WithFields(fields).Info("d.AttachVolume")
+
+	var err error
 
 	if force {
-		if err := d.DetachVolume(false, volumeID, "", true); err != nil {
+		if err = d.DetachVolume(false, volumeID, "", true); err != nil {
 			return nil, err
 		}
 	}
 
 	options := &volumeattach.CreateOpts{
-		Device:   nextDeviceName,
+		// Device:   "",
 		VolumeID: volumeID,
 	}
 

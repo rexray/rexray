@@ -2,11 +2,10 @@ package snapshot
 
 import (
 	"github.com/akutz/gofig"
-
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server/handlers"
 	"github.com/emccode/libstorage/api/server/httputils"
-	httptypes "github.com/emccode/libstorage/api/types/http"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
@@ -15,29 +14,24 @@ func init() {
 }
 
 type router struct {
-	config   gofig.Config
-	services map[string]httputils.Service
-	routes   []httputils.Route
+	routes []apihttp.Route
 }
 
 func (r *router) Name() string {
 	return "snapshot-router"
 }
 
-func (r *router) Init(
-	config gofig.Config, services map[string]httputils.Service) {
-	r.config = config
-	r.services = services
+func (r *router) Init(config gofig.Config) {
 	r.initRoutes()
 }
 
 // Routes returns the available routes.
-func (r *router) Routes() []httputils.Route {
+func (r *router) Routes() []apihttp.Route {
 	return r.routes
 }
 
 func (r *router) initRoutes() {
-	r.routes = []httputils.Route{
+	r.routes = []apihttp.Route{
 
 		// GET
 
@@ -55,7 +49,7 @@ func (r *router) initRoutes() {
 			"snapshotsForService",
 			"/snapshots/{service}",
 			r.snapshotsForService,
-			handlers.NewServiceValidator(r.services),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				nil, schema.SnapshotMapSchema, nil),
 		),
@@ -65,8 +59,7 @@ func (r *router) initRoutes() {
 			"snapshotInspect",
 			"/snapshots/{service}/{snapshotID}",
 			r.snapshotInspect,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewSnapshotValidator(),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(nil, schema.SnapshotSchema, nil),
 		),
 
@@ -77,13 +70,12 @@ func (r *router) initRoutes() {
 			"snapshotCreate",
 			"/snapshots/{service}/{snapshotID}",
 			r.volumeCreate,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewSnapshotValidator(),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				schema.VolumeCreateFromSnapshotRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} {
-					return &httptypes.VolumeCreateFromSnapshotRequest{}
+					return &apihttp.VolumeCreateFromSnapshotRequest{}
 				}),
 			handlers.NewPostArgsHandler(),
 		).Queries("create"),
@@ -93,13 +85,12 @@ func (r *router) initRoutes() {
 			"snapshotCopy",
 			"/snapshots/{service}/{snapshotID}",
 			r.snapshotCopy,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewSnapshotValidator(),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				schema.SnapshotCopyRequestSchema,
 				schema.SnapshotSchema,
 				func() interface{} {
-					return &httptypes.SnapshotCopyRequest{}
+					return &apihttp.SnapshotCopyRequest{}
 				}),
 			handlers.NewPostArgsHandler(),
 		).Queries("copy"),

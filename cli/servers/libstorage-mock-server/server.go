@@ -8,5 +8,8 @@ import (
 )
 
 func main() {
-	servers.Run(mock.Name1, "", false)
+	servers.Run("", false,
+		mock.Name1, mock.Name1,
+		mock.Name2, mock.Name2,
+		mock.Name3, mock.Name3)
 }

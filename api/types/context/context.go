@@ -17,38 +17,7 @@ var (
 )
 
 // Context is a libStorage context.
-type Context interface {
-	context.Context
-
-	// InstanceID returns the context's instance ID.
-	InstanceID() *types.InstanceID
-
-	// Profile returns the context's profile name.
-	Profile() string
-
-	// Route returns the name of context's route.
-	Route() string
-
-	// Log returns the context's logger.
-	Log() *log.Logger
-
-	// WithInstanceID returns a context with the provided instance ID.
-	WithInstanceID(instanceID *types.InstanceID) Context
-
-	// WithProfile returns a context with the provided profile.
-	WithProfile(profile string) Context
-
-	// WithRoute returns a contex with the provided route name.
-	WithRoute(routeName string) Context
-
-	// WithContextID returns a context with the provided context ID information.
-	// The context ID is often used with logging to identify a log statement's
-	// origin.
-	WithContextID(id, value string) Context
-
-	// WithValue returns a context with the provided value.
-	WithValue(key interface{}, val interface{}) Context
-}
+type Context types.Context
 
 type libstorContext struct {
 	context.Context
@@ -64,7 +33,6 @@ func Background() Context {
 
 // NewContext initializes a new libStorage context.
 func NewContext(parent context.Context, r *http.Request) Context {
-
 	var parentLogger *log.Logger
 	if parentCtx, ok := parent.(Context); ok {
 		parentLogger = parentCtx.Log()
@@ -189,7 +157,7 @@ type key int
 const reqKey key = 0
 
 // Value returns Gorilla's context package's value for this Context's request
-// and key. It delegates to the parent Context if there is no such value.
+// and key. It delegates to the parent types.Context if there is no such value.
 func (ctx *libstorContext) Value(key interface{}) interface{} {
 	if ctx.req == nil {
 		ctx.Context.Value(key)
@@ -225,24 +193,24 @@ func (ctx *libstorContext) Log() *log.Logger {
 }
 
 func (ctx *libstorContext) WithInstanceID(
-	instanceID *types.InstanceID) Context {
+	instanceID *types.InstanceID) types.Context {
 	return WithInstanceID(ctx, instanceID)
 }
 
-func (ctx *libstorContext) WithProfile(profile string) Context {
+func (ctx *libstorContext) WithProfile(profile string) types.Context {
 	return WithProfile(ctx, profile)
 }
 
-func (ctx *libstorContext) WithRoute(routeName string) Context {
+func (ctx *libstorContext) WithRoute(routeName string) types.Context {
 	return WithRoute(ctx, routeName)
 }
 
-func (ctx *libstorContext) WithContextID(id, value string) Context {
+func (ctx *libstorContext) WithContextID(id, value string) types.Context {
 	return WithContextID(ctx, id, value)
 }
 
 func (ctx *libstorContext) WithValue(
-	key interface{}, value interface{}) Context {
+	key interface{}, value interface{}) types.Context {
 	return WithValue(ctx, key, value)
 }
 

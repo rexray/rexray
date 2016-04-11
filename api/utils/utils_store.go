@@ -5,22 +5,56 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/libstorage/api/types"
 )
 
 type keyValueStore struct {
-	store map[string]interface{}
+	sync.RWMutex
+	store  map[string]interface{}
+	ttl    time.Duration
+	timers map[string]*ttlTimer
+}
+
+type ttlTimer struct {
+	sync.RWMutex
+	expires *time.Time
+}
+
+func (t *ttlTimer) touch(duration time.Duration) {
+	t.Lock()
+	defer t.Unlock()
+	expiration := time.Now().Add(duration)
+	t.expires = &expiration
+}
+
+func (t *ttlTimer) expired() bool {
+	t.RLock()
+	defer t.RUnlock()
+	if t.expires == nil {
+		return true
+	}
+	return t.expires.Before(time.Now())
 }
 
 // NewStore initializes a new instance of the Store type.
 func NewStore() types.Store {
-	return newKeyValueStore(map[string]interface{}{})
+	return newKeyValueStore(map[string]interface{}{}, -1)
+}
+
+// NewTTLStore initializes a new instance of the Store type, but has a TTL
+// that expires contents after a sliding duration.
+func NewTTLStore(duration time.Duration) types.Store {
+	return newKeyValueStore(map[string]interface{}{}, duration)
 }
 
 // NewStoreWithData initializes a new instance of the Store type.
 func NewStoreWithData(data map[string]interface{}) types.Store {
-	return newKeyValueStore(data)
+	return newKeyValueStore(data, -1)
 }
 
 // NewStoreWithVars initializes a new instance of the Store type.
@@ -29,24 +63,95 @@ func NewStoreWithVars(vars map[string]string) types.Store {
 	for k, v := range vars {
 		m[k] = v
 	}
-	return newKeyValueStore(m)
+	return newKeyValueStore(m, -1)
 }
 
-func newKeyValueStore(m map[string]interface{}) types.Store {
+func newKeyValueStore(m map[string]interface{}, ttl time.Duration) types.Store {
 	cm := map[string]interface{}{}
 	for k, v := range m {
 		cm[strings.ToLower(k)] = v
 	}
-	return &keyValueStore{cm}
+	store := &keyValueStore{store: cm}
+	if ttl > -1 {
+		store.ttl = ttl
+		store.timers = map[string]*ttlTimer{}
+		for k := range cm {
+			store.timers[k].touch(store.ttl)
+		}
+		store.startCleanupTimer()
+	}
+	return store
+}
+
+func (s *keyValueStore) cleanup() {
+	s.Lock()
+	defer s.Unlock()
+	for k, v := range s.timers {
+		if v.expired() {
+			delete(s.store, k)
+			delete(s.timers, k)
+			log.WithField("key", k).Debug("expiring cached key")
+		}
+	}
+}
+
+func (s *keyValueStore) startCleanupTimer() {
+	duration := s.ttl
+	if duration < time.Second {
+		duration = time.Second
+	}
+	ticker := time.Tick(duration)
+	go (func() {
+		for {
+			select {
+			case <-ticker:
+				s.cleanup()
+			}
+		}
+	})()
+}
+
+func (s *keyValueStore) Delete(k string) interface{} {
+	s.Lock()
+	defer s.Unlock()
+	k = strings.ToLower(k)
+	if v, ok := s.store[k]; ok {
+		delete(s.store, k)
+		return v
+	}
+	return nil
 }
 
 func (s *keyValueStore) IsSet(k string) bool {
-	_, ok := s.store[strings.ToLower(k)]
-	return ok
+	s.RLock()
+	defer s.RUnlock()
+	k = strings.ToLower(k)
+	_, vok := s.store[k]
+	if s.timers == nil || !vok {
+		return vok
+	}
+	ttlt, tok := s.timers[k]
+	if !tok || ttlt.expired() {
+		return false
+	}
+	ttlt.touch(s.ttl)
+	return true
 }
 
 func (s *keyValueStore) Get(k string) interface{} {
-	return s.store[strings.ToLower(k)]
+	s.RLock()
+	defer s.RUnlock()
+	k = strings.ToLower(k)
+	v, vok := s.store[k]
+	if s.timers == nil || !vok {
+		return v
+	}
+	ttlt, tok := s.timers[k]
+	if !tok || ttlt.expired() {
+		return nil
+	}
+	ttlt.touch(s.ttl)
+	return v
 }
 
 func (s *keyValueStore) GetStore(k string) types.Store {
@@ -225,10 +330,19 @@ func (s *keyValueStore) GetMap(k string) map[string]interface{} {
 }
 
 func (s *keyValueStore) Set(k string, v interface{}) {
+	s.Lock()
+	defer s.Unlock()
+	if s.timers != nil {
+		ttlt := &ttlTimer{}
+		ttlt.touch(s.ttl)
+		s.timers[strings.ToLower(k)] = ttlt
+	}
 	s.store[strings.ToLower(k)] = v
 }
 
 func (s *keyValueStore) Keys() []string {
+	s.RLock()
+	defer s.RUnlock()
 	keys := []string{}
 	for k := range s.store {
 		keys = append(keys, k)

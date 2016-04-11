@@ -63,4 +63,8 @@ type Store interface {
 
 	// Set sets a key/value in the store.
 	Set(k string, v interface{})
+
+	// Deletes a key/value from the store. If the value exists in the map it
+	// is returned.
+	Delete(k string) interface{}
 }

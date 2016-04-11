@@ -8,5 +8,5 @@ import (
 )
 
 func main() {
-	servers.Run(vfs.Name, "", false)
+	servers.Run("", false, vfs.Name)
 }

@@ -19,7 +19,15 @@ import (
 
 // Run runs the server and blocks until a Kill signal is received by the
 // owner process or the server returns an error via its error channel.
-func Run(driverName, host string, tls bool) {
+func Run(host string, tls bool, driversAndServices ...string) {
+
+	if runHost := os.Getenv("LIBSTORAGE_RUN_HOST"); runHost != "" {
+		host = runHost
+	}
+	if runTLS, err := strconv.ParseBool(
+		os.Getenv("LIBSTORAGE_RUN_TLS")); err != nil {
+		tls = runTLS
+	}
 
 	// make sure all servers get closed even if the test is abrubptly aborted
 	trapAbort()
@@ -34,7 +42,7 @@ func Run(driverName, host string, tls bool) {
 		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_LOGRESPONSE", "true")
 	}
 
-	serve(driverName, host, tls)
+	serve(host, tls, driversAndServices...)
 }
 
 func trapAbort() {
@@ -68,12 +76,12 @@ func closeAllServers() bool {
 	return noErrors
 }
 
-func serve(driverName, host string, tls bool) {
+func serve(host string, tls bool, driversAndServices ...string) {
 
 	if host == "" {
 		host = fmt.Sprintf("tcp://localhost:%d", gotil.RandomTCPPort())
 	}
-	config := getConfig(driverName, host, tls)
+	config := getConfig(host, tls, driversAndServices...)
 	server, errs := libstorage.Serve(config)
 	if server != nil {
 		servers = append(servers, server)
@@ -81,7 +89,9 @@ func serve(driverName, host string, tls bool) {
 	<-errs
 }
 
-func getConfig(driverName, host string, tls bool) gofig.Config {
+func getConfig(
+	host string, tls bool, driversAndServices ...string) gofig.Config {
+
 	if host == "" {
 		host = "tcp://127.0.0.1:7979"
 	}
@@ -96,11 +106,26 @@ func getConfig(driverName, host string, tls bool) gofig.Config {
 			libStorageConfigServerTLS,
 			serverCrt, serverKey, trustedCerts)
 	}
+
+	services := &bytes.Buffer{}
+
+	for i := 0; i < len(driversAndServices); i = i + 2 {
+		driverName := driversAndServices[i]
+		serviceName := driverName
+		if (i + 1) < len(driversAndServices) {
+			serviceName = driversAndServices[i+1]
+		}
+		services.WriteString(
+			fmt.Sprintf(libStorageConfigService, serviceName, driverName))
+	}
+
 	configYaml := fmt.Sprintf(
 		libStorageConfigBase,
 		host, "/tmp/libstorage/executors",
 		clientTLS, serverTLS,
-		driverName, driverName)
+		services.String())
+
+	log.Debug(configYaml)
 
 	configYamlBuf := []byte(configYaml)
 	if err := config.ReadConfig(bytes.NewReader(configYamlBuf)); err != nil {
@@ -127,8 +152,7 @@ const (
 	   02 - the executors directory
 	   03 - the client TLS section. use an empty string if TLS is disabled
 	   04 - the server TLS section. use an empty string if TLS is disabled
-	   05 - the first service name
-	   06 - the first service's driver type
+	   05 - the services
 	*/
 	libStorageConfigBase = `
 libstorage:
@@ -143,16 +167,14 @@ libstorage:
     endpoints:
       localhost:
         address: %[1]s%[4]s
-    services:
-      %[5]s:
-        libstorage:
-          driver: %[6]s
-          profiles:
-            enabled: true
-            groups:
-            - remote=127.0.0.1
+    services:%[5]s
 `
 
+	libStorageConfigService = `
+      %[1]s:
+        libstorage:
+          driver: %[2]s
+`
 	libStorageConfigClientTLS = `
     tls:
       serverName: libstorage-server

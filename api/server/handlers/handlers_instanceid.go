@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 const (
@@ -18,12 +18,12 @@ const (
 // instanceIDHandler is a global HTTP filter for grokking the InstanceIDs
 // from the headers
 type instanceIDHandler struct {
-	handler httputils.APIFunc
+	handler apihttp.APIFunc
 }
 
 // NewInstanceIDHandler returns a new global HTTP filter for grokking the
 // InstanceIDs from the headers
-func NewInstanceIDHandler() httputils.Middleware {
+func NewInstanceIDHandler() apihttp.Middleware {
 	return &instanceIDHandler{}
 }
 
@@ -31,9 +31,8 @@ func (h *instanceIDHandler) Name() string {
 	return "instanceIDs-handler"
 }
 
-func (h *instanceIDHandler) Handler(m httputils.APIFunc) httputils.APIFunc {
-	h.handler = m
-	return h.Handle
+func (h *instanceIDHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+	return (&instanceIDHandler{m}).Handle
 }
 
 // Handle is the type's Handler function.

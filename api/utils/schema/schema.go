@@ -152,6 +152,15 @@ func getSchemaValidator(s []byte) (*schema.Validator, error) {
 	return validator, nil
 }
 
+// ValidateObj validates an object using a schema.
+func ValidateObj(ctx context.Context, s []byte, i interface{}) error {
+	buf, err := json.Marshal(i)
+	if err != nil {
+		return err
+	}
+	return Validate(ctx, s, buf)
+}
+
 // Validate validates the provided data (d) against the provided schema (s).
 func Validate(ctx context.Context, s, d []byte) error {
 

@@ -259,3 +259,52 @@ type NextDeviceInfo struct {
 	// Pattern is the regex to match the part of a device path after the prefix.
 	Pattern string `json:"pattern"`
 }
+
+// TaskState is the possible state of a task.
+type TaskState string
+
+const (
+	// TaskStateQueued is the state for a task that has been enqueued but not
+	// yet started.
+	TaskStateQueued TaskState = "queued"
+
+	// TaskStateRunning is the state for a task that is running.
+	TaskStateRunning = "running"
+
+	// TaskStateSuccess is the state for a task that has completed successfully.
+	TaskStateSuccess = "success"
+
+	// TaskStateError is the state for a task that has completed with an error.
+	TaskStateError = "error"
+)
+
+// TaskRunFunc is a function responsible for a task's execution.
+type TaskRunFunc func(ctx Context) (interface{}, error)
+
+// Task is a representation of an asynchronous, long-running task.
+type Task struct {
+	// ID is the task's ID.
+	ID int `json:"id"`
+
+	// User is the name of the user that created the task.
+	User string `json:"user,omitempty"`
+
+	// CompleteTime is the time stamp when the task was completed
+	// (whether success or failure).
+	CompleteTime int64 `json:"completeTime,omitempty"`
+
+	// QueueTime is the time stamp when the task was created.
+	QueueTime int64 `json:"queueTime"`
+
+	// StartTime is the time stamp when the task started running.
+	StartTime int64 `json:"startTime,omitempty"`
+
+	// State is the current state of the task.
+	State TaskState `json:"state"`
+
+	// Result holds the result of the task.
+	Result interface{} `json:"result,omitempty"`
+
+	// Error contains the error if the task was unsuccessful.
+	Error error `json:"error,omitempty"`
+}

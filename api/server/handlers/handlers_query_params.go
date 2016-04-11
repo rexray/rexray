@@ -6,15 +6,15 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 // queryParamsHandler is an HTTP filter for injecting the store with query
 // parameters
 type queryParamsHandler struct {
-	handler httputils.APIFunc
+	handler apihttp.APIFunc
 }
 
 func (h *queryParamsHandler) Name() string {
@@ -23,13 +23,12 @@ func (h *queryParamsHandler) Name() string {
 
 // NewQueryParamsHandler returns a new filter for injecting the store with query
 // parameters
-func NewQueryParamsHandler() httputils.Middleware {
+func NewQueryParamsHandler() apihttp.Middleware {
 	return &queryParamsHandler{}
 }
 
-func (h *queryParamsHandler) Handler(m httputils.APIFunc) httputils.APIFunc {
-	h.handler = m
-	return h.Handle
+func (h *queryParamsHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+	return (&queryParamsHandler{m}).Handle
 }
 
 // Handle is the type's Handler function.

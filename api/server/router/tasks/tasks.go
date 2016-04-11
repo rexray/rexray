@@ -1,8 +1,7 @@
-package root
+package tasks
 
 import (
 	"github.com/akutz/gofig"
-
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server/httputils"
 	apihttp "github.com/emccode/libstorage/api/types/http"
@@ -17,7 +16,7 @@ type router struct {
 }
 
 func (r *router) Name() string {
-	return "root-router"
+	return "tasks-router"
 }
 
 func (r *router) Init(config gofig.Config) {
@@ -30,8 +29,19 @@ func (r *router) Routes() []apihttp.Route {
 }
 
 func (r *router) initRoutes() {
+
 	r.routes = []apihttp.Route{
+
 		// GET
-		httputils.NewGetRoute("root", "/", r.root),
+		httputils.NewGetRoute(
+			"tasks",
+			"/tasks",
+			r.tasks),
+
+		// GET
+		httputils.NewGetRoute(
+			"taskInspect",
+			"/tasks/{taskID}",
+			r.taskInspect),
 	}
 }

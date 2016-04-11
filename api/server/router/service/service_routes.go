@@ -4,9 +4,11 @@ import (
 	"net/http"
 
 	"github.com/emccode/libstorage/api/server/httputils"
+	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
-	httptypes "github.com/emccode/libstorage/api/types/http"
+	apihttp "github.com/emccode/libstorage/api/types/http"
+	apisvcs "github.com/emccode/libstorage/api/types/services"
 )
 
 func (r *router) servicesList(
@@ -15,8 +17,8 @@ func (r *router) servicesList(
 	req *http.Request,
 	store types.Store) error {
 
-	var reply httptypes.ServicesResponse = map[string]*types.ServiceInfo{}
-	for _, service := range r.services {
+	var reply apihttp.ServicesResponse = map[string]*types.ServiceInfo{}
+	for service := range services.StorageServices() {
 		si := toServiceInfo(service)
 		reply[si.Name] = si
 	}
@@ -35,8 +37,7 @@ func (r *router) serviceInspect(
 	if err != nil {
 		return err
 	}
-	reply := toServiceInfo(service)
-	httputils.WriteJSON(w, http.StatusOK, reply)
+	httputils.WriteJSON(w, http.StatusOK, toServiceInfo(service))
 	return nil
 }
 
@@ -58,7 +59,7 @@ func (r *router) executorsList(
 	return nil
 }
 
-func toServiceInfo(service httputils.Service) *types.ServiceInfo {
+func toServiceInfo(service apisvcs.StorageService) *types.ServiceInfo {
 	return &types.ServiceInfo{
 		Name: service.Name(),
 		Driver: &types.DriverInfo{

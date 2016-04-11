@@ -6,15 +6,16 @@ import (
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 // errorHandler is a global HTTP filter for handlling errors
 type errorHandler struct {
-	handler httputils.APIFunc
+	handler apihttp.APIFunc
 }
 
 // NewErrorHandler returns a new global HTTP filter for handling errors.
-func NewErrorHandler() httputils.Middleware {
+func NewErrorHandler() apihttp.Middleware {
 	return &errorHandler{}
 }
 
@@ -22,9 +23,8 @@ func (h *errorHandler) Name() string {
 	return "error-handler"
 }
 
-func (h *errorHandler) Handler(m httputils.APIFunc) httputils.APIFunc {
-	h.handler = m
-	return h.Handle
+func (h *errorHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+	return (&errorHandler{m}).Handle
 }
 
 // Handle is the type's Handler function.

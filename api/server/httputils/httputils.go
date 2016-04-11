@@ -3,24 +3,29 @@ package httputils
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"time"
 
+	"github.com/emccode/libstorage/api/server/services"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	"github.com/emccode/libstorage/api/types/drivers"
+	apisvcs "github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils"
 )
 
 var (
-	serviceTypeName       = utils.GetTypePkgPathAndName((*Service)(nil))
+	serviceTypeName       = utils.GetTypePkgPathAndName((*apisvcs.StorageService)(nil))
 	storageDriverTypeName = utils.GetTypePkgPathAndName((*drivers.StorageDriver)(nil))
 )
 
 // GetService gets the Service instance from a context.
-func GetService(ctx context.Context) (Service, error) {
+func GetService(ctx context.Context) (apisvcs.StorageService, error) {
 	serviceObj := ctx.Value("service")
 	if serviceObj == nil {
 		return nil, utils.NewContextKeyErr("service")
 	}
-	service, ok := serviceObj.(Service)
+	service, ok := serviceObj.(apisvcs.StorageService)
 	if !ok {
 		return nil, utils.NewContextTypeErr(
 			"service", serviceTypeName, utils.GetTypePkgPathAndName(serviceObj))
@@ -60,5 +65,42 @@ func WriteData(w http.ResponseWriter, code int, v []byte) error {
 	if _, err := w.Write(v); err != nil {
 		return err
 	}
+	return nil
+}
+
+// WriteResponse writes a recorded response to a ResponseWriter.
+func WriteResponse(w http.ResponseWriter, rec *httptest.ResponseRecorder) {
+	w.WriteHeader(rec.Code)
+	for k, v := range rec.HeaderMap {
+		w.Header()[k] = v
+	}
+	w.Write(rec.Body.Bytes())
+}
+
+// WriteTask writes a task to a ResponseWriter.
+func WriteTask(
+	ctx context.Context,
+	w http.ResponseWriter,
+	store types.Store,
+	task *types.Task,
+	okStatus int) error {
+
+	if store.GetBool("async") {
+		WriteJSON(w, http.StatusAccepted, task)
+		return nil
+	}
+
+	timeout := time.NewTimer(time.Second * 60)
+
+	select {
+	case <-services.TaskWaitC(task.ID):
+		if task.Error != nil {
+			return task.Error
+		}
+		WriteJSON(w, okStatus, task.Result)
+	case <-timeout.C:
+		WriteJSON(w, http.StatusRequestTimeout, task)
+	}
+
 	return nil
 }

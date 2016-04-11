@@ -158,6 +158,48 @@ const (
         },
 
 
+        "task": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number",
+                    "description": "The task's unique identifier."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the task."
+                },
+                "user": {
+                    "type": "string",
+                    "description": "The name of the user that created the task."
+                },
+                "completeTime": {
+                    "type": "number",
+                    "description": "The time stamp (epoch) when the task was completed."
+                },
+                "queueTime": {
+                    "type": "number",
+                    "description": "The time stamp (epoch) when the task was created."
+                },
+                "startTime": {
+                    "type": "number",
+                    "description": "The time stamp (epoch) when the task started running."
+                },
+                "result": {
+                    "type": "object",
+                    "description": "The result of the operation."
+                },
+                "error": {
+                    "type": "object",
+                    "description": "If the operation returned an error, this is it."
+                },
+                "fields": { "$ref": "#/definitions/fields" }
+            },
+            "required": [ "id", "name",  "user", "queueTime" ],
+            "additionalProperties": false
+        },
+
+
         "serviceInfo": {
             "type": "object",
             "properties": {
@@ -260,6 +302,15 @@ const (
         },
 
 
+        "taskMap": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+$": { "$ref": "#/definitions/task" }
+            },
+            "additionalProperties": false
+        },
+
+
         "serviceVolumeMap": {
             "type": "object",
             "patternProperties": {
@@ -273,6 +324,15 @@ const (
             "type": "object",
             "patternProperties": {
                 "^[a-zA-Z].+$": { "$ref": "#/definitions/snapshotMap" }
+            },
+            "additionalProperties": false
+        },
+
+
+        "serviceTaskMap": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z].+$": { "$ref": "#/definitions/taskMap" }
             },
             "additionalProperties": false
         },

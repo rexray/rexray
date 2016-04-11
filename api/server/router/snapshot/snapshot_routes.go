@@ -3,11 +3,16 @@ package snapshot
 import (
 	"net/http"
 
+	"github.com/akutz/goof"
+
 	"github.com/emccode/libstorage/api/server/httputils"
+	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
-	httptypes "github.com/emccode/libstorage/api/types/http"
+	apihttp "github.com/emccode/libstorage/api/types/http"
+	apisvcs "github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils"
+	"github.com/emccode/libstorage/api/utils/schema"
 )
 
 func (r *router) snapshots(
@@ -16,24 +21,61 @@ func (r *router) snapshots(
 	req *http.Request,
 	store types.Store) error {
 
-	var reply httptypes.ServiceSnapshotMap = map[string]httptypes.SnapshotMap{}
+	var (
+		tasks   = map[string]*types.Task{}
+		taskIDs []int
+		reply   apihttp.ServiceSnapshotMap = map[string]apihttp.SnapshotMap{}
+	)
 
-	for _, service := range r.services {
+	for service := range services.StorageServices() {
 
-		snapshots, err := service.Driver().Snapshots(ctx, store)
-		if err != nil {
-			return utils.NewBatchProcessErr(reply, err)
+		run := func(
+			ctx context.Context,
+			svc apisvcs.StorageService) (interface{}, error) {
+
+			objs, err := svc.Driver().Snapshots(ctx, store)
+			if err != nil {
+				return nil, err
+			}
+
+			objMap := map[string]*types.Snapshot{}
+			for _, obj := range objs {
+				objMap[obj.ID] = obj
+			}
+			return objMap, nil
 		}
 
-		snapshotMap := map[string]*types.Snapshot{}
-		reply[service.Name()] = snapshotMap
-		for _, s := range snapshots {
-			snapshotMap[s.ID] = s
-		}
+		task := service.TaskExecute(ctx, run, schema.SnapshotMapSchema)
+		taskIDs = append(taskIDs, task.ID)
+		tasks[service.Name()] = task
 	}
 
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+	run := func(ctx context.Context) (interface{}, error) {
+
+		services.TaskWaitAll(taskIDs...)
+
+		for k, v := range tasks {
+			if v.Error != nil {
+				return nil, utils.NewBatchProcessErr(reply, v.Error)
+			}
+
+			objMap, ok := v.Result.(map[string]*types.Snapshot)
+			if !ok {
+				return nil, utils.NewBatchProcessErr(
+					reply, goof.New("error casting to []*types.Snapshot"))
+			}
+			reply[k] = objMap
+		}
+
+		return reply, nil
+	}
+
+	return httputils.WriteTask(
+		ctx,
+		w,
+		store,
+		services.TaskExecute(ctx, run, schema.ServiceSnapshotMapSchema),
+		http.StatusOK)
 }
 
 func (r *router) snapshotsForService(
@@ -42,24 +84,34 @@ func (r *router) snapshotsForService(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	var reply httptypes.SnapshotMap = map[string]*types.Snapshot{}
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
 
-	snapshots, err := d.Snapshots(ctx, store)
-	if err != nil {
-		return utils.NewBatchProcessErr(reply, err)
+		var reply apihttp.SnapshotMap = map[string]*types.Snapshot{}
+
+		objs, err := svc.Driver().Snapshots(ctx, store)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, obj := range objs {
+			reply[obj.ID] = obj
+		}
+		return reply, nil
 	}
 
-	for _, s := range snapshots {
-		reply[s.ID] = s
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+	return httputils.WriteTask(
+		ctx,
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		http.StatusOK)
 }
 
 func (r *router) snapshotInspect(
@@ -68,13 +120,27 @@ func (r *router) snapshotInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	reply, err := getSnapshot(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().SnapshotInspect(
+			ctx,
+			store.GetString("snapshotID"),
+			store)
+	}
+
+	return httputils.WriteTask(
+		ctx,
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		http.StatusOK)
 }
 
 func (r *router) snapshotRemove(
@@ -83,21 +149,27 @@ func (r *router) snapshotRemove(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = d.SnapshotRemove(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return nil, svc.Driver().SnapshotRemove(
+			ctx,
+			store.GetString("snapshotID"),
+			store)
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("snapshotID"),
-		store)
-	if err != nil {
-		return err
-	}
-
-	w.WriteHeader(http.StatusResetContent)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, nil),
+		http.StatusResetContent)
 }
 
 func (r *router) volumeCreate(
@@ -106,22 +178,28 @@ func (r *router) volumeCreate(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	reply, err := d.VolumeCreateFromSnapshot(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().VolumeCreateFromSnapshot(
+			ctx,
+			store.GetString("snapshotID"),
+			store.GetString("volumeName"),
+			store)
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("snapshotID"),
-		store.GetString("volumeName"),
-		store)
-	if err != nil {
-		return err
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		http.StatusCreated)
 }
 
 func (r *router) snapshotCopy(
@@ -130,42 +208,27 @@ func (r *router) snapshotCopy(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	reply, err := d.SnapshotCopy(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().SnapshotCopy(
+			ctx,
+			store.GetString("snapshotID"),
+			store.GetString("snapshotName"),
+			store.GetString("destinationID"),
+			store)
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("snapshotID"),
-		store.GetString("snapshotName"),
-		store.GetString("destinationID"),
-		store)
-	if err != nil {
-		return err
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
-}
-
-var (
-	snapshotTypeName = utils.GetTypePkgPathAndName(
-		&types.Snapshot{})
-)
-
-func getSnapshot(
-	ctx context.Context) (*types.Snapshot, error) {
-	obj := ctx.Value("snapshot")
-	if obj == nil {
-		return nil, utils.NewContextKeyErr("snapshot")
-	}
-	typedObj, ok := obj.(*types.Snapshot)
-	if !ok {
-		return nil, utils.NewContextTypeErr(
-			"snapshot",
-			snapshotTypeName,
-			utils.GetTypePkgPathAndName(obj))
-	}
-	return typedObj, nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		http.StatusCreated)
 }

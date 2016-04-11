@@ -35,6 +35,7 @@ var (
 libstorage:
   server:
     http:
+      timeout: 2m
       logging:
         enabled: true
         logrequest: true

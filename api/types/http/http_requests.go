@@ -1,5 +1,9 @@
 package http
 
+// NewRequestObjFunc is a function that creates a new instance of the type to
+// which the request body is serialized.
+type NewRequestObjFunc func() interface{}
+
 // VolumeCreateRequest is the JSON body for creating a new volume.
 type VolumeCreateRequest struct {
 	Name             string                 `json:"name"`

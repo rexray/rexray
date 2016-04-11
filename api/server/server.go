@@ -19,15 +19,17 @@ import (
 	"github.com/gorilla/mux"
 
 	// imported to load routers
+
 	_ "github.com/emccode/libstorage/api/server/router"
 
 	// imported to load drivers
 	_ "github.com/emccode/libstorage/drivers"
 
 	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/server/httputils"
+	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
+	apihttp "github.com/emccode/libstorage/api/types/http"
+	apisvcs "github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils"
 )
 
@@ -37,14 +39,14 @@ type server struct {
 	addrs        []string
 	config       gofig.Config
 	servers      []*HTTPServer
-	services     map[string]httputils.Service
+	services     map[string]apisvcs.StorageService
 	closeSignal  chan int
 	closedSignal chan int
 	closeOnce    *sync.Once
 
-	routers        []httputils.Router
-	routeHandlers  map[string][]httputils.Middleware
-	globalHandlers []httputils.Middleware
+	routers        []apihttp.Router
+	routeHandlers  map[string][]apihttp.Middleware
+	globalHandlers []apihttp.Middleware
 
 	logHTTPEnabled   bool
 	logHTTPRequests  bool
@@ -73,7 +75,7 @@ func newServer(config gofig.Config) (*server, error) {
 	}
 	s.ctx.Log().Debug("initialized endpoints")
 
-	if err := s.initServices(); err != nil {
+	if err := services.Init(s.config); err != nil {
 		return nil, err
 	}
 	s.ctx.Log().Debug("initialized services")
@@ -257,82 +259,9 @@ func (s *server) initEndpoints() error {
 	return nil
 }
 
-type service struct {
-	driver drivers.StorageDriver
-	config gofig.Config
-	name   string
-}
-
-func (s *service) Config() gofig.Config {
-	return s.config
-}
-
-func (s *service) Driver() drivers.StorageDriver {
-	return s.driver
-}
-
-func (s *service) Name() string {
-	return s.name
-}
-
-func (s *server) initServices() error {
-
-	cfgSvcs := s.config.Get("libstorage.server.services")
-	cfgSvcsMap, ok := cfgSvcs.(map[string]interface{})
-	if !ok {
-		return goof.New("invalid format libstorage.server.services")
-	}
-	log.WithField("count", len(cfgSvcsMap)).Debug("got services map")
-
-	s.services = map[string]httputils.Service{}
-
-	for name := range cfgSvcsMap {
-		name = strings.ToLower(name)
-
-		log.WithField("name", name).Debug("processing service config")
-
-		scope := fmt.Sprintf("libstorage.server.services.%s", name)
-		log.WithField("scope", scope).Debug("getting scoped config for service")
-		sc := s.config.Scope(scope)
-
-		driverName := sc.GetString("driver")
-		if driverName == "" {
-			driverName = sc.GetString("libstorage.driver")
-			if driverName == "" {
-				return goof.WithField(
-					"service", name, "error getting driver name")
-			}
-		}
-
-		driver, err := registry.NewStorageDriver(driverName)
-		if err != nil {
-			return err
-		}
-
-		if err := driver.Init(sc); err != nil {
-			return err
-		}
-
-		svc := &service{
-			name:   name,
-			driver: driver,
-			config: sc,
-		}
-
-		log.WithFields(log.Fields{
-			"service": svc.Name(),
-			"driver":  driver.Name(),
-		}).Info("created new service")
-
-		s.services[name] = svc
-	}
-
-	return nil
-}
-
 func (s *server) initRouters() error {
 	for r := range registry.Routers() {
-		r.Init(s.config, s.services)
+		r.Init(s.config)
 		s.addRouter(r)
 		log.WithFields(log.Fields{
 			"router":      r.Name(),
@@ -346,13 +275,13 @@ func (s *server) initRouters() error {
 	return nil
 }
 
-func (s *server) addRouter(r httputils.Router) {
+func (s *server) addRouter(r apihttp.Router) {
 	s.routers = append(s.routers, r)
 }
 
 func (s *server) makeHTTPHandler(
 	ctx context.Context,
-	route httputils.Route) http.HandlerFunc {
+	route apihttp.Route) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
 

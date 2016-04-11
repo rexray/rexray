@@ -4,33 +4,31 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/emccode/libstorage/api/server/httputils"
+	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils"
 )
 
 // serviceValidator is an HTTP filter for validating that the service
 // specified as part of the path is valid.
 type serviceValidator struct {
-	services map[string]httputils.Service
-	handler  httputils.APIFunc
+	handler apihttp.APIFunc
 }
 
 // NewServiceValidator returns a new filter for validating that the service
 // specified as part of the path is valid.
-func NewServiceValidator(
-	services map[string]httputils.Service) httputils.Middleware {
-	return &serviceValidator{services: services}
+func NewServiceValidator() apihttp.Middleware {
+	return &serviceValidator{}
 }
 
 func (h *serviceValidator) Name() string {
 	return "service-validator"
 }
 
-func (h *serviceValidator) Handler(m httputils.APIFunc) httputils.APIFunc {
-	h.handler = m
-	return h.Handle
+func (h *serviceValidator) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+	return (&serviceValidator{m}).Handle
 }
 
 // Handle is the type's Handler function.
@@ -45,8 +43,8 @@ func (h *serviceValidator) Handle(
 	}
 
 	serviceName := store.GetString("service")
-	service, ok := h.services[strings.ToLower(serviceName)]
-	if !ok {
+	service := services.GetStorageService(serviceName)
+	if service == nil {
 		return utils.NewNotFoundError(serviceName)
 	}
 

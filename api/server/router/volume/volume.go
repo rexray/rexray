@@ -2,11 +2,10 @@ package volume
 
 import (
 	"github.com/akutz/gofig"
-
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server/handlers"
 	"github.com/emccode/libstorage/api/server/httputils"
-	httptypes "github.com/emccode/libstorage/api/types/http"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
@@ -15,36 +14,33 @@ func init() {
 }
 
 type router struct {
-	config   gofig.Config
-	services map[string]httputils.Service
-	routes   []httputils.Route
+	config gofig.Config
+	routes []apihttp.Route
 }
 
 func (r *router) Name() string {
 	return "volume-router"
 }
 
-func (r *router) Init(
-	config gofig.Config, services map[string]httputils.Service) {
+func (r *router) Init(config gofig.Config) {
 	r.config = config
-	r.services = services
 	r.initRoutes()
 }
 
 // Routes returns the available routes.
-func (r *router) Routes() []httputils.Route {
+func (r *router) Routes() []apihttp.Route {
 	return r.routes
 }
 
 func (r *router) initRoutes() {
-	r.routes = []httputils.Route{
+	r.routes = []apihttp.Route{
 		// GET
 
 		// get all volumes (and possibly attachments) from all services
 		httputils.NewGetRoute(
 			"volumesAndAttachments",
 			"/volumes",
-			newVolumesRoute(r.services, true).volumes,
+			newVolumesRoute(r.config, true).volumes,
 			handlers.NewInstanceIDValidator(false),
 			handlers.NewSchemaValidator(nil, schema.ServiceVolumeMapSchema, nil),
 		).Queries("attachments"),
@@ -53,7 +49,7 @@ func (r *router) initRoutes() {
 		httputils.NewGetRoute(
 			"volumes",
 			"/volumes",
-			newVolumesRoute(r.services, false).volumes,
+			newVolumesRoute(r.config, false).volumes,
 			handlers.NewSchemaValidator(nil, schema.ServiceVolumeMapSchema, nil),
 		),
 
@@ -61,8 +57,8 @@ func (r *router) initRoutes() {
 		httputils.NewGetRoute(
 			"volumesAndAttachmentsForService",
 			"/volumes/{service}",
-			newVolumesRoute(r.services, true).volumesForService,
-			handlers.NewServiceValidator(r.services),
+			newVolumesRoute(r.config, true).volumesForService,
+			handlers.NewServiceValidator(),
 			handlers.NewInstanceIDValidator(false),
 			handlers.NewSchemaValidator(nil, schema.VolumeMapSchema, nil),
 		).Queries("attachments"),
@@ -71,8 +67,8 @@ func (r *router) initRoutes() {
 		httputils.NewGetRoute(
 			"volumesForService",
 			"/volumes/{service}",
-			newVolumesRoute(r.services, false).volumesForService,
-			handlers.NewServiceValidator(r.services),
+			newVolumesRoute(r.config, false).volumesForService,
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(nil, schema.VolumeMapSchema, nil),
 		),
 
@@ -82,9 +78,8 @@ func (r *router) initRoutes() {
 			"volumeAndAttachmentsInspect",
 			"/volumes/{service}/{volumeID}",
 			r.volumeInspect,
-			handlers.NewServiceValidator(r.services),
+			handlers.NewServiceValidator(),
 			handlers.NewInstanceIDValidator(false),
-			handlers.NewVolumeValidator(),
 			handlers.NewSchemaValidator(nil, schema.VolumeSchema, nil),
 		).Queries("attachments"),
 
@@ -93,8 +88,7 @@ func (r *router) initRoutes() {
 			"volumeInspect",
 			"/volumes/{service}/{volumeID}",
 			r.volumeInspect,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewVolumeValidator(),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(nil, schema.VolumeSchema, nil),
 		),
 
@@ -105,11 +99,11 @@ func (r *router) initRoutes() {
 			"volumesDetachForService",
 			"/volumes/{service}",
 			r.volumeDetachAllForService,
-			handlers.NewServiceValidator(r.services),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeMapSchema,
-				func() interface{} { return &httptypes.VolumeDetachRequest{} }),
+				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
 		).Queries("detach"),
 
 		// create a new volume
@@ -117,11 +111,11 @@ func (r *router) initRoutes() {
 			"volumeCreate",
 			"/volumes/{service}",
 			r.volumeCreate,
-			handlers.NewServiceValidator(r.services),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				schema.VolumeCreateRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &httptypes.VolumeCreateRequest{} }),
+				func() interface{} { return &apihttp.VolumeCreateRequest{} }),
 			handlers.NewPostArgsHandler(),
 		),
 
@@ -130,12 +124,11 @@ func (r *router) initRoutes() {
 			"volumeCopy",
 			"/volumes/{service}/{volumeID}",
 			r.volumeCopy,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewVolumeValidator(),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				schema.VolumeCopyRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &httptypes.VolumeCopyRequest{} }),
+				func() interface{} { return &apihttp.VolumeCopyRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("copy"),
 
@@ -144,12 +137,11 @@ func (r *router) initRoutes() {
 			"volumeSnapshot",
 			"/volumes/{service}/{volumeID}",
 			r.volumeSnapshot,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewVolumeValidator(),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				schema.VolumeSnapshotRequestSchema,
 				schema.SnapshotSchema,
-				func() interface{} { return &httptypes.VolumeSnapshotRequest{} }),
+				func() interface{} { return &apihttp.VolumeSnapshotRequest{} }),
 		).Queries("snapshot"),
 
 		// attach an existing volume
@@ -157,13 +149,12 @@ func (r *router) initRoutes() {
 			"volumeAttach",
 			"/volumes/{service}/{volumeID}",
 			r.volumeAttach,
-			handlers.NewServiceValidator(r.services),
+			handlers.NewServiceValidator(),
 			handlers.NewInstanceIDValidator(true),
-			handlers.NewVolumeValidator(),
 			handlers.NewSchemaValidator(
 				schema.VolumeAttachRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &httptypes.VolumeAttachRequest{} }),
+				func() interface{} { return &apihttp.VolumeAttachRequest{} }),
 		).Queries("attach"),
 
 		// detach all volumes for all services
@@ -174,7 +165,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.ServiceVolumeMapSchema,
-				func() interface{} { return &httptypes.VolumeDetachRequest{} }),
+				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
 		).Queries("detach"),
 
 		// detach an individual volume
@@ -182,12 +173,11 @@ func (r *router) initRoutes() {
 			"volumeDetach",
 			"/volumes/{service}/{volumeID}",
 			r.volumeDetach,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewVolumeValidator(),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &httptypes.VolumeDetachRequest{} }),
+				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
 		).Queries("detach"),
 
 		// DELETE
@@ -195,8 +185,7 @@ func (r *router) initRoutes() {
 			"volumeRemove",
 			"/volumes/{service}/{volumeID}",
 			r.volumeRemove,
-			handlers.NewServiceValidator(r.services),
-			handlers.NewVolumeValidator(),
+			handlers.NewServiceValidator(),
 		),
 	}
 }

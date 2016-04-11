@@ -232,7 +232,7 @@ $$(PKG_D_$1): $$(SRCS_$1)
 
 $$(PKG_D_$1)-clean:
 	rm -f $$(PKG_D_$1)
-GO_CLOBBER += $$(PKG_D_$1)-clean
+GO_CLEAN += $$(PKG_D_$1)-clean
 
 $$(PKG_A_$1): $$(EXT_DEPS_SRCS_$1) $$(SRCS_$1) | $$(DEPS_ARKS_$1)
 	go install $1
@@ -261,7 +261,7 @@ $$(PKG_TD_$1): $$(TEST_SRCS_$1)
 
 $$(PKG_TD_$1)-clean:
 	rm -f $$(PKG_TD_$1)
-GO_CLOBBER += $$(PKG_TD_$1)-clean
+GO_CLEAN += $$(PKG_TD_$1)-clean
 
 -include $$(PKG_TD_$1)
 
@@ -365,8 +365,18 @@ clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)
 
-.PHONY: info build \
-		clean clobber \
-		build-tests test test-debug \
-		cover cover-debug cover-clean \
+run: $(GOPATH)/bin/libstorage-mock-server
+	env LIBSTORAGE_RUN_HOST='tcp://127.0.0.1:7979' $?
+
+run-debug:
+	env LIBSTORAGE_DEBUG=true $(MAKE) run
+
+run-tls:
+	env LIBSTORAGE_RUN_TLS='true' $(MAKE) run
+
+run-tls-debug:
+	env LIBSTORAGE_RUN_TLS='true' $(MAKE) run-debug
+
+.PHONY: info clean clobber \
+		run run-debug run-tls run-tls-debug \
 		$(GO_PHONY)

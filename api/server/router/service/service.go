@@ -2,10 +2,10 @@ package service
 
 import (
 	"github.com/akutz/gofig"
-
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server/handlers"
 	"github.com/emccode/libstorage/api/server/httputils"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
@@ -14,30 +14,25 @@ func init() {
 }
 
 type router struct {
-	config   gofig.Config
-	services map[string]httputils.Service
-	routes   []httputils.Route
+	routes []apihttp.Route
 }
 
 func (r *router) Name() string {
 	return "service-router"
 }
 
-func (r *router) Init(
-	config gofig.Config, services map[string]httputils.Service) {
-	r.config = config
-	r.services = services
+func (r *router) Init(config gofig.Config) {
 	r.initRoutes()
 }
 
 // Routes returns the available routes.
-func (r *router) Routes() []httputils.Route {
+func (r *router) Routes() []apihttp.Route {
 	return r.routes
 }
 
 func (r *router) initRoutes() {
 
-	r.routes = []httputils.Route{
+	r.routes = []apihttp.Route{
 
 		// GET
 		httputils.NewGetRoute(
@@ -50,14 +45,14 @@ func (r *router) initRoutes() {
 			"serviceInspect",
 			"/services/{service}",
 			r.serviceInspect,
-			handlers.NewServiceValidator(r.services),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(nil, schema.ServiceInfoSchema, nil)),
 
 		httputils.NewGetRoute(
 			"serviceInspect",
 			"/services/{service}/executors",
 			r.serviceInspect,
-			handlers.NewServiceValidator(r.services),
+			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(nil, schema.ServiceInfoSchema, nil)),
 	}
 }

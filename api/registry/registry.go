@@ -8,8 +8,8 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types/drivers"
+	"github.com/emccode/libstorage/api/types/http"
 )
 
 var (
@@ -25,12 +25,12 @@ var (
 	intDriverCtors    = map[string]drivers.NewIntegrationDriver{}
 	intDriverCtorsRWL = &sync.RWMutex{}
 
-	routers    = []httputils.Router{}
+	routers    = []http.Router{}
 	routersRWL = &sync.RWMutex{}
 )
 
 // RegisterRouter registers a Router.
-func RegisterRouter(router httputils.Router) {
+func RegisterRouter(router http.Router) {
 	routersRWL.Lock()
 	defer routersRWL.Unlock()
 	routers = append(routers, router)
@@ -206,8 +206,8 @@ func IntegrationDrivers() <-chan drivers.IntegrationDriver {
 
 // Routers returns a channel on which new instances of all registered routers
 // can be received.
-func Routers() <-chan httputils.Router {
-	c := make(chan httputils.Router)
+func Routers() <-chan http.Router {
+	c := make(chan http.Router)
 	go func() {
 		routersRWL.RLock()
 		defer routersRWL.RUnlock()

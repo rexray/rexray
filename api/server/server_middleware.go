@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/emccode/libstorage/api/server/handlers"
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 func (s *server) initGlobalMiddleware() {
@@ -25,7 +25,7 @@ func (s *server) initRouteMiddleware() {
 	// add the route-specific middleware for all the existing routes. it's
 	// also possible to add route-specific middleware that is not defined as
 	// part of a route's Middlewares collection.
-	s.routeHandlers = map[string][]httputils.Middleware{}
+	s.routeHandlers = map[string][]apihttp.Middleware{}
 	for _, router := range s.routers {
 		for _, r := range router.Routes() {
 			s.addRouterMiddleware(r, r.GetMiddlewares()...)
@@ -34,23 +34,23 @@ func (s *server) initRouteMiddleware() {
 }
 
 func (s *server) addRouterMiddleware(
-	r httputils.Route, middlewares ...httputils.Middleware) {
+	r apihttp.Route, middlewares ...apihttp.Middleware) {
 
 	middlewaresForRouteName, ok := s.routeHandlers[r.GetName()]
 	if !ok {
-		middlewaresForRouteName = []httputils.Middleware{}
+		middlewaresForRouteName = []apihttp.Middleware{}
 	}
 	middlewaresForRouteName = append(middlewaresForRouteName, middlewares...)
 	s.routeHandlers[r.GetName()] = middlewaresForRouteName
 }
 
-func (s *server) addGlobalMiddleware(m httputils.Middleware) {
+func (s *server) addGlobalMiddleware(m apihttp.Middleware) {
 	s.globalHandlers = append(s.globalHandlers, m)
 }
 
 func (s *server) handleWithMiddleware(
 	ctx context.Context,
-	route httputils.Route) httputils.APIFunc {
+	route apihttp.Route) apihttp.APIFunc {
 
 	handler := route.GetHandler()
 
@@ -84,8 +84,8 @@ func (s *server) handleWithMiddleware(
 	return handler
 }
 
-func reverse(middlewares []httputils.Middleware) chan httputils.Middleware {
-	ret := make(chan httputils.Middleware)
+func reverse(middlewares []apihttp.Middleware) chan apihttp.Middleware {
+	ret := make(chan apihttp.Middleware)
 	go func() {
 		for i := range middlewares {
 			ret <- middlewares[len(middlewares)-1-i]

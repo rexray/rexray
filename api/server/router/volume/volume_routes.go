@@ -3,22 +3,26 @@ package volume
 import (
 	"net/http"
 
+	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
+
 	"github.com/emccode/libstorage/api/server/httputils"
+	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	"github.com/emccode/libstorage/api/types/drivers"
-	httptypes "github.com/emccode/libstorage/api/types/http"
+	apihttp "github.com/emccode/libstorage/api/types/http"
+	apisvcs "github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils"
+	"github.com/emccode/libstorage/api/utils/schema"
 )
 
-func newVolumesRoute(
-	services map[string]httputils.Service,
-	queryAttachments bool) *volumesRoute {
-	return &volumesRoute{services, queryAttachments}
+func newVolumesRoute(config gofig.Config, queryAttachments bool) *volumesRoute {
+	return &volumesRoute{config, queryAttachments}
 }
 
 type volumesRoute struct {
-	services         map[string]httputils.Service
+	config           gofig.Config
 	queryAttachments bool
 }
 
@@ -27,34 +31,70 @@ func (r *volumesRoute) volumes(ctx context.Context,
 	req *http.Request,
 	store types.Store) error {
 
-	attachments := false
+	var attachments bool
 	if r.queryAttachments {
 		attachments = store.GetBool("attachments")
 	}
 
-	var reply httptypes.ServiceVolumeMap = map[string]httptypes.VolumeMap{}
+	var (
+		tasks   = map[string]*types.Task{}
+		taskIDs []int
+		reply   apihttp.ServiceVolumeMap = map[string]apihttp.VolumeMap{}
+	)
 
-	for _, service := range r.services {
+	for service := range services.StorageServices() {
 
-		volumes, err := service.Driver().Volumes(
-			ctx,
-			&drivers.VolumesOpts{
-				Attachments: attachments,
-				Opts:        store,
-			})
-		if err != nil {
-			return utils.NewBatchProcessErr(reply, err)
+		run := func(
+			ctx context.Context,
+			svc apisvcs.StorageService) (interface{}, error) {
+
+			objs, err := svc.Driver().Volumes(
+				ctx, &drivers.VolumesOpts{
+					Attachments: attachments,
+					Opts:        store,
+				})
+			if err != nil {
+				return nil, err
+			}
+
+			objMap := map[string]*types.Volume{}
+			for _, obj := range objs {
+				objMap[obj.ID] = obj
+			}
+			return objMap, nil
 		}
 
-		volumeMap := map[string]*types.Volume{}
-		reply[service.Name()] = volumeMap
-		for _, v := range volumes {
-			volumeMap[v.ID] = v
-		}
+		task := service.TaskExecute(ctx, run, schema.VolumeMapSchema)
+		taskIDs = append(taskIDs, task.ID)
+		tasks[service.Name()] = task
 	}
 
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+	run := func(ctx context.Context) (interface{}, error) {
+
+		services.TaskWaitAll(taskIDs...)
+
+		for k, v := range tasks {
+			if v.Error != nil {
+				return nil, utils.NewBatchProcessErr(reply, v.Error)
+			}
+
+			objMap, ok := v.Result.(map[string]*types.Volume)
+			if !ok {
+				return nil, utils.NewBatchProcessErr(
+					reply, goof.New("error casting to []*types.Volume"))
+			}
+			reply[k] = objMap
+		}
+
+		return reply, nil
+	}
+
+	return httputils.WriteTask(
+		ctx,
+		w,
+		store,
+		services.TaskExecute(ctx, run, schema.ServiceVolumeMapSchema),
+		http.StatusOK)
 }
 
 func (r *volumesRoute) volumesForService(
@@ -63,29 +103,39 @@ func (r *volumesRoute) volumesForService(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	var reply httptypes.VolumeMap = map[string]*types.Volume{}
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
 
-	volumes, err := d.Volumes(
+		var reply apihttp.VolumeMap = map[string]*types.Volume{}
+
+		objs, err := svc.Driver().Volumes(
+			ctx,
+			&drivers.VolumesOpts{
+				Attachments: store.GetBool("attachments"),
+				Opts:        store,
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, obj := range objs {
+			reply[obj.ID] = obj
+		}
+		return reply, nil
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		&drivers.VolumesOpts{
-			Attachments: store.GetBool("attachments"),
-			Opts:        store,
-		})
-	if err != nil {
-		return utils.NewBatchProcessErr(reply, err)
-	}
-
-	for _, v := range volumes {
-		reply[v.ID] = v
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.VolumeMapSchema),
+		http.StatusOK)
 }
 
 func (r *router) volumeInspect(
@@ -94,13 +144,30 @@ func (r *router) volumeInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	reply, err := getVolume(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().VolumeInspect(
+			ctx,
+			store.GetString("volumeID"),
+			&drivers.VolumeInspectOpts{
+				Attachments: store.GetBool("attachments"),
+				Opts:        store,
+			})
+	}
+
+	return httputils.WriteTask(
+		ctx,
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		http.StatusOK)
 }
 
 func (r *router) volumeCreate(
@@ -109,27 +176,33 @@ func (r *router) volumeCreate(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	reply, err := d.VolumeCreate(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().VolumeCreate(
+			ctx,
+			store.GetString("name"),
+			&drivers.VolumeCreateOpts{
+				AvailabilityZone: store.GetStringPtr("availabilityZone"),
+				IOPS:             store.GetInt64Ptr("iops"),
+				Size:             store.GetInt64Ptr("size"),
+				Type:             store.GetStringPtr("type"),
+				Opts:             store,
+			})
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("name"),
-		&drivers.VolumeCreateOpts{
-			AvailabilityZone: store.GetStringPtr("availabilityZone"),
-			IOPS:             store.GetInt64Ptr("iops"),
-			Size:             store.GetInt64Ptr("size"),
-			Type:             store.GetStringPtr("type"),
-			Opts:             store,
-		})
-	if err != nil {
-		return err
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		http.StatusCreated)
 }
 
 func (r *router) volumeCopy(
@@ -138,22 +211,28 @@ func (r *router) volumeCopy(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	reply, err := d.VolumeCopy(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().VolumeCopy(
+			ctx,
+			store.GetString("volumeID"),
+			store.GetString("volumeName"),
+			store)
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("volumeID"),
-		store.GetString("volumeName"),
-		store)
-	if err != nil {
-		return err
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		http.StatusCreated)
 }
 
 func (r *router) volumeSnapshot(
@@ -162,22 +241,28 @@ func (r *router) volumeSnapshot(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	reply, err := d.VolumeSnapshot(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().VolumeSnapshot(
+			ctx,
+			store.GetString("volumeID"),
+			store.GetString("snapshotName"),
+			store)
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("volumeID"),
-		store.GetString("snapshotName"),
-		store)
-	if err != nil {
-		return err
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		http.StatusCreated)
 }
 
 func (r *router) volumeAttach(
@@ -186,24 +271,30 @@ func (r *router) volumeAttach(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	reply, err := d.VolumeAttach(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return svc.Driver().VolumeAttach(
+			ctx,
+			store.GetString("volumeID"),
+			&drivers.VolumeAttachByIDOpts{
+				NextDevice: store.GetStringPtr("nextDeviceName"),
+				Opts:       store,
+			})
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("volumeID"),
-		&drivers.VolumeAttachByIDOpts{
-			NextDevice: store.GetStringPtr("nextDeviceName"),
-			Opts:       store,
-		})
-	if err != nil {
-		return err
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		http.StatusOK)
 }
 
 func (r *router) volumeDetach(
@@ -212,26 +303,27 @@ func (r *router) volumeDetach(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	volume, err := getVolume(ctx)
-	if err != nil {
-		return err
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return nil, svc.Driver().VolumeDetach(
+			ctx,
+			store.GetString("volumeID"),
+			store)
 	}
 
-	err = d.VolumeDetach(
+	return httputils.WriteTask(
 		ctx,
-		volume.ID,
-		store)
-	if err != nil {
-		return err
-	}
-
-	httputils.WriteJSON(w, http.StatusResetContent, volume)
-	return nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, nil),
+		http.StatusResetContent)
 }
 
 func (r *router) volumeDetachAll(
@@ -240,37 +332,66 @@ func (r *router) volumeDetachAll(
 	req *http.Request,
 	store types.Store) error {
 
-	var reply httptypes.ServiceVolumeMap = map[string]httptypes.VolumeMap{}
+	var (
+		taskIDs []int
+		tasks   = map[string]*types.Task{}
+		opts    = &drivers.VolumesOpts{Opts: store}
+	)
 
-	for _, service := range r.services {
+	var reply apihttp.ServiceVolumeMap = map[string]apihttp.VolumeMap{}
 
-		svcCtx := ctx.WithValue("serviceID", service.Name())
+	for service := range services.StorageServices() {
 
-		d := service.Driver()
+		run := func(
+			ctx context.Context,
+			svc apisvcs.StorageService) (interface{}, error) {
 
-		volumes, err := d.Volumes(
-			svcCtx,
-			&drivers.VolumesOpts{
-				Attachments: store.GetBool("attachments"),
-				Opts:        store,
-			})
-		if err != nil {
-			return utils.NewBatchProcessErr(reply, err)
-		}
+			driver := svc.Driver()
 
-		volumeMap := map[string]*types.Volume{}
-		reply[service.Name()] = volumeMap
-
-		for _, volume := range volumes {
-			if err := d.VolumeDetach(svcCtx, volume.ID, store); err != nil {
-				return utils.NewBatchProcessErr(reply, err)
+			volumes, err := driver.Volumes(ctx, opts)
+			if err != nil {
+				return nil, err
 			}
-			volumeMap[volume.ID] = volume
+
+			var volumeMap apihttp.VolumeMap = map[string]*types.Volume{}
+			defer func() {
+				if len(volumeMap) > 0 {
+					reply[service.Name()] = volumeMap
+				}
+			}()
+
+			for _, volume := range volumes {
+				err := driver.VolumeDetach(ctx, volume.ID, store)
+				if err != nil {
+					return nil, err
+				}
+				volumeMap[volume.ID] = volume
+			}
+
+			return nil, nil
 		}
+
+		task := service.TaskExecute(ctx, run, nil)
+		taskIDs = append(taskIDs, task.ID)
+		tasks[service.Name()] = task
 	}
 
-	httputils.WriteJSON(w, http.StatusResetContent, reply)
-	return nil
+	run := func(ctx context.Context) (interface{}, error) {
+		services.TaskWaitAll(taskIDs...)
+		for _, v := range tasks {
+			if v.Error != nil {
+				return nil, utils.NewBatchProcessErr(reply, v.Error)
+			}
+		}
+		return reply, nil
+	}
+
+	return httputils.WriteTask(
+		ctx,
+		w,
+		store,
+		services.TaskExecute(ctx, run, schema.ServiceVolumeMapSchema),
+		http.StatusResetContent)
 }
 
 func (r *router) volumeDetachAllForService(
@@ -279,32 +400,41 @@ func (r *router) volumeDetachAllForService(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	var reply httptypes.VolumeMap = map[string]*types.Volume{}
+	var reply apihttp.VolumeMap = map[string]*types.Volume{}
 
-	volumes, err := d.Volumes(
-		ctx,
-		&drivers.VolumesOpts{
-			Attachments: store.GetBool("attachments"),
-			Opts:        store,
-		})
-	if err != nil {
-		return err
-	}
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
 
-	for _, volume := range volumes {
-		if err := d.VolumeDetach(ctx, volume.ID, store); err != nil {
-			return utils.NewBatchProcessErr(reply, err)
+		driver := svc.Driver()
+
+		volumes, err := driver.Volumes(ctx, &drivers.VolumesOpts{Opts: store})
+		if err != nil {
+			return nil, err
 		}
-		reply[volume.ID] = volume
+
+		for _, volume := range volumes {
+			err := driver.VolumeDetach(ctx, volume.ID, store)
+			if err != nil {
+				return nil, utils.NewBatchProcessErr(reply, err)
+			}
+			reply[volume.ID] = volume
+		}
+
+		return reply, nil
 	}
 
-	httputils.WriteJSON(w, http.StatusResetContent, reply)
-	return nil
+	return httputils.WriteTask(
+		ctx,
+		w,
+		store,
+		service.TaskExecute(ctx, run, schema.VolumeMapSchema),
+		http.StatusResetContent)
 }
 
 func (r *router) volumeRemove(
@@ -313,40 +443,25 @@ func (r *router) volumeRemove(
 	req *http.Request,
 	store types.Store) error {
 
-	d, err := httputils.GetStorageDriver(ctx)
+	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = d.VolumeRemove(
+	run := func(
+		ctx context.Context,
+		svc apisvcs.StorageService) (interface{}, error) {
+
+		return nil, svc.Driver().VolumeRemove(
+			ctx,
+			store.GetString("volumeID"),
+			store)
+	}
+
+	return httputils.WriteTask(
 		ctx,
-		store.GetString("volumeID"),
-		store)
-	if err != nil {
-		return err
-	}
-
-	w.WriteHeader(http.StatusResetContent)
-	return nil
-}
-
-var (
-	volumeTypeName = utils.GetTypePkgPathAndName(
-		&types.Volume{})
-)
-
-func getVolume(
-	ctx context.Context) (*types.Volume, error) {
-	obj := ctx.Value("volume")
-	if obj == nil {
-		return nil, utils.NewContextKeyErr("volume")
-	}
-	typedObj, ok := obj.(*types.Volume)
-	if !ok {
-		return nil, utils.NewContextTypeErr(
-			"volume",
-			volumeTypeName,
-			utils.GetTypePkgPathAndName(obj))
-	}
-	return typedObj, nil
+		w,
+		store,
+		service.TaskExecute(ctx, run, nil),
+		http.StatusNoContent)
 }

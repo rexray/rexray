@@ -9,25 +9,25 @@ import (
 
 	//log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
 // schemaValidator is an HTTP filter for validating incoming request payloads
 type schemaValidator struct {
+	handler       apihttp.APIFunc
 	reqSchema     []byte
 	resSchema     []byte
 	newReqObjFunc func() interface{}
-	handler       httputils.APIFunc
 }
 
 // NewSchemaValidator returns a new filter for validating request payloads and
 // response payloads against defined JSON schemas.
 func NewSchemaValidator(
 	reqSchema, resSchema []byte,
-	newReqObjFunc func() interface{}) httputils.Middleware {
+	newReqObjFunc func() interface{}) apihttp.Middleware {
 
 	return &schemaValidator{
 		reqSchema:     reqSchema,
@@ -40,9 +40,9 @@ func (h *schemaValidator) Name() string {
 	return "schmea-validator"
 }
 
-func (h *schemaValidator) Handler(m httputils.APIFunc) httputils.APIFunc {
-	h.handler = m
-	return h.Handle
+func (h *schemaValidator) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+	return (&schemaValidator{
+		m, h.reqSchema, h.resSchema, h.newReqObjFunc}).Handle
 }
 
 // Handle is the type's Handler function.

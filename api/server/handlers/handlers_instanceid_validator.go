@@ -5,21 +5,21 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 // instanceIDValidator is a global HTTP filter for validating that the
 // InstanceID for a context is present when it's required
 type instanceIDValidator struct {
+	handler  apihttp.APIFunc
 	required bool
-	handler  httputils.APIFunc
 }
 
 // NewInstanceIDValidator returns a new global HTTP filter for validating that
 // the InstanceID for a context is present when it's required
-func NewInstanceIDValidator(required bool) httputils.Middleware {
+func NewInstanceIDValidator(required bool) apihttp.Middleware {
 	return &instanceIDValidator{required: required}
 }
 
@@ -27,9 +27,8 @@ func (h *instanceIDValidator) Name() string {
 	return "instanceID-validator"
 }
 
-func (h *instanceIDValidator) Handler(m httputils.APIFunc) httputils.APIFunc {
-	h.handler = m
-	return h.Handle
+func (h *instanceIDValidator) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+	return (&instanceIDValidator{m, h.required}).Handle
 }
 
 // Handle is the type's Handler function.

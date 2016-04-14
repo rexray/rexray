@@ -1,6 +1,7 @@
 package openstack
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -114,10 +115,20 @@ func (d *driver) Init(r *core.RexRay) error {
 	fields["tenantName"] = d.tenantName()
 	fields["domainId"] = d.domainID()
 	fields["domainName"] = d.domainName()
+	fields["insecure"] = d.insecure()
 
 	if d.provider, err = openstack.AuthenticatedClient(authOpts); err != nil {
 		return goof.WithFieldsE(fields,
 			"error getting authenticated client", err)
+	}
+
+	if d.insecure() {
+		d.provider.HTTPClient.Transport = &http.Transport{
+			TLSHandshakeTimeout: 120 * time.Second,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
 	}
 
 	if d.client, err = openstack.NewComputeV2(d.provider,
@@ -620,7 +631,7 @@ func (d *driver) CreateVolume(
 	resp, err := volumes.Create(d.clientBlockStorage, options).Extract()
 	if err != nil {
 		return nil,
-			goof.WithFields(fields, "error creating volume")
+			goof.WithFieldsE(fields, "error creating volume", err)
 	}
 
 	if !runAsync {
@@ -628,16 +639,16 @@ func (d *driver) CreateVolume(
 		err = volumes.WaitForStatus(d.clientBlockStorage, resp.ID, "available", 120)
 		if err != nil {
 			return nil,
-				goof.WithFields(fields,
-					"error waiting for volume creation to complete")
+				goof.WithFieldsE(fields,
+					"error waiting for volume creation to complete", err)
 		}
 
 		if volumeID != "" {
 			err := d.RemoveSnapshot(snapshotID)
 			if err != nil {
 				return nil,
-					goof.WithFields(fields,
-						"error removing snapshot")
+					goof.WithFieldsE(fields,
+						"error removing snapshot", err)
 			}
 		}
 	}
@@ -647,8 +658,8 @@ func (d *driver) CreateVolume(
 
 	volume, err = d.GetVolume(resp.ID, "")
 	if err != nil {
-		return nil, goof.WithFields(fields,
-			"error removing snapshot")
+		return nil, goof.WithFieldsE(fields,
+			"error removing snapshot", err)
 	}
 
 	return volume[0], nil
@@ -1019,9 +1030,14 @@ func (d *driver) availabilityZoneName() string {
 	return d.r.Config.GetString("openstack.availabilityZoneName")
 }
 
+func (d *driver) insecure() bool {
+	return d.r.Config.GetBool("openstack.insecure")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Openstack")
 	r.Key(gofig.String, "", "", "", "openstack.authURL")
+	r.Key(gofig.Bool, "", false, "", "openstack.insecure")
 	r.Key(gofig.String, "", "", "", "openstack.userID")
 	r.Key(gofig.String, "", "", "", "openstack.userName")
 	r.Key(gofig.String, "", "", "", "openstack.password")

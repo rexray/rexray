@@ -703,6 +703,7 @@ openStack:
   password: password
   tenantName: tenantName
   regionName: regionName
+  availabilityZoneName: nova
 ```
 
 Driver|Supported

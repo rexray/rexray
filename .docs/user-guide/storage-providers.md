@@ -201,7 +201,7 @@ openstack:
     domainID:             0
     domainName:           corp
     regionName:           USNW
-    availabilityZoneName: Gold
+    availabilityZoneName: nova
 ```
 
 For information on the equivalent environment variable and CLI flag names
@@ -226,6 +226,7 @@ openstack:
   password: password
   tenantName: tenantName
   regionName: regionName
+  availabilityZoneName: nova
 ```
 
 ## Rackspace
@@ -327,7 +328,7 @@ parameter.
 - By default the password is the same as your administrative MDM password.
 - Start the gateway `service scaleio-gateway start`.
  - With 1.32 we have noticed a restart of the gateway may be necessary as well
-after an initial install with `service scaleio-gateway restart`. 
+after an initial install with `service scaleio-gateway restart`.
 
 ### Activating the Driver
 To activate the ScaleIO driver please follow the instructions for

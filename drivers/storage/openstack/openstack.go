@@ -593,9 +593,19 @@ func (d *driver) CreateVolume(
 		return nil, errors.ErrRunAsyncFromVolume
 	}
 
-	d.createVolumeEnsureAvailabilityZone(&availabilityZone)
+	vols, err := d.GetVolume("", volumeName)
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
+	if len(vols) > 0 {
+		return nil, goof.WithFields(goof.Fields{
+			"moduleName": d.r.Context,
+			"driverName": d.Name(),
+			"volumeName": volumeName}, "volume name already exists")
+	}
+
+	d.createVolumeEnsureAvailabilityZone(&availabilityZone)
 
 	if err = d.createVolumeHandleSnapshotID(
 		&size, snapshotID, fields); err != nil {

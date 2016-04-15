@@ -15,6 +15,12 @@ import (
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
+var (
+	// DisableResponseValidation is a flag indicating whether or not to
+	// perform resposne validation.
+	DisableResponseValidation = true
+)
+
 // schemaValidator is an HTTP filter for validating incoming request payloads
 type schemaValidator struct {
 	handler       apihttp.APIFunc
@@ -79,7 +85,7 @@ func (h *schemaValidator) Handle(
 
 	// if there's not response schema then just return the result of the next
 	// handler
-	if h.resSchema == nil {
+	if DisableResponseValidation || h.resSchema == nil {
 		return h.handler(ctx, w, req, store)
 	}
 

@@ -149,10 +149,6 @@ func (th *testHarness) run(
 		return err
 	}
 
-	if jstr, _ := config.ToJSON(); jstr != "" {
-		t.Log(jstr)
-	}
-
 	libstorageConfigMap := map[string]interface{}{
 		"driver": driver,
 		"server": map[string]interface{}{
@@ -180,10 +176,6 @@ func (th *testHarness) run(
 		if err := config.ReadConfig(bytes.NewReader(configBuf)); err != nil {
 			return err
 		}
-	}
-
-	if jstr, _ := config.ToJSON(); jstr != "" {
-		t.Log(jstr)
 	}
 
 	configs := []gofig.Config{

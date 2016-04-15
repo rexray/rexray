@@ -225,12 +225,7 @@ const (
                     "type": "string",
                     "description": "Type is the type of storage the driver provides: block, nas, object."
                 },
-                "nextDevice": { "$ref": "#/definitions/nextDeviceInfo" },
-                "executors": {
-                    "type": "array",
-                    "description": "Executors is information about the driver's client-side executors.",
-                    "items": { "$ref": "#/definitions/executorInfo" }
-                }
+                "nextDevice": { "$ref": "#/definitions/nextDeviceInfo" }
             },
             "required": [ "name", "type" ],
             "additionalProperties": false
@@ -240,16 +235,24 @@ const (
         "executorInfo": {
             "type": "object",
             "properties": {
-                "md5checksum": {
-                    "type": "string",
-                    "description": "MD5Checksum is the MD5 checksum of the executor. This can be used to determine if a local copy of the executor needs to be updated."
-                },
                 "name": {
                     "type": "string",
-                    "description": "Name is the file name of the executor, including the file extension."
+                    "description": "The name of the executor."
+                },
+                "md5checksum": {
+                    "type": "string",
+                    "description": "The file's MD5 checksum. This can be used to determine if a local copy of the executor needs to be updated."
+                },
+                "size": {
+                    "type": "number",
+                    "description": "The size of the executor, in bytes."
+                },
+                "lastModified": {
+                    "type": "number",
+                    "description": "The time the executor was last modified as an epoch."
                 }
             },
-            "required": [ "md5checksum", "name" ],
+            "required": [ "name", "md5checksum", "size", "lastModified" ],
             "additionalProperties": false
         },
 
@@ -342,6 +345,15 @@ const (
             "type": "object",
             "patternProperties": {
                 "^[a-zA-Z].+$": { "$ref": "#/definitions/serviceInfo" }
+            },
+            "additionalProperties": false
+        },
+
+
+        "executorInfoMap": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z].+$": { "$ref": "#/definitions/executorInfo" }
             },
             "additionalProperties": false
         },

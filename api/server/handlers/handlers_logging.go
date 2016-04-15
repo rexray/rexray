@@ -89,11 +89,13 @@ func (h *loggingHandler) Handle(
 		fmt.Fprintln(bw, "")
 	}
 
-	w.WriteHeader(rec.Code)
 	for k, v := range rec.HeaderMap {
 		w.Header()[k] = v
 	}
-	w.Write(rec.Body.Bytes())
+	w.WriteHeader(rec.Code)
+	if req.Method != http.MethodHead {
+		w.Write(rec.Body.Bytes())
+	}
 
 	return nil
 }
@@ -133,7 +135,17 @@ func logResponse(
 		fmt.Fprintf(w, "    %s=%s\n", k, strings.Join(v, ","))
 	}
 	fmt.Fprintln(w, "")
-	gotil.WriteIndented(w, rec.Body.Bytes())
+	if !isBinaryContent(rec.HeaderMap) {
+		gotil.WriteIndented(w, rec.Body.Bytes())
+	}
+}
+
+func isBinaryContent(headers http.Header) bool {
+	v, ok := headers["Content-Type"]
+	if !ok || len(v) == 0 {
+		return false
+	}
+	return v[0] == "application/octet-stream"
 }
 
 // buildCommonLogLine builds a log entry for req in Apache Common Log Format.

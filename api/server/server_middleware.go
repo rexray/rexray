@@ -52,16 +52,11 @@ func (s *server) handleWithMiddleware(
 	ctx context.Context,
 	route apihttp.Route) apihttp.APIFunc {
 
-	handler := route.GetHandler()
-
-	// add the route handlers
-	/*for h := range reverse(route.GetMiddlewares()) {
-		handler = h.Handler(handler)
-		log.WithFields(log.Fields{
-			"route":      route.GetName(),
-			"middleware": h.Name(),
-		}).Debug("added route middlware")
+	/*if route.GetMethod() == "HEAD" {
+		return route.GetHandler()
 	}*/
+
+	handler := route.GetHandler()
 
 	middlewaresForRouteName, ok := s.routeHandlers[route.GetName()]
 	if !ok {

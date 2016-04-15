@@ -202,12 +202,18 @@ type VolumeDevice struct {
 // its name and MD5 checksum.
 type ExecutorInfo struct {
 
+	// Name is the name of the executor.
+	Name string `json:"name"`
+
 	// MD5Checksum is the MD5 checksum of the executor. This can be used to
 	// determine if a local copy of the executor needs to be updated.
 	MD5Checksum string `json:"md5checksum"`
 
-	// Name is the file name of the executor, including the file extension.
-	Name string `json:"name"`
+	// Size is the size of the executor in bytes.
+	Size int64 `json:"size"`
+
+	// LastModified is the time the executor was last modified as an epoch.
+	LastModified int64 `json:"lastModified"`
 }
 
 // ServiceInfo is information about a service.
@@ -228,10 +234,7 @@ type DriverInfo struct {
 	Type StorageType `json:"type"`
 
 	// NextDevice is the next available device information for the service.
-	NextDevice *NextDeviceInfo `json:"nextDevice"`
-
-	// Executors is information about the driver's client-side executors.
-	Executors []*ExecutorInfo `json:"executors"`
+	NextDevice *NextDeviceInfo `json:"nextDevice,omitempty"`
 }
 
 // NextDeviceInfo assists the libStorage client in determining the

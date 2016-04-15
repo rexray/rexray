@@ -55,8 +55,8 @@ BUILD_INFO := $(shell $(GO_LIST_BUILD_INFO_CMD))
 ROOT_IMPORT_PATH := $(word 1,$(BUILD_INFO))
 ROOT_IMPORT_NAME := $(word 2,$(BUILD_INFO))
 ROOT_DIR := $(word 3,$(BUILD_INFO))
-GOOS := $(word 4,$(BUILD_INFO))
-GOARCH := $(word 5,$(BUILD_INFO))
+GOOS ?= $(word 4,$(BUILD_INFO))
+GOARCH ?= $(word 5,$(BUILD_INFO))
 BUILD_TAGS := $(word 6,$(BUILD_INFO))
 BUILD_TAGS := $(subst $(COMMA), ,$(BUILD_TAGS))
 BUILD_TAGS := $(wordlist 2,$(words $(BUILD_TAGS)),$(BUILD_TAGS))
@@ -225,8 +225,8 @@ ifneq (,$$(strip $$(SRCS_$1)))
 
 DEPS_SRCS_$1 := $$(foreach d,$$(INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
-$$(PKG_D_$1): $$(SRCS_$1)
-	$$(file >$$@,$$(PKG_A_$1) $$(PKG_D_$1): $$(DEPS_SRCS_$1))
+$$(PKG_D_$1): $$(filter-out %_generated.go,$$(SRCS_$1))
+	$$(file >$$@,$$(PKG_A_$1) $$(PKG_D_$1): $$(filter-out %_generated.go,$$(DEPS_SRCS_$1)))
 
 -include $$(PKG_D_$1)
 
@@ -256,8 +256,8 @@ ifneq (,$$(strip $$(TEST_SRCS_$1)))
 
 TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
-$$(PKG_TD_$1): $$(TEST_SRCS_$1)
-	$$(file >$$@,$$(PKG_TA_$1) $$(PKG_TD_$1): $$(TEST_DEPS_SRCS_$1))
+$$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_SRCS_$1))
+	$$(file >$$@,$$(PKG_TA_$1) $$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_DEPS_SRCS_$1)))
 
 $$(PKG_TD_$1)-clean:
 	rm -f $$(PKG_TD_$1)
@@ -322,8 +322,48 @@ GO_PHONY += $(LIBSTORAGE_SCHEMA_GENERATED)-clean
 ##                                 EXECUTORS                                  ##
 ################################################################################
 
-EXECUTORS := $(foreach d,$(DRIVERS),$(GOPATH)/bin/libstorage-$(d)-executor)
-$(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api/server.a: $(EXECUTORS)
+EXECUTOR := $(shell go list -f '{{.Target}}' ./cli/executors/lsx-$(GOOS))
+EXECUTOR_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/executors/lsx-linux)
+EXECUTOR_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/executors/lsx-darwin)
+EXECUTOR_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/executors/lsx-windows)
+build-executor-linux: $(EXECUTOR_LINUX)
+build-executor-darwin: $(EXECUTOR_DARWIN)
+build-executor-windows: $(EXECUTOR_WINDOWS)
+
+EXECUTORS_GENERATED := ./api/server/executors/executors_generated.go
+API_SERVER_EXECUTORS_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api/server/executors.a
+
+define EXECUTOR_RULES
+LSX_EMBEDDED_$2 := ./api/server/executors/bin/$$(notdir $1)
+
+ifneq ($2,$$(GOOS))
+$1:
+	env GOOS=$2 GOARCH=amd64 $$(MAKE) -j $$@
+$1-clean:
+	rm -f $1
+GO_PHONY += $1-clean
+GO_CLEAN += $1-clean
+endif
+
+$$(LSX_EMBEDDED_$2): $1
+	@mkdir -p $$(@D) && cp -f $$? $$@
+
+EXECUTORS_EMBEDDED += $$(LSX_EMBEDDED_$2)
+endef
+
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
+
+$(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
+	go-bindata -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
+
+$(EXECUTORS_GENERATED)-clean:
+	rm -f $(EXECUTORS_GENERATED) && rm -fr $(dir $(EXECUTORS_GENERATED))/bin
+GO_PHONY += $(EXECUTORS_GENERATED)-clean
+GO_CLEAN += $(EXECUTORS_GENERATED)-clean
+
+$(API_SERVER_EXECUTORS_A): $(EXECUTORS_GENERATED)
 
 ################################################################################
 ##                                  COVERAGE                                  ##
@@ -339,8 +379,12 @@ $(COVERAGE)-clean:
 GO_CLEAN += $(COVERAGE)-clean
 GO_PHONY += $(COVERAGE)-clean
 
-codecov: $(COVERAGE)
+cover: $(COVERAGE)
 	curl -sSL https://codecov.io/bash | bash -s -- -f $?
+
+cover-debug:
+	env LIBSTORAGE_DEBUG=true $(MAKE) cover
+
 GO_PHONY += codecov
 
 ################################################################################
@@ -349,17 +393,14 @@ GO_PHONY += codecov
 
 build-tests: $(GO_BUILD_TESTS)
 
+build-executors: $(EXECUTORS_EMBEDDED)
+
 build: $(GO_BUILD)
 
 test: $(GO_TEST)
 
 test-debug:
 	env LIBSTORAGE_DEBUG=true $(MAKE) test
-
-cover: $(GO_COVERAGE)
-
-cover-debug:
-	env LIBSTORAGE_DEBUG=true $(MAKE) cover
 
 clean: $(GO_CLEAN)
 

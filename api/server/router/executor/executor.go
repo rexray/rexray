@@ -1,12 +1,11 @@
-package service
+package executor
 
 import (
 	"github.com/akutz/gofig"
+
 	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/server/handlers"
 	"github.com/emccode/libstorage/api/server/httputils"
 	apihttp "github.com/emccode/libstorage/api/types/http"
-	"github.com/emccode/libstorage/api/utils/schema"
 )
 
 func init() {
@@ -18,7 +17,7 @@ type router struct {
 }
 
 func (r *router) Name() string {
-	return "service-router"
+	return "executor-router"
 }
 
 func (r *router) Init(config gofig.Config) {
@@ -36,16 +35,20 @@ func (r *router) initRoutes() {
 
 		// GET
 		httputils.NewGetRoute(
-			"services",
-			"/services",
-			r.servicesList,
-			handlers.NewSchemaValidator(nil, schema.ServiceInfoMapSchema, nil)),
+			"executors",
+			"/executors",
+			r.executors),
 
+		// GET
 		httputils.NewGetRoute(
-			"serviceInspect",
-			"/services/{service}",
-			r.serviceInspect,
-			handlers.NewServiceValidator(),
-			handlers.NewSchemaValidator(nil, schema.ServiceInfoSchema, nil)),
+			"executorInspect",
+			"/executors/{executor}",
+			r.executorInspect),
+
+		// HEAD
+		httputils.NewHeadRoute(
+			"executorHead",
+			"/executors/{executor}",
+			r.executorHead),
 	}
 }

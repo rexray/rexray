@@ -1,8 +1,6 @@
 package executor
 
 import (
-	"fmt"
-
 	"github.com/akutz/gofig"
 
 	"github.com/emccode/libstorage/api/registry"
@@ -12,14 +10,8 @@ import (
 )
 
 const (
-	// Name1 is the name of the first mock driver.
-	Name1 = "mock1"
-
-	// Name2 is the name of the second mock driver.
-	Name2 = "mock2"
-
-	// Name3 is the name of the third mock driver.
-	Name3 = "mock3"
+	// Name is the name of the driver.
+	Name = "mock"
 )
 
 var (
@@ -34,28 +26,18 @@ type Executor struct {
 }
 
 func init() {
-	registry.RegisterStorageExecutor(Name1, newExecutor1)
-	registry.RegisterStorageExecutor(Name2, newExecutor2)
-	registry.RegisterStorageExecutor(Name3, newExecutor3)
+	registry.RegisterStorageExecutor(Name, newExecutor)
 }
 
-func newExecutor1() drivers.StorageExecutor {
-	return NewExecutor(Name1)
-}
-
-func newExecutor2() drivers.StorageExecutor {
-	return NewExecutor(Name2)
-}
-
-func newExecutor3() drivers.StorageExecutor {
-	return NewExecutor(Name3)
+func newExecutor() drivers.StorageExecutor {
+	return NewExecutor()
 }
 
 // NewExecutor returns a new executor.
-func NewExecutor(name string) *Executor {
+func NewExecutor() *Executor {
 	return &Executor{
-		name:       name,
-		instanceID: getInstanceID(name),
+		name:       Name,
+		instanceID: getInstanceID(),
 	}
 }
 
@@ -89,13 +71,9 @@ func (d *Executor) LocalDevices(
 	return nil, nil
 }
 
-func pwn(name, v string) string {
-	return fmt.Sprintf("%s-%s", name, v)
-}
-
-func getInstanceID(name string) *types.InstanceID {
+func getInstanceID() *types.InstanceID {
 	return &types.InstanceID{
-		ID:       pwn(name, "InstanceID"),
+		ID:       "12345",
 		Metadata: instanceIDMetadata(),
 	}
 }

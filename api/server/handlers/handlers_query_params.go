@@ -51,7 +51,7 @@ func (h *queryParamsHandler) Handle(
 			if len(v[0]) == 0 {
 				store.Set(k, true)
 			} else {
-				if b, err := strconv.ParseBool(v[0]); err != nil {
+				if b, err := strconv.ParseBool(v[0]); err == nil {
 					store.Set(k, b)
 				} else {
 					store.Set(k, v[0])

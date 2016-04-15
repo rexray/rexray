@@ -280,6 +280,7 @@ example see the `Examples` section.
 ```yaml
 scaleio:
     endpoint:             https://host_ip/api
+    apiVersion:           "2.0"
     insecure:             false
     useCerts:             true
     userName:             admin
@@ -294,6 +295,8 @@ scaleio:
 ```
 
 #### Configuration Notes
+- The `apiVersion` can optionally be set here to force certain API behavior.
+The default is to retrieve the endpoint API, and pass this version during calls.
 - `insecure` should be set to `true` if you have not loaded the SSL
 certificates on the host.  A successful wget or curl should be possible without
 SSL errors to the API `endpoint` in this case.
@@ -327,7 +330,7 @@ parameter.
 - By default the password is the same as your administrative MDM password.
 - Start the gateway `service scaleio-gateway start`.
  - With 1.32 we have noticed a restart of the gateway may be necessary as well
-after an initial install with `service scaleio-gateway restart`. 
+after an initial install with `service scaleio-gateway restart`.
 
 ### Activating the Driver
 To activate the ScaleIO driver please follow the instructions for

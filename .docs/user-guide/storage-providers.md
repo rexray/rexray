@@ -11,21 +11,28 @@ This page reviews the storage providers and platforms supported by `REX-Ray`.
 The Amazon EC2 driver registers a storage driver named `ec2` with the `REX-Ray`
 driver manager and is used to connect and manage storage on EC2 instances. The
 EC2 driver is made possible by the
-[goamz project](https://github.com/mitchellh/goamz).
+[official Amazon Go AWS SDK](https://github.com/aws/aws-sdk-go.git).
 
-### Configuration
-The following is an example configuration of the AWS EC2 driver.
+### Providing credentials.
 
+There are several ways to provide AWS credentials to use with EC2 drivers.
+They are listed below in precedence order - first one matched wins:
+
+1. Describe it in `config.yml` as follows:
 ```yaml
 aws:
     accessKey: MyAccessKey
     secretKey: MySecretKey
     region:    USNW
 ```
-
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
 [transformed](./config/#all-other-properties).
+
+ This method is inherited from `goamz` used in earlier version of `rexray`,
+and kept for upward compatibility.
+
+1. Standard Amazon-way, described [here](http://docs.aws.amazon.com/amazonswf/latest/awsrbflowguide/set-up-creds.html)
 
 ### Activating the Driver
 To activate the EC2 driver please follow the instructions for
@@ -33,7 +40,7 @@ To activate the EC2 driver please follow the instructions for
 using `ec2` as the driver name.
 
 ### Examples
-Below is a full `config.yml` file that works with OpenStack.
+Below is a full `config.yml` file that works with AWS.
 
 ```yaml
 rexray:
@@ -42,6 +49,45 @@ rexray:
 aws:
     accessKey: MyAccessKey
     secretKey: MySecretKey
+```
+
+### IAM Policy for rexray driver on AWS
+
+For proper operations, `rexray` needs following permissions attached either to EC2 Instance profile,
+or AWS user identified by AWS access/secret key pair:
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RexRayMin",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateVolume",
+                "ec2:CreateSnapshot",
+                "ec2:CreateTags",
+                "ec2:DeleteVolume",
+                "ec2:DeleteSnapshot",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeInstances",
+                "ec2:DescribeVolumes",
+                "ec2:DescribeVolumeAttribute",
+                "ec2:DescribeVolumeStatus",
+                "ec2:DescribeSnapshots",
+                "ec2:CopySnapshot",
+                "ec2:DescribeSnapshotAttribute",
+                "ec2:DetachVolume",
+                "ec2:ModifySnapshotAttribute",
+                "ec2:ModifyVolumeAttribute",
+                "ec2:DescribeTags"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
 ```
 
 ## Google Compute Engine

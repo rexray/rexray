@@ -231,7 +231,6 @@ func (c *CLI) tryToStartDaemon() {
 	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)
-	cmd.Stderr = os.Stderr
 
 	cmdErr := cmd.Start()
 	failOnError(cmdErr)

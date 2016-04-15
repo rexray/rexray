@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,16 +13,17 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"regexp"
+	"strconv"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
-	//gjson "github.com/gorilla/rpc/json"
 	"golang.org/x/net/context/ctxhttp"
 
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
-	httptypes "github.com/emccode/libstorage/api/types/http"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils"
 )
 
@@ -32,7 +34,13 @@ type Client interface {
 	Root() ([]string, error)
 
 	// Volumes returns a list of all Volumes for all Services.
-	Volumes() (httptypes.ServiceVolumeMap, error)
+	Volumes() (apihttp.ServiceVolumeMap, error)
+
+	// Executors returns information about the executors.
+	Executors() (apihttp.ExecutorsMap, error)
+
+	// ExecutorHead returns information about an executor.
+	ExecutorHead(name string) (*types.ExecutorInfo, error)
 }
 
 type client struct {
@@ -110,26 +118,58 @@ func Dial(
 }
 
 func (c *client) Root() ([]string, error) {
-	reply := httptypes.RootResponse{}
-	if err := c.httpGet("/", &reply); err != nil {
+	reply := apihttp.RootResponse{}
+	if _, err := c.httpGet("/", &reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
 }
 
-func (c *client) Volumes() (httptypes.ServiceVolumeMap, error) {
-	reply := httptypes.ServiceVolumeMap{}
-	if err := c.httpGet("/volumes", &reply); err != nil {
+func (c *client) Volumes() (apihttp.ServiceVolumeMap, error) {
+	reply := apihttp.ServiceVolumeMap{}
+	if _, err := c.httpGet("/volumes", &reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
 }
 
-func (c *client) httpDo(method, path string, payload, reply interface{}) error {
+func (c *client) Executors() (apihttp.ExecutorsMap, error) {
+	reply := apihttp.ExecutorsMap{}
+	if _, err := c.httpGet("/executors", &reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (c *client) ExecutorHead(name string) (*types.ExecutorInfo, error) {
+	res, err := c.httpHead(fmt.Sprintf("/executors/%s", name))
+	if err != nil {
+		return nil, err
+	}
+
+	size, err := strconv.ParseInt(res.Header.Get("Content-Length"), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	buf, err := base64.StdEncoding.DecodeString(res.Header.Get("Content-MD5"))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.ExecutorInfo{
+		Name:        name,
+		Size:        size,
+		MD5Checksum: fmt.Sprintf("%x", buf),
+	}, nil
+}
+
+func (c *client) httpDo(
+	method, path string, payload, reply interface{}) (*http.Response, error) {
 
 	reqBody, err := encPayload(payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	host := c.laddr
@@ -144,36 +184,43 @@ func (c *client) httpDo(method, path string, payload, reply interface{}) error {
 	c.ctx.Log().WithField("url", url).Debug("built request url")
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	c.logRequest(req)
 
 	res, err := ctxhttp.Do(c.ctx, c.httpClient, req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	c.logResponse(res)
 
-	if err := decRes(res.Body, reply); err != nil {
-		return err
+	if req.Method != http.MethodHead {
+		if err := decRes(res.Body, reply); err != nil {
+			return nil, err
+		}
 	}
 
-	return nil
+	return res, nil
 }
 
-func (c *client) httpGet(path string, reply interface{}) error {
+func (c *client) httpGet(
+	path string, reply interface{}) (*http.Response, error) {
 	return c.httpDo("GET", path, nil, reply)
+}
+
+func (c *client) httpHead(
+	path string) (*http.Response, error) {
+	return c.httpDo("HEAD", path, nil, nil)
 }
 
 func (c *client) httpPost(
 	path string,
-	payload interface{}, reply interface{}) error {
-
+	payload interface{}, reply interface{}) (*http.Response, error) {
 	return c.httpDo("POST", path, payload, reply)
 }
 
-func (c *client) httpDelete(path string, reply interface{}) error {
-
+func (c *client) httpDelete(
+	path string, reply interface{}) (*http.Response, error) {
 	return c.httpDo("DELETE", path, nil, reply)
 }
 

@@ -41,31 +41,16 @@ func (r *router) serviceInspect(
 	return nil
 }
 
-func (r *router) executorsList(
-	ctx context.Context,
-	w http.ResponseWriter,
-	req *http.Request,
-	store types.Store) error {
-
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
-
-	//driverName := service.Driver().Name()
-
-	reply := toServiceInfo(service)
-	httputils.WriteJSON(w, http.StatusOK, reply)
-	return nil
-}
-
 func toServiceInfo(service apisvcs.StorageService) *types.ServiceInfo {
+	d := service.Driver()
+	dn := service.Driver().Name()
+
 	return &types.ServiceInfo{
 		Name: service.Name(),
 		Driver: &types.DriverInfo{
-			Name:       service.Driver().Name(),
-			Type:       service.Driver().Type(),
-			NextDevice: service.Driver().NextDeviceInfo(),
+			Name:       dn,
+			Type:       d.Type(),
+			NextDevice: d.NextDeviceInfo(),
 		},
 	}
 }

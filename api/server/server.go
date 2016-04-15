@@ -316,23 +316,22 @@ func (s *server) createMux(ctx context.Context) *mux.Router {
 	m := mux.NewRouter()
 	for _, apiRouter := range s.routers {
 		for _, r := range apiRouter.Routes() {
-			f := s.makeHTTPHandler(ctx, r)
+			rctx := ctx.WithContextID("route", r.GetName())
+			f := s.makeHTTPHandler(rctx, r)
 			mr := m.Path(r.GetPath())
 			mr = mr.Name(r.GetName())
 			mr = mr.Methods(r.GetMethod())
 			mr = mr.Queries(r.GetQueries()...)
 			mr.Handler(f)
-			if ctx.Log().Level >= log.DebugLevel {
+			if rctx.Log().Level >= log.DebugLevel {
 				ctx.Log().WithFields(log.Fields{
-					"route":        r.GetName(),
 					"path":         r.GetPath(),
 					"method":       r.GetMethod(),
 					"queries":      r.GetQueries(),
 					"len(queries)": len(r.GetQueries()),
 				}).Debug("registered route")
 			} else {
-				ctx.Log().WithField(
-					"route", r.GetName()).Info("registered route")
+				rctx.Log().Info("registered route")
 			}
 		}
 	}

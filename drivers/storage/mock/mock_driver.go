@@ -16,14 +16,8 @@ import (
 )
 
 const (
-	// Name1 is the name of the driver.
-	Name1 = executor.Name1
-
-	// Name2 is the name of the driver.
-	Name2 = executor.Name2
-
-	// Name3 is the name of the driver.
-	Name3 = executor.Name3
+	// Name is the name of the driver.
+	Name = executor.Name
 )
 
 type driver struct {
@@ -35,52 +29,38 @@ type driver struct {
 }
 
 func init() {
-	registry.RegisterStorageDriver(Name1, newDriver1)
-	registry.RegisterStorageDriver(Name2, newDriver2)
-	registry.RegisterStorageDriver(Name3, newDriver3)
+	registry.RegisterStorageDriver(Name, newDriver)
 }
 
-func newDriver1() drivers.StorageDriver {
-	return newDriver(Name1)
-}
+func newDriver() drivers.StorageDriver {
 
-func newDriver2() drivers.StorageDriver {
-	return newDriver(Name2)
-}
-
-func newDriver3() drivers.StorageDriver {
-	return newDriver(Name3)
-}
-
-func newDriver(name string) drivers.StorageDriver {
-
-	d := &driver{Executor: *executor.NewExecutor(name)}
+	d := &driver{Executor: *executor.NewExecutor()}
 
 	d.nextDeviceInfo = &types.NextDeviceInfo{
 		Prefix:  "xvd",
 		Pattern: `\w`,
-		Ignore:  getDeviceIgnore(name),
+		Ignore:  false,
 	}
 
 	d.volumes = []*types.Volume{
 		&types.Volume{
-			Name:             d.pwn("Volume 0"),
-			ID:               d.pwn("vol-000"),
-			AvailabilityZone: d.pwn("zone-000"),
+			Name:             "Volume 0",
+			ID:               "vol-000",
+			AvailabilityZone: "zone-000",
 			Type:             "gold",
 			Size:             10240,
 		},
 		&types.Volume{
-			Name:             d.pwn("Volume 1"),
-			ID:               d.pwn("vol-001"),
-			AvailabilityZone: d.pwn("zone-001"),
+			Name:             "Volume 1",
+			ID:               "vol-001",
+			AvailabilityZone: "zone-001",
 			Type:             "gold",
 			Size:             40960,
 		},
 		&types.Volume{
-			Name:             d.pwn("Volume 2"),
-			ID:               d.pwn("vol-002"),
-			AvailabilityZone: d.pwn("zone-002"),
+			Name:             "Volume 2",
+			ID:               "vol-002",
+			AvailabilityZone: "zone-002",
 			Type:             "gold",
 			Size:             163840,
 		},
@@ -88,19 +68,19 @@ func newDriver(name string) drivers.StorageDriver {
 
 	d.snapshots = []*types.Snapshot{
 		&types.Snapshot{
-			Name:     d.pwn("Snapshot 0"),
-			ID:       d.pwn("snap-000"),
-			VolumeID: d.pwn("vol-000"),
+			Name:     "Snapshot 0",
+			ID:       "snap-000",
+			VolumeID: "vol-000",
 		},
 		&types.Snapshot{
-			Name:     d.pwn("Snapshot 1"),
-			ID:       d.pwn("snap-001"),
-			VolumeID: d.pwn("vol-001"),
+			Name:     "Snapshot 1",
+			ID:       "snap-001",
+			VolumeID: "vol-001",
 		},
 		&types.Snapshot{
-			Name:     d.pwn("Snapshot 2"),
-			ID:       d.pwn("snap-002"),
-			VolumeID: d.pwn("vol-002"),
+			Name:     "Snapshot 2",
+			ID:       "snap-002",
+			VolumeID: "vol-002",
 		},
 	}
 
@@ -150,7 +130,7 @@ func (d *driver) VolumeCreate(
 
 	volume := &types.Volume{
 		Name:   name,
-		ID:     d.pwn(fmt.Sprintf("vol-%03d", lenVols+1)),
+		ID:     fmt.Sprintf("vol-%03d", lenVols+1),
 		Fields: map[string]string{},
 	}
 
@@ -209,7 +189,7 @@ func (d *driver) VolumeCopy(
 
 	volume := &types.Volume{
 		Name:             volumeName,
-		ID:               d.pwn(fmt.Sprintf("vol-%03d", lenVols+1)),
+		ID:               fmt.Sprintf("vol-%03d", lenVols+1),
 		AvailabilityZone: ogvol.AvailabilityZone,
 		Type:             ogvol.Type,
 		Size:             ogvol.Size,
@@ -240,7 +220,7 @@ func (d *driver) VolumeSnapshot(
 
 	snapshot := &types.Snapshot{
 		Name:     snapshotName,
-		ID:       d.pwn(fmt.Sprintf("snap-%03d", lenSnaps+1)),
+		ID:       fmt.Sprintf("snap-%03d", lenSnaps+1),
 		VolumeID: volumeID,
 		Fields:   map[string]string{},
 	}
@@ -342,7 +322,7 @@ func (d *driver) SnapshotCopy(
 
 	snapshot := &types.Snapshot{
 		Name:     snapshotName,
-		ID:       d.pwn(fmt.Sprintf("snap-%03d", lenSnaps+1)),
+		ID:       fmt.Sprintf("snap-%03d", lenSnaps+1),
 		VolumeID: ogsnap.VolumeID,
 		Fields:   map[string]string{},
 	}
@@ -382,39 +362,4 @@ func (d *driver) SnapshotRemove(
 	d.snapshots = append(d.snapshots[:xToRemove], d.snapshots[xToRemove+1:]...)
 
 	return nil
-}
-
-func (d *driver) pwn(v string) string {
-	return fmt.Sprintf("%s-%s", d.Name(), v)
-}
-
-func getDeviceIgnore(driver string) bool {
-	if driver == Name2 {
-		return true
-	}
-	return false
-}
-
-func getDeviceName(driver string) string {
-	var deviceName string
-	switch driver {
-	case Name1:
-		deviceName = "/dev/xvdb"
-	case Name2:
-		deviceName = "/dev/xvda"
-	case Name3:
-		deviceName = "/dev/xvdc"
-	}
-	return deviceName
-}
-
-func getNextDeviceName(driver string) string {
-	var deviceName string
-	switch driver {
-	case Name1:
-		deviceName = "/dev/xvdc"
-	case Name3:
-		deviceName = "/dev/xvdb"
-	}
-	return deviceName
 }

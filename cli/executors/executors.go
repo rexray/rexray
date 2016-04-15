@@ -11,6 +11,19 @@ import (
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types/context"
 	"github.com/emccode/libstorage/api/utils"
+
+	// load the executors
+	//_ "github.com/emccode/libstorage/drivers/storage/ec2/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/gce/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/isilon/executor"
+	_ "github.com/emccode/libstorage/drivers/storage/mock/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/openstack/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/rackspace/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/scaleio/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/vbox/executor"
+	_ "github.com/emccode/libstorage/drivers/storage/vfs/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/vmax/executor"
+	//_ "github.com/emccode/libstorage/drivers/storage/xtremio/executor"
 )
 
 var (
@@ -21,27 +34,26 @@ var (
 func Run() {
 
 	args := os.Args
-	if len(args) != 2 {
+	if len(args) != 3 {
 		printUsageAndExit()
 	}
 
-	cmd := cmdRx.FindString(args[1])
+	d, err := registry.NewStorageExecutor(args[1])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	cmd := cmdRx.FindString(args[2])
 	if cmd == "" {
 		printUsageAndExit()
 	}
 	cmd = strings.ToLower(cmd)
 
-	d := <-registry.StorageExecutors()
-	if d == nil {
-		fmt.Fprintln(os.Stderr, "error: no storage driver available")
-		os.Exit(1)
-	}
-
 	ctx := context.Background()
 	store := utils.NewStore()
 
 	var (
-		err    error
 		result interface{}
 		op     string
 	)
@@ -98,7 +110,7 @@ func Run() {
 
 func printUsage() {
 	fmt.Printf(
-		"usage: %s instanceID|nextDevice|localDevices\n",
+		"usage: %s executor instanceID|nextDevice|localDevices\n",
 		path.Base(os.Args[0]))
 }
 

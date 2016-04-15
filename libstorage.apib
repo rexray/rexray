@@ -109,9 +109,9 @@ a portable format such as JSON.
 The `libStorage` documentation is available at
 [libstorage.rtfd.org](http://libstorage.rtfd.org).
 
-# Group Global
+# Group Root
 
-# Default [/]
+# Root Resource [/]
 The root resource.
 
 ## Get [GET]
@@ -122,11 +122,286 @@ Gets a list of the API's top-level resources.
     + Body
 
             [
-                "/drivers",
+                "/executors",
                 "/services",
                 "/volumes",
                 "/snapshots"
             ]
+
+# Group Services
+
+# Services Collection [/services]
+
+## Get [GET]
+Gets information about all of the configured services.
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "ec2-00": {
+                    "name": "ec2-00",
+                    "driver": {
+                        "name": "ec2",
+                        "type": "nas",
+                        "executors": [
+                            {
+                                "name": "ec2-linux-executor.sh",
+                                "md5checksum": "d2794c0df5b907fdace235a619d80314"
+                            }
+                        ]
+                    }
+                }
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/serviceInfoMap" }
+
++ Response 401 (application/json)
+Unauthorized request
+
+    + Body
+
+            {
+                "type":      "unauthorizedRequest",
+                "httpStatus": 401,
+                "message":   "The requestor is unauthorized to access this resource"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
+
++ Response 500 (application/json)
+Internal server error
+
+    + Body
+
+            {
+                "type":      "internalServerError",
+                "httpStatus": 500,
+                "message":   "An internal server error occurred"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
+
+# Service Inspector [/services/{service}]
+
++ Parameters
+
+    + service: `ec2-00` (string, required)
+
+## Inspect [GET]
+Gets information about the service with the specified name.
+
++ Response 200 (application/json)
+
+    + Attributes (ServiceInfo)
+
+    + Body
+
+            {
+                "name": "ec2-00",
+                "driver": {
+                    "name": "ec2",
+                    "type": "nas",
+                    "executors": [
+                        {
+                            "name": "ec2-linux-executor.sh",
+                            "md5checksum": "d2794c0df5b907fdace235a619d80314"
+                        }
+                    ]
+                }
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/serviceInfo" }
+
++ Response 401 (application/json)
+Unauthorized request
+
+    + Body
+
+            {
+                "type":      "unauthorizedRequest",
+                "httpStatus": 401,
+                "message":   "The requestor is unauthorized to access this resource"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
+
++ Response 404 (application/json)
+The specified resource was not found
+
+    + Body
+
+            {
+                "type":      "resourceNotFound",
+                "httpStatus": 404,
+                "message":   "The requested resource was not found"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/resourceNotFoundError" }
+
++ Response 500 (application/json)
+Internal server error
+
+    + Body
+
+            {
+                "type":      "internalServerError",
+                "httpStatus": 500,
+                "message":   "An internal server error occurred"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
+
+# Group Executors
+A collection of resources and actions related to libStorage's client-side
+executors.
+
+# Executors Collection [/executors]
+
+## Get [GET]
+Gets the executors collection.
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "lsx-darwin": {
+                    "name": "lsx-darwin",
+                    "md5checksum": "6f491e62fe434adb15606bd0a2b6a938",
+                    "size": 11572748
+                },
+                "lsx-linux": {
+                    "name": "lsx-linux",
+                    "md5checksum": "52c108e3ef6b936e10148fa7c3882be8",
+                    "size": 11626296
+                },
+                "lsx-windows.exe": {
+                    "name": "lsx-windows.exe",
+                    "md5checksum": "2d5d2facad103b3cb53ebf1423e2ec3b",
+                    "size": 11495424
+                }
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/executorInfoMap" }
+
++ Response 401 (application/json)
+Unauthorized request
+
+    + Body
+
+            {
+                "type":      "unauthorizedRequest",
+                "httpStatus": 401,
+                "message":   "The requestor is unauthorized to access this resource"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
+
+## Download [GET /executors/{executor}]
+Downloads an executor.
+
++ Parameters
+
+    + executor: `lsx-windows.exe` (string, required)
+
++ Response 200
+
+    + Headers
+
+            Accept-Ranges: bytes
+            Content-Length: 11495424
+            Content-Md5: LV0vrK0QOzy1Pr8UI+LsOw==
+            Content-Type: application/octet-stream
+            Last-Modified: Thu, 14 Apr 2016 20:54:17 CDT
+
++ Response 401 (application/json)
+Unauthorized request
+
+    + Body
+
+            {
+                "type":      "unauthorizedRequest",
+                "httpStatus": 401,
+                "message":   "The requestor is unauthorized to access this resource"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
+
++ Response 404 (application/json)
+The specified resource was not found
+
+    + Body
+
+            {
+                "type":      "resourceNotFound",
+                "httpStatus": 404,
+                "message":   "The requested resource was not found"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/resourceNotFoundError" }
+
++ Response 500 (application/json)
+Internal server error
+
+    + Body
+
+            {
+                "type":      "internalServerError",
+                "httpStatus": 500,
+                "message":   "An internal server error occurred"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
+
+## Inspect [HEAD /executors/{executor}]
+Inspects an executor. This operation is functionally equivalent to downloading an executor, except the body is not returned, only the headers.
+
++ Parameters
+
+    + executor: `lsx-windows.exe` (string, required)
+
++ Response 200
+
+    + Headers
+
+            Accept-Ranges: bytes
+            Content-Length: 11495424
+            Content-Md5: LV0vrK0QOzy1Pr8UI+LsOw==
+            Content-Type: application/octet-stream
+            Last-Modified: Thu, 14 Apr 2016 20:54:17 CDT
+
++ Response 401
++ Response 404
++ Response 500
+
+# Group Volumes
+A collection of resources and actions related to libStorage Volumes.
 
 # Volumes Collection [/volumes]
 A collection of Volume objects for all configured services.
@@ -392,471 +667,7 @@ Internal server error
 
             { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
 
-# Snapshots Collection [/snapshots]
-A collection of Snapshot objects for all configured services.
-
-## Get [GET]
-Gets a list of Snapshot resources for all configured services.
-
-+ Response 200 (application/json)
-
-    + Body
-
-            {
-                "ec2-00": {
-                    "snap-000": {
-                        "id": "snap-000",
-                        "name": "Snapshot-000",
-                        "description": "A snapshot of Volume-000 (vol-000)",
-                        "startTime": 1455826676,
-                        "volumeID": "vol-000",
-                        "volumeSize": 10240,
-                        "fields": {
-                            "sparse": true,
-                            "region": "US"
-                        }
-                    },
-                    "snap-001": {
-                        "id": "snap-001",
-                        "name": "Snapshot-001",
-                        "description": "A snapshot of Volume-000 (vol-000)",
-                        "startTime": 1455846531,
-                        "volumeID": "vol-000",
-                        "volumeSize": 10240,
-                        "fields": {
-                            "sparse": true,
-                            "region": "US"
-                        }
-                    }
-                },
-                "ec2-01": {
-                    "snap-000": {
-                        "id": "snap-000",
-                        "name": "Snapshot-000",
-                        "description": "A snapshot of Volume-000 (vol-000)",
-                        "startTime": 1455826676,
-                        "volumeID": "vol-000",
-                        "volumeSize": 10240,
-                        "fields": {
-                            "sparse": true,
-                            "region": "US"
-                        }
-                    }
-                }
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/serviceSnapshotMap" }
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
-
-+ Response 500 (application/json)
-Internal server error
-
-    + Body
-
-            {
-                "type":      "internalServerError",
-                "httpStatus": 500,
-                "message":   "An internal server error occurred"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
-
-# Group Services
-
-# Services Collection [/services]
-
-## Get [GET]
-Gets information about all of the configured services.
-
-+ Response 200 (application/json)
-
-    + Body
-
-            {
-                "ec2-00": {
-                    "name": "ec2-00",
-                    "driver": {
-                        "name": "ec2",
-                        "type": "nas",
-                        "executors": [
-                            {
-                                "name": "ec2-linux-executor.sh",
-                                "md5checksum": "d2794c0df5b907fdace235a619d80314"
-                            }
-                        ]
-                    }
-                }
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/serviceInfoMap" }
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
-
-+ Response 500 (application/json)
-Internal server error
-
-    + Body
-
-            {
-                "type":      "internalServerError",
-                "httpStatus": 500,
-                "message":   "An internal server error occurred"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
-
-# Service Inspector [/services/{service}]
-
-+ Parameters
-
-    + service: `ec2-00` (string, required)
-
-## Inspect [GET]
-Gets information about the service with the specified name.
-
-+ Response 200 (application/json)
-
-    + Attributes (ServiceInfo)
-
-    + Body
-
-            {
-                "name": "ec2-00",
-                "driver": {
-                    "name": "ec2",
-                    "type": "nas",
-                    "executors": [
-                        {
-                            "name": "ec2-linux-executor.sh",
-                            "md5checksum": "d2794c0df5b907fdace235a619d80314"
-                        }
-                    ]
-                }
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/serviceInfo" }
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
-
-+ Response 404 (application/json)
-The specified resource was not found
-
-    + Body
-
-            {
-                "type":      "resourceNotFound",
-                "httpStatus": 404,
-                "message":   "The requested resource was not found"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/resourceNotFoundError" }
-
-+ Response 500 (application/json)
-Internal server error
-
-    + Body
-
-            {
-                "type":      "internalServerError",
-                "httpStatus": 500,
-                "message":   "An internal server error occurred"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
-
-# Group Drivers
-
-# Drivers Collection [/drivers]
-
-## Get [GET]
-Gets information about all of the registered drivers.
-
-+ Response 200 (application/json)
-
-    + Body
-
-            {
-                "ec2": {
-                    "name": "ec2",
-                    "type": "nas",
-                    "executors": [
-                        {
-                            "name": "ec2-linux-executor.sh",
-                            "md5checksum": "d2794c0df5b907fdace235a619d80314"
-                        }
-                    ]
-                },
-                "scaleio": {
-                    "name": "scaleio",
-                    "type": "block",
-                    "executors": [
-                        {
-                            "name": "scaleio-linux-executor.sh",
-                            "md5checksum": "6ae87ffe3787a7c9338afee160097c73"
-                        }
-                    ]
-                }
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/driverInfoMap" }
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
-
-+ Response 500 (application/json)
-Internal server error
-
-    + Body
-
-            {
-                "type":      "internalServerError",
-                "httpStatus": 500,
-                "message":   "An internal server error occurred"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
-
-# Driver Inspector [/drivers/{driver}]
-
-+ Parameters
-
-    + driver: `ec2` (string, required)
-
-## Inspect [GET]
-Gets information about the driver with the specified name.
-
-+ Response 200 (application/json)
-
-    + Attributes (DriverInfo)
-
-    + Body
-
-            {
-                "name": "ec2",
-                "type": "nas",
-                "executors": [
-                    {
-                        "name": "ec2-linux-executor.sh",
-                        "md5checksum": "d2794c0df5b907fdace235a619d80314"
-                    }
-                ]
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/driverInfo" }
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
-
-+ Response 404 (application/json)
-The specified resource was not found
-
-    + Body
-
-            {
-                "type":      "resourceNotFound",
-                "httpStatus": 404,
-                "message":   "The requested resource was not found"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/resourceNotFoundError" }
-
-+ Response 500 (application/json)
-Internal server error
-
-    + Body
-
-            {
-                "type":      "internalServerError",
-                "httpStatus": 500,
-                "message":   "An internal server error occurred"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
-
-# Group Executors
-A collection of resources and actions related to libStorage's client-side
-executors.
-
-# Download Executor [/drivers/{driver}/executors/{name}]
-Please read the following notes regarding downloading an Executor.
-
-## Performance
-Due to the possible response size, the libStorage API does not support batch
-retrieval of executors. While it is of course possible to invoke several calls
-in parallel to this API from a client, it is not recommended as it may place
-an undue burden on the server and result in overall, degraded performance.
-
-## Response Type
-The response type differs based on the value of the `tool` parameter's file
-extension. If the extension is `.sh` or `.ps1` then the response type will be
-`text/plain`. Otherwise the tool will be treated as a binary file and the
-response type will be `application/octet-stream`.
-
-+ Parameters
-
-    + driver: `ec2` (string, required)
-
-        The driver name
-
-    + name: `libstor-ec2-tool` (string, required)
-
-        The name of the executor to download.
-
-## Download [GET]
-
-+ Response 200 (application/octet-stream)
-
-+ Response 200 (text/plain)
-
-    + Body
-
-            #!/bin/sh
-            case "$1" in
-            "GetInstanceID")
-                echo '%s'
-                ;;
-            "GetNextAvailableDeviceName")
-                echo $BLOCK_DEVICES_JSON
-                ;;
-            esac
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
-
-+ Response 404 (application/json)
-The specified resource was not found
-
-    + Body
-
-            {
-                "type":      "resourceNotFound",
-                "httpStatus": 404,
-                "message":   "The requested resource was not found"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/resourceNotFoundError" }
-
-+ Response 500 (application/json)
-Internal server error
-
-    + Body
-
-            {
-                "type":      "internalServerError",
-                "httpStatus": 500,
-                "message":   "An internal server error occurred"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
-
-# Group Volumes
-A collection of resources and actions related to libStorage Volumes.
-
-# Volumes Collection [/volumes/{service}]
+# Volumes by Service Collection [/volumes/{service}]
 
 + Parameters
 
@@ -1434,7 +1245,7 @@ Internal server error
 
             { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
 
-### Snaphot [POST /volumes/{service}/{volumeID}?{snapshot}]
+### Snapshot [POST /volumes/{service}/{volumeID}?{snapshot}]
 Takes a snapshot of the volume.
 
 + Parameters
@@ -1812,7 +1623,94 @@ Internal server error
 # Group Snapshots
 A collection of resources and actions related to libStorage Snapshots.
 
-# Snapshot Collection [/snapshots/{service}]
+# Snapshots Collection [/snapshots]
+A collection of Snapshot objects for all configured services.
+
+## Get [GET]
+Gets a list of Snapshot resources for all configured services.
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "ec2-00": {
+                    "snap-000": {
+                        "id": "snap-000",
+                        "name": "Snapshot-000",
+                        "description": "A snapshot of Volume-000 (vol-000)",
+                        "startTime": 1455826676,
+                        "volumeID": "vol-000",
+                        "volumeSize": 10240,
+                        "fields": {
+                            "sparse": true,
+                            "region": "US"
+                        }
+                    },
+                    "snap-001": {
+                        "id": "snap-001",
+                        "name": "Snapshot-001",
+                        "description": "A snapshot of Volume-000 (vol-000)",
+                        "startTime": 1455846531,
+                        "volumeID": "vol-000",
+                        "volumeSize": 10240,
+                        "fields": {
+                            "sparse": true,
+                            "region": "US"
+                        }
+                    }
+                },
+                "ec2-01": {
+                    "snap-000": {
+                        "id": "snap-000",
+                        "name": "Snapshot-000",
+                        "description": "A snapshot of Volume-000 (vol-000)",
+                        "startTime": 1455826676,
+                        "volumeID": "vol-000",
+                        "volumeSize": 10240,
+                        "fields": {
+                            "sparse": true,
+                            "region": "US"
+                        }
+                    }
+                }
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/serviceSnapshotMap" }
+
++ Response 401 (application/json)
+Unauthorized request
+
+    + Body
+
+            {
+                "type":      "unauthorizedRequest",
+                "httpStatus": 401,
+                "message":   "The requestor is unauthorized to access this resource"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/unauthorizedRequestError" }
+
++ Response 500 (application/json)
+Internal server error
+
+    + Body
+
+            {
+                "type":      "internalServerError",
+                "httpStatus": 500,
+                "message":   "An internal server error occurred"
+            }
+
+    + Schema
+
+            { "$ref": "https://raw.githubusercontent.com/akutz/libstorage/feature/dadd/libstorage.json#/definitions/internalServerError" }
+
+# Snapshots by Service Collection [/snapshots/{service}]
 A collection of Snapshot resources that belong to Volumes for a specifc service.
 
 + Parameters

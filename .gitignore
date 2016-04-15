@@ -9,6 +9,7 @@ vendor/
 .project
 .gomk/tmp
 api/server/executors/executors_generated.go
+api/server/executors/bin/
 
 # Created by https://www.gitignore.io
 

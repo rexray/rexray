@@ -25,8 +25,8 @@ type DriverInspectResponse *types.DriverInfo
 **                               Executors                                    **
 *******************************************************************************/
 
-// ExecutorsListResponse is the response when getting one to many ExecutorInfos.
-type ExecutorsListResponse []*types.ExecutorInfo
+// ExecutorsMap is the response when getting one to many ExecutorInfos.
+type ExecutorsMap map[string]*types.ExecutorInfo
 
 /******************************************************************************
 **                               Instances                                    **

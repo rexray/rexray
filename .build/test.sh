@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo "mode: set" > acc.out
+COVER_PROFILE=coverage.txt
+
+echo "mode: set" > $COVER_PROFILE
 FAIL=0
 
 go test -cover ./rexray/cli || FAIL=1
@@ -12,7 +14,7 @@ fi
 COVER_PKG="github.com/emccode/rexray","github.com/emccode/rexray/core"
 go test -coverpkg=$COVER_PKG  -coverprofile=profile.out ./test || FAIL=1
 if [ -f profile.out ]; then
-    cat profile.out | grep -v "mode: set" >> acc.out
+    cat profile.out | grep -v "mode: set" >> $COVER_PROFILE
     rm -f profile.out
 fi
 
@@ -21,7 +23,7 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 if [ "$1" = "main" ]; then
-    rm -f acc.out
+    rm -f $COVER_PROFILE
     exit 0
 fi
 
@@ -37,7 +39,7 @@ for DIR in $(find . -type d \
     if ls $DIR/*.go &> /dev/null; then
         go test -coverprofile=profile.out $DIR || FAIL=1
         if [ -f profile.out ]; then
-            cat profile.out | grep -v "mode: set" >> acc.out
+            cat profile.out | grep -v "mode: set" >> $COVER_PROFILE
             rm -f profile.out
         fi
     fi
@@ -45,8 +47,12 @@ for DIR in $(find . -type d \
 done
 
 if [ -n "$COVERALLS" -a "$FAIL" -eq "0" ]; then
-    goveralls -v -coverprofile=acc.out
+    goveralls -v -coverprofile=$COVER_PROFILE
 fi
-rm -f acc.out
+if [ -n "$CODECOV" -a "$FAIL" -eq "0" ]; then
+    bash <(curl -s https://codecov.io/bash)
+fi
+
+rm -f $COVER_PROFILE
 
 exit $FAIL

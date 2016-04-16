@@ -1,5 +1,5 @@
 # configure make
-export MAKEFLAGS := $(MAKEFLAGS) --no-print-directory -k
+export MAKEFLAGS := $(MAKEFLAGS) --no-print-directory -k -j1
 
 # MAKE_LOG_LEVEL can be 0=quiet, 1=error, 2=verbose
 MAKE_LOG_LEVEL ?= 0

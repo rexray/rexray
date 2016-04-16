@@ -25,11 +25,11 @@ aws:
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Activating the Driver
 To activate the EC2 driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `ec2` as the driver name.
 
 ### Examples
@@ -64,11 +64,11 @@ gce:
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Activating the Driver
 To activate the GCE driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `gce` as the driver name.
 
 ### Examples
@@ -111,7 +111,7 @@ isilon:
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Extra Parameters
 The following items are configurable specific to this driver.
@@ -135,7 +135,7 @@ The following items are not required, but available to this driver.
 
 ### Activating the Driver
 To activate the Isilon driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `isilon` as the driver name.
 
 ### Examples
@@ -206,11 +206,11 @@ openstack:
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Activating the Driver
 To activate the OpenStack driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `openstack` as the driver name.
 
 ### Examples
@@ -250,7 +250,7 @@ rackspace:
 
 ### Activating the Driver
 To activate the Rackspace driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `rackspace` as the driver name.
 
 ### Examples
@@ -308,7 +308,7 @@ on a host that does not have any certificates installed.
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Runtime Behavior
 The `storageType` field that is configured per volume is considered the
@@ -327,11 +327,11 @@ parameter.
 - By default the password is the same as your administrative MDM password.
 - Start the gateway `service scaleio-gateway start`.
  - With 1.32 we have noticed a restart of the gateway may be necessary as well
-after an initial install with `service scaleio-gateway restart`. 
+after an initial install with `service scaleio-gateway restart`.
 
 ### Activating the Driver
 To activate the ScaleIO driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `scaleio` as the driver name.
 
 ### Troubleshooting
@@ -408,11 +408,11 @@ virtualbox:
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Activating the Driver
 To activate the VirtualBox driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `virtualbox` as the driver name.
 
 ### Examples
@@ -466,7 +466,7 @@ vmax:
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Extra Parameters
 The following items are configurable specific to this driver.
@@ -480,7 +480,7 @@ The following items are configurable specific to this driver.
 
 ### Activating the Driver
 To activate the VMAX driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `vmax` as the driver name.
 
 ### Examples
@@ -540,11 +540,11 @@ xtremio:
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
-[transformed](./config/#all-other-properties).
+[transformed](./config.md#all-other-properties).
 
 ### Activating the Driver
 To activate the XtremIO driver please follow the instructions for
-[activating storage drivers](/user-guide/config#storage-drivers),
+[activating storage drivers](./config.md#storage-drivers),
 using `xtremio` as the driver name.
 
 ### Examples

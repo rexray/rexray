@@ -187,7 +187,7 @@ native method.  This is a `config.yml` file that can be used.  In this case we
 are showing a `virtualbox` driver configuration, but you can use anything here.  
 We suggest two optional options for the `mesos-module-dvdi`.  Setting the
 `volume.mount.preempt` flag ensures any host can preempt control of a volume
-from other hosts.  Refer to the [User-Guide](/user-guide/config#preemption) for
+from other hosts.  Refer to the [User-Guide](./config.md#preemption) for
 more information on preempt.  The `volume.unmount.ignoreusedcount` ensures that
 `mesos-module-dvdi` is authoritative when it comes to deciding when to unmount
 volumes.

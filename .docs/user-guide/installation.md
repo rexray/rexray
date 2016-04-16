@@ -9,7 +9,7 @@ There are several different methods available for installing `REX-Ray`. It
 is written in Go, so there are typically no dependencies that must be installed
 alongside its single binary file. The manual methods can be extremely simple
 through tools like `curl`. You also have the opportunity to perform install
-steps individually. Following the manual installs, [configuration](/user-guide/config/)
+steps individually. Following the manual installs, [configuration](./config.md)
 must take place.
 
 We also provide some great automation examples using tools like `Ansible` and

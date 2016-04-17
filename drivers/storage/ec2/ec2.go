@@ -25,12 +25,16 @@ import (
 	"github.com/emccode/rexray/core/errors"
 )
 
-const providerName = "ec2"
+const (
+	providerName = "ec2"
+	rexrayTag    = "rexraySet"
+)
 
 // The EC2 storage driver.
 type driver struct {
 	instanceDocument *instanceIdentityDocument
 	ec2Instance      *ec2.EC2
+	ec2Tag           string
 	ec2creds         *credentials.Credentials
 	r                *core.RexRay
 }
@@ -86,6 +90,8 @@ func (d *driver) Init(r *core.RexRay) error {
 	if region == "" {
 		region = d.instanceDocument.Region
 	}
+
+	d.ec2Tag = d.rexrayTag()
 
 	mySession := session.New()
 
@@ -249,18 +255,39 @@ func (d *driver) CreateSnapshot(
 		return nil, err
 	}
 
-	if snapshotName != "" {
-		ctInput := &ec2.CreateTagsInput{
-			Resources: []*string{
-				resp.SnapshotId,
-			},
-			Tags: []*ec2.Tag{
-				{
+	if snapshotName != "" || d.ec2Tag != "" {
+
+		var ctInput *ec2.CreateTagsInput
+		initCTInput := func() {
+			if ctInput != nil {
+				return
+			}
+			ctInput = &ec2.CreateTagsInput{
+				Resources: []*string{resp.SnapshotId},
+				Tags:      []*ec2.Tag{},
+			}
+		}
+
+		if snapshotName != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
 					Key:   aws.String("Name"),
 					Value: &snapshotName,
-				},
-			},
+				})
 		}
+
+		if d.ec2Tag != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
+					Key:   aws.String(rexrayTag),
+					Value: &d.ec2Tag,
+				})
+		}
+
 		_, err = d.ec2Instance.CreateTags(ctInput)
 		if err != nil {
 			return nil, err
@@ -302,6 +329,12 @@ func (d *driver) getSnapshot(
 		//using SnapshotIds in request is returning stale data
 		filters = append(filters, &ec2.Filter{
 			Name: aws.String("snapshot-id"), Values: []*string{&snapshotID}})
+	}
+
+	if d.ec2Tag != "" {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", rexrayTag)),
+			Values: []*string{&d.ec2Tag}})
 	}
 
 	dsInput := &ec2.DescribeSnapshotsInput{}
@@ -557,20 +590,41 @@ func (d *driver) createVolumeCreateVolume(
 
 func (d *driver) createVolumeCreateTags(
 	volumeName string, resp *ec2.Volume) (err error) {
-	if volumeName == "" {
+	if volumeName == "" && d.ec2Tag == "" {
 		return
 	}
-	ctInput := &ec2.CreateTagsInput{
-		Resources: []*string{
-			resp.VolumeId,
-		},
-		Tags: []*ec2.Tag{
-			{
+
+	var ctInput *ec2.CreateTagsInput
+	initCTInput := func() {
+		if ctInput != nil {
+			return
+		}
+		ctInput = &ec2.CreateTagsInput{
+			Resources: []*string{resp.VolumeId},
+			Tags:      []*ec2.Tag{},
+		}
+	}
+
+	if volumeName != "" {
+		initCTInput()
+		ctInput.Tags = append(
+			ctInput.Tags,
+			&ec2.Tag{
 				Key:   aws.String("Name"),
 				Value: &volumeName,
-			},
-		},
+			})
 	}
+
+	if d.ec2Tag != "" {
+		initCTInput()
+		ctInput.Tags = append(
+			ctInput.Tags,
+			&ec2.Tag{
+				Key:   aws.String(rexrayTag),
+				Value: &d.ec2Tag,
+			})
+	}
+
 	_, err = d.ec2Instance.CreateTags(ctInput)
 	if err != nil {
 		return err
@@ -616,6 +670,12 @@ func (d *driver) getVolume(
 	if volumeID != "" {
 		filters = append(filters, &ec2.Filter{
 			Name: aws.String("volume-id"), Values: []*string{&volumeID}})
+	}
+
+	if d.ec2Tag != "" {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", rexrayTag)),
+			Values: []*string{&d.ec2Tag}})
 	}
 
 	dvInput := &ec2.DescribeVolumesInput{}
@@ -963,18 +1023,39 @@ func (d *driver) CopySnapshot(runAsync bool,
 		return nil, err
 	}
 
-	if destinationSnapshotName != "" {
-		ctInput := &ec2.CreateTagsInput{
-			Resources: []*string{
-				resp.SnapshotId,
-			},
-			Tags: []*ec2.Tag{
-				{
+	if destinationSnapshotName != "" || d.ec2Tag != "" {
+
+		var ctInput *ec2.CreateTagsInput
+		initCTInput := func() {
+			if ctInput != nil {
+				return
+			}
+			ctInput = &ec2.CreateTagsInput{
+				Resources: []*string{resp.SnapshotId},
+				Tags:      []*ec2.Tag{},
+			}
+		}
+
+		if destinationSnapshotName != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
 					Key:   aws.String("Name"),
 					Value: &destinationSnapshotName,
-				},
-			},
+				})
 		}
+
+		if d.ec2Tag != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
+					Key:   aws.String(rexrayTag),
+					Value: &d.ec2Tag,
+				})
+		}
+
 		_, err = d.ec2Instance.CreateTags(ctInput)
 
 		if err != nil {
@@ -1015,11 +1096,16 @@ func (d *driver) region() string {
 	return d.r.Config.GetString("aws.region")
 }
 
+func (d *driver) rexrayTag() string {
+	return d.r.Config.GetString("aws.rexrayTag")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Amazon EC2")
 	r.Key(gofig.String, "", "", "", "aws.accessKey")
 	r.Key(gofig.String, "", "", "", "aws.secretKey")
 	r.Key(gofig.String, "", "", "", "aws.region")
+	r.Key(gofig.String, "", "", "", "aws.rexrayTag")
 	return r
 }
 

@@ -50,6 +50,20 @@ aws:
     accessKey: MyAccessKey
     secretKey: MySecretKey
 ```
+### Volume tagging (optional)
+
+By default, Rexray has access to all volumes and snapshots defined in Amazon account. Though sometimes it can be useful. it can be also overwhelming. Therefore, Rexray has an optional `rexrayTag` key in `aws` section to limit its view. When it is present, all volumes and snapshots created will have an additional EC2 tag `rexraySet` with a value defined in config. That way it not only limits Rexray view, but also makes possible to have different environments, like `prod`, `testing` or `development` each with its own set of volumes/snapshots.
+
+It can be defined like that:
+```yaml
+rexray:
+  storageDrivers:
+  - ec2
+aws:
+    accessKey: MyAccessKey
+    secretKey: MySecretKey
+    rexrayTag: prod
+```
 
 ### IAM Policy for rexray driver on AWS
 

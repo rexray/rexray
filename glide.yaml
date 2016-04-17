@@ -24,7 +24,7 @@ import:
     repo:    https://github.com/aws/aws-sdk-go.git
     vcs:     git
   - package: github.com/emccode/goscaleio
-    ref:     5b02f78c9e4b331a05271145196c15c6614b9eff
+    ref:     53ea76f52205380ab52b9c1f4ad89321c286bb95
     repo:    https://github.com/emccode/goscaleio.git
     vcs:     git
   - package: github.com/emccode/goxtremio

@@ -31,13 +31,26 @@ import (
 type Client interface {
 
 	// Root returns a list of root resources.
-	Root() ([]string, error)
+	Root() (apihttp.RootResources, error)
+
+	// Services returns a map of the configured Services.
+	Services() (apihttp.ServicesMap, error)
+
+	// ServiceInspect returns information about a service.
+	ServiceInspect(service string) (*types.ServiceInfo, error)
 
 	// Volumes returns a list of all Volumes for all Services.
 	Volumes() (apihttp.ServiceVolumeMap, error)
 
+	// VolumeInspect gets information about a single volume.
+	VolumeInspect(
+		service, volumeID string, attachments bool) (*types.Volume, error)
+
 	// Executors returns information about the executors.
 	Executors() (apihttp.ExecutorsMap, error)
+
+	// ExecutorGet downloads an executor.
+	ExecutorGet(name string) (io.ReadCloser, error)
 
 	// ExecutorHead returns information about an executor.
 	ExecutorHead(name string) (*types.ExecutorInfo, error)
@@ -117,9 +130,26 @@ func Dial(
 	return c, nil
 }
 
-func (c *client) Root() ([]string, error) {
-	reply := apihttp.RootResponse{}
+func (c *client) Root() (apihttp.RootResources, error) {
+	reply := apihttp.RootResources{}
 	if _, err := c.httpGet("/", &reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (c *client) Services() (apihttp.ServicesMap, error) {
+	reply := apihttp.ServicesMap{}
+	if _, err := c.httpGet("/services", &reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (c *client) ServiceInspect(name string) (*types.ServiceInfo, error) {
+	reply := &types.ServiceInfo{}
+	if _, err := c.httpGet(
+		fmt.Sprintf("/services/%s", name), &reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -131,6 +161,17 @@ func (c *client) Volumes() (apihttp.ServiceVolumeMap, error) {
 		return nil, err
 	}
 	return reply, nil
+}
+
+func (c *client) VolumeInspect(
+	service, volumeID string, attachments bool) (*types.Volume, error) {
+
+	reply := types.Volume{}
+	if _, err := c.httpGet(
+		fmt.Sprintf("/volumes/%s/%s", service, volumeID), &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
 }
 
 func (c *client) Executors() (apihttp.ExecutorsMap, error) {
@@ -164,6 +205,15 @@ func (c *client) ExecutorHead(name string) (*types.ExecutorInfo, error) {
 	}, nil
 }
 
+func (c *client) ExecutorGet(name string) (io.ReadCloser, error) {
+	res, err := c.httpGet(fmt.Sprintf("/executors/%s", name), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Body, nil
+}
+
 func (c *client) httpDo(
 	method, path string, payload, reply interface{}) (*http.Response, error) {
 
@@ -194,7 +244,7 @@ func (c *client) httpDo(
 	}
 	c.logResponse(res)
 
-	if req.Method != http.MethodHead {
+	if req.Method != http.MethodHead && reply != nil {
 		if err := decRes(res.Body, reply); err != nil {
 			return nil, err
 		}
@@ -283,7 +333,9 @@ func (c *client) logResponse(res *http.Response) {
 	fmt.Fprint(w, "HTTP RESPONSE (CLIENT)")
 	fmt.Fprintln(w, " -------------------------")
 
-	buf, err := httputil.DumpResponse(res, true)
+	buf, err := httputil.DumpResponse(
+		res,
+		res.Header.Get("Content-Type") != "application/octet-stream")
 	if err != nil {
 		return
 	}

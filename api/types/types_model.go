@@ -1,5 +1,9 @@
 package types
 
+import (
+	"encoding/json"
+)
+
 // StorageType is the type of storage a driver provides.
 type StorageType string
 
@@ -20,7 +24,7 @@ type InstanceID struct {
 	ID string `json:"id"`
 
 	// Metadata is any extra information about the instance ID.
-	Metadata interface{} `json:"metadata,omitempty"`
+	Metadata json.RawMessage `json:"metadata,omitempty"`
 }
 
 // Instance provides information about a storage object.

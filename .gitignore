@@ -10,6 +10,9 @@ vendor/
 .gomk/tmp
 api/server/executors/executors_generated.go
 api/server/executors/bin/
+c/libstor-s/libstor-s.so
+c/libstor-s/libstor-s.h
+c/libstor-s/libstor-s.a
 
 # Created by https://www.gitignore.io
 

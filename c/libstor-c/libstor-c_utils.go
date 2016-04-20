@@ -1,0 +1,120 @@
+package main
+
+//#include "../types.h"
+import "C"
+
+import (
+	"encoding/binary"
+	"math/rand"
+	"time"
+
+	"github.com/akutz/gofig"
+
+	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/client"
+)
+
+func toCError(e error) *C.error {
+	if e == nil {
+		return nil
+	}
+	return &C.error{msg: C.CString(e.Error())}
+}
+
+func toCVolume(v *types.Volume) (*C.volume, error) {
+
+	lcva, cva, err := toCVolumeAttachments(v)
+	if err != nil {
+		return nil, err
+	}
+
+	cv := C.volume{
+		id:                C.CString(v.ID),
+		name:              C.CString(v.Name),
+		size:              C.int64_t(v.Size),
+		iops:              C.int64_t(v.IOPS),
+		status:            C.CString(v.Status),
+		volume_type:       C.CString(v.Type),
+		availability_zone: C.CString(v.AvailabilityZone),
+		network_name:      C.CString(v.NetworkName),
+	}
+	cv.attachments_c = lcva
+	cv.attachments = cva
+
+	return &cv, nil
+}
+
+func toCVolumeAttachments(
+	v *types.Volume) (C.int, *C.volume_attachment, error) {
+
+	la := C.int(len(v.Attachments))
+	if la == 0 {
+		return 0, nil, nil
+	}
+
+	ca := make([]*C.volume_attachment, la)
+	for x, a := range v.Attachments {
+		cva, err := toCVolumeAttachment(a)
+		if err != nil {
+			return 0, nil, err
+		}
+		ca[x] = cva
+	}
+
+	return la, ca[0], nil
+}
+
+func toCVolumeAttachment(
+	va *types.VolumeAttachment) (*C.volume_attachment, error) {
+
+	ciid, err := toCInstanceID(va.InstanceID)
+	if err != nil {
+		return nil, err
+	}
+
+	cva := C.volume_attachment{
+		volume_id:   C.CString(va.VolumeID),
+		device_name: C.CString(va.DeviceName),
+		mount_point: C.CString(va.MountPoint),
+		status:      C.CString(va.Status),
+	}
+	cva.instance_id = ciid
+
+	return &cva, nil
+}
+
+func toCInstanceID(i *types.InstanceID) (*C.instance_id, error) {
+	return &C.instance_id{
+		id:       C.CString(i.ID),
+		metadata: C.CString(string(i.Metadata)),
+	}, nil
+}
+
+func newWithConfig(configPath string) (client.Client, error) {
+	config := gofig.New()
+	if err := config.ReadConfigFile(configPath); err != nil {
+		return nil, err
+	}
+	return client.New(config)
+}
+
+func getClient(clientID C.hc) client.Client {
+	clientsRWL.RLock()
+	defer clientsRWL.RUnlock()
+	return clients[clientID]
+}
+
+var (
+	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+)
+
+func newClientID() (C.hc, error) {
+	buf := make([]byte, 16)
+	if _, err := rng.Read(buf[:]); err != nil {
+		return 0, err
+	}
+	buf[8] = (buf[8] | 0x40) & 0x7F
+	buf[6] = (buf[6] & 0xF) | (4 << 4)
+	u, _ := binary.Uvarint(buf)
+	return C.hc(u), nil
+}

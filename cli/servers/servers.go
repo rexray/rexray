@@ -15,11 +15,14 @@ import (
 	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage"
+
+	// load the drivers
+	_ "github.com/emccode/libstorage/drivers"
 )
 
 // Run runs the server and blocks until a Kill signal is received by the
 // owner process or the server returns an error via its error channel.
-func Run(host string, tls bool, driversAndServices ...string) {
+func Run(host string, tls bool, driversAndServices ...string) error {
 
 	if runHost := os.Getenv("LIBSTORAGE_RUN_HOST"); runHost != "" {
 		host = runHost
@@ -42,7 +45,7 @@ func Run(host string, tls bool, driversAndServices ...string) {
 		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_LOGRESPONSE", "true")
 	}
 
-	serve(host, tls, driversAndServices...)
+	return start(host, tls, driversAndServices...)
 }
 
 func trapAbort() {
@@ -76,7 +79,7 @@ func closeAllServers() bool {
 	return noErrors
 }
 
-func serve(host string, tls bool, driversAndServices ...string) {
+func start(host string, tls bool, driversAndServices ...string) error {
 
 	if host == "" {
 		host = fmt.Sprintf("tcp://localhost:%d", gotil.RandomTCPPort())
@@ -86,7 +89,8 @@ func serve(host string, tls bool, driversAndServices ...string) {
 	if server != nil {
 		servers = append(servers, server)
 	}
-	<-errs
+	err := <-errs
+	return err
 }
 
 func getConfig(
@@ -157,8 +161,6 @@ const (
 	libStorageConfigBase = `
 libstorage:
   host: %[1]s
-  driver: invalidDriverName
-  executorsDir: %[2]s
   profiles:
     enabled: true
     groups:

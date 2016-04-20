@@ -8,18 +8,9 @@ import (
 **                                 Root                                      **
 *******************************************************************************/
 
-// RootResponse is the response when getting root information about the service.
-type RootResponse []string
-
-/******************************************************************************
-**                                Drivers                                    **
-*******************************************************************************/
-
-// DriversResponse is the response when getting one to many DriverInfos.
-type DriversResponse map[string]*types.DriverInfo
-
-// DriverInspectResponse is the response when getting a single DriverInfo.
-type DriverInspectResponse *types.DriverInfo
+// RootResources is the response when getting root information about the
+// service.
+type RootResources []string
 
 /******************************************************************************
 **                               Executors                                    **
@@ -29,27 +20,11 @@ type DriverInspectResponse *types.DriverInfo
 type ExecutorsMap map[string]*types.ExecutorInfo
 
 /******************************************************************************
-**                               Instances                                    **
-*******************************************************************************/
-/*
-// InstanceRef is a wrapper for an Instance object along with its location.
-type InstanceRef struct {
-	Service  string    `json:"service,omitempty"`
-	Instance *Instance `json:"instance"`
-}
-
-// InstancesResponse is the response when getting one to many Instances.
-type InstancesResponse []*InstanceRef
-
-// InstanceInspectResponse is the response when getting a single Instance.
-type InstanceInspectResponse *Instance*/
-
-/******************************************************************************
 **                                Services                                    **
 *******************************************************************************/
 
-// ServicesResponse is the response when getting one to many ServiceInfos.
-type ServicesResponse map[string]*types.ServiceInfo
+// ServicesMap is the response when getting one to many ServiceInfos.
+type ServicesMap map[string]*types.ServiceInfo
 
 // ServiceInspectResponse is the response when getting a single ServiceInfo.
 type ServiceInspectResponse *types.ServiceInfo

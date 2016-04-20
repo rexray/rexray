@@ -27,9 +27,11 @@ func (r *router) root(
 	}
 	rootURL := fmt.Sprintf("%s://%s", proto, req.Host)
 
-	var reply httptypes.RootResponse = []string{
+	var reply httptypes.RootResources = []string{
+		fmt.Sprintf("%s/executors", rootURL),
 		fmt.Sprintf("%s/services", rootURL),
 		fmt.Sprintf("%s/snapshots", rootURL),
+		fmt.Sprintf("%s/tasks", rootURL),
 		fmt.Sprintf("%s/volumes", rootURL),
 	}
 

@@ -17,7 +17,7 @@ func (r *router) servicesList(
 	req *http.Request,
 	store types.Store) error {
 
-	var reply apihttp.ServicesResponse = map[string]*types.ServiceInfo{}
+	var reply apihttp.ServicesMap = map[string]*types.ServiceInfo{}
 	for service := range services.StorageServices() {
 		si := toServiceInfo(service)
 		reply[si.Name] = si

@@ -1,6 +1,8 @@
 package executor
 
 import (
+	"encoding/json"
+
 	"github.com/akutz/gofig"
 
 	"github.com/emccode/libstorage/api/registry"
@@ -78,11 +80,12 @@ func getInstanceID() *types.InstanceID {
 	}
 }
 
-func instanceIDMetadata() map[string]interface{} {
-	return map[string]interface{}{
+func instanceIDMetadata() json.RawMessage {
+	metadata, _ := json.Marshal(map[string]interface{}{
 		"min":     0,
 		"max":     10,
 		"rad":     "cool",
 		"totally": "tubular",
-	}
+	})
+	return metadata
 }

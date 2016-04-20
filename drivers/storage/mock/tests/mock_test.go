@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/akutz/gofig"
@@ -31,20 +32,52 @@ libstorage:
 )
 
 func TestRoot(t *testing.T) {
-
 	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
 		reply, err := client.Root()
 		if err != nil {
 			t.Fatal(err)
 		}
-		apitests.LogAsJSON(reply, t)
+		assert.Equal(t, len(reply), 5)
 	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
 
+func TestServices(t *testing.T) {
+	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		reply, err := client.Services()
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, len(reply), 3)
+
+		_, ok := reply[mock.Name]
+		assert.True(t, ok)
+
+		_, ok = reply["mock2"]
+		assert.True(t, ok)
+
+		_, ok = reply["mock3"]
+		assert.True(t, ok)
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestServiceInpspect(t *testing.T) {
+	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		reply, err := client.ServiceInspect("mock2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, "mock2", reply.Name)
+		assert.Equal(t, "mock", reply.Driver.Name)
+		assert.False(t, reply.Driver.NextDevice.Ignore)
+		assert.Equal(t, "xvd", reply.Driver.NextDevice.Prefix)
+		assert.Equal(t, `\w`, reply.Driver.NextDevice.Pattern)
+	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
 func TestVolumes(t *testing.T) {
-
 	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
 		reply, err := client.Volumes()
 		if err != nil {
@@ -52,7 +85,6 @@ func TestVolumes(t *testing.T) {
 		}
 		apitests.LogAsJSON(reply, t)
 	}
-
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
@@ -94,6 +126,50 @@ func TestExecutorHead(t *testing.T) {
 			t.Fatal(err)
 		}
 		assertLSXDarwin(t, reply)
+	}
+
+	apitests.RunGroup(t, mock.Name, configYAML, tf1, tf2, tf3)
+}
+
+func TestExecutorGet(t *testing.T) {
+
+	tf1 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		reply, err := client.ExecutorGet("lsx-windows.exe")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer reply.Close()
+		buf, err := ioutil.ReadAll(reply)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, lsxWindowsInfo.Size, len(buf))
+	}
+
+	tf2 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		reply, err := client.ExecutorGet("lsx-linux")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer reply.Close()
+		buf, err := ioutil.ReadAll(reply)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, lsxLinuxInfo.Size, len(buf))
+	}
+
+	tf3 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		reply, err := client.ExecutorGet("lsx-darwin")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer reply.Close()
+		buf, err := ioutil.ReadAll(reply)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, lsxDarwinInfo.Size, len(buf))
 	}
 
 	apitests.RunGroup(t, mock.Name, configYAML, tf1, tf2, tf3)

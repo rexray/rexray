@@ -21,9 +21,9 @@ They are listed below in precedence order - first one matched wins:
 1. Describe it in `config.yml` as follows:
 ```yaml
 aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
-    region:    USNW
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
+  region:    USNW
 ```
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
@@ -47,12 +47,23 @@ rexray:
   storageDrivers:
   - ec2
 aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
 ```
 ### Volume tagging (optional)
+By default, `REX-Ray` has access to all volumes and snapshots defined in your
+AWS account. Volume tagging gives you the ability to only include management of
+volumes that have a specific `ec2 tag`. There is an optional `rexrayTag` key in
+`aws` configuration section to limit the access to and tagging that happens
+for any new volumes or snapshots created. The objects will have a `ec2 tag`
+called `rexraySet` with a value defined by the configurable `rexrayTag`.
 
-By default, Rexray has access to all volumes and snapshots defined in Amazon account. Though sometimes it can be useful. it can be also overwhelming. Therefore, Rexray has an optional `rexrayTag` key in `aws` section to limit its view. When it is present, all volumes and snapshots created will have an additional EC2 tag `rexraySet` with a value defined in config. That way it not only limits Rexray view, but also makes possible to have different environments, like `prod`, `testing` or `development` each with its own set of volumes/snapshots.
+For example, if you had a set of hosts you can configure `REX-Ray` to tag them
+with `prod`, `testing` or `development` each with its own set of volumes and
+snapshots.
+
+Volumes and snapshots that are accessed directly from `volumeID` can still be
+controlled regardless of the `rexrayTag`.
 
 It can be defined like that:
 ```yaml
@@ -60,15 +71,19 @@ rexray:
   storageDrivers:
   - ec2
 aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
-    rexrayTag: prod
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
+  rexrayTag: prod
 ```
 
-### IAM Policy for rexray driver on AWS
-
-For proper operations, `rexray` needs following permissions attached either to EC2 Instance profile,
-or AWS user identified by AWS access/secret key pair:
+### IAM Policy (optional)
+You can leverage IAM policies and toles to give `REX-Ray` and the `ec2` instance
+the permissions it needs to perform necessary operations. This method means
+local credentials for `accessKey` and `secretKey` are not needed in the
+configuration file. The `ec2` instance and thus `REX-Ray` are authorized for
+making necessary calls. A `role` that includes a `role policy` must be created
+The following is an example of this policy that enables all necessary
+functionality for `REX-Ray`.
 ```
 {
     "Version": "2012-10-17",
@@ -103,6 +118,18 @@ or AWS user identified by AWS access/secret key pair:
     ]
 }
 ```
+
+Make sure to associate the IAM role to the instance when it is created.
+
+The `config.yml` file could then look like the following if the IAM profile
+is attached to the instance.
+
+```yaml
+rexray:
+  storageDrivers:
+  - ec2
+```
+
 
 ## Google Compute Engine
 The Google Compute Engine (GCE) registers a storage driver named `gce` with the

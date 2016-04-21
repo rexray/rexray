@@ -3,10 +3,10 @@ package mock
 import (
 	"io/ioutil"
 	"testing"
-
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
+	apihttp "github.com/emccode/libstorage/api/types/http"
 	apiclient "github.com/emccode/libstorage/api/client"
 	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
@@ -84,6 +84,57 @@ func TestVolumes(t *testing.T) {
 			t.Fatal(err)
 		}
 		apitests.LogAsJSON(reply, t)
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestVolumeCreate(t *testing.T) {
+
+	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		volumeName := "Volume 001"
+		availabilityZone := "US"
+		iops := int64(1000)
+		size := int64(10240)
+		volType := "myType"
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		volumeCreateRequest := &apihttp.VolumeCreateRequest{
+			Name:             volumeName,
+			AvailabilityZone: &availabilityZone,
+			IOPS:             &iops,
+			Size:             &size,
+			Type:             &volType,
+			Opts: opts,
+		}
+
+		reply, err := client.VolumeCreate("mock",volumeCreateRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		apitests.LogAsJSON(reply, t)
+
+		assert.Equal(t, availabilityZone, reply.AvailabilityZone)
+		assert.Equal(t, iops, reply.IOPS)
+		assert.Equal(t, volumeName,reply.Name)
+		assert.Equal(t, size,reply.Size)
+		assert.Equal(t, volType,reply.Type)
+		assert.Equal(t, opts["priority"], 2)
+		assert.Equal(t, opts["owner"], "root@example.com")
+
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestVolumeRemove(t *testing.T) {
+	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		err := client.VolumeRemove("mock","vol-000")
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }

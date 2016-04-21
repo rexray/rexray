@@ -27,8 +27,8 @@ type DeviceFormatOpts struct {
 type OSDriver interface {
 	Driver
 
-	// Inspect get a list of mount points for a local device.
-	Inspect(
+	// Mounts get a list of mount points for a local device.
+	Mounts(
 		ctx context.Context,
 		deviceName, mountPoint string,
 		opts types.Store) ([]*types.MountInfo, error)

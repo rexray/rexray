@@ -9,6 +9,9 @@ import (
 	apiclient "github.com/emccode/libstorage/api/client"
 	"github.com/emccode/libstorage/api/types"
 	apihttp "github.com/emccode/libstorage/api/types/http"
+
+	// load the drivers
+	_ "github.com/emccode/libstorage/drivers/os"
 )
 
 var (

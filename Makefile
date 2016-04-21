@@ -391,19 +391,31 @@ GO_PHONY += codecov
 ##                                  C CLIENT                                  ##
 ################################################################################
 C_LIBSTOR_DIR := ./c
-C_LIBSTOR_TYPES_H := $(C_LIBSTOR_DIR)/types.h
 C_LIBSTOR_C_DIR := $(C_LIBSTOR_DIR)/libstor-c
 C_LIBSTOR_C_SO := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/c/libstor-c.so
-C_LIBSTOR_C_SO_SRCS := $(wildcard $(C_LIBSTOR_C_DIR)/*.go)
+C_LIBSTOR_C_SO_SRCS :=  $(wildcard $(C_LIBSTOR_C_DIR)/*.go) \
+						$(wildcard $(C_LIBSTOR_C_DIR)/*.h) \
+						$(wildcard $(C_LIBSTOR_C_DIR)/*.c)
+C_LIBSTOR_C_BIN := $(GOPATH)/bin/libstor-c
+C_LIBSTOR_C_BIN_SRC := $(C_LIBSTOR_DIR)/libstor-c.c
 C_LIBSTOR_C_GO_DEPS :=	$(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/api/types.a \
 						$(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/client.a \
 
-libstor-c: $(C_LIBSTOR_C_SO)
-$(C_LIBSTOR_C_SO):	$(C_LIBSTOR_TYPES_H) \
-					$(C_LIBSTOR_C_SO_SRCS) \
-					$(C_LIBSTOR_C_BIN) \
+libstor-c: $(C_LIBSTOR_C_SO) $(C_LIBSTOR_C_BIN)
+
+$(C_LIBSTOR_C_SO):  $(C_LIBSTOR_C_SO_SRCS) \
 					$(C_LIBSTOR_C_GO_DEPS)
 	go build -buildmode=c-shared -o $@ $(C_LIBSTOR_C_DIR)
+
+$(C_LIBSTOR_C_BIN): $(C_LIBSTOR_C_BIN_SRC) \
+					$(C_LIBSTOR_C_SO) \
+					$(C_LIBSTOR_C_GO_DEPS)
+	gcc -I$(abspath $(C_LIBSTOR_C_DIR)) \
+		-I$(dir $(C_LIBSTOR_C_SO)) \
+		-L$(dir $(C_LIBSTOR_C_SO)) \
+		-o $@ \
+		$(C_LIBSTOR_C_BIN_SRC) \
+		-lstor-c
 
 ################################################################################
 ##                                  C SERVER                                  ##
@@ -415,10 +427,12 @@ C_LIBSTOR_S_BIN := $(GOPATH)/bin/libstor-s
 C_LIBSTOR_S_BIN_SRC := $(C_LIBSTOR_DIR)/libstor-s.c
 C_LIBSTOR_S_GO_DEPS := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/cli/servers.a
 
-$(C_LIBSTOR_S_SO):	$(C_LIBSTOR_TYPES_H) $(C_LIBSTOR_S_SO_SRCS)
+libstor-s: $(C_LIBSTOR_S_BIN) $(C_LIBSTOR_S_SO)
+
+$(C_LIBSTOR_S_SO):	$(C_LIBSTOR_TYPES_H) \
+					$(C_LIBSTOR_S_SO_SRCS)
 	go build -buildmode=c-shared -o $@ $(C_LIBSTOR_S_DIR)
 
-libstor-s: $(C_LIBSTOR_S_BIN)
 $(C_LIBSTOR_S_BIN): $(C_LIBSTOR_TYPES_H) \
 					$(C_LIBSTOR_S_BIN_SRC) \
 					$(C_LIBSTOR_S_SO) \
@@ -438,7 +452,7 @@ build-tests: $(GO_BUILD_TESTS)
 
 build-executors: $(EXECUTORS_EMBEDDED)
 
-build: $(GO_BUILD) $(C_LIBSTOR_C_SO) $(C_LIBSTOR_S_BIN)
+build: $(GO_BUILD) libstor-c libstor-s
 
 test: $(GO_TEST)
 

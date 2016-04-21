@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strconv"
 	"testing"
 
@@ -16,9 +17,26 @@ import (
 	"github.com/akutz/gotil"
 	yaml "gopkg.in/yaml.v2"
 
-	apiclient "github.com/emccode/libstorage/api/client"
 	apiserver "github.com/emccode/libstorage/api/server"
+	"github.com/emccode/libstorage/api/server/executors"
+	"github.com/emccode/libstorage/client"
 )
+
+var (
+	lsxbin string
+
+	lsxLinuxInfo, _   = executors.ExecutorInfoInspect("lsx-linux", false)
+	lsxDarwinInfo, _  = executors.ExecutorInfoInspect("lsx-darwin", false)
+	lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
+)
+
+func init() {
+	if runtime.GOOS == "windows" {
+		lsxbin = "lsx-windows.exe"
+	} else {
+		lsxbin = fmt.Sprintf("lsx-%s", runtime.GOOS)
+	}
+}
 
 var (
 	tlsPath = fmt.Sprintf(
@@ -63,7 +81,7 @@ libstorage:
 //  2 - tcp+tls
 //  3 - sock
 //  4 - sock+tls
-type APITestFunc func(config gofig.Config, client apiclient.Client, t *testing.T)
+type APITestFunc func(config gofig.Config, client client.Client, t *testing.T)
 
 // testHarness can be used by StorageDriver developers to quickly create
 // test suites for their drivers.
@@ -241,14 +259,15 @@ func (th *testHarness) run(
 	return nil
 }
 
-func getClient(config gofig.Config) (apiclient.Client, error) {
-	client, err := apiclient.Dial(nil, config)
+func getClient(config gofig.Config) (client.Client, error) {
+	c, err := client.New(config)
 	if err != nil {
 		return nil, goof.WithFieldE(
 			"host", config.Get("libstorage.host"),
 			"error dialing libStorage service", err)
 	}
-	return client, nil
+
+	return c, nil
 }
 
 func (th *testHarness) closeServers(t *testing.T) {

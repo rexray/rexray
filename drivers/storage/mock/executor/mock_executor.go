@@ -39,7 +39,7 @@ func newExecutor() drivers.StorageExecutor {
 func NewExecutor() *Executor {
 	return &Executor{
 		name:       Name,
-		instanceID: getInstanceID(),
+		instanceID: GetInstanceID(),
 	}
 }
 
@@ -73,7 +73,8 @@ func (d *Executor) LocalDevices(
 	return nil, nil
 }
 
-func getInstanceID() *types.InstanceID {
+// GetInstanceID gets the mock instance ID.
+func GetInstanceID() *types.InstanceID {
 	return &types.InstanceID{
 		ID:       "12345",
 		Metadata: instanceIDMetadata(),

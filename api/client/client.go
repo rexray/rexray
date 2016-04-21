@@ -27,11 +27,8 @@ import (
 	"github.com/emccode/libstorage/api/utils"
 )
 
-// Client is the interface for Golang libStorage clients.
+// Client is the base interface for the libStorage API client..
 type Client interface {
-
-	// Root returns a list of root resources.
-	Root() (apihttp.RootResources, error)
 
 	// Services returns a map of the configured Services.
 	Services() (apihttp.ServicesMap, error)
@@ -48,11 +45,20 @@ type Client interface {
 
 	// VolumeCreate creates a single volume.
 	VolumeCreate(
-		service string, request *apihttp.VolumeCreateRequest) (*types.Volume, error)
+		service string,
+		request *apihttp.VolumeCreateRequest) (*types.Volume, error)
 
 	// VolumeRemove removes a single volume.
 	VolumeRemove(
 		service, volumeID string) error
+}
+
+// APIClient is the extended interface for the libStorage API client.
+type APIClient interface {
+	Client
+
+	// Root returns a list of root resources.
+	Root() (apihttp.RootResources, error)
 
 	// Executors returns information about the executors.
 	Executors() (apihttp.ExecutorsMap, error)
@@ -83,7 +89,7 @@ type client struct {
 // property libstorage.host.
 func Dial(
 	ctx context.Context,
-	config gofig.Config) (Client, error) {
+	config gofig.Config) (APIClient, error) {
 
 	c := &client{config: config}
 	c.logRequests = c.config.GetBool(
@@ -183,7 +189,8 @@ func (c *client) VolumeInspect(
 }
 
 func (c *client) VolumeCreate(
-	service string, request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
+	service string,
+	request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
 
 	reply := types.Volume{}
 	if _, err := c.httpPost(

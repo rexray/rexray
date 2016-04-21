@@ -2,24 +2,20 @@ package mock
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/exec"
 	"runtime"
 	"testing"
 
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
-	apiclient "github.com/emccode/libstorage/api/client"
 	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
-	"github.com/emccode/libstorage/api/types"
 	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/client"
 
 	// load the  driver
 	"github.com/emccode/libstorage/drivers/storage/mock"
+	mockx "github.com/emccode/libstorage/drivers/storage/mock/executor"
 )
 
 var (
@@ -48,18 +44,11 @@ func init() {
 }
 
 func TestRoot(t *testing.T) {
-	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.Root()
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, len(reply), 5)
-	}
-	apitests.Run(t, mock.Name, configYAML, tf)
+	apitests.Run(t, mock.Name, configYAML, apitests.TestRoot)
 }
 
 func TestServices(t *testing.T) {
-	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		reply, err := client.Services()
 		if err != nil {
 			t.Fatal(err)
@@ -79,7 +68,7 @@ func TestServices(t *testing.T) {
 }
 
 func TestServiceInpspect(t *testing.T) {
-	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		reply, err := client.ServiceInspect("mock2")
 		if err != nil {
 			t.Fatal(err)
@@ -94,7 +83,7 @@ func TestServiceInpspect(t *testing.T) {
 }
 
 func TestVolumes(t *testing.T) {
-	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		reply, err := client.Volumes()
 		if err != nil {
 			t.Fatal(err)
@@ -106,7 +95,7 @@ func TestVolumes(t *testing.T) {
 
 func TestVolumeCreate(t *testing.T) {
 
-	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		volumeName := "Volume 001"
 		availabilityZone := "US"
 		iops := int64(1000)
@@ -146,7 +135,7 @@ func TestVolumeCreate(t *testing.T) {
 }
 
 func TestVolumeRemove(t *testing.T) {
-	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		err := client.VolumeRemove("mock", "vol-000")
 		if err != nil {
 			t.Fatal(err)
@@ -156,138 +145,30 @@ func TestVolumeRemove(t *testing.T) {
 }
 
 func TestExecutors(t *testing.T) {
-
-	apitests.Run(t, mock.Name, configYAML,
-		func(config gofig.Config, client apiclient.Client, t *testing.T) {
-			reply, err := client.Executors()
-			if err != nil {
-				t.Fatal(err)
-			}
-			assertLSXWindows(t, reply["lsx-windows.exe"])
-			assertLSXLinux(t, reply["lsx-linux"])
-			assertLSXDarwin(t, reply["lsx-darwin"])
-		})
+	apitests.Run(t, mock.Name, configYAML, apitests.TestExecutors)
 }
 
 func TestExecutorHead(t *testing.T) {
-
-	tf1 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.ExecutorHead("lsx-windows.exe")
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertLSXWindows(t, reply)
-	}
-
-	tf2 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.ExecutorHead("lsx-linux")
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertLSXLinux(t, reply)
-	}
-
-	tf3 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.ExecutorHead("lsx-darwin")
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertLSXDarwin(t, reply)
-	}
-
-	apitests.RunGroup(t, mock.Name, configYAML, tf1, tf2, tf3)
+	apitests.RunGroup(
+		t, mock.Name, configYAML,
+		apitests.TestHeadExecutorLinux,
+		apitests.TestHeadExecutorDarwin,
+		apitests.TestHeadExecutorWindows)
 }
 
 func TestExecutorGet(t *testing.T) {
-
-	tf1 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.ExecutorGet("lsx-windows.exe")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer reply.Close()
-		buf, err := ioutil.ReadAll(reply)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.EqualValues(t, lsxWindowsInfo.Size, len(buf))
-	}
-
-	tf2 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.ExecutorGet("lsx-linux")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer reply.Close()
-		buf, err := ioutil.ReadAll(reply)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.EqualValues(t, lsxLinuxInfo.Size, len(buf))
-	}
-
-	tf3 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.ExecutorGet("lsx-darwin")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer reply.Close()
-		buf, err := ioutil.ReadAll(reply)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.EqualValues(t, lsxDarwinInfo.Size, len(buf))
-	}
-
-	apitests.RunGroup(t, mock.Name, configYAML, tf1, tf2, tf3)
+	apitests.RunGroup(
+		t, mock.Name, configYAML,
+		apitests.TestGetExecutorLinux,
+		apitests.TestGetExecutorDarwin,
+		apitests.TestGetExecutorWindows)
 }
-
-const (
-	mockInstanceIDJSON = `{"id":"12345","metadata":{"max":10,"min":0,"rad":"cool","totally":"tubular"}}
-`
-)
 
 func TestInstanceID(t *testing.T) {
-
-	tf1 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
-		reply, err := client.ExecutorGet(lsxbin)
-		assert.NoError(t, err)
-		defer reply.Close()
-
-		f, err := ioutil.TempFile("", "")
-		assert.NoError(t, err)
-
-		_, err = io.Copy(f, reply)
-		assert.NoError(t, err)
-
-		err = f.Close()
-		assert.NoError(t, err)
-
-		os.Chmod(f.Name(), 0755)
-
-		out, err := exec.Command(
-			f.Name(), mock.Name, "instanceID").CombinedOutput()
-		assert.NoError(t, err)
-		assert.Equal(t, mockInstanceIDJSON, string(out))
-	}
-
-	apitests.RunGroup(t, mock.Name, nil, tf1)
-}
-
-func assertLSXWindows(t *testing.T, i *types.ExecutorInfo) {
-	assert.Equal(t, lsxWindowsInfo.Name, i.Name)
-	assert.EqualValues(t, lsxWindowsInfo.Size, i.Size)
-	assert.Equal(t, lsxWindowsInfo.MD5Checksum, i.MD5Checksum)
-}
-
-func assertLSXLinux(t *testing.T, i *types.ExecutorInfo) {
-	assert.Equal(t, lsxLinuxInfo.Name, i.Name)
-	assert.EqualValues(t, lsxLinuxInfo.Size, i.Size)
-	assert.Equal(t, lsxLinuxInfo.MD5Checksum, i.MD5Checksum)
-}
-
-func assertLSXDarwin(t *testing.T, i *types.ExecutorInfo) {
-	assert.Equal(t, lsxDarwinInfo.Name, i.Name)
-	assert.EqualValues(t, lsxDarwinInfo.Size, i.Size)
-	assert.Equal(t, lsxDarwinInfo.MD5Checksum, i.MD5Checksum)
+	apitests.RunGroup(
+		t, mock.Name, nil,
+		(&apitests.InstanceIDTest{
+			Driver:   mock.Name,
+			Expected: mockx.GetInstanceID(),
+		}).Test)
 }

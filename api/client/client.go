@@ -124,7 +124,7 @@ func Dial(
 		},
 	}
 
-	ctx.Log().WithFields(logFields).Info("configured client")
+	ctx.Log().WithFields(logFields).Debug("configured client")
 
 	c.ctx = ctx
 	return c, nil

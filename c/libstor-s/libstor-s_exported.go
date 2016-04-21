@@ -1,7 +1,5 @@
 package main
 
-//#cgo CFLAGS: -I${SRCDIR}/..
-//#include "types.h"
 import "C"
 
 import (
@@ -27,10 +25,10 @@ import (
 //                  array is odd-numbered then the service for the trailing
 //                  driver takes the name of the driver
 //
-// error* serve(char* host, short tls, int argc, void* argv);
+// char* serve(char* host, short tls, int argc, void* argv);
 //export serve
 func serve(
-	host *C.char, tls C.short, argc C.int, argv unsafe.Pointer) *C.error {
+	host *C.char, tls C.short, argc C.int, argv unsafe.Pointer) *C.char {
 
 	iargc := int(argc)
 	args := make([]string, iargc)
@@ -55,12 +53,5 @@ func serve(
 		"args": args,
 	}).Info("serving")
 
-	return toCError(servers.Run(szHost, bTLS, args...))
-}
-
-func toCError(e error) *C.error {
-	if e == nil {
-		return nil
-	}
-	return &C.error{msg: C.CString(e.Error())}
+	return C.CString(servers.Run(szHost, bTLS, args...).Error())
 }

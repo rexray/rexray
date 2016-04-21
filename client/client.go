@@ -30,6 +30,14 @@ type Client interface {
 	// VolumeInspect gets information about a single volume.
 	VolumeInspect(
 		service, volumeID string, attachments bool) (*types.Volume, error)
+
+	// VolumeCreate creates a single volume.
+	VolumeCreate(
+		service string, request *apihttp.VolumeCreateRequest) (*types.Volume, error)
+
+	// VolumeRemove removes a single volume.
+	VolumeRemove(
+		service, volumeID string) error
 }
 
 type client struct {
@@ -69,6 +77,16 @@ func (c *client) Volumes(
 func (c *client) VolumeInspect(
 	service, volumeID string, attachments bool) (*types.Volume, error) {
 	return c.apicli.VolumeInspect(service, volumeID, attachments)
+}
+
+func (c *client) VolumeCreate(
+	service string, request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
+	return c.apicli.VolumeCreate(service, request)
+}
+
+func (c *client) VolumeRemove(
+	service, volumeID string) error {
+	return c.apicli.VolumeRemove(service, volumeID)
 }
 
 func getNewConfig() (gofig.Config, error) {

@@ -46,6 +46,14 @@ type Client interface {
 	VolumeInspect(
 		service, volumeID string, attachments bool) (*types.Volume, error)
 
+	// VolumeCreate creates a single volume.
+	VolumeCreate(
+		service string, request *apihttp.VolumeCreateRequest) (*types.Volume, error)
+
+	// VolumeRemove removes a single volume.
+	VolumeRemove(
+		service, volumeID string) error
+
 	// Executors returns information about the executors.
 	Executors() (apihttp.ExecutorsMap, error)
 
@@ -172,6 +180,27 @@ func (c *client) VolumeInspect(
 		return nil, err
 	}
 	return &reply, nil
+}
+
+func (c *client) VolumeCreate(
+	service string, request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
+
+	reply := types.Volume{}
+	if _, err := c.httpPost(
+		fmt.Sprintf("/volumes/%s", service), request, &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
+}
+
+func (c *client) VolumeRemove(
+	service, volumeID string) error {
+
+	if _, err := c.httpDelete(
+		fmt.Sprintf("/volumes/%s/%s", service, volumeID), nil); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *client) Executors() (apihttp.ExecutorsMap, error) {

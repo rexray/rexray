@@ -18,7 +18,7 @@ You can determine your currently installed version using `rexray version`:
     Commit: 36ccc425faeab49d792eda4851e3d72a85744874
     Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
-## Version 0.3.3 (TBA)
+## Version 0.3.3 (2016/04/21)
 
 ### New Features
 * ScaleIO v2 support ([#355](https://github.com/emccode/rexray/issues/355))

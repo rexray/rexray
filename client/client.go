@@ -7,6 +7,7 @@ import (
 	"github.com/akutz/gotil"
 
 	apiclient "github.com/emccode/libstorage/api/client"
+	apiconfig "github.com/emccode/libstorage/api/utils/config"
 
 	// load the drivers
 	_ "github.com/emccode/libstorage/drivers/os"
@@ -29,7 +30,7 @@ type client struct {
 // New returns a new Client.
 func New(config gofig.Config) (Client, error) {
 	if config == nil {
-		if cfg, err := getNewConfig(); err != nil {
+		if cfg, err := apiconfig.NewConfig(); err != nil {
 			return nil, err
 		} else {
 			config = cfg
@@ -40,19 +41,4 @@ func New(config gofig.Config) (Client, error) {
 		return nil, err
 	}
 	return &client{APIClient: ac, config: config}, nil
-}
-
-func getNewConfig() (gofig.Config, error) {
-	cfp := fmt.Sprintf("%s/config.yaml", libstorHome)
-	if !gotil.FileExists(cfp) {
-		cfp = fmt.Sprintf("%s/config.yml", libstorHome)
-		if !gotil.FileExists(cfp) {
-			return gofig.New(), nil
-		}
-	}
-	config := gofig.New()
-	if err := config.ReadConfigFile(cfp); err != nil {
-		return nil, err
-	}
-	return config, nil
 }

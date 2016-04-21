@@ -9,7 +9,9 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: libstor-server DRIVER")
+		fmt.Fprintln(
+			os.Stderr,
+			"usage: libstor-server DRIVER [SERVICE] [DRIVER [SERVICE]]...")
 		os.Exit(1)
 	}
 

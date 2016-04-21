@@ -1,7 +1,12 @@
 package mock
 
 import (
+	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"runtime"
 	"testing"
 
 	"github.com/akutz/gofig"
@@ -18,6 +23,8 @@ import (
 )
 
 var (
+	lsxbin string
+
 	lsxLinuxInfo, _   = executors.ExecutorInfoInspect("lsx-linux", false)
 	lsxDarwinInfo, _  = executors.ExecutorInfoInspect("lsx-darwin", false)
 	lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
@@ -31,6 +38,14 @@ libstorage:
       mock3:
 `)
 )
+
+func init() {
+	if runtime.GOOS == "windows" {
+		lsxbin = "lsx-windows.exe"
+	} else {
+		lsxbin = fmt.Sprintf("lsx-%s", runtime.GOOS)
+	}
+}
 
 func TestRoot(t *testing.T) {
 	tf := func(config gofig.Config, client apiclient.Client, t *testing.T) {
@@ -225,6 +240,38 @@ func TestExecutorGet(t *testing.T) {
 	}
 
 	apitests.RunGroup(t, mock.Name, configYAML, tf1, tf2, tf3)
+}
+
+const (
+	mockInstanceIDJSON = `{"id":"12345","metadata":{"max":10,"min":0,"rad":"cool","totally":"tubular"}}
+`
+)
+
+func TestInstanceID(t *testing.T) {
+
+	tf1 := func(config gofig.Config, client apiclient.Client, t *testing.T) {
+		reply, err := client.ExecutorGet(lsxbin)
+		assert.NoError(t, err)
+		defer reply.Close()
+
+		f, err := ioutil.TempFile("", "")
+		assert.NoError(t, err)
+
+		_, err = io.Copy(f, reply)
+		assert.NoError(t, err)
+
+		err = f.Close()
+		assert.NoError(t, err)
+
+		os.Chmod(f.Name(), 0755)
+
+		out, err := exec.Command(
+			f.Name(), mock.Name, "instanceID").CombinedOutput()
+		assert.NoError(t, err)
+		assert.Equal(t, mockInstanceIDJSON, string(out))
+	}
+
+	apitests.RunGroup(t, mock.Name, nil, tf1)
 }
 
 func assertLSXWindows(t *testing.T, i *types.ExecutorInfo) {

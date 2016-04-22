@@ -18,6 +18,15 @@ type Service interface {
 	Init(config gofig.Config) error
 }
 
+// Services is a service's container.
+type Services interface {
+	// Storage gets the storage service.
+	Storage() StorageService
+
+	// Tasks gets the task service.
+	Tasks() TaskTrackingService
+}
+
 // TaskRunFunc is a function responsible for a task's execution.
 type TaskRunFunc func(ctx context.Context) (interface{}, error)
 
@@ -33,7 +42,7 @@ type StorageService interface {
 	Service
 
 	// Driver returns the service's StorageDriver.
-	Driver() drivers.StorageDriver
+	Driver() drivers.RemoteStorageDriver
 
 	// TaskExecute enqueues a task for execution.
 	TaskExecute(

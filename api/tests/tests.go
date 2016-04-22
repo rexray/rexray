@@ -15,6 +15,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+	"github.com/stretchr/testify/assert"
 	yaml "gopkg.in/yaml.v2"
 
 	apiserver "github.com/emccode/libstorage/api/server"
@@ -154,18 +155,87 @@ func (th *testHarness) run(
 	debug, group bool,
 	tests ...APITestFunc) error {
 
+	if group {
+		config := getTestConfig(t, configBuf, debug)
+		configNames, configs := getTestConfigs(t, driver, config)
+
+		for x, config := range configs {
+			server, errs := apiserver.Serve(config)
+
+			go func(errs <-chan error) {
+				err := <-errs
+				if err != nil {
+					th.closeServers(t)
+					t.Fatalf("server (%s) error: %v", configNames[x], err)
+				}
+			}(errs)
+
+			if server != nil {
+				th.servers = append(th.servers, server)
+			}
+
+			client, err := getClient(config)
+			assert.NoError(t, err)
+
+			for _, test := range tests {
+				test(config, client, t)
+			}
+		}
+	} else {
+		for _, test := range tests {
+
+			config := getTestConfig(t, configBuf, debug)
+			configNames, configs := getTestConfigs(t, driver, config)
+
+			for x, config := range configs {
+				server, errs := apiserver.Serve(config)
+
+				go func(errs <-chan error) {
+					err := <-errs
+					if err != nil {
+						th.closeServers(t)
+						t.Fatalf("server (%s) error: %v", configNames[x], err)
+					}
+				}(errs)
+
+				if server != nil {
+					th.servers = append(th.servers, server)
+				}
+
+				client, err := getClient(config)
+				assert.NoError(t, err)
+
+				test(config, client, t)
+			}
+		}
+	}
+
+	th.closeServers(t)
+	return nil
+}
+
+func getTestConfig(t *testing.T, configBuf []byte, debug bool) gofig.Config {
 	config := gofig.New()
 
 	if debug {
 		log.SetLevel(log.DebugLevel)
-		if err := config.ReadConfig(bytes.NewReader(debugConfig)); err != nil {
-			return err
-		}
+		err := config.ReadConfig(bytes.NewReader(debugConfig))
+		assert.NoError(t, err)
 	}
 
-	if err := config.ReadConfig(bytes.NewReader(profilesConfig)); err != nil {
-		return err
+	assert.NoError(t, config.ReadConfig(bytes.NewReader(profilesConfig)))
+
+	if configBuf != nil {
+		assert.NoError(t, config.ReadConfig(bytes.NewReader(configBuf)))
 	}
+
+	return config
+}
+
+func getTestConfigs(
+	t *testing.T,
+	driver string,
+	config gofig.Config) (map[int]string, []gofig.Config) {
 
 	libstorageConfigMap := map[string]interface{}{
 		"driver": driver,
@@ -183,17 +253,14 @@ func (th *testHarness) run(
 	}
 
 	yamlBuf, err := yaml.Marshal(libstorageConfig)
-	if err != nil {
-		return err
-	}
-	if err := config.ReadConfig(bytes.NewReader(yamlBuf)); err != nil {
-		return err
-	}
+	assert.NoError(t, err)
+	assert.NoError(t, config.ReadConfig(bytes.NewReader(yamlBuf)))
 
-	if configBuf != nil {
-		if err := config.ReadConfig(bytes.NewReader(configBuf)); err != nil {
-			return err
-		}
+	configNames := map[int]string{
+		0: "tcp",
+		1: "tcpTLS",
+		2: "unix",
+		3: "unixTLS",
 	}
 
 	configs := []gofig.Config{
@@ -203,60 +270,7 @@ func (th *testHarness) run(
 		config.Scope("libstorage.tests.unixTLS"),
 	}
 
-	if group {
-		for _, config := range configs {
-			server, errs := apiserver.Serve(config)
-
-			go func(errs <-chan error) {
-				err := <-errs
-				if err != nil {
-					th.closeServers(t)
-					t.Fatalf("server error: %v", err)
-				}
-			}(errs)
-
-			if server != nil {
-				th.servers = append(th.servers, server)
-			}
-
-			client, err := getClient(config)
-			if err != nil {
-				return err
-			}
-
-			for _, test := range tests {
-				test(config, client, t)
-			}
-		}
-	} else {
-		for _, test := range tests {
-			for _, config := range configs {
-				server, errs := apiserver.Serve(config)
-
-				go func(errs <-chan error) {
-					err := <-errs
-					if err != nil {
-						th.closeServers(t)
-						t.Fatalf("server error: %v", err)
-					}
-				}(errs)
-
-				if server != nil {
-					th.servers = append(th.servers, server)
-				}
-
-				client, err := getClient(config)
-				if err != nil {
-					return err
-				}
-
-				test(config, client, t)
-			}
-		}
-	}
-
-	th.closeServers(t)
-	return nil
+	return configNames, configs
 }
 
 func getClient(config gofig.Config) (client.Client, error) {

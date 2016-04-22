@@ -26,7 +26,7 @@ type task struct {
 }
 
 func newTask(ctx context.Context, schema []byte) *task {
-	t := taskService.taskTrack(ctx)
+	t := getTaskService(ctx).taskTrack(ctx)
 	t.resultSchema = schema
 	t.done = make(chan int)
 	return t

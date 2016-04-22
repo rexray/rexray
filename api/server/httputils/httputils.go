@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	serviceTypeName       = utils.GetTypePkgPathAndName((*apisvcs.StorageService)(nil))
-	storageDriverTypeName = utils.GetTypePkgPathAndName((*drivers.StorageDriver)(nil))
+	serviceTypeName             = utils.GetTypePkgPathAndName((*apisvcs.StorageService)(nil))
+	remoteStorageDriverTypeName = utils.GetTypePkgPathAndName((*drivers.RemoteStorageDriver)(nil))
 )
 
 // GetService gets the Service instance from a context.
@@ -33,8 +33,8 @@ func GetService(ctx context.Context) (apisvcs.StorageService, error) {
 	return service, nil
 }
 
-// GetStorageDriver gets the StorageDriver instance from a context.
-func GetStorageDriver(ctx context.Context) (drivers.StorageDriver, error) {
+// GetStorageDriver gets the RemoteStorageDriver instance from a context.
+func GetStorageDriver(ctx context.Context) (drivers.RemoteStorageDriver, error) {
 	service, err := GetService(ctx)
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func WriteTask(
 	timeout := time.NewTimer(time.Second * 60)
 
 	select {
-	case <-services.TaskWaitC(task.ID):
+	case <-services.TaskWaitC(ctx, task.ID):
 		if task.Error != nil {
 			return task.Error
 		}

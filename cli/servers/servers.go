@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
@@ -79,16 +80,29 @@ func closeAllServers() bool {
 	return noErrors
 }
 
-func start(host string, tls bool, driversAndServices ...string) error {
+var (
+	portLock = &sync.Mutex{}
+)
 
+func start(host string, tls bool, driversAndServices ...string) error {
 	if host == "" {
-		host = fmt.Sprintf("tcp://localhost:%d", gotil.RandomTCPPort())
+		portLock.Lock()
+		defer portLock.Unlock()
+
+		port := 7979
+		if !gotil.IsTCPPortAvailable(port) {
+			port = gotil.RandomTCPPort()
+		}
+		host = fmt.Sprintf("tcp://localhost:%d", port)
 	}
+
 	config := getConfig(host, tls, driversAndServices...)
 	server, errs := libstorage.Serve(config)
+
 	if server != nil {
 		servers = append(servers, server)
 	}
+
 	err := <-errs
 	return err
 }

@@ -29,10 +29,10 @@ type driver struct {
 }
 
 func init() {
-	registry.RegisterStorageDriver(Name, newDriver)
+	registry.RegisterRemoteStorageDriver(Name, newDriver)
 }
 
-func newDriver() drivers.StorageDriver {
+func newDriver() drivers.RemoteStorageDriver {
 
 	d := &driver{Executor: *executor.NewExecutor()}
 
@@ -147,11 +147,13 @@ func (d *driver) VolumeCreate(
 		volume.IOPS = *opts.IOPS
 	}
 
-	if opts.Opts.IsSet("owner") {
-		volume.Fields["owner"] = opts.Opts.GetString("owner")
-	}
-	if opts.Opts.IsSet("priority") {
-		volume.Fields["priority"] = opts.Opts.GetString("priority")
+	if customFields := opts.Opts.GetStore("opts"); customFields != nil {
+		if customFields.IsSet("owner") {
+			volume.Fields["owner"] = customFields.GetString("owner")
+		}
+		if customFields.IsSet("priority") {
+			volume.Fields["priority"] = customFields.GetString("priority")
+		}
 	}
 
 	d.volumes = append(d.volumes, volume)

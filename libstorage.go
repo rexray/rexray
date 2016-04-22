@@ -49,10 +49,11 @@ func init() {
 	registerGofigDefaults()
 }
 
-// RegisterStorageDriver registers a new StorageDriver with the libStorage
-// service.
-func RegisterStorageDriver(name string, ctor drivers.NewStorageDriver) {
-	registry.RegisterStorageDriver(name, ctor)
+// RegisterRemoteStorageDriver registers a new RemoteStorageDriver with the
+// libStorage service.
+func RegisterRemoteStorageDriver(
+	name string, ctor drivers.NewRemoteStorageDriver) {
+	registry.RegisterRemoteStorageDriver(name, ctor)
 }
 
 // RegisterOSDriver registers a new StorageDriver with the libStorage

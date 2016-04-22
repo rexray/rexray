@@ -43,7 +43,7 @@ func (h *serviceValidator) Handle(
 	}
 
 	serviceName := store.GetString("service")
-	service := services.GetStorageService(serviceName)
+	service := services.GetStorageService(ctx, serviceName)
 	if service == nil {
 		return utils.NewNotFoundError(serviceName)
 	}

@@ -18,7 +18,7 @@ func (r *router) tasks(
 	store types.Store) error {
 
 	tasks := map[string]*types.Task{}
-	for t := range services.Tasks() {
+	for t := range services.Tasks(ctx) {
 		tasks[fmt.Sprintf("%d", t.ID)] = t
 	}
 	httputils.WriteJSON(w, http.StatusOK, tasks)
@@ -31,7 +31,7 @@ func (r *router) taskInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	task := services.TaskInspect(store.GetInt("taskID"))
+	task := services.TaskInspect(ctx, store.GetInt("taskID"))
 	if task == nil {
 		return utils.NewNotFoundError(store.GetString("taskID"))
 	}

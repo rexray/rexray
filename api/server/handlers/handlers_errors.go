@@ -42,9 +42,9 @@ func (h *errorHandler) Handle(
 	ctx.Log().Error(err)
 
 	jsonError := types.JSONError{
-		Status:  getStatus(err),
-		Message: err.Error(),
-		Error:   err,
+		Status:     getStatus(err),
+		Message:    err.Error(),
+		InnerError: err,
 	}
 
 	httputils.WriteJSON(w, jsonError.Status, jsonError)

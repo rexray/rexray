@@ -68,6 +68,7 @@ func newServer(config gofig.Config) (*server, error) {
 	}
 
 	s.ctx = s.ctx.WithContextID("server", s.name)
+	s.ctx = s.ctx.WithValue("server", s.name)
 	s.ctx.Log().Debug("initializing server")
 
 	if err := s.initEndpoints(); err != nil {
@@ -75,7 +76,7 @@ func newServer(config gofig.Config) (*server, error) {
 	}
 	s.ctx.Log().Debug("initialized endpoints")
 
-	if err := services.Init(s.config); err != nil {
+	if err := services.Init(s.ctx, s.config); err != nil {
 		return nil, err
 	}
 	s.ctx.Log().Debug("initialized services")

@@ -256,3 +256,22 @@ func TestVolumeCreateRequestObject(t *testing.T) {
 		assert.NoError(t, err)
 	}
 }
+
+func TestVolumeSnapshotRequestObject(t *testing.T) {
+	snapshotName := "snapshot1"
+	opts := map[string]interface{}{
+		"priority": 2,
+	}
+
+	s := &httptypes.VolumeSnapshotRequest{
+		SnapshotName: snapshotName,
+		Opts: opts,
+	}
+
+	d, err := ValidateVolumeSnapshotRequest(s)
+	if d == nil {
+		assert.NoError(t, err, string(d))
+	} else {
+		assert.NoError(t, err)
+	}
+}

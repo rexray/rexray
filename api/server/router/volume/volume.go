@@ -142,6 +142,7 @@ func (r *router) initRoutes() {
 				schema.VolumeSnapshotRequestSchema,
 				schema.SnapshotSchema,
 				func() interface{} { return &apihttp.VolumeSnapshotRequest{} }),
+			handlers.NewPostArgsHandler(),
 		).Queries("snapshot"),
 
 		// attach an existing volume

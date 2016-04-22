@@ -117,6 +117,15 @@ func ValidateVolumeCreateRequest(
 	return validateObject(VolumeCreateRequestSchema, v)
 }
 
+// ValidateVolumeSnapshotRequest validates a VolumeSnapshotRequest object using the
+// JSON schema. If the object is valid no error is returned. The first return
+// value, the object marshaled to JSON, is returned whether or not the
+// validation is successful.
+func ValidateVolumeSnapshotRequest(
+	v *httptypes.VolumeSnapshotRequest) ([]byte, error) {
+	return validateObject(VolumeSnapshotRequestSchema, v)
+}
+
 func validateObject(s []byte, o interface{}) (d []byte, e error) {
 	if d, e = json.Marshal(o); e != nil {
 		return

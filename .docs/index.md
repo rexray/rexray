@@ -33,12 +33,12 @@ The following storage providers and platforms are supported by `REX-Ray`.
 
 Provider              | Storage Platform(s)
 ----------------------|-------------------------
-[Amazon EC2](/user-guide/storage-providers/ec2/) | EBS
-[Google Compute Engine](/user-guide/storage-providers/gce) | Disk
-[Open Stack](/user-guide/storage-providers/openstack) | Cinder
-[Rackspace](/user-guide/storage-providers/rackspace) | Cinder
-EMC                   | [ScaleIO](/user-guide/storage-providers/scaleio), [XtremIO](/user-guide/storage-providers/xtremio), [VMAX](/user-guide/storage-providers/vmax), [Isilon](/user-guide/storage-providers/isilon)
-[Virtual Box](/user-guide/storage-providers/virtualbox)          | Virtual Media
+[Amazon EC2](./user-guide/storage-providers.md#amazon-ec2) | EBS
+[Google Compute Engine](./user-guide/storage-providers.md#google-compute-engine) | Disk
+[Open Stack](./user-guide/storage-providers.md#openstack) | Cinder
+[Rackspace](./user-guide/storage-providers.md#rackspace) | Cinder
+EMC                   | [ScaleIO](./user-guide/storage-providers.md#scaleio), [XtremIO](./user-guide/storage-providers.md#xtremio), [VMAX](./user-guide/storage-providers.md#vmax), [Isilon](./user-guide/storage-providers.md#isilon)
+[Virtual Box](./user-guide/storage-providers.md#virtualbox)          | Virtual Media
 
 ### Operating System Support
 The following operating systems (OS) are supported by `REX-Ray`:
@@ -59,14 +59,14 @@ Windows        | No           | No
 
 Platform            | Use
 ------------------|-------------------------
-Docker            | [Volume Driver Plugin](/user-guide/schedulers#docker)
-Mesos             | [Volume Driver Isolator module](/user-guide/schedulers#mesos)
-Mesos + Docker    | [Volume Driver Plugin](/user-guide/schedulers#mesos)
+Docker            | [Volume Driver Plugin](./user-guide/schedulers.md#docker)
+Mesos             | [Volume Driver Isolator module](./user-guide/schedulers.md#mesos)
+Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers.md#mesos)
 
 ## Getting Started
 This section will help you get REX-Ray up and running quickly. For more advanced
 configurations including
-[core properties](/user-guide/config/#configuration-properties) and additional
+[core properties](./user-guide/config.md#configuration-properties) and additional
 storage providers use the `User Guide` menu in the tool-bar.
 
 ### Installing REX-Ray
@@ -149,7 +149,7 @@ Congratulations, you have used `REX-Ray` to provide persistence for stateless
 containers!
 
 Examples using MongoDB, Postgres, and more with persistent storage can be found
-at [Application Examples](/user-guide/application/).
+at [Application Examples](./user-guide/application.md).
 
 ## Getting Help
 Having issues? No worries, let's figure it out together.

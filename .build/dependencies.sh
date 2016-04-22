@@ -9,6 +9,8 @@ tmp=$HOME/.tmp && mkdir -p $tmp
 ##                           coverage                                 ##
 ########################################################################
 
+go get -v github.com/onsi/gomega
+go get -v github.com/onsi/ginkgo
 go get -v github.com/axw/gocov/gocov
 go get -v github.com/mattn/goveralls
 go get -v golang.org/x/tools/cmd/cover

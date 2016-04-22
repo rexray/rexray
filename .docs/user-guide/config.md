@@ -16,7 +16,7 @@ This section outlines the most common configuration scenarios encountered by
 A typical configuration occurs by creating the file `/etc/rexray/config.yml`.
 This is the global settings file for `REX-Ray`, and is used whether the
 program is used as a command line interface (CLI) application or started as a
-background service. Please see the [advanced section](/user-guide/config#advanced-configuration)
+background service. Please see the [advanced section](./config.md#advanced-configuration)
 for more information and options regarding configuration.
 
 ### Example sans Modules
@@ -51,13 +51,13 @@ driver is loaded. All of the `rexray` properties are
 The `docker` section defines properties specific to Docker. The property
 `docker.size` defines in gigabytes the default size for a new Docker volume.
 The complete list of properties for the `docker` section are described on the
-[Schedulers page](/user-guide/schedulers#docker).
+[Schedulers page](./schedulers.md#docker).
 
 Finally, the `virtualbox` section configures the VirtualBox driver loaded by
 `REX-Ray`, as indicated via the `rexray.storageDrivers` property). The
 Storage Drivers page has information about the configuration details of
-[each driver](/user-guide/storage-providers), including
-[VirtualBox](/user-guide/storage-providers#virtualbox).
+[each driver](./storage-providers.md), including
+[VirtualBox](./storage-providers.md#virtualbox).
 
 ### Example with Modules
 Modules enable a single `REX-Ray` instance to present multiple personalities or
@@ -428,15 +428,15 @@ storage systems. Currently the following storage drivers are supported:
 
  Driver | Driver Name
 --------|------------
-[Amazon EC2](/user-guide/storage-providers#amazon-ec2) | ec2
-[Google Compute Engine](/user-guide/storage-providers#google-compute-engine) | gce
-[Isilon](/user-guide/storage-providers#isilon) | isilon
-[OpenStack](/user-guide/storage-providers#openstack) | openstack
-[Rackspace](/user-guide/storage-providers#rackspace) | rackspace
-[ScaleIO](/user-guide/storage-providers#scaleio) | scaleio
-[VirtualBox](/user-guide/storage-providers#virtualbox) | virtualbox
-[VMAX](/user-guide/storage-providers#vmax) | vmax
-[XtremIO](/user-guide/storage-providers#xtremio) | xtremio
+[Amazon EC2](./storage-providers.md#amazon-ec2) | ec2
+[Google Compute Engine](./storage-providers.md#google-compute-engine) | gce
+[Isilon](./storage-providers.md#isilon) | isilon
+[OpenStack](./storage-providers.md#openstack) | openstack
+[Rackspace](./storage-providers.md#rackspace) | rackspace
+[ScaleIO](./storage-providers.md#scaleio) | scaleio
+[VirtualBox](./storage-providers.md#virtualbox) | virtualbox
+[VMAX](./storage-providers.md#vmax) | vmax
+[XtremIO](./storage-providers.md#xtremio) | xtremio
 
 The `rexray.storageDrivers` property can be used to activate storage drivers..
 

@@ -49,6 +49,12 @@ docker.fsType|Type of filesystem for new volumes (ext4/xfs)
 docker.availabilityZone|Extensible parameter per storage driver
 linux.volume.rootPath|The path within the volume to private mount (/data)
 rexray.volume.mount.preempt|Forcefully take control of volumes when requested
+rexray.volume.create.disable|Disable the ability for a volume to be created
+rexray.volume.remove.disable|Disable the ability for a volume to be removed
+
+Note: With Docker 1.9.1 or below a `rexray.volume.remove.disable` is suggested
+since Docker will remove external volumes when containers that are using volumes
+are forcefully removed.
 
 ### Starting Volume Driver
 
@@ -192,6 +198,10 @@ more information on preempt.  The `volume.unmount.ignoreusedcount` ensures that
 `mesos-module-dvdi` is authoritative when it comes to deciding when to unmount
 volumes.
 
+Note: We have added a `rexray.volume.remove.disable` flag to disable the ability
+for the scheduler to remove volumes. With Mesos + Docker 1.9.1 this setting
+is suggested.
+
 ```yaml
 rexray:
   storageDrivers:
@@ -201,6 +211,8 @@ rexray:
       preempt: true
     unmount:
       ignoreusedcount: true
+    remove:
+      disable: true
 virtualbox:
   endpoint: http://yourlaptop:18083
   volumePath: /Users/youruser/VirtualBox Volumes

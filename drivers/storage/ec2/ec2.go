@@ -13,19 +13,29 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 
 	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/core/errors"
-	"github.com/goamz/goamz/aws"
-	"github.com/goamz/goamz/ec2"
 )
 
-const providerName = "ec2"
+const (
+	providerName = "ec2"
+	rexrayTag    = "rexraySet"
+)
 
 // The EC2 storage driver.
 type driver struct {
 	instanceDocument *instanceIdentityDocument
 	ec2Instance      *ec2.EC2
+	ec2Tag           string
+	ec2creds         *credentials.Credentials
 	r                *core.RexRay
 }
 
@@ -76,18 +86,28 @@ func (d *driver) Init(r *core.RexRay) error {
 		return goof.WithFields(ef(), "error getting instance id doc")
 	}
 
-	auth := aws.Auth{
-		AccessKey: d.accessKey(),
-		SecretKey: d.secretKey(),
-	}
 	region := d.region()
 	if region == "" {
 		region = d.instanceDocument.Region
 	}
-	d.ec2Instance = ec2.New(
-		auth,
-		aws.Regions[region],
-	)
+
+	d.ec2Tag = d.rexrayTag()
+
+	mySession := session.New()
+
+	d.ec2creds = credentials.NewChainCredentials(
+		[]credentials.Provider{
+			&credentials.StaticProvider{Value: credentials.Value{AccessKeyID: d.accessKey(), SecretAccessKey: d.secretKey()}},
+			&credentials.EnvProvider{},
+			&credentials.SharedCredentialsProvider{},
+			&ec2rolecreds.EC2RoleProvider{
+				Client: ec2metadata.New(mySession),
+			},
+		})
+
+	config := aws.NewConfig().WithCredentials(d.ec2creds).WithRegion(region)
+
+	d.ec2Instance = ec2.New(mySession, config)
 
 	log.WithFields(fields).Info("storage driver initialized")
 
@@ -127,9 +147,9 @@ func (d *driver) GetVolumeMapping() ([]*core.BlockDevice, error) {
 			ProviderName: providerName,
 			InstanceID:   d.instanceDocument.InstanceID,
 			Region:       d.instanceDocument.Region,
-			DeviceName:   blockDevice.DeviceName,
-			VolumeID:     blockDevice.EBS.VolumeId,
-			Status:       blockDevice.EBS.Status,
+			DeviceName:   *blockDevice.DeviceName,
+			VolumeID:     *((*blockDevice.Ebs).VolumeId),
+			Status:       *((*blockDevice.Ebs).Status),
 		}
 		BlockDevices = append(BlockDevices, sdBlockDevice)
 	}
@@ -167,15 +187,14 @@ func getInstanceIdendityDocument() (*instanceIdentityDocument, error) {
 	return &document, nil
 }
 
-func (d *driver) getBlockDevices(instanceID string) ([]ec2.BlockDevice, error) {
+func (d *driver) getBlockDevices(instanceID string) ([]*ec2.InstanceBlockDeviceMapping, error) {
 
 	instance, err := d.getInstance()
 	if err != nil {
-		return []ec2.BlockDevice{}, err
+		return nil, err
 	}
 
-	return instance.BlockDevices, nil
-
+	return instance.BlockDeviceMappings, nil
 }
 
 func getInstanceName(server ec2.Instance) string {
@@ -184,8 +203,8 @@ func getInstanceName(server ec2.Instance) string {
 
 func getTag(server ec2.Instance, key string) string {
 	for _, tag := range server.Tags {
-		if tag.Key == key {
-			return tag.Value
+		if *tag.Key == key {
+			return *tag.Value
 		}
 	}
 	return ""
@@ -211,29 +230,65 @@ func (d *driver) GetInstance() (*core.Instance, error) {
 
 func (d *driver) getInstance() (ec2.Instance, error) {
 
-	resp, err := d.ec2Instance.DescribeInstances(
-		[]string{
-			d.instanceDocument.InstanceID},
-		&ec2.Filter{})
+	diInput := &ec2.DescribeInstancesInput{
+		InstanceIds: []*string{&d.instanceDocument.InstanceID},
+	}
+	resp, err := d.ec2Instance.DescribeInstances(diInput)
 	if err != nil {
 		return ec2.Instance{}, err
 	}
 
-	return resp.Reservations[0].Instances[0], nil
+	return *resp.Reservations[0].Instances[0], nil
 }
 
 func (d *driver) CreateSnapshot(
 	runAsync bool,
 	snapshotName, volumeID, description string) ([]*core.Snapshot, error) {
 
-	resp, err := d.ec2Instance.CreateSnapshot(volumeID, description)
+	csInput := &ec2.CreateSnapshotInput{
+		VolumeId:    &volumeID, // Required
+		Description: &description,
+	}
+
+	resp, err := d.ec2Instance.CreateSnapshot(csInput)
 	if err != nil {
 		return nil, err
 	}
 
-	if snapshotName != "" {
-		_, err := d.ec2Instance.CreateTags(
-			[]string{resp.Id}, []ec2.Tag{{"Name", snapshotName}})
+	if snapshotName != "" || d.ec2Tag != "" {
+
+		var ctInput *ec2.CreateTagsInput
+		initCTInput := func() {
+			if ctInput != nil {
+				return
+			}
+			ctInput = &ec2.CreateTagsInput{
+				Resources: []*string{resp.SnapshotId},
+				Tags:      []*ec2.Tag{},
+			}
+		}
+
+		if snapshotName != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
+					Key:   aws.String("Name"),
+					Value: &snapshotName,
+				})
+		}
+
+		if d.ec2Tag != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
+					Key:   aws.String(rexrayTag),
+					Value: &d.ec2Tag,
+				})
+		}
+
+		_, err = d.ec2Instance.CreateTags(ctInput)
 		if err != nil {
 			return nil, err
 		}
@@ -241,43 +296,56 @@ func (d *driver) CreateSnapshot(
 
 	if !runAsync {
 		log.Println("Waiting for snapshot to complete")
-		err = d.waitSnapshotComplete(resp.Snapshot.Id)
+		err = d.waitSnapshotComplete(*resp.SnapshotId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	snapshot, err := d.GetSnapshot("", resp.Snapshot.Id, "")
+	snapshot, err := d.GetSnapshot("", *resp.SnapshotId, "")
 	if err != nil {
 		return nil, err
 	}
 
 	log.Println("Created Snapshot: " + snapshot[0].SnapshotID)
 	return snapshot, nil
-
 }
 
 func (d *driver) getSnapshot(
-	volumeID, snapshotID, snapshotName string) ([]ec2.Snapshot, error) {
-	filter := ec2.NewFilter()
+	volumeID, snapshotID, snapshotName string) ([]*ec2.Snapshot, error) {
+
+	filters := []*ec2.Filter{}
 	if snapshotName != "" {
-		filter.Add("tag:Name", fmt.Sprintf("%s", snapshotName))
+		filters = append(filters, &ec2.Filter{
+			Name: aws.String("tag:Name"), Values: []*string{&snapshotName}})
 	}
 
 	if volumeID != "" {
-		filter.Add("volume-id", volumeID)
+		filters = append(filters, &ec2.Filter{
+			Name: aws.String("volume-id"), Values: []*string{&volumeID}})
 	}
 
-	snapshotList := []string{}
 	if snapshotID != "" {
-		//using snapshotList is returning stale data
-		//snapshotList = append(snapshotList, snapshotID)
-		filter.Add("snapshot-id", snapshotID)
+		//using SnapshotIds in request is returning stale data
+		filters = append(filters, &ec2.Filter{
+			Name: aws.String("snapshot-id"), Values: []*string{&snapshotID}})
 	}
 
-	resp, err := d.ec2Instance.Snapshots(snapshotList, filter)
+	if d.ec2Tag != "" {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", rexrayTag)),
+			Values: []*string{&d.ec2Tag}})
+	}
+
+	dsInput := &ec2.DescribeSnapshotsInput{}
+
+	if len(filters) > 0 {
+		dsInput.Filters = filters
+	}
+
+	resp, err := d.ec2Instance.DescribeSnapshots(dsInput)
 	if err != nil {
-		return []ec2.Snapshot{}, err
+		return nil, err
 	}
 
 	return resp.Snapshots, nil
@@ -296,12 +364,12 @@ func (d *driver) GetSnapshot(
 		name := getName(snapshot.Tags)
 		snapshotSD := &core.Snapshot{
 			Name:        name,
-			VolumeID:    snapshot.VolumeId,
-			SnapshotID:  snapshot.Id,
-			VolumeSize:  snapshot.VolumeSize,
-			StartTime:   snapshot.StartTime,
-			Description: snapshot.Description,
-			Status:      snapshot.Status,
+			VolumeID:    *snapshot.VolumeId,
+			SnapshotID:  *snapshot.SnapshotId,
+			VolumeSize:  fmt.Sprintf("%d", *snapshot.VolumeSize),
+			StartTime:   (*snapshot.StartTime).Format(time.RFC3339),
+			Description: *snapshot.Description,
+			Status:      *snapshot.State,
 		}
 		snapshotsInt = append(snapshotsInt, snapshotSD)
 	}
@@ -311,7 +379,10 @@ func (d *driver) GetSnapshot(
 }
 
 func (d *driver) RemoveSnapshot(snapshotID string) error {
-	_, err := d.ec2Instance.DeleteSnapshots([]string{snapshotID})
+	dsInput := &ec2.DeleteSnapshotInput{
+		SnapshotId: &snapshotID,
+	}
+	_, err := d.ec2Instance.DeleteSnapshot(dsInput)
 	if err != nil {
 		return err
 	}
@@ -409,61 +480,63 @@ func (d *driver) CreateVolume(
 		return nil, err
 	}
 
-	volumes, err = d.GetVolume(resp.VolumeId, "")
+	volumes, err = d.GetVolume(*resp.VolumeId, "")
 	if err != nil {
 		return nil, err
 	}
 
 	// log.Println(fmt.Sprintf("Created volume: %+v", volumes[0]))
 	return volumes[0], nil
-
 }
 
 func (d *driver) createVolume(
 	runAsync bool, volumeName, volumeID, snapshotID, volumeType string,
 	IOPS, size int64,
-	availabilityZone string) (*ec2.CreateVolumeResp, error) {
+	availabilityZone string) (*ec2.Volume, error) {
 
 	if volumeID != "" && runAsync {
-		return &ec2.CreateVolumeResp{}, errors.ErrRunAsyncFromVolume
+		return &ec2.Volume{}, errors.ErrRunAsyncFromVolume
 	}
 
 	var err error
 
 	var server ec2.Instance
 	if server, err = d.getInstance(); err != nil {
-		return &ec2.CreateVolumeResp{}, err
+		return &ec2.Volume{}, err
 	}
 
 	if volumeID != "" {
 		if snapshotID, err = d.createVolumeCreateSnapshot(
 			volumeID, snapshotID); err != nil {
-			return &ec2.CreateVolumeResp{}, err
+			return &ec2.Volume{}, err
 		}
 	}
 
 	d.createVolumeEnsureAvailabilityZone(&availabilityZone, &server)
 
-	options := &ec2.CreateVolume{
-		Size:       size,
-		SnapshotId: snapshotID,
-		AvailZone:  availabilityZone,
-		VolumeType: volumeType,
-		IOPS:       IOPS,
+	options := &ec2.CreateVolumeInput{
+		Size:             &size,
+		SnapshotId:       &snapshotID,
+		AvailabilityZone: &availabilityZone,
+		VolumeType:       &volumeType,
 	}
 
-	var resp *ec2.CreateVolumeResp
+	if IOPS > 0 {
+		options.Iops = &IOPS
+	}
+
+	var resp *ec2.Volume
 	if resp, err = d.createVolumeCreateVolume(options); err != nil {
-		return &ec2.CreateVolumeResp{}, err
+		return &ec2.Volume{}, err
 	}
 
 	if err = d.createVolumeCreateTags(volumeName, resp); err != nil {
-		return &ec2.CreateVolumeResp{}, err
+		return &ec2.Volume{}, err
 	}
 
 	if err = d.createVolumeWait(
 		runAsync, snapshotID, volumeID, resp); err != nil {
-		return &ec2.CreateVolumeResp{}, err
+		return &ec2.Volume{}, err
 	}
 
 	return resp, nil
@@ -481,23 +554,30 @@ func (d *driver) createVolumeCreateSnapshot(
 		return "", err
 	}
 
+	err = d.waitSnapshotComplete(snapshots[0].SnapshotID)
+
+	if err != nil {
+		return "", err
+	}
+
 	return snapshots[0].SnapshotID, nil
 }
 
 func (d *driver) createVolumeEnsureAvailabilityZone(
 	availabilityZone *string, server *ec2.Instance) {
 	if *availabilityZone == "" {
-		*availabilityZone = server.AvailabilityZone
+		*availabilityZone = *server.Placement.AvailabilityZone
 	}
 }
 
 func (d *driver) createVolumeCreateVolume(
-	options *ec2.CreateVolume) (resp *ec2.CreateVolumeResp, err error) {
+	options *ec2.CreateVolumeInput) (resp *ec2.Volume, err error) {
 	for {
 		resp, err = d.ec2Instance.CreateVolume(options)
 		if err != nil {
-			if err.Error() ==
-				"Snapshot is in invalid state - pending (IncorrectState)" {
+			if awsErrMessage(err) ==
+				"Snapshot is in invalid state - pending" {
+				// Really, snapshot should be created already
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -509,19 +589,52 @@ func (d *driver) createVolumeCreateVolume(
 }
 
 func (d *driver) createVolumeCreateTags(
-	volumeName string, resp *ec2.CreateVolumeResp) (err error) {
-	if volumeName == "" {
+	volumeName string, resp *ec2.Volume) (err error) {
+	if volumeName == "" && d.ec2Tag == "" {
 		return
 	}
-	_, err = d.ec2Instance.CreateTags(
-		[]string{resp.VolumeId}, []ec2.Tag{{"Name", volumeName}})
 
-	return
+	var ctInput *ec2.CreateTagsInput
+	initCTInput := func() {
+		if ctInput != nil {
+			return
+		}
+		ctInput = &ec2.CreateTagsInput{
+			Resources: []*string{resp.VolumeId},
+			Tags:      []*ec2.Tag{},
+		}
+	}
+
+	if volumeName != "" {
+		initCTInput()
+		ctInput.Tags = append(
+			ctInput.Tags,
+			&ec2.Tag{
+				Key:   aws.String("Name"),
+				Value: &volumeName,
+			})
+	}
+
+	if d.ec2Tag != "" {
+		initCTInput()
+		ctInput.Tags = append(
+			ctInput.Tags,
+			&ec2.Tag{
+				Key:   aws.String(rexrayTag),
+				Value: &d.ec2Tag,
+			})
+	}
+
+	_, err = d.ec2Instance.CreateTags(ctInput)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (d *driver) createVolumeWait(
 	runAsync bool, snapshotID, volumeID string,
-	resp *ec2.CreateVolumeResp) (err error) {
+	resp *ec2.Volume) (err error) {
 	if runAsync {
 		return
 	}
@@ -532,7 +645,7 @@ func (d *driver) createVolumeWait(
 		"snapshotID":    snapshotID,
 		"volumeID":      volumeID,
 		"resp.VolumeId": resp.VolumeId}).Info("waiting for volume creation to complete")
-	if err = d.waitVolumeComplete(resp.VolumeId); err != nil {
+	if err = d.waitVolumeComplete(*resp.VolumeId); err != nil {
 		return
 	}
 
@@ -546,30 +659,47 @@ func (d *driver) createVolumeWait(
 }
 
 func (d *driver) getVolume(
-	volumeID, volumeName string) ([]ec2.Volume, error) {
+	volumeID, volumeName string) ([]*ec2.Volume, error) {
 
-	filter := ec2.NewFilter()
+	filters := []*ec2.Filter{}
 	if volumeName != "" {
-		filter.Add("tag:Name", fmt.Sprintf("%s", volumeName))
+		filters = append(filters, &ec2.Filter{
+			Name: aws.String("tag:Name"), Values: []*string{&volumeName}})
 	}
 
-	volumeList := []string{}
 	if volumeID != "" {
-		volumeList = append(volumeList, volumeID)
+		filters = append(filters, &ec2.Filter{
+			Name: aws.String("volume-id"), Values: []*string{&volumeID}})
 	}
 
-	resp, err := d.ec2Instance.Volumes(volumeList, filter)
+	if d.ec2Tag != "" {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", rexrayTag)),
+			Values: []*string{&d.ec2Tag}})
+	}
+
+	dvInput := &ec2.DescribeVolumesInput{}
+
+	if len(filters) > 0 {
+		dvInput.Filters = filters
+	}
+
+	if volumeID != "" {
+		dvInput.VolumeIds = []*string{&volumeID}
+	}
+
+	resp, err := d.ec2Instance.DescribeVolumes(dvInput)
 	if err != nil {
-		return []ec2.Volume{}, err
+		return []*ec2.Volume{}, err
 	}
 
 	return resp.Volumes, nil
 }
 
-func getName(tags []ec2.Tag) string {
+func getName(tags []*ec2.Tag) string {
 	for _, tag := range tags {
-		if tag.Key == "Name" {
-			return tag.Value
+		if *tag.Key == "Name" {
+			return *tag.Value
 		}
 	}
 	return ""
@@ -577,21 +707,19 @@ func getName(tags []ec2.Tag) string {
 
 func (d *driver) GetVolume(
 	volumeID, volumeName string) ([]*core.Volume, error) {
-
 	volumes, err := d.getVolume(volumeID, volumeName)
 	if err != nil {
 		return []*core.Volume{}, err
 	}
-
 	var volumesSD []*core.Volume
 	for _, volume := range volumes {
 		var attachmentsSD []*core.VolumeAttachment
 		for _, attachment := range volume.Attachments {
 			attachmentSD := &core.VolumeAttachment{
-				VolumeID:   attachment.VolumeId,
-				InstanceID: attachment.InstanceId,
-				DeviceName: attachment.Device,
-				Status:     attachment.Status,
+				VolumeID:   *attachment.VolumeId,
+				InstanceID: *attachment.InstanceId,
+				DeviceName: *attachment.Device,
+				Status:     *attachment.State,
 			}
 			attachmentsSD = append(attachmentsSD, attachmentSD)
 		}
@@ -600,17 +728,19 @@ func (d *driver) GetVolume(
 
 		volumeSD := &core.Volume{
 			Name:             name,
-			VolumeID:         volume.VolumeId,
-			AvailabilityZone: volume.AvailZone,
-			Status:           volume.Status,
-			VolumeType:       volume.VolumeType,
-			IOPS:             volume.IOPS,
-			Size:             volume.Size,
+			VolumeID:         *volume.VolumeId,
+			AvailabilityZone: *volume.AvailabilityZone,
+			Status:           *volume.State,
+			VolumeType:       *volume.VolumeType,
+			Size:             fmt.Sprintf("%d", *volume.Size),
 			Attachments:      attachmentsSD,
+		}
+		// Some volume types have no IOPS, so we get nil in volume.Iops
+		if volume.Iops != nil {
+			volumeSD.IOPS = *volume.Iops
 		}
 		volumesSD = append(volumesSD, volumeSD)
 	}
-
 	return volumesSD, nil
 }
 
@@ -642,15 +772,20 @@ func (d *driver) GetVolumeAttach(
 
 func (d *driver) waitSnapshotComplete(snapshotID string) error {
 	for {
-
 		snapshots, err := d.getSnapshot("", snapshotID, "")
 		if err != nil {
 			return err
 		}
 
+		if len(snapshots) == 0 {
+			return errors.ErrDriverSnapshotDiscovery
+		}
 		snapshot := snapshots[0]
-		if snapshot.Status == "completed" {
+		if *snapshot.State == ec2.SnapshotStateCompleted {
 			break
+		}
+		if *snapshot.State == ec2.SnapshotStateError {
+			return fmt.Errorf("%s", *snapshot.StateMessage)
 		}
 		time.Sleep(1 * time.Second)
 	}
@@ -669,7 +804,7 @@ func (d *driver) waitVolumeComplete(volumeID string) error {
 			return err
 		}
 
-		if volumes[0].Status == "available" {
+		if *volumes[0].State == ec2.VolumeStateAvailable {
 			break
 		}
 		time.Sleep(1 * time.Second)
@@ -693,7 +828,7 @@ func (d *driver) waitVolumeAttach(volumeID, instanceID string) error {
 			break
 		}
 
-		if volume[0].Status == "attached" {
+		if volume[0].Status == ec2.VolumeAttachmentStateAttached {
 			break
 		}
 		time.Sleep(1 * time.Second)
@@ -727,7 +862,10 @@ func (d *driver) RemoveVolume(volumeID string) error {
 		return errors.ErrMissingVolumeID
 	}
 
-	_, err := d.ec2Instance.DeleteVolume(volumeID)
+	dvInput := &ec2.DeleteVolumeInput{
+		VolumeId: &volumeID,
+	}
+	_, err := d.ec2Instance.DeleteVolume(dvInput)
 	if err != nil {
 		return err
 	}
@@ -754,8 +892,16 @@ func (d *driver) AttachVolume(
 		}
 	}
 
-	_, err = d.ec2Instance.AttachVolume(
-		volumeID, instanceID, nextDeviceName)
+	if instanceID == "" {
+		instanceID = d.instanceDocument.InstanceID
+	}
+
+	avInput := &ec2.AttachVolumeInput{
+		Device:     &nextDeviceName,
+		InstanceId: &instanceID,
+		VolumeId:   &volumeID,
+	}
+	_, err = d.ec2Instance.AttachVolume(avInput)
 
 	if err != nil {
 		return nil, err
@@ -797,11 +943,16 @@ func (d *driver) DetachVolume(
 		return err
 	}
 
-	if volumes[0].Status == "available" {
+	if *volumes[0].State == ec2.VolumeStateAvailable {
 		return nil
 	}
 
-	_, err = d.ec2Instance.DetachVolume(volumeID, force)
+	dvInput := &ec2.DetachVolumeInput{
+		VolumeId: &volumeID,
+		Force:    &force,
+	}
+
+	_, err = d.ec2Instance.DetachVolume(dvInput)
 	if err != nil {
 		return err
 	}
@@ -832,6 +983,10 @@ func (d *driver) CopySnapshot(runAsync bool,
 		return nil, goof.New("Missing volumeID, snapshotID, or snapshotName")
 	}
 
+	if destinationRegion == "" {
+		destinationRegion = d.instanceDocument.Region
+	}
+
 	snapshots, err := d.getSnapshot(volumeID, snapshotID, snapshotName)
 	if err != nil {
 		return nil, err
@@ -843,23 +998,20 @@ func (d *driver) CopySnapshot(runAsync bool,
 		return nil, errors.ErrNoVolumesReturned
 	}
 
-	snapshotID = snapshots[0].Id
+	snapshotID = *(snapshots[0]).SnapshotId
 
-	options := &ec2.CopySnapshot{
-		SourceRegion:      d.ec2Instance.Region.Name,
-		DestinationRegion: destinationRegion,
-		SourceSnapshotId:  snapshotID,
-		Description: fmt.Sprintf("[Copied %s from %s]",
-			snapshotID, d.ec2Instance.Region.Name),
+	options := &ec2.CopySnapshotInput{
+		SourceRegion:      &d.instanceDocument.Region,
+		DestinationRegion: &destinationRegion,
+		SourceSnapshotId:  &snapshotID,
+		Description: aws.String(fmt.Sprintf("[Copied %s from %s]",
+			snapshotID, d.instanceDocument.Region)),
 	}
-	resp := &ec2.CopySnapshotResp{}
+	resp := &ec2.CopySnapshotOutput{}
 
-	auth := aws.Auth{
-		AccessKey: d.accessKey(),
-		SecretKey: d.secretKey()}
 	destec2Instance := ec2.New(
-		auth,
-		aws.Regions[destinationRegion],
+		session.New(),
+		aws.NewConfig().WithCredentials(d.ec2creds).WithRegion(destinationRegion),
 	)
 
 	origec2Instance := d.ec2Instance
@@ -871,10 +1023,40 @@ func (d *driver) CopySnapshot(runAsync bool,
 		return nil, err
 	}
 
-	if destinationSnapshotName != "" {
-		_, err := d.ec2Instance.CreateTags(
-			[]string{resp.SnapshotId},
-			[]ec2.Tag{{"Name", destinationSnapshotName}})
+	if destinationSnapshotName != "" || d.ec2Tag != "" {
+
+		var ctInput *ec2.CreateTagsInput
+		initCTInput := func() {
+			if ctInput != nil {
+				return
+			}
+			ctInput = &ec2.CreateTagsInput{
+				Resources: []*string{resp.SnapshotId},
+				Tags:      []*ec2.Tag{},
+			}
+		}
+
+		if destinationSnapshotName != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
+					Key:   aws.String("Name"),
+					Value: &destinationSnapshotName,
+				})
+		}
+
+		if d.ec2Tag != "" {
+			initCTInput()
+			ctInput.Tags = append(
+				ctInput.Tags,
+				&ec2.Tag{
+					Key:   aws.String(rexrayTag),
+					Value: &d.ec2Tag,
+				})
+		}
+
+		_, err = d.ec2Instance.CreateTags(ctInput)
 
 		if err != nil {
 			return nil, err
@@ -888,13 +1070,13 @@ func (d *driver) CopySnapshot(runAsync bool,
 			"runAsync":        runAsync,
 			"resp.SnapshotId": resp.SnapshotId}).Info("waiting for snapshot to complete")
 
-		err = d.waitSnapshotComplete(resp.SnapshotId)
+		err = d.waitSnapshotComplete(*resp.SnapshotId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	snapshot, err := d.GetSnapshot("", resp.SnapshotId, "")
+	snapshot, err := d.GetSnapshot("", *resp.SnapshotId, "")
 	if err != nil {
 		return nil, err
 	}
@@ -914,10 +1096,29 @@ func (d *driver) region() string {
 	return d.r.Config.GetString("aws.region")
 }
 
+func (d *driver) rexrayTag() string {
+	return d.r.Config.GetString("aws.rexrayTag")
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Amazon EC2")
 	r.Key(gofig.String, "", "", "", "aws.accessKey")
 	r.Key(gofig.String, "", "", "", "aws.secretKey")
 	r.Key(gofig.String, "", "", "", "aws.region")
+	r.Key(gofig.String, "", "", "", "aws.rexrayTag")
 	return r
+}
+
+func awsErrCode(err error) string {
+	if awsErr, ok := err.(awserr.Error); ok {
+		return awsErr.Code()
+	}
+	return ""
+}
+
+func awsErrMessage(err error) string {
+	if awsErr, ok := err.(awserr.Error); ok {
+		return awsErr.Message()
+	}
+	return ""
 }

@@ -369,10 +369,15 @@ func (r *vdm) List() ([]VolumeMap, error) {
 func (r *vdm) Create(volumeName string, opts VolumeOpts) error {
 	for _, d := range r.drivers {
 		log.WithFields(log.Fields{
-			"moduleName": r.rexray.Context,
-			"driverName": d.Name(),
-			"volumeName": volumeName,
-			"opts":       opts}).Info("vdm.Create")
+			"moduleName":    r.rexray.Context,
+			"driverName":    d.Name(),
+			"volumeName":    volumeName,
+			"opts":          opts,
+			"disableCreate": r.disableCreate()}).Info("vdm.Create")
+
+		if r.disableCreate() {
+			return nil
+		}
 
 		r.countInit(volumeName)
 		return d.Create(volumeName, opts)
@@ -384,9 +389,14 @@ func (r *vdm) Create(volumeName string, opts VolumeOpts) error {
 func (r *vdm) Remove(volumeName string) error {
 	for _, d := range r.drivers {
 		log.WithFields(log.Fields{
-			"moduleName": r.rexray.Context,
-			"driverName": d.Name(),
-			"volumeName": volumeName}).Info("vdm.Remove")
+			"moduleName":    r.rexray.Context,
+			"driverName":    d.Name(),
+			"volumeName":    volumeName,
+			"disableRemove": r.disableRemove()}).Info("vdm.Remove")
+
+		if r.disableRemove() {
+			return nil
+		}
 
 		return d.Remove(volumeName)
 	}
@@ -441,6 +451,14 @@ func (r *vdm) NetworkName(volumeName, instanceID string) (string, error) {
 
 func (r *vdm) preempt() bool {
 	return r.rexray.Config.GetBool("rexray.volume.mount.preempt")
+}
+
+func (r *vdm) disableCreate() bool {
+	return r.rexray.Config.GetBool("rexray.volume.create.disable")
+}
+
+func (r *vdm) disableRemove() bool {
+	return r.rexray.Config.GetBool("rexray.volume.remove.disable")
 }
 
 func (r *vdm) ignoreUsedCount() bool {

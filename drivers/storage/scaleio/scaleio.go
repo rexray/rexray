@@ -63,12 +63,14 @@ func (d *driver) Init(r *core.RexRay) error {
 		"endpoint":   d.endpoint(),
 		"insecure":   d.insecure(),
 		"useCerts":   d.useCerts(),
+		"apiVersion": d.apiVersion(),
 	})
 
 	var err error
 
 	if d.client, err = goscaleio.NewClientWithArgs(
 		d.endpoint(),
+		d.apiVersion(),
 		d.insecure(),
 		d.useCerts()); err != nil {
 		return goof.WithFieldsE(fields, "error constructing new client", err)
@@ -76,9 +78,10 @@ func (d *driver) Init(r *core.RexRay) error {
 
 	if _, err := d.client.Authenticate(
 		&goscaleio.ConfigConnect{
-			d.endpoint(),
-			d.userName(),
-			d.password()}); err != nil {
+			Endpoint: d.endpoint(),
+			Username: d.userName(),
+			Password: d.password(),
+		}); err != nil {
 		fields["userName"] = d.userName()
 		if d.password() != "" {
 			fields["password"] = "******"
@@ -784,6 +787,10 @@ func (d *driver) endpoint() string {
 	return d.r.Config.GetString("scaleio.endpoint")
 }
 
+func (d *driver) apiVersion() string {
+	return d.r.Config.GetString("scaleio.apiVersion")
+}
+
 func (d *driver) insecure() bool {
 	return d.r.Config.GetBool("scaleio.insecure")
 }
@@ -841,6 +848,7 @@ func configRegistration() *gofig.Registration {
 	r.Key(gofig.String, "", "", "", "scaleio.endpoint")
 	r.Key(gofig.Bool, "", false, "", "scaleio.insecure")
 	r.Key(gofig.Bool, "", false, "", "scaleio.useCerts")
+	r.Key(gofig.String, "", "", "", "scaleio.apiVersion")
 	r.Key(gofig.String, "", "", "", "scaleio.userID")
 	r.Key(gofig.String, "", "", "", "scaleio.userName")
 	r.Key(gofig.String, "", "", "", "scaleio.password")

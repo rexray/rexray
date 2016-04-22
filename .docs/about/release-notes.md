@@ -18,6 +18,29 @@ You can determine your currently installed version using `rexray version`:
     Commit: 36ccc425faeab49d792eda4851e3d72a85744874
     Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
+## Version 0.3.3 (2016/04/21)
+
+### New Features
+* ScaleIO v2 support ([#355](https://github.com/emccode/rexray/issues/355))
+* EC2 Tags added to Volumes & Snapshots ([#314](https://github.com/emccode/rexray/issues/314))
+
+### Enhancements
+* Use of official Amazon EC2 SDK ([#359](https://github.com/emccode/rexray/issues/359))
+* Added a disable feature for create/remove volume ([#366](https://github.com/emccode/rexray/issues/366))
+* Added ScaleIO troubleshooting information ([#367](https://github.com/emccode/rexray/issues/367))
+
+### Bug Fixes
+* Fixes URLs for documentation when viewed via Github ([#337](https://github.com/emccode/rexray/issues/337))
+* Fixes logging bug on Ubuntu 14.04 ([#377](https://github.com/emccode/rexray/issues/377))
+* Fixes module start timeout error ([#376](https://github.com/emccode/rexray/issues/376))
+* Fixes ScaleIO authentication loop bug ([#375](https://github.com/emccode/rexray/issues/375))
+
+### Thank You
+* [Philipp Franke](https://github.com/philippfranke)
+* [Eugene Chupriyanov](https://github.com/echupriyanov)
+* [Peter Blum](https://github.com/oskoss)
+* [Megan Hyland](https://github.com/meganmurawski)
+
 ## Version 0.3.2 (2016-03-04)
 
 ### New Features

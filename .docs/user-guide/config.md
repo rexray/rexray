@@ -682,6 +682,30 @@ The above example disables the `default-docker` and `isilon3` modules such that
 This section describes various global configuration options related to
 operations such as mounting and unmounting volumes.
 
+#### Disable Create
+The disable create feature enables you to disallow any volume creation activity.
+Any requests will be returned in a successful manner, but the create will not
+get passed to the backend storage platform.
+
+```yaml
+rexray:
+  volume:
+    create:
+      disable: true
+```
+
+#### Disable Remove
+The disable remove feature enables you to disallow any volume removal activity.
+Any requests will be returned in a successful manner, but the remove will not
+get passed to the backend storage platform.
+
+```yaml
+rexray:
+  volume:
+    remove:
+      disable: true
+```
+
 #### Preemption
 There is a capability to preemptively detach any existing attachments to other
 instances before attempting a mount.  This will enable use cases for

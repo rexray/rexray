@@ -318,7 +318,7 @@ func StartModule(name string) error {
 		mod.IsStarted = true
 		log.WithFields(lf).Info("started module")
 	case <-timeout:
-		log.WithFields(lf).Debug("timed out while monitoring module start")
+		return goof.New("timed out while monitoring module start")
 	case sErr := <-startError:
 		return sErr
 	}

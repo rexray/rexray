@@ -11,21 +11,28 @@ This page reviews the storage providers and platforms supported by `REX-Ray`.
 The Amazon EC2 driver registers a storage driver named `ec2` with the `REX-Ray`
 driver manager and is used to connect and manage storage on EC2 instances. The
 EC2 driver is made possible by the
-[goamz project](https://github.com/mitchellh/goamz).
+[official Amazon Go AWS SDK](https://github.com/aws/aws-sdk-go.git).
 
-### Configuration
-The following is an example configuration of the AWS EC2 driver.
+### Providing credentials.
 
+There are several ways to provide AWS credentials to use with EC2 drivers.
+They are listed below in precedence order - first one matched wins:
+
+1. Describe it in `config.yml` as follows:
 ```yaml
 aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
-    region:    USNW
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
+  region:    USNW
 ```
-
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
 [transformed](./config.md#all-other-properties).
+
+ This method is inherited from `goamz` used in earlier version of `rexray`,
+and kept for upward compatibility.
+
+1. Standard Amazon-way, described [here](http://docs.aws.amazon.com/amazonswf/latest/awsrbflowguide/set-up-creds.html)
 
 ### Activating the Driver
 To activate the EC2 driver please follow the instructions for
@@ -33,16 +40,96 @@ To activate the EC2 driver please follow the instructions for
 using `ec2` as the driver name.
 
 ### Examples
-Below is a full `config.yml` file that works with OpenStack.
+Below is a full `config.yml` file that works with AWS.
 
 ```yaml
 rexray:
   storageDrivers:
   - ec2
 aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
 ```
+### Volume tagging (optional)
+By default, `REX-Ray` has access to all volumes and snapshots defined in your
+AWS account. Volume tagging gives you the ability to only include management of
+volumes that have a specific `ec2 tag`. There is an optional `rexrayTag` key in
+`aws` configuration section to limit the access to and tagging that happens
+for any new volumes or snapshots created. The objects will have a `ec2 tag`
+called `rexraySet` with a value defined by the configurable `rexrayTag`.
+
+For example, if you had a set of hosts you can configure `REX-Ray` to tag them
+with `prod`, `testing` or `development` each with its own set of volumes and
+snapshots.
+
+Volumes and snapshots that are accessed directly from `volumeID` can still be
+controlled regardless of the `rexrayTag`.
+
+It can be defined like that:
+```yaml
+rexray:
+  storageDrivers:
+  - ec2
+aws:
+  accessKey: MyAccessKey
+  secretKey: MySecretKey
+  rexrayTag: prod
+```
+
+### IAM Policy (optional)
+You can leverage IAM policies and toles to give `REX-Ray` and the `ec2` instance
+the permissions it needs to perform necessary operations. This method means
+local credentials for `accessKey` and `secretKey` are not needed in the
+configuration file. The `ec2` instance and thus `REX-Ray` are authorized for
+making necessary calls. A `role` that includes a `role policy` must be created
+The following is an example of this policy that enables all necessary
+functionality for `REX-Ray`.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RexRayMin",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateVolume",
+                "ec2:CreateSnapshot",
+                "ec2:CreateTags",
+                "ec2:DeleteVolume",
+                "ec2:DeleteSnapshot",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeInstances",
+                "ec2:DescribeVolumes",
+                "ec2:DescribeVolumeAttribute",
+                "ec2:DescribeVolumeStatus",
+                "ec2:DescribeSnapshots",
+                "ec2:CopySnapshot",
+                "ec2:DescribeSnapshotAttribute",
+                "ec2:DetachVolume",
+                "ec2:ModifySnapshotAttribute",
+                "ec2:ModifyVolumeAttribute",
+                "ec2:DescribeTags"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+```
+
+Make sure to associate the IAM role to the instance when it is created.
+
+The `config.yml` file could then look like the following if the IAM profile
+is attached to the instance.
+
+```yaml
+rexray:
+  storageDrivers:
+  - ec2
+```
+
 
 ## Google Compute Engine
 The Google Compute Engine (GCE) registers a storage driver named `gce` with the
@@ -270,8 +357,14 @@ rackspace:
 
 ## ScaleIO
 The ScaleIO driver registers a storage driver named `scaleio` with the `REX-Ray`
-driver manager and is used to connect and manage ScaleIO storage.  The ScaleIO
-`REST Gateway` is required for the driver to function.
+driver manager and is used to connect and manage ScaleIO storage.  
+
+
+### Requirements
+ - The ScaleIO `REST Gateway` is required for the driver to function.
+ - REX-Ray must reside on a host that has the SDC client installed. You should
+ be able to run `/opt/emc/scaleio/sdc/bin/drv_cfg --query_guid` and it should
+ return the local SDC GUID.
 
 ### Configuration
 The following is an example with all possible fields configured.  For a running
@@ -280,6 +373,7 @@ example see the `Examples` section.
 ```yaml
 scaleio:
     endpoint:             https://host_ip/api
+    apiVersion:           "2.0"
     insecure:             false
     useCerts:             true
     userName:             admin
@@ -294,6 +388,8 @@ scaleio:
 ```
 
 #### Configuration Notes
+- The `apiVersion` can optionally be set here to force certain API behavior.
+The default is to retrieve the endpoint API, and pass this version during calls.
 - `insecure` should be set to `true` if you have not loaded the SSL
 certificates on the host.  A successful wget or curl should be possible without
 SSL errors to the API `endpoint` in this case.
@@ -335,12 +431,22 @@ To activate the ScaleIO driver please follow the instructions for
 using `scaleio` as the driver name.
 
 ### Troubleshooting
-Ensure that you are able to open a TCP connection to the gateway with the
+- Verify your parameters for `system`, `protectionDomain`, and
+`storagePool` are correct.
+- Verify that have the ScaleIO SDC service installed with
+`rpm -qa EMC-ScaleIO-sdc`
+- Verify that the following command returns the local SDC GUID
+`/opt/emc/scaleio/sdc/bin/drv_cfg --query_guid`.
+- Ensure that you are able to open a TCP connection to the gateway with the
 address that you will be supplying below in the `gateway_ip` parameter.  For
 example `telnet gateway_ip 443` should open a successful connection.  Removing
 the `EMC-ScaleIO-gateway` package and reinstalling can force re-creation of
 self-signed certs which may help resolve gateway problems.  Also try restarting
 the gateway with `service scaleio-gateway restart`.
+- Ensure that you have the correct authentication credentials for the gateway.
+This can be done with a curl login. You should receive an authentication
+token in return.
+`curl --insecure --user admin:XScaleio123 https://gw_ip:443/api/login`
 
 ### Examples
 Below is a full `config.yml` file that works with ScaleIO.

@@ -283,7 +283,7 @@ type RemoteStorageDriver interface {
 	VolumeCreateFromSnapshot(
 		ctx context.Context,
 		snapshotID, volumeName string,
-		opts types.Store) (*types.Volume, error)
+		opts *VolumeCreateOpts) (*types.Volume, error)
 
 	// VolumeCopy copies an existing volume.
 	VolumeCopy(

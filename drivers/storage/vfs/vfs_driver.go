@@ -140,7 +140,7 @@ func (d *driver) VolumeCreate(
 func (d *driver) VolumeCreateFromSnapshot(
 	ctx context.Context,
 	snapshotID, volumeName string,
-	opts types.Store) (*types.Volume, error) {
+	opts *drivers.VolumeCreateOpts) (*types.Volume, error) {
 	return nil, nil
 }
 

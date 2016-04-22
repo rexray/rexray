@@ -83,6 +83,20 @@ func TestServiceInpspect(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
+func TestServiceSnapshots(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		reply, err := client.ServiceSnapshots("mock")
+		if err != nil {
+			t.Fatal(err)
+		}
+		apitests.LogAsJSON(reply, t)
+		_, ok := reply["snap-000"]
+		assert.Equal(t, ok, true)
+		assert.Equal(t, reply["snap-000"].Name, "Snapshot 0")
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
 func TestVolumes(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		reply, err := client.Volumes()
@@ -167,10 +181,10 @@ func TestVolumeSnapshot(t *testing.T) {
 
 		request := &apihttp.VolumeSnapshotRequest{
 			SnapshotName: snapshotName,
-			Opts: opts,
+			Opts:         opts,
 		}
 
-		reply, err := client.VolumeSnapshot("mock", volumeID,request)
+		reply, err := client.VolumeSnapshot("mock", volumeID, request)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -183,12 +197,106 @@ func TestVolumeSnapshot(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
-func TestSnapshotRemove(t *testing.T) {
+func TestSnapshots(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		err := client.VolumeRemove("mock", "vol-000")
+		reply, err := client.Snapshots()
 		if err != nil {
 			t.Fatal(err)
 		}
+		apitests.LogAsJSON(reply, t)
+		_, ok := reply["mock"]
+		assert.Equal(t, true, ok)
+		assert.Equal(t, 3, len(reply["mock"]))
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestSnapshotInspect(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		reply, err := client.SnapshotInspect("mock", "snap-000")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, "Snapshot 0", reply.Name)
+		assert.Equal(t, "snap-000", reply.ID)
+		assert.Equal(t, "vol-000", reply.VolumeID)
+		assert.Equal(t, int64(100), reply.VolumeSize)
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestSnapshotCreate(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		volumeName := "Volume from snap-000"
+
+		availabilityZone := "US"
+		iops := int64(1000)
+		size := int64(10240)
+		volType := "myType"
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		snapshotCreateRequest := &apihttp.VolumeCreateRequest{
+			Name:             volumeName,
+			AvailabilityZone: &availabilityZone,
+			IOPS:             &iops,
+			Size:             &size,
+			Type:             &volType,
+			Opts:             opts,
+		}
+
+		reply, err := client.SnapshotCreate("mock", "snap-000", snapshotCreateRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		apitests.LogAsJSON(reply, t)
+
+		assert.Equal(t, volumeName, reply.Name)
+		assert.Equal(t, opts["priority"], 2)
+		assert.Equal(t, opts["owner"], "root@example.com")
+
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestSnapshotRemove(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		err := client.SnapshotRemove("mock", "snap-000")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestSnapshotCopy(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		snapshotName := "Snapshot from snap-000"
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		request := &apihttp.SnapshotCopyRequest{
+			SnapshotName: snapshotName,
+			Opts:         opts,
+		}
+
+		reply, err := client.SnapshotCopy("mock", "snap-000", request)
+		if err != nil {
+			t.Fatal(err)
+		}
+		apitests.LogAsJSON(reply, t)
+
+		assert.Equal(t, snapshotName, reply.Name)
+		assert.Equal(t, opts["priority"], 2)
+		assert.Equal(t, opts["owner"], "root@example.com")
+
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }

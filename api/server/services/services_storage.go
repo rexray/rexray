@@ -13,7 +13,7 @@ import (
 
 type storageService struct {
 	name          string
-	driver        drivers.StorageDriver
+	driver        drivers.RemoteStorageDriver
 	config        gofig.Config
 	taskExecQueue chan *task
 }
@@ -44,7 +44,7 @@ func (s *storageService) initStorageDriver() error {
 		}
 	}
 
-	driver, err := registry.NewStorageDriver(driverName)
+	driver, err := registry.NewRemoteStorageDriver(driverName)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (s *storageService) Config() gofig.Config {
 	return s.config
 }
 
-func (s *storageService) Driver() drivers.StorageDriver {
+func (s *storageService) Driver() drivers.RemoteStorageDriver {
 	return s.driver
 }
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
+	"github.com/emccode/libstorage/api/types"
 	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/client"
 
@@ -135,13 +136,24 @@ func TestVolumeCreate(t *testing.T) {
 }
 
 func TestVolumeRemove(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+
+	tf1 := func(config gofig.Config, client client.Client, t *testing.T) {
 		err := client.VolumeRemove("mock", "vol-000")
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, err)
 	}
-	apitests.Run(t, mock.Name, configYAML, tf)
+
+	apitests.Run(t, mock.Name, configYAML, tf1, tf1)
+
+	tf2 := func(config gofig.Config, client client.Client, t *testing.T) {
+		err := client.VolumeRemove("mock", "vol-000")
+		assert.Error(t, err)
+		assert.IsType(t, &types.JSONError{}, err)
+		je := err.(*types.JSONError)
+		assert.Equal(t, "resource not found", je.Error())
+		assert.Equal(t, 404, je.Status)
+	}
+
+	apitests.RunGroup(t, mock.Name, configYAML, tf1, tf2)
 }
 
 func TestExecutors(t *testing.T) {

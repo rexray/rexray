@@ -407,6 +407,11 @@ $(C_LIBSTOR_C_SO):  $(C_LIBSTOR_C_SO_SRCS) \
 					$(C_LIBSTOR_C_GO_DEPS)
 	go build -buildmode=c-shared -o $@ $(C_LIBSTOR_C_DIR)
 
+$(C_LIBSTOR_C_SO)-clean:
+	rm -f $(C_LIBSTOR_C_SO) $(basename $(C_LIBSTOR_C_SO).h)
+GO_PHONY += $(C_LIBSTOR_C_SO)-clean
+GO_CLEAN += $(C_LIBSTOR_C_SO)-clean
+
 $(C_LIBSTOR_C_BIN): $(C_LIBSTOR_C_BIN_SRC) \
 					$(C_LIBSTOR_C_SO) \
 					$(C_LIBSTOR_C_GO_DEPS)
@@ -416,6 +421,12 @@ $(C_LIBSTOR_C_BIN): $(C_LIBSTOR_C_BIN_SRC) \
 		-o $@ \
 		$(C_LIBSTOR_C_BIN_SRC) \
 		-lstor-c
+
+$(C_LIBSTOR_C_BIN)-clean:
+	rm -f $(C_LIBSTOR_C_BIN)
+GO_PHONY += $(C_LIBSTOR_C_BIN)-clean
+GO_CLEAN += $(C_LIBSTOR_C_BIN)-clean
+
 
 ################################################################################
 ##                                  C SERVER                                  ##
@@ -433,6 +444,11 @@ $(C_LIBSTOR_S_SO):	$(C_LIBSTOR_TYPES_H) \
 					$(C_LIBSTOR_S_SO_SRCS)
 	go build -buildmode=c-shared -o $@ $(C_LIBSTOR_S_DIR)
 
+$(C_LIBSTOR_S_SO)-clean:
+	rm -f $(C_LIBSTOR_S_SO) $(basename $(C_LIBSTOR_S_SO).h)
+GO_PHONY += $(C_LIBSTOR_S_SO)-clean
+GO_CLEAN += $(C_LIBSTOR_S_SO)-clean
+
 $(C_LIBSTOR_S_BIN): $(C_LIBSTOR_TYPES_H) \
 					$(C_LIBSTOR_S_BIN_SRC) \
 					$(C_LIBSTOR_S_SO) \
@@ -444,6 +460,11 @@ $(C_LIBSTOR_S_BIN): $(C_LIBSTOR_TYPES_H) \
 		$(C_LIBSTOR_S_BIN_SRC) \
 		-lstor-s
 
+$(C_LIBSTOR_S_BIN)-clean:
+	rm -f $(C_LIBSTOR_S_BIN)
+GO_PHONY += $(C_LIBSTOR_S_BIN)-clean
+GO_CLEAN += $(C_LIBSTOR_S_BIN)-clean
+
 ################################################################################
 ##                                  TARGETS                                   ##
 ################################################################################
@@ -452,7 +473,8 @@ build-tests: $(GO_BUILD_TESTS)
 
 build-executors: $(EXECUTORS_EMBEDDED)
 
-build: $(GO_BUILD) libstor-c libstor-s
+build: $(GO_BUILD)
+	$(MAKE) -j libstor-c libstor-s
 
 test: $(GO_TEST)
 

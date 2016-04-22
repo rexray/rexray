@@ -18,7 +18,7 @@ func (r *router) servicesList(
 	store types.Store) error {
 
 	var reply apihttp.ServicesMap = map[string]*types.ServiceInfo{}
-	for service := range services.StorageServices() {
+	for service := range services.StorageServices(ctx) {
 		si := toServiceInfo(service)
 		reply[si.Name] = si
 	}

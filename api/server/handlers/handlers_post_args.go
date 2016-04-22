@@ -11,6 +11,7 @@ import (
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/utils"
 )
 
 // postArgsHandler is an HTTP filter for injecting the store with the POST
@@ -56,15 +57,11 @@ func (h *postArgsHandler) Handle(
 		case nil:
 			// do nothing
 		case map[string]interface{}:
-			// it's the Opts field; iterate Opts and add them to the store
-			for k, v := range tfv {
-				store.Set(k, v)
-			}
+			store.Set(getFieldName(ft), utils.NewStoreWithData(tfv))
 		default:
 			// add it to the store
 			store.Set(getFieldName(ft), fv)
 		}
-
 	}
 
 	return h.handler(ctx, w, req, store)

@@ -290,7 +290,7 @@ const (
         "volumeMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/volume" }
+                "^.+$": { "$ref": "#/definitions/volume" }
             },
             "additionalProperties": false
         },
@@ -299,7 +299,7 @@ const (
         "snapshotMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/snapshot" }
+                "^.+$": { "$ref": "#/definitions/snapshot" }
             },
             "additionalProperties": false
         },
@@ -308,7 +308,7 @@ const (
         "taskMap": {
             "type": "object",
             "patternProperties": {
-                "^[0-9]+$": { "$ref": "#/definitions/task" }
+                "^.+$": { "$ref": "#/definitions/task" }
             },
             "additionalProperties": false
         },
@@ -317,7 +317,7 @@ const (
         "serviceVolumeMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/volumeMap" }
+                "^.+$": { "$ref": "#/definitions/volumeMap" }
             },
             "additionalProperties": false
         },
@@ -326,7 +326,7 @@ const (
         "serviceSnapshotMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/snapshotMap" }
+                "^.+$": { "$ref": "#/definitions/snapshotMap" }
             },
             "additionalProperties": false
         },
@@ -335,7 +335,7 @@ const (
         "serviceTaskMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/taskMap" }
+                "^.+$": { "$ref": "#/definitions/taskMap" }
             },
             "additionalProperties": false
         },
@@ -344,7 +344,7 @@ const (
         "serviceInfoMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/serviceInfo" }
+                "^.+$": { "$ref": "#/definitions/serviceInfo" }
             },
             "additionalProperties": false
         },
@@ -353,7 +353,7 @@ const (
         "executorInfoMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/executorInfo" }
+                "^.+$": { "$ref": "#/definitions/executorInfo" }
             },
             "additionalProperties": false
         },
@@ -362,7 +362,7 @@ const (
         "driverInfoMap": {
             "type": "object",
             "patternProperties": {
-                "^[a-zA-Z].+$": { "$ref": "#/definitions/driverInfo" }
+                "^.+$": { "$ref": "#/definitions/driverInfo" }
             },
             "additionalProperties": false
         },
@@ -372,7 +372,7 @@ const (
             "type": "object",
             "description": "Opts are additional properties that can be defined for POST requests.",
             "patternProperties": {
-                ".+": {
+                "^.+$": {
                     "anyOf": [
                         { "type": "array" },
                         { "type": "boolean" },

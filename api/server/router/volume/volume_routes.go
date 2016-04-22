@@ -26,7 +26,8 @@ type volumesRoute struct {
 	queryAttachments bool
 }
 
-func (r *volumesRoute) volumes(ctx context.Context,
+func (r *volumesRoute) volumes(
+	ctx context.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -42,7 +43,7 @@ func (r *volumesRoute) volumes(ctx context.Context,
 		reply   apihttp.ServiceVolumeMap = map[string]apihttp.VolumeMap{}
 	)
 
-	for service := range services.StorageServices() {
+	for service := range services.StorageServices(ctx) {
 
 		run := func(
 			ctx context.Context,
@@ -71,7 +72,7 @@ func (r *volumesRoute) volumes(ctx context.Context,
 
 	run := func(ctx context.Context) (interface{}, error) {
 
-		services.TaskWaitAll(taskIDs...)
+		services.TaskWaitAll(ctx, taskIDs...)
 
 		for k, v := range tasks {
 			if v.Error != nil {
@@ -340,7 +341,7 @@ func (r *router) volumeDetachAll(
 
 	var reply apihttp.ServiceVolumeMap = map[string]apihttp.VolumeMap{}
 
-	for service := range services.StorageServices() {
+	for service := range services.StorageServices(ctx) {
 
 		run := func(
 			ctx context.Context,
@@ -377,7 +378,7 @@ func (r *router) volumeDetachAll(
 	}
 
 	run := func(ctx context.Context) (interface{}, error) {
-		services.TaskWaitAll(taskIDs...)
+		services.TaskWaitAll(ctx, taskIDs...)
 		for _, v := range tasks {
 			if v.Error != nil {
 				return nil, utils.NewBatchProcessErr(reply, v.Error)

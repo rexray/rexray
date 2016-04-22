@@ -8,8 +8,13 @@ import (
 // NewStorageExecutor is a function that constructs a new StorageExecutors.
 type NewStorageExecutor func() StorageExecutor
 
-// NewStorageDriver is a function that constructs a new StorageDriver.
-type NewStorageDriver func() StorageDriver
+// NewClientStorageDriver is a function that constructs a new
+// ClientStorageDriver.
+type NewClientStorageDriver func() ClientStorageDriver
+
+// NewRemoteStorageDriver is a function that constructs a new
+// RemoteStorageDriver.
+type NewRemoteStorageDriver func() RemoteStorageDriver
 
 // VolumesOpts are options when inspecting a volume.
 type VolumesOpts struct {
@@ -38,7 +43,8 @@ type VolumeAttachByIDOpts struct {
 	Opts       types.Store
 }
 
-// StorageExecutor is the client-side functionality for a StorageDriver.
+// StorageExecutor is the part of a storage driver that is downloaded at
+// runtime by the libStorage client.
 type StorageExecutor interface {
 	Driver
 
@@ -58,15 +64,185 @@ type StorageExecutor interface {
 		opts types.Store) (map[string]string, error)
 }
 
+// ClientStorageDriver is the client-side storage driver.
+type ClientStorageDriver interface {
+	Driver
+
+	/***************************************************************************
+	**                               Instance                                 **
+	***************************************************************************/
+	// InstanceInspectBefore may return an error, preventing the operation.
+	InstanceInspectBefore(
+		ctx context.Context,
+		opts types.Store) error
+
+	// InstanceInspectAfter provides an opportunity to inspect/mutate the
+	// result.
+	InstanceInspectAfter(
+		ctx context.Context,
+		result *types.Instance)
+
+	/***************************************************************************
+	**                               Volumes                                  **
+	***************************************************************************/
+	// VolumesBefore may return an error, preventing the operation.
+	VolumesBefore(
+		ctx context.Context,
+		opts *VolumesOpts) error
+
+	// VolumesAfter provides an opportunity to inspect/mutate the result.
+	VolumesAfter(
+		ctx context.Context,
+		result []*types.Volume)
+
+	// VolumeInspectBefore may return an error, preventing the operation.
+	VolumeInspectBefore(
+		ctx context.Context,
+		volumeID string,
+		opts *VolumeInspectOpts) (*types.Volume, error)
+
+	// VolumeInspectAfter provides an opportunity to inspect/mutate the result.
+	VolumeInspectAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// VolumeCreateBefore may return an error, preventing the operation.
+	VolumeCreateBefore(
+		ctx context.Context,
+		name string,
+		opts *VolumeCreateOpts) (*types.Volume, error)
+
+	// VolumeCreateAfter provides an opportunity to inspect/mutate the result.
+	VolumeCreateAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// VolumeCreateFromSnapshotBefore may return an error, preventing the
+	// operation.
+	VolumeCreateFromSnapshotBefore(
+		ctx context.Context,
+		snapshotID, volumeName string,
+		opts types.Store) (*types.Volume, error)
+
+	// VolumeCreateFromSnapshotAfter provides an opportunity to inspect/mutate
+	// the result.
+	VolumeCreateFromSnapshotAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// VolumeCopyBefore may return an error, preventing the operation.
+	VolumeCopyBefore(
+		ctx context.Context,
+		volumeID, volumeName string,
+		opts types.Store) (*types.Volume, error)
+
+	// VolumeCopyAfter provides an opportunity to inspect/mutate the result.
+	VolumeCopyAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// VolumeSnapshotBefore may return an error, preventing the operation.
+	VolumeSnapshotBefore(
+		ctx context.Context,
+		volumeID, snapshotName string,
+		opts types.Store) (*types.Snapshot, error)
+
+	// VolumeSnapshotAfter provides an opportunity to inspect/mutate the result.
+	VolumeSnapshotAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// VolumeRemoveBefore may return an error, preventing the operation.
+	VolumeRemoveBefore(
+		ctx context.Context,
+		volumeID string,
+		opts types.Store) error
+
+	// VolumeRemoveAfter provides an opportunity to inspect/mutate the result.
+	VolumeRemoveAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// VolumeAttachBefore may return an error, preventing the operation.
+	VolumeAttachBefore(
+		ctx context.Context,
+		volumeID string,
+		opts *VolumeAttachByIDOpts) (*types.Volume, error)
+
+	// VolumeAttachAfter provides an opportunity to inspect/mutate the result.
+	VolumeAttachAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// VolumeDetachBefore may return an error, preventing the operation.
+	VolumeDetachBefore(
+		ctx context.Context,
+		volumeID string,
+		opts types.Store) error
+
+	// VolumeDetachAfter provides an opportunity to inspect/mutate the result.
+	VolumeDetachAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	/***************************************************************************
+	**                             Snapshots                                  **
+	***************************************************************************/
+
+	// SnapshotsBefore may return an error, preventing the operation.
+	SnapshotsBefore(
+		ctx context.Context,
+		opts types.Store) ([]*types.Snapshot, error)
+
+	// SnapshotsAfter provides an opportunity to inspect/mutate the result.
+	SnapshotsAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// SnapshotInspectBefore may return an error, preventing the operation.
+	SnapshotInspectBefore(
+		ctx context.Context,
+		snapshotID string,
+		opts types.Store) (*types.Snapshot, error)
+
+	// SnapshotInspectAfter provides an opportunity to inspect/mutate the
+	// result.
+	SnapshotInspectAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// SnapshotCopyBefore may return an error, preventing the operation.
+	SnapshotCopyBefore(
+		ctx context.Context,
+		snapshotID, snapshotName, destinationID string,
+		opts types.Store) (*types.Snapshot, error)
+
+	// SnapshotCopyAfter provides an opportunity to inspect/mutate the result.
+	SnapshotCopyAfter(
+		ctx context.Context,
+		result *types.Volume)
+
+	// SnapshotRemoveBefore may return an error, preventing the operation.
+	SnapshotRemoveBefore(
+		ctx context.Context,
+		snapshotID string,
+		opts types.Store) error
+
+	// SnapshotRemoveAfter provides an opportunity to inspect/mutate the result.
+	SnapshotRemoveAfter(
+		ctx context.Context,
+		result *types.Volume)
+}
+
 /*
-StorageDriver is a libStorage driver used by the routes to implement the backend
-functionality.
+RemoteStorageDriver is a libStorage driver used by the routes to implement the
+backend functionality.
 
 Functions that inspect a resource or send an operation to a resource should
 always return ErrResourceNotFound if the acted upon resource cannot be found.
 */
-type StorageDriver interface {
-	StorageExecutor
+type RemoteStorageDriver interface {
+	Driver
 
 	// NextDeviceInfo returns the information about the driver's next available
 	// device workflow.

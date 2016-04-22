@@ -27,7 +27,7 @@ func (r *router) snapshots(
 		reply   apihttp.ServiceSnapshotMap = map[string]apihttp.SnapshotMap{}
 	)
 
-	for service := range services.StorageServices() {
+	for service := range services.StorageServices(ctx) {
 
 		run := func(
 			ctx context.Context,
@@ -52,7 +52,7 @@ func (r *router) snapshots(
 
 	run := func(ctx context.Context) (interface{}, error) {
 
-		services.TaskWaitAll(taskIDs...)
+		services.TaskWaitAll(ctx, taskIDs...)
 
 		for k, v := range tasks {
 			if v.Error != nil {

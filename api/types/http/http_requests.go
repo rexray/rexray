@@ -14,13 +14,6 @@ type VolumeCreateRequest struct {
 	Opts             map[string]interface{} `json:"opts"`
 }
 
-// VolumeCreateFromSnapshotRequest is the JSON body for creating a new volume
-// from an existing snapshot.
-type VolumeCreateFromSnapshotRequest struct {
-	VolumeName string                 `json:"volumeName"`
-	Opts       map[string]interface{} `json:"opts"`
-}
-
 // VolumeCopyRequest is the JSON body for copying a volume.
 type VolumeCopyRequest struct {
 	VolumeName string                 `json:"volumeName"`

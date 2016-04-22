@@ -72,11 +72,9 @@ func (r *router) initRoutes() {
 			r.volumeCreate,
 			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(
-				schema.VolumeCreateFromSnapshotRequestSchema,
+				schema.VolumeCreateRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} {
-					return &apihttp.VolumeCreateFromSnapshotRequest{}
-				}),
+				func() interface{} { return &apihttp.VolumeCreateRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("create"),
 
@@ -99,6 +97,8 @@ func (r *router) initRoutes() {
 		httputils.NewDeleteRoute(
 			"snapshotRemove",
 			"/snapshots/{service}/{snapshotID}",
-			r.snapshotRemove),
+			r.snapshotRemove,
+			handlers.NewServiceValidator(),
+		),
 	}
 }

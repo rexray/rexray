@@ -68,19 +68,22 @@ func newDriver() drivers.StorageDriver {
 
 	d.snapshots = []*types.Snapshot{
 		&types.Snapshot{
-			Name:     "Snapshot 0",
-			ID:       "snap-000",
-			VolumeID: "vol-000",
+			Name:       "Snapshot 0",
+			ID:         "snap-000",
+			VolumeID:   "vol-000",
+			VolumeSize: 100,
 		},
 		&types.Snapshot{
-			Name:     "Snapshot 1",
-			ID:       "snap-001",
-			VolumeID: "vol-001",
+			Name:       "Snapshot 1",
+			ID:         "snap-001",
+			VolumeID:   "vol-001",
+			VolumeSize: 101,
 		},
 		&types.Snapshot{
-			Name:     "Snapshot 2",
-			ID:       "snap-002",
-			VolumeID: "vol-002",
+			Name:       "Snapshot 2",
+			ID:         "snap-002",
+			VolumeID:   "vol-002",
+			VolumeSize: 102,
 		},
 	}
 
@@ -162,9 +165,46 @@ func (d *driver) VolumeCreate(
 func (d *driver) VolumeCreateFromSnapshot(
 	ctx context.Context,
 	snapshotID, volumeName string,
-	opts types.Store) (*types.Volume, error) {
+	opts *drivers.VolumeCreateOpts) (*types.Volume, error) {
 
-	return nil, nil
+	s, err := d.SnapshotInspect(ctx, snapshotID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := d.VolumeInspect(ctx, s.VolumeID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	lenVols := len(d.volumes)
+
+	volume := &types.Volume{
+		Name:   volumeName,
+		ID:     fmt.Sprintf("vol-%03d", lenVols+1),
+		Fields: map[string]string{},
+	}
+
+	if opts.AvailabilityZone != nil {
+		volume.AvailabilityZone = v.AvailabilityZone
+	}
+	if opts.Type != nil {
+		volume.Type = v.Type
+	}
+	if opts.Size != nil {
+		volume.Size = v.Size
+	}
+	if opts.IOPS != nil {
+		volume.IOPS = v.IOPS
+	}
+
+	if opts.Opts.IsSet("owner") {
+		volume.Fields["owner"] = opts.Opts.GetString("owner")
+	}
+	if opts.Opts.IsSet("priority") {
+		volume.Fields["priority"] = opts.Opts.GetString("priority")
+	}
+	return volume, nil
 }
 
 func (d *driver) VolumeCopy(

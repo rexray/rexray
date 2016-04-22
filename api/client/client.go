@@ -36,6 +36,10 @@ type Client interface {
 	// ServiceInspect returns information about a service.
 	ServiceInspect(service string) (*types.ServiceInfo, error)
 
+	// ServiceSnapshots returns a single snapshot from a service.
+	ServiceSnapshots(
+		service string) (apihttp.SnapshotMap, error)
+
 	// Volumes returns a list of all Volumes for all Services.
 	Volumes() (apihttp.ServiceVolumeMap, error)
 
@@ -58,6 +62,26 @@ type Client interface {
 		volumeID string,
 		request *apihttp.VolumeSnapshotRequest) (*types.Snapshot, error)
 
+	// Volumes returns a list of all Snapshots for all services.
+	Snapshots() (apihttp.ServiceSnapshotMap, error)
+
+	// VolumeInspect gets information about a single snapshot.
+	SnapshotInspect(
+		service, snapshotID string) (*types.Snapshot, error)
+
+	// SnapshotCreate creates a single volume from a snapshot.
+	SnapshotCreate(
+		service, snapshotID string,
+		request *apihttp.VolumeCreateRequest) (*types.Volume, error)
+
+	// SnapshotRemove removes a single snapshot.
+	SnapshotRemove(
+		service, snapshotID string) error
+
+	// SnapshotCopy copies a snapshot to a new snapshot.
+	SnapshotCopy(
+		service, snapshotID string,
+		request *apihttp.SnapshotCopyRequest) (*types.Snapshot, error)
 }
 
 // APIClient is the extended interface for the libStorage API client.
@@ -176,6 +200,16 @@ func (c *client) ServiceInspect(name string) (*types.ServiceInfo, error) {
 	return reply, nil
 }
 
+func (c *client) ServiceSnapshots(
+	service string) (apihttp.SnapshotMap, error) {
+	reply := apihttp.SnapshotMap{}
+	if _, err := c.httpGet(
+		fmt.Sprintf("/snapshots/%s", service), &reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
 func (c *client) Volumes() (apihttp.ServiceVolumeMap, error) {
 	reply := apihttp.ServiceVolumeMap{}
 	if _, err := c.httpGet("/volumes", &reply); err != nil {
@@ -225,6 +259,55 @@ func (c *client) VolumeSnapshot(
 	reply := types.Snapshot{}
 	if _, err := c.httpPost(
 		fmt.Sprintf("/volumes/%s/%s?snapshot", service, volumeID), request, &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
+}
+
+func (c *client) Snapshots() (apihttp.ServiceSnapshotMap, error) {
+	reply := apihttp.ServiceSnapshotMap{}
+	if _, err := c.httpGet("/snapshots", &reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (c *client) SnapshotInspect(
+	service, snapshotID string) (*types.Snapshot, error) {
+	reply := types.Snapshot{}
+	if _, err := c.httpGet(
+		fmt.Sprintf("/snapshots/%s/%s", service, snapshotID), &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
+}
+
+func (c *client) SnapshotCreate(
+	service, snapshotID string,
+	request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
+	reply := types.Volume{}
+	if _, err := c.httpPost(
+		fmt.Sprintf("/snapshots/%s/%s?create", service, snapshotID), request, &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
+}
+
+func (c *client) SnapshotRemove(
+	service, snapshotID string) error {
+	if _, err := c.httpDelete(
+		fmt.Sprintf("/snapshots/%s/%s", service, snapshotID), nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *client) SnapshotCopy(
+	service, snapshotID string,
+	request *apihttp.SnapshotCopyRequest) (*types.Snapshot, error) {
+	reply := types.Snapshot{}
+	if _, err := c.httpPost(
+		fmt.Sprintf("/snapshots/%s/%s?copy", service, snapshotID), request, &reply); err != nil {
 		return nil, err
 	}
 	return &reply, nil

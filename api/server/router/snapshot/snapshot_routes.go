@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/akutz/goof"
-
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	"github.com/emccode/libstorage/api/types/drivers"
 	apihttp "github.com/emccode/libstorage/api/types/http"
 	apisvcs "github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils"
@@ -110,7 +110,7 @@ func (r *router) snapshotsForService(
 		ctx,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		service.TaskExecute(ctx, run, schema.SnapshotMapSchema),
 		http.StatusOK)
 }
 
@@ -190,8 +190,14 @@ func (r *router) volumeCreate(
 		return svc.Driver().VolumeCreateFromSnapshot(
 			ctx,
 			store.GetString("snapshotID"),
-			store.GetString("volumeName"),
-			store)
+			store.GetString("name"),
+			&drivers.VolumeCreateOpts{
+				AvailabilityZone: store.GetStringPtr("availabilityZone"),
+				IOPS:             store.GetInt64Ptr("iops"),
+				Size:             store.GetInt64Ptr("size"),
+				Type:             store.GetStringPtr("type"),
+				Opts:             store,
+			})
 	}
 
 	return httputils.WriteTask(

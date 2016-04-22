@@ -51,6 +51,13 @@ type Client interface {
 	// VolumeRemove removes a single volume.
 	VolumeRemove(
 		service, volumeID string) error
+
+	// VolumeSnapshot creates a single snapshot.
+	VolumeSnapshot(
+		service string,
+		volumeID string,
+		request *apihttp.VolumeSnapshotRequest) (*types.Snapshot, error)
+
 }
 
 // APIClient is the extended interface for the libStorage API client.
@@ -208,6 +215,19 @@ func (c *client) VolumeRemove(
 		return err
 	}
 	return nil
+}
+
+func (c *client) VolumeSnapshot(
+	service string,
+	volumeID string,
+	request *apihttp.VolumeSnapshotRequest) (*types.Snapshot, error) {
+
+	reply := types.Snapshot{}
+	if _, err := c.httpPost(
+		fmt.Sprintf("/volumes/%s/%s?snapshot", service, volumeID), request, &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
 }
 
 func (c *client) Executors() (apihttp.ExecutorsMap, error) {

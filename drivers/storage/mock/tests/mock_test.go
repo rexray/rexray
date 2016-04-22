@@ -144,6 +144,43 @@ func TestVolumeRemove(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
+func TestVolumeSnapshot(t *testing.T) {
+
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		volumeID := "vol-000"
+		snapshotName := "snapshot1"
+		opts := map[string]interface{}{
+			"priority": 2,
+		}
+
+		request := &apihttp.VolumeSnapshotRequest{
+			SnapshotName: snapshotName,
+			Opts: opts,
+		}
+
+		reply, err := client.VolumeSnapshot("mock", volumeID,request)
+		if err != nil {
+			t.Fatal(err)
+		}
+		apitests.LogAsJSON(reply, t)
+
+		assert.Equal(t, snapshotName, reply.Name)
+		assert.Equal(t, volumeID, reply.VolumeID)
+
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestSnapshotRemove(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		err := client.VolumeRemove("mock", "vol-000")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
 func TestExecutors(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, apitests.TestExecutors)
 }

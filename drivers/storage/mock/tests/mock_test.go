@@ -83,9 +83,9 @@ func TestServiceInpspect(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
-func TestServiceSnapshots(t *testing.T) {
+func TestSnapshotsByService(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.ServiceSnapshots("mock")
+		reply, err := client.SnapshotsByService("mock")
 		if err != nil {
 			t.Fatal(err)
 		}

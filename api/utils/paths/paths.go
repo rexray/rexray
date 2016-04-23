@@ -9,11 +9,10 @@ import (
 )
 
 var (
-	logDirPathSuffix = "/var/log/libstor"
-	etcDirPathSuffix = "/etc/libstor"
-
-	// UsrDirPath is the path to the user libStorage config directory.
-	UsrDirPath = fmt.Sprintf("%s/.libstor", gotil.HomeDir())
+	etcDirPathSuffix = "/etc/libstorage"
+	libDirPathSuffix = "/var/lib/libstorage"
+	logDirPathSuffix = "/var/log/libstorage"
+	runDirPathSuffix = "/var/run/libstorage"
 )
 
 var (
@@ -23,8 +22,11 @@ var (
 
 	prefix string
 
-	logDirPath string
 	etcDirPath string
+	libDirPath string
+	logDirPath string
+	runDirPath string
+	usrDirPath string
 )
 
 func init() {
@@ -63,6 +65,15 @@ func EtcDirPath() string {
 	return etcDirPath
 }
 
+// LibDirPath returns the path to the lib directory.
+func LibDirPath() string {
+	if libDirPath == "" {
+		libDirPath = fmt.Sprintf("%s%s", prefix, libDirPathSuffix)
+		os.MkdirAll(libDirPath, 0755)
+	}
+	return libDirPath
+}
+
 // LogDirPath returns the path to the log directory.
 func LogDirPath() string {
 	if logDirPath == "" {
@@ -72,16 +83,53 @@ func LogDirPath() string {
 	return logDirPath
 }
 
+// RunDirPath returns the path to the run directory.
+func RunDirPath() string {
+	if runDirPath == "" {
+		runDirPath = fmt.Sprintf("%s%s", prefix, runDirPathSuffix)
+		os.MkdirAll(runDirPath, 0755)
+	}
+	return runDirPath
+}
+
+// UsrDirPath is the path to the user libStorage config directory.
+func UsrDirPath() string {
+	if usrDirPath == "" {
+		usrDirPath = fmt.Sprintf("%s/.libstorage", gotil.HomeDir())
+		os.MkdirAll(usrDirPath, 0755)
+	}
+
+	return usrDirPath
+}
+
 // EtcFilePath returns the path to a file inside the etc directory with the
 // provided file name.
 func EtcFilePath(fileName string) string {
 	return fmt.Sprintf("%s/%s", EtcDirPath(), fileName)
 }
 
+// LibFilePath returns the path to a file inside the lib directory with the
+// the provided file name.
+func LibFilePath(fileName string) string {
+	return fmt.Sprintf("%s/%s", LibDirPath(), fileName)
+}
+
 // LogFilePath returns the path to a file inside the log directory with the
 // provided file name.
 func LogFilePath(fileName string) string {
 	return fmt.Sprintf("%s/%s", LogDirPath(), fileName)
+}
+
+// RunFilePath returns the path to a file inside the run directory with the
+// provided file name.
+func RunFilePath(fileName string) string {
+	return fmt.Sprintf("%s/%s", RunDirPath(), fileName)
+}
+
+// UsrFilePath returns the path to a file inside the usr directory with the
+// provided file name.
+func UsrFilePath(fileName string) string {
+	return fmt.Sprintf("%s/%s", UsrDirPath(), fileName)
 }
 
 // LogFile returns a writer to a file inside the log directory with the

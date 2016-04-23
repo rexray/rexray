@@ -43,6 +43,9 @@ type Client interface {
 	// Volumes returns a list of all Volumes for all Services.
 	Volumes() (apihttp.ServiceVolumeMap, error)
 
+	// VolumesByService returns a list of all Volumes for a service.
+	VolumesByService(service string) (apihttp.VolumeMap, error)
+
 	// VolumeInspect gets information about a single volume.
 	VolumeInspect(
 		service, volumeID string, attachments bool) (*types.Volume, error)
@@ -213,6 +216,16 @@ func (c *client) ServiceSnapshots(
 func (c *client) Volumes() (apihttp.ServiceVolumeMap, error) {
 	reply := apihttp.ServiceVolumeMap{}
 	if _, err := c.httpGet("/volumes", &reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (c *client) VolumesByService(
+	service string) (apihttp.VolumeMap, error) {
+	reply := apihttp.VolumeMap{}
+	if _, err := c.httpGet(
+		fmt.Sprintf("/volumes/%s", service), &reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

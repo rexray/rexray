@@ -108,6 +108,20 @@ func TestVolumes(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
+func TestVolumesByService(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		reply, err := client.VolumesByService("mock")
+		if err != nil {
+			t.Fatal(err)
+		}
+		apitests.LogAsJSON(reply, t)
+		_, ok := reply["vol-000"]
+		assert.Equal(t, ok, true)
+		assert.Equal(t, reply["vol-000"].AvailabilityZone, "zone-000")
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
 func TestVolumeCreate(t *testing.T) {
 
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {

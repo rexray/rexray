@@ -36,10 +36,6 @@ type Client interface {
 	// ServiceInspect returns information about a service.
 	ServiceInspect(service string) (*types.ServiceInfo, error)
 
-	// ServiceSnapshots returns a single snapshot from a service.
-	ServiceSnapshots(
-		service string) (apihttp.SnapshotMap, error)
-
 	// Volumes returns a list of all Volumes for all Services.
 	Volumes() (apihttp.ServiceVolumeMap, error)
 
@@ -67,6 +63,10 @@ type Client interface {
 
 	// Volumes returns a list of all Snapshots for all services.
 	Snapshots() (apihttp.ServiceSnapshotMap, error)
+
+	// ServiceSnapshots returns a single snapshot from a service.
+	SnapshotsByService(
+		service string) (apihttp.SnapshotMap, error)
 
 	// VolumeInspect gets information about a single snapshot.
 	SnapshotInspect(
@@ -203,7 +203,7 @@ func (c *client) ServiceInspect(name string) (*types.ServiceInfo, error) {
 	return reply, nil
 }
 
-func (c *client) ServiceSnapshots(
+func (c *client) SnapshotsByService(
 	service string) (apihttp.SnapshotMap, error) {
 	reply := apihttp.SnapshotMap{}
 	if _, err := c.httpGet(

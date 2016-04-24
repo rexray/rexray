@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 
+	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
@@ -48,19 +48,10 @@ func (h *serviceValidator) Handle(
 		return utils.NewNotFoundError(serviceName)
 	}
 
-	instanceIDs, ok := ctx.Value("instanceIDs").(map[string]*types.InstanceID)
-	if ok {
-		if iid, ok := instanceIDs[strings.ToLower(serviceName)]; ok {
-			ctx = ctx.WithInstanceID(iid)
-			ctx = ctx.WithContextID("instanceID", iid.ID)
-			ctx.Log().Debug("set instanceID")
-		}
+	err := httputils.GetServiceContext(&ctx, service)
+	if err != nil {
+		return err
 	}
-
-	ctx = ctx.WithValue("service", service)
-	ctx = ctx.WithValue("serviceID", service.Name())
-	ctx = ctx.WithContextID("service", service.Name())
-	ctx = ctx.WithContextID("driver", service.Driver().Name())
 
 	ctx.Log().Debug("set service context")
 	return h.handler(ctx, w, req, store)

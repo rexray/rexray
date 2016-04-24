@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"sync"
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
@@ -32,6 +33,7 @@ var (
 )
 
 func init() {
+	goof.IncludeFieldsInFormat = true
 	if runtime.GOOS == "windows" {
 		lsxbin = "lsx-windows.exe"
 	} else {
@@ -61,6 +63,7 @@ libstorage:
         logresponse: true
   client:
     http:
+      disableKeepAlives: true
       logging:
         enabled: true
         logrequest: true
@@ -137,7 +140,7 @@ func run(
 	driver string,
 	configBuf []byte,
 	debug, group bool,
-	tests ...APITestFunc) error {
+	tests ...APITestFunc) {
 
 	th := &testHarness{}
 
@@ -145,7 +148,7 @@ func run(
 		debug, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG"))
 	}
 
-	return th.run(t, driver, configBuf, debug, group, tests...)
+	th.run(t, driver, configBuf, debug, group, tests...)
 }
 
 func (th *testHarness) run(
@@ -153,50 +156,27 @@ func (th *testHarness) run(
 	driver string,
 	configBuf []byte,
 	debug, group bool,
-	tests ...APITestFunc) error {
+	tests ...APITestFunc) {
+
+	wg := &sync.WaitGroup{}
 
 	if group {
 		config := getTestConfig(t, configBuf, debug)
 		configNames, configs := getTestConfigs(t, driver, config)
 
 		for x, config := range configs {
-			server, errs := apiserver.Serve(config)
-
-			go func(errs <-chan error) {
-				err := <-errs
-				if err != nil {
-					th.closeServers(t)
-					t.Fatalf("server (%s) error: %v", configNames[x], err)
-				}
-			}(errs)
-
-			if server != nil {
-				th.servers = append(th.servers, server)
-			}
-
-			client, err := getClient(config)
-			assert.NoError(t, err)
-
-			for _, test := range tests {
-				test(config, client, t)
-			}
-		}
-	} else {
-		for _, test := range tests {
-
-			config := getTestConfig(t, configBuf, debug)
-			configNames, configs := getTestConfigs(t, driver, config)
-
-			for x, config := range configs {
+			wg.Add(1)
+			go func(x int, config gofig.Config) {
+				defer wg.Done()
 				server, errs := apiserver.Serve(config)
-
-				go func(errs <-chan error) {
+				go func() {
 					err := <-errs
 					if err != nil {
 						th.closeServers(t)
-						t.Fatalf("server (%s) error: %v", configNames[x], err)
+						t.Errorf("server (%s) error: %v", configNames[x], err)
+						t.Fail()
 					}
-				}(errs)
+				}()
 
 				if server != nil {
 					th.servers = append(th.servers, server)
@@ -205,13 +185,45 @@ func (th *testHarness) run(
 				client, err := getClient(config)
 				assert.NoError(t, err)
 
-				test(config, client, t)
+				for _, test := range tests {
+					test(config, client, t)
+				}
+			}(x, config)
+		}
+	} else {
+		for _, test := range tests {
+			config := getTestConfig(t, configBuf, debug)
+			configNames, configs := getTestConfigs(t, driver, config)
+
+			for x, config := range configs {
+				wg.Add(1)
+				go func(test APITestFunc, x int, config gofig.Config) {
+					defer wg.Done()
+					server, errs := apiserver.Serve(config)
+					go func() {
+						err := <-errs
+						if err != nil {
+							th.closeServers(t)
+							t.Errorf("server (%s) error: %v", configNames[x], err)
+							t.Fail()
+						}
+					}()
+
+					if server != nil {
+						th.servers = append(th.servers, server)
+					}
+
+					client, err := getClient(config)
+					assert.NoError(t, err)
+
+					test(config, client, t)
+				}(test, x, config)
 			}
 		}
 	}
 
+	wg.Wait()
 	th.closeServers(t)
-	return nil
 }
 
 func getTestConfig(t *testing.T, configBuf []byte, debug bool) gofig.Config {

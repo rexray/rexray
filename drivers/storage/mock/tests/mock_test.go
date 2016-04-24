@@ -2,6 +2,7 @@ package mock
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
 	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/utils/config"
 	"github.com/emccode/libstorage/client"
 
 	// load the  driver
@@ -44,16 +46,52 @@ func init() {
 	}
 }
 
+func TestMain(m *testing.M) {
+	cfg, err := config.NewConfig()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	lsxBinPath := cfg.GetString(client.LSXPathKey)
+	os.RemoveAll(lsxBinPath)
+
+	os.Exit(m.Run())
+}
+
+func TestClient(t *testing.T) {
+	apitests.Run(t, mock.Name, configYAML,
+		func(config gofig.Config, client client.Client, t *testing.T) {
+			iid, err := client.InstanceID(mock.Name)
+			assert.NoError(t, err)
+			assert.NotNil(t, iid)
+
+			iid, err = client.InstanceID("mock2")
+			assert.NoError(t, err)
+			assert.NotNil(t, iid)
+
+			iid, err = client.InstanceID("mock3")
+			assert.NoError(t, err)
+			assert.NotNil(t, iid)
+		})
+}
+
+func TestInstanceID(t *testing.T) {
+	apitests.RunGroup(
+		t, mock.Name, nil,
+		(&apitests.InstanceIDTest{
+			Driver:   mock.Name,
+			Expected: mockx.GetInstanceID(),
+		}).Test)
+}
+
 func TestRoot(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, apitests.TestRoot)
 }
 
 func TestServices(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.Services()
-		if err != nil {
-			t.Fatal(err)
-		}
+		reply, err := client.API().Services(nil)
+		assert.NoError(t, err)
 		assert.Equal(t, len(reply), 3)
 
 		_, ok := reply[mock.Name]
@@ -70,13 +108,11 @@ func TestServices(t *testing.T) {
 
 func TestServiceInpspect(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.ServiceInspect("mock2")
-		if err != nil {
-			t.Fatal(err)
-		}
+		reply, err := client.API().ServiceInspect(nil, "mock2")
+		assert.NoError(t, err)
 		assert.Equal(t, "mock2", reply.Name)
 		assert.Equal(t, "mock", reply.Driver.Name)
-		assert.False(t, reply.Driver.NextDevice.Ignore)
+		assert.True(t, reply.Driver.NextDevice.Ignore)
 		assert.Equal(t, "xvd", reply.Driver.NextDevice.Prefix)
 		assert.Equal(t, `\w`, reply.Driver.NextDevice.Pattern)
 	}
@@ -86,9 +122,7 @@ func TestServiceInpspect(t *testing.T) {
 func TestSnapshotsByService(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		reply, err := client.SnapshotsByService("mock")
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		_, ok := reply["snap-000"]
 		assert.Equal(t, ok, true)
@@ -99,21 +133,65 @@ func TestSnapshotsByService(t *testing.T) {
 
 func TestVolumes(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.Volumes()
-		if err != nil {
-			t.Fatal(err)
-		}
+		reply, err := client.Volumes(false)
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
+		assert.Len(t, reply, 3)
+		assert.Len(t, reply["mock"], 3)
+		assert.Len(t, reply["mock"]["vol-000"].Attachments, 0)
+		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
+		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
+	}
+
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestVolumesWithAttachments(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		reply, err := client.Volumes(true)
+		assert.NoError(t, err)
+		apitests.LogAsJSON(reply, t)
+		assert.Len(t, reply, 3)
+		assert.Len(t, reply["mock"], 3)
+		assert.Len(t, reply["mock"]["vol-000"].Attachments, 3)
+		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
+		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
+		assert.Equal(
+			t, "/var/log", reply["mock"]["vol-000"].Attachments[0].MountPoint)
+		assert.Equal(
+			t, "/home", reply["mock"]["vol-000"].Attachments[1].MountPoint)
+		assert.Equal(
+			t, "/net/share", reply["mock"]["vol-000"].Attachments[2].MountPoint)
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
+func TestVolumesWithAttachmentsNoLocalDevices(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		reply, err := client.Volumes(true)
+		assert.NoError(t, err)
+		apitests.LogAsJSON(reply, t)
+		assert.Len(t, reply, 3)
+		assert.Len(t, reply["mock"], 3)
+		assert.Len(t, reply["mock"]["vol-000"].Attachments, 3)
+		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
+		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
+		assert.NotEqual(
+			t, "/var/log", reply["mock"]["vol-000"].Attachments[0].MountPoint)
+		assert.NotEqual(
+			t, "/home", reply["mock"]["vol-000"].Attachments[1].MountPoint)
+		assert.NotEqual(
+			t, "/net/share", reply["mock"]["vol-000"].Attachments[2].MountPoint)
+	}
+	client.EnableLocalDevicesHeaders = false
+	apitests.Run(t, mock.Name, configYAML, tf)
+	client.EnableLocalDevicesHeaders = true
+}
+
 func TestVolumesByService(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.VolumesByService("mock")
-		if err != nil {
-			t.Fatal(err)
-		}
+		reply, err := client.VolumesByService("mock", false)
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		_, ok := reply["vol-000"]
 		assert.Equal(t, ok, true)
@@ -146,9 +224,7 @@ func TestVolumeCreate(t *testing.T) {
 		}
 
 		reply, err := client.VolumeCreate("mock", volumeCreateRequest)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
 		assert.Equal(t, availabilityZone, reply.AvailabilityZone)
@@ -199,9 +275,7 @@ func TestVolumeSnapshot(t *testing.T) {
 		}
 
 		reply, err := client.VolumeSnapshot("mock", volumeID, request)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
 		assert.Equal(t, snapshotName, reply.Name)
@@ -214,9 +288,7 @@ func TestVolumeSnapshot(t *testing.T) {
 func TestSnapshots(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		reply, err := client.Snapshots()
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		_, ok := reply["mock"]
 		assert.Equal(t, true, ok)
@@ -228,10 +300,7 @@ func TestSnapshots(t *testing.T) {
 func TestSnapshotInspect(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		reply, err := client.SnapshotInspect("mock", "snap-000")
-		if err != nil {
-			t.Fatal(err)
-		}
-
+		assert.NoError(t, err)
 		assert.Equal(t, "Snapshot 0", reply.Name)
 		assert.Equal(t, "snap-000", reply.ID)
 		assert.Equal(t, "vol-000", reply.VolumeID)
@@ -263,10 +332,9 @@ func TestSnapshotCreate(t *testing.T) {
 			Opts:             opts,
 		}
 
-		reply, err := client.SnapshotCreate("mock", "snap-000", snapshotCreateRequest)
-		if err != nil {
-			t.Fatal(err)
-		}
+		reply, err := client.SnapshotCreate(
+			"mock", "snap-000", snapshotCreateRequest)
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
 		assert.Equal(t, volumeName, reply.Name)
@@ -279,10 +347,7 @@ func TestSnapshotCreate(t *testing.T) {
 
 func TestSnapshotRemove(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		err := client.SnapshotRemove("mock", "snap-000")
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, client.SnapshotRemove("mock", "snap-000"))
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
@@ -302,9 +367,7 @@ func TestSnapshotCopy(t *testing.T) {
 		}
 
 		reply, err := client.SnapshotCopy("mock", "snap-000", request)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
 		assert.Equal(t, snapshotName, reply.Name)
@@ -333,13 +396,4 @@ func TestExecutorGet(t *testing.T) {
 		apitests.TestGetExecutorLinux,
 		apitests.TestGetExecutorDarwin,
 		apitests.TestGetExecutorWindows)
-}
-
-func TestInstanceID(t *testing.T) {
-	apitests.RunGroup(
-		t, mock.Name, nil,
-		(&apitests.InstanceIDTest{
-			Driver:   mock.Name,
-			Expected: mockx.GetInstanceID(),
-		}).Test)
 }

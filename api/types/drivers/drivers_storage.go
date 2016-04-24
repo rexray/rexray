@@ -8,9 +8,9 @@ import (
 // NewStorageExecutor is a function that constructs a new StorageExecutors.
 type NewStorageExecutor func() StorageExecutor
 
-// NewClientStorageDriver is a function that constructs a new
-// ClientStorageDriver.
-type NewClientStorageDriver func() ClientStorageDriver
+// NewLocalStorageDriver is a function that constructs a new
+// LocalStorageDriver.
+type NewLocalStorageDriver func() LocalStorageDriver
 
 // NewRemoteStorageDriver is a function that constructs a new
 // RemoteStorageDriver.
@@ -64,8 +64,8 @@ type StorageExecutor interface {
 		opts types.Store) (map[string]string, error)
 }
 
-// ClientStorageDriver is the client-side storage driver.
-type ClientStorageDriver interface {
+// LocalStorageDriver is the client-side storage driver.
+type LocalStorageDriver interface {
 	Driver
 
 	/***************************************************************************

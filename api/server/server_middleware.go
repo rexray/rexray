@@ -19,6 +19,7 @@ func (s *server) initGlobalMiddleware() {
 
 	s.addGlobalMiddleware(handlers.NewErrorHandler())
 	s.addGlobalMiddleware(handlers.NewInstanceIDHandler())
+	s.addGlobalMiddleware(handlers.NewLocalDevicesHandler())
 }
 
 func (s *server) initRouteMiddleware() {
@@ -65,7 +66,7 @@ func (s *server) handleWithMiddleware(
 		for h := range reverse(middlewaresForRouteName) {
 			handler = h.Handler(handler)
 			ctx.Log().WithField(
-				"middleware", h.Name()).Debug("added route middlware")
+				"middleware", h.Name()).Debug("added route middleware")
 		}
 	}
 
@@ -73,7 +74,7 @@ func (s *server) handleWithMiddleware(
 	for h := range reverse(s.globalHandlers) {
 		handler = h.Handler(handler)
 		ctx.Log().WithField(
-			"middleware", h.Name()).Debug("added global middlware")
+			"middleware", h.Name()).Debug("added global middleware")
 	}
 
 	return handler

@@ -33,6 +33,11 @@ func (r *router) snapshots(
 			ctx context.Context,
 			svc apisvcs.StorageService) (interface{}, error) {
 
+			err := httputils.GetServiceContext(&ctx, svc)
+			if err != nil {
+				return nil, err
+			}
+
 			objs, err := svc.Driver().Snapshots(ctx, store)
 			if err != nil {
 				return nil, err

@@ -380,7 +380,11 @@ GO_CLEAN += $(COVERAGE)-clean
 GO_PHONY += $(COVERAGE)-clean
 
 cover: $(COVERAGE)
+ifneq (1,$(CODECOV_OFFLINE))
 	curl -sSL https://codecov.io/bash | bash -s -- -f $?
+else
+	@echo codecov offline
+endif
 
 cover-debug:
 	env LIBSTORAGE_DEBUG=true $(MAKE) cover

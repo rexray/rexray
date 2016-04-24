@@ -43,7 +43,7 @@ func NewSchemaValidator(
 }
 
 func (h *schemaValidator) Name() string {
-	return "schmea-validator"
+	return "schema-validator"
 }
 
 func (h *schemaValidator) Handler(m apihttp.APIFunc) apihttp.APIFunc {

@@ -63,14 +63,19 @@ func (d *Executor) InstanceID(
 func (d *Executor) NextDevice(
 	ctx context.Context,
 	opts types.Store) (string, error) {
-	return "", nil
+	return "/dev/xvde", nil
 }
 
 // LocalDevices returns a map of the system's local devices.
 func (d *Executor) LocalDevices(
 	ctx context.Context,
 	opts types.Store) (map[string]string, error) {
-	return nil, nil
+	return map[string]string{
+		"/dev/xvda": "/var/log",
+		"/dev/xvdb": "/home",
+		"/dev/xvdc": "/net/share",
+		"/dev/xvdd": "/var/lib/backup",
+	}, nil
 }
 
 // GetInstanceID gets the mock instance ID.

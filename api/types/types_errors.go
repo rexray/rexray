@@ -22,22 +22,22 @@ var ErrNotImplemented = goof.New("not implemented")
 
 // ErrNotFound occurs when a Driver inspects or sends an operation to a
 // resource that cannot be found.
-type ErrNotFound struct{ *goof.Goof }
+type ErrNotFound struct{ goof.Goof }
 
 // ErrStoreKey occurs when no value exists for a specified store key.
-type ErrStoreKey struct{ *goof.Goof }
+type ErrStoreKey struct{ goof.Goof }
 
 // ErrContextKey occurs when no value exists for a specified context key.
-type ErrContextKey struct{ *goof.Goof }
+type ErrContextKey struct{ goof.Goof }
 
 // ErrContextType occurs when a value exists in the context but is not the
 // expected typed.
-type ErrContextType struct{ *goof.Goof }
+type ErrContextType struct{ goof.Goof }
 
 // ErrDriverTypeErr occurs when a Driver is constructed with an invalid type.
-type ErrDriverTypeErr struct{ *goof.Goof }
+type ErrDriverTypeErr struct{ goof.Goof }
 
 // ErrBatchProcess occurs when a batch process is interrupted by an error
 // before the process is complete. This error will contain information about
 // the objects for which the process did complete.
-type ErrBatchProcess struct{ *goof.Goof }
+type ErrBatchProcess struct{ goof.Goof }

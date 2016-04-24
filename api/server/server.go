@@ -237,13 +237,10 @@ func (s *server) initEndpoints() error {
 			"address":  laddr,
 		}
 
-		tlsConfig, tlsFields, err :=
-			utils.ParseTLSConfig(s.config.Scope(endpoint))
+		tlsConfig, err :=
+			utils.ParseTLSConfig(s.config.Scope(endpoint), logFields)
 		if err != nil {
 			return err
-		}
-		for k, v := range tlsFields {
-			logFields[k] = v
 		}
 
 		log.WithFields(logFields).Info("configured endpoint")

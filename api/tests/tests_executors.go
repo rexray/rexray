@@ -7,7 +7,6 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
-	apiclient "github.com/emccode/libstorage/api/client"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/client"
 )
@@ -17,7 +16,7 @@ var TestExecutors = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).Executors()
+	reply, err := client.API().Executors(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +30,7 @@ var TestHeadExecutorWindows = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).ExecutorHead("lsx-windows.exe")
+	reply, err := client.API().ExecutorHead(nil, "lsx-windows.exe")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +42,7 @@ var TestHeadExecutorLinux = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).ExecutorHead("lsx-linux")
+	reply, err := client.API().ExecutorHead(nil, "lsx-linux")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +54,7 @@ var TestHeadExecutorDarwin = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).ExecutorHead("lsx-darwin")
+	reply, err := client.API().ExecutorHead(nil, "lsx-darwin")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +66,7 @@ var TestGetExecutorWindows = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).ExecutorGet("lsx-windows.exe")
+	reply, err := client.API().ExecutorGet(nil, "lsx-windows.exe")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +83,7 @@ var TestGetExecutorLinux = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).ExecutorGet("lsx-linux")
+	reply, err := client.API().ExecutorGet(nil, "lsx-linux")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +100,7 @@ var TestGetExecutorDarwin = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).ExecutorGet("lsx-darwin")
+	reply, err := client.API().ExecutorGet(nil, "lsx-darwin")
 	if err != nil {
 		t.Fatal(err)
 	}

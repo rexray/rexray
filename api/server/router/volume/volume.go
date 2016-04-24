@@ -36,52 +36,22 @@ func (r *router) initRoutes() {
 	r.routes = []apihttp.Route{
 		// GET
 
-		// get all volumes (and possibly attachments) from all services
-		httputils.NewGetRoute(
-			"volumesAndAttachments",
-			"/volumes",
-			newVolumesRoute(r.config, true).volumes,
-			handlers.NewInstanceIDValidator(false),
-			handlers.NewSchemaValidator(nil, schema.ServiceVolumeMapSchema, nil),
-		).Queries("attachments"),
-
 		// get all volumes from all services
 		httputils.NewGetRoute(
 			"volumes",
 			"/volumes",
-			newVolumesRoute(r.config, false).volumes,
+			r.volumes,
 			handlers.NewSchemaValidator(nil, schema.ServiceVolumeMapSchema, nil),
 		),
-
-		// get all volumes (and possibly attachments) from a specific service
-		httputils.NewGetRoute(
-			"volumesAndAttachmentsForService",
-			"/volumes/{service}",
-			newVolumesRoute(r.config, true).volumesForService,
-			handlers.NewServiceValidator(),
-			handlers.NewInstanceIDValidator(false),
-			handlers.NewSchemaValidator(nil, schema.VolumeMapSchema, nil),
-		).Queries("attachments"),
 
 		// get all volumes from a specific service
 		httputils.NewGetRoute(
 			"volumesForService",
 			"/volumes/{service}",
-			newVolumesRoute(r.config, false).volumesForService,
+			r.volumesForService,
 			handlers.NewServiceValidator(),
 			handlers.NewSchemaValidator(nil, schema.VolumeMapSchema, nil),
 		),
-
-		// get a specific volume (and possibly attachments) from a specific
-		// service
-		httputils.NewGetRoute(
-			"volumeAndAttachmentsInspect",
-			"/volumes/{service}/{volumeID}",
-			r.volumeInspect,
-			handlers.NewServiceValidator(),
-			handlers.NewInstanceIDValidator(false),
-			handlers.NewSchemaValidator(nil, schema.VolumeSchema, nil),
-		).Queries("attachments"),
 
 		// get a specific volume from a specific service
 		httputils.NewGetRoute(
@@ -151,7 +121,6 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeAttach,
 			handlers.NewServiceValidator(),
-			handlers.NewInstanceIDValidator(true),
 			handlers.NewSchemaValidator(
 				schema.VolumeAttachRequestSchema,
 				schema.VolumeSchema,

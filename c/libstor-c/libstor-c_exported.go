@@ -57,7 +57,7 @@ func volumes(clientID C.h, attachments C.short) C.result {
 		return result
 	}
 
-	svcToVolMap, err := c.Volumes()
+	svcToVolMap, err := c.Volumes(attachments > 0)
 	if err != nil {
 		result.err = C.CString(err.Error())
 		return result

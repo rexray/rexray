@@ -13,6 +13,13 @@ func NewNotFoundError(resourceID string) error {
 	}
 }
 
+// NewMissingInstanceIDError returns a new ErrMissingInstanceID error.
+func NewMissingInstanceIDError(service string) error {
+	return &types.ErrMissingInstanceID{
+		Goof: goof.WithField("service", service, "missing instance ID"),
+	}
+}
+
 // NewStoreKeyErr returns a new ErrStoreKey error.
 func NewStoreKeyErr(storeKey string) error {
 	return &types.ErrStoreKey{

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/emccode/libstorage/api/registry"
@@ -27,9 +28,31 @@ import (
 	//_ "github.com/emccode/libstorage/drivers/storage/xtremio/executor"
 )
 
+const (
+	// InstanceID is the command to execute to get the instance ID.
+	InstanceID = "instanceID"
+
+	// LocalDevices is the command to execute to get the local devices map.
+	LocalDevices = "localDevices"
+
+	// NextDevice is the command to execute to get the next device.
+	NextDevice = "nextDevice"
+)
+
 var (
+	// LSX is the default  name of the libStorage executor for the current OS.
+	LSX string
+
 	cmdRx = regexp.MustCompile("(?i)instanceid|nextdevice|localdevices")
 )
+
+func init() {
+	if runtime.GOOS == "windows" {
+		LSX = "lsx-windows.exe"
+	} else {
+		LSX = fmt.Sprintf("lsx-%s", runtime.GOOS)
+	}
+}
 
 // Run runs the executor CLI.
 func Run() {

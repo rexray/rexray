@@ -38,11 +38,10 @@ import (
 
 	"github.com/akutz/gofig"
 
-	"github.com/emccode/libstorage/api/client"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/types/context"
 	"github.com/emccode/libstorage/api/types/drivers"
+	"github.com/emccode/libstorage/client"
 )
 
 func init() {
@@ -86,8 +85,8 @@ func Serve(config gofig.Config) (io.Closer, <-chan error) {
 // If the config parameter is nil a default instance is created. The
 // function dials the libStorage service specified by the configuration
 // property libstorage.host.
-func Dial(ctx context.Context, config gofig.Config) (client.Client, error) {
-	return client.Dial(ctx, config)
+func Dial(config gofig.Config) (client.Client, error) {
+	return client.New(config)
 }
 
 func registerGofigDefaults() {
@@ -98,18 +97,6 @@ func registerGofigDefaults() {
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.enabled")
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.client")
 	r.Key(gofig.String, "", "local=127.0.0.1", "", "libstorage.profiles.groups")
-
-	r.Key(gofig.String, "",
-		"/proc/partitions", "", "libstorage.client.localdevicesfile")
-
-	r.Key(gofig.String, "", "/usr/local/bin", "", "libstorage.client.tooldir")
-	r.Key(gofig.Bool, "", false, "", "libstorage.client.http.logging.enabled")
-	r.Key(gofig.String, "", "", "", "libstorage.client.http.logging.out")
-	r.Key(gofig.String, "", "", "", "libstorage.client.http.logging.err")
-	r.Key(gofig.Bool, "",
-		false, "", "libstorage.client.http.logging.logrequest")
-	r.Key(gofig.Bool, "",
-		false, "", "libstorage.client.http.logging.logresponse")
 
 	r.Key(gofig.Int, "", 60, "", "libstorage.server.readtimeout")
 	r.Key(gofig.Int, "", 60, "", "libstorage.server.writetimeout")

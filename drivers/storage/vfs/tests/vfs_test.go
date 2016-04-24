@@ -17,7 +17,7 @@ import (
 func TestVolumes(t *testing.T) {
 
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.Volumes()
+		reply, err := client.Volumes(false)
 		if err != nil {
 			t.Fatal(err)
 		}

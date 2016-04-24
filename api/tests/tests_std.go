@@ -12,14 +12,13 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/stretchr/testify/assert"
 
-	apiclient "github.com/emccode/libstorage/api/client"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/client"
 )
 
 // TestRoot tests the GET / route.
 var TestRoot = func(config gofig.Config, client client.Client, t *testing.T) {
-	reply, err := client.(apiclient.APIClient).Root()
+	reply, err := client.API().Root(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,25 +46,14 @@ func (tt *InstanceIDTest) Test(
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
 
-	reply, err := client.(apiclient.APIClient).ExecutorGet(lsxbin)
-	assert.NoError(t, err)
-	defer reply.Close()
-
-	f, err := ioutil.TempFile("", "")
+	iid, err := client.InstanceID(tt.Driver)
 	assert.NoError(t, err)
 
-	_, err = io.Copy(f, reply)
+	iidBuf, err := json.Marshal(iid)
 	assert.NoError(t, err)
+	iidJSON := string(iidBuf)
 
-	err = f.Close()
-	assert.NoError(t, err)
-
-	os.Chmod(f.Name(), 0755)
-
-	out, err := exec.Command(
-		f.Name(), tt.Driver, "instanceID").CombinedOutput()
-	assert.NoError(t, err)
-	assert.Equal(t, expectedJSON, gotil.Trim(string(out)))
+	assert.Equal(t, expectedJSON, iidJSON)
 }
 
 // NextDeviceTest is the test harness for testing getting the next device.
@@ -85,7 +73,7 @@ func (tt *NextDeviceTest) Test(
 	client client.Client,
 	t *testing.T) {
 
-	reply, err := client.(apiclient.APIClient).ExecutorGet(lsxbin)
+	reply, err := client.API().ExecutorGet(nil, lsxbin)
 	assert.NoError(t, err)
 	defer reply.Close()
 
@@ -127,7 +115,7 @@ func (tt *LocalDevicesTest) Test(
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
 
-	reply, err := client.(apiclient.APIClient).ExecutorGet(lsxbin)
+	reply, err := client.API().ExecutorGet(nil, lsxbin)
 	assert.NoError(t, err)
 	defer reply.Close()
 

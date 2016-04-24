@@ -39,7 +39,7 @@ func newDriver() drivers.RemoteStorageDriver {
 	d.nextDeviceInfo = &types.NextDeviceInfo{
 		Prefix:  "xvd",
 		Pattern: `\w`,
-		Ignore:  false,
+		Ignore:  true,
 	}
 
 	d.volumes = []*types.Volume{
@@ -108,6 +108,35 @@ func (d *driver) InstanceInspect(
 func (d *driver) Volumes(
 	ctx context.Context,
 	opts *drivers.VolumesOpts) ([]*types.Volume, error) {
+
+	if ctx.Value(context.ContextKeyServiceName) == "mock" &&
+		opts.Attachments &&
+		ctx.InstanceID().ID == executor.GetInstanceID().ID {
+
+		d.volumes[0].Attachments = []*types.VolumeAttachment{
+			&types.VolumeAttachment{
+				DeviceName: "/dev/xvda",
+				MountPoint: ctx.LocalDevices()["/dev/xvda"],
+				InstanceID: ctx.InstanceID(),
+				Status:     "attached",
+				VolumeID:   d.volumes[0].ID,
+			},
+			&types.VolumeAttachment{
+				DeviceName: "/dev/xvdb",
+				MountPoint: ctx.LocalDevices()["/dev/xvdb"],
+				InstanceID: ctx.InstanceID(),
+				Status:     "attached",
+				VolumeID:   d.volumes[1].ID,
+			},
+			&types.VolumeAttachment{
+				DeviceName: "/dev/xvdc",
+				MountPoint: ctx.LocalDevices()["/dev/xvdc"],
+				InstanceID: ctx.InstanceID(),
+				Status:     "attached",
+				VolumeID:   d.volumes[2].ID,
+			},
+		}
+	}
 	return d.volumes, nil
 }
 

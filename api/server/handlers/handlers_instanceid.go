@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
+
+	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"
-)
-
-const (
-	libStorageInstanceIDHeaderKey = "libstorage-instanceid"
 )
 
 // instanceIDHandler is a global HTTP filter for grokking the InstanceIDs
@@ -42,45 +41,64 @@ func (h *instanceIDHandler) Handle(
 	req *http.Request,
 	store types.Store) error {
 
-	var iidHeader string
-	for k, v := range req.Header {
-		if strings.ToLower(k) == libStorageInstanceIDHeaderKey {
-			iidHeader = v[0]
-			break
-		}
+	valMap := map[string]*types.InstanceID{}
+
+	if err := parseInstanceIDHeaders(
+		ctx,
+		apihttp.InstanceIDHeader,
+		httputils.GetHeader(req.Header, apihttp.InstanceIDHeader),
+		valMap); err != nil {
+		return err
 	}
 
-	ctx.Log().WithField(
-		libStorageInstanceIDHeaderKey, iidHeader).Debug("http header")
-
-	var iidPairs []string
-	if len(iidHeader) > 0 {
-		iidPairs = strings.Split(iidHeader, ",")
+	if err := parseInstanceIDHeaders(
+		ctx,
+		apihttp.InstanceID64Header,
+		httputils.GetHeader(req.Header, apihttp.InstanceID64Header),
+		valMap); err != nil {
+		return err
 	}
 
-	iidMap := map[string]*types.InstanceID{}
-
-	for _, iidPair := range iidPairs {
-		iidParts := strings.Split(iidPair, ":")
-		iidService := iidParts[0]
-		iidBase64 := iidParts[1]
-
-		iid := &types.InstanceID{}
-		decoded, err := base64.StdEncoding.DecodeString(iidBase64)
-		if err != nil {
-			return err
-		}
-
-		if err := json.Unmarshal(decoded, iid); err != nil {
-			return err
-		}
-
-		iidMap[strings.ToLower(iidService)] = iid
-	}
-
-	if len(iidMap) > 0 {
-		ctx = ctx.WithValue("instanceIDs", iidMap)
+	if len(valMap) > 0 {
+		ctx = ctx.WithInstanceIDsByService(valMap)
 	}
 
 	return h.handler(ctx, w, req, store)
+}
+
+func parseInstanceIDHeaders(
+	ctx context.Context,
+	name string,
+	headers []string,
+	instanceIDs map[string]*types.InstanceID) error {
+
+	ctx.Log().WithField(name, headers).Debug("http header")
+
+	for _, v := range headers {
+		iidParts := strings.SplitN(v, "=", 2)
+		iidDriver := strings.ToLower(iidParts[0])
+		iidValue := iidParts[1]
+
+		iid := &types.InstanceID{}
+
+		if name == apihttp.InstanceIDHeader {
+			iid.ID = iidValue
+		} else {
+			buf, err := base64.StdEncoding.DecodeString(iidValue)
+			if err != nil {
+				return err
+			}
+			if err := json.Unmarshal(buf, iid); err != nil {
+				return err
+			}
+		}
+
+		instanceIDs[iidDriver] = iid
+		ctx.Log().WithFields(log.Fields{
+			"driver":     iidDriver,
+			"instanceID": iid.ID,
+		}).Debug("set instanceID")
+	}
+
+	return nil
 }

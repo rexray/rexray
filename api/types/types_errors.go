@@ -24,6 +24,10 @@ var ErrNotImplemented = goof.New("not implemented")
 // resource that cannot be found.
 type ErrNotFound struct{ goof.Goof }
 
+// ErrMissingInstanceID occurs when an operation requires the instance ID for
+// the configured service to be avaialble.
+type ErrMissingInstanceID struct{ goof.Goof }
+
 // ErrStoreKey occurs when no value exists for a specified store key.
 type ErrStoreKey struct{ goof.Goof }
 

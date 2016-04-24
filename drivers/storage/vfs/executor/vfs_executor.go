@@ -199,7 +199,7 @@ func (d *Executor) VolumesDirPath() string {
 }
 
 func configRegistration() *gofig.Registration {
-	defaultRootDir := fmt.Sprintf("%s/vfs", paths.UsrDirPath)
+	defaultRootDir := fmt.Sprintf("%s/vfs", paths.UsrDirPath())
 	r := gofig.NewRegistration("VFS")
 	r.Key(gofig.String, "", defaultRootDir, "", "vfs.root")
 	return r

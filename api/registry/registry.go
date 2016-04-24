@@ -16,8 +16,11 @@ var (
 	storExecsCtors    = map[string]drivers.NewStorageExecutor{}
 	storExecsCtorsRWL = &sync.RWMutex{}
 
-	storDriverCtors    = map[string]drivers.NewRemoteStorageDriver{}
-	storDriverCtorsRWL = &sync.RWMutex{}
+	lclStorDriverCtors    = map[string]drivers.NewLocalStorageDriver{}
+	lclStorDriverCtorsRWL = &sync.RWMutex{}
+
+	remStorDriverCtors    = map[string]drivers.NewRemoteStorageDriver{}
+	remStorDriverCtorsRWL = &sync.RWMutex{}
 
 	osDriverCtors    = map[string]drivers.NewOSDriver{}
 	osDriverCtorsRWL = &sync.RWMutex{}
@@ -43,11 +46,20 @@ func RegisterStorageExecutor(name string, ctor drivers.NewStorageExecutor) {
 	storExecsCtors[strings.ToLower(name)] = ctor
 }
 
+// RegisterLocalStorageDriver registers a LocalStorageDriver.
+func RegisterLocalStorageDriver(
+	name string, ctor drivers.NewLocalStorageDriver) {
+	lclStorDriverCtorsRWL.Lock()
+	defer lclStorDriverCtorsRWL.Unlock()
+	lclStorDriverCtors[strings.ToLower(name)] = ctor
+}
+
 // RegisterRemoteStorageDriver registers a RemoteStorageDriver.
-func RegisterRemoteStorageDriver(name string, ctor drivers.NewRemoteStorageDriver) {
-	storDriverCtorsRWL.Lock()
-	defer storDriverCtorsRWL.Unlock()
-	storDriverCtors[strings.ToLower(name)] = ctor
+func RegisterRemoteStorageDriver(
+	name string, ctor drivers.NewRemoteStorageDriver) {
+	remStorDriverCtorsRWL.Lock()
+	defer remStorDriverCtorsRWL.Unlock()
+	remStorDriverCtors[strings.ToLower(name)] = ctor
 }
 
 // RegisterOSDriver registers a OSDriver.
@@ -84,6 +96,26 @@ func NewStorageExecutor(name string) (drivers.StorageExecutor, error) {
 	return ctor(), nil
 }
 
+// NewLocalStorageDriver returns a new instance of the driver specified by the
+// driver name.
+func NewLocalStorageDriver(name string) (drivers.LocalStorageDriver, error) {
+
+	var ok bool
+	var ctor drivers.NewLocalStorageDriver
+
+	func() {
+		lclStorDriverCtorsRWL.RLock()
+		defer lclStorDriverCtorsRWL.RUnlock()
+		ctor, ok = lclStorDriverCtors[strings.ToLower(name)]
+	}()
+
+	if !ok {
+		return nil, goof.WithField("driver", name, "invalid driver name")
+	}
+
+	return ctor(), nil
+}
+
 // NewRemoteStorageDriver returns a new instance of the driver specified by the
 // driver name.
 func NewRemoteStorageDriver(name string) (drivers.RemoteStorageDriver, error) {
@@ -92,9 +124,9 @@ func NewRemoteStorageDriver(name string) (drivers.RemoteStorageDriver, error) {
 	var ctor drivers.NewRemoteStorageDriver
 
 	func() {
-		storDriverCtorsRWL.RLock()
-		defer storDriverCtorsRWL.RUnlock()
-		ctor, ok = storDriverCtors[strings.ToLower(name)]
+		remStorDriverCtorsRWL.RLock()
+		defer remStorDriverCtorsRWL.RUnlock()
+		ctor, ok = remStorDriverCtors[strings.ToLower(name)]
 	}()
 
 	if !ok {
@@ -159,14 +191,29 @@ func StorageExecutors() <-chan drivers.StorageExecutor {
 	return c
 }
 
-// RemoteStorageDrivers returns a channel on which new instances of all registered
-// storage drivers can be received.
+// LocalStorageDrivers returns a channel on which new instances of all
+// registered remote local drivers can be received.
+func LocalStorageDrivers() <-chan drivers.LocalStorageDriver {
+	c := make(chan drivers.LocalStorageDriver)
+	go func() {
+		lclStorDriverCtorsRWL.RLock()
+		defer lclStorDriverCtorsRWL.RUnlock()
+		for _, ctor := range lclStorDriverCtors {
+			c <- ctor()
+		}
+		close(c)
+	}()
+	return c
+}
+
+// RemoteStorageDrivers returns a channel on which new instances of all
+// registered remote storage drivers can be received.
 func RemoteStorageDrivers() <-chan drivers.RemoteStorageDriver {
 	c := make(chan drivers.RemoteStorageDriver)
 	go func() {
-		storDriverCtorsRWL.RLock()
-		defer storDriverCtorsRWL.RUnlock()
-		for _, ctor := range storDriverCtors {
+		remStorDriverCtorsRWL.RLock()
+		defer remStorDriverCtorsRWL.RUnlock()
+		for _, ctor := range remStorDriverCtors {
 			c <- ctor()
 		}
 		close(c)

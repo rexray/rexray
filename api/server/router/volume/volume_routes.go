@@ -3,7 +3,6 @@ package volume
 import (
 	"net/http"
 
-	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
 	"github.com/emccode/libstorage/api/server/httputils"
@@ -17,30 +16,20 @@ import (
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
-func newVolumesRoute(config gofig.Config, queryAttachments bool) *volumesRoute {
-	return &volumesRoute{config, queryAttachments}
-}
-
-type volumesRoute struct {
-	config           gofig.Config
-	queryAttachments bool
-}
-
-func (r *volumesRoute) volumes(
+func (r *router) volumes(
 	ctx context.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
 
-	var attachments bool
-	if r.queryAttachments {
-		attachments = store.GetBool("attachments")
-	}
-
 	var (
 		tasks   = map[string]*types.Task{}
 		taskIDs []int
-		reply   apihttp.ServiceVolumeMap = map[string]apihttp.VolumeMap{}
+		opts    = &drivers.VolumesOpts{
+			Attachments: store.GetBool("attachments"),
+			Opts:        store,
+		}
+		reply apihttp.ServiceVolumeMap = map[string]apihttp.VolumeMap{}
 	)
 
 	for service := range services.StorageServices(ctx) {
@@ -49,11 +38,12 @@ func (r *volumesRoute) volumes(
 			ctx context.Context,
 			svc apisvcs.StorageService) (interface{}, error) {
 
-			objs, err := svc.Driver().Volumes(
-				ctx, &drivers.VolumesOpts{
-					Attachments: attachments,
-					Opts:        store,
-				})
+			err := httputils.GetServiceContext(&ctx, svc)
+			if err != nil {
+				return nil, err
+			}
+
+			objs, err := svc.Driver().Volumes(ctx, opts)
 			if err != nil {
 				return nil, err
 			}
@@ -98,7 +88,7 @@ func (r *volumesRoute) volumes(
 		http.StatusOK)
 }
 
-func (r *volumesRoute) volumesForService(
+func (r *router) volumesForService(
 	ctx context.Context,
 	w http.ResponseWriter,
 	req *http.Request,
@@ -346,6 +336,11 @@ func (r *router) volumeDetachAll(
 		run := func(
 			ctx context.Context,
 			svc apisvcs.StorageService) (interface{}, error) {
+
+			err := httputils.GetServiceContext(&ctx, svc)
+			if err != nil {
+				return nil, err
+			}
 
 			driver := svc.Driver()
 

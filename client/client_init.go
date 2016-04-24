@@ -229,24 +229,18 @@ func (c *lsc) getExecutorChecksum() (string, error) {
 
 func (c *lsc) downloadExecutor() error {
 
-	if err := func() error {
-		f, err := os.Create(c.lsxBinPath)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		rdr, err := c.Client.ExecutorGet(c.ctx, executors.LSX)
-		if _, err := io.Copy(f, rdr); err != nil {
-			return err
-		}
-
-		return nil
-	}(); err != nil {
+	f, err := os.OpenFile(
+		c.lsxBinPath,
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
+		0755)
+	if err != nil {
 		return err
 	}
 
-	if err := os.Chmod(c.lsxBinPath, 0755); err != nil {
+	defer f.Close()
+
+	rdr, err := c.Client.ExecutorGet(c.ctx, executors.LSX)
+	if _, err := io.Copy(f, rdr); err != nil {
 		return err
 	}
 

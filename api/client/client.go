@@ -21,4 +21,12 @@ type Client struct {
 
 	// Headers are headers to send with each HTTP request.
 	Headers http.Header
+
+	// ServerName returns the name of the server to which the client is
+	// connected. This is not the same as the host name, rather it's the
+	// randomly generated name the server creates for unique identification
+	// when the server starts for the first time. This value is updated
+	// by every request to the server that returns the server name header
+	// as part of its response.
+	ServerName string
 }

@@ -34,6 +34,8 @@ const (
 	ContextKeyLocalDevices = types.ContextKeyLocalDevices
 	// ContextKeyLocalDevicesByService is a context key.
 	ContextKeyLocalDevicesByService = types.ContextKeyLocalDevicesByService
+	// ContextKeyServerName is a context key.
+	ContextKeyServerName = types.ContextKeyServerName
 )
 
 var (
@@ -136,7 +138,7 @@ func WithContextID(
 	parent context.Context, id, val string) Context {
 
 	contextID := map[string]string{id: val}
-	parentContextID, ok := parent.Value(contextID).(map[string]string)
+	parentContextID, ok := parent.Value(ContextKeyContextID).(map[string]string)
 	if ok {
 		for k, v := range parentContextID {
 			contextID[k] = v
@@ -151,6 +153,22 @@ func WithValue(
 	key interface{},
 	val interface{}) Context {
 	return NewContext(context.WithValue(parent, key, val), HTTPRequest(parent))
+}
+
+// ServerName returns the context's server name.
+func ServerName(ctx context.Context) (string, error) {
+
+	obj := ctx.Value(ContextKeyServerName)
+	if obj == nil {
+		return "", utils.NewContextKeyErr(ContextKeyServerName)
+	}
+	typedObj, ok := obj.(string)
+	if !ok {
+		return "", utils.NewContextTypeErr(
+			ContextKeyServerName,
+			"string", utils.GetTypePkgPathAndName(obj))
+	}
+	return typedObj, nil
 }
 
 // InstanceIDsByService gets the context's service to instance IDs map.
@@ -278,6 +296,11 @@ func (ctx *libstorContext) Value(key interface{}) interface{} {
 	return ctx.Context.Value(key)
 }
 
+func (ctx *libstorContext) ServerName() string {
+	v, _ := ServerName(ctx)
+	return v
+}
+
 func (ctx *libstorContext) InstanceIDsByService() map[string]*types.InstanceID {
 	v, _ := InstanceIDsByService(ctx)
 	return v
@@ -355,7 +378,7 @@ type fieldFormatter struct {
 }
 
 func (f *fieldFormatter) Format(entry *log.Entry) ([]byte, error) {
-	contextID, ok := f.ctx.Value("contextID").(map[string]string)
+	contextID, ok := f.ctx.Value(ContextKeyContextID).(map[string]string)
 	if !ok {
 		return f.f.Format(entry)
 	}

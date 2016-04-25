@@ -13,6 +13,8 @@ import (
 
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/utils"
 )
 
 func (c *Client) httpDo(
@@ -41,6 +43,8 @@ func (c *Client) httpDo(
 	if err != nil {
 		return nil, err
 	}
+	defer c.setServerName(res)
+
 	c.logResponse(res)
 
 	if res.StatusCode > 299 {
@@ -58,6 +62,13 @@ func (c *Client) httpDo(
 	}
 
 	return res, nil
+}
+
+func (c *Client) setServerName(res *http.Response) {
+	snh := utils.GetHeader(res.Header, apihttp.ServerNameHeader)
+	if len(snh) > 0 {
+		c.ServerName = snh[0]
+	}
 }
 
 func (c *Client) httpGet(

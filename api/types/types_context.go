@@ -28,11 +28,16 @@ const (
 	ContextKeyLocalDevices = "localDevices"
 	// ContextKeyLocalDevicesByService is a context key.
 	ContextKeyLocalDevicesByService = "localDevicesByService"
+	// ContextKeyServerName is a context key.
+	ContextKeyServerName = "serverName"
 )
 
 // Context is a libStorage context.
 type Context interface {
 	context.Context
+
+	// ServerName gets the server name.
+	ServerName() string
 
 	// InstanceIDsByService returns the context's service to instance ID map.
 	InstanceIDsByService() map[string]*InstanceID

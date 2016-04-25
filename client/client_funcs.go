@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os/exec"
 
+	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage/api/types"
 	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/cli/executors"
@@ -69,12 +70,47 @@ func (c *lsc) LocalDevices(service string) (map[string]string, error) {
 			executors.LocalDevices).CombinedOutput()
 	}()
 
+	if err != nil {
+		return nil, err
+	}
+
 	ldm := map[string]string{}
 	if err := json.Unmarshal(out, &ldm); err != nil {
 		return nil, err
 	}
 
 	return ldm, nil
+}
+
+func (c *lsc) NextDevice(service string) (string, error) {
+
+	si, err := c.getServiceInfo(service)
+	if err != nil {
+		return "", err
+	}
+
+	out, err := func() ([]byte, error) {
+		c.ctx.Log().Debug("waiting on executor lock")
+		if err := lsxMutex.Wait(); err != nil {
+			return nil, err
+		}
+		defer func() {
+			c.ctx.Log().Debug("signalling executor lock")
+			if err := lsxMutex.Signal(); err != nil {
+				panic(err)
+			}
+		}()
+		return exec.Command(
+			c.lsxBinPath,
+			si.Driver.Name,
+			executors.NextDevice).CombinedOutput()
+	}()
+
+	if err != nil {
+		return "", err
+	}
+
+	return gotil.Trim(string(out)), nil
 }
 
 func (c *lsc) Services() (apihttp.ServicesMap, error) {

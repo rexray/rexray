@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/akutz/gotil"
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/utils"
 )
 
 // localDevicesHandler is a global HTTP filter for grokking the local devices
@@ -43,7 +43,7 @@ func (h *localDevicesHandler) Handle(
 	req *http.Request,
 	store types.Store) error {
 
-	headers := httputils.GetHeader(req.Header, apihttp.LocalDevicesHeader)
+	headers := utils.GetHeader(req.Header, apihttp.LocalDevicesHeader)
 	ctx.Log().WithField(
 		apihttp.LocalDevicesHeader, headers).Debug("http header")
 

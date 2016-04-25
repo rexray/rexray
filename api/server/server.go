@@ -68,7 +68,7 @@ func newServer(config gofig.Config) (*server, error) {
 	}
 
 	s.ctx = s.ctx.WithContextID("server", s.name)
-	s.ctx = s.ctx.WithValue("server", s.name)
+	s.ctx = s.ctx.WithValue(context.ContextKeyServerName, s.name)
 	s.ctx.Log().Debug("initializing server")
 
 	if err := s.initEndpoints(); err != nil {
@@ -282,6 +282,8 @@ func (s *server) makeHTTPHandler(
 	route apihttp.Route) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
+
+		w.Header().Set(apihttp.ServerNameHeader, s.name)
 
 		fctx := context.NewContext(ctx, req)
 		fctx = ctx.WithContextID("route", route.GetName())

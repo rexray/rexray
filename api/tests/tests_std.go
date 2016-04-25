@@ -2,14 +2,9 @@ package tests
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/akutz/gofig"
-	"github.com/akutz/gotil"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/emccode/libstorage/api/types"
@@ -73,25 +68,10 @@ func (tt *NextDeviceTest) Test(
 	client client.Client,
 	t *testing.T) {
 
-	reply, err := client.API().ExecutorGet(nil, lsxbin)
-	assert.NoError(t, err)
-	defer reply.Close()
-
-	f, err := ioutil.TempFile("", "")
+	val, err := client.NextDevice(tt.Driver)
 	assert.NoError(t, err)
 
-	_, err = io.Copy(f, reply)
-	assert.NoError(t, err)
-
-	err = f.Close()
-	assert.NoError(t, err)
-
-	os.Chmod(f.Name(), 0755)
-
-	out, err := exec.Command(
-		f.Name(), tt.Driver, "nextDevice").CombinedOutput()
-	assert.NoError(t, err)
-	assert.Equal(t, tt.Expected, gotil.Trim(string(out)))
+	assert.Equal(t, tt.Expected, val)
 }
 
 // LocalDevicesTest is the test harness for testing getting the local devices.
@@ -115,24 +95,12 @@ func (tt *LocalDevicesTest) Test(
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
 
-	reply, err := client.API().ExecutorGet(nil, lsxbin)
-	assert.NoError(t, err)
-	defer reply.Close()
-
-	f, err := ioutil.TempFile("", "")
+	val, err := client.LocalDevices(tt.Driver)
 	assert.NoError(t, err)
 
-	_, err = io.Copy(f, reply)
+	buf, err := json.Marshal(val)
 	assert.NoError(t, err)
+	actualJSON := string(buf)
 
-	err = f.Close()
-	assert.NoError(t, err)
-
-	os.Chmod(f.Name(), 0755)
-
-	out, err := exec.Command(
-		f.Name(), tt.Driver, "localDevices").CombinedOutput()
-	assert.NoError(t, err)
-
-	assert.Equal(t, expectedJSON, gotil.Trim(string(out)))
+	assert.Equal(t, expectedJSON, actualJSON)
 }

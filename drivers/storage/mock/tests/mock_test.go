@@ -12,7 +12,6 @@ import (
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
 	apihttp "github.com/emccode/libstorage/api/types/http"
-	"github.com/emccode/libstorage/api/utils/config"
 	"github.com/emccode/libstorage/client"
 
 	// load the  driver
@@ -44,17 +43,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	cfg, err := config.NewConfig()
-	if err != nil {
-		client.Close()
-		os.Exit(1)
-	}
-
-	lsxBinPath := cfg.GetString(client.LSXPathKey)
-	os.RemoveAll(lsxBinPath)
-
 	ec := m.Run()
-
 	client.Close()
 	os.Exit(ec)
 }

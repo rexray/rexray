@@ -17,10 +17,10 @@ func randomServerName() string {
 		possibleServerNames["countries"][z])
 }
 
-const (
-	maxAdjectives = 527 - 1
-	maxNouns      = 364 - 1
-	maxCountries  = 249 - 1
+var (
+	maxAdjectives = len(possibleServerNames["adjectives"]) - 1
+	maxNouns      = len(possibleServerNames["nouns"]) - 1
+	maxCountries  = len(possibleServerNames["countries"]) - 1
 )
 
 var (

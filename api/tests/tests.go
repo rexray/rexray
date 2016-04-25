@@ -184,6 +184,10 @@ func (th *testHarness) run(
 
 				client, err := getClient(config)
 				assert.NoError(t, err)
+				assert.NotNil(t, client)
+				if client == nil {
+					panic(fmt.Sprintf("err=%v, client=%v", err, client))
+				}
 
 				for _, test := range tests {
 					test(config, client, t)
@@ -215,6 +219,11 @@ func (th *testHarness) run(
 
 					client, err := getClient(config)
 					assert.NoError(t, err)
+					assert.NotNil(t, client)
+
+					if client == nil {
+						panic(fmt.Sprintf("err=%v, client=%v", err, client))
+					}
 
 					test(config, client, t)
 				}(test, x, config)
@@ -292,7 +301,6 @@ func getClient(config gofig.Config) (client.Client, error) {
 			"host", config.Get("libstorage.host"),
 			"error dialing libStorage service", err)
 	}
-
 	return c, nil
 }
 

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"runtime"
 	"strings"
 
 	"github.com/emccode/libstorage/api/registry"
@@ -40,19 +39,8 @@ const (
 )
 
 var (
-	// LSX is the default  name of the libStorage executor for the current OS.
-	LSX string
-
 	cmdRx = regexp.MustCompile("(?i)instanceid|nextdevice|localdevices")
 )
-
-func init() {
-	if runtime.GOOS == "windows" {
-		LSX = "lsx-windows.exe"
-	} else {
-		LSX = fmt.Sprintf("lsx-%s", runtime.GOOS)
-	}
-}
 
 // Run runs the executor CLI.
 func Run() {

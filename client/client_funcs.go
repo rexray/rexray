@@ -16,10 +16,23 @@ func (c *lsc) InstanceID(service string) (*types.InstanceID, error) {
 		return nil, err
 	}
 
-	out, err := exec.Command(
-		c.lsxBinPath,
-		si.Driver.Name,
-		executors.InstanceID).CombinedOutput()
+	out, err := func() ([]byte, error) {
+		c.ctx.Log().Debug("waiting on executor lock")
+		if err := lsxMutex.Wait(); err != nil {
+			return nil, err
+		}
+		defer func() {
+			c.ctx.Log().Debug("signalling executor lock")
+			if err := lsxMutex.Signal(); err != nil {
+				panic(err)
+			}
+		}()
+		return exec.Command(
+			c.lsxBinPath,
+			si.Driver.Name,
+			executors.InstanceID).CombinedOutput()
+	}()
+
 	if err != nil {
 		return nil, err
 	}
@@ -39,13 +52,22 @@ func (c *lsc) LocalDevices(service string) (map[string]string, error) {
 		return nil, err
 	}
 
-	out, err := exec.Command(
-		c.lsxBinPath,
-		si.Driver.Name,
-		executors.LocalDevices).CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
+	out, err := func() ([]byte, error) {
+		c.ctx.Log().Debug("waiting on executor lock")
+		if err := lsxMutex.Wait(); err != nil {
+			return nil, err
+		}
+		defer func() {
+			c.ctx.Log().Debug("signalling executor lock")
+			if err := lsxMutex.Signal(); err != nil {
+				panic(err)
+			}
+		}()
+		return exec.Command(
+			c.lsxBinPath,
+			si.Driver.Name,
+			executors.LocalDevices).CombinedOutput()
+	}()
 
 	ldm := map[string]string{}
 	if err := json.Unmarshal(out, &ldm); err != nil {

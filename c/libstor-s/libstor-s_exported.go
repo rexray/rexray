@@ -53,5 +53,5 @@ func serve(
 		"args": args,
 	}).Info("serving")
 
-	return C.CString(servers.Run(szHost, bTLS, args...).Error())
+	return C.Cstring(servers.RunSync(szHost, bTLS, args...))
 }

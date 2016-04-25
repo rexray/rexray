@@ -36,7 +36,7 @@ type Semaphore interface {
 	// TimedWait is the same as Wait(), except that abs_timeout
 	// specifies a limit on the amount of time that the call should block if
 	// the decrement cannot be immediately performed.
-	TimedWait(timeout *time.Time) error
+	TimedWait(timeout time.Duration) error
 
 	// Value returns the current value of the semaphore. If one or more
 	// processes or threads are blocked waiting to lock the

@@ -52,15 +52,6 @@ int _sem_post(void* sem) {
 int _sem_unlink(char* name) {
     return sem_unlink((const char*) name) == 0 ? 0 : errno;
 }
-
-int* pInt() {
-    int* val = (int*)malloc(sizeof(int));
-    return val;
-}
-
-const char* cpchar(char* val) {
-    return (const char*)val;
-}
 */
 import "C"
 
@@ -88,6 +79,7 @@ func open(
 		name = fmt.Sprintf("/%s", name)
 	}
 	cs := C.CString(name)
+	defer C.free(unsafe.Pointer(cs))
 
 	flags := C.O_CREAT
 	if excl {
@@ -101,8 +93,6 @@ func open(
 			"error": sema.err,
 		}, "error opening semaphore")
 	}
-
-	C.free(unsafe.Pointer(cs))
 
 	return &semaphore{
 		name:  name,
@@ -120,6 +110,7 @@ func (s *semaphore) Close() error {
 	if err == 0 {
 		return nil
 	}
+	C.free(s.sema)
 	return goof.WithFields(goof.Fields{
 		"name":  s.name,
 		"error": int(err),
@@ -168,7 +159,7 @@ func (s *semaphore) TryWait() (bool, error) {
 	}, "error trying wait on semaphore")
 }
 
-func (s *semaphore) TimedWait(t *time.Time) error {
+func (s *semaphore) TimedWait(t time.Duration) error {
 	return s.timedWait(t)
 }
 
@@ -177,8 +168,8 @@ func unlink(name string) error {
 		name = fmt.Sprintf("/%s", name)
 	}
 	cs := C.CString(name)
+	defer C.free(unsafe.Pointer(cs))
 	err := C._sem_unlink(cs)
-	C.free(unsafe.Pointer(cs))
 	if err == 0 {
 		return nil
 	}

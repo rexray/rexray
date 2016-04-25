@@ -28,6 +28,9 @@ func TestMain(m *testing.M) {
 func TestOpenClose(t *testing.T) {
 	s, err := Open(name, true, 0644, 0)
 	assert.NoError(t, err)
+	if err != nil {
+		t.FailNow()
+	}
 
 	_, err = Open(name, true, 0644, 0)
 	assert.Error(t, err)

@@ -1,9 +1,8 @@
 package mock
 
 import (
-	"fmt"
 	"os"
-	"runtime"
+	"strconv"
 	"testing"
 
 	"github.com/akutz/gofig"
@@ -39,23 +38,25 @@ libstorage:
 )
 
 func init() {
-	if runtime.GOOS == "windows" {
-		lsxbin = "lsx-windows.exe"
-	} else {
-		lsxbin = fmt.Sprintf("lsx-%s", runtime.GOOS)
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); !travis {
+		// semaphore.Unlink(types.LSX)
 	}
 }
 
 func TestMain(m *testing.M) {
 	cfg, err := config.NewConfig()
 	if err != nil {
+		client.Close()
 		os.Exit(1)
 	}
 
 	lsxBinPath := cfg.GetString(client.LSXPathKey)
 	os.RemoveAll(lsxBinPath)
 
-	os.Exit(m.Run())
+	ec := m.Run()
+
+	client.Close()
+	os.Exit(ec)
 }
 
 func TestClient(t *testing.T) {

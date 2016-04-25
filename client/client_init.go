@@ -2,17 +2,13 @@ package client
 
 import (
 	"bytes"
-	"crypto/md5"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
-	"os"
 	"strings"
-	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
@@ -26,13 +22,27 @@ import (
 	"github.com/emccode/libstorage/api/utils"
 	apiconfig "github.com/emccode/libstorage/api/utils/config"
 	"github.com/emccode/libstorage/api/utils/paths"
-	"github.com/emccode/libstorage/cli/executors"
+	"github.com/emccode/libstorage/api/utils/semaphore"
 
 	// load the drivers
 	_ "github.com/emccode/libstorage/drivers/os"
 )
 
+var (
+	lsxMutex semaphore.Semaphore
+)
+
 func init() {
+	var err error
+	for {
+		lsxMutex, err = semaphore.Open(types.LSX, false, 0644, 1)
+		if err != nil {
+			log.WithError(err).Warn(err)
+		} else {
+			break
+		}
+	}
+
 	registerConfig()
 }
 
@@ -139,6 +149,11 @@ func New(config gofig.Config) (Client, error) {
 	return c, nil
 }
 
+// Close releases system resources.
+func Close() error {
+	return lsxMutex.Close()
+}
+
 func (c *lsc) API() *apiclient.Client {
 	return &c.Client
 }
@@ -160,90 +175,6 @@ func (c *lsc) updateServiceInfo() error {
 		return err
 	}
 	c.svcInfo = svcInfo
-	return nil
-}
-
-func (c *lsc) updateExecutorInfo() error {
-	c.ctx.Log().Debug("getting executor information")
-	lsxInfo, err := c.Client.Executors(c.ctx)
-	if err != nil {
-		return err
-	}
-	c.lsxInfo = lsxInfo
-	return nil
-}
-
-var (
-	lsxBinLock = &sync.Mutex{}
-)
-
-func (c *lsc) updateExecutor() error {
-	lsxi, ok := c.lsxInfo[executors.LSX]
-	if !ok {
-		return goof.WithField("lsx", executors.LSX, "unknown executor")
-	}
-
-	lsxBinLock.Lock()
-	defer lsxBinLock.Unlock()
-
-	if !gotil.FileExists(c.lsxBinPath) {
-		return c.downloadExecutor()
-	}
-
-	checksum, err := c.getExecutorChecksum()
-	if err != nil {
-		return err
-	}
-
-	if lsxi.MD5Checksum != checksum {
-		return c.downloadExecutor()
-	}
-
-	return nil
-}
-
-func (c *lsc) getExecutorChecksum() (string, error) {
-	f, err := os.Open(c.lsxBinPath)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	h := md5.New()
-	buf := make([]byte, 1024)
-	for {
-		n, err := f.Read(buf)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return "", err
-		}
-		if _, err := h.Write(buf[:n]); err != nil {
-			return "", err
-		}
-	}
-
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
-}
-
-func (c *lsc) downloadExecutor() error {
-
-	f, err := os.OpenFile(
-		c.lsxBinPath,
-		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
-		0755)
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	rdr, err := c.Client.ExecutorGet(c.ctx, executors.LSX)
-	if _, err := io.Copy(f, rdr); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -367,7 +298,7 @@ func (c *lsc) getServiceInfo(service string) (*types.ServiceInfo, error) {
 
 func registerConfig() {
 	r := gofig.NewRegistration("libStorage Client")
-	lsxBinPath := fmt.Sprintf("%s/%s", paths.UsrDirPath(), executors.LSX)
+	lsxBinPath := fmt.Sprintf("%s/%s", paths.UsrDirPath(), types.LSX)
 	r.Key(gofig.String, "", lsxBinPath, "", LSXPathKey)
 	r.Key(gofig.Bool, "", false, "", lsxOffline)
 	r.Key(gofig.Bool, "", false, "", logEnabledKey)

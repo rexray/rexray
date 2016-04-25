@@ -6,7 +6,7 @@ import (
 	"github.com/akutz/goof"
 )
 
-func (s *semaphore) timedWait(t *time.Time) error {
+func (s *semaphore) timedWait(t time.Duration) error {
 	return goof.New("unsupported")
 }
 

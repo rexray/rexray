@@ -17,10 +17,12 @@ int _sem_timedwait(void* sem, time_t sec, long nsec) {
     ts->tv_sec = sec;
     ts->tv_nsec = nsec;
 	const struct timespec* cts = (const struct timespec*) ts;
+	int ec = 0;
 	while (sem_timedwait(((sem_tt*)sem)->val, cts))
 		if (errno == EINTR) errno = 0;
-		else return errno;
-	return 0;
+		else { ec = errno; break; }
+	free(ts);
+	return ec;
 }
 
 typedef struct {
@@ -37,12 +39,14 @@ getvalue_result* _sem_getvalue(void* sem) {
 import "C"
 import (
 	"time"
+	"unsafe"
 
 	"github.com/akutz/goof"
 )
 
-func (s *semaphore) timedWait(t *time.Time) error {
-	err := C._sem_timedwait(s.sema, C.time_t(t.Unix()), C.long(t.UnixNano()))
+func (s *semaphore) timedWait(t time.Duration) error {
+	err := C._sem_timedwait(
+		s.sema, C.time_t(t.Seconds()), C.long(t.Nanoseconds()))
 	if err == 0 {
 		return nil
 	}
@@ -54,6 +58,7 @@ func (s *semaphore) timedWait(t *time.Time) error {
 
 func (s *semaphore) value() (int, error) {
 	r := C._sem_getvalue(s.sema)
+	defer C.free(unsafe.Pointer(r))
 	if r.ret == 0 {
 		return int(r.val), nil
 	}

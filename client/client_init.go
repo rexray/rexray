@@ -126,6 +126,8 @@ func New(config gofig.Config) (Client, error) {
 		return nil, err
 	}
 
+	c.ctx = c.ctx.WithContextID("server", c.ServerName())
+
 	if !config.GetBool(lsxOffline) {
 		if err := c.updateExecutorInfo(); err != nil {
 			return nil, err
@@ -156,6 +158,10 @@ func Close() error {
 
 func (c *lsc) API() *apiclient.Client {
 	return &c.Client
+}
+
+func (c *lsc) ServerName() string {
+	return c.Client.ServerName
 }
 
 func getHost(proto, lAddr string, tlsConfig *tls.Config) string {

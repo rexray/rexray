@@ -27,7 +27,7 @@ type serviceContainer struct {
 
 // Init initializes the services.
 func Init(ctx context.Context, config gofig.Config) error {
-	serverName := ctx.Value("server").(string)
+	serverName := ctx.ServerName()
 
 	sc := &serviceContainer{
 		taskService:     &globalTaskService{name: "global-task-service"},
@@ -62,7 +62,7 @@ func (sc *serviceContainer) Init(config gofig.Config) error {
 func getStorageServices(
 	ctx context.Context) map[string]services.StorageService {
 
-	return servicesByServer[ctx.Value("server").(string)].storageServices
+	return servicesByServer[ctx.ServerName()].storageServices
 }
 
 // GetStorageService returns the storage service specified by the given name;
@@ -125,7 +125,7 @@ func (sc *serviceContainer) initStorageServices() error {
 func getTaskService(ctx context.Context) *globalTaskService {
 	servicesByServerRWL.RLock()
 	defer servicesByServerRWL.RUnlock()
-	return servicesByServer[ctx.Value("server").(string)].taskService
+	return servicesByServer[ctx.ServerName()].taskService
 }
 
 // Tasks returns a channel on which all tasks are received.

@@ -24,6 +24,12 @@ var (
 // Client is the libStorage client.
 type Client interface {
 
+	// ServerName returns the name of the server to which the client is
+	// connected. This is not the same as the host name, rather it's the
+	// randomly generated name the server creates for unique identification
+	// when the server starts for the first time.
+	ServerName() string
+
 	// API returns the underlying API client.
 	API() *apiclient.Client
 
@@ -32,6 +38,9 @@ type Client interface {
 
 	// LocalDevices gets the client's local devices map.
 	LocalDevices(service string) (map[string]string, error)
+
+	// NextDevice gets the next available device ID.
+	NextDevice(service string) (string, error)
 
 	// Services returns a map of the configured Services.
 	Services() (apihttp.ServicesMap, error)

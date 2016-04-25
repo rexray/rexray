@@ -8,10 +8,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/utils"
 )
 
 // instanceIDHandler is a global HTTP filter for grokking the InstanceIDs
@@ -46,7 +46,7 @@ func (h *instanceIDHandler) Handle(
 	if err := parseInstanceIDHeaders(
 		ctx,
 		apihttp.InstanceIDHeader,
-		httputils.GetHeader(req.Header, apihttp.InstanceIDHeader),
+		utils.GetHeader(req.Header, apihttp.InstanceIDHeader),
 		valMap); err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (h *instanceIDHandler) Handle(
 	if err := parseInstanceIDHeaders(
 		ctx,
 		apihttp.InstanceID64Header,
-		httputils.GetHeader(req.Header, apihttp.InstanceID64Header),
+		utils.GetHeader(req.Header, apihttp.InstanceID64Header),
 		valMap); err != nil {
 		return err
 	}

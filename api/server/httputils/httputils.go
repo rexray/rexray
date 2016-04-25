@@ -23,16 +23,6 @@ var (
 		(*drivers.RemoteStorageDriver)(nil))
 )
 
-// GetHeader is a case-insensitive way to retrieve a header's value.
-func GetHeader(headers http.Header, name string) []string {
-	for k, v := range headers {
-		if strings.ToLower(k) == strings.ToLower(name) {
-			return v
-		}
-	}
-	return nil
-}
-
 // GetService gets the Service instance from a context.
 func GetService(ctx context.Context) (apisvcs.StorageService, error) {
 	serviceObj := ctx.Value(context.ContextKeyService)

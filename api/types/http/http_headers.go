@@ -10,4 +10,10 @@ const (
 
 	// LocalDevicesHeader is the HTTP header that contains a local device pair.
 	LocalDevicesHeader = "libstorage-localdevices"
+
+	// ServerNameHeader is the HTTP header that contains the randomly generated
+	// name the server creates for unique identification when the server starts
+	// for the first time. This header is provided with every response sent
+	// from the server.
+	ServerNameHeader = "libstorage-servername"
 )

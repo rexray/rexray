@@ -334,7 +334,26 @@ func (d *driver) VolumeAttach(
 	volumeID string,
 	opts *drivers.VolumeAttachByIDOpts) (*types.Volume, error) {
 
-	return nil, nil
+	var modVol *types.Volume
+	for _, vol := range d.volumes {
+		if vol.ID == volumeID {
+			modVol = vol
+			break
+		}
+	}
+
+	fmt.Println(fmt.Sprintf("%+v", *opts))
+	modVol.Attachments = []*types.VolumeAttachment{
+		&types.VolumeAttachment{
+			DeviceName: *opts.NextDevice,
+			MountPoint: "",
+			InstanceID: ctx.InstanceID(),
+			Status:     "attached",
+			VolumeID:   modVol.ID,
+		},
+	}
+
+	return modVol, nil
 }
 
 func (d *driver) VolumeDetach(
@@ -342,9 +361,27 @@ func (d *driver) VolumeDetach(
 	volumeID string,
 	opts types.Store) error {
 
-	if strings.ToLower(ctx.Value("serviceID").(string)) == "testservice2" &&
-		strings.ToLower(volumeID) == "mockdriver2-vol-001" {
-		return goof.New("volume detach error")
+	var modVol *types.Volume
+	for _, vol := range d.volumes {
+		if vol.ID == volumeID {
+			continue
+		}
+		modVol = vol
+		break
+	}
+
+	modVol.Attachments = nil
+
+	return nil
+}
+
+func (d *driver) VolumeDetachAll(
+	ctx context.Context,
+	volumeID string,
+	opts types.Store) error {
+
+	for _, vol := range d.volumes {
+		vol.Attachments = nil
 	}
 
 	return nil

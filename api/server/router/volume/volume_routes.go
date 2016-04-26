@@ -349,6 +349,7 @@ func (r *router) volumeDetachAll(
 				return nil, err
 			}
 
+			// check here
 			var volumeMap apihttp.VolumeMap = map[string]*types.Volume{}
 			defer func() {
 				if len(volumeMap) > 0 {

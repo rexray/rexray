@@ -368,6 +368,129 @@ func TestSnapshotCopy(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
+func TestVolumeAttach(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		nd, _ := client.NextDevice("mock")
+		request := &apihttp.VolumeAttachRequest{
+			NextDeviceName: nd,
+			Opts:           opts,
+		}
+
+		reply, err := client.VolumeAttach("mock", "vol-001", request)
+		assert.NoError(t, err)
+		apitests.LogAsJSON(reply, t)
+		assert.Equal(
+			t, "vol-001", reply.ID)
+		assert.Equal(
+			t, "/dev/xvde", reply.Attachments[0].DeviceName)
+
+		reply, err = client.VolumeAttach("mock", "vol-002", request)
+		assert.NoError(t, err)
+		apitests.LogAsJSON(reply, t)
+		assert.Equal(
+			t, "vol-002", reply.ID)
+		assert.Equal(
+			t, "/dev/xvde", reply.Attachments[0].DeviceName)
+
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestVolumeDetach(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		request := &apihttp.VolumeDetachRequest{
+			Opts: opts,
+		}
+
+		vol, err := client.VolumeDetach("mock", "vol-000", request)
+		assert.NoError(t, err)
+		assert.Equal(t, vol.ID, "vol-000")
+		assert.Len(
+			t, vol.Attachments, 0)
+
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestVolumeDetachAllForService(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		nd, err := client.NextDevice("mock2")
+		assert.NoError(t, err)
+		request := &apihttp.VolumeAttachRequest{
+			NextDeviceName: nd,
+			Opts:           opts,
+		}
+
+		_, err = client.VolumeAttach("mock2", "vol-000", request)
+		assert.NoError(t, err)
+		var vol *types.Volume
+		vol, err = client.VolumeInspect("mock2", "vol-000", true)
+		assert.NoError(t, err)
+		assert.Len(
+			t, vol.Attachments, 1)
+
+		requestD := &apihttp.VolumeDetachRequest{
+			Opts: opts,
+		}
+		err = client.VolumeDetachAllForService("mock", requestD)
+		assert.NoError(t, err)
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
+func TestVolumeDetachAll(t *testing.T) {
+	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		request := &apihttp.VolumeDetachRequest{
+			Opts: opts,
+		}
+
+		err := client.VolumeDetachAll(request)
+		assert.NoError(t, err)
+		vol, err := client.VolumeInspect("mock", "vol-000", true)
+		assert.NoError(t, err)
+		assert.Len(
+			t, vol.Attachments, 0)
+		vol, err = client.VolumeInspect("mock", "vol-001", true)
+		assert.NoError(t, err)
+		assert.Len(
+			t, vol.Attachments, 0)
+		vol, err = client.VolumeInspect("mock", "vol-002", true)
+		assert.NoError(t, err)
+		assert.Len(
+			t, vol.Attachments, 0)
+		vol, err = client.VolumeInspect("mock2", "vol-000", true)
+		assert.NoError(t, err)
+		assert.Len(
+			t, vol.Attachments, 0)
+
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
 func TestExecutors(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, apitests.TestExecutors)
 }

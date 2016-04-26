@@ -66,6 +66,27 @@ type Client interface {
 	// VolumeRemove removes a single volume.
 	VolumeRemove(service, volumeID string) error
 
+	// VolumeAttach attaches a single volume.
+	VolumeAttach(
+		service string,
+		volumeID string,
+		request *apihttp.VolumeAttachRequest) (*types.Volume, error)
+
+	// VolumeAttach attaches a single volume.
+	VolumeDetach(
+		service string,
+		volumeID string,
+		request *apihttp.VolumeDetachRequest) (*types.Volume, error)
+
+	// VolumeDetachByService detaches all volumes in a service
+	VolumeDetachAllForService(
+		service string,
+		request *apihttp.VolumeDetachRequest) error
+
+	// VolumeDetachAll detaches all volumes from all services
+	VolumeDetachAll(
+		request *apihttp.VolumeDetachRequest) error
+
 	// VolumeSnapshot creates a single snapshot.
 	VolumeSnapshot(
 		service string,

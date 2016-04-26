@@ -74,6 +74,7 @@ func (r *router) initRoutes() {
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeMapSchema,
 				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
+			handlers.NewPostArgsHandler(),
 		).Queries("detach"),
 
 		// create a new volume
@@ -125,6 +126,7 @@ func (r *router) initRoutes() {
 				schema.VolumeAttachRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} { return &apihttp.VolumeAttachRequest{} }),
+			handlers.NewPostArgsHandler(),
 		).Queries("attach"),
 
 		// detach all volumes for all services
@@ -136,6 +138,7 @@ func (r *router) initRoutes() {
 				schema.VolumeDetachRequestSchema,
 				schema.ServiceVolumeMapSchema,
 				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
+			handlers.NewPostArgsHandler(),
 		).Queries("detach"),
 
 		// detach an individual volume
@@ -148,6 +151,7 @@ func (r *router) initRoutes() {
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
+			handlers.NewPostArgsHandler(),
 		).Queries("detach"),
 
 		// DELETE

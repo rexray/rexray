@@ -7,7 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/libstorage/cli/servers"
+	"github.com/emccode/libstorage/api/server"
 )
 
 // serve starts the libStorage server, blocking the current thread until the
@@ -53,5 +53,8 @@ func serve(
 		"args": args,
 	}).Info("serving")
 
-	return C.CString(servers.Run(szHost, bTLS, args...).Error())
+	if err := server.Run(szHost, bTLS, args...); err != nil {
+		return C.CString(err.Error())
+	}
+	return nil
 }

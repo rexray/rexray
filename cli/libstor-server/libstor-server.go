@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/emccode/libstorage/cli/servers"
+	"github.com/emccode/libstorage/api/server"
 )
 
 func main() {
@@ -15,7 +15,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := servers.Run("", false, os.Args[1:]...); err != nil {
+	err := server.Run("", false, os.Args[1:]...)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "libstor-server: error: %v\n", err)
 		os.Exit(1)
 	}

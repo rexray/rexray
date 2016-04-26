@@ -10,11 +10,13 @@ import (
 	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/types/context"
 )
 
 func (c *lsc) updateExecutorInfo() error {
-	c.ctx.Log().Debug("getting executor information")
-	lsxInfo, err := c.Client.Executors(c.ctx)
+	ctx := c.getTXCTX()
+	ctx.Log().Debug("getting executor information")
+	lsxInfo, err := c.Client.Executors(ctx)
 	if err != nil {
 		return err
 	}
@@ -23,39 +25,44 @@ func (c *lsc) updateExecutorInfo() error {
 }
 
 func (c *lsc) updateExecutor() error {
+	ctx := c.getTXCTX()
+	ctx.Log().Debug("updating executor")
+
 	lsxi, ok := c.lsxInfo[types.LSX]
 	if !ok {
 		return goof.WithField("lsx", types.LSX, "unknown executor")
 	}
 
-	c.ctx.Log().Debug("waiting on executor lock")
+	ctx.Log().Debug("waiting on executor lock")
 	if err := lsxMutex.Wait(); err != nil {
 		return err
 	}
 	defer func() {
-		c.ctx.Log().Debug("signalling executor lock")
+		ctx.Log().Debug("signalling executor lock")
 		if err := lsxMutex.Signal(); err != nil {
 			panic(err)
 		}
 	}()
 
 	if !gotil.FileExists(c.lsxBinPath) {
-		return c.downloadExecutor()
+		return c.downloadExecutor(ctx)
 	}
 
-	checksum, err := c.getExecutorChecksum()
+	checksum, err := c.getExecutorChecksum(ctx)
 	if err != nil {
 		return err
 	}
 
 	if lsxi.MD5Checksum != checksum {
-		return c.downloadExecutor()
+		return c.downloadExecutor(ctx)
 	}
 
 	return nil
 }
 
-func (c *lsc) getExecutorChecksum() (string, error) {
+func (c *lsc) getExecutorChecksum(ctx context.Context) (string, error) {
+	ctx.Log().Debug("getting executor checksum")
+
 	f, err := os.Open(c.lsxBinPath)
 	if err != nil {
 		return "", err
@@ -80,7 +87,9 @@ func (c *lsc) getExecutorChecksum() (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-func (c *lsc) downloadExecutor() error {
+func (c *lsc) downloadExecutor(ctx context.Context) error {
+
+	ctx.Log().Debug("downloading executor")
 
 	f, err := os.OpenFile(
 		c.lsxBinPath,
@@ -92,7 +101,7 @@ func (c *lsc) downloadExecutor() error {
 
 	defer f.Close()
 
-	rdr, err := c.Client.ExecutorGet(c.ctx, types.LSX)
+	rdr, err := c.Client.ExecutorGet(ctx, types.LSX)
 	if _, err := io.Copy(f, rdr); err != nil {
 		return err
 	}

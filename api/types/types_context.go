@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/net/context"
 )
@@ -30,6 +32,10 @@ const (
 	ContextKeyLocalDevicesByService = "localDevicesByService"
 	// ContextKeyServerName is a context key.
 	ContextKeyServerName = "serverName"
+	// ContextKeyTransactionID is a context key.
+	ContextKeyTransactionID = "txID"
+	// ContextKeyTransactionCreated is a context key.
+	ContextKeyTransactionCreated = "txCR"
 )
 
 // Context is a libStorage context.
@@ -38,6 +44,13 @@ type Context interface {
 
 	// ServerName gets the server name.
 	ServerName() string
+
+	// TransactionID gets the transaction ID.
+	TransactionID() string
+
+	// TransactionCreated gets the timestamp of when the transaction was
+	// created.
+	TransactionCreated() time.Time
 
 	// InstanceIDsByService returns the context's service to instance ID map.
 	InstanceIDsByService() map[string]*InstanceID
@@ -84,6 +97,13 @@ type Context interface {
 	// The context ID is often used with logging to identify a log statement's
 	// origin.
 	WithContextID(id, value string) Context
+
+	// WithTransactionID returns a context with the provided transaction ID.
+	WithTransactionID(transactionID string) Context
+
+	// WithTransactionCreated returns a context with the provided transaction
+	// created timestamp.
+	WithTransactionCreated(timestamp time.Time) Context
 
 	// WithValue returns a context with the provided value.
 	WithValue(key interface{}, val interface{}) Context

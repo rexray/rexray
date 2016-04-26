@@ -2,15 +2,37 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
+	"time"
 
 	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/cli/executors"
 )
 
+func (c *lsc) getTXCTX() context.Context {
+	txIDUUID, _ := utils.NewUUID()
+	txID := txIDUUID.String()
+	ctx := c.ctx.WithTransactionID(txID)
+	ctx = ctx.WithContextID(context.ContextKeyTransactionID, txID)
+	txCR := time.Now().UTC()
+	ctx = ctx.WithTransactionCreated(txCR)
+	ctx = ctx.WithContextID(
+		context.ContextKeyTransactionCreated,
+		fmt.Sprintf("%d", txCR.Unix()))
+	return ctx
+}
+
 func (c *lsc) InstanceID(service string) (*types.InstanceID, error) {
+	return c.instanceID(c.getTXCTX(), service)
+}
+
+func (c *lsc) instanceID(
+	ctx context.Context, service string) (*types.InstanceID, error) {
 
 	si, err := c.getServiceInfo(service)
 	if err != nil {
@@ -18,12 +40,12 @@ func (c *lsc) InstanceID(service string) (*types.InstanceID, error) {
 	}
 
 	out, err := func() ([]byte, error) {
-		c.ctx.Log().Debug("waiting on executor lock")
+		ctx.Log().Debug("waiting on executor lock")
 		if err := lsxMutex.Wait(); err != nil {
 			return nil, err
 		}
 		defer func() {
-			c.ctx.Log().Debug("signalling executor lock")
+			ctx.Log().Debug("signalling executor lock")
 			if err := lsxMutex.Signal(); err != nil {
 				panic(err)
 			}
@@ -47,6 +69,11 @@ func (c *lsc) InstanceID(service string) (*types.InstanceID, error) {
 }
 
 func (c *lsc) LocalDevices(service string) (map[string]string, error) {
+	return c.localDevices(c.getTXCTX(), service)
+}
+
+func (c *lsc) localDevices(
+	ctx context.Context, service string) (map[string]string, error) {
 
 	si, err := c.getServiceInfo(service)
 	if err != nil {
@@ -54,12 +81,12 @@ func (c *lsc) LocalDevices(service string) (map[string]string, error) {
 	}
 
 	out, err := func() ([]byte, error) {
-		c.ctx.Log().Debug("waiting on executor lock")
+		ctx.Log().Debug("waiting on executor lock")
 		if err := lsxMutex.Wait(); err != nil {
 			return nil, err
 		}
 		defer func() {
-			c.ctx.Log().Debug("signalling executor lock")
+			ctx.Log().Debug("signalling executor lock")
 			if err := lsxMutex.Signal(); err != nil {
 				panic(err)
 			}
@@ -84,18 +111,20 @@ func (c *lsc) LocalDevices(service string) (map[string]string, error) {
 
 func (c *lsc) NextDevice(service string) (string, error) {
 
+	ctx := c.getTXCTX()
+
 	si, err := c.getServiceInfo(service)
 	if err != nil {
 		return "", err
 	}
 
 	out, err := func() ([]byte, error) {
-		c.ctx.Log().Debug("waiting on executor lock")
+		ctx.Log().Debug("waiting on executor lock")
 		if err := lsxMutex.Wait(); err != nil {
 			return nil, err
 		}
 		defer func() {
-			c.ctx.Log().Debug("signalling executor lock")
+			ctx.Log().Debug("signalling executor lock")
 			if err := lsxMutex.Signal(); err != nil {
 				panic(err)
 			}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/akutz/goof"
 	"golang.org/x/net/context/ctxhttp"
@@ -21,6 +22,21 @@ func (c *Client) httpDo(
 	ctx context.Context,
 	method, path string,
 	payload, reply interface{}) (*http.Response, error) {
+
+	txID := ctx.TransactionID()
+	if txID == "" {
+		txIDUUID, _ := utils.NewUUID()
+		txID = txIDUUID.String()
+		ctx = ctx.WithTransactionID(txID).WithContextID(
+			context.ContextKeyTransactionID, txID)
+	}
+	txCR := ctx.TransactionCreated()
+	if txCR.IsZero() {
+		txCR = time.Now().UTC()
+		ctx = ctx.WithTransactionCreated(txCR).WithContextID(
+			context.ContextKeyTransactionCreated,
+			fmt.Sprintf("%d", txCR.Unix()))
+	}
 
 	reqBody, err := encPayload(payload)
 	if err != nil {
@@ -37,6 +53,9 @@ func (c *Client) httpDo(
 		req.Header[k] = v
 	}
 
+	req.Header.Set(apihttp.TransactionIDHeader, txID)
+	req.Header.Set(
+		apihttp.TransactionCreatedHeader, fmt.Sprintf("%d", txCR.Unix()))
 	c.logRequest(req)
 
 	res, err := ctxhttp.Do(ctx, c.Client, req)

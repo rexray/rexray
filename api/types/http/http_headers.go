@@ -11,6 +11,14 @@ const (
 	// LocalDevicesHeader is the HTTP header that contains a local device pair.
 	LocalDevicesHeader = "libstorage-localdevices"
 
+	// TransactionIDHeader is the HTTP header that contains the transaction ID
+	// sent from the client.
+	TransactionIDHeader = "libstorage-txid"
+
+	// TransactionCreatedHeader is the HTTP header that contains the UTC
+	// epoch of the time that the transaction was created.
+	TransactionCreatedHeader = "libstorage-txcr"
+
 	// ServerNameHeader is the HTTP header that contains the randomly generated
 	// name the server creates for unique identification when the server starts
 	// for the first time. This header is provided with every response sent

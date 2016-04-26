@@ -30,6 +30,11 @@ var (
 	lsxLinuxInfo, _   = executors.ExecutorInfoInspect("lsx-linux", false)
 	lsxDarwinInfo, _  = executors.ExecutorInfoInspect("lsx-darwin", false)
 	lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
+
+	tcpTest        bool
+	tcpTLSTest, _  = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_TCP_TLS"))
+	sockTest, _    = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_SOCK"))
+	sockTLSTest, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_SOCK_TLS"))
 )
 
 func init() {
@@ -38,6 +43,12 @@ func init() {
 		lsxbin = "lsx-windows.exe"
 	} else {
 		lsxbin = fmt.Sprintf("lsx-%s", runtime.GOOS)
+	}
+
+	var err error
+	tcpTest, err = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_TCP"))
+	if err != nil {
+		tcpTest = true
 	}
 }
 
@@ -277,18 +288,24 @@ func getTestConfigs(
 	assert.NoError(t, err)
 	assert.NoError(t, config.ReadConfig(bytes.NewReader(yamlBuf)))
 
-	configNames := map[int]string{
-		0: "tcp",
-		1: "tcpTLS",
-		2: "unix",
-		3: "unixTLS",
-	}
+	configNames := map[int]string{}
+	configs := []gofig.Config{}
 
-	configs := []gofig.Config{
-		config.Scope("libstorage.tests.tcp"),
-		config.Scope("libstorage.tests.tcpTLS"),
-		config.Scope("libstorage.tests.unix"),
-		config.Scope("libstorage.tests.unixTLS"),
+	if tcpTest {
+		configNames[len(configNames)] = "tcp"
+		configs = append(configs, config.Scope("libstorage.tests.tcp"))
+	}
+	if tcpTLSTest {
+		configNames[len(configNames)] = "tcpTLS"
+		configs = append(configs, config.Scope("libstorage.tests.tcpTLS"))
+	}
+	if sockTest {
+		configNames[len(configNames)] = "unix"
+		configs = append(configs, config.Scope("libstorage.tests.unix"))
+	}
+	if sockTLSTest {
+		configNames[len(configNames)] = "unixTLS"
+		configs = append(configs, config.Scope("libstorage.tests.unixTLS"))
 	}
 
 	return configNames, configs

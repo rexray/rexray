@@ -175,8 +175,9 @@ func getHost(proto, lAddr string, tlsConfig *tls.Config) string {
 }
 
 func (c *lsc) updateServiceInfo() error {
-	c.ctx.Log().Debug("getting service information")
-	svcInfo, err := c.Client.Services(c.ctx)
+	ctx := c.getTXCTX()
+	ctx.Log().Debug("getting service information")
+	svcInfo, err := c.Client.Services(ctx)
 	if err != nil {
 		return err
 	}
@@ -195,8 +196,8 @@ func (c *lsc) updateInstanceIDs() error {
 		return nil
 	}
 
-	c.ctx.Log().Debug("getting instance IDs")
-
+	ctx := c.getTXCTX()
+	ctx.Log().Debug("getting instance IDs")
 	cache := map[string]*iidHeader{}
 
 	for service, si := range c.svcInfo {
@@ -205,7 +206,7 @@ func (c *lsc) updateInstanceIDs() error {
 			continue
 		}
 
-		iid, err := c.InstanceID(service)
+		iid, err := c.instanceID(ctx, service)
 		if err != nil {
 			return err
 		}
@@ -252,7 +253,8 @@ func (c *lsc) updateLocalDevices() error {
 		return nil
 	}
 
-	c.ctx.Log().Debug("getting local devices")
+	ctx := c.getTXCTX()
+	ctx.Log().Debug("getting local devices")
 
 	cache := map[string]*ldHeader{}
 
@@ -262,7 +264,7 @@ func (c *lsc) updateLocalDevices() error {
 			continue
 		}
 
-		ldm, err := c.LocalDevices(service)
+		ldm, err := c.localDevices(ctx, service)
 		if err != nil {
 			return err
 		}

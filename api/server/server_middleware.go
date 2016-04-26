@@ -17,7 +17,10 @@ func (s *server) initGlobalMiddleware() {
 			s.logHTTPResponses))
 	}
 
+	s.addGlobalMiddleware(handlers.NewTransactionHandler())
+
 	s.addGlobalMiddleware(handlers.NewErrorHandler())
+
 	s.addGlobalMiddleware(handlers.NewInstanceIDHandler())
 	s.addGlobalMiddleware(handlers.NewLocalDevicesHandler())
 }

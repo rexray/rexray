@@ -2,6 +2,7 @@ package context
 
 import (
 	"net/http"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	gcontext "github.com/gorilla/context"
@@ -36,6 +37,10 @@ const (
 	ContextKeyLocalDevicesByService = types.ContextKeyLocalDevicesByService
 	// ContextKeyServerName is a context key.
 	ContextKeyServerName = types.ContextKeyServerName
+	// ContextKeyTransactionID is a context key.
+	ContextKeyTransactionID = types.ContextKeyTransactionID
+	// ContextKeyTransactionCreated is a context key.
+	ContextKeyTransactionCreated = types.ContextKeyTransactionCreated
 )
 
 var (
@@ -50,6 +55,8 @@ var (
 
 	localDevicesByServiceTypeName = utils.GetTypePkgPathAndName(
 		map[string]map[string]string{})
+
+	timestampTypeName = utils.GetTypePkgPathAndName(time.Time{})
 
 	loggerTypeName = utils.GetTypePkgPathAndName(
 		&log.Logger{})
@@ -145,6 +152,17 @@ func WithContextID(
 		}
 	}
 	return WithValue(parent, ContextKeyContextID, contextID)
+}
+
+// WithTransactionID returns a context with the provided transaction ID.
+func WithTransactionID(parent context.Context, val string) Context {
+	return WithValue(parent, ContextKeyTransactionID, val)
+}
+
+// WithTransactionCreated returns a context with the provided transaction
+// created timestamp.
+func WithTransactionCreated(parent context.Context, val time.Time) Context {
+	return WithValue(parent, ContextKeyTransactionCreated, val)
 }
 
 // WithValue returns a context with the provided value.
@@ -265,6 +283,36 @@ func Route(ctx context.Context) (string, error) {
 	return typedObj, nil
 }
 
+// TransactionID gets the context's transaction ID.
+func TransactionID(ctx context.Context) (string, error) {
+	obj := ctx.Value(ContextKeyTransactionID)
+	if obj == nil {
+		return "", utils.NewContextKeyErr(ContextKeyTransactionID)
+	}
+	typedObj, ok := obj.(string)
+	if !ok {
+		return "", utils.NewContextTypeErr(
+			ContextKeyTransactionID,
+			"string", utils.GetTypePkgPathAndName(obj))
+	}
+	return typedObj, nil
+}
+
+// TransactionCreated gets the context's transaction created timstamp.
+func TransactionCreated(ctx context.Context) (time.Time, error) {
+	obj := ctx.Value(ContextKeyTransactionCreated)
+	if obj == nil {
+		return time.Time{}, utils.NewContextKeyErr(ContextKeyTransactionCreated)
+	}
+	typedObj, ok := obj.(time.Time)
+	if !ok {
+		return time.Time{}, utils.NewContextTypeErr(
+			ContextKeyTransactionCreated,
+			timestampTypeName, utils.GetTypePkgPathAndName(obj))
+	}
+	return typedObj, nil
+}
+
 // HTTPRequest returns the *http.Request associated with ctx using
 // NewRequestContext, if any.
 func HTTPRequest(ctx context.Context) *http.Request {
@@ -331,6 +379,16 @@ func (ctx *libstorContext) Route() string {
 	return v
 }
 
+func (ctx *libstorContext) TransactionID() string {
+	v, _ := TransactionID(ctx)
+	return v
+}
+
+func (ctx *libstorContext) TransactionCreated() time.Time {
+	v, _ := TransactionCreated(ctx)
+	return v
+}
+
 func (ctx *libstorContext) Log() *log.Logger {
 	return ctx.logger
 }
@@ -365,6 +423,14 @@ func (ctx *libstorContext) WithRoute(val string) types.Context {
 
 func (ctx *libstorContext) WithContextID(id, val string) types.Context {
 	return WithContextID(ctx, id, val)
+}
+
+func (ctx *libstorContext) WithTransactionID(val string) types.Context {
+	return WithTransactionID(ctx, val)
+}
+
+func (ctx *libstorContext) WithTransactionCreated(val time.Time) types.Context {
+	return WithTransactionCreated(ctx, val)
 }
 
 func (ctx *libstorContext) WithValue(

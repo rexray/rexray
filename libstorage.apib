@@ -60,6 +60,19 @@ header in action:
 
         libStorage-LocalDevices: mock=/dev/xvda=/var/log, /dev/xvdb=/home, /dev/xvdc=/net/share, /dev/xvdd=/var/lib/backup
 
+### Transaction ID
+The transaction ID is a UUID/GUID that is used to track an operation
+from the time it originates on a client, through the server, and back
+to the client again. The header name is `libStorage-txID`:
+
+        libStorage-txID: 959716fa-6a76-4e48-6243-1dd328c0f313
+
+### Transaction Created
+The header `libStorage-txCR` is a UTC epoch timestamp that notes when
+the original client-side operation was created:
+
+        libStorage-txCR: 1461644872
+
 # Group Root
 
 # Root Resource [/]

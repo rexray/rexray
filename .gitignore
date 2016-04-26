@@ -13,6 +13,10 @@ api/server/executors/bin/
 c/libstor-s/libstor-s.so
 c/libstor-s/libstor-s.h
 c/libstor-s/libstor-s.a
+cli/semaphores/open
+cli/semaphores/wait
+cli/semaphores/signal
+cli/semaphores/unlink
 
 # Created by https://www.gitignore.io
 

@@ -366,6 +366,28 @@ GO_CLEAN += $(EXECUTORS_GENERATED)-clean
 $(API_SERVER_EXECUTORS_A): $(EXECUTORS_GENERATED)
 
 ################################################################################
+##                               SEMAPHORE BINS                               ##
+################################################################################
+SEM_OPEN := ./cli/semaphores/open
+SEM_WAIT := ./cli/semaphores/wait
+SEM_SIGNAL := ./cli/semaphores/signal
+SEM_UNLINK := ./cli/semaphores/unlink
+
+$(SEM_OPEN): $(SEM_OPEN).c
+	gcc $? -o $@
+
+$(SEM_WAIT): $(SEM_WAIT).c
+	gcc $? -o $@
+
+$(SEM_SIGNAL): $(SEM_SIGNAL).c
+	gcc $? -o $@
+
+$(SEM_UNLINK): $(SEM_UNLINK).c
+	gcc $? -o $@
+
+sem-tools: $(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK)
+
+################################################################################
 ##                                  COVERAGE                                  ##
 ################################################################################
 COVERAGE := coverage.out
@@ -477,7 +499,7 @@ build-tests: $(GO_BUILD_TESTS)
 
 build-executors: $(EXECUTORS_EMBEDDED)
 
-build: $(GO_BUILD)
+build: sem-tools $(GO_BUILD)
 	$(MAKE) -j libstor-c libstor-s
 
 test: $(GO_TEST)

@@ -126,7 +126,7 @@ func New(config gofig.Config) (Client, error) {
 		return nil, err
 	}
 
-	c.ctx = c.ctx.WithContextID("server", c.ServerName())
+	c.ctx = c.ctx.WithContextID(context.ContextKeyServerName, c.ServerName())
 
 	if !config.GetBool(lsxOffline) {
 		if err := c.updateExecutorInfo(); err != nil {

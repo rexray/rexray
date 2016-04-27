@@ -111,6 +111,60 @@ func (c *Client) VolumeRemove(
 	return nil
 }
 
+// VolumeAttach attaches a single volume.
+func (c *Client) VolumeAttach(
+	ctx context.Context,
+	service string,
+	volumeID string,
+	request *apihttp.VolumeAttachRequest) (*types.Volume, error) {
+	cctx(&ctx)
+	reply := types.Volume{}
+	if _, err := c.httpPost(ctx,
+		fmt.Sprintf("/volumes/%s/%s?attach", service, volumeID), request, &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
+}
+
+// VolumeDetach attaches a single volume.
+func (c *Client) VolumeDetach(
+	ctx context.Context,
+	service string,
+	volumeID string,
+	request *apihttp.VolumeDetachRequest) error {
+	cctx(&ctx)
+	if _, err := c.httpPost(ctx,
+		fmt.Sprintf("/volumes/%s/%s?detach", service, volumeID), request, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+// VolumeDetachAll attaches all volumes from all services.
+func (c *Client) VolumeDetachAll(
+	ctx context.Context,
+	request *apihttp.VolumeDetachRequest) error {
+	cctx(&ctx)
+	if _, err := c.httpPost(ctx,
+		fmt.Sprintf("/volumes?detach"), request, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+// VolumeDetachAllForService detaches all volumes from a service.
+func (c *Client) VolumeDetachAllForService(
+	ctx context.Context,
+	service string,
+	request *apihttp.VolumeDetachRequest) error {
+	cctx(&ctx)
+	if _, err := c.httpPost(ctx,
+		fmt.Sprintf("/volumes/%s?detach", service), request, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
 // VolumeSnapshot creates a single snapshot.
 func (c *Client) VolumeSnapshot(
 	ctx context.Context,

@@ -175,6 +175,34 @@ func (c *lsc) VolumeRemove(service, volumeID string) error {
 	return c.Client.VolumeRemove(c.ctx, service, volumeID)
 }
 
+func (c *lsc) VolumeAttach(
+	service string,
+	volumeID string,
+	request *apihttp.VolumeAttachRequest) (*types.Volume, error) {
+	return c.Client.VolumeAttach(c.ctx, service, volumeID, request)
+}
+
+func (c *lsc) VolumeDetach(
+	service string,
+	volumeID string,
+	request *apihttp.VolumeDetachRequest) (*types.Volume, error) {
+	if err := c.Client.VolumeDetach(c.ctx, service, volumeID, request); err != nil {
+		return nil, err
+	}
+	return c.Client.VolumeInspect(c.ctx, service, volumeID, true)
+}
+
+func (c *lsc) VolumeDetachAllForService(
+	service string,
+	request *apihttp.VolumeDetachRequest) error {
+	return c.Client.VolumeDetachAllForService(c.ctx, service, request)
+}
+
+func (c *lsc) VolumeDetachAll(
+	request *apihttp.VolumeDetachRequest) error {
+	return c.Client.VolumeDetachAll(c.ctx, request)
+}
+
 func (c *lsc) VolumeSnapshot(
 	service, volumeID string,
 	request *apihttp.VolumeSnapshotRequest) (*types.Snapshot, error) {

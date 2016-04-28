@@ -15,6 +15,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	server.CloseOnAbort()
+
 	err := server.Run("", false, os.Args[1:]...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "libstor-server: error: %v\n", err)

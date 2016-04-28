@@ -71,13 +71,12 @@ func GetServiceContext(
 	ctx *context.Context,
 	service apisvcs.StorageService) error {
 
-	iid := GetInstanceIDForService(*ctx, service)
-	if iid == nil {
-		return utils.NewMissingInstanceIDError(service.Name())
-	}
+	sctx := *ctx
 
-	sctx := context.WithInstanceID(*ctx, iid)
-	sctx = sctx.WithContextID(context.ContextKeyInstanceID, iid.ID)
+	if iid := GetInstanceIDForService(sctx, service); iid != nil {
+		sctx = context.WithInstanceID(sctx, iid)
+		sctx = sctx.WithContextID(context.ContextKeyInstanceID, iid.ID)
+	}
 
 	localDevices := GetLocalDevicesForService(sctx, service)
 	if localDevices != nil {
@@ -90,6 +89,8 @@ func GetServiceContext(
 	sctx = sctx.WithContextID(context.ContextKeyDriver, service.Driver().Name())
 
 	*ctx = sctx
+
+	sctx.Log().Debug("set service context")
 	return nil
 }
 

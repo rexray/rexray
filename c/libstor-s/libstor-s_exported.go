@@ -10,6 +10,14 @@ import (
 	"github.com/emccode/libstorage/api/server"
 )
 
+// closeOnAbort is a helper function that can be called by programs, such as
+// tests or a command line or service application.
+//
+//export closeOnAbort
+func closeOnAbort() {
+	server.CloseOnAbort()
+}
+
 // serve starts the libStorage server, blocking the current thread until the
 // server is shutdown.
 //

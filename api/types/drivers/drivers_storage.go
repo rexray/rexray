@@ -3,6 +3,7 @@ package drivers
 import (
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
+	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 // NewStorageExecutor is a function that constructs a new StorageExecutors.
@@ -68,170 +69,134 @@ type StorageExecutor interface {
 type LocalStorageDriver interface {
 	Driver
 
-	/***************************************************************************
-	**                               Instance                                 **
-	***************************************************************************/
 	// InstanceInspectBefore may return an error, preventing the operation.
-	InstanceInspectBefore(
-		ctx context.Context,
-		opts types.Store) error
+	InstanceInspectBefore(ctx *context.Context) error
 
 	// InstanceInspectAfter provides an opportunity to inspect/mutate the
 	// result.
-	InstanceInspectAfter(
-		ctx context.Context,
-		result *types.Instance)
+	InstanceInspectAfter(ctx context.Context, result *types.Instance)
 
-	/***************************************************************************
-	**                               Volumes                                  **
-	***************************************************************************/
 	// VolumesBefore may return an error, preventing the operation.
-	VolumesBefore(
-		ctx context.Context,
-		opts *VolumesOpts) error
+	VolumesBefore(ctx *context.Context) error
 
 	// VolumesAfter provides an opportunity to inspect/mutate the result.
-	VolumesAfter(
-		ctx context.Context,
-		result []*types.Volume)
+	VolumesAfter(ctx context.Context, result *apihttp.ServiceVolumeMap)
+
+	// VolumesByServiceBefore may return an error, preventing the operation.
+	VolumesByServiceBefore(ctx *context.Context, service string) error
+
+	// VolumesByServiceAfter provides an opportunity to inspect/mutate the
+	// result.
+	VolumesByServiceAfter(
+		ctx context.Context, service string, result *apihttp.VolumeMap)
 
 	// VolumeInspectBefore may return an error, preventing the operation.
 	VolumeInspectBefore(
-		ctx context.Context,
-		volumeID string,
-		opts *VolumeInspectOpts) (*types.Volume, error)
+		ctx *context.Context, service, volumeID string, attachments bool) error
 
 	// VolumeInspectAfter provides an opportunity to inspect/mutate the result.
-	VolumeInspectAfter(
-		ctx context.Context,
-		result *types.Volume)
+	VolumeInspectAfter(ctx context.Context, result *types.Volume)
 
 	// VolumeCreateBefore may return an error, preventing the operation.
 	VolumeCreateBefore(
-		ctx context.Context,
-		name string,
-		opts *VolumeCreateOpts) (*types.Volume, error)
+		ctx *context.Context, service string,
+		request *apihttp.VolumeCreateRequest) error
 
 	// VolumeCreateAfter provides an opportunity to inspect/mutate the result.
-	VolumeCreateAfter(
-		ctx context.Context,
-		result *types.Volume)
+	VolumeCreateAfter(ctx context.Context, result *types.Volume)
 
 	// VolumeCreateFromSnapshotBefore may return an error, preventing the
 	// operation.
 	VolumeCreateFromSnapshotBefore(
-		ctx context.Context,
-		snapshotID, volumeName string,
-		opts types.Store) (*types.Volume, error)
+		ctx *context.Context,
+		service, snapshotID string,
+		request *apihttp.VolumeCreateRequest) error
 
 	// VolumeCreateFromSnapshotAfter provides an opportunity to inspect/mutate
 	// the result.
-	VolumeCreateFromSnapshotAfter(
-		ctx context.Context,
-		result *types.Volume)
+	VolumeCreateFromSnapshotAfter(ctx context.Context, result *types.Volume)
 
 	// VolumeCopyBefore may return an error, preventing the operation.
 	VolumeCopyBefore(
-		ctx context.Context,
-		volumeID, volumeName string,
-		opts types.Store) (*types.Volume, error)
+		ctx *context.Context,
+		service, volumeID string,
+		request *apihttp.VolumeCopyRequest) error
 
 	// VolumeCopyAfter provides an opportunity to inspect/mutate the result.
-	VolumeCopyAfter(
-		ctx context.Context,
-		result *types.Volume)
-
-	// VolumeSnapshotBefore may return an error, preventing the operation.
-	VolumeSnapshotBefore(
-		ctx context.Context,
-		volumeID, snapshotName string,
-		opts types.Store) (*types.Snapshot, error)
-
-	// VolumeSnapshotAfter provides an opportunity to inspect/mutate the result.
-	VolumeSnapshotAfter(
-		ctx context.Context,
-		result *types.Volume)
+	VolumeCopyAfter(ctx context.Context, result *types.Volume)
 
 	// VolumeRemoveBefore may return an error, preventing the operation.
 	VolumeRemoveBefore(
-		ctx context.Context,
-		volumeID string,
-		opts types.Store) error
+		ctx *context.Context,
+		service, volumeID string) error
 
 	// VolumeRemoveAfter provides an opportunity to inspect/mutate the result.
-	VolumeRemoveAfter(
-		ctx context.Context,
-		result *types.Volume)
+	VolumeRemoveAfter(ctx context.Context, service, volumeID string)
+
+	// VolumeSnapshotBefore may return an error, preventing the operation.
+	VolumeSnapshotBefore(
+		ctx *context.Context,
+		service, volumeID string,
+		request *apihttp.VolumeSnapshotRequest) error
+
+	// VolumeSnapshotAfter provides an opportunity to inspect/mutate the result.
+	VolumeSnapshotAfter(ctx context.Context, result *types.Snapshot)
 
 	// VolumeAttachBefore may return an error, preventing the operation.
 	VolumeAttachBefore(
-		ctx context.Context,
-		volumeID string,
-		opts *VolumeAttachByIDOpts) (*types.Volume, error)
+		ctx *context.Context,
+		service, volumeID string,
+		request *apihttp.VolumeAttachRequest) error
 
 	// VolumeAttachAfter provides an opportunity to inspect/mutate the result.
-	VolumeAttachAfter(
-		ctx context.Context,
-		result *types.Volume)
+	VolumeAttachAfter(ctx context.Context, result *types.Volume)
 
 	// VolumeDetachBefore may return an error, preventing the operation.
 	VolumeDetachBefore(
-		ctx context.Context,
-		volumeID string,
-		opts types.Store) error
+		ctx *context.Context,
+		service, volumeID string,
+		request *apihttp.VolumeDetachRequest) error
 
 	// VolumeDetachAfter provides an opportunity to inspect/mutate the result.
-	VolumeDetachAfter(
-		ctx context.Context,
-		result *types.Volume)
-
-	/***************************************************************************
-	**                             Snapshots                                  **
-	***************************************************************************/
+	VolumeDetachAfter(ctx context.Context, result *types.Volume)
 
 	// SnapshotsBefore may return an error, preventing the operation.
-	SnapshotsBefore(
-		ctx context.Context,
-		opts types.Store) ([]*types.Snapshot, error)
+	SnapshotsBefore(ctx *context.Context) error
 
 	// SnapshotsAfter provides an opportunity to inspect/mutate the result.
-	SnapshotsAfter(
-		ctx context.Context,
-		result *types.Volume)
+	SnapshotsAfter(ctx context.Context, result *apihttp.ServiceSnapshotMap)
+
+	// SnapshotsByServiceBefore may return an error, preventing the operation.
+	SnapshotsByServiceBefore(ctx *context.Context, service string) error
+
+	// SnapshotsByServiceAfter provides an opportunity to inspect/mutate the
+	// result.
+	SnapshotsByServiceAfter(
+		ctx context.Context, service string, result *apihttp.SnapshotMap)
 
 	// SnapshotInspectBefore may return an error, preventing the operation.
 	SnapshotInspectBefore(
-		ctx context.Context,
-		snapshotID string,
-		opts types.Store) (*types.Snapshot, error)
+		ctx *context.Context,
+		service, snapshotID string) error
 
 	// SnapshotInspectAfter provides an opportunity to inspect/mutate the
 	// result.
-	SnapshotInspectAfter(
-		ctx context.Context,
-		result *types.Volume)
+	SnapshotInspectAfter(ctx context.Context, result *types.Volume)
 
 	// SnapshotCopyBefore may return an error, preventing the operation.
 	SnapshotCopyBefore(
-		ctx context.Context,
-		snapshotID, snapshotName, destinationID string,
-		opts types.Store) (*types.Snapshot, error)
+		ctx *context.Context,
+		service, snapshotID, string,
+		request *apihttp.SnapshotCopyRequest) error
 
 	// SnapshotCopyAfter provides an opportunity to inspect/mutate the result.
-	SnapshotCopyAfter(
-		ctx context.Context,
-		result *types.Volume)
+	SnapshotCopyAfter(ctx context.Context, result *types.Snapshot)
 
 	// SnapshotRemoveBefore may return an error, preventing the operation.
-	SnapshotRemoveBefore(
-		ctx context.Context,
-		snapshotID string,
-		opts types.Store) error
+	SnapshotRemoveBefore(ctx *context.Context, service, snapshotID string) error
 
 	// SnapshotRemoveAfter provides an opportunity to inspect/mutate the result.
-	SnapshotRemoveAfter(
-		ctx context.Context,
-		result *types.Volume)
+	SnapshotRemoveAfter(ctx context.Context, snapshotID string)
 }
 
 /*
@@ -313,7 +278,7 @@ type RemoteStorageDriver interface {
 	VolumeDetach(
 		ctx context.Context,
 		volumeID string,
-		opts types.Store) error
+		opts types.Store) (*types.Volume, error)
 
 	/***************************************************************************
 	**                             Snapshots                                  **

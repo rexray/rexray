@@ -67,10 +67,8 @@ func (tt *NextDeviceTest) Test(
 	config gofig.Config,
 	client client.Client,
 	t *testing.T) {
-
 	val, err := client.NextDevice(tt.Driver)
 	assert.NoError(t, err)
-
 	assert.Equal(t, tt.Expected, val)
 }
 

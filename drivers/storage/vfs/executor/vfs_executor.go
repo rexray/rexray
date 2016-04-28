@@ -2,7 +2,6 @@ package executor
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -16,12 +15,8 @@ import (
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	"github.com/emccode/libstorage/api/types/drivers"
-	"github.com/emccode/libstorage/api/utils/paths"
-)
-
-const (
-	// Name is the name of the storage executor and driver.
-	Name = "vfs"
+	"github.com/emccode/libstorage/api/utils"
+	"github.com/emccode/libstorage/drivers/storage/vfs"
 )
 
 var (
@@ -29,37 +24,28 @@ var (
 	devFileLocksRWL = &sync.RWMutex{}
 )
 
-// Executor is the storage executor for the VFS storage driver.
-type Executor struct {
+type driver struct {
 	config      gofig.Config
 	rootDir     string
 	devFilePath string
-	volDirPath  string
 }
 
 func init() {
-	gofig.Register(configRegistration())
-	registry.RegisterStorageExecutor(Name, newExecutor)
+	registry.RegisterStorageExecutor(vfs.Name, newDriver)
 }
 
-func newExecutor() drivers.StorageExecutor {
-	return &Executor{}
+func newDriver() drivers.StorageExecutor {
+	return &driver{}
 }
 
-func (d *Executor) Init(config gofig.Config) error {
+func (d *driver) Name() string {
+	return vfs.Name
+}
+
+func (d *driver) Init(config gofig.Config) error {
 	d.config = config
 
-	d.rootDir = d.config.GetString("vfs.root")
-	if err := os.MkdirAll(d.rootDir, 0755); err != nil {
-		return err
-	}
-
-	d.volDirPath = fmt.Sprintf("%s/vol", d.rootDir)
-	if err := os.MkdirAll(d.volDirPath, 0755); err != nil {
-		return err
-	}
-
-	d.devFilePath = fmt.Sprintf("%s/dev", d.rootDir)
+	d.devFilePath = vfs.DeviceFilePath(config)
 	if !gotil.FileExists(d.devFilePath) {
 		err := ioutil.WriteFile(d.devFilePath, initialDeviceFile, 0644)
 		if err != nil {
@@ -74,15 +60,11 @@ func (d *Executor) Init(config gofig.Config) error {
 	return nil
 }
 
-func (d *Executor) Name() string {
-	return Name
-}
-
 // InstanceID returns the local system's InstanceID.
-func (d *Executor) InstanceID(
+func (d *driver) InstanceID(
 	ctx context.Context,
 	opts types.Store) (*types.InstanceID, error) {
-	return GetInstanceID()
+	return instanceID()
 }
 
 var (
@@ -90,7 +72,7 @@ var (
 )
 
 // NextDevice returns the next available device.
-func (d *Executor) NextDevice(
+func (d *driver) NextDevice(
 	ctx context.Context,
 	opts types.Store) (string, error) {
 
@@ -135,7 +117,7 @@ var (
 )
 
 // LocalDevices returns a map of the system's local devices.
-func (d *Executor) LocalDevices(
+func (d *driver) LocalDevices(
 	ctx context.Context,
 	opts types.Store) (map[string]string, error) {
 
@@ -183,31 +165,8 @@ func (d *Executor) LocalDevices(
 	return localDevs, nil
 }
 
-// RootDir returns the path to the VFS root directory.
-func (d *Executor) RootDir() string {
-	return d.rootDir
-}
-
-// DeviceFilePath returns the path to the VFS devices file.
-func (d *Executor) DeviceFilePath() string {
-	return d.devFilePath
-}
-
-// VolumesDirPath returns the path to the VFS volumes directory.
-func (d *Executor) VolumesDirPath() string {
-	return d.volDirPath
-}
-
-func configRegistration() *gofig.Registration {
-	defaultRootDir := fmt.Sprintf("%s/vfs", paths.UsrDirPath())
-	r := gofig.NewRegistration("VFS")
-	r.Key(gofig.String, "", defaultRootDir, "", "vfs.root")
-	return r
-}
-
-// GetInstanceID returns the instance ID.
-func GetInstanceID() (*types.InstanceID, error) {
-	hostName, err := getHostName()
+func instanceID() (*types.InstanceID, error) {
+	hostName, err := utils.HostName()
 	if err != nil {
 		return nil, err
 	}

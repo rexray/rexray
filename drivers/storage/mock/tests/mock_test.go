@@ -8,6 +8,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
@@ -43,6 +44,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
+	server.CloseOnAbort()
 	ec := m.Run()
 	client.Close()
 	os.Exit(ec)
@@ -299,7 +301,7 @@ func TestSnapshotInspect(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
-func TestSnapshotCreate(t *testing.T) {
+func TestVolumeCreateFromSnapshot(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 		volumeName := "Volume from snap-000"
 
@@ -322,7 +324,7 @@ func TestSnapshotCreate(t *testing.T) {
 			Opts:             opts,
 		}
 
-		reply, err := client.SnapshotCreate(
+		reply, err := client.VolumeCreateFromSnapshot(
 			"mock", "snap-000", snapshotCreateRequest)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
@@ -404,22 +406,11 @@ func TestVolumeAttach(t *testing.T) {
 
 func TestVolumeDetach(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-
-		opts := map[string]interface{}{
-			"priority": 2,
-			"owner":    "root@example.com",
-		}
-
-		request := &apihttp.VolumeDetachRequest{
-			Opts: opts,
-		}
-
+		request := &apihttp.VolumeDetachRequest{}
 		vol, err := client.VolumeDetach("mock", "vol-000", request)
 		assert.NoError(t, err)
-		assert.Equal(t, vol.ID, "vol-000")
-		assert.Len(
-			t, vol.Attachments, 0)
-
+		assert.Equal(t, "vol-000", vol.ID)
+		assert.Len(t, vol.Attachments, 0)
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
@@ -450,7 +441,7 @@ func TestVolumeDetachAllForService(t *testing.T) {
 		requestD := &apihttp.VolumeDetachRequest{
 			Opts: opts,
 		}
-		err = client.VolumeDetachAllForService("mock", requestD)
+		_, err = client.VolumeDetachAllForService("mock", requestD)
 		assert.NoError(t, err)
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
@@ -468,7 +459,7 @@ func TestVolumeDetachAll(t *testing.T) {
 			Opts: opts,
 		}
 
-		err := client.VolumeDetachAll(request)
+		_, err := client.VolumeDetachAll(request)
 		assert.NoError(t, err)
 		vol, err := client.VolumeInspect("mock", "vol-000", true)
 		assert.NoError(t, err)

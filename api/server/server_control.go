@@ -14,22 +14,18 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 
-	// imported to load routers
-	_ "github.com/emccode/libstorage/api/server/router"
-
-	// imported to load drivers
-	_ "github.com/emccode/libstorage/drivers"
-
 	"github.com/emccode/libstorage/api/server/services"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"
 	apisvcs "github.com/emccode/libstorage/api/types/services"
 	apicnfg "github.com/emccode/libstorage/api/utils/config"
+	"github.com/emccode/libstorage/api/utils/semaphore"
 )
 
 var (
 	portLock = &sync.Mutex{}
-	servers  []io.Closer
+	servers  []*server
 )
 
 func start(host string, tls bool, driversAndServices ...string) (
@@ -47,7 +43,7 @@ func start(host string, tls bool, driversAndServices ...string) (
 	}
 
 	config := NewConfig(host, tls, driversAndServices...)
-	server, errs := Serve(config)
+	server, errs := serve(config)
 
 	if server != nil {
 		servers = append(servers, server)
@@ -57,7 +53,7 @@ func start(host string, tls bool, driversAndServices ...string) (
 }
 
 func startWithConfig(config gofig.Config) (io.Closer, <-chan error) {
-	server, errs := Serve(config)
+	server, errs := serve(config)
 
 	if server != nil {
 		servers = append(servers, server)
@@ -149,7 +145,9 @@ func newServer(config gofig.Config) (*server, error) {
 // also the prescribed manner for clients wishing to block until the server is
 // shutdown as the error channel will be closed when the server is stopped.
 func Serve(config gofig.Config) (io.Closer, <-chan error) {
-
+	return serve(config)
+}
+func serve(config gofig.Config) (*server, <-chan error) {
 	s, err := newServer(config)
 	if err != nil {
 		errs := make(chan error)
@@ -245,7 +243,9 @@ func (s *server) close() error {
 	return nil
 }
 
-func trapAbort() {
+// CloseOnAbort is a helper function that can be called by programs, such as
+// tests or a command line or service application.
+func CloseOnAbort() {
 	// make sure all servers get closed even if the test is abrubptly aborted
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc,
@@ -257,19 +257,25 @@ func trapAbort() {
 	go func() {
 		<-sigc
 		fmt.Println("received abort signal")
-		closeAllServers()
-		fmt.Println("all servers closed")
+		for range Close() {
+		}
+		semaphore.Unlink(types.LSX)
 		os.Exit(1)
 	}()
 }
 
-func closeAllServers() bool {
-	noErrors := true
-	for _, server := range servers {
-		if err := server.Close(); err != nil {
-			noErrors = false
-			fmt.Printf("error closing server: %v\n", err)
+// Close closes all servers. This function can be used when a calling program
+// traps UNIX signals or when it exits gracefully.
+func Close() <-chan error {
+	errs := make(chan error)
+	go func() {
+		for _, server := range servers {
+			if err := server.Close(); err != nil {
+				errs <- err
+			}
 		}
-	}
-	return noErrors
+		close(errs)
+		log.Info("all servers closed")
+	}()
+	return errs
 }

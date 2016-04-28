@@ -5,8 +5,8 @@ import (
 	"github.com/emccode/libstorage/api/types"
 	apihttp "github.com/emccode/libstorage/api/types/http"
 
-	// load the drivers
-	_ "github.com/emccode/libstorage/drivers/os"
+	// load the local drivers
+	_ "github.com/emccode/libstorage/imports/local"
 )
 
 var (
@@ -23,6 +23,16 @@ var (
 
 // Client is the libStorage client.
 type Client interface {
+
+	// EnableInstanceIDHeaders is a flag indicating whether or not the
+	// client will automatically send the instance ID header(s) along with
+	// storage-related API requests. The default is enabled.
+	EnableInstanceIDHeaders(enabled bool)
+
+	// EnableLocalDevicesHeaders is a flag indicating whether or not the
+	// client will automatically send the local devices header(s) along with
+	// storage-related API requests. The default is enabled.
+	EnableLocalDevicesHeaders(enabled bool)
 
 	// ServerName returns the name of the server to which the client is
 	// connected. This is not the same as the host name, rather it's the
@@ -52,15 +62,26 @@ type Client interface {
 	Volumes(attachments bool) (apihttp.ServiceVolumeMap, error)
 
 	// VolumesByService returns a list of all Volumes for a service.
-	VolumesByService(service string, attachments bool) (apihttp.VolumeMap, error)
+	VolumesByService(
+		service string, attachments bool) (apihttp.VolumeMap, error)
 
 	// VolumeInspect gets information about a single volume.
 	VolumeInspect(
 		service, volumeID string, attachments bool) (*types.Volume, error)
 
+	// VolumeCopy copies a single volume.
+	VolumeCopy(
+		service, volumeID string,
+		request *apihttp.VolumeCopyRequest) (*types.Volume, error)
+
 	// VolumeCreate creates a single volume.
 	VolumeCreate(
 		service string,
+		request *apihttp.VolumeCreateRequest) (*types.Volume, error)
+
+	// SnapshotCreate creates a single volume from a snapshot.
+	VolumeCreateFromSnapshot(
+		service, snapshotID string,
 		request *apihttp.VolumeCreateRequest) (*types.Volume, error)
 
 	// VolumeRemove removes a single volume.
@@ -81,11 +102,11 @@ type Client interface {
 	// VolumeDetachByService detaches all volumes in a service
 	VolumeDetachAllForService(
 		service string,
-		request *apihttp.VolumeDetachRequest) error
+		request *apihttp.VolumeDetachRequest) (apihttp.VolumeMap, error)
 
 	// VolumeDetachAll detaches all volumes from all services
 	VolumeDetachAll(
-		request *apihttp.VolumeDetachRequest) error
+		request *apihttp.VolumeDetachRequest) (apihttp.ServiceVolumeMap, error)
 
 	// VolumeSnapshot creates a single snapshot.
 	VolumeSnapshot(
@@ -101,11 +122,6 @@ type Client interface {
 
 	// SnapshotInspect gets information about a single snapshot.
 	SnapshotInspect(service, snapshotID string) (*types.Snapshot, error)
-
-	// SnapshotCreate creates a single volume from a snapshot.
-	SnapshotCreate(
-		service, snapshotID string,
-		request *apihttp.VolumeCreateRequest) (*types.Volume, error)
 
 	// SnapshotRemove removes a single snapshot.
 	SnapshotRemove(service, snapshotID string) error

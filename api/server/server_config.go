@@ -8,9 +8,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/akutz/gofig"
-
-	// load the drivers
-	_ "github.com/emccode/libstorage/drivers"
 )
 
 var (

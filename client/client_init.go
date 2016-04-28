@@ -23,9 +23,6 @@ import (
 	apiconfig "github.com/emccode/libstorage/api/utils/config"
 	"github.com/emccode/libstorage/api/utils/paths"
 	"github.com/emccode/libstorage/api/utils/semaphore"
-
-	// load the drivers
-	_ "github.com/emccode/libstorage/drivers/os"
 )
 
 var (
@@ -117,9 +114,11 @@ func New(config gofig.Config) (Client, error) {
 				},
 			},
 		},
-		config:     config,
-		ctx:        ctx,
-		lsxBinPath: config.GetString(LSXPathKey),
+		config:             config,
+		ctx:                ctx,
+		enableIIDHeader:    EnableInstanceIDHeaders,
+		enableLclDevHeader: EnableLocalDevicesHeaders,
+		lsxBinPath:         config.GetString(LSXPathKey),
 	}
 
 	if err := c.updateServiceInfo(); err != nil {
@@ -154,6 +153,18 @@ func New(config gofig.Config) (Client, error) {
 // Close releases system resources.
 func Close() error {
 	return lsxMutex.Close()
+}
+
+func (c *lsc) InstanceIDCallback(callback func(service string) (*types.InstanceID, error)) {
+
+}
+
+func (c *lsc) EnableInstanceIDHeaders(enabled bool) {
+	c.enableIIDHeader = enabled
+}
+
+func (c *lsc) EnableLocalDevicesHeaders(enabled bool) {
+	c.enableLclDevHeader = enabled
 }
 
 func (c *lsc) API() *apiclient.Client {
@@ -192,7 +203,7 @@ type iidHeader struct {
 }
 
 func (c *lsc) updateInstanceIDs() error {
-	if !EnableInstanceIDHeaders {
+	if !c.enableIIDHeader {
 		return nil
 	}
 
@@ -249,7 +260,7 @@ type ldHeader struct {
 }
 
 func (c *lsc) updateLocalDevices() error {
-	if !EnableLocalDevicesHeaders {
+	if !c.enableLclDevHeader {
 		return nil
 	}
 

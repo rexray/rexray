@@ -1,6 +1,6 @@
-package os
+package local
 
 import (
-	// import to load
+	// load the os driver
 	_ "github.com/emccode/libstorage/drivers/os/linux"
 )

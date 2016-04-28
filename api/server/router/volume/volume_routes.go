@@ -22,11 +22,13 @@ func (r *router) volumes(
 	req *http.Request,
 	store types.Store) error {
 
+	attachments := store.GetBool("attachments")
+
 	var (
 		tasks   = map[string]*types.Task{}
 		taskIDs []int
 		opts    = &drivers.VolumesOpts{
-			Attachments: store.GetBool("attachments"),
+			Attachments: attachments,
 			Opts:        store,
 		}
 		reply apihttp.ServiceVolumeMap = map[string]apihttp.VolumeMap{}
@@ -38,9 +40,12 @@ func (r *router) volumes(
 			ctx context.Context,
 			svc apisvcs.StorageService) (interface{}, error) {
 
-			err := httputils.GetServiceContext(&ctx, svc)
-			if err != nil {
+			if err := httputils.GetServiceContext(&ctx, svc); err != nil {
 				return nil, err
+			}
+
+			if attachments && ctx.InstanceID() == nil {
+				return nil, utils.NewMissingInstanceIDError(service.Name())
 			}
 
 			objs, err := svc.Driver().Volumes(ctx, opts)
@@ -99,18 +104,23 @@ func (r *router) volumesForService(
 		return err
 	}
 
+	attachments := store.GetBool("attachments")
+	if attachments && ctx.InstanceID() == nil {
+		return utils.NewMissingInstanceIDError(service.Name())
+	}
+
+	opts := &drivers.VolumesOpts{
+		Attachments: attachments,
+		Opts:        store,
+	}
+
 	run := func(
 		ctx context.Context,
 		svc apisvcs.StorageService) (interface{}, error) {
 
 		var reply apihttp.VolumeMap = map[string]*types.Volume{}
 
-		objs, err := svc.Driver().Volumes(
-			ctx,
-			&drivers.VolumesOpts{
-				Attachments: store.GetBool("attachments"),
-				Opts:        store,
-			})
+		objs, err := svc.Driver().Volumes(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -140,17 +150,22 @@ func (r *router) volumeInspect(
 		return err
 	}
 
+	attachments := store.GetBool("attachments")
+	if attachments && ctx.InstanceID() == nil {
+		return utils.NewMissingInstanceIDError(service.Name())
+	}
+
+	opts := &drivers.VolumeInspectOpts{
+		Attachments: attachments,
+		Opts:        store,
+	}
+
 	run := func(
 		ctx context.Context,
 		svc apisvcs.StorageService) (interface{}, error) {
 
 		return svc.Driver().VolumeInspect(
-			ctx,
-			store.GetString("volumeID"),
-			&drivers.VolumeInspectOpts{
-				Attachments: store.GetBool("attachments"),
-				Opts:        store,
-			})
+			ctx, store.GetString("volumeID"), opts)
 	}
 
 	return httputils.WriteTask(
@@ -267,6 +282,10 @@ func (r *router) volumeAttach(
 		return err
 	}
 
+	if ctx.InstanceID() == nil {
+		return utils.NewMissingInstanceIDError(service.Name())
+	}
+
 	run := func(
 		ctx context.Context,
 		svc apisvcs.StorageService) (interface{}, error) {
@@ -299,11 +318,15 @@ func (r *router) volumeDetach(
 		return err
 	}
 
+	if ctx.InstanceID() == nil {
+		return utils.NewMissingInstanceIDError(service.Name())
+	}
+
 	run := func(
 		ctx context.Context,
 		svc apisvcs.StorageService) (interface{}, error) {
 
-		return nil, svc.Driver().VolumeDetach(
+		return svc.Driver().VolumeDetach(
 			ctx,
 			store.GetString("volumeID"),
 			store)
@@ -337,9 +360,12 @@ func (r *router) volumeDetachAll(
 			ctx context.Context,
 			svc apisvcs.StorageService) (interface{}, error) {
 
-			err := httputils.GetServiceContext(&ctx, svc)
-			if err != nil {
+			if err := httputils.GetServiceContext(&ctx, svc); err != nil {
 				return nil, err
+			}
+
+			if ctx.InstanceID() == nil {
+				return nil, utils.NewMissingInstanceIDError(service.Name())
 			}
 
 			driver := svc.Driver()
@@ -358,11 +384,11 @@ func (r *router) volumeDetachAll(
 			}()
 
 			for _, volume := range volumes {
-				err := driver.VolumeDetach(ctx, volume.ID, store)
+				vol, err := driver.VolumeDetach(ctx, volume.ID, store)
 				if err != nil {
 					return nil, err
 				}
-				volumeMap[volume.ID] = volume
+				volumeMap[volume.ID] = vol
 			}
 
 			return nil, nil
@@ -402,6 +428,10 @@ func (r *router) volumeDetachAllForService(
 		return err
 	}
 
+	if ctx.InstanceID() == nil {
+		return utils.NewMissingInstanceIDError(service.Name())
+	}
+
 	var reply apihttp.VolumeMap = map[string]*types.Volume{}
 
 	run := func(
@@ -416,11 +446,11 @@ func (r *router) volumeDetachAllForService(
 		}
 
 		for _, volume := range volumes {
-			err := driver.VolumeDetach(ctx, volume.ID, store)
+			vol, err := driver.VolumeDetach(ctx, volume.ID, store)
 			if err != nil {
 				return nil, utils.NewBatchProcessErr(reply, err)
 			}
-			reply[volume.ID] = volume
+			reply[volume.ID] = vol
 		}
 
 		return reply, nil

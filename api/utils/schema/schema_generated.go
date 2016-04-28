@@ -413,19 +413,6 @@ const (
         },
 
 
-        "volumeCreateFromSnapshotRequest": {
-            "type": "object",
-            "properties": {
-                "volumeName": {
-                    "type": "string"
-                },
-                "opts": { "$ref" : "#/definitions/opts" }
-            },
-            "required": [ "volumeName" ],
-            "additionalProperties": false
-        },
-
-
         "volumeCopyRequest": {
             "type": "object",
             "properties": {

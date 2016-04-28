@@ -277,9 +277,13 @@ endif
 
 $$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
 	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
+$$(PKG_TA_$1)-clean:
+	rm -f $$(PKG_TA_$1)
+GO_PHONY += $$(PKG_TA_$1)-clean
+GO_CLEAN += $$(PKG_TA_$1)-clean
 
 $$(PKG_TC_$1): $$(PKG_TA_$1)
-	$$(PKG_TA_$1) -test.v -test.coverprofile $$@
+	$$(PKG_TA_$1) -test.coverprofile $$@ $$(GO_TEST_FLAGS)
 TEST_PROFILES += $$(PKG_TC_$1)
 
 $$(PKG_TC_$1)-clean:
@@ -410,8 +414,6 @@ endif
 
 cover-debug:
 	env LIBSTORAGE_DEBUG=true $(MAKE) cover
-
-GO_PHONY += codecov
 
 ################################################################################
 ##                                  C CLIENT                                  ##

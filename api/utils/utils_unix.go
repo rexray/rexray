@@ -1,6 +1,6 @@
 // +build !windows
 
-package executor
+package utils
 
 import "os/exec"
 
@@ -8,7 +8,8 @@ const (
 	newline = 10
 )
 
-func getHostName() (string, error) {
+// HostName returns then host name.
+func HostName() (string, error) {
 	buf, err := exec.Command("hostname").Output()
 	if err != nil {
 		return "", err

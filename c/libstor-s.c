@@ -8,6 +8,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    closeOnAbort();
     serve("", 0, argc-1, argv[1]);
 	return 0;
 }

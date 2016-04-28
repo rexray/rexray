@@ -53,6 +53,5 @@ func (h *serviceValidator) Handle(
 		return err
 	}
 
-	ctx.Log().Debug("set service context")
 	return h.handler(ctx, w, req, store)
 }

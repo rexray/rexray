@@ -3,10 +3,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"time"
 
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"
@@ -39,23 +39,7 @@ func (c *lsc) instanceID(
 		return nil, err
 	}
 
-	out, err := func() ([]byte, error) {
-		ctx.Log().Debug("waiting on executor lock")
-		if err := lsxMutex.Wait(); err != nil {
-			return nil, err
-		}
-		defer func() {
-			ctx.Log().Debug("signalling executor lock")
-			if err := lsxMutex.Signal(); err != nil {
-				panic(err)
-			}
-		}()
-		return exec.Command(
-			c.lsxBinPath,
-			si.Driver.Name,
-			executors.InstanceID).CombinedOutput()
-	}()
-
+	out, err := c.runExecutor(ctx, si.Driver.Name, executors.InstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,23 +64,7 @@ func (c *lsc) localDevices(
 		return nil, err
 	}
 
-	out, err := func() ([]byte, error) {
-		ctx.Log().Debug("waiting on executor lock")
-		if err := lsxMutex.Wait(); err != nil {
-			return nil, err
-		}
-		defer func() {
-			ctx.Log().Debug("signalling executor lock")
-			if err := lsxMutex.Signal(); err != nil {
-				panic(err)
-			}
-		}()
-		return exec.Command(
-			c.lsxBinPath,
-			si.Driver.Name,
-			executors.LocalDevices).CombinedOutput()
-	}()
-
+	out, err := c.runExecutor(ctx, si.Driver.Name, executors.LocalDevices)
 	if err != nil {
 		return nil, err
 	}
@@ -118,23 +86,7 @@ func (c *lsc) NextDevice(service string) (string, error) {
 		return "", err
 	}
 
-	out, err := func() ([]byte, error) {
-		ctx.Log().Debug("waiting on executor lock")
-		if err := lsxMutex.Wait(); err != nil {
-			return nil, err
-		}
-		defer func() {
-			ctx.Log().Debug("signalling executor lock")
-			if err := lsxMutex.Signal(); err != nil {
-				panic(err)
-			}
-		}()
-		return exec.Command(
-			c.lsxBinPath,
-			si.Driver.Name,
-			executors.NextDevice).CombinedOutput()
-	}()
-
+	out, err := c.runExecutor(ctx, si.Driver.Name, executors.NextDevice)
 	if err != nil {
 		return "", err
 	}
@@ -150,8 +102,7 @@ func (c *lsc) ServiceInspect(name string) (*types.ServiceInfo, error) {
 	return c.Client.ServiceInspect(c.ctx, name)
 }
 
-func (c *lsc) Volumes(
-	attachments bool) (apihttp.ServiceVolumeMap, error) {
+func (c *lsc) Volumes(attachments bool) (apihttp.ServiceVolumeMap, error) {
 	return c.Client.Volumes(c.ctx, attachments)
 }
 
@@ -168,11 +119,116 @@ func (c *lsc) VolumeInspect(
 func (c *lsc) VolumeCreate(
 	service string,
 	request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
-	return c.Client.VolumeCreate(c.ctx, service, request)
+
+	ctx := c.getTXCTX()
+	lsd, _ := registry.NewLocalStorageDriver(service)
+	if lsd != nil {
+		if err := lsd.Init(c.config); err != nil {
+			return nil, err
+		}
+
+		if err := lsd.VolumeCreateBefore(
+			&ctx, service, request); err != nil {
+			return nil, err
+		}
+	}
+
+	vol, err := c.Client.VolumeCreate(ctx, service, request)
+	if err != nil {
+		return nil, err
+	}
+
+	if lsd != nil {
+		lsd.VolumeCreateAfter(ctx, vol)
+	}
+
+	return vol, nil
+}
+
+func (c *lsc) VolumeCopy(
+	service, volumeID string,
+	request *apihttp.VolumeCopyRequest) (*types.Volume, error) {
+
+	ctx := c.getTXCTX()
+	lsd, _ := registry.NewLocalStorageDriver(service)
+	if lsd != nil {
+		if err := lsd.Init(c.config); err != nil {
+			return nil, err
+		}
+
+		if err := lsd.VolumeCopyBefore(
+			&ctx, service, volumeID, request); err != nil {
+			return nil, err
+		}
+	}
+
+	vol, err := c.Client.VolumeCopy(ctx, service, volumeID, request)
+	if err != nil {
+		return nil, err
+	}
+
+	if lsd != nil {
+		lsd.VolumeCopyAfter(ctx, vol)
+	}
+
+	return vol, nil
+}
+
+func (c *lsc) VolumeCreateFromSnapshot(
+	service, snapshotID string,
+	request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
+
+	ctx := c.getTXCTX()
+	lsd, _ := registry.NewLocalStorageDriver(service)
+	if lsd != nil {
+		if err := lsd.Init(c.config); err != nil {
+			return nil, err
+		}
+
+		if err := lsd.VolumeCreateFromSnapshotBefore(
+			&ctx, service, snapshotID, request); err != nil {
+			return nil, err
+		}
+	}
+
+	vol, err := c.Client.VolumeCreateFromSnapshot(
+		ctx, service, snapshotID, request)
+	if err != nil {
+		return nil, err
+	}
+
+	if lsd != nil {
+		lsd.VolumeCreateFromSnapshotAfter(ctx, vol)
+	}
+
+	return vol, nil
 }
 
 func (c *lsc) VolumeRemove(service, volumeID string) error {
-	return c.Client.VolumeRemove(c.ctx, service, volumeID)
+
+	ctx := c.getTXCTX()
+	lsd, _ := registry.NewLocalStorageDriver(service)
+	if lsd != nil {
+		if err := lsd.Init(c.config); err != nil {
+			return err
+		}
+
+		if err := lsd.VolumeRemoveBefore(
+			&ctx, service, volumeID); err != nil {
+			return err
+		}
+	}
+
+	err := c.Client.VolumeRemove(ctx, service, volumeID)
+	if err != nil {
+		return err
+	}
+
+	if lsd != nil {
+		lsd.VolumeRemoveAfter(ctx, service, volumeID)
+	}
+
+	return nil
 }
 
 func (c *lsc) VolumeAttach(
@@ -186,20 +242,21 @@ func (c *lsc) VolumeDetach(
 	service string,
 	volumeID string,
 	request *apihttp.VolumeDetachRequest) (*types.Volume, error) {
-	if err := c.Client.VolumeDetach(c.ctx, service, volumeID, request); err != nil {
+	reply, err := c.Client.VolumeDetach(c.ctx, service, volumeID, request)
+	if err != nil {
 		return nil, err
 	}
-	return c.Client.VolumeInspect(c.ctx, service, volumeID, true)
+	return reply, nil
 }
 
 func (c *lsc) VolumeDetachAllForService(
 	service string,
-	request *apihttp.VolumeDetachRequest) error {
+	request *apihttp.VolumeDetachRequest) (apihttp.VolumeMap, error) {
 	return c.Client.VolumeDetachAllForService(c.ctx, service, request)
 }
 
 func (c *lsc) VolumeDetachAll(
-	request *apihttp.VolumeDetachRequest) error {
+	request *apihttp.VolumeDetachRequest) (apihttp.ServiceVolumeMap, error) {
 	return c.Client.VolumeDetachAll(c.ctx, request)
 }
 
@@ -221,12 +278,6 @@ func (c *lsc) SnapshotsByService(
 func (c *lsc) SnapshotInspect(
 	service, snapshotID string) (*types.Snapshot, error) {
 	return c.Client.SnapshotInspect(c.ctx, service, snapshotID)
-}
-
-func (c *lsc) SnapshotCreate(
-	service, snapshotID string,
-	request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
-	return c.Client.SnapshotCreate(c.ctx, service, snapshotID, request)
 }
 
 func (c *lsc) SnapshotRemove(service, snapshotID string) error {

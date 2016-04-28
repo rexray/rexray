@@ -15,12 +15,6 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/gorilla/mux"
 
-	// imported to load routers
-	_ "github.com/emccode/libstorage/api/server/router"
-
-	// imported to load drivers
-	_ "github.com/emccode/libstorage/drivers"
-
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types/context"
 	apihttp "github.com/emccode/libstorage/api/types/http"

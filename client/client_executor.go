@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
@@ -111,4 +112,25 @@ func (c *lsc) downloadExecutor(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *lsc) runExecutor(
+	ctx context.Context, driverName, cmdName string) ([]byte, error) {
+	ctx.Log().Debug("waiting on executor lock")
+	if err := lsxMutex.Wait(); err != nil {
+		return nil, err
+	}
+	defer func() {
+		ctx.Log().Debug("signalling executor lock")
+		if err := lsxMutex.Signal(); err != nil {
+			panic(err)
+		}
+	}()
+	cmd := exec.Command(c.lsxBinPath, driverName, cmdName)
+	cmd.Env = os.Environ()
+	for _, cev := range c.config.EnvVars() {
+		ctx.Log().WithField("value", cev).Debug("set executor env var")
+		cmd.Env = append(cmd.Env, cev)
+	}
+	return cmd.CombinedOutput()
 }

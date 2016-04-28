@@ -342,7 +342,6 @@ func (d *driver) VolumeAttach(
 		}
 	}
 
-	fmt.Println(fmt.Sprintf("%+v", *opts))
 	modVol.Attachments = []*types.VolumeAttachment{
 		&types.VolumeAttachment{
 			DeviceName: *opts.NextDevice,
@@ -359,20 +358,19 @@ func (d *driver) VolumeAttach(
 func (d *driver) VolumeDetach(
 	ctx context.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts types.Store) (*types.Volume, error) {
 
 	var modVol *types.Volume
 	for _, vol := range d.volumes {
 		if vol.ID == volumeID {
-			continue
+			modVol = vol
+			break
 		}
-		modVol = vol
-		break
 	}
 
 	modVol.Attachments = nil
 
-	return nil
+	return modVol, nil
 }
 
 func (d *driver) VolumeDetachAll(

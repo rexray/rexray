@@ -169,6 +169,16 @@ func (th *testHarness) run(
 	debug, group bool,
 	tests ...APITestFunc) {
 
+	if !testing.Verbose() {
+		buf := &bytes.Buffer{}
+		log.StandardLogger().Out = buf
+		defer func() {
+			if t.Failed() {
+				io.Copy(os.Stderr, buf)
+			}
+		}()
+	}
+
 	wg := &sync.WaitGroup{}
 
 	if group {

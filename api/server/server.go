@@ -32,10 +32,10 @@ import (
 	"github.com/akutz/gofig"
 
 	// imported to load routers
-	_ "github.com/emccode/libstorage/api/server/router"
+	_ "github.com/emccode/libstorage/imports/routers"
 
-	// imported to load drivers
-	_ "github.com/emccode/libstorage/drivers"
+	// imported to load remote storage drivers
+	_ "github.com/emccode/libstorage/imports/remote"
 )
 
 // Run runs the server and blocks until a Kill signal is received by the
@@ -59,9 +59,6 @@ func Start(host string, tls bool, driversAndServices ...string) (
 		os.Getenv("LIBSTORAGE_RUN_TLS")); err != nil {
 		tls = runTLS
 	}
-
-	// make sure all servers get closed even if the test is abrubptly aborted
-	trapAbort()
 
 	if debug, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG")); debug {
 		log.SetLevel(log.DebugLevel)

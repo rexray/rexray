@@ -168,6 +168,19 @@ type Volume struct {
 	Fields map[string]string `json:"fields,omitempty"`
 }
 
+// VolumeName returns the volume's name.
+func (v *Volume) VolumeName() string {
+	return v.Name
+}
+
+// MountPoint returns the volume's mount point, if one is present.
+func (v *Volume) MountPoint() string {
+	if len(v.Attachments) == 0 {
+		return ""
+	}
+	return v.Attachments[0].MountPoint
+}
+
 // VolumeAttachment provides information about an object attached to a
 // storage volume.
 type VolumeAttachment struct {

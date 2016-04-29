@@ -11,22 +11,31 @@ type VolumeMountOpts struct {
 	Opts        Store
 }
 
+// VolumeMapping is a volume's name and the path to which it is mounted.
+type VolumeMapping interface {
+	// VolumeName returns the volume's name.
+	VolumeName() string
+
+	// MountPoint returns the volume's mount point.
+	MountPoint() string
+}
+
 // IntegrationDriver is the interface implemented to integrate external
 // storage consumers, such as Docker, with libStorage.
 type IntegrationDriver interface {
 	Driver
 
-	// Volumes returns all available volumes.
-	Volumes(
+	// List a map that relates volume names to their mount points.
+	List(
 		ctx Context,
-		opts Store) ([]*Volume, error)
+		opts Store) ([]VolumeMapping, error)
 
 	// Inspect returns a specific volume as identified by the provided
 	// volume name.
 	Inspect(
 		ctx Context,
 		volumeName string,
-		opts Store) (*Volume, error)
+		opts Store) (VolumeMapping, error)
 
 	// Mount will return a mount point path when specifying either a volumeName
 	// or volumeID.  If a overwriteFs boolean is specified it will overwrite

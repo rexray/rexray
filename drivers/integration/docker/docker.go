@@ -27,6 +27,19 @@ var (
 	mountDirectoryPath string
 )
 
+type volumeMapping struct {
+	Name             string `json:"Name"`
+	VolumeMountPoint string `json:"Mountpoint"`
+}
+
+func (v *volumeMapping) VolumeName() string {
+	return v.Name
+}
+
+func (v *volumeMapping) MountPoint() string {
+	return v.VolumeMountPoint
+}
+
 func init() {
 	registry.RegisterIntegrationDriver(providerName, newDriver)
 	gofig.Register(configRegistration())
@@ -45,18 +58,32 @@ func (d *driver) Name() string {
 	return providerName
 }
 
-// Volumes returns all available volumes.
-func (d *driver) Volumes(
+// List returns all available volume mappings.
+func (d *driver) List(
 	ctx types.Context,
-	opts types.Store) ([]*types.Volume, error) {
+	opts types.Store) ([]types.VolumeMapping, error) {
 
-	return ctx.StorageDriver().Volumes(
+	vols, err := ctx.StorageDriver().Volumes(
 		ctx,
 		&types.VolumesOpts{
 			Attachments: true,
 			Opts:        opts,
 		},
 	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	volMaps := []types.VolumeMapping{}
+	for _, v := range vols {
+		volMaps = append(volMaps, &volumeMapping{
+			Name:             v.Name,
+			VolumeMountPoint: v.MountPoint(),
+		})
+	}
+
+	return volMaps, nil
 }
 
 // Inspect returns a specific volume as identified by the provided
@@ -64,16 +91,16 @@ func (d *driver) Volumes(
 func (d *driver) Inspect(
 	ctx types.Context,
 	volumeName string,
-	opts types.Store) (*types.Volume, error) {
+	opts types.Store) (types.VolumeMapping, error) {
 
-	objs, err := d.Volumes(ctx, opts)
+	objs, err := d.List(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	var obj *types.Volume
+	var obj types.VolumeMapping
 	for _, o := range objs {
-		if strings.ToLower(volumeName) == strings.ToLower(o.Name) {
+		if strings.ToLower(volumeName) == strings.ToLower(o.VolumeName()) {
 			obj = o
 			break
 		}

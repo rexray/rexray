@@ -6,20 +6,18 @@ import (
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils"
 )
 
 // serviceValidator is an HTTP filter for validating that the service
 // specified as part of the path is valid.
 type serviceValidator struct {
-	handler apihttp.APIFunc
+	handler types.APIFunc
 }
 
 // NewServiceValidator returns a new filter for validating that the service
 // specified as part of the path is valid.
-func NewServiceValidator() apihttp.Middleware {
+func NewServiceValidator() types.Middleware {
 	return &serviceValidator{}
 }
 
@@ -27,13 +25,13 @@ func (h *serviceValidator) Name() string {
 	return "service-validator"
 }
 
-func (h *serviceValidator) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+func (h *serviceValidator) Handler(m types.APIFunc) types.APIFunc {
 	return (&serviceValidator{m}).Handle
 }
 
 // Handle is the type's Handler function.
 func (h *serviceValidator) Handle(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {

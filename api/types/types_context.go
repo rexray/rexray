@@ -41,6 +41,10 @@ const (
 // Context is a libStorage context.
 type Context interface {
 	context.Context
+	log.FieldLogger
+
+	// Log returns the underlying logger instance.
+	Log() *log.Logger
 
 	// ServerName gets the server name.
 	ServerName() string
@@ -70,8 +74,17 @@ type Context interface {
 	// Route returns the name of context's route.
 	Route() string
 
-	// Log returns the context's logger.
-	Log() *log.Logger
+	// ServiceName returns the name of the context's service.
+	ServiceName() string
+
+	// StorageDriver returns this context's storage driver.
+	StorageDriver() StorageDriver
+
+	// OSDriver returns this context's OS driver.
+	OSDriver() OSDriver
+
+	// IntegrationDriver returns this context's integration driver.
+	IntegrationDriver() IntegrationDriver
 
 	// WithInstanceIDsByService returns a context with the provided service to
 	// instance ID map.
@@ -93,6 +106,9 @@ type Context interface {
 	// WithRoute returns a contex with the provided route name.
 	WithRoute(routeName string) Context
 
+	// WithServiceName returns a contex with the provided service name.
+	WithServiceName(serviceName string) Context
+
 	// WithContextID returns a context with the provided context ID information.
 	// The context ID is often used with logging to identify a log statement's
 	// origin.
@@ -105,6 +121,19 @@ type Context interface {
 	// created timestamp.
 	WithTransactionCreated(timestamp time.Time) Context
 
+	// WithStorageDriver returns a context with the provided storage driver.
+	WithStorageDriver(driver StorageDriver) Context
+
+	// WithOSDriver returns a context with the provided OS driver.
+	WithOSDriver(driver OSDriver) Context
+
+	// WithIntegrationDriver sreturns a context with the provided integration
+	// driver.
+	WithIntegrationDriver(driver IntegrationDriver) Context
+
 	// WithValue returns a context with the provided value.
 	WithValue(key interface{}, val interface{}) Context
+
+	// WithParent creates a copy of this context with a new parent.
+	WithParent(parent Context) Context
 }

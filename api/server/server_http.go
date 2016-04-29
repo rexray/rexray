@@ -15,9 +15,9 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/gorilla/mux"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 )
 
@@ -88,17 +88,17 @@ func (s *server) initRouters() error {
 	return nil
 }
 
-func (s *server) addRouter(r apihttp.Router) {
+func (s *server) addRouter(r types.Router) {
 	s.routers = append(s.routers, r)
 }
 
 func (s *server) makeHTTPHandler(
-	ctx context.Context,
-	route apihttp.Route) http.HandlerFunc {
+	ctx types.Context,
+	route types.Route) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
 
-		w.Header().Set(apihttp.ServerNameHeader, s.name)
+		w.Header().Set(types.ServerNameHeader, s.name)
 
 		fctx := context.NewContext(ctx, req)
 		fctx = ctx.WithContextID("route", route.GetName())
@@ -111,7 +111,7 @@ func (s *server) makeHTTPHandler(
 			}
 		}
 
-		ctx.Log().Debug("http request")
+		ctx.Debug("http request")
 
 		vars := mux.Vars(req)
 		if vars == nil {
@@ -121,13 +121,13 @@ func (s *server) makeHTTPHandler(
 
 		handlerFunc := s.handleWithMiddleware(fctx, route)
 		if err := handlerFunc(fctx, w, req, store); err != nil {
-			fctx.Log().Error(err)
+			fctx.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
 
-func (s *server) createMux(ctx context.Context) *mux.Router {
+func (s *server) createMux(ctx types.Context) *mux.Router {
 	m := mux.NewRouter()
 	for _, apiRouter := range s.routers {
 		for _, r := range apiRouter.Routes() {
@@ -139,14 +139,14 @@ func (s *server) createMux(ctx context.Context) *mux.Router {
 			mr = mr.Queries(r.GetQueries()...)
 			mr.Handler(f)
 			if rctx.Log().Level >= log.DebugLevel {
-				ctx.Log().WithFields(log.Fields{
+				ctx.WithFields(log.Fields{
 					"path":         r.GetPath(),
 					"method":       r.GetMethod(),
 					"queries":      r.GetQueries(),
 					"len(queries)": len(r.GetQueries()),
 				}).Debug("registered route")
 			} else {
-				rctx.Log().Info("registered route")
+				rctx.Info("registered route")
 			}
 		}
 	}
@@ -197,7 +197,7 @@ func (s *server) newHTTPServer(
 type HTTPServer struct {
 	srv *http.Server
 	l   net.Listener
-	ctx context.Context
+	ctx types.Context
 }
 
 // Serve starts listening for inbound requests.
@@ -210,8 +210,8 @@ func (s *HTTPServer) Close() error {
 	return s.l.Close()
 }
 
-// Context returns this server's context.
-func (s *HTTPServer) Context() context.Context {
+// Context returns this server's types.
+func (s *HTTPServer) Context() types.Context {
 	return s.ctx
 }
 

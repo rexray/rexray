@@ -1,20 +1,17 @@
-package http
+package types
 
 import (
 	"net/http"
-
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
 )
 
 // APIFunc is an adapter to allow the use of ordinary functions as API
 // endpoints. Any function that has the appropriate signature can be register
 // as an API endpoint.
 type APIFunc func(
-	ctx context.Context,
+	ctx Context,
 	w http.ResponseWriter,
 	r *http.Request,
-	store types.Store) error
+	store Store) error
 
 // MiddlewareFunc is an adapter to allow the use of ordinary functions as API
 // filters. Any function that has the appropriate signature can be register as
@@ -32,8 +29,8 @@ type Middleware interface {
 
 	// Handle is for processing an incoming request.
 	Handle(
-		ctx context.Context,
+		ctx Context,
 		w http.ResponseWriter,
 		r *http.Request,
-		store types.Store) error
+		store Store) error
 }

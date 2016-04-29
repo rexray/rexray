@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/emccode/libstorage/api/types"
-	httptypes "github.com/emccode/libstorage/api/types/http"
 )
 
 func TestVolumeObject(t *testing.T) {
@@ -233,7 +232,7 @@ func TestVolumeCreateRequestObject(t *testing.T) {
 	size := int64(10240)
 	volType := "gold"
 
-	v := &httptypes.VolumeCreateRequest{
+	v := &types.VolumeCreateRequest{
 		Name:             "Volume 001",
 		AvailabilityZone: &availabilityZone,
 		IOPS:             &iops,
@@ -263,9 +262,9 @@ func TestVolumeSnapshotRequestObject(t *testing.T) {
 		"priority": 2,
 	}
 
-	s := &httptypes.VolumeSnapshotRequest{
+	s := &types.VolumeSnapshotRequest{
 		SnapshotName: snapshotName,
-		Opts: opts,
+		Opts:         opts,
 	}
 
 	d, err := ValidateVolumeSnapshotRequest(s)

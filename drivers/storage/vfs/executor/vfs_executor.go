@@ -13,8 +13,6 @@ import (
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/drivers/storage/vfs"
 )
@@ -34,7 +32,7 @@ func init() {
 	registry.RegisterStorageExecutor(vfs.Name, newDriver)
 }
 
-func newDriver() drivers.StorageExecutor {
+func newDriver() types.StorageExecutor {
 	return &driver{}
 }
 
@@ -62,7 +60,7 @@ func (d *driver) Init(config gofig.Config) error {
 
 // InstanceID returns the local system's InstanceID.
 func (d *driver) InstanceID(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 	return instanceID()
 }
@@ -73,7 +71,7 @@ var (
 
 // NextDevice returns the next available device.
 func (d *driver) NextDevice(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (string, error) {
 
 	var devFileRWL *sync.RWMutex
@@ -118,7 +116,7 @@ var (
 
 // LocalDevices returns a map of the system's local devices.
 func (d *driver) LocalDevices(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (map[string]string, error) {
 
 	var devFileRWL *sync.RWMutex

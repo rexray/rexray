@@ -464,7 +464,7 @@ C_LIBSTOR_S_SO := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/
 C_LIBSTOR_S_SO_SRCS := $(wildcard $(C_LIBSTOR_S_DIR)/*.go)
 C_LIBSTOR_S_BIN := $(GOPATH)/bin/libstor-s
 C_LIBSTOR_S_BIN_SRC := $(C_LIBSTOR_DIR)/libstor-s.c
-C_LIBSTOR_S_GO_DEPS := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/cli/servers.a
+C_LIBSTOR_S_GO_DEPS := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/api/server.a
 
 libstor-s: $(C_LIBSTOR_S_BIN) $(C_LIBSTOR_S_SO)
 

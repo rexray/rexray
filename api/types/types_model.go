@@ -18,6 +18,25 @@ const (
 	Object StorageType = "object"
 )
 
+// VolumeMap is the response for listing volumes for a single service.
+type VolumeMap map[string]*Volume
+
+// SnapshotMap is the response for listing snapshots for a single service.
+type SnapshotMap map[string]*Snapshot
+
+// ServiceVolumeMap is the response for listing volumes for multiple services.
+type ServiceVolumeMap map[string]VolumeMap
+
+// ServiceSnapshotMap is the response for listing snapshots for multiple
+// services.
+type ServiceSnapshotMap map[string]SnapshotMap
+
+// ServicesMap is the response when getting one to many ServiceInfos.
+type ServicesMap map[string]*ServiceInfo
+
+// ExecutorsMap is the response when getting one to many ExecutorInfos.
+type ExecutorsMap map[string]*ExecutorInfo
+
 // InstanceID identifies a host to a remote storage platform.
 type InstanceID struct {
 	// ID is the instance ID
@@ -284,9 +303,6 @@ const (
 	// TaskStateError is the state for a task that has completed with an error.
 	TaskStateError = "error"
 )
-
-// TaskRunFunc is a function responsible for a task's execution.
-type TaskRunFunc func(ctx Context) (interface{}, error)
 
 // Task is a representation of an asynchronous, long-running task.
 type Task struct {

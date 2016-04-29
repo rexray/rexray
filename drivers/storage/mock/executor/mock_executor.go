@@ -7,8 +7,6 @@ import (
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
 )
 
 const (
@@ -31,7 +29,7 @@ func init() {
 	registry.RegisterStorageExecutor(Name, newExecutor)
 }
 
-func newExecutor() drivers.StorageExecutor {
+func newExecutor() types.StorageExecutor {
 	return NewExecutor()
 }
 
@@ -54,21 +52,21 @@ func (d *Executor) Name() string {
 
 // InstanceID returns the local system's InstanceID.
 func (d *Executor) InstanceID(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 	return d.instanceID, nil
 }
 
 // NextDevice returns the next available device.
 func (d *Executor) NextDevice(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (string, error) {
 	return "/dev/xvde", nil
 }
 
 // LocalDevices returns a map of the system's local devices.
 func (d *Executor) LocalDevices(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (map[string]string, error) {
 	return map[string]string{
 		"/dev/xvda": "/var/log",

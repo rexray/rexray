@@ -2,10 +2,11 @@ package snapshot
 
 import (
 	"github.com/akutz/gofig"
+
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server/handlers"
 	"github.com/emccode/libstorage/api/server/httputils"
-	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
@@ -14,7 +15,7 @@ func init() {
 }
 
 type router struct {
-	routes []apihttp.Route
+	routes []types.Route
 }
 
 func (r *router) Name() string {
@@ -26,12 +27,12 @@ func (r *router) Init(config gofig.Config) {
 }
 
 // Routes returns the available routes.
-func (r *router) Routes() []apihttp.Route {
+func (r *router) Routes() []types.Route {
 	return r.routes
 }
 
 func (r *router) initRoutes() {
-	r.routes = []apihttp.Route{
+	r.routes = []types.Route{
 
 		// GET
 
@@ -74,7 +75,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeCreateRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &apihttp.VolumeCreateRequest{} }),
+				func() interface{} { return &types.VolumeCreateRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("create"),
 
@@ -88,7 +89,7 @@ func (r *router) initRoutes() {
 				schema.SnapshotCopyRequestSchema,
 				schema.SnapshotSchema,
 				func() interface{} {
-					return &apihttp.SnapshotCopyRequest{}
+					return &types.SnapshotCopyRequest{}
 				}),
 			handlers.NewPostArgsHandler(),
 		).Queries("copy"),

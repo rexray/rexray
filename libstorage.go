@@ -40,7 +40,7 @@ import (
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/types/drivers"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/client"
 )
 
@@ -48,22 +48,22 @@ func init() {
 	registerGofigDefaults()
 }
 
-// RegisterRemoteStorageDriver registers a new RemoteStorageDriver with the
+// RegisterStorageDriver registers a new StorageDriver with the
 // libStorage service.
-func RegisterRemoteStorageDriver(
-	name string, ctor drivers.NewRemoteStorageDriver) {
-	registry.RegisterRemoteStorageDriver(name, ctor)
+func RegisterStorageDriver(
+	name string, ctor types.NewStorageDriver) {
+	registry.RegisterStorageDriver(name, ctor)
 }
 
 // RegisterOSDriver registers a new StorageDriver with the libStorage
 // service.
-func RegisterOSDriver(name string, ctor drivers.NewOSDriver) {
+func RegisterOSDriver(name string, ctor types.NewOSDriver) {
 	registry.RegisterOSDriver(name, ctor)
 }
 
 // RegisterIntegrationDriver registers a new IntegrationDriver with the
 // libStorage service.
-func RegisterIntegrationDriver(name string, ctor drivers.NewIntegrationDriver) {
+func RegisterIntegrationDriver(name string, ctor types.NewIntegrationDriver) {
 	registry.RegisterIntegrationDriver(name, ctor)
 }
 

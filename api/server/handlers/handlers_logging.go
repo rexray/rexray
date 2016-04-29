@@ -17,8 +17,6 @@ import (
 	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 const (
@@ -28,7 +26,7 @@ const (
 // loggingHandler is an HTTP logging handler for the libStorage service
 // endpoint.
 type loggingHandler struct {
-	handler      apihttp.APIFunc
+	handler      types.APIFunc
 	logRequests  bool
 	logResponses bool
 	writer       io.Writer
@@ -37,7 +35,7 @@ type loggingHandler struct {
 // NewLoggingHandler instantiates a new instance of the loggingHandler type.
 func NewLoggingHandler(
 	w io.Writer,
-	logHTTPRequests, logHTTPResponses bool) apihttp.Middleware {
+	logHTTPRequests, logHTTPResponses bool) types.Middleware {
 
 	return &loggingHandler{
 		writer:       w,
@@ -50,13 +48,13 @@ func (h *loggingHandler) Name() string {
 	return "logging-handler"
 }
 
-func (h *loggingHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+func (h *loggingHandler) Handler(m types.APIFunc) types.APIFunc {
 	return (&loggingHandler{m, h.logRequests, h.logResponses, h.writer}).Handle
 }
 
 // Handle is the type's Handler function.
 func (h *loggingHandler) Handle(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {

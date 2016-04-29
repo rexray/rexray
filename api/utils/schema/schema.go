@@ -10,8 +10,6 @@ import (
 	"github.com/cesanta/validate-json/schema"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	httptypes "github.com/emccode/libstorage/api/types/http"
 )
 
 const (
@@ -113,7 +111,7 @@ func ValidateSnapshot(v *types.Snapshot) ([]byte, error) {
 // value, the object marshaled to JSON, is returned whether or not the
 // validation is successful.
 func ValidateVolumeCreateRequest(
-	v *httptypes.VolumeCreateRequest) ([]byte, error) {
+	v *types.VolumeCreateRequest) ([]byte, error) {
 	return validateObject(VolumeCreateRequestSchema, v)
 }
 
@@ -122,7 +120,7 @@ func ValidateVolumeCreateRequest(
 // value, the object marshaled to JSON, is returned whether or not the
 // validation is successful.
 func ValidateVolumeSnapshotRequest(
-	v *httptypes.VolumeSnapshotRequest) ([]byte, error) {
+	v *types.VolumeSnapshotRequest) ([]byte, error) {
 	return validateObject(VolumeSnapshotRequestSchema, v)
 }
 
@@ -162,7 +160,7 @@ func getSchemaValidator(s []byte) (*schema.Validator, error) {
 }
 
 // ValidateObj validates an object using a schema.
-func ValidateObj(ctx context.Context, s []byte, i interface{}) error {
+func ValidateObj(ctx types.Context, s []byte, i interface{}) error {
 	buf, err := json.Marshal(i)
 	if err != nil {
 		return err
@@ -171,19 +169,19 @@ func ValidateObj(ctx context.Context, s []byte, i interface{}) error {
 }
 
 // Validate validates the provided data (d) against the provided schema (s).
-func Validate(ctx context.Context, s, d []byte) error {
+func Validate(ctx types.Context, s, d []byte) error {
 
-	var l *log.Logger
 	if ctx == nil {
-		l = log.StandardLogger()
+		log.StandardLogger().WithFields(log.Fields{
+			"schema": string(s),
+			"body":   string(d),
+		}).Debug("validating schema")
 	} else {
-		l = ctx.Log()
+		ctx.WithFields(log.Fields{
+			"schema": string(s),
+			"body":   string(d),
+		}).Debug("validating schema")
 	}
-
-	l.WithFields(log.Fields{
-		"schema": string(s),
-		"body":   string(d),
-	}).Debug("validating schema")
 
 	validator, err := getSchemaValidator(s)
 	if err != nil {

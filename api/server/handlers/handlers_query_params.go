@@ -7,14 +7,12 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 // queryParamsHandler is an HTTP filter for injecting the store with query
 // parameters
 type queryParamsHandler struct {
-	handler apihttp.APIFunc
+	handler types.APIFunc
 }
 
 func (h *queryParamsHandler) Name() string {
@@ -23,23 +21,23 @@ func (h *queryParamsHandler) Name() string {
 
 // NewQueryParamsHandler returns a new filter for injecting the store with query
 // parameters
-func NewQueryParamsHandler() apihttp.Middleware {
+func NewQueryParamsHandler() types.Middleware {
 	return &queryParamsHandler{}
 }
 
-func (h *queryParamsHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+func (h *queryParamsHandler) Handler(m types.APIFunc) types.APIFunc {
 	return (&queryParamsHandler{m}).Handle
 }
 
 // Handle is the type's Handler function.
 func (h *queryParamsHandler) Handle(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
 
 	for k, v := range req.URL.Query() {
-		ctx.Log().WithFields(log.Fields{
+		ctx.WithFields(log.Fields{
 			"key":        k,
 			"value":      v,
 			"len(value)": len(v),

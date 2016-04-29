@@ -9,8 +9,6 @@ import (
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/drivers/storage/mock/executor"
 )
@@ -29,10 +27,10 @@ type driver struct {
 }
 
 func init() {
-	registry.RegisterRemoteStorageDriver(Name, newDriver)
+	registry.RegisterStorageDriver(Name, newDriver)
 }
 
-func newDriver() drivers.RemoteStorageDriver {
+func newDriver() types.StorageDriver {
 
 	d := &driver{Executor: *executor.NewExecutor()}
 
@@ -90,26 +88,26 @@ func newDriver() drivers.RemoteStorageDriver {
 	return d
 }
 
-func (d *driver) Type() types.StorageType {
+func (d *driver) Type(ctx types.Context) types.StorageType {
 	return types.Block
 }
 
-func (d *driver) NextDeviceInfo() *types.NextDeviceInfo {
+func (d *driver) NextDeviceInfo(ctx types.Context) *types.NextDeviceInfo {
 	return d.nextDeviceInfo
 }
 
 func (d *driver) InstanceInspect(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
 	iid, _ := d.InstanceID(ctx, opts)
 	return &types.Instance{InstanceID: iid}, nil
 }
 
 func (d *driver) Volumes(
-	ctx context.Context,
-	opts *drivers.VolumesOpts) ([]*types.Volume, error) {
+	ctx types.Context,
+	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	if ctx.Value(context.ContextKeyServiceName) == "mock" &&
+	if ctx.Value(types.ContextKeyServiceName) == "mock" &&
 		opts.Attachments &&
 		ctx.InstanceID().ID == executor.GetInstanceID().ID {
 
@@ -141,9 +139,9 @@ func (d *driver) Volumes(
 }
 
 func (d *driver) VolumeInspect(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
-	opts *drivers.VolumeInspectOpts) (*types.Volume, error) {
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
 	for _, v := range d.volumes {
 		if strings.ToLower(v.ID) == strings.ToLower(volumeID) {
@@ -154,9 +152,9 @@ func (d *driver) VolumeInspect(
 }
 
 func (d *driver) VolumeCreate(
-	ctx context.Context,
+	ctx types.Context,
 	name string,
-	opts *drivers.VolumeCreateOpts) (*types.Volume, error) {
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
 	lenVols := len(d.volumes)
 
@@ -194,9 +192,9 @@ func (d *driver) VolumeCreate(
 }
 
 func (d *driver) VolumeCreateFromSnapshot(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID, volumeName string,
-	opts *drivers.VolumeCreateOpts) (*types.Volume, error) {
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
 	s, err := d.SnapshotInspect(ctx, snapshotID, nil)
 	if err != nil {
@@ -239,11 +237,11 @@ func (d *driver) VolumeCreateFromSnapshot(
 }
 
 func (d *driver) VolumeCopy(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID, volumeName string,
 	opts types.Store) (*types.Volume, error) {
 
-	ctx.Log().WithFields(log.Fields{
+	ctx.WithFields(log.Fields{
 		"volumeID":   volumeID,
 		"volumeName": volumeName,
 	}).Debug("mockDriver.VolumeCopy")
@@ -278,11 +276,11 @@ func (d *driver) VolumeCopy(
 }
 
 func (d *driver) VolumeSnapshot(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID, snapshotName string,
 	opts types.Store) (*types.Snapshot, error) {
 
-	ctx.Log().WithFields(log.Fields{
+	ctx.WithFields(log.Fields{
 		"volumeID":     volumeID,
 		"snapshotName": snapshotName,
 	}).Debug("mockDriver.VolumeSnapshot")
@@ -302,11 +300,11 @@ func (d *driver) VolumeSnapshot(
 }
 
 func (d *driver) VolumeRemove(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
 	opts types.Store) error {
 
-	ctx.Log().WithFields(log.Fields{
+	ctx.WithFields(log.Fields{
 		"volumeID": volumeID,
 	}).Debug("mockDriver.VolumeRemove")
 
@@ -330,9 +328,9 @@ func (d *driver) VolumeRemove(
 }
 
 func (d *driver) VolumeAttach(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
-	opts *drivers.VolumeAttachByIDOpts) (*types.Volume, error) {
+	opts *types.VolumeAttachOpts) (*types.Volume, error) {
 
 	var modVol *types.Volume
 	for _, vol := range d.volumes {
@@ -356,9 +354,9 @@ func (d *driver) VolumeAttach(
 }
 
 func (d *driver) VolumeDetach(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
-	opts types.Store) (*types.Volume, error) {
+	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
 	var modVol *types.Volume
 	for _, vol := range d.volumes {
@@ -374,7 +372,7 @@ func (d *driver) VolumeDetach(
 }
 
 func (d *driver) VolumeDetachAll(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
 	opts types.Store) error {
 
@@ -386,14 +384,14 @@ func (d *driver) VolumeDetachAll(
 }
 
 func (d *driver) Snapshots(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) ([]*types.Snapshot, error) {
 
 	return d.snapshots, nil
 }
 
 func (d *driver) SnapshotInspect(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID string,
 	opts types.Store) (*types.Snapshot, error) {
 
@@ -406,11 +404,11 @@ func (d *driver) SnapshotInspect(
 }
 
 func (d *driver) SnapshotCopy(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID, snapshotName, destinationID string,
 	opts types.Store) (*types.Snapshot, error) {
 
-	ctx.Log().WithFields(log.Fields{
+	ctx.WithFields(log.Fields{
 		"snapshotID":    snapshotID,
 		"snapshotName":  snapshotName,
 		"destinationID": destinationID,
@@ -443,11 +441,11 @@ func (d *driver) SnapshotCopy(
 }
 
 func (d *driver) SnapshotRemove(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID string,
 	opts types.Store) error {
 
-	ctx.Log().WithFields(log.Fields{
+	ctx.WithFields(log.Fields{
 		"snapshotID": snapshotID,
 	}).Debug("mockDriver.SnapshotRemove")
 

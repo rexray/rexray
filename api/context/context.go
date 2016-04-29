@@ -5,42 +5,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/goof"
 	gcontext "github.com/gorilla/context"
 	"golang.org/x/net/context"
 
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-)
-
-const (
-	// ContextKeyInstanceID is a context key.
-	ContextKeyInstanceID = types.ContextKeyInstanceID
-	// ContextKeyInstanceIDsByService is a context key.
-	ContextKeyInstanceIDsByService = types.ContextKeyInstanceIDsByService
-	// ContextKeyProfile is a context key.
-	ContextKeyProfile = types.ContextKeyProfile
-	// ContextKeyRoute is a context key.
-	ContextKeyRoute = types.ContextKeyRoute
-	// ContextKeyContextID is a context key.
-	ContextKeyContextID = types.ContextKeyContextID
-	// ContextKeyService is a context key.
-	ContextKeyService = types.ContextKeyService
-	// ContextKeyServiceName is a context key.
-	ContextKeyServiceName = types.ContextKeyServiceName
-	// ContextKeyDriver is a context key.
-	ContextKeyDriver = types.ContextKeyDriver
-	// ContextKeyDriverName is a context key.
-	ContextKeyDriverName = types.ContextKeyDriverName
-	// ContextKeyLocalDevices is a context key.
-	ContextKeyLocalDevices = types.ContextKeyLocalDevices
-	// ContextKeyLocalDevicesByService is a context key.
-	ContextKeyLocalDevicesByService = types.ContextKeyLocalDevicesByService
-	// ContextKeyServerName is a context key.
-	ContextKeyServerName = types.ContextKeyServerName
-	// ContextKeyTransactionID is a context key.
-	ContextKeyTransactionID = types.ContextKeyTransactionID
-	// ContextKeyTransactionCreated is a context key.
-	ContextKeyTransactionCreated = types.ContextKeyTransactionCreated
 )
 
 var (
@@ -62,128 +32,130 @@ var (
 		&log.Logger{})
 )
 
-// Context is a libStorage context.
-type Context types.Context
-
-type libstorContext struct {
+type lsc struct {
 	context.Context
-	req        *http.Request
-	logger     *log.Logger
-	contextIDs map[string]string
+	*log.Logger
+	req *http.Request
 }
 
 // Background initializes a new, empty context.
-func Background() Context {
+func Background() types.Context {
 	return NewContext(context.Background(), nil)
 }
 
 // NewContext initializes a new libStorage context.
-func NewContext(parent context.Context, r *http.Request) Context {
+func NewContext(parent context.Context, r *http.Request) types.Context {
 	var parentLogger *log.Logger
-	if parentCtx, ok := parent.(Context); ok {
-		parentLogger = parentCtx.Log()
+	if parentCtx, ok := parent.(*lsc); ok {
+		parentLogger = parentCtx.Logger
 	} else {
 		parentLogger = log.StandardLogger()
 	}
 
-	ctx := &libstorContext{
+	ctx := &lsc{
 		Context: parent,
 		req:     r,
 	}
 
-	logger := &log.Logger{
+	ctx.Logger = &log.Logger{
 		Formatter: &fieldFormatter{parentLogger.Formatter, ctx},
 		Out:       parentLogger.Out,
 		Hooks:     parentLogger.Hooks,
 		Level:     parentLogger.Level,
 	}
-	ctx.logger = logger
 
 	return ctx
 }
 
 // WithInstanceIDsByService returns a context with the provided instance ID map.
 func WithInstanceIDsByService(
-	parent context.Context, val map[string]*types.InstanceID) Context {
-	return WithValue(parent, ContextKeyInstanceIDsByService, val)
+	parent context.Context, val map[string]*types.InstanceID) types.Context {
+	return WithValue(parent, types.ContextKeyInstanceIDsByService, val)
 }
 
 // WithInstanceID returns a context with the provided instance ID.
 func WithInstanceID(
-	parent context.Context, val *types.InstanceID) Context {
-	return WithValue(parent, ContextKeyInstanceID, val)
+	parent context.Context, val *types.InstanceID) types.Context {
+	return WithValue(parent, types.ContextKeyInstanceID, val)
 }
 
 // WithLocalDevicesByService returns a context with the provided service to
 //  instance ID map.
 func WithLocalDevicesByService(
-	parent context.Context, val map[string]map[string]string) Context {
-	return WithValue(parent, ContextKeyLocalDevicesByService, val)
+	parent context.Context, val map[string]map[string]string) types.Context {
+	return WithValue(parent, types.ContextKeyLocalDevicesByService, val)
 }
 
 // WithLocalDevices returns a context with the provided local devices map.
 func WithLocalDevices(
-	parent context.Context, val map[string]string) Context {
-	return WithValue(parent, ContextKeyLocalDevices, val)
+	parent context.Context, val map[string]string) types.Context {
+	return WithValue(parent, types.ContextKeyLocalDevices, val)
 }
 
 // WithProfile returns a context with the provided profile.
 func WithProfile(
-	parent context.Context, val string) Context {
-	return WithValue(parent, ContextKeyProfile, val)
+	parent context.Context, val string) types.Context {
+	return WithValue(parent, types.ContextKeyProfile, val)
 }
 
 // WithRoute returns a contex with the provided route name.
-func WithRoute(parent context.Context, val string) Context {
-	return WithValue(parent, ContextKeyRoute, val)
+func WithRoute(parent context.Context, val string) types.Context {
+	return WithValue(parent, types.ContextKeyRoute, val)
+}
+
+// WithServiceName returns a contex with the provided service name.
+func WithServiceName(parent context.Context, val string) types.Context {
+	return WithValue(parent, types.ContextKeyServiceName, val)
 }
 
 // WithContextID returns a context with the provided context ID information.
 // The context ID is often used with logging to identify a log statement's
 // origin.
 func WithContextID(
-	parent context.Context, id, val string) Context {
+	parent context.Context, id, val string) types.Context {
 
 	contextID := map[string]string{id: val}
-	parentContextID, ok := parent.Value(ContextKeyContextID).(map[string]string)
+	parentContextID, ok := parent.Value(
+		types.ContextKeyContextID).(map[string]string)
 	if ok {
 		for k, v := range parentContextID {
 			contextID[k] = v
 		}
 	}
-	return WithValue(parent, ContextKeyContextID, contextID)
+	return WithValue(parent, types.ContextKeyContextID, contextID)
 }
 
 // WithTransactionID returns a context with the provided transaction ID.
-func WithTransactionID(parent context.Context, val string) Context {
-	return WithValue(parent, ContextKeyTransactionID, val)
+func WithTransactionID(parent context.Context, val string) types.Context {
+	return WithValue(parent, types.ContextKeyTransactionID, val)
 }
 
 // WithTransactionCreated returns a context with the provided transaction
 // created timestamp.
-func WithTransactionCreated(parent context.Context, val time.Time) Context {
-	return WithValue(parent, ContextKeyTransactionCreated, val)
+func WithTransactionCreated(
+	parent context.Context, val time.Time) types.Context {
+	return WithValue(parent, types.ContextKeyTransactionCreated, val)
 }
 
 // WithValue returns a context with the provided value.
 func WithValue(
 	parent context.Context,
 	key interface{},
-	val interface{}) Context {
+	val interface{}) types.Context {
 	return NewContext(context.WithValue(parent, key, val), HTTPRequest(parent))
 }
 
 // ServerName returns the context's server name.
 func ServerName(ctx context.Context) (string, error) {
 
-	obj := ctx.Value(ContextKeyServerName)
+	obj := ctx.Value(types.ContextKeyServerName)
 	if obj == nil {
-		return "", utils.NewContextKeyErr(ContextKeyServerName)
+		return "", utils.NewContextKeyErr(types.ContextKeyServerName)
 	}
 	typedObj, ok := obj.(string)
 	if !ok {
 		return "", utils.NewContextTypeErr(
-			ContextKeyServerName,
+			types.ContextKeyServerName,
 			"string", utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -193,14 +165,15 @@ func ServerName(ctx context.Context) (string, error) {
 func InstanceIDsByService(
 	ctx context.Context) (map[string]*types.InstanceID, error) {
 
-	obj := ctx.Value(ContextKeyInstanceIDsByService)
+	obj := ctx.Value(types.ContextKeyInstanceIDsByService)
 	if obj == nil {
-		return nil, utils.NewContextKeyErr(ContextKeyInstanceIDsByService)
+		return nil, utils.NewContextKeyErr(
+			types.ContextKeyInstanceIDsByService)
 	}
 	typedObj, ok := obj.(map[string]*types.InstanceID)
 	if !ok {
 		return nil, utils.NewContextTypeErr(
-			ContextKeyInstanceIDsByService,
+			types.ContextKeyInstanceIDsByService,
 			instanceIDsByServiceTypeName, utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -208,14 +181,14 @@ func InstanceIDsByService(
 
 // InstanceID gets the context's instance ID.
 func InstanceID(ctx context.Context) (*types.InstanceID, error) {
-	obj := ctx.Value(ContextKeyInstanceID)
+	obj := ctx.Value(types.ContextKeyInstanceID)
 	if obj == nil {
-		return nil, utils.NewContextKeyErr(ContextKeyInstanceID)
+		return nil, utils.NewContextKeyErr(types.ContextKeyInstanceID)
 	}
 	typedObj, ok := obj.(*types.InstanceID)
 	if !ok {
 		return nil, utils.NewContextTypeErr(
-			ContextKeyInstanceID,
+			types.ContextKeyInstanceID,
 			instanceIDTypeName, utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -225,14 +198,14 @@ func InstanceID(ctx context.Context) (*types.InstanceID, error) {
 func LocalDevicesByService(
 	ctx context.Context) (map[string]map[string]string, error) {
 
-	obj := ctx.Value(ContextKeyLocalDevicesByService)
+	obj := ctx.Value(types.ContextKeyLocalDevicesByService)
 	if obj == nil {
-		return nil, utils.NewContextKeyErr(ContextKeyLocalDevicesByService)
+		return nil, utils.NewContextKeyErr(types.ContextKeyLocalDevicesByService)
 	}
 	typedObj, ok := obj.(map[string]map[string]string)
 	if !ok {
 		return nil, utils.NewContextTypeErr(
-			ContextKeyLocalDevicesByService,
+			types.ContextKeyLocalDevicesByService,
 			localDevicesByServiceTypeName, utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -240,14 +213,14 @@ func LocalDevicesByService(
 
 // LocalDevices gets the context's local devices map.
 func LocalDevices(ctx context.Context) (map[string]string, error) {
-	obj := ctx.Value(ContextKeyLocalDevices)
+	obj := ctx.Value(types.ContextKeyLocalDevices)
 	if obj == nil {
-		return nil, utils.NewContextKeyErr(ContextKeyLocalDevices)
+		return nil, utils.NewContextKeyErr(types.ContextKeyLocalDevices)
 	}
 	typedObj, ok := obj.(map[string]string)
 	if !ok {
 		return nil, utils.NewContextTypeErr(
-			ContextKeyLocalDevices,
+			types.ContextKeyLocalDevices,
 			localDevicesTypeName, utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -255,14 +228,14 @@ func LocalDevices(ctx context.Context) (map[string]string, error) {
 
 // Profile gets the context's profile.
 func Profile(ctx context.Context) (string, error) {
-	obj := ctx.Value(ContextKeyProfile)
+	obj := ctx.Value(types.ContextKeyProfile)
 	if obj == nil {
-		return "", utils.NewContextKeyErr(ContextKeyProfile)
+		return "", utils.NewContextKeyErr(types.ContextKeyProfile)
 	}
 	typedObj, ok := obj.(string)
 	if !ok {
 		return "", utils.NewContextTypeErr(
-			ContextKeyProfile,
+			types.ContextKeyProfile,
 			"string", utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -270,14 +243,29 @@ func Profile(ctx context.Context) (string, error) {
 
 // Route gets the context's route name.
 func Route(ctx context.Context) (string, error) {
-	obj := ctx.Value(ContextKeyRoute)
+	obj := ctx.Value(types.ContextKeyRoute)
 	if obj == nil {
-		return "", utils.NewContextKeyErr(ContextKeyRoute)
+		return "", utils.NewContextKeyErr(types.ContextKeyRoute)
 	}
 	typedObj, ok := obj.(string)
 	if !ok {
 		return "", utils.NewContextTypeErr(
-			ContextKeyRoute,
+			types.ContextKeyRoute,
+			"string", utils.GetTypePkgPathAndName(obj))
+	}
+	return typedObj, nil
+}
+
+// ServiceName returns the name of the context's service.
+func ServiceName(ctx context.Context) (string, error) {
+	obj := ctx.Value(types.ContextKeyServiceName)
+	if obj == nil {
+		return "", utils.NewContextKeyErr(types.ContextKeyServiceName)
+	}
+	typedObj, ok := obj.(string)
+	if !ok {
+		return "", utils.NewContextTypeErr(
+			types.ContextKeyServiceName,
 			"string", utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -285,14 +273,14 @@ func Route(ctx context.Context) (string, error) {
 
 // TransactionID gets the context's transaction ID.
 func TransactionID(ctx context.Context) (string, error) {
-	obj := ctx.Value(ContextKeyTransactionID)
+	obj := ctx.Value(types.ContextKeyTransactionID)
 	if obj == nil {
-		return "", utils.NewContextKeyErr(ContextKeyTransactionID)
+		return "", utils.NewContextKeyErr(types.ContextKeyTransactionID)
 	}
 	typedObj, ok := obj.(string)
 	if !ok {
 		return "", utils.NewContextTypeErr(
-			ContextKeyTransactionID,
+			types.ContextKeyTransactionID,
 			"string", utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -300,14 +288,14 @@ func TransactionID(ctx context.Context) (string, error) {
 
 // TransactionCreated gets the context's transaction created timstamp.
 func TransactionCreated(ctx context.Context) (time.Time, error) {
-	obj := ctx.Value(ContextKeyTransactionCreated)
+	obj := ctx.Value(types.ContextKeyTransactionCreated)
 	if obj == nil {
-		return time.Time{}, utils.NewContextKeyErr(ContextKeyTransactionCreated)
+		return time.Time{}, utils.NewContextKeyErr(types.ContextKeyTransactionCreated)
 	}
 	typedObj, ok := obj.(time.Time)
 	if !ok {
 		return time.Time{}, utils.NewContextTypeErr(
-			ContextKeyTransactionCreated,
+			types.ContextKeyTransactionCreated,
 			timestampTypeName, utils.GetTypePkgPathAndName(obj))
 	}
 	return typedObj, nil
@@ -329,7 +317,7 @@ const reqKey key = 0
 
 // Value returns Gorilla's context package's value for this Context's request
 // and key. It delegates to the parent types.Context if there is no such value.
-func (ctx *libstorContext) Value(key interface{}) interface{} {
+func (ctx *lsc) Value(key interface{}) interface{} {
 	if ctx.req == nil {
 		ctx.Context.Value(key)
 	}
@@ -344,107 +332,180 @@ func (ctx *libstorContext) Value(key interface{}) interface{} {
 	return ctx.Context.Value(key)
 }
 
-func (ctx *libstorContext) ServerName() string {
+func (ctx *lsc) Log() *log.Logger {
+	return ctx.Logger
+}
+
+func (ctx *lsc) ServerName() string {
 	v, _ := ServerName(ctx)
 	return v
 }
 
-func (ctx *libstorContext) InstanceIDsByService() map[string]*types.InstanceID {
+func (ctx *lsc) InstanceIDsByService() map[string]*types.InstanceID {
 	v, _ := InstanceIDsByService(ctx)
 	return v
 }
 
-func (ctx *libstorContext) InstanceID() *types.InstanceID {
+func (ctx *lsc) InstanceID() *types.InstanceID {
 	v, _ := InstanceID(ctx)
 	return v
 }
 
-func (ctx *libstorContext) LocalDevicesByService() map[string]map[string]string {
+func (ctx *lsc) LocalDevicesByService() map[string]map[string]string {
 	v, _ := LocalDevicesByService(ctx)
 	return v
 }
 
-func (ctx *libstorContext) LocalDevices() map[string]string {
+func (ctx *lsc) LocalDevices() map[string]string {
 	v, _ := LocalDevices(ctx)
 	return v
 }
 
-func (ctx *libstorContext) Profile() string {
+func (ctx *lsc) Profile() string {
 	v, _ := Profile(ctx)
 	return v
 }
 
-func (ctx *libstorContext) Route() string {
+func (ctx *lsc) Route() string {
 	v, _ := Route(ctx)
 	return v
 }
 
-func (ctx *libstorContext) TransactionID() string {
+func (ctx *lsc) ServiceName() string {
+	v, _ := ServiceName(ctx)
+	return v
+}
+
+func (ctx *lsc) TransactionID() string {
 	v, _ := TransactionID(ctx)
 	return v
 }
 
-func (ctx *libstorContext) TransactionCreated() time.Time {
+func (ctx *lsc) TransactionCreated() time.Time {
 	v, _ := TransactionCreated(ctx)
 	return v
 }
 
-func (ctx *libstorContext) Log() *log.Logger {
-	return ctx.logger
+func (ctx *lsc) StorageDriver() types.StorageDriver {
+	return nil
 }
 
-func (ctx *libstorContext) WithInstanceIDsByService(
+func (ctx *lsc) OSDriver() types.OSDriver {
+	return nil
+}
+
+func (ctx *lsc) IntegrationDriver() types.IntegrationDriver {
+	return nil
+}
+
+func (ctx *lsc) WithInstanceIDsByService(
 	val map[string]*types.InstanceID) types.Context {
 	return WithInstanceIDsByService(ctx, val)
 }
 
-func (ctx *libstorContext) WithInstanceID(
+func (ctx *lsc) WithInstanceID(
 	val *types.InstanceID) types.Context {
 	return WithInstanceID(ctx, val)
 }
 
-func (ctx *libstorContext) WithLocalDevicesByService(
+func (ctx *lsc) WithLocalDevicesByService(
 	val map[string]map[string]string) types.Context {
 	return WithLocalDevicesByService(ctx, val)
 }
 
-func (ctx *libstorContext) WithLocalDevices(
+func (ctx *lsc) WithLocalDevices(
 	val map[string]string) types.Context {
 	return WithLocalDevices(ctx, val)
 }
 
-func (ctx *libstorContext) WithProfile(val string) types.Context {
+func (ctx *lsc) WithProfile(val string) types.Context {
 	return WithProfile(ctx, val)
 }
 
-func (ctx *libstorContext) WithRoute(val string) types.Context {
+func (ctx *lsc) WithRoute(val string) types.Context {
 	return WithRoute(ctx, val)
 }
 
-func (ctx *libstorContext) WithContextID(id, val string) types.Context {
+func (ctx *lsc) WithServiceName(val string) types.Context {
+	return WithServiceName(ctx, val)
+}
+
+func (ctx *lsc) WithContextID(id, val string) types.Context {
 	return WithContextID(ctx, id, val)
 }
 
-func (ctx *libstorContext) WithTransactionID(val string) types.Context {
+func (ctx *lsc) WithTransactionID(val string) types.Context {
 	return WithTransactionID(ctx, val)
 }
 
-func (ctx *libstorContext) WithTransactionCreated(val time.Time) types.Context {
+func (ctx *lsc) WithTransactionCreated(val time.Time) types.Context {
 	return WithTransactionCreated(ctx, val)
 }
 
-func (ctx *libstorContext) WithValue(
+// WithStorageDriver returns a context with the provided storage driver.
+func (ctx *lsc) WithStorageDriver(driver types.StorageDriver) types.Context {
+	return nil
+}
+
+// WithOSDriver returns a context with the provided OS driver.
+func (ctx *lsc) WithOSDriver(driver types.OSDriver) types.Context {
+	return nil
+}
+
+// WithIntegrationDriver sreturns a context with the provided integration
+// driver.
+func (ctx *lsc) WithIntegrationDriver(
+	driver types.IntegrationDriver) types.Context {
+	return nil
+}
+
+func (ctx *lsc) WithValue(
 	key interface{}, val interface{}) types.Context {
 	return WithValue(ctx, key, val)
 }
 
+// WithParent creates a copy of this context with a new parent.
+func (ctx *lsc) WithParent(parent types.Context) types.Context {
+
+	if lscParent, ok := parent.(*lsc); ok && ctx == lscParent {
+		panic(goof.New("context.WithParent with same contexts"))
+	}
+
+	newLSCtx := &lsc{
+		Context: parent,
+		Logger:  ctx.Logger,
+		req:     ctx.req,
+	}
+
+	contextID := map[string]string{}
+	parentContextID, ok := parent.Value(
+		types.ContextKeyContextID).(map[string]string)
+	if ok {
+		for k, v := range parentContextID {
+			contextID[k] = v
+		}
+	}
+
+	childContextID, ok := ctx.Value(
+		types.ContextKeyContextID).(map[string]string)
+	if ok {
+		for k, v := range childContextID {
+			contextID[k] = v
+		}
+	}
+
+	newCtx := newLSCtx.WithValue(types.ContextKeyContextID, contextID)
+
+	return newCtx
+}
+
 type fieldFormatter struct {
 	f   log.Formatter
-	ctx Context
+	ctx types.Context
 }
 
 func (f *fieldFormatter) Format(entry *log.Entry) ([]byte, error) {
-	contextID, ok := f.ctx.Value(ContextKeyContextID).(map[string]string)
+	contextID, ok := f.ctx.Value(types.ContextKeyContextID).(map[string]string)
 	if !ok {
 		return f.f.Format(entry)
 	}

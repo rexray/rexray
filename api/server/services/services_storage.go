@@ -6,14 +6,11 @@ import (
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
-	"github.com/emccode/libstorage/api/types/services"
 )
 
 type storageService struct {
 	name          string
-	driver        drivers.RemoteStorageDriver
+	driver        types.StorageDriver
 	config        gofig.Config
 	taskExecQueue chan *task
 }
@@ -44,7 +41,7 @@ func (s *storageService) initStorageDriver() error {
 		}
 	}
 
-	driver, err := registry.NewRemoteStorageDriver(driverName)
+	driver, err := registry.NewStorageDriver(driverName)
 	if err != nil {
 		return err
 	}
@@ -61,13 +58,13 @@ func (s *storageService) Config() gofig.Config {
 	return s.config
 }
 
-func (s *storageService) Driver() drivers.RemoteStorageDriver {
+func (s *storageService) Driver() types.StorageDriver {
 	return s.driver
 }
 
 func (s *storageService) TaskExecute(
-	ctx context.Context,
-	run services.StorageTaskRunFunc,
+	ctx types.Context,
+	run types.StorageTaskRunFunc,
 	schema []byte) *types.Task {
 
 	t := newStorageServiceTask(ctx, run, s, schema)

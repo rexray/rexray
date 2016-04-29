@@ -1,9 +1,4 @@
-package drivers
-
-import (
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-)
+package types
 
 // NewOSDriver is a function that constructs a new OSDriver.
 type NewOSDriver func() OSDriver
@@ -12,14 +7,14 @@ type NewOSDriver func() OSDriver
 type DeviceMountOpts struct {
 	MountOptions string
 	MountLabel   string
-	Opts         types.Store
+	Opts         Store
 }
 
 // DeviceFormatOpts are options when formatting a device.
 type DeviceFormatOpts struct {
 	NewFSType   string
 	OverwriteFS bool
-	Opts        types.Store
+	Opts        Store
 }
 
 // OSDriver is the interface implemented by types that provide OS introspection
@@ -29,31 +24,31 @@ type OSDriver interface {
 
 	// Mounts get a list of mount points for a local device.
 	Mounts(
-		ctx context.Context,
+		ctx Context,
 		deviceName, mountPoint string,
-		opts types.Store) ([]*types.MountInfo, error)
+		opts Store) ([]*MountInfo, error)
 
 	// Mount mounts a device to a specified path.
 	Mount(
-		ctx context.Context,
+		ctx Context,
 		deviceName, mountPoint string,
 		opts *DeviceMountOpts) error
 
 	// Unmount unmounts the underlying device from the specified path.
 	Unmount(
-		ctx context.Context,
+		ctx Context,
 		mountPoint string,
-		opts types.Store) error
+		opts Store) error
 
 	// IsMounted checks whether a path is mounted or not
 	IsMounted(
-		ctx context.Context,
+		ctx Context,
 		mountPoint string,
-		opts types.Store) (bool, error)
+		opts Store) (bool, error)
 
 	// Format formats a device.
 	Format(
-		ctx context.Context,
+		ctx Context,
 		deviceName string,
 		opts *DeviceFormatOpts) error
 }

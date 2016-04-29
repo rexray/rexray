@@ -24,49 +24,14 @@ type Client interface {
 	// API returns the underlying libStorage API client.
 	API() libstor.Client
 
-	// Driver returns the client's underlying storage driver.
-	Driver() types.StorageDriver
+	// OS returns the client's OS driver instance.
+	OS() types.OSDriver
 
-	// List returns all volumes attached to this instance.
-	List(service string) ([]*types.Volume, error)
+	// Storage returns the client's storage driver instance.
+	Storage() types.StorageDriver
 
-	// Inspect returns a specific volume as identified by the provided volume
-	// name.
-	Inspect(service, volumeName string) (*types.Volume, error)
-
-	// Mount will return a mount point path when specifying either a volumeName
-	// or volumeID.  If overwriteFS is true the file system will be overwritten
-	// based on the newFSType if there is not an existing filesystem.
-	Mount(
-		service, volumeID, volumeName string,
-		opts *types.VolumeMountOpts) (string, *types.Volume, error)
-
-	// Unmount unmounts the volume.
-	Unmount(service, volumeID, volumeName string) error
-
-	// Path returns the mounted path of the volume.
-	Path(service, volumeID, volumeName string) (string, error)
-
-	// Create creates a new volume with the specified name and options.
-	Create(
-		service, volumeName string,
-		opts *types.VolumeCreateOpts) (*types.Volume, error)
-
-	// Remove removes the volume.
-	Remove(service, volumeName string) error
-
-	// Attach attaches the volume.
-	Attach(
-		service, volumeName string,
-		opts *types.VolumeAttachOpts) (string, error)
-
-	// Detach detaches the volume.
-	Detach(service, volumeName string, opts *types.VolumeDetachOpts) error
-
-	// NetworkName returns an identifier of a volume that is relevant when
-	// correlating a local device to a device that is the volumeName to the
-	// local instanceID.
-	NetworkName(service, volumeName string) (string, error)
+	// IntegrationDriver returns the client's integration driver instance.
+	Integration() types.IntegrationDriver
 }
 
 type client struct {

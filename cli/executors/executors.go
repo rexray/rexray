@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types/context"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/api/utils/config"
 

@@ -1,4 +1,4 @@
-package remote
+package storage
 
 import (
 	"fmt"
@@ -9,8 +9,6 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/drivers/storage/vfs"
 )
@@ -28,10 +26,10 @@ type driver struct {
 }
 
 func init() {
-	registry.RegisterRemoteStorageDriver(vfs.Name, newDriver)
+	registry.RegisterStorageDriver(vfs.Name, newDriver)
 }
 
-func newDriver() drivers.RemoteStorageDriver {
+func newDriver() types.StorageDriver {
 	return &driver{}
 }
 
@@ -66,25 +64,25 @@ func (d *driver) Init(config gofig.Config) error {
 	return nil
 }
 
-func (d *driver) Type() types.StorageType {
+func (d *driver) Type(ctx types.Context) types.StorageType {
 	return types.Object
 }
 
-func (d *driver) NextDeviceInfo() *types.NextDeviceInfo {
+func (d *driver) NextDeviceInfo(ctx types.Context) *types.NextDeviceInfo {
 	return &types.NextDeviceInfo{
 		Ignore: true,
 	}
 }
 
 func (d *driver) InstanceInspect(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
 	return &types.Instance{InstanceID: ctx.InstanceID()}, nil
 }
 
 func (d *driver) Volumes(
-	ctx context.Context,
-	opts *drivers.VolumesOpts) ([]*types.Volume, error) {
+	ctx types.Context,
+	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
 	volJSONPaths, err := d.getVolJSONs()
 	if err != nil {
@@ -104,13 +102,13 @@ func (d *driver) Volumes(
 		volumes = append(volumes, v)
 	}
 
-	return volumes, nil
+	return utils.SortVolumeByID(volumes), nil
 }
 
 func (d *driver) VolumeInspect(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
-	opts *drivers.VolumeInspectOpts) (*types.Volume, error) {
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 	v, err := d.getVolumeByID(volumeID)
 	if err != nil {
 		return nil, err
@@ -122,9 +120,9 @@ func (d *driver) VolumeInspect(
 }
 
 func (d *driver) VolumeCreate(
-	ctx context.Context,
+	ctx types.Context,
 	name string,
-	opts *drivers.VolumeCreateOpts) (*types.Volume, error) {
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
 	v := &types.Volume{
 		ID:     d.newVolumeID(),
@@ -158,9 +156,9 @@ func (d *driver) VolumeCreate(
 }
 
 func (d *driver) VolumeCreateFromSnapshot(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID, volumeName string,
-	opts *drivers.VolumeCreateOpts) (*types.Volume, error) {
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
 	snap, err := d.getSnapshotByID(snapshotID)
 	if err != nil {
@@ -208,7 +206,7 @@ func (d *driver) VolumeCreateFromSnapshot(
 }
 
 func (d *driver) VolumeCopy(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID, volumeName string,
 	opts types.Store) (*types.Volume, error) {
 
@@ -241,7 +239,7 @@ func (d *driver) VolumeCopy(
 }
 
 func (d *driver) VolumeSnapshot(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID, snapshotName string,
 	opts types.Store) (*types.Snapshot, error) {
 
@@ -274,7 +272,7 @@ func (d *driver) VolumeSnapshot(
 }
 
 func (d *driver) VolumeRemove(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
 	opts types.Store) error {
 
@@ -287,9 +285,9 @@ func (d *driver) VolumeRemove(
 }
 
 func (d *driver) VolumeAttach(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
-	opts *drivers.VolumeAttachByIDOpts) (*types.Volume, error) {
+	opts *types.VolumeAttachOpts) (*types.Volume, error) {
 
 	vol, err := d.getVolumeByID(volumeID)
 	if err != nil {
@@ -319,9 +317,9 @@ func (d *driver) VolumeAttach(
 }
 
 func (d *driver) VolumeDetach(
-	ctx context.Context,
+	ctx types.Context,
 	volumeID string,
-	opts types.Store) (*types.Volume, error) {
+	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
 	vol, err := d.getVolumeByID(volumeID)
 	if err != nil {
@@ -348,7 +346,7 @@ func (d *driver) VolumeDetach(
 }
 
 func (d *driver) Snapshots(
-	ctx context.Context,
+	ctx types.Context,
 	opts types.Store) ([]*types.Snapshot, error) {
 
 	snapJSONPaths, err := d.getSnapJSONs()
@@ -370,7 +368,7 @@ func (d *driver) Snapshots(
 }
 
 func (d *driver) SnapshotInspect(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID string,
 	opts types.Store) (*types.Snapshot, error) {
 
@@ -382,7 +380,7 @@ func (d *driver) SnapshotInspect(
 }
 
 func (d *driver) SnapshotCopy(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID, snapshotName, destinationID string,
 	opts types.Store) (*types.Snapshot, error) {
 
@@ -415,7 +413,7 @@ func (d *driver) SnapshotCopy(
 }
 
 func (d *driver) SnapshotRemove(
-	ctx context.Context,
+	ctx types.Context,
 	snapshotID string,
 	opts types.Store) error {
 

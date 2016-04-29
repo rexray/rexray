@@ -12,10 +12,10 @@ import (
 	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/client"
 
 	// load the  driver
+	"github.com/emccode/libstorage/drivers/storage/libstorage"
 	"github.com/emccode/libstorage/drivers/storage/mock"
 	mockx "github.com/emccode/libstorage/drivers/storage/mock/executor"
 )
@@ -46,22 +46,21 @@ func init() {
 func TestMain(m *testing.M) {
 	server.CloseOnAbort()
 	ec := m.Run()
-	client.Close()
 	os.Exit(ec)
 }
 
 func TestClient(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML,
 		func(config gofig.Config, client client.Client, t *testing.T) {
-			iid, err := client.InstanceID(mock.Name)
+			iid, err := client.API().InstanceID(nil, mock.Name)
 			assert.NoError(t, err)
 			assert.NotNil(t, iid)
 
-			iid, err = client.InstanceID("mock2")
+			iid, err = client.API().InstanceID(nil, "mock2")
 			assert.NoError(t, err)
 			assert.NotNil(t, iid)
 
-			iid, err = client.InstanceID("mock3")
+			iid, err = client.API().InstanceID(nil, "mock3")
 			assert.NoError(t, err)
 			assert.NotNil(t, iid)
 		})
@@ -103,7 +102,7 @@ func TestServiceInpspect(t *testing.T) {
 		reply, err := client.API().ServiceInspect(nil, "mock2")
 		assert.NoError(t, err)
 		assert.Equal(t, "mock2", reply.Name)
-		assert.Equal(t, "mock", reply.Driver.Name)
+		assert.Equal(t, mock.Name, reply.Driver.Name)
 		assert.True(t, reply.Driver.NextDevice.Ignore)
 		assert.Equal(t, "xvd", reply.Driver.NextDevice.Prefix)
 		assert.Equal(t, `\w`, reply.Driver.NextDevice.Pattern)
@@ -113,7 +112,7 @@ func TestServiceInpspect(t *testing.T) {
 
 func TestSnapshotsByService(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.SnapshotsByService("mock")
+		reply, err := client.API().SnapshotsByService(nil, mock.Name)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		_, ok := reply["snap-000"]
@@ -125,12 +124,12 @@ func TestSnapshotsByService(t *testing.T) {
 
 func TestVolumes(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.Volumes(false)
+		reply, err := client.API().Volumes(nil, false)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		assert.Len(t, reply, 3)
-		assert.Len(t, reply["mock"], 3)
-		assert.Len(t, reply["mock"]["vol-000"].Attachments, 0)
+		assert.Len(t, reply[mock.Name], 3)
+		assert.Len(t, reply[mock.Name]["vol-000"].Attachments, 0)
 		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
 		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
 	}
@@ -140,49 +139,49 @@ func TestVolumes(t *testing.T) {
 
 func TestVolumesWithAttachments(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.Volumes(true)
+		reply, err := client.API().Volumes(nil, true)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		assert.Len(t, reply, 3)
-		assert.Len(t, reply["mock"], 3)
-		assert.Len(t, reply["mock"]["vol-000"].Attachments, 3)
+		assert.Len(t, reply[mock.Name], 3)
+		assert.Len(t, reply[mock.Name]["vol-000"].Attachments, 3)
 		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
 		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
 		assert.Equal(
-			t, "/var/log", reply["mock"]["vol-000"].Attachments[0].MountPoint)
+			t, "/var/log", reply[mock.Name]["vol-000"].Attachments[0].MountPoint)
 		assert.Equal(
-			t, "/home", reply["mock"]["vol-000"].Attachments[1].MountPoint)
+			t, "/home", reply[mock.Name]["vol-000"].Attachments[1].MountPoint)
 		assert.Equal(
-			t, "/net/share", reply["mock"]["vol-000"].Attachments[2].MountPoint)
+			t, "/net/share", reply[mock.Name]["vol-000"].Attachments[2].MountPoint)
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
 func TestVolumesWithAttachmentsNoLocalDevices(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.Volumes(true)
+		reply, err := client.API().Volumes(nil, true)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		assert.Len(t, reply, 3)
-		assert.Len(t, reply["mock"], 3)
-		assert.Len(t, reply["mock"]["vol-000"].Attachments, 3)
+		assert.Len(t, reply[mock.Name], 3)
+		assert.Len(t, reply[mock.Name]["vol-000"].Attachments, 3)
 		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
 		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
 		assert.NotEqual(
-			t, "/var/log", reply["mock"]["vol-000"].Attachments[0].MountPoint)
+			t, "/var/log", reply[mock.Name]["vol-000"].Attachments[0].MountPoint)
 		assert.NotEqual(
-			t, "/home", reply["mock"]["vol-000"].Attachments[1].MountPoint)
+			t, "/home", reply[mock.Name]["vol-000"].Attachments[1].MountPoint)
 		assert.NotEqual(
-			t, "/net/share", reply["mock"]["vol-000"].Attachments[2].MountPoint)
+			t, "/net/share", reply[mock.Name]["vol-000"].Attachments[2].MountPoint)
 	}
-	client.EnableLocalDevicesHeaders = false
+	libstorage.EnableLocalDevicesHeaders = false
 	apitests.Run(t, mock.Name, configYAML, tf)
-	client.EnableLocalDevicesHeaders = true
+	libstorage.EnableLocalDevicesHeaders = true
 }
 
 func TestVolumesByService(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.VolumesByService("mock", false)
+		reply, err := client.API().VolumesByService(nil, mock.Name, false)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		_, ok := reply["vol-000"]
@@ -206,7 +205,7 @@ func TestVolumeCreate(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		volumeCreateRequest := &apihttp.VolumeCreateRequest{
+		volumeCreateRequest := &types.VolumeCreateRequest{
 			Name:             volumeName,
 			AvailabilityZone: &availabilityZone,
 			IOPS:             &iops,
@@ -215,7 +214,8 @@ func TestVolumeCreate(t *testing.T) {
 			Opts:             opts,
 		}
 
-		reply, err := client.VolumeCreate("mock", volumeCreateRequest)
+		reply, err := client.API().VolumeCreate(
+			nil, mock.Name, volumeCreateRequest)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
@@ -234,14 +234,14 @@ func TestVolumeCreate(t *testing.T) {
 func TestVolumeRemove(t *testing.T) {
 
 	tf1 := func(config gofig.Config, client client.Client, t *testing.T) {
-		err := client.VolumeRemove("mock", "vol-000")
+		err := client.API().VolumeRemove(nil, mock.Name, "vol-000")
 		assert.NoError(t, err)
 	}
 
 	apitests.Run(t, mock.Name, configYAML, tf1, tf1)
 
 	tf2 := func(config gofig.Config, client client.Client, t *testing.T) {
-		err := client.VolumeRemove("mock", "vol-000")
+		err := client.API().VolumeRemove(nil, mock.Name, "vol-000")
 		assert.Error(t, err)
 		assert.IsType(t, &types.JSONError{}, err)
 		je := err.(*types.JSONError)
@@ -261,12 +261,13 @@ func TestVolumeSnapshot(t *testing.T) {
 			"priority": 2,
 		}
 
-		request := &apihttp.VolumeSnapshotRequest{
+		request := &types.VolumeSnapshotRequest{
 			SnapshotName: snapshotName,
 			Opts:         opts,
 		}
 
-		reply, err := client.VolumeSnapshot("mock", volumeID, request)
+		reply, err := client.API().VolumeSnapshot(
+			nil, mock.Name, volumeID, request)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
@@ -279,19 +280,19 @@ func TestVolumeSnapshot(t *testing.T) {
 
 func TestSnapshots(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.Snapshots()
+		reply, err := client.API().Snapshots(nil)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
-		_, ok := reply["mock"]
+		_, ok := reply[mock.Name]
 		assert.Equal(t, true, ok)
-		assert.Equal(t, 3, len(reply["mock"]))
+		assert.Equal(t, 3, len(reply[mock.Name]))
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
 func TestSnapshotInspect(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		reply, err := client.SnapshotInspect("mock", "snap-000")
+		reply, err := client.API().SnapshotInspect(nil, mock.Name, "snap-000")
 		assert.NoError(t, err)
 		assert.Equal(t, "Snapshot 0", reply.Name)
 		assert.Equal(t, "snap-000", reply.ID)
@@ -315,7 +316,7 @@ func TestVolumeCreateFromSnapshot(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		snapshotCreateRequest := &apihttp.VolumeCreateRequest{
+		snapshotCreateRequest := &types.VolumeCreateRequest{
 			Name:             volumeName,
 			AvailabilityZone: &availabilityZone,
 			IOPS:             &iops,
@@ -324,8 +325,8 @@ func TestVolumeCreateFromSnapshot(t *testing.T) {
 			Opts:             opts,
 		}
 
-		reply, err := client.VolumeCreateFromSnapshot(
-			"mock", "snap-000", snapshotCreateRequest)
+		reply, err := client.API().VolumeCreateFromSnapshot(nil,
+			mock.Name, "snap-000", snapshotCreateRequest)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
@@ -339,7 +340,8 @@ func TestVolumeCreateFromSnapshot(t *testing.T) {
 
 func TestSnapshotRemove(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		assert.NoError(t, client.SnapshotRemove("mock", "snap-000"))
+		assert.NoError(t, client.API().SnapshotRemove(
+			nil, mock.Name, "snap-000"))
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
@@ -353,12 +355,12 @@ func TestSnapshotCopy(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		request := &apihttp.SnapshotCopyRequest{
+		request := &types.SnapshotCopyRequest{
 			SnapshotName: snapshotName,
 			Opts:         opts,
 		}
 
-		reply, err := client.SnapshotCopy("mock", "snap-000", request)
+		reply, err := client.API().SnapshotCopy(nil, mock.Name, "snap-000", request)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 
@@ -378,13 +380,13 @@ func TestVolumeAttach(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		nd, _ := client.NextDevice("mock")
-		request := &apihttp.VolumeAttachRequest{
-			NextDeviceName: nd,
+		nd, _ := client.API().NextDevice(nil, mock.Name)
+		request := &types.VolumeAttachRequest{
+			NextDeviceName: &nd,
 			Opts:           opts,
 		}
 
-		reply, err := client.VolumeAttach("mock", "vol-001", request)
+		reply, err := client.API().VolumeAttach(nil, mock.Name, "vol-001", request)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		assert.Equal(
@@ -392,7 +394,7 @@ func TestVolumeAttach(t *testing.T) {
 		assert.Equal(
 			t, "/dev/xvde", reply.Attachments[0].DeviceName)
 
-		reply, err = client.VolumeAttach("mock", "vol-002", request)
+		reply, err = client.API().VolumeAttach(nil, mock.Name, "vol-002", request)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		assert.Equal(
@@ -406,8 +408,8 @@ func TestVolumeAttach(t *testing.T) {
 
 func TestVolumeDetach(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
-		request := &apihttp.VolumeDetachRequest{}
-		vol, err := client.VolumeDetach("mock", "vol-000", request)
+		request := &types.VolumeDetachRequest{}
+		vol, err := client.API().VolumeDetach(nil, mock.Name, "vol-000", request)
 		assert.NoError(t, err)
 		assert.Equal(t, "vol-000", vol.ID)
 		assert.Len(t, vol.Attachments, 0)
@@ -423,25 +425,25 @@ func TestVolumeDetachAllForService(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		nd, err := client.NextDevice("mock2")
+		nd, err := client.API().NextDevice(nil, "mock2")
 		assert.NoError(t, err)
-		request := &apihttp.VolumeAttachRequest{
-			NextDeviceName: nd,
+		request := &types.VolumeAttachRequest{
+			NextDeviceName: &nd,
 			Opts:           opts,
 		}
 
-		_, err = client.VolumeAttach("mock2", "vol-000", request)
+		_, err = client.API().VolumeAttach(nil, "mock2", "vol-000", request)
 		assert.NoError(t, err)
 		var vol *types.Volume
-		vol, err = client.VolumeInspect("mock2", "vol-000", true)
+		vol, err = client.API().VolumeInspect(nil, "mock2", "vol-000", true)
 		assert.NoError(t, err)
 		assert.Len(
 			t, vol.Attachments, 1)
 
-		requestD := &apihttp.VolumeDetachRequest{
+		requestD := &types.VolumeDetachRequest{
 			Opts: opts,
 		}
-		_, err = client.VolumeDetachAllForService("mock", requestD)
+		_, err = client.API().VolumeDetachAllForService(nil, mock.Name, requestD)
 		assert.NoError(t, err)
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
@@ -455,25 +457,25 @@ func TestVolumeDetachAll(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		request := &apihttp.VolumeDetachRequest{
+		request := &types.VolumeDetachRequest{
 			Opts: opts,
 		}
 
-		_, err := client.VolumeDetachAll(request)
+		_, err := client.API().VolumeDetachAll(nil, request)
 		assert.NoError(t, err)
-		vol, err := client.VolumeInspect("mock", "vol-000", true)
-		assert.NoError(t, err)
-		assert.Len(
-			t, vol.Attachments, 0)
-		vol, err = client.VolumeInspect("mock", "vol-001", true)
+		vol, err := client.API().VolumeInspect(nil, mock.Name, "vol-000", true)
 		assert.NoError(t, err)
 		assert.Len(
 			t, vol.Attachments, 0)
-		vol, err = client.VolumeInspect("mock", "vol-002", true)
+		vol, err = client.API().VolumeInspect(nil, mock.Name, "vol-001", true)
 		assert.NoError(t, err)
 		assert.Len(
 			t, vol.Attachments, 0)
-		vol, err = client.VolumeInspect("mock2", "vol-000", true)
+		vol, err = client.API().VolumeInspect(nil, mock.Name, "vol-002", true)
+		assert.NoError(t, err)
+		assert.Len(
+			t, vol.Attachments, 0)
+		vol, err = client.API().VolumeInspect(nil, "mock2", "vol-000", true)
 		assert.NoError(t, err)
 		assert.Len(
 			t, vol.Attachments, 0)

@@ -13,13 +13,11 @@ import (
 	"golang.org/x/net/context/ctxhttp"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils"
 )
 
 func (c *Client) httpDo(
-	ctx context.Context,
+	ctx types.Context,
 	method, path string,
 	payload, reply interface{}) (*http.Response, error) {
 
@@ -28,13 +26,13 @@ func (c *Client) httpDo(
 		txIDUUID, _ := utils.NewUUID()
 		txID = txIDUUID.String()
 		ctx = ctx.WithTransactionID(txID).WithContextID(
-			context.ContextKeyTransactionID, txID)
+			types.ContextKeyTransactionID, txID)
 	}
 	txCR := ctx.TransactionCreated()
 	if txCR.IsZero() {
 		txCR = time.Now().UTC()
 		ctx = ctx.WithTransactionCreated(txCR).WithContextID(
-			context.ContextKeyTransactionCreated,
+			types.ContextKeyTransactionCreated,
 			fmt.Sprintf("%d", txCR.Unix()))
 	}
 
@@ -53,9 +51,9 @@ func (c *Client) httpDo(
 		req.Header[k] = v
 	}
 
-	req.Header.Set(apihttp.TransactionIDHeader, txID)
+	req.Header.Set(types.TransactionIDHeader, txID)
 	req.Header.Set(
-		apihttp.TransactionCreatedHeader, fmt.Sprintf("%d", txCR.Unix()))
+		types.TransactionCreatedHeader, fmt.Sprintf("%d", txCR.Unix()))
 	c.logRequest(req)
 
 	res, err := ctxhttp.Do(ctx, c.Client, req)
@@ -84,14 +82,14 @@ func (c *Client) httpDo(
 }
 
 func (c *Client) setServerName(res *http.Response) {
-	snh := utils.GetHeader(res.Header, apihttp.ServerNameHeader)
+	snh := utils.GetHeader(res.Header, types.ServerNameHeader)
 	if len(snh) > 0 {
 		c.ServerName = snh[0]
 	}
 }
 
 func (c *Client) httpGet(
-	ctx context.Context,
+	ctx types.Context,
 	path string,
 	reply interface{}) (*http.Response, error) {
 
@@ -99,14 +97,14 @@ func (c *Client) httpGet(
 }
 
 func (c *Client) httpHead(
-	ctx context.Context,
+	ctx types.Context,
 	path string) (*http.Response, error) {
 
 	return c.httpDo(ctx, "HEAD", path, nil, nil)
 }
 
 func (c *Client) httpPost(
-	ctx context.Context,
+	ctx types.Context,
 	path string,
 	payload interface{},
 	reply interface{}) (*http.Response, error) {
@@ -115,7 +113,7 @@ func (c *Client) httpPost(
 }
 
 func (c *Client) httpDelete(
-	ctx context.Context,
+	ctx types.Context,
 	path string,
 	reply interface{}) (*http.Response, error) {
 

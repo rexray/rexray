@@ -4,7 +4,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server/httputils"
-	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/types"
 )
 
 func init() {
@@ -12,7 +12,7 @@ func init() {
 }
 
 type router struct {
-	routes []apihttp.Route
+	routes []types.Route
 }
 
 func (r *router) Name() string {
@@ -24,13 +24,13 @@ func (r *router) Init(config gofig.Config) {
 }
 
 // Routes returns the available routes.
-func (r *router) Routes() []apihttp.Route {
+func (r *router) Routes() []types.Route {
 	return r.routes
 }
 
 func (r *router) initRoutes() {
 
-	r.routes = []apihttp.Route{
+	r.routes = []types.Route{
 
 		// GET
 		httputils.NewGetRoute(

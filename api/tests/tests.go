@@ -203,15 +203,15 @@ func (th *testHarness) run(
 					th.servers = append(th.servers, server)
 				}
 
-				client, err := getClient(config)
+				c, err := client.New(config)
 				assert.NoError(t, err)
-				assert.NotNil(t, client)
-				if client == nil {
-					panic(fmt.Sprintf("err=%v, client=%v", err, client))
+				assert.NotNil(t, c)
+				if err != nil || c == nil {
+					t.Fatalf("err=%v, client=%v", err, c)
 				}
 
 				for _, test := range tests {
-					test(config, client, t)
+					test(config, c, t)
 				}
 			}(x, config)
 		}
@@ -238,15 +238,15 @@ func (th *testHarness) run(
 						th.servers = append(th.servers, server)
 					}
 
-					client, err := getClient(config)
+					c, err := client.New(config)
 					assert.NoError(t, err)
-					assert.NotNil(t, client)
+					assert.NotNil(t, c)
 
-					if client == nil {
-						panic(fmt.Sprintf("err=%v, client=%v", err, client))
+					if c == nil {
+						panic(fmt.Sprintf("err=%v, client=%v", err, c))
 					}
 
-					test(config, client, t)
+					test(config, c, t)
 				}(test, x, config)
 			}
 		}
@@ -319,16 +319,6 @@ func getTestConfigs(
 	}
 
 	return configNames, configs
-}
-
-func getClient(config gofig.Config) (client.Client, error) {
-	c, err := client.New(config)
-	if err != nil {
-		return nil, goof.WithFieldE(
-			"host", config.Get("libstorage.host"),
-			"error dialing libStorage service", err)
-	}
-	return c, nil
 }
 
 func (th *testHarness) closeServers(t *testing.T) {

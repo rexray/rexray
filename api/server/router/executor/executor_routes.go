@@ -12,17 +12,15 @@ import (
 	"github.com/emccode/libstorage/api/server/executors"
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 func (r *router) executors(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
 
-	var reply apihttp.ExecutorsMap = map[string]*types.ExecutorInfo{}
+	var reply types.ExecutorsMap = map[string]*types.ExecutorInfo{}
 	for ei := range executors.ExecutorInfos() {
 		reply[ei.Name] = &ei.ExecutorInfo
 	}
@@ -31,7 +29,7 @@ func (r *router) executors(
 }
 
 func (r *router) executorInspect(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -45,7 +43,7 @@ func (r *router) executorInspect(
 }
 
 func (r *router) executorHead(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {

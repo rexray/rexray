@@ -1,4 +1,4 @@
-package http
+package types
 
 // NewRequestObjFunc is a function that creates a new instance of the type to
 // which the request body is serialized.
@@ -28,13 +28,15 @@ type VolumeSnapshotRequest struct {
 
 // VolumeAttachRequest is the JSON body for attaching a volume to an instance.
 type VolumeAttachRequest struct {
-	NextDeviceName string                 `json:"nextDeviceName"`
+	Force          bool                   `json:"force,omitempty"`
+	NextDeviceName *string                `json:"nextDeviceName,omitempty"`
 	Opts           map[string]interface{} `json:"opts,omitempty"`
 }
 
 // VolumeDetachRequest is the JSON body for detaching a volume from an instance.
 type VolumeDetachRequest struct {
-	Opts map[string]interface{} `json:"opts,omitempty"`
+	Force bool                   `json:"force,omitempty"`
+	Opts  map[string]interface{} `json:"opts,omitempty"`
 }
 
 // SnapshotCopyRequest is the JSON body for copying a snapshot.

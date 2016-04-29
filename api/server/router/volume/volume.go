@@ -2,10 +2,11 @@ package volume
 
 import (
 	"github.com/akutz/gofig"
+
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server/handlers"
 	"github.com/emccode/libstorage/api/server/httputils"
-	apihttp "github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
@@ -15,7 +16,7 @@ func init() {
 
 type router struct {
 	config gofig.Config
-	routes []apihttp.Route
+	routes []types.Route
 }
 
 func (r *router) Name() string {
@@ -28,12 +29,12 @@ func (r *router) Init(config gofig.Config) {
 }
 
 // Routes returns the available routes.
-func (r *router) Routes() []apihttp.Route {
+func (r *router) Routes() []types.Route {
 	return r.routes
 }
 
 func (r *router) initRoutes() {
-	r.routes = []apihttp.Route{
+	r.routes = []types.Route{
 		// GET
 
 		// get all volumes from all services
@@ -73,7 +74,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeMapSchema,
-				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
+				func() interface{} { return &types.VolumeDetachRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("detach"),
 
@@ -86,7 +87,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeCreateRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &apihttp.VolumeCreateRequest{} }),
+				func() interface{} { return &types.VolumeCreateRequest{} }),
 			handlers.NewPostArgsHandler(),
 		),
 
@@ -99,7 +100,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeCopyRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &apihttp.VolumeCopyRequest{} }),
+				func() interface{} { return &types.VolumeCopyRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("copy"),
 
@@ -112,7 +113,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeSnapshotRequestSchema,
 				schema.SnapshotSchema,
-				func() interface{} { return &apihttp.VolumeSnapshotRequest{} }),
+				func() interface{} { return &types.VolumeSnapshotRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("snapshot"),
 
@@ -125,7 +126,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeAttachRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &apihttp.VolumeAttachRequest{} }),
+				func() interface{} { return &types.VolumeAttachRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("attach"),
 
@@ -137,7 +138,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.ServiceVolumeMapSchema,
-				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
+				func() interface{} { return &types.VolumeDetachRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("detach"),
 
@@ -150,7 +151,7 @@ func (r *router) initRoutes() {
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeSchema,
-				func() interface{} { return &apihttp.VolumeDetachRequest{} }),
+				func() interface{} { return &types.VolumeDetachRequest{} }),
 			handlers.NewPostArgsHandler(),
 		).Queries("detach"),
 

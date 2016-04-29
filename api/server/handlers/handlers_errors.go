@@ -5,17 +5,15 @@ import (
 
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 // errorHandler is a global HTTP filter for handlling errors
 type errorHandler struct {
-	handler apihttp.APIFunc
+	handler types.APIFunc
 }
 
 // NewErrorHandler returns a new global HTTP filter for handling errors.
-func NewErrorHandler() apihttp.Middleware {
+func NewErrorHandler() types.Middleware {
 	return &errorHandler{}
 }
 
@@ -23,13 +21,13 @@ func (h *errorHandler) Name() string {
 	return "error-handler"
 }
 
-func (h *errorHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+func (h *errorHandler) Handler(m types.APIFunc) types.APIFunc {
 	return (&errorHandler{m}).Handle
 }
 
 // Handle is the type's Handler function.
 func (h *errorHandler) Handle(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -39,7 +37,7 @@ func (h *errorHandler) Handle(
 		return nil
 	}
 
-	ctx.Log().Error(err)
+	ctx.Error(err)
 
 	jsonError := types.JSONError{
 		Status:     getStatus(err),

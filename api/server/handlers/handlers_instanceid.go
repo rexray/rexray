@@ -9,20 +9,18 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils"
 )
 
 // instanceIDHandler is a global HTTP filter for grokking the InstanceIDs
 // from the headers
 type instanceIDHandler struct {
-	handler apihttp.APIFunc
+	handler types.APIFunc
 }
 
 // NewInstanceIDHandler returns a new global HTTP filter for grokking the
 // InstanceIDs from the headers
-func NewInstanceIDHandler() apihttp.Middleware {
+func NewInstanceIDHandler() types.Middleware {
 	return &instanceIDHandler{}
 }
 
@@ -30,13 +28,13 @@ func (h *instanceIDHandler) Name() string {
 	return "instanceIDs-handler"
 }
 
-func (h *instanceIDHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+func (h *instanceIDHandler) Handler(m types.APIFunc) types.APIFunc {
 	return (&instanceIDHandler{m}).Handle
 }
 
 // Handle is the type's Handler function.
 func (h *instanceIDHandler) Handle(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -45,16 +43,16 @@ func (h *instanceIDHandler) Handle(
 
 	if err := parseInstanceIDHeaders(
 		ctx,
-		apihttp.InstanceIDHeader,
-		utils.GetHeader(req.Header, apihttp.InstanceIDHeader),
+		types.InstanceIDHeader,
+		utils.GetHeader(req.Header, types.InstanceIDHeader),
 		valMap); err != nil {
 		return err
 	}
 
 	if err := parseInstanceIDHeaders(
 		ctx,
-		apihttp.InstanceID64Header,
-		utils.GetHeader(req.Header, apihttp.InstanceID64Header),
+		types.InstanceID64Header,
+		utils.GetHeader(req.Header, types.InstanceID64Header),
 		valMap); err != nil {
 		return err
 	}
@@ -67,12 +65,12 @@ func (h *instanceIDHandler) Handle(
 }
 
 func parseInstanceIDHeaders(
-	ctx context.Context,
+	ctx types.Context,
 	name string,
 	headers []string,
 	instanceIDs map[string]*types.InstanceID) error {
 
-	ctx.Log().WithField(name, headers).Debug("http header")
+	ctx.WithField(name, headers).Debug("http header")
 
 	for _, v := range headers {
 		iidParts := strings.SplitN(v, "=", 2)
@@ -81,7 +79,7 @@ func parseInstanceIDHeaders(
 
 		iid := &types.InstanceID{}
 
-		if name == apihttp.InstanceIDHeader {
+		if name == types.InstanceIDHeader {
 			iid.ID = iidValue
 		} else {
 			buf, err := base64.StdEncoding.DecodeString(iidValue)
@@ -94,7 +92,7 @@ func parseInstanceIDHeaders(
 		}
 
 		instanceIDs[iidDriver] = iid
-		ctx.Log().WithFields(log.Fields{
+		ctx.WithFields(log.Fields{
 			"driver":     iidDriver,
 			"instanceID": iid.ID,
 		}).Debug("set instanceID")

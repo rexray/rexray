@@ -445,6 +445,9 @@ const (
                 "nextDeviceName": {
                     "type": "string"
                 },
+                "force": {
+                    "type": "boolean"
+                },
                 "opts": { "$ref" : "#/definitions/opts" }
             },
             "additionalProperties": false
@@ -454,6 +457,9 @@ const (
         "volumeDetachRequest": {
             "type": "object",
             "properties": {
+                "force": {
+                    "type": "boolean"
+                },
                 "opts": { "$ref" : "#/definitions/opts" }
             },
             "additionalProperties": false

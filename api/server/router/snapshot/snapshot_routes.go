@@ -7,16 +7,12 @@ import (
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
-	apihttp "github.com/emccode/libstorage/api/types/http"
-	apisvcs "github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
 func (r *router) snapshots(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -24,14 +20,14 @@ func (r *router) snapshots(
 	var (
 		tasks   = map[string]*types.Task{}
 		taskIDs []int
-		reply   apihttp.ServiceSnapshotMap = map[string]apihttp.SnapshotMap{}
+		reply   = types.ServiceSnapshotMap{}
 	)
 
 	for service := range services.StorageServices(ctx) {
 
 		run := func(
-			ctx context.Context,
-			svc apisvcs.StorageService) (interface{}, error) {
+			ctx types.Context,
+			svc types.StorageService) (interface{}, error) {
 
 			err := httputils.GetServiceContext(&ctx, svc)
 			if err != nil {
@@ -55,7 +51,7 @@ func (r *router) snapshots(
 		tasks[service.Name()] = task
 	}
 
-	run := func(ctx context.Context) (interface{}, error) {
+	run := func(ctx types.Context) (interface{}, error) {
 
 		services.TaskWaitAll(ctx, taskIDs...)
 
@@ -84,7 +80,7 @@ func (r *router) snapshots(
 }
 
 func (r *router) snapshotsForService(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -95,10 +91,10 @@ func (r *router) snapshotsForService(
 	}
 
 	run := func(
-		ctx context.Context,
-		svc apisvcs.StorageService) (interface{}, error) {
+		ctx types.Context,
+		svc types.StorageService) (interface{}, error) {
 
-		var reply apihttp.SnapshotMap = map[string]*types.Snapshot{}
+		var reply types.SnapshotMap = map[string]*types.Snapshot{}
 
 		objs, err := svc.Driver().Snapshots(ctx, store)
 		if err != nil {
@@ -120,7 +116,7 @@ func (r *router) snapshotsForService(
 }
 
 func (r *router) snapshotInspect(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -131,8 +127,8 @@ func (r *router) snapshotInspect(
 	}
 
 	run := func(
-		ctx context.Context,
-		svc apisvcs.StorageService) (interface{}, error) {
+		ctx types.Context,
+		svc types.StorageService) (interface{}, error) {
 
 		return svc.Driver().SnapshotInspect(
 			ctx,
@@ -149,7 +145,7 @@ func (r *router) snapshotInspect(
 }
 
 func (r *router) snapshotRemove(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -160,8 +156,8 @@ func (r *router) snapshotRemove(
 	}
 
 	run := func(
-		ctx context.Context,
-		svc apisvcs.StorageService) (interface{}, error) {
+		ctx types.Context,
+		svc types.StorageService) (interface{}, error) {
 
 		return nil, svc.Driver().SnapshotRemove(
 			ctx,
@@ -178,7 +174,7 @@ func (r *router) snapshotRemove(
 }
 
 func (r *router) volumeCreate(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -189,14 +185,14 @@ func (r *router) volumeCreate(
 	}
 
 	run := func(
-		ctx context.Context,
-		svc apisvcs.StorageService) (interface{}, error) {
+		ctx types.Context,
+		svc types.StorageService) (interface{}, error) {
 
 		return svc.Driver().VolumeCreateFromSnapshot(
 			ctx,
 			store.GetString("snapshotID"),
 			store.GetString("name"),
-			&drivers.VolumeCreateOpts{
+			&types.VolumeCreateOpts{
 				AvailabilityZone: store.GetStringPtr("availabilityZone"),
 				IOPS:             store.GetInt64Ptr("iops"),
 				Size:             store.GetInt64Ptr("size"),
@@ -214,7 +210,7 @@ func (r *router) volumeCreate(
 }
 
 func (r *router) snapshotCopy(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -225,8 +221,8 @@ func (r *router) snapshotCopy(
 	}
 
 	run := func(
-		ctx context.Context,
-		svc apisvcs.StorageService) (interface{}, error) {
+		ctx types.Context,
+		svc types.StorageService) (interface{}, error) {
 
 		return svc.Driver().SnapshotCopy(
 			ctx,

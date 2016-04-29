@@ -14,11 +14,9 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
-	apisvcs "github.com/emccode/libstorage/api/types/services"
 	apicnfg "github.com/emccode/libstorage/api/utils/config"
 	"github.com/emccode/libstorage/api/utils/semaphore"
 )
@@ -64,18 +62,18 @@ func startWithConfig(config gofig.Config) (io.Closer, <-chan error) {
 
 type server struct {
 	name         string
-	ctx          context.Context
+	ctx          types.Context
 	addrs        []string
 	config       gofig.Config
 	servers      []*HTTPServer
-	services     map[string]apisvcs.StorageService
+	services     map[string]types.StorageService
 	closeSignal  chan int
 	closedSignal chan int
 	closeOnce    *sync.Once
 
-	routers        []apihttp.Router
-	routeHandlers  map[string][]apihttp.Middleware
-	globalHandlers []apihttp.Middleware
+	routers        []types.Router
+	routeHandlers  map[string][]types.Middleware
+	globalHandlers []types.Middleware
 
 	logHTTPEnabled   bool
 	logHTTPRequests  bool
@@ -103,19 +101,19 @@ func newServer(config gofig.Config) (*server, error) {
 		closeOnce:    &sync.Once{},
 	}
 
-	s.ctx = s.ctx.WithContextID(context.ContextKeyServerName, s.name)
-	s.ctx = s.ctx.WithValue(context.ContextKeyServerName, s.name)
-	s.ctx.Log().Info("initializing server")
+	s.ctx = s.ctx.WithContextID(types.ContextKeyServerName, s.name)
+	s.ctx = s.ctx.WithValue(types.ContextKeyServerName, s.name)
+	s.ctx.Info("initializing server")
 
 	if err := s.initEndpoints(); err != nil {
 		return nil, err
 	}
-	s.ctx.Log().Info("initialized endpoints")
+	s.ctx.Info("initialized endpoints")
 
 	if err := services.Init(s.ctx, s.config); err != nil {
 		return nil, err
 	}
-	s.ctx.Log().Info("initialized services")
+	s.ctx.Info("initialized services")
 
 	s.logHTTPEnabled = config.GetBool("libstorage.server.http.logging.enabled")
 	if s.logHTTPEnabled {
@@ -164,7 +162,7 @@ func serve(config gofig.Config) (*server, <-chan error) {
 	for _, srv := range s.servers {
 		srv.srv.Handler = s.createMux(srv.Context())
 		go func(srv *HTTPServer) {
-			srv.Context().Log().Info("api listening")
+			srv.Context().Info("api listening")
 			if err := srv.Serve(); err != nil {
 				if !strings.Contains(
 					err.Error(), "use of closed network connection") {
@@ -175,16 +173,16 @@ func serve(config gofig.Config) (*server, <-chan error) {
 	}
 
 	go func() {
-		s.ctx.Log().Info("waiting for err or close signal")
+		s.ctx.Info("waiting for err or close signal")
 		select {
 		case err := <-srvErrs:
 			errs <- err
-			s.ctx.Log().Error("received server error")
+			s.ctx.Error("received server error")
 		case <-s.closeSignal:
-			s.ctx.Log().Debug("received close signal")
+			s.ctx.Debug("received close signal")
 		}
 		close(errs)
-		s.ctx.Log().Info("closed server error channel")
+		s.ctx.Info("closed server error channel")
 		s.closedSignal <- 1
 	}()
 
@@ -194,7 +192,7 @@ func serve(config gofig.Config) (*server, <-chan error) {
 	timeout := time.NewTimer(time.Second * 1)
 	<-timeout.C
 
-	s.ctx.Log().Info("server started")
+	s.ctx.Info("server started")
 	return s, errs
 }
 
@@ -210,20 +208,20 @@ func (s *server) Close() (err error) {
 }
 
 func (s *server) close() error {
-	s.ctx.Log().Info("shutting down server")
+	s.ctx.Info("shutting down server")
 
 	for _, srv := range s.servers {
-		srv.ctx.Log().Info("shutting down endpoint")
+		srv.ctx.Info("shutting down endpoint")
 		if err := srv.Close(); err != nil {
-			srv.Context().Log().Error(err)
+			srv.Context().Error(err)
 		}
 		if srv.l.Addr().Network() == "unix" {
 			laddr := srv.l.Addr().String()
-			srv.Context().Log().WithField(
+			srv.Context().WithField(
 				"path", laddr).Debug("removed unix socket")
 			os.RemoveAll(laddr)
 		}
-		srv.Context().Log().Debug("shutdown endpoint complete")
+		srv.Context().Debug("shutdown endpoint complete")
 	}
 
 	if s.stdOut != nil {
@@ -238,7 +236,7 @@ func (s *server) close() error {
 		}
 	}
 
-	s.ctx.Log().Debug("shutdown server complete")
+	s.ctx.Debug("shutdown server complete")
 
 	return nil
 }

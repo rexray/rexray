@@ -122,6 +122,16 @@ func (s *keyValueStore) Delete(k string) interface{} {
 	return nil
 }
 
+func (s *keyValueStore) Map() map[string]interface{} {
+	s.RLock()
+	defer s.RUnlock()
+	m := map[string]interface{}{}
+	for _, k := range s.Keys() {
+		m[k] = s.Get(k)
+	}
+	return m
+}
+
 func (s *keyValueStore) IsSet(k string) bool {
 	s.RLock()
 	defer s.RUnlock()
@@ -323,6 +333,16 @@ func (s *keyValueStore) GetMap(k string) map[string]interface{} {
 	v := s.Get(k)
 	switch tv := v.(type) {
 	case map[string]interface{}:
+		return tv
+	default:
+		return nil
+	}
+}
+
+func (s *keyValueStore) GetInstanceID(k string) *types.InstanceID {
+	v := s.Get(k)
+	switch tv := v.(type) {
+	case (*types.InstanceID):
 		return tv
 	default:
 		return nil

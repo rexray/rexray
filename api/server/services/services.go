@@ -10,8 +10,6 @@ import (
 	"github.com/akutz/goof"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/services"
 )
 
 var (
@@ -21,18 +19,18 @@ var (
 
 type serviceContainer struct {
 	config          gofig.Config
-	storageServices map[string]services.StorageService
+	storageServices map[string]types.StorageService
 	taskService     *globalTaskService
 }
 
-// Init initializes the services.
-func Init(ctx context.Context, config gofig.Config) error {
+// Init initializes the types.
+func Init(ctx types.Context, config gofig.Config) error {
 	serverName := ctx.ServerName()
-	ctx.Log().Info("initializing server services")
+	ctx.Info("initializing server services")
 
 	sc := &serviceContainer{
 		taskService:     &globalTaskService{name: "global-task-service"},
-		storageServices: map[string]services.StorageService{},
+		storageServices: map[string]types.StorageService{},
 	}
 
 	if err := sc.Init(config); err != nil {
@@ -61,25 +59,25 @@ func (sc *serviceContainer) Init(config gofig.Config) error {
 }
 
 func getStorageServices(
-	ctx context.Context) map[string]services.StorageService {
+	ctx types.Context) map[string]types.StorageService {
 	return servicesByServer[ctx.ServerName()].storageServices
 }
 
 // GetStorageService returns the storage service specified by the given name;
 // otherwise a nil value is returned if no such service exists.
 func GetStorageService(
-	ctx context.Context, name string) services.StorageService {
+	ctx types.Context, name string) types.StorageService {
 	servicesByServerRWL.RLock()
 	defer servicesByServerRWL.RUnlock()
 	name = strings.ToLower(name)
-	ctx.Log().WithField("service", name).Debug("getting storage service")
+	ctx.WithField("service", name).Debug("getting storage service")
 	return getStorageServices(ctx)[name]
 }
 
 // StorageServices returns a channel on which all the storage services are
 // received.
-func StorageServices(ctx context.Context) <-chan services.StorageService {
-	c := make(chan services.StorageService)
+func StorageServices(ctx types.Context) <-chan types.StorageService {
+	c := make(chan types.StorageService)
 	go func() {
 		for _, v := range getStorageServices(ctx) {
 			c <- v
@@ -103,7 +101,7 @@ func (sc *serviceContainer) initStorageServices() error {
 
 		log.WithField("service", serviceName).Debug("processing service config")
 
-		scope := fmt.Sprintf("libstorage.server.services.%s", serviceName)
+		scope := fmt.Sprintf("libstorage.server.types.%s", serviceName)
 		log.WithField("scope", scope).Debug("getting scoped config for service")
 		config := sc.config.Scope(scope)
 
@@ -123,54 +121,54 @@ func (sc *serviceContainer) initStorageServices() error {
 	return nil
 }
 
-func getTaskService(ctx context.Context) *globalTaskService {
+func getTaskService(ctx types.Context) *globalTaskService {
 	servicesByServerRWL.RLock()
 	defer servicesByServerRWL.RUnlock()
-	ctx.Log().Debug("getting task service")
+	ctx.Debug("getting task service")
 	return servicesByServer[ctx.ServerName()].taskService
 }
 
 // Tasks returns a channel on which all tasks are received.
-func Tasks(ctx context.Context) <-chan *types.Task {
+func Tasks(ctx types.Context) <-chan *types.Task {
 	return getTaskService(ctx).Tasks()
 }
 
 // TaskTrack creates a new, trackable task.
-func TaskTrack(ctx context.Context) *types.Task {
+func TaskTrack(ctx types.Context) *types.Task {
 	return getTaskService(ctx).TaskTrack(ctx)
 }
 
 // TaskExecute enqueues a task for execution.
 func TaskExecute(
-	ctx context.Context,
-	run services.TaskRunFunc,
+	ctx types.Context,
+	run types.TaskRunFunc,
 	schema []byte) *types.Task {
 	return getTaskService(ctx).TaskExecute(ctx, run, schema)
 }
 
 // TaskInspect returns the task with the specified ID.
-func TaskInspect(ctx context.Context, taskID int) *types.Task {
+func TaskInspect(ctx types.Context, taskID int) *types.Task {
 	return getTaskService(ctx).TaskInspect(taskID)
 }
 
 // TaskWait blocks until the specified task is completed.
-func TaskWait(ctx context.Context, taskID int) {
+func TaskWait(ctx types.Context, taskID int) {
 	getTaskService(ctx).TaskWait(taskID)
 }
 
 // TaskWaitC returns a channel that is closed only when the specified task is
 // completed.
-func TaskWaitC(ctx context.Context, taskID int) <-chan int {
+func TaskWaitC(ctx types.Context, taskID int) <-chan int {
 	return getTaskService(ctx).TaskWaitC(taskID)
 }
 
 // TaskWaitAll blocks until all the specified task are complete.
-func TaskWaitAll(ctx context.Context, taskIDs ...int) {
+func TaskWaitAll(ctx types.Context, taskIDs ...int) {
 	getTaskService(ctx).TaskWaitAll(taskIDs...)
 }
 
 // TaskWaitAllC returns a channel that is closed only when all the specified
 // tasks are completed.
-func TaskWaitAllC(ctx context.Context, taskIDs ...int) <-chan int {
+func TaskWaitAllC(ctx types.Context, taskIDs ...int) <-chan int {
 	return getTaskService(ctx).TaskWaitAllC(taskIDs...)
 }

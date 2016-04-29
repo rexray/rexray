@@ -1,4 +1,4 @@
-package http
+package types
 
 const (
 	// InstanceIDHeader is the HTTP header that contains an InstanceID.

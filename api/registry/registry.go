@@ -8,69 +8,68 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/types/drivers"
-	"github.com/emccode/libstorage/api/types/http"
+	"github.com/emccode/libstorage/api/types"
 )
 
 var (
-	storExecsCtors    = map[string]drivers.NewStorageExecutor{}
+	storExecsCtors    = map[string]types.NewStorageExecutor{}
 	storExecsCtorsRWL = &sync.RWMutex{}
 
-	lclStorDriverCtors    = map[string]drivers.NewLocalStorageDriver{}
-	lclStorDriverCtorsRWL = &sync.RWMutex{}
+	clientDriverCtors    = map[string]types.NewClientDriver{}
+	clientDriverCtorsRWL = &sync.RWMutex{}
 
-	remStorDriverCtors    = map[string]drivers.NewRemoteStorageDriver{}
-	remStorDriverCtorsRWL = &sync.RWMutex{}
+	storDriverCtors    = map[string]types.NewStorageDriver{}
+	storDriverCtorsRWL = &sync.RWMutex{}
 
-	osDriverCtors    = map[string]drivers.NewOSDriver{}
+	osDriverCtors    = map[string]types.NewOSDriver{}
 	osDriverCtorsRWL = &sync.RWMutex{}
 
-	intDriverCtors    = map[string]drivers.NewIntegrationDriver{}
+	intDriverCtors    = map[string]types.NewIntegrationDriver{}
 	intDriverCtorsRWL = &sync.RWMutex{}
 
-	routers    = []http.Router{}
+	routers    = []types.Router{}
 	routersRWL = &sync.RWMutex{}
 )
 
 // RegisterRouter registers a Router.
-func RegisterRouter(router http.Router) {
+func RegisterRouter(router types.Router) {
 	routersRWL.Lock()
 	defer routersRWL.Unlock()
 	routers = append(routers, router)
 }
 
 // RegisterStorageExecutor registers a StorageExecutor.
-func RegisterStorageExecutor(name string, ctor drivers.NewStorageExecutor) {
+func RegisterStorageExecutor(name string, ctor types.NewStorageExecutor) {
 	storExecsCtorsRWL.Lock()
 	defer storExecsCtorsRWL.Unlock()
 	storExecsCtors[strings.ToLower(name)] = ctor
 }
 
-// RegisterLocalStorageDriver registers a LocalStorageDriver.
-func RegisterLocalStorageDriver(
-	name string, ctor drivers.NewLocalStorageDriver) {
-	lclStorDriverCtorsRWL.Lock()
-	defer lclStorDriverCtorsRWL.Unlock()
-	lclStorDriverCtors[strings.ToLower(name)] = ctor
+// RegisterClientDriver registers a ClientDriver.
+func RegisterClientDriver(
+	name string, ctor types.NewClientDriver) {
+	clientDriverCtorsRWL.Lock()
+	defer clientDriverCtorsRWL.Unlock()
+	clientDriverCtors[strings.ToLower(name)] = ctor
 }
 
-// RegisterRemoteStorageDriver registers a RemoteStorageDriver.
-func RegisterRemoteStorageDriver(
-	name string, ctor drivers.NewRemoteStorageDriver) {
-	remStorDriverCtorsRWL.Lock()
-	defer remStorDriverCtorsRWL.Unlock()
-	remStorDriverCtors[strings.ToLower(name)] = ctor
+// RegisterStorageDriver registers a StorageDriver.
+func RegisterStorageDriver(
+	name string, ctor types.NewStorageDriver) {
+	storDriverCtorsRWL.Lock()
+	defer storDriverCtorsRWL.Unlock()
+	storDriverCtors[strings.ToLower(name)] = ctor
 }
 
 // RegisterOSDriver registers a OSDriver.
-func RegisterOSDriver(name string, ctor drivers.NewOSDriver) {
+func RegisterOSDriver(name string, ctor types.NewOSDriver) {
 	osDriverCtorsRWL.Lock()
 	defer osDriverCtorsRWL.Unlock()
 	osDriverCtors[strings.ToLower(name)] = ctor
 }
 
 // RegisterIntegrationDriver registers a IntegrationDriver.
-func RegisterIntegrationDriver(name string, ctor drivers.NewIntegrationDriver) {
+func RegisterIntegrationDriver(name string, ctor types.NewIntegrationDriver) {
 	intDriverCtorsRWL.Lock()
 	defer intDriverCtorsRWL.Unlock()
 	intDriverCtors[strings.ToLower(name)] = ctor
@@ -78,10 +77,10 @@ func RegisterIntegrationDriver(name string, ctor drivers.NewIntegrationDriver) {
 
 // NewStorageExecutor returns a new instance of the executor specified by the
 // executor name.
-func NewStorageExecutor(name string) (drivers.StorageExecutor, error) {
+func NewStorageExecutor(name string) (types.StorageExecutor, error) {
 
 	var ok bool
-	var ctor drivers.NewStorageExecutor
+	var ctor types.NewStorageExecutor
 
 	func() {
 		storExecsCtorsRWL.RLock()
@@ -96,17 +95,18 @@ func NewStorageExecutor(name string) (drivers.StorageExecutor, error) {
 	return ctor(), nil
 }
 
-// NewLocalStorageDriver returns a new instance of the driver specified by the
-// driver name.
-func NewLocalStorageDriver(name string) (drivers.LocalStorageDriver, error) {
+// NewClientDriver returns a new instance of the driver specified by
+// the driver name.
+func NewClientDriver(
+	name string) (types.ClientDriver, error) {
 
 	var ok bool
-	var ctor drivers.NewLocalStorageDriver
+	var ctor types.NewClientDriver
 
 	func() {
-		lclStorDriverCtorsRWL.RLock()
-		defer lclStorDriverCtorsRWL.RUnlock()
-		ctor, ok = lclStorDriverCtors[strings.ToLower(name)]
+		clientDriverCtorsRWL.RLock()
+		defer clientDriverCtorsRWL.RUnlock()
+		ctor, ok = clientDriverCtors[strings.ToLower(name)]
 	}()
 
 	if !ok {
@@ -116,17 +116,17 @@ func NewLocalStorageDriver(name string) (drivers.LocalStorageDriver, error) {
 	return ctor(), nil
 }
 
-// NewRemoteStorageDriver returns a new instance of the driver specified by the
+// NewStorageDriver returns a new instance of the driver specified by the
 // driver name.
-func NewRemoteStorageDriver(name string) (drivers.RemoteStorageDriver, error) {
+func NewStorageDriver(name string) (types.StorageDriver, error) {
 
 	var ok bool
-	var ctor drivers.NewRemoteStorageDriver
+	var ctor types.NewStorageDriver
 
 	func() {
-		remStorDriverCtorsRWL.RLock()
-		defer remStorDriverCtorsRWL.RUnlock()
-		ctor, ok = remStorDriverCtors[strings.ToLower(name)]
+		storDriverCtorsRWL.RLock()
+		defer storDriverCtorsRWL.RUnlock()
+		ctor, ok = storDriverCtors[strings.ToLower(name)]
 	}()
 
 	if !ok {
@@ -138,10 +138,10 @@ func NewRemoteStorageDriver(name string) (drivers.RemoteStorageDriver, error) {
 
 // NewOSDriver returns a new instance of the driver specified by the
 // driver name.
-func NewOSDriver(name string) (drivers.OSDriver, error) {
+func NewOSDriver(name string) (types.OSDriver, error) {
 
 	var ok bool
-	var ctor drivers.NewOSDriver
+	var ctor types.NewOSDriver
 
 	func() {
 		osDriverCtorsRWL.RLock()
@@ -158,10 +158,10 @@ func NewOSDriver(name string) (drivers.OSDriver, error) {
 
 // NewIntegrationDriver returns a new instance of the driver specified by the
 // driver name.
-func NewIntegrationDriver(name string) (drivers.IntegrationDriver, error) {
+func NewIntegrationDriver(name string) (types.IntegrationDriver, error) {
 
 	var ok bool
-	var ctor drivers.NewIntegrationDriver
+	var ctor types.NewIntegrationDriver
 
 	func() {
 		intDriverCtorsRWL.RLock()
@@ -178,8 +178,8 @@ func NewIntegrationDriver(name string) (drivers.IntegrationDriver, error) {
 
 // StorageExecutors returns a channel on which new instances of all registered
 // storage executors can be received.
-func StorageExecutors() <-chan drivers.StorageExecutor {
-	c := make(chan drivers.StorageExecutor)
+func StorageExecutors() <-chan types.StorageExecutor {
+	c := make(chan types.StorageExecutor)
 	go func() {
 		storExecsCtorsRWL.RLock()
 		defer storExecsCtorsRWL.RUnlock()
@@ -191,14 +191,14 @@ func StorageExecutors() <-chan drivers.StorageExecutor {
 	return c
 }
 
-// LocalStorageDrivers returns a channel on which new instances of all
+// ClientDrivers returns a channel on which new instances of all
 // registered remote local drivers can be received.
-func LocalStorageDrivers() <-chan drivers.LocalStorageDriver {
-	c := make(chan drivers.LocalStorageDriver)
+func ClientDrivers() <-chan types.ClientDriver {
+	c := make(chan types.ClientDriver)
 	go func() {
-		lclStorDriverCtorsRWL.RLock()
-		defer lclStorDriverCtorsRWL.RUnlock()
-		for _, ctor := range lclStorDriverCtors {
+		clientDriverCtorsRWL.RLock()
+		defer clientDriverCtorsRWL.RUnlock()
+		for _, ctor := range clientDriverCtors {
 			c <- ctor()
 		}
 		close(c)
@@ -206,14 +206,14 @@ func LocalStorageDrivers() <-chan drivers.LocalStorageDriver {
 	return c
 }
 
-// RemoteStorageDrivers returns a channel on which new instances of all
+// StorageDrivers returns a channel on which new instances of all
 // registered remote storage drivers can be received.
-func RemoteStorageDrivers() <-chan drivers.RemoteStorageDriver {
-	c := make(chan drivers.RemoteStorageDriver)
+func StorageDrivers() <-chan types.StorageDriver {
+	c := make(chan types.StorageDriver)
 	go func() {
-		remStorDriverCtorsRWL.RLock()
-		defer remStorDriverCtorsRWL.RUnlock()
-		for _, ctor := range remStorDriverCtors {
+		storDriverCtorsRWL.RLock()
+		defer storDriverCtorsRWL.RUnlock()
+		for _, ctor := range storDriverCtors {
 			c <- ctor()
 		}
 		close(c)
@@ -223,8 +223,8 @@ func RemoteStorageDrivers() <-chan drivers.RemoteStorageDriver {
 
 // OSDrivers returns a channel on which new instances of all registered
 // OS drivers can be received.
-func OSDrivers() <-chan drivers.OSDriver {
-	c := make(chan drivers.OSDriver)
+func OSDrivers() <-chan types.OSDriver {
+	c := make(chan types.OSDriver)
 	go func() {
 		osDriverCtorsRWL.RLock()
 		defer osDriverCtorsRWL.RUnlock()
@@ -238,8 +238,8 @@ func OSDrivers() <-chan drivers.OSDriver {
 
 // IntegrationDrivers returns a channel on which new instances of all registered
 // integration drivers can be received.
-func IntegrationDrivers() <-chan drivers.IntegrationDriver {
-	c := make(chan drivers.IntegrationDriver)
+func IntegrationDrivers() <-chan types.IntegrationDriver {
+	c := make(chan types.IntegrationDriver)
 	go func() {
 		intDriverCtorsRWL.RLock()
 		defer intDriverCtorsRWL.RUnlock()
@@ -253,8 +253,8 @@ func IntegrationDrivers() <-chan drivers.IntegrationDriver {
 
 // Routers returns a channel on which new instances of all registered routers
 // can be received.
-func Routers() <-chan http.Router {
-	c := make(chan http.Router)
+func Routers() <-chan types.Router {
+	c := make(chan types.Router)
 	go func() {
 		routersRWL.RLock()
 		defer routersRWL.RUnlock()

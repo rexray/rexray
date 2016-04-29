@@ -10,8 +10,6 @@ import (
 	//log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
@@ -23,7 +21,7 @@ var (
 
 // schemaValidator is an HTTP filter for validating incoming request payloads
 type schemaValidator struct {
-	handler       apihttp.APIFunc
+	handler       types.APIFunc
 	reqSchema     []byte
 	resSchema     []byte
 	newReqObjFunc func() interface{}
@@ -33,7 +31,7 @@ type schemaValidator struct {
 // response payloads against defined JSON schemas.
 func NewSchemaValidator(
 	reqSchema, resSchema []byte,
-	newReqObjFunc func() interface{}) apihttp.Middleware {
+	newReqObjFunc func() interface{}) types.Middleware {
 
 	return &schemaValidator{
 		reqSchema:     reqSchema,
@@ -46,14 +44,14 @@ func (h *schemaValidator) Name() string {
 	return "schema-validator"
 }
 
-func (h *schemaValidator) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+func (h *schemaValidator) Handler(m types.APIFunc) types.APIFunc {
 	return (&schemaValidator{
 		m, h.reqSchema, h.resSchema, h.newReqObjFunc}).Handle
 }
 
 // Handle is the type's Handler function.
 func (h *schemaValidator) Handle(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -80,7 +78,7 @@ func (h *schemaValidator) Handle(
 					"validate req schema: unmarshal error: %v", err)
 			}
 		}
-		ctx = context.WithValue(ctx, "reqObj", reqObj)
+		ctx = ctx.WithValue("reqObj", reqObj)
 	}
 
 	// if there's not response schema then just return the result of the next

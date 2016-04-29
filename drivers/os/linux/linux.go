@@ -16,8 +16,6 @@ import (
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
 )
 
 const driverName = "linux"
@@ -37,7 +35,7 @@ type driver struct {
 	config gofig.Config
 }
 
-func newDriver() drivers.OSDriver {
+func newDriver() types.OSDriver {
 	return &driver{}
 }
 
@@ -45,9 +43,7 @@ func (d *driver) Init(config gofig.Config) error {
 	if runtime.GOOS != "linux" {
 		return errUnknownOS
 	}
-
 	d.config = config
-	log.WithField("driver", driverName).Info("os driver initialized")
 	return nil
 }
 
@@ -56,7 +52,7 @@ func (d *driver) Name() string {
 }
 
 func (d *driver) Mounts(
-	ctx context.Context,
+	ctx types.Context,
 	deviceName, mountPoint string,
 	opts types.Store) ([]*types.MountInfo, error) {
 
@@ -81,9 +77,9 @@ func (d *driver) Mounts(
 }
 
 func (d *driver) Mount(
-	ctx context.Context,
+	ctx types.Context,
 	deviceName, mountPoint string,
-	opts *drivers.DeviceMountOpts) error {
+	opts *types.DeviceMountOpts) error {
 
 	if d.isNfsDevice(deviceName) {
 
@@ -122,7 +118,7 @@ func (d *driver) Mount(
 }
 
 func (d *driver) Unmount(
-	ctx context.Context,
+	ctx types.Context,
 	mountPoint string,
 	opts types.Store) error {
 
@@ -130,7 +126,7 @@ func (d *driver) Unmount(
 }
 
 func (d *driver) IsMounted(
-	ctx context.Context,
+	ctx types.Context,
 	mountPoint string,
 	opts types.Store) (bool, error) {
 
@@ -138,9 +134,9 @@ func (d *driver) IsMounted(
 }
 
 func (d *driver) Format(
-	ctx context.Context,
+	ctx types.Context,
 	deviceName string,
-	opts *drivers.DeviceFormatOpts) error {
+	opts *types.DeviceFormatOpts) error {
 
 	fsType, err := probeFsType(deviceName)
 	if err != nil && err != errUnknownFileSystem {
@@ -148,7 +144,7 @@ func (d *driver) Format(
 	}
 	fsDetected := fsType != ""
 
-	ctx.Log().WithFields(log.Fields{
+	ctx.WithFields(log.Fields{
 		"fsDetected":  fsDetected,
 		"fsType":      fsType,
 		"deviceName":  deviceName,

@@ -1,11 +1,7 @@
-package services
+package types
 
 import (
 	"github.com/akutz/gofig"
-
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
 )
 
 // Service is the base type for services.
@@ -28,12 +24,12 @@ type Services interface {
 }
 
 // TaskRunFunc is a function responsible for a task's execution.
-type TaskRunFunc func(ctx context.Context) (interface{}, error)
+type TaskRunFunc func(ctx Context) (interface{}, error)
 
 // StorageTaskRunFunc is a function responsible for a storage-service task's
 // execution.
 type StorageTaskRunFunc func(
-	ctx context.Context,
+	ctx Context,
 	service StorageService) (interface{}, error)
 
 // StorageService is a service that provides the interaction with
@@ -42,13 +38,13 @@ type StorageService interface {
 	Service
 
 	// Driver returns the service's StorageDriver.
-	Driver() drivers.RemoteStorageDriver
+	Driver() StorageDriver
 
 	// TaskExecute enqueues a task for execution.
 	TaskExecute(
-		ctx context.Context,
+		ctx Context,
 		run StorageTaskRunFunc,
-		schema []byte) *types.Task
+		schema []byte) *Task
 }
 
 // TaskTrackingService a service for tracking tasks.
@@ -57,19 +53,19 @@ type TaskTrackingService interface {
 
 	// Tasks returns a channel on which all tasks tracked via TrackTasks are
 	// received.
-	Tasks() <-chan *types.Task
+	Tasks() <-chan *Task
 
 	// TaskTrack creates a new, trackable task.
-	TaskTrack(ctx context.Context) *types.Task
+	TaskTrack(ctx Context) *Task
 
 	// TaskExecute enqueues a task for execution.
 	TaskExecute(
-		ctx context.Context,
+		ctx Context,
 		run TaskRunFunc,
-		schema []byte) *types.Task
+		schema []byte) *Task
 
 	// TaskInspect returns the task with the specified ID.
-	TaskInspect(taskID int) *types.Task
+	TaskInspect(taskID int) *Task
 
 	// TaskWait blocks until the specified task completes.
 	TaskWait(taskID int) <-chan int
@@ -92,7 +88,7 @@ type TaskExecutionService interface {
 
 	// TaskExecute enqueues a task for execution.
 	TaskExecute(
-		ctx context.Context,
+		ctx Context,
 		run TaskRunFunc,
-		schema []byte) *types.Task
+		schema []byte) *Task
 }

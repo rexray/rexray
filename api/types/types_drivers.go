@@ -1,4 +1,4 @@
-package drivers
+package types
 
 import (
 	"github.com/akutz/gofig"

@@ -6,20 +6,17 @@ import (
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
-	apisvcs "github.com/emccode/libstorage/api/types/services"
 )
 
 func (r *router) servicesList(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
 
-	var reply apihttp.ServicesMap = map[string]*types.ServiceInfo{}
+	reply := map[string]*types.ServiceInfo{}
 	for service := range services.StorageServices(ctx) {
-		si := toServiceInfo(service)
+		si := toServiceInfo(ctx, service)
 		reply[si.Name] = si
 	}
 
@@ -28,7 +25,7 @@ func (r *router) servicesList(
 }
 
 func (r *router) serviceInspect(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -37,11 +34,14 @@ func (r *router) serviceInspect(
 	if err != nil {
 		return err
 	}
-	httputils.WriteJSON(w, http.StatusOK, toServiceInfo(service))
+	httputils.WriteJSON(w, http.StatusOK, toServiceInfo(ctx, service))
 	return nil
 }
 
-func toServiceInfo(service apisvcs.StorageService) *types.ServiceInfo {
+func toServiceInfo(
+	ctx types.Context,
+	service types.StorageService) *types.ServiceInfo {
+
 	d := service.Driver()
 	dn := service.Driver().Name()
 
@@ -49,8 +49,8 @@ func toServiceInfo(service apisvcs.StorageService) *types.ServiceInfo {
 		Name: service.Name(),
 		Driver: &types.DriverInfo{
 			Name:       dn,
-			Type:       d.Type(),
-			NextDevice: d.NextDeviceInfo(),
+			Type:       d.Type(ctx),
+			NextDevice: d.NextDeviceInfo(ctx),
 		},
 	}
 }

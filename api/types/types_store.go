@@ -2,6 +2,10 @@ package types
 
 // Store is a key/value store with case-insensitive keys.
 type Store interface {
+
+	// Map returns the contents of the store as a map[string]interface{}.
+	Map() map[string]interface{}
+
 	// Keys returns a list of all the keys in the store.
 	Keys() []string
 
@@ -52,6 +56,10 @@ type Store interface {
 	// GetBoolSlice returns a bool slice value for a key; a nil value if
 	// the key does not exist.
 	GetBoolSlice(k string) []bool
+
+	// GetInstanceID returns an instance ID for a key; a nil value if the key
+	// does not exist.
+	GetInstanceID(k string) *InstanceID
 
 	// GetMap returns a map value for a key; a nil value if the key does not
 	// exist.

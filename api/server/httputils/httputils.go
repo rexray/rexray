@@ -9,30 +9,27 @@ import (
 
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
-	apisvcs "github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils"
 )
 
 var (
 	serviceTypeName = utils.GetTypePkgPathAndName(
-		(*apisvcs.StorageService)(nil))
+		(*types.StorageService)(nil))
 
 	remoteStorageDriverTypeName = utils.GetTypePkgPathAndName(
-		(*drivers.RemoteStorageDriver)(nil))
+		(*types.StorageDriver)(nil))
 )
 
-// GetService gets the Service instance from a context.
-func GetService(ctx context.Context) (apisvcs.StorageService, error) {
-	serviceObj := ctx.Value(context.ContextKeyService)
+// GetService gets the Service instance from a types.
+func GetService(ctx types.Context) (types.StorageService, error) {
+	serviceObj := ctx.Value(types.ContextKeyService)
 	if serviceObj == nil {
-		return nil, utils.NewContextKeyErr(context.ContextKeyService)
+		return nil, utils.NewContextKeyErr(types.ContextKeyService)
 	}
-	service, ok := serviceObj.(apisvcs.StorageService)
+	service, ok := serviceObj.(types.StorageService)
 	if !ok {
 		return nil, utils.NewContextTypeErr(
-			context.ContextKeyService,
+			types.ContextKeyService,
 			serviceTypeName, utils.GetTypePkgPathAndName(serviceObj))
 	}
 	return service, nil
@@ -41,7 +38,7 @@ func GetService(ctx context.Context) (apisvcs.StorageService, error) {
 // GetInstanceIDForService gets the instance ID for a service using the
 // context's instance IDs map.
 func GetInstanceIDForService(
-	ctx context.Context, service apisvcs.StorageService) *types.InstanceID {
+	ctx types.Context, service types.StorageService) *types.InstanceID {
 	sm := ctx.InstanceIDsByService()
 	if len(sm) == 0 {
 		return nil
@@ -55,7 +52,7 @@ func GetInstanceIDForService(
 // GetLocalDevicesForService gets the local devices for a service using the
 // context's local devices map.
 func GetLocalDevicesForService(
-	ctx context.Context, service apisvcs.StorageService) map[string]string {
+	ctx types.Context, service types.StorageService) map[string]string {
 	sm := ctx.LocalDevicesByService()
 	if len(sm) == 0 {
 		return nil
@@ -66,16 +63,16 @@ func GetLocalDevicesForService(
 	return nil
 }
 
-// GetServiceContext gets the service context.
+// GetServiceContext gets the service types.
 func GetServiceContext(
-	ctx *context.Context,
-	service apisvcs.StorageService) error {
+	ctx *types.Context,
+	service types.StorageService) error {
 
 	sctx := *ctx
 
 	if iid := GetInstanceIDForService(sctx, service); iid != nil {
-		sctx = context.WithInstanceID(sctx, iid)
-		sctx = sctx.WithContextID(context.ContextKeyInstanceID, iid.ID)
+		sctx = sctx.WithInstanceID(iid)
+		sctx = sctx.WithContextID(types.ContextKeyInstanceID, iid.ID)
 	}
 
 	localDevices := GetLocalDevicesForService(sctx, service)
@@ -83,20 +80,19 @@ func GetServiceContext(
 		sctx = sctx.WithLocalDevices(localDevices)
 	}
 
-	sctx = sctx.WithValue(context.ContextKeyService, service)
-	sctx = sctx.WithValue(context.ContextKeyServiceName, service.Name())
-	sctx = sctx.WithContextID(context.ContextKeyService, service.Name())
-	sctx = sctx.WithContextID(context.ContextKeyDriver, service.Driver().Name())
+	sctx = sctx.WithValue(types.ContextKeyService, service)
+	sctx = sctx.WithValue(types.ContextKeyServiceName, service.Name())
+	sctx = sctx.WithContextID(types.ContextKeyService, service.Name())
+	sctx = sctx.WithContextID(types.ContextKeyDriver, service.Driver().Name())
 
 	*ctx = sctx
 
-	sctx.Log().Debug("set service context")
+	sctx.Debug("set service context")
 	return nil
 }
 
-// GetStorageDriver gets the RemoteStorageDriver instance from a context.
-func GetStorageDriver(
-	ctx context.Context) (drivers.RemoteStorageDriver, error) {
+// GetStorageDriver gets the RemoteStorageDriver instance from a types.
+func GetStorageDriver(ctx types.Context) (types.StorageDriver, error) {
 
 	service, err := GetService(ctx)
 	if err != nil {
@@ -142,7 +138,7 @@ func WriteResponse(w http.ResponseWriter, rec *httptest.ResponseRecorder) {
 
 // WriteTask writes a task to a ResponseWriter.
 func WriteTask(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	store types.Store,
 	task *types.Task,

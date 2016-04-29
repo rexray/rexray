@@ -10,22 +10,20 @@ import (
 	"github.com/akutz/goof"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/services"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
 type task struct {
 	types.Task
-	ctx          context.Context
-	runFunc      services.TaskRunFunc
-	storRunFunc  services.StorageTaskRunFunc
-	storService  services.StorageService
+	ctx          types.Context
+	runFunc      types.TaskRunFunc
+	storRunFunc  types.StorageTaskRunFunc
+	storService  types.StorageService
 	resultSchema []byte
 	done         chan int
 }
 
-func newTask(ctx context.Context, schema []byte) *task {
+func newTask(ctx types.Context, schema []byte) *task {
 	t := getTaskService(ctx).taskTrack(ctx)
 	t.resultSchema = schema
 	t.done = make(chan int)
@@ -33,8 +31,8 @@ func newTask(ctx context.Context, schema []byte) *task {
 }
 
 func newGenericTask(
-	ctx context.Context,
-	run services.TaskRunFunc,
+	ctx types.Context,
+	run types.TaskRunFunc,
 	schema []byte) *task {
 
 	t := newTask(ctx, schema)
@@ -43,9 +41,9 @@ func newGenericTask(
 }
 
 func newStorageServiceTask(
-	ctx context.Context,
-	run services.StorageTaskRunFunc,
-	svc services.StorageService,
+	ctx types.Context,
+	run types.StorageTaskRunFunc,
+	svc types.StorageService,
 	schema []byte) *task {
 
 	t := newTask(ctx, schema)
@@ -58,19 +56,19 @@ func execTask(t *task) {
 	defer func() {
 		t.CompleteTime = time.Now().Unix()
 		if t.Error != nil {
-			t.ctx.Log().Error(t.Error)
+			t.ctx.Error(t.Error)
 			t.State = types.TaskStateError
 		} else {
 			t.State = types.TaskStateSuccess
 		}
 		close(t.done)
-		t.ctx.Log().Debug("task completed")
+		t.ctx.Debug("task completed")
 	}()
 
 	t.State = types.TaskStateRunning
 	t.StartTime = time.Now().Unix()
 
-	t.ctx.Log().Info("executing task")
+	t.ctx.Info("executing task")
 
 	if t.storRunFunc != nil && t.storService != nil {
 		t.Result, t.Error = t.storRunFunc(t.ctx, t.storService)
@@ -135,10 +133,10 @@ func (s *globalTaskService) Tasks() <-chan *types.Task {
 }
 
 // TaskTrack creates a new, trackable task.
-func (s *globalTaskService) TaskTrack(ctx context.Context) *types.Task {
+func (s *globalTaskService) TaskTrack(ctx types.Context) *types.Task {
 	return &s.taskTrack(ctx).Task
 }
-func (s *globalTaskService) taskTrack(ctx context.Context) *task {
+func (s *globalTaskService) taskTrack(ctx types.Context) *task {
 
 	now := time.Now().Unix()
 	s.RLock()
@@ -162,8 +160,8 @@ func (s *globalTaskService) taskTrack(ctx context.Context) *task {
 
 // TaskExecute enqueues a task for execution.
 func (s *globalTaskService) TaskExecute(
-	ctx context.Context,
-	run services.TaskRunFunc,
+	ctx types.Context,
+	run types.TaskRunFunc,
 	schema []byte) *types.Task {
 
 	t := newGenericTask(ctx, run, schema)

@@ -1,6 +1,8 @@
-package http
+package types
 
-import "github.com/akutz/gofig"
+import (
+	"github.com/akutz/gofig"
+)
 
 // Router defines an interface to specify a group of routes to add the the
 // server.

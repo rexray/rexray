@@ -9,20 +9,18 @@ import (
 	//log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/api/utils"
 )
 
 // postArgsHandler is an HTTP filter for injecting the store with the POST
 // object's fields and additional options
 type postArgsHandler struct {
-	handler apihttp.APIFunc
+	handler types.APIFunc
 }
 
 // NewPostArgsHandler returns a new filter for injecting the store with the
 // POST object's fields and additional options.
-func NewPostArgsHandler() apihttp.Middleware {
+func NewPostArgsHandler() types.Middleware {
 	return &postArgsHandler{}
 }
 
@@ -30,13 +28,13 @@ func (h *postArgsHandler) Name() string {
 	return "post-args-handler"
 }
 
-func (h *postArgsHandler) Handler(m apihttp.APIFunc) apihttp.APIFunc {
+func (h *postArgsHandler) Handler(m types.APIFunc) types.APIFunc {
 	return (&postArgsHandler{m}).Handle
 }
 
 // Handle is the type's Handler function.
 func (h *postArgsHandler) Handle(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {

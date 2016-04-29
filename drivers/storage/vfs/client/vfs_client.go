@@ -1,4 +1,4 @@
-package local
+package client
 
 import (
 	"os"
@@ -8,9 +8,6 @@ import (
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	"github.com/emccode/libstorage/api/types/drivers"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 	"github.com/emccode/libstorage/drivers/storage/vfs"
 )
 
@@ -19,10 +16,10 @@ type driver struct {
 }
 
 func init() {
-	registry.RegisterLocalStorageDriver(vfs.Name, newDriver)
+	registry.RegisterClientDriver(vfs.Name, newDriver)
 }
 
-func newDriver() drivers.LocalStorageDriver {
+func newDriver() types.ClientDriver {
 	return &driver{}
 }
 
@@ -36,166 +33,166 @@ func (d *driver) Init(config gofig.Config) error {
 	return nil
 }
 
-func (d *driver) InstanceInspectBefore(ctx *context.Context) error {
+func (d *driver) InstanceInspectBefore(ctx *types.Context) error {
 	return nil
 }
 
 func (d *driver) InstanceInspectAfter(
-	ctx context.Context, result *types.Instance) {
+	ctx types.Context, result *types.Instance) {
 }
 
-func (d *driver) VolumesBefore(ctx *context.Context) error {
+func (d *driver) VolumesBefore(ctx *types.Context) error {
 	return nil
 }
 
 func (d *driver) VolumesAfter(
-	ctx context.Context, result *apihttp.ServiceVolumeMap) {
+	ctx types.Context, result *types.ServiceVolumeMap) {
 }
 
 func (d *driver) VolumesByServiceBefore(
-	ctx *context.Context, service string) error {
+	ctx *types.Context, service string) error {
 	return nil
 }
 
 func (d *driver) VolumesByServiceAfter(
-	ctx context.Context, service string, result *apihttp.VolumeMap) {
+	ctx types.Context, service string, result *types.VolumeMap) {
 }
 
 func (d *driver) VolumeInspectBefore(
-	ctx *context.Context,
+	ctx *types.Context,
 	service, volumeID string, attachments bool) error {
 	return nil
 }
 
 func (d *driver) VolumeInspectAfter(
-	ctx context.Context,
+	ctx types.Context,
 	result *types.Volume) {
 }
 
 func (d *driver) VolumeCreateBefore(
-	ctx *context.Context,
-	service string, request *apihttp.VolumeCreateRequest) error {
+	ctx *types.Context,
+	service string, request *types.VolumeCreateRequest) error {
 	return nil
 }
 
 func (d *driver) VolumeCreateAfter(
-	ctx context.Context,
+	ctx types.Context,
 	result *types.Volume) {
 	volDir := path.Join(vfs.VolumesDirPath(d.config), result.ID)
 	os.MkdirAll(volDir, 0755)
 }
 
 func (d *driver) VolumeCreateFromSnapshotBefore(
-	ctx *context.Context,
+	ctx *types.Context,
 	service, snapshotID string,
-	request *apihttp.VolumeCreateRequest) error {
+	request *types.VolumeCreateRequest) error {
 	return nil
 }
 
 func (d *driver) VolumeCreateFromSnapshotAfter(
-	ctx context.Context, result *types.Volume) {
+	ctx types.Context, result *types.Volume) {
 	volDir := path.Join(vfs.VolumesDirPath(d.config), result.ID)
 	os.MkdirAll(volDir, 0755)
 }
 
 func (d *driver) VolumeCopyBefore(
-	ctx *context.Context,
-	service, volumeID string, request *apihttp.VolumeCopyRequest) error {
+	ctx *types.Context,
+	service, volumeID string, request *types.VolumeCopyRequest) error {
 	return nil
 }
 
 func (d *driver) VolumeCopyAfter(
-	ctx context.Context,
+	ctx types.Context,
 	result *types.Volume) {
 	volDir := path.Join(vfs.VolumesDirPath(d.config), result.ID)
 	os.MkdirAll(volDir, 0755)
 }
 
 func (d *driver) VolumeRemoveBefore(
-	ctx *context.Context, service, volumeID string) error {
+	ctx *types.Context, service, volumeID string) error {
 	return nil
 }
 
 func (d *driver) VolumeRemoveAfter(
-	ctx context.Context, service, volumeID string) {
+	ctx types.Context, service, volumeID string) {
 	volDir := path.Join(vfs.VolumesDirPath(d.config), volumeID)
 	os.RemoveAll(volDir)
 }
 
 func (d *driver) VolumeSnapshotBefore(
-	ctx *context.Context,
+	ctx *types.Context,
 	service, volumeID string,
-	request *apihttp.VolumeSnapshotRequest) error {
+	request *types.VolumeSnapshotRequest) error {
 	return nil
 }
 
 func (d *driver) VolumeSnapshotAfter(
-	ctx context.Context, result *types.Snapshot) {
+	ctx types.Context, result *types.Snapshot) {
 }
 
 func (d *driver) VolumeAttachBefore(
-	ctx *context.Context,
+	ctx *types.Context,
 	service, volumeID string,
-	request *apihttp.VolumeAttachRequest) error {
+	request *types.VolumeAttachRequest) error {
 	return nil
 }
 
-func (d *driver) VolumeAttachAfter(ctx context.Context, result *types.Volume) {
+func (d *driver) VolumeAttachAfter(ctx types.Context, result *types.Volume) {
 }
 
 func (d *driver) VolumeDetachBefore(
-	ctx *context.Context,
+	ctx *types.Context,
 	service, volumeID string,
-	request *apihttp.VolumeDetachRequest) error {
+	request *types.VolumeDetachRequest) error {
 	return nil
 }
 
 func (d *driver) VolumeDetachAfter(
-	ctx context.Context, result *types.Volume) {
+	ctx types.Context, result *types.Volume) {
 }
 
-func (d *driver) SnapshotsBefore(ctx *context.Context) error {
+func (d *driver) SnapshotsBefore(ctx *types.Context) error {
 	return nil
 }
 
 func (d *driver) SnapshotsAfter(
-	ctx context.Context, result *apihttp.ServiceSnapshotMap) {
+	ctx types.Context, result *types.ServiceSnapshotMap) {
 }
 
 func (d *driver) SnapshotsByServiceBefore(
-	ctx *context.Context, service string) error {
+	ctx *types.Context, service string) error {
 	return nil
 }
 
 func (d *driver) SnapshotsByServiceAfter(
-	ctx context.Context, service string, result *apihttp.SnapshotMap) {
+	ctx types.Context, service string, result *types.SnapshotMap) {
 }
 
 func (d *driver) SnapshotInspectBefore(
-	ctx *context.Context,
+	ctx *types.Context,
 	service, snapshotID string) error {
 	return nil
 }
 
 func (d *driver) SnapshotInspectAfter(
-	ctx context.Context, result *types.Volume) {
+	ctx types.Context, result *types.Volume) {
 }
 
 func (d *driver) SnapshotCopyBefore(
-	ctx *context.Context,
+	ctx *types.Context,
 	service, snapshotID, string,
-	request *apihttp.SnapshotCopyRequest) error {
+	request *types.SnapshotCopyRequest) error {
 	return nil
 }
 
 func (d *driver) SnapshotCopyAfter(
-	ctx context.Context, result *types.Snapshot) {
+	ctx types.Context, result *types.Snapshot) {
 }
 
 func (d *driver) SnapshotRemoveBefore(
-	ctx *context.Context, service, snapshotID string) error {
+	ctx *types.Context, service, snapshotID string) error {
 	return nil
 }
 
-func (d *driver) SnapshotRemoveAfter(ctx context.Context, snapshotID string) {
+func (d *driver) SnapshotRemoveAfter(ctx types.Context, snapshotID string) {
 }

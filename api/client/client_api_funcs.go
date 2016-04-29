@@ -6,15 +6,14 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	apihttp "github.com/emccode/libstorage/api/types/http"
 )
 
 // Root returns a list of root resources.
-func (c *Client) Root(ctx context.Context) (apihttp.RootResources, error) {
+func (c *Client) Root(ctx types.Context) ([]string, error) {
 	cctx(&ctx)
-	reply := apihttp.RootResources{}
+	reply := []string{}
 	if _, err := c.httpGet(ctx, "/", &reply); err != nil {
 		return nil, err
 	}
@@ -22,9 +21,11 @@ func (c *Client) Root(ctx context.Context) (apihttp.RootResources, error) {
 }
 
 // Services returns a map of the configured Services.
-func (c *Client) Services(ctx context.Context) (apihttp.ServicesMap, error) {
+func (c *Client) Services(
+	ctx types.Context) (map[string]*types.ServiceInfo, error) {
+
 	cctx(&ctx)
-	reply := apihttp.ServicesMap{}
+	reply := map[string]*types.ServiceInfo{}
 	if _, err := c.httpGet(ctx, "/services", &reply); err != nil {
 		return nil, err
 	}
@@ -33,7 +34,7 @@ func (c *Client) Services(ctx context.Context) (apihttp.ServicesMap, error) {
 
 // ServiceInspect returns information about a service.
 func (c *Client) ServiceInspect(
-	ctx context.Context, name string) (*types.ServiceInfo, error) {
+	ctx types.Context, name string) (*types.ServiceInfo, error) {
 	cctx(&ctx)
 	reply := &types.ServiceInfo{}
 	if _, err := c.httpGet(ctx,
@@ -45,10 +46,10 @@ func (c *Client) ServiceInspect(
 
 // Volumes returns a list of all Volumes for all Services.
 func (c *Client) Volumes(
-	ctx context.Context,
-	attachments bool) (apihttp.ServiceVolumeMap, error) {
+	ctx types.Context,
+	attachments bool) (types.ServiceVolumeMap, error) {
 	cctx(&ctx)
-	reply := apihttp.ServiceVolumeMap{}
+	reply := types.ServiceVolumeMap{}
 	url := fmt.Sprintf("/volumes?attachments=%v", attachments)
 	if _, err := c.httpGet(ctx, url, &reply); err != nil {
 		return nil, err
@@ -58,11 +59,11 @@ func (c *Client) Volumes(
 
 // VolumesByService returns a list of all Volumes for a service.
 func (c *Client) VolumesByService(
-	ctx context.Context,
+	ctx types.Context,
 	service string,
-	attachments bool) (apihttp.VolumeMap, error) {
+	attachments bool) (types.VolumeMap, error) {
 	cctx(&ctx)
-	reply := apihttp.VolumeMap{}
+	reply := types.VolumeMap{}
 	url := fmt.Sprintf("/volumes/%s?attachments=%v", service, attachments)
 	if _, err := c.httpGet(ctx, url, &reply); err != nil {
 		return nil, err
@@ -72,7 +73,7 @@ func (c *Client) VolumesByService(
 
 // VolumeInspect gets information about a single volume.
 func (c *Client) VolumeInspect(
-	ctx context.Context,
+	ctx types.Context,
 	service, volumeID string,
 	attachments bool) (*types.Volume, error) {
 	cctx(&ctx)
@@ -87,9 +88,9 @@ func (c *Client) VolumeInspect(
 
 // VolumeCreate creates a single volume.
 func (c *Client) VolumeCreate(
-	ctx context.Context,
+	ctx types.Context,
 	service string,
-	request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
+	request *types.VolumeCreateRequest) (*types.Volume, error) {
 	cctx(&ctx)
 	reply := types.Volume{}
 	if _, err := c.httpPost(ctx,
@@ -101,9 +102,9 @@ func (c *Client) VolumeCreate(
 
 // VolumeCreateFromSnapshot creates a single volume from a snapshot.
 func (c *Client) VolumeCreateFromSnapshot(
-	ctx context.Context,
+	ctx types.Context,
 	service, snapshotID string,
-	request *apihttp.VolumeCreateRequest) (*types.Volume, error) {
+	request *types.VolumeCreateRequest) (*types.Volume, error) {
 	cctx(&ctx)
 	reply := types.Volume{}
 	if _, err := c.httpPost(ctx,
@@ -116,9 +117,9 @@ func (c *Client) VolumeCreateFromSnapshot(
 
 // VolumeCopy copies a single volume.
 func (c *Client) VolumeCopy(
-	ctx context.Context,
+	ctx types.Context,
 	service, volumeID string,
-	request *apihttp.VolumeCopyRequest) (*types.Volume, error) {
+	request *types.VolumeCopyRequest) (*types.Volume, error) {
 	cctx(&ctx)
 	reply := types.Volume{}
 	if _, err := c.httpPost(ctx,
@@ -131,7 +132,7 @@ func (c *Client) VolumeCopy(
 
 // VolumeRemove removes a single volume.
 func (c *Client) VolumeRemove(
-	ctx context.Context,
+	ctx types.Context,
 	service, volumeID string) error {
 	cctx(&ctx)
 	if _, err := c.httpDelete(ctx,
@@ -143,10 +144,10 @@ func (c *Client) VolumeRemove(
 
 // VolumeAttach attaches a single volume.
 func (c *Client) VolumeAttach(
-	ctx context.Context,
+	ctx types.Context,
 	service string,
 	volumeID string,
-	request *apihttp.VolumeAttachRequest) (*types.Volume, error) {
+	request *types.VolumeAttachRequest) (*types.Volume, error) {
 	cctx(&ctx)
 	reply := types.Volume{}
 	if _, err := c.httpPost(ctx,
@@ -159,10 +160,10 @@ func (c *Client) VolumeAttach(
 
 // VolumeDetach attaches a single volume.
 func (c *Client) VolumeDetach(
-	ctx context.Context,
+	ctx types.Context,
 	service string,
 	volumeID string,
-	request *apihttp.VolumeDetachRequest) (*types.Volume, error) {
+	request *types.VolumeDetachRequest) (*types.Volume, error) {
 	cctx(&ctx)
 	reply := types.Volume{}
 	if _, err := c.httpPost(ctx,
@@ -173,12 +174,12 @@ func (c *Client) VolumeDetach(
 	return &reply, nil
 }
 
-// VolumeDetachAll attaches all volumes from all services.
+// VolumeDetachAll attaches all volumes from all types.
 func (c *Client) VolumeDetachAll(
-	ctx context.Context,
-	request *apihttp.VolumeDetachRequest) (apihttp.ServiceVolumeMap, error) {
+	ctx types.Context,
+	request *types.VolumeDetachRequest) (types.ServiceVolumeMap, error) {
 	cctx(&ctx)
-	reply := apihttp.ServiceVolumeMap{}
+	reply := types.ServiceVolumeMap{}
 	if _, err := c.httpPost(ctx,
 		fmt.Sprintf("/volumes?detach"), request, &reply); err != nil {
 		return nil, err
@@ -188,11 +189,11 @@ func (c *Client) VolumeDetachAll(
 
 // VolumeDetachAllForService detaches all volumes from a service.
 func (c *Client) VolumeDetachAllForService(
-	ctx context.Context,
+	ctx types.Context,
 	service string,
-	request *apihttp.VolumeDetachRequest) (apihttp.VolumeMap, error) {
+	request *types.VolumeDetachRequest) (types.VolumeMap, error) {
 	cctx(&ctx)
-	reply := apihttp.VolumeMap{}
+	reply := types.VolumeMap{}
 	if _, err := c.httpPost(ctx,
 		fmt.Sprintf(
 			"/volumes/%s?detach", service), request, &reply); err != nil {
@@ -203,10 +204,10 @@ func (c *Client) VolumeDetachAllForService(
 
 // VolumeSnapshot creates a single snapshot.
 func (c *Client) VolumeSnapshot(
-	ctx context.Context,
+	ctx types.Context,
 	service string,
 	volumeID string,
-	request *apihttp.VolumeSnapshotRequest) (*types.Snapshot, error) {
+	request *types.VolumeSnapshotRequest) (*types.Snapshot, error) {
 	cctx(&ctx)
 	reply := types.Snapshot{}
 	if _, err := c.httpPost(ctx,
@@ -217,11 +218,11 @@ func (c *Client) VolumeSnapshot(
 	return &reply, nil
 }
 
-// Snapshots returns a list of all Snapshots for all services.
+// Snapshots returns a list of all Snapshots for all types.
 func (c *Client) Snapshots(
-	ctx context.Context) (apihttp.ServiceSnapshotMap, error) {
+	ctx types.Context) (types.ServiceSnapshotMap, error) {
 	cctx(&ctx)
-	reply := apihttp.ServiceSnapshotMap{}
+	reply := types.ServiceSnapshotMap{}
 	if _, err := c.httpGet(ctx, "/snapshots", &reply); err != nil {
 		return nil, err
 	}
@@ -230,9 +231,9 @@ func (c *Client) Snapshots(
 
 // SnapshotsByService returns a list of all Snapshots for a single service.
 func (c *Client) SnapshotsByService(
-	ctx context.Context, service string) (apihttp.SnapshotMap, error) {
+	ctx types.Context, service string) (types.SnapshotMap, error) {
 	cctx(&ctx)
-	reply := apihttp.SnapshotMap{}
+	reply := types.SnapshotMap{}
 	if _, err := c.httpGet(ctx,
 		fmt.Sprintf("/snapshots/%s", service), &reply); err != nil {
 		return nil, err
@@ -242,7 +243,7 @@ func (c *Client) SnapshotsByService(
 
 // SnapshotInspect gets information about a single snapshot.
 func (c *Client) SnapshotInspect(
-	ctx context.Context,
+	ctx types.Context,
 	service, snapshotID string) (*types.Snapshot, error) {
 	cctx(&ctx)
 	reply := types.Snapshot{}
@@ -256,7 +257,7 @@ func (c *Client) SnapshotInspect(
 
 // SnapshotRemove removes a single snapshot.
 func (c *Client) SnapshotRemove(
-	ctx context.Context,
+	ctx types.Context,
 	service, snapshotID string) error {
 	cctx(&ctx)
 	if _, err := c.httpDelete(ctx,
@@ -268,9 +269,9 @@ func (c *Client) SnapshotRemove(
 
 // SnapshotCopy copies a snapshot to a new snapshot.
 func (c *Client) SnapshotCopy(
-	ctx context.Context,
+	ctx types.Context,
 	service, snapshotID string,
-	request *apihttp.SnapshotCopyRequest) (*types.Snapshot, error) {
+	request *types.SnapshotCopyRequest) (*types.Snapshot, error) {
 	cctx(&ctx)
 	reply := types.Snapshot{}
 	if _, err := c.httpPost(ctx,
@@ -283,9 +284,9 @@ func (c *Client) SnapshotCopy(
 
 // Executors returns information about the executors.
 func (c *Client) Executors(
-	ctx context.Context) (apihttp.ExecutorsMap, error) {
+	ctx types.Context) (map[string]*types.ExecutorInfo, error) {
 	cctx(&ctx)
-	reply := apihttp.ExecutorsMap{}
+	reply := map[string]*types.ExecutorInfo{}
 	if _, err := c.httpGet(ctx, "/executors", &reply); err != nil {
 		return nil, err
 	}
@@ -294,7 +295,7 @@ func (c *Client) Executors(
 
 // ExecutorHead returns information about an executor.
 func (c *Client) ExecutorHead(
-	ctx context.Context,
+	ctx types.Context,
 	name string) (*types.ExecutorInfo, error) {
 	cctx(&ctx)
 
@@ -322,7 +323,7 @@ func (c *Client) ExecutorHead(
 
 // ExecutorGet downloads an executor.
 func (c *Client) ExecutorGet(
-	ctx context.Context, name string) (io.ReadCloser, error) {
+	ctx types.Context, name string) (io.ReadCloser, error) {
 	cctx(&ctx)
 	res, err := c.httpGet(ctx, fmt.Sprintf("/executors/%s", name), nil)
 	if err != nil {
@@ -331,7 +332,7 @@ func (c *Client) ExecutorGet(
 	return res.Body, nil
 }
 
-func cctx(ctx *context.Context) {
+func cctx(ctx *types.Context) {
 	if *ctx == nil {
 		*ctx = context.Background()
 	}

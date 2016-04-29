@@ -7,8 +7,6 @@ import (
 
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/types/context"
-	httptypes "github.com/emccode/libstorage/api/types/http"
 )
 
 var (
@@ -16,7 +14,7 @@ var (
 )
 
 func (r *router) root(
-	ctx context.Context,
+	ctx types.Context,
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
@@ -27,7 +25,7 @@ func (r *router) root(
 	}
 	rootURL := fmt.Sprintf("%s://%s", proto, req.Host)
 
-	var reply httptypes.RootResources = []string{
+	reply := []string{
 		fmt.Sprintf("%s/executors", rootURL),
 		fmt.Sprintf("%s/services", rootURL),
 		fmt.Sprintf("%s/snapshots", rootURL),

@@ -338,6 +338,7 @@ $(LIBSTORAGE_SCHEMA_GENERATED): $(LIBSTORAGE_JSON)
 ################################################################################
 ##                                 EXECUTORS                                  ##
 ################################################################################
+ifneq (true,$(TRAVIS))
 
 EXECUTOR := $(shell go list -f '{{.Target}}' ./cli/executors/lsx-$(GOOS))
 EXECUTOR_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/executors/lsx-linux)
@@ -381,6 +382,8 @@ GO_PHONY += $(EXECUTORS_GENERATED)-clean
 GO_CLEAN += $(EXECUTORS_GENERATED)-clean
 
 $(API_SERVER_EXECUTORS_A): $(EXECUTORS_GENERATED)
+
+endif
 
 ################################################################################
 ##                               SEMAPHORE BINS                               ##

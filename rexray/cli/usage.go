@@ -13,6 +13,10 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
+const (
+	driverFlags = "libStorage Client Flags"
+)
+
 func (c *CLI) initUsageTemplates() {
 
 	var ut string
@@ -84,7 +88,7 @@ func (c *CLI) globalFlags(cmd *cobra.Command) *flag.FlagSet {
 }
 
 func (c *CLI) driverFlags() *flag.FlagSet {
-	return c.r.Config.FlagSets()["Driver Flags"]
+	return c.config.FlagSets()[driverFlags]
 }
 
 func (c *CLI) sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
@@ -100,9 +104,9 @@ func (c *CLI) sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
 func (c *CLI) sansDriverFlags(flags *flag.FlagSet) *flag.FlagSet {
 	fs := &flag.FlagSet{}
 	flags.VisitAll(func(f *flag.Flag) {
-		if c.driverFlags().Lookup(f.Name) == nil {
-			fs.AddFlag(f)
-		}
+		//if c.driverFlags().Lookup(f.Name) == nil {
+		fs.AddFlag(f)
+		//}
 	})
 	return fs
 }
@@ -121,8 +125,8 @@ func (c *CLI) additionalFlags() *flag.FlagSet {
 
 func (c *CLI) additionalFlagSets() map[string]*flag.FlagSet {
 	afs := map[string]*flag.FlagSet{}
-	for fsn, fs := range c.r.Config.FlagSets() {
-		if fsn == "Global Flags" || fsn == "Driver Flags" {
+	for fsn, fs := range c.config.FlagSets() {
+		if fsn == "Global Flags" || fsn == driverFlags {
 			continue
 		}
 		afs[fsn] = fs

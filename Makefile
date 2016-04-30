@@ -50,7 +50,7 @@ else
 endif
 
 # init the build platforms
-BUILD_PLATFORMS ?= Linux-i386 Linux-x86_64 Darwin-x86_64
+BUILD_PLATFORMS ?= Linux-x86_64
 
 # init the internal go os and architecture variable values used for naming files
 _GOOS ?= $(GOOS)

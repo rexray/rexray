@@ -42,51 +42,36 @@
 package rexray
 
 import (
-	"io"
-	"os"
+	"fmt"
 
 	"github.com/akutz/gofig"
+	"github.com/akutz/gotil"
 
-	"github.com/emccode/rexray/core"
-
-	// This blank import loads the drivers package
-	_ "github.com/emccode/rexray/drivers"
+	// load libStorage
+	_ "github.com/emccode/libstorage"
+	_ "github.com/emccode/libstorage/imports/local"
+	_ "github.com/emccode/libstorage/imports/remote"
+	"github.com/emccode/rexray/util"
 )
 
-// NewWithEnv creates a new REX-Ray instance and configures it with a a custom
-// environment.
-func NewWithEnv(env map[string]string) (*core.RexRay, error) {
-	if env != nil {
-		for k, v := range env {
-			os.Setenv(k, v)
-		}
-	}
-	return New()
+func init() {
+	gofig.SetGlobalConfigPath(util.EtcDirPath())
+	gofig.SetUserConfigPath(fmt.Sprintf("%s/.rexray", gotil.HomeDir()))
+	gofig.Register(globalRegistration())
 }
 
-// NewWithConfigFile creates a new REX-Ray instance and configures it with a
-// custom configuration file.
-func NewWithConfigFile(path string) (*core.RexRay, error) {
-	c := gofig.New()
-	if err := c.ReadConfigFile(path); err != nil {
-		return nil, err
-	}
-	return core.New(c), nil
-}
-
-// NewWithConfigReader creates a new REX-Ray instance and configures it with a
-// custom configuration stream.
-func NewWithConfigReader(in io.Reader) (*core.RexRay, error) {
-	c := gofig.New()
-	if err := c.ReadConfig(in); err != nil {
-		return nil, err
-	}
-	return core.New(c), nil
-}
-
-// New creates a new REX-Ray instance and configures using the standard
-// configuration workflow: environment variables followed by global and user
-// configuration files.
-func New() (*core.RexRay, error) {
-	return core.New(gofig.New()), nil
+func globalRegistration() *gofig.Registration {
+	r := gofig.NewRegistration("Global")
+	r.Yaml(`
+rexray:
+    host: tcp://:7979
+    logLevel: warn
+`)
+	r.Key(gofig.String, "h", "tcp://:7979",
+		"The REX-Ray host", "rexray.host",
+		"host")
+	r.Key(gofig.String, "l", "warn",
+		"The log level (error, warn, info, debug)", "rexray.logLevel",
+		"logLevel")
+	return r
 }

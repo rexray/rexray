@@ -33,8 +33,7 @@ func (c *CLI) initSnapshotCmds() {
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
 
-			allSnapshots, err := c.r.Storage.GetSnapshot(
-				c.volumeID, c.snapshotID, c.snapshotName)
+			allSnapshots, err := c.r.Storage().Snapshots(c.ctx, store())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -60,8 +59,8 @@ func (c *CLI) initSnapshotCmds() {
 				log.Fatalf("missing --volumeid")
 			}
 
-			snapshot, err := c.r.Storage.CreateSnapshot(
-				c.runAsync, c.snapshotName, c.volumeID, c.description)
+			snapshot, err := c.r.Storage().VolumeSnapshot(
+				c.ctx, c.volumeID, c.snapshotName, store())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -86,7 +85,7 @@ func (c *CLI) initSnapshotCmds() {
 				log.Fatalf("missing --snapshotid")
 			}
 
-			err := c.r.Storage.RemoveSnapshot(c.snapshotID)
+			err := c.r.Storage().SnapshotRemove(c.ctx, c.snapshotID, store())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -104,9 +103,9 @@ func (c *CLI) initSnapshotCmds() {
 				log.Fatalf("missing --volumeid or --snapshotid or --volumename")
 			}
 
-			snapshot, err := c.r.Storage.CopySnapshot(
-				c.runAsync, c.volumeID, c.snapshotID,
-				c.snapshotName, c.destinationSnapshotName, c.destinationRegion)
+			snapshot, err := c.r.Storage().SnapshotCopy(
+				c.ctx, c.snapshotID, c.snapshotName,
+				c.destinationRegion, store())
 			if err != nil {
 				log.Fatal(err)
 			}

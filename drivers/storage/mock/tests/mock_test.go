@@ -23,9 +23,9 @@ import (
 var (
 	lsxbin string
 
-	lsxLinuxInfo, _   = executors.ExecutorInfoInspect("lsx-linux", false)
-	lsxDarwinInfo, _  = executors.ExecutorInfoInspect("lsx-darwin", false)
-	lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
+	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
+	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
+	//lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
 
 	configYAML = []byte(`
 libstorage:
@@ -492,14 +492,14 @@ func TestExecutorHead(t *testing.T) {
 	apitests.RunGroup(
 		t, mock.Name, configYAML,
 		apitests.TestHeadExecutorLinux,
-		apitests.TestHeadExecutorDarwin,
-		apitests.TestHeadExecutorWindows)
+		apitests.TestHeadExecutorDarwin)
+	//apitests.TestHeadExecutorWindows)
 }
 
 func TestExecutorGet(t *testing.T) {
 	apitests.RunGroup(
 		t, mock.Name, configYAML,
 		apitests.TestGetExecutorLinux,
-		apitests.TestGetExecutorDarwin,
-		apitests.TestGetExecutorWindows)
+		apitests.TestGetExecutorDarwin)
+	//apitests.TestGetExecutorWindows)
 }

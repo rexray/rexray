@@ -335,11 +335,6 @@ $(LIBSTORAGE_SCHEMA_GENERATED): $(LIBSTORAGE_JSON)
 		sed -e 's/^//' $< >>$@; \
 		printf "\`\n)\n" >>$@;
 
-$(LIBSTORAGE_SCHEMA_GENERATED)-clean:
-	rm -f $(LIBSTORAGE_SCHEMA_GENERATED)
-GO_CLEAN += $(LIBSTORAGE_SCHEMA_GENERATED)-clean
-GO_PHONY += $(LIBSTORAGE_SCHEMA_GENERATED)-clean
-
 ################################################################################
 ##                                 EXECUTORS                                  ##
 ################################################################################
@@ -375,13 +370,13 @@ endef
 
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux))
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin))
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
+#$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
 
 $(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
 	go-bindata -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
 
 $(EXECUTORS_GENERATED)-clean:
-	rm -f $(EXECUTORS_GENERATED) && rm -fr $(dir $(EXECUTORS_GENERATED))/bin
+	rm -fr $(dir $(EXECUTORS_GENERATED))/bin
 GO_PHONY += $(EXECUTORS_GENERATED)-clean
 GO_CLEAN += $(EXECUTORS_GENERATED)-clean
 

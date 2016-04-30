@@ -28,7 +28,6 @@ import (
 	"os"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
 	// imported to load routers
@@ -58,16 +57,6 @@ func Start(host string, tls bool, driversAndServices ...string) (
 	if runTLS, err := strconv.ParseBool(
 		os.Getenv("LIBSTORAGE_RUN_TLS")); err != nil {
 		tls = runTLS
-	}
-
-	if debug, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG")); debug {
-		log.SetLevel(log.DebugLevel)
-		os.Setenv("LIBSTORAGE_SERVER_HTTP_LOGGING_ENABLED", "true")
-		os.Setenv("LIBSTORAGE_SERVER_HTTP_LOGGING_LOGREQUEST", "true")
-		os.Setenv("LIBSTORAGE_SERVER_HTTP_LOGGING_LOGRESPONSE", "true")
-		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_ENABLED", "true")
-		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_LOGREQUEST", "true")
-		os.Setenv("LIBSTORAGE_CLIENT_HTTP_LOGGING_LOGRESPONSE", "true")
 	}
 
 	return start(host, tls, driversAndServices...)

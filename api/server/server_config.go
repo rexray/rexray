@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strconv"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -76,6 +77,23 @@ func NewConfig(
 	}
 	config := gofig.New()
 
+	if debug, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG")); debug {
+		log.SetLevel(log.DebugLevel)
+		config.ReadConfig(bytes.NewReader([]byte(`libstorage:
+  server:
+    http:
+      logging:
+        enabled: true
+        logrequest: true
+        logresponse: true
+  client:
+    http:
+      logging:
+        enabled: true
+        logrequest: true
+        logresponse: true`)))
+	}
+
 	var clientTLS, serverTLS string
 	if tls {
 		clientTLS = fmt.Sprintf(
@@ -110,5 +128,6 @@ func NewConfig(
 	if err := config.ReadConfig(bytes.NewReader(configYamlBuf)); err != nil {
 		panic(err)
 	}
+
 	return config
 }

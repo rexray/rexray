@@ -101,7 +101,7 @@ func (sc *serviceContainer) initStorageServices() error {
 
 		log.WithField("service", serviceName).Debug("processing service config")
 
-		scope := fmt.Sprintf("libstorage.server.driver.%s", serviceName)
+		scope := fmt.Sprintf("libstorage.server.services.%s", serviceName)
 		log.WithField("scope", scope).Debug("getting scoped config for service")
 		config := sc.config.Scope(scope)
 

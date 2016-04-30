@@ -37,12 +37,12 @@ func withTX(ctx types.Context) types.Context {
 	txID := txIDUUID.String()
 
 	ctx = ctx.WithTransactionID(txID)
-	ctx = ctx.WithContextID(types.ContextKeyTransactionID, txID)
+	ctx = ctx.WithContextSID(types.CtxKeyTransactionID, txID)
 
 	txCR := time.Now().UTC()
 	ctx = ctx.WithTransactionCreated(txCR)
-	ctx = ctx.WithContextID(
-		types.ContextKeyTransactionCreated,
+	ctx = ctx.WithContextSID(
+		types.CtxKeyTransactionCreated,
 		fmt.Sprintf("%d", txCR.Unix()))
 
 	return ctx
@@ -52,7 +52,7 @@ func withContext(ctx types.Context, parent types.Context) types.Context {
 	if ctx == nil {
 		return withTX(parent)
 	}
-	return ctx.WithParent(parent)
+	return ctx.Join(parent)
 }
 
 func (c *client) withContext(ctx types.Context) types.Context {

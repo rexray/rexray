@@ -101,8 +101,8 @@ func newServer(config gofig.Config) (*server, error) {
 		closeOnce:    &sync.Once{},
 	}
 
-	s.ctx = s.ctx.WithContextID(types.ContextKeyServerName, s.name)
-	s.ctx = s.ctx.WithValue(types.ContextKeyServerName, s.name)
+	s.ctx = s.ctx.WithContextSID(types.CtxKeyServerName, s.name)
+	s.ctx = s.ctx.WithValue(types.CtxKeyServerName, s.name)
 	s.ctx.Info("initializing server")
 
 	if err := s.initEndpoints(); err != nil {

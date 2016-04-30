@@ -100,7 +100,7 @@ func (s *server) makeHTTPHandler(
 
 		w.Header().Set(types.ServerNameHeader, s.name)
 
-		fctx := context.NewContext(ctx, req)
+		fctx := context.NewContext(ctx, s.config, req)
 		fctx = ctx.WithContextID("route", route.GetName())
 		fctx = ctx.WithRoute(route.GetName())
 

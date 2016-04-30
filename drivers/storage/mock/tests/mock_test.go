@@ -8,10 +8,12 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/client"
 
 	// load the  driver
@@ -47,6 +49,17 @@ func TestMain(m *testing.M) {
 	server.CloseOnAbort()
 	ec := m.Run()
 	os.Exit(ec)
+}
+
+func TestStorageDriverVolumes(t *testing.T) {
+	apitests.Run(t, mock.Name, configYAML,
+		func(config gofig.Config, client client.Client, t *testing.T) {
+			vols, err := client.Storage().Volumes(
+				context.WithServiceName(context.Background(), mock.Name),
+				&types.VolumesOpts{Attachments: true, Opts: utils.NewStore()})
+			assert.NoError(t, err)
+			assert.Len(t, vols, 3)
+		})
 }
 
 func TestClient(t *testing.T) {

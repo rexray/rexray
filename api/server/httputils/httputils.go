@@ -22,14 +22,14 @@ var (
 
 // GetService gets the Service instance from a types.
 func GetService(ctx types.Context) (types.StorageService, error) {
-	serviceObj := ctx.Value(types.ContextKeyService)
+	serviceObj := ctx.Value(types.CtxKeyService)
 	if serviceObj == nil {
-		return nil, utils.NewContextKeyErr(types.ContextKeyService)
+		return nil, utils.NewCtxKeyErr(types.CtxKeyService)
 	}
 	service, ok := serviceObj.(types.StorageService)
 	if !ok {
 		return nil, utils.NewContextTypeErr(
-			types.ContextKeyService,
+			types.CtxKeyService,
 			serviceTypeName, utils.GetTypePkgPathAndName(serviceObj))
 	}
 	return service, nil
@@ -72,7 +72,7 @@ func GetServiceContext(
 
 	if iid := GetInstanceIDForService(sctx, service); iid != nil {
 		sctx = sctx.WithInstanceID(iid)
-		sctx = sctx.WithContextID(types.ContextKeyInstanceID, iid.ID)
+		sctx = sctx.WithContextSID(types.CtxKeyInstanceID, iid.ID)
 	}
 
 	localDevices := GetLocalDevicesForService(sctx, service)
@@ -80,10 +80,10 @@ func GetServiceContext(
 		sctx = sctx.WithLocalDevices(localDevices)
 	}
 
-	sctx = sctx.WithValue(types.ContextKeyService, service)
-	sctx = sctx.WithValue(types.ContextKeyServiceName, service.Name())
-	sctx = sctx.WithContextID(types.ContextKeyService, service.Name())
-	sctx = sctx.WithContextID(types.ContextKeyDriver, service.Driver().Name())
+	sctx = sctx.WithValue(types.CtxKeyService, service)
+	sctx = sctx.WithValue(types.CtxKeyServiceName, service.Name())
+	sctx = sctx.WithContextSID(types.CtxKeyService, service.Name())
+	sctx = sctx.WithContextSID(types.CtxKeyDriver, service.Driver().Name())
 
 	*ctx = sctx
 

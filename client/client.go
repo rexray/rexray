@@ -98,9 +98,9 @@ func New(config gofig.Config) (Client, error) {
 }
 
 const (
-	osDriverKey          = "libstorage.client.types.os"
-	storageDriverKey     = "libstorage.client.types.storage"
-	integrationDriverKey = "libstorage.client.types.integration"
+	osDriverKey          = "libstorage.client.driver.os"
+	storageDriverKey     = "libstorage.client.driver.storage"
+	integrationDriverKey = "libstorage.client.driver.integration"
 )
 
 func registerConfig() {

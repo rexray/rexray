@@ -20,13 +20,13 @@ var TestExecutors = func(
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertLSXWindows(t, reply["lsx-windows.exe"])
+	//assertLSXWindows(t, reply["lsx-windows.exe"])
 	assertLSXLinux(t, reply["lsx-linux"])
 	assertLSXDarwin(t, reply["lsx-darwin"])
 }
 
 // TestHeadExecutorWindows tests the HEAD /executors/lsx-windows.exe route.
-var TestHeadExecutorWindows = func(
+/*var TestHeadExecutorWindows = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
@@ -35,7 +35,7 @@ var TestHeadExecutorWindows = func(
 		t.Fatal(err)
 	}
 	assertLSXWindows(t, reply)
-}
+}*/
 
 // TestHeadExecutorLinux tests the HEAD /executors/lsx-linux route.
 var TestHeadExecutorLinux = func(
@@ -62,7 +62,7 @@ var TestHeadExecutorDarwin = func(
 }
 
 // TestGetExecutorWindows tests the GET /executors/lsx-windows.exe route.
-var TestGetExecutorWindows = func(
+/*var TestGetExecutorWindows = func(
 	config gofig.Config,
 	client client.Client, t *testing.T) {
 
@@ -76,7 +76,7 @@ var TestGetExecutorWindows = func(
 		t.Fatal(err)
 	}
 	assert.EqualValues(t, lsxWindowsInfo.Size, len(buf))
-}
+}*/
 
 // TestGetExecutorLinux tests the GET /executors/lsx-linux route.
 var TestGetExecutorLinux = func(
@@ -112,11 +112,11 @@ var TestGetExecutorDarwin = func(
 	assert.EqualValues(t, lsxDarwinInfo.Size, len(buf))
 }
 
-func assertLSXWindows(t *testing.T, i *types.ExecutorInfo) {
+/*func assertLSXWindows(t *testing.T, i *types.ExecutorInfo) {
 	assert.Equal(t, lsxWindowsInfo.Name, i.Name)
 	assert.EqualValues(t, lsxWindowsInfo.Size, i.Size)
 	assert.Equal(t, lsxWindowsInfo.MD5Checksum, i.MD5Checksum)
-}
+}*/
 
 func assertLSXLinux(t *testing.T, i *types.ExecutorInfo) {
 	assert.Equal(t, lsxLinuxInfo.Name, i.Name)

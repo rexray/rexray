@@ -27,9 +27,9 @@ import (
 var (
 	lsxbin string
 
-	lsxLinuxInfo, _   = executors.ExecutorInfoInspect("lsx-linux", false)
-	lsxDarwinInfo, _  = executors.ExecutorInfoInspect("lsx-darwin", false)
-	lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
+	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
+	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
+	// lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
 
 	tcpTest        bool
 	tcpTLSTest, _  = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_TCP_TLS"))

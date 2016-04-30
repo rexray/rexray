@@ -1,47 +1,25 @@
 package types
 
 import (
+	"fmt"
+	"net/http"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 	"golang.org/x/net/context"
-)
-
-const (
-	// ContextKeyInstanceID is a context key.
-	ContextKeyInstanceID = "instanceID"
-	// ContextKeyInstanceIDsByService is a context key.
-	ContextKeyInstanceIDsByService = "InstanceIDsByService"
-	// ContextKeyProfile is a context key.
-	ContextKeyProfile = "profile"
-	// ContextKeyRoute is a context key.
-	ContextKeyRoute = "route"
-	// ContextKeyContextID is a context key.
-	ContextKeyContextID = "contextID"
-	// ContextKeyService is a context key.
-	ContextKeyService = "service"
-	// ContextKeyServiceName is a context key.
-	ContextKeyServiceName = "serviceName"
-	// ContextKeyDriver is a context key.
-	ContextKeyDriver = "driver"
-	// ContextKeyDriverName is a context key.
-	ContextKeyDriverName = "driverName"
-	// ContextKeyLocalDevices is a context key.
-	ContextKeyLocalDevices = "localDevices"
-	// ContextKeyLocalDevicesByService is a context key.
-	ContextKeyLocalDevicesByService = "localDevicesByService"
-	// ContextKeyServerName is a context key.
-	ContextKeyServerName = "serverName"
-	// ContextKeyTransactionID is a context key.
-	ContextKeyTransactionID = "txID"
-	// ContextKeyTransactionCreated is a context key.
-	ContextKeyTransactionCreated = "txCR"
 )
 
 // Context is a libStorage context.
 type Context interface {
 	context.Context
+	gofig.Config
 	log.FieldLogger
+
+	// Join joins this context with another, such that value lookups will first
+	// check this context, and if no such value exist, a lookup will be
+	// performed against the joined context.
+	Join(rightSide Context) Context
 
 	// Log returns the underlying logger instance.
 	Log() *log.Logger
@@ -86,6 +64,15 @@ type Context interface {
 	// IntegrationDriver returns this context's integration driver.
 	IntegrationDriver() IntegrationDriver
 
+	// WithConfig returns a context with the provided config.
+	WithConfig(config gofig.Config) Context
+
+	// WithHTTPRequest returns a context with the provided HTTP request.
+	WithHTTPRequest(req *http.Request) Context
+
+	// WithValue returns a context with the provided value.
+	WithValue(key interface{}, val interface{}) Context
+
 	// WithInstanceIDsByService returns a context with the provided service to
 	// instance ID map.
 	WithInstanceIDsByService(val map[string]*InstanceID) Context
@@ -114,6 +101,10 @@ type Context interface {
 	// origin.
 	WithContextID(id, value string) Context
 
+	// WithContextSID is the same as the WithContextID function except this
+	// variant only accepts fmt.Stringer values for its id argument.
+	WithContextSID(id fmt.Stringer, value string) Context
+
 	// WithTransactionID returns a context with the provided transaction ID.
 	WithTransactionID(transactionID string) Context
 
@@ -127,13 +118,103 @@ type Context interface {
 	// WithOSDriver returns a context with the provided OS driver.
 	WithOSDriver(driver OSDriver) Context
 
-	// WithIntegrationDriver sreturns a context with the provided integration
+	// WithIntegrationDriver returns a context with the provided integration
 	// driver.
 	WithIntegrationDriver(driver IntegrationDriver) Context
-
-	// WithValue returns a context with the provided value.
-	WithValue(key interface{}, val interface{}) Context
-
-	// WithParent creates a copy of this context with a new parent.
-	WithParent(parent Context) Context
 }
+
+// ContextKey is the type used as a context key.
+type ContextKey int
+
+// String returns the string-representation of the context key.
+func (ck ContextKey) String() string {
+	return ctxIDKeys[ck]
+}
+
+const (
+
+	// CtxKeyHTTPRequest is a context key.
+	CtxKeyHTTPRequest ContextKey = iota
+
+	// CtxKeyConfig is a context key.
+	CtxKeyConfig
+
+	// CtxKeyLogger is a context key.
+	CtxKeyLogger
+
+	// CtxKeyInstanceID is a context key.
+	CtxKeyInstanceID
+
+	// CtxKeyInstanceIDsByService is a context key.
+	CtxKeyInstanceIDsByService
+
+	// CtxKeyProfile is a context key.
+	CtxKeyProfile
+
+	// CtxKeyRoute is a context key.
+	CtxKeyRoute
+
+	// CtxKeyContextID is a context key.
+	CtxKeyContextID
+
+	// CtxKeyService is a context key.
+	CtxKeyService
+
+	// CtxKeyServiceName is a context key.
+	CtxKeyServiceName
+
+	// CtxKeyDriver is a context key.
+	CtxKeyDriver
+
+	// CtxKeyDriverName is a context key.
+	CtxKeyDriverName
+
+	// CtxKeyLocalDevices is a context key.
+	CtxKeyLocalDevices
+
+	// CtxKeyLocalDevicesByService is a context key.
+	CtxKeyLocalDevicesByService
+
+	// CtxKeyServerName is a context key.
+	CtxKeyServerName
+
+	// CtxKeyTransactionID is a context key.
+	CtxKeyTransactionID
+
+	// CtxKeyTransactionCreated is a context key.
+	CtxKeyTransactionCreated
+
+	// CtxKeyOSDriver is a context key.
+	CtxKeyOSDriver
+
+	// CtxKeyStorageDriver is a context key.
+	CtxKeyStorageDriver
+
+	// CtxKeyIntegrationDriver is a context key.
+	CtxKeyIntegrationDriver
+)
+
+var (
+	ctxIDKeys = map[ContextKey]string{
+		CtxKeyHTTPRequest:           "httpRequest",
+		CtxKeyConfig:                "config",
+		CtxKeyLogger:                "logger",
+		CtxKeyInstanceID:            "instanceID",
+		CtxKeyInstanceIDsByService:  "instanceIDsByService",
+		CtxKeyProfile:               "profile",
+		CtxKeyRoute:                 "route",
+		CtxKeyContextID:             "contextID",
+		CtxKeyService:               "service",
+		CtxKeyServiceName:           "serviceName",
+		CtxKeyDriver:                "driver",
+		CtxKeyDriverName:            "driverName",
+		CtxKeyLocalDevices:          "localDevices",
+		CtxKeyLocalDevicesByService: "localDevicesByService",
+		CtxKeyServerName:            "serverName",
+		CtxKeyTransactionID:         "txID",
+		CtxKeyTransactionCreated:    "txCR",
+		CtxKeyOSDriver:              "osDriver",
+		CtxKeyStorageDriver:         "storageDriver",
+		CtxKeyIntegrationDriver:     "integrationDriver",
+	}
+)

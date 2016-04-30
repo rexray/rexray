@@ -49,7 +49,7 @@ func (h *transactionHandler) Handle(
 		txID = txIDUUID.String()
 	}
 	ctx = ctx.WithTransactionID(txID)
-	ctx = ctx.WithContextID(types.ContextKeyTransactionID, txID)
+	ctx = ctx.WithContextSID(types.CtxKeyTransactionID, txID)
 
 	txCRHeaders := utils.GetHeader(req.Header, types.TransactionCreatedHeader)
 	ctx.WithField(
@@ -64,8 +64,8 @@ func (h *transactionHandler) Handle(
 		txCR = time.Unix(epoch, 0)
 	}
 	ctx = ctx.WithTransactionCreated(txCR)
-	ctx = ctx.WithContextID(
-		types.ContextKeyTransactionCreated,
+	ctx = ctx.WithContextSID(
+		types.CtxKeyTransactionCreated,
 		fmt.Sprintf("%d", txCR.Unix()))
 
 	return h.handler(ctx, w, req, store)

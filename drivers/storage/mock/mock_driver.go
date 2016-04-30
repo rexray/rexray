@@ -107,7 +107,7 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	if ctx.Value(types.ContextKeyServiceName) == "mock" &&
+	if ctx.ServiceName() == "mock" &&
 		opts.Attachments &&
 		ctx.InstanceID().ID == executor.GetInstanceID().ID {
 

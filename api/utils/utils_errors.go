@@ -21,27 +21,31 @@ func NewMissingInstanceIDError(service string) error {
 }
 
 // NewStoreKeyErr returns a new ErrStoreKey error.
-func NewStoreKeyErr(storeKey string) error {
+func NewStoreKeyErr(key string) error {
 	return &types.ErrStoreKey{
-		Goof: goof.WithField("storeKey", storeKey, "missing store key"),
+		Goof: goof.WithField("storeKey", key, "missing store key"),
 	}
 }
 
 // NewContextKeyErr returns a new ErrContextKey error.
-func NewContextKeyErr(contextKey string) error {
+func NewContextKeyErr(key types.ContextKey) error {
 	return &types.ErrContextKey{
-		Goof: goof.WithField("contextKey", contextKey, "missing context key"),
+		Goof: goof.WithField("contextKey", key.String(), "missing context key"),
 	}
+}
+
+// NewCtxKeyErr returns a new ErrContextKey error.
+func NewCtxKeyErr(key types.ContextKey) error {
+	return NewContextKeyErr(key)
 }
 
 // NewContextTypeErr returns a new ErrContextType error.
 func NewContextTypeErr(
-	contextKey, expectedType, actualType string) error {
-
+	contextKey types.ContextKey, expectedType, actualType string) error {
 	return &types.ErrContextType{
 		Goof: goof.WithFields(
 			goof.Fields{
-				"contextKey":   contextKey,
+				"contextKey":   contextKey.String(),
 				"expectedType": expectedType,
 				"actualType":   actualType,
 			}, "invalid context type")}

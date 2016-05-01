@@ -135,9 +135,8 @@ func (ck ContextKey) String() string {
 }
 
 const (
-
 	// ContextHTTPRequest is a context key.
-	ContextHTTPRequest ContextKey = iota
+	ContextHTTPRequest ContextKey = 5000 + iota
 
 	// ContextConfig is a context key.
 	ContextConfig

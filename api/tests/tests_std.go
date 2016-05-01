@@ -7,7 +7,9 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/client"
 )
 
@@ -42,6 +44,38 @@ func (tt *InstanceIDTest) Test(
 	expectedJSON := string(expectedBuf)
 
 	iid, err := client.API().InstanceID(nil, tt.Driver)
+	assert.NoError(t, err)
+
+	iidBuf, err := json.Marshal(iid)
+	assert.NoError(t, err)
+	iidJSON := string(iidBuf)
+
+	assert.Equal(t, expectedJSON, iidJSON)
+}
+
+// InstanceTest is the test harness for testing instance inspection.
+type InstanceTest struct {
+
+	// Driver is the name of the driver/executor for which to inspect the
+	// instance.
+	Driver string
+
+	// Expected is the expected instance.
+	Expected *types.Instance
+}
+
+// Test is the APITestFunc for the InstanceTest.
+func (tt *InstanceTest) Test(
+	config gofig.Config,
+	client client.Client,
+	t *testing.T) {
+
+	expectedBuf, err := json.Marshal(tt.Expected)
+	assert.NoError(t, err)
+	expectedJSON := string(expectedBuf)
+
+	ctx := context.Background().WithServiceName(tt.Driver)
+	iid, err := client.Storage().InstanceInspect(ctx, utils.NewStore())
 	assert.NoError(t, err)
 
 	iidBuf, err := json.Marshal(iid)

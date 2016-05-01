@@ -13,10 +13,31 @@ func (d *driver) API() lstypes.Client {
 	return &d.client
 }
 
+func (d *driver) NextDeviceInfo(
+	ctx types.Context) (*types.NextDeviceInfo, error) {
+
+	si, err := d.getServiceInfo(ctx.ServiceName())
+	if err != nil {
+		return nil, err
+	}
+
+	return si.Driver.NextDevice, nil
+}
+
+func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
+
+	si, err := d.getServiceInfo(ctx.ServiceName())
+	if err != nil {
+		return "", err
+	}
+
+	return si.Driver.Type, nil
+}
+
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
-	return nil, nil
+	return d.client.InstanceInspect(ctx, ctx.ServiceName())
 }
 
 func (d *driver) Volumes(

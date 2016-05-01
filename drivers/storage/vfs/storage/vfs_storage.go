@@ -68,20 +68,24 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	return nil
 }
 
-func (d *driver) Type(ctx types.Context) types.StorageType {
-	return types.Object
+func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
+	return types.Object, nil
 }
 
-func (d *driver) NextDeviceInfo(ctx types.Context) *types.NextDeviceInfo {
+func (d *driver) NextDeviceInfo(
+	ctx types.Context) (*types.NextDeviceInfo, error) {
 	return &types.NextDeviceInfo{
 		Ignore: true,
-	}
+	}, nil
 }
 
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
-	return &types.Instance{InstanceID: ctx.InstanceID()}, nil
+	return &types.Instance{
+		Name:       "vfsInstance",
+		InstanceID: ctx.InstanceID(),
+	}, nil
 }
 
 func (d *driver) Volumes(

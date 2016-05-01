@@ -85,11 +85,11 @@ type StorageDriver interface {
 	// NextDeviceInfo returns the information about the driver's next available
 	// device workflow.
 	NextDeviceInfo(
-		ctx Context) *NextDeviceInfo
+		ctx Context) (*NextDeviceInfo, error)
 
 	// Type returns the type of storage the driver provides.
 	Type(
-		ctx Context) StorageType
+		ctx Context) (StorageType, error)
 
 	// InstanceInspect returns an instance.
 	InstanceInspect(

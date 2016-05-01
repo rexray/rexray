@@ -474,11 +474,31 @@ func TestSnapshotRemove(t *testing.T) {
 func TestInstanceID(t *testing.T) {
 	iid, err := instanceID()
 	assert.NoError(t, err)
-	apitests.RunGroup(
+	if err != nil {
+		t.FailNow()
+	}
+	apitests.Run(
 		t, vfs.Name, newTestConfig(t),
 		(&apitests.InstanceIDTest{
 			Driver:   vfs.Name,
 			Expected: iid,
+		}).Test)
+}
+
+func TestInstance(t *testing.T) {
+	iid, err := instanceID()
+	assert.NoError(t, err)
+	if err != nil {
+		t.FailNow()
+	}
+	apitests.Run(
+		t, vfs.Name, nil,
+		(&apitests.InstanceTest{
+			Driver: vfs.Name,
+			Expected: &types.Instance{
+				InstanceID: iid,
+				Name:       "vfsInstance",
+			},
 		}).Test)
 }
 

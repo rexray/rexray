@@ -257,6 +257,9 @@ type ServiceInfo struct {
 	// Name is the service's name.
 	Name string `json:"name"`
 
+	// Instance is the service's instance.
+	Instance *Instance `json:"instance,omitempty"`
+
 	// Driver is the name of the driver registered for the service.
 	Driver *DriverInfo `json:"driver"`
 }

@@ -105,14 +105,13 @@ func (c *client) NextDevice(
 	return gotil.Trim(string(out)), nil
 }
 
-func (c *client) NextDeviceInfo(ctx types.Context) *types.NextDeviceInfo {
-	// TODO libstorage StorageDriver .NextDeviceInfo
-	return nil
+func (c *client) Instances(ctx types.Context) ([]*types.Instance, error) {
+	return c.Client.Instances(c.withContext(ctx))
 }
 
-func (c *client) Type(ctx types.Context) types.StorageType {
-	// TODO libstorage StorageDriver .Type
-	return ""
+func (c *client) InstanceInspect(
+	ctx types.Context, service string) (*types.Instance, error) {
+	return c.Client.InstanceInspect(c.withContext(ctx), service)
 }
 
 func (c *client) Root(

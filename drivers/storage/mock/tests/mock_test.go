@@ -80,11 +80,23 @@ func TestClient(t *testing.T) {
 }
 
 func TestInstanceID(t *testing.T) {
-	apitests.RunGroup(
+	apitests.Run(
 		t, mock.Name, nil,
 		(&apitests.InstanceIDTest{
 			Driver:   mock.Name,
 			Expected: mockx.GetInstanceID(),
+		}).Test)
+}
+
+func TestInstance(t *testing.T) {
+	apitests.Run(
+		t, mock.Name, nil,
+		(&apitests.InstanceTest{
+			Driver: mock.Name,
+			Expected: &types.Instance{
+				InstanceID: mockx.GetInstanceID(),
+				Name:       "mockInstance",
+			},
 		}).Test)
 }
 

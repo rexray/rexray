@@ -15,13 +15,17 @@ import (
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v1"
 
-	"github.com/emccode/rexray/core"
+	"github.com/emccode/libstorage/api/context"
+	apitypes "github.com/emccode/libstorage/api/types"
+	apiutils "github.com/emccode/libstorage/api/utils"
+	apiclient "github.com/emccode/libstorage/client"
+
 	"github.com/emccode/rexray/rexray/cli/term"
 	"github.com/emccode/rexray/util"
 )
 
 func init() {
-	log.SetFormatter(&glog.TextFormatter{log.TextFormatter{}})
+	log.SetFormatter(&glog.TextFormatter{TextFormatter: log.TextFormatter{}})
 }
 
 type helpFlagPanic struct{}
@@ -30,9 +34,11 @@ type subCommandPanic struct{}
 
 // CLI is the REX-Ray command line interface.
 type CLI struct {
-	l *log.Logger
-	r *core.RexRay
-	c *cobra.Command
+	l      *log.Logger
+	r      apiclient.Client
+	c      *cobra.Command
+	config gofig.Config
+	ctx    apitypes.Context
 
 	serviceCmd               *cobra.Command
 	moduleCmd                *cobra.Command
@@ -74,6 +80,7 @@ type CLI struct {
 	volumeUnmountCmd         *cobra.Command
 	volumePathCmd            *cobra.Command
 
+	service                 string
 	outputFormat            string
 	client                  string
 	fg                      bool
@@ -169,8 +176,8 @@ func NewWithArgs(a ...string) *CLI {
 		"  visibility and management from cloud and storage platforms."
 
 	c := &CLI{
-		l: log.New(),
-		r: core.New(nil),
+		l:      log.New(),
+		config: gofig.New(),
 	}
 
 	c.c = &cobra.Command{
@@ -297,7 +304,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	if c.cfgFile != "" && gotil.FileExists(c.cfgFile) {
 		validateConfig(c.cfgFile)
-		if err := c.r.Config.ReadConfigFile(c.cfgFile); err != nil {
+		if err := c.config.ReadConfigFile(c.cfgFile); err != nil {
 			panic(err)
 		}
 		cmd.Flags().Parse(os.Args[1:])
@@ -305,7 +312,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	c.updateLogLevel()
 
-	c.r.Config = c.r.Config.Scope("rexray.modules.default-docker")
+	c.config = c.config.Scope("rexray.modules.default-docker")
 
 	if isHelpFlag(cmd) {
 		cmd.Help()
@@ -325,8 +332,14 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 	}
 
 	if c.isInitDriverManagersCmd(cmd) {
-		if err := c.r.InitDrivers(); err != nil {
-
+		c.ctx = context.Background().WithServiceName(c.service)
+		if c.runAsync {
+			c.ctx = c.ctx.WithValue("async", true)
+		}
+		r, err := apiclient.New(c.config)
+		if err == nil {
+			c.r = r
+		} else {
 			if term.IsTerminal() {
 				printColorizedError(err)
 			} else {
@@ -440,9 +453,13 @@ func (c *CLI) isModuleCmd(cmd *cobra.Command) bool {
 }
 
 func (c *CLI) logLevel() string {
-	return c.r.Config.GetString("rexray.logLevel")
+	return c.config.GetString("rexray.logLevel")
 }
 
 func (c *CLI) host() string {
-	return c.r.Config.GetString("rexray.host")
+	return c.config.GetString("rexray.host")
+}
+
+func store() apitypes.Store {
+	return apiutils.NewStore()
 }

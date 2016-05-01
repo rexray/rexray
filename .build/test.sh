@@ -11,16 +11,16 @@ if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi
 
-COVER_PKG="github.com/emccode/rexray","github.com/emccode/rexray/core"
-go test -coverpkg=$COVER_PKG  -coverprofile=profile.out ./test || FAIL=1
-if [ -f profile.out ]; then
-    cat profile.out | grep -v "mode: set" >> $COVER_PROFILE
-    rm -f profile.out
-fi
+#COVER_PKG="github.com/emccode/rexray","github.com/emccode/rexray/core"
+#go test -coverpkg=$COVER_PKG  -coverprofile=profile.out ./test || FAIL=1
+#if [ -f profile.out ]; then
+#    cat profile.out | grep -v "mode: set" >> $COVER_PROFILE
+#    rm -f profile.out
+#fi
 
-if [ "$FAIL" -ne 0 ]; then
-    exit 1
-fi
+#if [ "$FAIL" -ne 0 ]; then
+#    exit 1
+#fi
 
 if [ "$1" = "main" ]; then
     rm -f $COVER_PROFILE
@@ -33,6 +33,7 @@ for DIR in $(find . -type d \
              -not -path '*/_*' \
              -not -path './vendor/*' \
              -not -path './rexray/*' \
+             -not -path './test/*' \
              -not -path './core' \
              -not -path '.'); do
 

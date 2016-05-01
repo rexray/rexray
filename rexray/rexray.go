@@ -1,10 +1,10 @@
 package main
 
 import (
-	// This blank import loads the drivers package
-	_ "github.com/emccode/rexray/drivers"
-
 	"github.com/emccode/rexray/rexray/cli"
+
+	// load REX-Ray
+	_ "github.com/emccode/rexray"
 )
 
 func main() {

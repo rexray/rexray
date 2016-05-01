@@ -436,11 +436,11 @@ cover-debug:
 ################################################################################
 C_LIBSTOR_DIR := ./c
 C_LIBSTOR_C_DIR := $(C_LIBSTOR_DIR)/libstor-c
-C_LIBSTOR_C_SO := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/c/libstor-c.so
+C_LIBSTOR_C_SO := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/c/libstor-c.so
 C_LIBSTOR_C_BIN := $(GOPATH)/bin/libstor-c
 C_LIBSTOR_C_BIN_SRC := $(C_LIBSTOR_DIR)/libstor-c.c
-C_LIBSTOR_C_GO_DEPS :=	$(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/api/types.a \
-						$(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/client.a \
+C_LIBSTOR_C_GO_DEPS :=	$(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api/types.a \
+						$(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/client.a \
 
 libstor-c: $(C_LIBSTOR_C_SO) $(C_LIBSTOR_C_BIN)
 
@@ -467,10 +467,10 @@ $(C_LIBSTOR_C_BIN):  $(C_LIBSTOR_C_BIN_SRC) \
 ##                                  C SERVER                                  ##
 ################################################################################
 C_LIBSTOR_S_DIR := $(C_LIBSTOR_DIR)/libstor-s
-C_LIBSTOR_S_SO := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/c/libstor-s.so
+C_LIBSTOR_S_SO := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/c/libstor-s.so
 C_LIBSTOR_S_BIN := $(GOPATH)/bin/libstor-s
 C_LIBSTOR_S_BIN_SRC := $(C_LIBSTOR_DIR)/libstor-s.c
-C_LIBSTOR_S_GO_DEPS := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/github.com/emccode/libstorage/api/server.a
+C_LIBSTOR_S_GO_DEPS := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api/server.a
 
 libstor-s: $(C_LIBSTOR_S_BIN) $(C_LIBSTOR_S_SO)
 

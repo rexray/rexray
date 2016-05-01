@@ -88,19 +88,20 @@ func newDriver() types.StorageDriver {
 	return d
 }
 
-func (d *driver) Type(ctx types.Context) types.StorageType {
-	return types.Block
+func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
+	return types.Block, nil
 }
 
-func (d *driver) NextDeviceInfo(ctx types.Context) *types.NextDeviceInfo {
-	return d.nextDeviceInfo
+func (d *driver) NextDeviceInfo(
+	ctx types.Context) (*types.NextDeviceInfo, error) {
+	return d.nextDeviceInfo, nil
 }
 
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
 	iid, _ := d.InstanceID(ctx, opts)
-	return &types.Instance{InstanceID: iid}, nil
+	return &types.Instance{Name: "mockInstance", InstanceID: iid}, nil
 }
 
 func (d *driver) Volumes(

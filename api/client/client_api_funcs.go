@@ -20,13 +20,50 @@ func (c *Client) Root(ctx types.Context) ([]string, error) {
 	return reply, nil
 }
 
+const (
+	ctxInstanceForSvc = 1000 + iota
+)
+
+type ctxInstanceForSvcT struct{}
+
+// Instances returns a list of instances.
+func (c *Client) Instances(ctx types.Context) ([]*types.Instance, error) {
+	sis, err := c.Services(
+		ctx.WithValue(ctxInstanceForSvc, &ctxInstanceForSvcT{}))
+	if err != nil {
+		return nil, err
+	}
+	instances := []*types.Instance{}
+	for _, si := range sis {
+		instances = append(instances, si.Instance)
+	}
+	return instances, nil
+}
+
+// InstanceInspect inspects an instance.
+func (c *Client) InstanceInspect(
+	ctx types.Context, service string) (*types.Instance, error) {
+	si, err := c.ServiceInspect(
+		ctx.WithValue(ctxInstanceForSvc, &ctxInstanceForSvcT{}), service)
+	if err != nil {
+		return nil, err
+	}
+	return si.Instance, nil
+}
+
 // Services returns a map of the configured Services.
 func (c *Client) Services(
 	ctx types.Context) (map[string]*types.ServiceInfo, error) {
 
 	cctx(&ctx)
 	reply := map[string]*types.ServiceInfo{}
-	if _, err := c.httpGet(ctx, "/services", &reply); err != nil {
+
+	url := "/services"
+	if ctx.Value(ctxInstanceForSvc) != nil {
+		url = "/services?instance"
+	}
+
+	if _, err := c.httpGet(ctx, url, &reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -35,10 +72,16 @@ func (c *Client) Services(
 // ServiceInspect returns information about a service.
 func (c *Client) ServiceInspect(
 	ctx types.Context, name string) (*types.ServiceInfo, error) {
+
 	cctx(&ctx)
 	reply := &types.ServiceInfo{}
-	if _, err := c.httpGet(ctx,
-		fmt.Sprintf("/services/%s", name), &reply); err != nil {
+
+	url := fmt.Sprintf("/services/%s", name)
+	if ctx.Value(ctxInstanceForSvc) != nil {
+		url = fmt.Sprintf("/services/%s?instance", name)
+	}
+
+	if _, err := c.httpGet(ctx, url, &reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

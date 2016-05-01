@@ -100,9 +100,6 @@ func (sc *serviceContainer) initStorageServices(ctx types.Context) error {
 			"configKey": types.ConfigServices,
 			"obj":       cfgSvcs,
 		}, "invalid format")
-		err.IncludeFieldsInString(true)
-		err.IncludeFieldsInError(true)
-		err.IncludeFieldsInFormat(true)
 		return err
 	}
 	ctx.WithField("count", len(cfgSvcsMap)).Debug("got services map")

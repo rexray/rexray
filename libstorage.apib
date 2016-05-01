@@ -94,10 +94,18 @@ Gets a list of the API's top-level resources.
 
 # Group Services
 
-# Services Collection [/services]
+# Services Collection [/services?{instance}]
 
 ## Get [GET]
 Gets information about all of the configured services.
+
++ Parameters
+
+    + instance: `false` (boolean, optional)
+
+            When the instance query string is specified the instance ID header
+            is required. This flag indicates that the services' instances should
+            be retrieved along with standard service information.
 
 + Response 200 (application/json)
 
@@ -153,11 +161,16 @@ Internal server error
 
             { "$ref": "https://raw.githubusercontent.com/emccode/libstorage/master/libstorage.json#/definitions/internalServerError" }
 
-# Service Inspector [/services/{service}]
+# Service Inspector [/services/{service}?{instance}]
 
 + Parameters
 
     + service: `ec2-00` (string, required)
+    + instance: `false` (boolean, optional)
+
+            When the instance query string is specified the instance ID header
+            is required. This flag indicates that the service's instance should
+            be retrieved along with standard service information.
 
 ## Inspect [GET]
 Gets information about the service with the specified name.

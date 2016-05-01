@@ -41,6 +41,12 @@ type APIClient interface {
 	// Root returns a list of root resources.
 	Root(ctx types.Context) ([]string, error)
 
+	// Instances returns a list of instances.
+	Instances(ctx types.Context) ([]*types.Instance, error)
+
+	// InstanceInspect inspects an instance.
+	InstanceInspect(ctx types.Context, service string) (*types.Instance, error)
+
 	// Services returns a map of the configured Services.
 	Services(ctx types.Context) (map[string]*types.ServiceInfo, error)
 

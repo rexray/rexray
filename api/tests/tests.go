@@ -177,6 +177,13 @@ func (th *testHarness) run(
 		configNames, configs := getTestConfigs(t, driver, config)
 
 		for x, config := range configs {
+
+			cj, err := config.ToJSON()
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Logf("client.config=%s\n", cj)
+
 			wg.Add(1)
 			go func(x int, config gofig.Config) {
 				defer wg.Done()

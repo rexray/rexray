@@ -207,6 +207,7 @@ const (
                     "type": "string",
                     "description": "Name is the service's name."
                 },
+                "instance": { "$ref": "#/definitions/instance" },
                 "driver": { "$ref": "#/definitions/driverInfo" }
             },
             "required": [ "name", "driver" ],

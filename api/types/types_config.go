@@ -65,7 +65,7 @@ const (
 	ConfigExecutorNoDownload = ConfigRoot + ".executor.disableDownload"
 
 	// ConfigVolMountPreempt is a config key.
-	ConfigVolMountPreempt = ConfigClient + ".volume.mount.preempt"
+	ConfigVolMountPreempt = ConfigRoot + ".volume.mount.preempt"
 
 	// ConfigVolCreateDisable is a config key.
 	ConfigVolCreateDisable = ConfigRoot + ".volume.mount.disable"

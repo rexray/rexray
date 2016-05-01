@@ -2,7 +2,6 @@ package libstorage
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
 
@@ -11,10 +10,9 @@ import (
 	"github.com/akutz/gotil"
 
 	apiclient "github.com/emccode/libstorage/api/client"
-	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/api/utils/paths"
+	lstypes "github.com/emccode/libstorage/drivers/storage/libstorage/types"
 )
 
 var (
@@ -29,68 +27,43 @@ var (
 	EnableLocalDevicesHeaders = true
 )
 
-const (
-	clientScope          = "libstorage.client"
-	hostKey              = "libstorage.host"
-	logEnabledKey        = clientScope + ".http.logging.enabled"
-	logOutKey            = clientScope + ".http.logging.out"
-	logErrKey            = clientScope + ".http.logging.err"
-	logRequestsKey       = clientScope + ".http.logging.logrequest"
-	logResponsesKey      = clientScope + ".http.logging.logresponse"
-	disableKeepAlivesKey = clientScope + ".http.disableKeepAlives"
-	lsxOffline           = clientScope + ".executor.offline"
-
-	// LSXPathKey is the configuration key for the libStorage executor
-	// binary path.
-	LSXPathKey = clientScope + ".executor.path"
-)
-
-func registerConfig() {
-	r := gofig.NewRegistration("libStorage Storage Driver")
-	lsxBinPath := fmt.Sprintf("%s/%s", paths.UsrDirPath(), types.LSX)
-	r.Key(gofig.String, "", lsxBinPath, "", LSXPathKey)
-	r.Key(gofig.Bool, "", false, "", lsxOffline)
-	r.Key(gofig.Bool, "", false, "", logEnabledKey)
-	r.Key(gofig.String, "", "", "", logOutKey)
-	r.Key(gofig.String, "", "", "", logErrKey)
-	r.Key(gofig.Bool, "", false, "", logRequestsKey)
-	r.Key(gofig.Bool, "", false, "", logResponsesKey)
-	r.Key(gofig.Bool, "", false, "", disableKeepAlivesKey)
-	gofig.Register(r)
-}
-
 type driver struct {
 	client
 }
 
 func newDriver() types.StorageDriver {
-	var d Driver = &driver{}
+	var d lstypes.Driver = &driver{}
 	return d
 }
 
-func (d *driver) Init(config gofig.Config) error {
+func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	logFields := log.Fields{}
 
-	addr := config.GetString(hostKey)
-	ctx := context.Background().WithContextID("host", addr)
+	addr := config.GetString(types.ConfigHost)
+	ctx = ctx.WithContextSID(types.ContextHost, addr)
+	ctx.Debug("got configured host address")
 
 	proto, lAddr, err := gotil.ParseAddress(addr)
 	if err != nil {
 		return err
 	}
 
-	tlsConfig, err := utils.ParseTLSConfig(
-		config.Scope(clientScope), logFields)
+	tlsConfig, err := utils.ParseTLSConfig(config, logFields)
 	if err != nil {
 		return err
 	}
+
+	logHTTPReq := config.GetBool(types.ConfigLogHTTPRequests)
+	logHTTPRes := config.GetBool(types.ConfigLogHTTPResponses)
+	disableKeepAlive := config.GetBool(types.ConfigHTTPDisableKeepAlive)
+	lsxPath := config.GetString(types.ConfigExecutorPath)
 
 	d.client = client{
 		Client: apiclient.Client{
 			Host:         getHost(proto, lAddr, tlsConfig),
 			Headers:      http.Header{},
-			LogRequests:  config.GetBool(logRequestsKey),
-			LogResponses: config.GetBool(logResponsesKey),
+			LogRequests:  logHTTPReq,
+			LogResponses: logHTTPRes,
 			Client: &http.Client{
 				Transport: &http.Transport{
 					Dial: func(string, string) (net.Conn, error) {
@@ -99,13 +72,13 @@ func (d *driver) Init(config gofig.Config) error {
 						}
 						return tls.Dial(proto, lAddr, tlsConfig)
 					},
-					DisableKeepAlives: config.GetBool(disableKeepAlivesKey),
+					DisableKeepAlives: disableKeepAlive,
 				},
 			},
 		},
 		ctx:                ctx,
 		config:             config,
-		lsxBinPath:         config.GetString(LSXPathKey),
+		lsxBinPath:         lsxPath,
 		enableIIDHeader:    EnableInstanceIDHeaders,
 		enableLclDevHeader: EnableLocalDevicesHeaders,
 	}

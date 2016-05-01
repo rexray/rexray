@@ -13,7 +13,9 @@ import (
 )
 
 func (d *driver) getVolPath(volumeID string) string {
-	return fmt.Sprintf("%s/%s.json", d.volPath, volumeID)
+	p := fmt.Sprintf("%s/%s.json", d.volPath, volumeID)
+	d.ctx.WithField("vol.path", p).Info(p)
+	return p
 }
 
 func (d *driver) getVolumeByID(volumeID string) (*types.Volume, error) {

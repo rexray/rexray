@@ -11,7 +11,7 @@ import (
 
 func TestJoin(t *testing.T) {
 
-	ctx1 := Background().WithValue(types.CtxKeyServerName, "box-head-us")
+	ctx1 := Background().WithValue(types.ContextServerName, "box-head-us")
 	ctx2 := Background().WithServiceName("mock")
 
 	assert.Equal(t, "box-head-us", ctx1.ServerName())
@@ -30,7 +30,7 @@ func TestJoin(t *testing.T) {
 func TestContextIDLog(t *testing.T) {
 	ctx := Background()
 	ctx.Info("no storage driver")
-	ctx = ctx.WithContextSID(types.CtxKeyStorageDriver, "mock")
+	ctx = ctx.WithContextSID(types.ContextStorageDriver, "mock")
 	ctx.Info("storage driver set")
 }
 

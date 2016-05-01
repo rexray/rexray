@@ -41,7 +41,7 @@ func NewExecutor() *Executor {
 	}
 }
 
-func (d *Executor) Init(config gofig.Config) error {
+func (d *Executor) Init(ctx types.Context, config gofig.Config) error {
 	d.Config = config
 	return nil
 }

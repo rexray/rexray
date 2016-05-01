@@ -14,6 +14,7 @@ import (
 )
 
 type driver struct {
+	ctx    types.Context
 	config gofig.Config
 
 	volJSONGlobPatt  string
@@ -37,11 +38,14 @@ func (d *driver) Name() string {
 	return vfs.Name
 }
 
-func (d *driver) Init(config gofig.Config) error {
+func (d *driver) Init(ctx types.Context, config gofig.Config) error {
+	d.ctx = ctx
 	d.config = config
 
 	d.volPath = vfs.VolumesDirPath(config)
 	d.snapPath = vfs.SnapshotsDirPath(config)
+
+	ctx.WithField("vfs.root.path", vfs.RootDir(config)).Info("vfs.root")
 
 	os.MkdirAll(d.volPath, 0755)
 	os.MkdirAll(d.snapPath, 0755)

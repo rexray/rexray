@@ -34,8 +34,8 @@ func NewContextKeyErr(key types.ContextKey) error {
 	}
 }
 
-// NewCtxKeyErr returns a new ErrContextKey error.
-func NewCtxKeyErr(key types.ContextKey) error {
+// NewContextErr returns a new ErrContextKey error.
+func NewContextErr(key types.ContextKey) error {
 	return NewContextKeyErr(key)
 }
 

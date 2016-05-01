@@ -1,5 +1,8 @@
 package types
 
+// LibStorageDriverName is the name of the libStorage storage driver.
+const LibStorageDriverName = "libstorage"
+
 // NewStorageExecutor is a function that constructs a new StorageExecutors.
 type NewStorageExecutor func() StorageExecutor
 
@@ -59,6 +62,14 @@ type StorageExecutor interface {
 	LocalDevices(
 		ctx Context,
 		opts Store) (map[string]string, error)
+}
+
+// StorageDriverManager is the management wrapper for a StorageDriver.
+type StorageDriverManager interface {
+	StorageDriver
+
+	// Driver returns the underlying driver.
+	Driver() StorageDriver
 }
 
 /*

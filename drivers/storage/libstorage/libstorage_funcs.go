@@ -2,13 +2,14 @@ package libstorage
 
 import (
 	"github.com/emccode/libstorage/api/types"
+	lstypes "github.com/emccode/libstorage/drivers/storage/libstorage/types"
 )
 
 func (d *driver) Name() string {
 	return Name
 }
 
-func (d *driver) API() Client {
+func (d *driver) API() lstypes.Client {
 	return &d.client
 }
 

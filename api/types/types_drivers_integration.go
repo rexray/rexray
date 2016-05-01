@@ -20,6 +20,14 @@ type VolumeMapping interface {
 	MountPoint() string
 }
 
+// IntegrationDriverManager is the management wrapper for an IntegrationDriver.
+type IntegrationDriverManager interface {
+	IntegrationDriver
+
+	// Driver returns the underlying driver.
+	Driver() IntegrationDriver
+}
+
 // IntegrationDriver is the interface implemented to integrate external
 // storage consumers, such as Docker, with libStorage.
 type IntegrationDriver interface {

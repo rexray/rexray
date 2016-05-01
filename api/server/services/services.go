@@ -5,7 +5,6 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
@@ -33,7 +32,7 @@ func Init(ctx types.Context, config gofig.Config) error {
 		storageServices: map[string]types.StorageService{},
 	}
 
-	if err := sc.Init(config); err != nil {
+	if err := sc.Init(ctx, config); err != nil {
 		return err
 	}
 
@@ -44,14 +43,14 @@ func Init(ctx types.Context, config gofig.Config) error {
 	return nil
 }
 
-func (sc *serviceContainer) Init(config gofig.Config) error {
+func (sc *serviceContainer) Init(ctx types.Context, config gofig.Config) error {
 	sc.config = config
 
 	if err := sc.taskService.Init(config); err != nil {
 		return err
 	}
 
-	if err := sc.initStorageServices(); err != nil {
+	if err := sc.initStorageServices(ctx); err != nil {
 		return err
 	}
 
@@ -87,33 +86,45 @@ func StorageServices(ctx types.Context) <-chan types.StorageService {
 	return c
 }
 
-func (sc *serviceContainer) initStorageServices() error {
-
-	cfgSvcs := sc.config.Get("libstorage.server.services")
+func (sc *serviceContainer) initStorageServices(ctx types.Context) error {
+	if ctx == nil {
+		panic("ctx is nil")
+	}
+	if sc.config == nil {
+		panic("sc.config is nil")
+	}
+	cfgSvcs := sc.config.Get(types.ConfigServices)
 	cfgSvcsMap, ok := cfgSvcs.(map[string]interface{})
 	if !ok {
-		return goof.New("invalid format libstorage.server.services")
+		err := goof.WithFields(goof.Fields{
+			"configKey": types.ConfigServices,
+			"obj":       cfgSvcs,
+		}, "invalid format")
+		err.IncludeFieldsInString(true)
+		err.IncludeFieldsInError(true)
+		err.IncludeFieldsInFormat(true)
+		return err
 	}
-	log.WithField("count", len(cfgSvcsMap)).Debug("got services map")
+	ctx.WithField("count", len(cfgSvcsMap)).Debug("got services map")
 
 	for serviceName := range cfgSvcsMap {
 		serviceName = strings.ToLower(serviceName)
 
-		log.WithField("service", serviceName).Debug("processing service config")
+		ctx = ctx.WithContextSID(types.ContextServiceName, serviceName)
+		ctx.Debug("processing service config")
 
 		scope := fmt.Sprintf("libstorage.server.services.%s", serviceName)
-		log.WithField("scope", scope).Debug("getting scoped config for service")
+		ctx.WithField("scope", scope).Debug("getting scoped config for service")
 		config := sc.config.Scope(scope)
 
 		storSvc := &storageService{name: serviceName}
-		if err := storSvc.Init(config); err != nil {
+		if err := storSvc.Init(ctx, config); err != nil {
 			return err
 		}
 
-		log.WithFields(log.Fields{
-			"service": storSvc.Name(),
-			"driver":  storSvc.Driver().Name(),
-		}).Info("created new service")
+		ctx = ctx.WithContextSID(
+			types.ContextDriverName, storSvc.Driver().Name())
+		ctx.Info("created new service")
 
 		sc.storageServices[serviceName] = storSvc
 	}

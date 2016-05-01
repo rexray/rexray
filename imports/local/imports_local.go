@@ -1,6 +1,9 @@
 package local
 
 import (
+	// load the config
+	_ "github.com/emccode/libstorage/imports/config"
+
 	// load the libStorage storage driver
 	_ "github.com/emccode/libstorage/drivers/storage/libstorage"
 

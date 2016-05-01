@@ -17,6 +17,14 @@ type DeviceFormatOpts struct {
 	Opts        Store
 }
 
+// OSDriverManagerManager is the management wrapper for an OSDriver.
+type OSDriverManager interface {
+	OSDriver
+
+	// Driver returns the underlying driver.
+	Driver() OSDriver
+}
+
 // OSDriver is the interface implemented by types that provide OS introspection
 // and management.
 type OSDriver interface {

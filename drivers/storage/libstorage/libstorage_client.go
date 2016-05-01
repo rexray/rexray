@@ -160,7 +160,7 @@ func (c *client) VolumeCreate(
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
-		if err := lsd.Init(c.config); err != nil {
+		if err := lsd.Init(ctx, c.config); err != nil {
 			return nil, err
 		}
 
@@ -192,7 +192,7 @@ func (c *client) VolumeCreateFromSnapshot(
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
-		if err := lsd.Init(c.config); err != nil {
+		if err := lsd.Init(ctx, c.config); err != nil {
 			return nil, err
 		}
 
@@ -224,7 +224,7 @@ func (c *client) VolumeCopy(
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
-		if err := lsd.Init(c.config); err != nil {
+		if err := lsd.Init(ctx, c.config); err != nil {
 			return nil, err
 		}
 
@@ -254,7 +254,7 @@ func (c *client) VolumeRemove(
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
-		if err := lsd.Init(c.config); err != nil {
+		if err := lsd.Init(ctx, c.config); err != nil {
 			return err
 		}
 

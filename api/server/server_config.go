@@ -48,7 +48,8 @@ libstorage:
 	libStorageConfigService = `
       %[1]s:
         libstorage:
-          driver: %[2]s
+          storage:
+            driver: %[2]s
 `
 	libStorageConfigClientTLS = `
     tls:
@@ -81,17 +82,13 @@ func NewConfig(
 		log.SetLevel(log.DebugLevel)
 		config.ReadConfig(bytes.NewReader([]byte(`libstorage:
   server:
-    http:
-      logging:
-        enabled: true
-        logrequest: true
-        logresponse: true
+    logging:
+      httpRequests: true
+      httpResponses: true
   client:
-    http:
-      logging:
-        enabled: true
-        logrequest: true
-        logresponse: true`)))
+    logging:
+      httpRequests: true
+      httpResponses: true`)))
 	}
 
 	var clientTLS, serverTLS string

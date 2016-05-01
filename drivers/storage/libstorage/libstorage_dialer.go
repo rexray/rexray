@@ -22,9 +22,9 @@ func (c *client) dial(ctx types.Context) error {
 		return err
 	}
 
-	c.ctx = c.ctx.WithContextSID(types.CtxKeyServerName, c.ServerName())
+	c.ctx = c.ctx.WithContextSID(types.ContextServerName, c.ServerName())
 
-	if !c.config.GetBool(lsxOffline) {
+	if !c.config.GetBool(types.ConfigExecutorNoDownload) {
 		if err := c.updateExecutorInfo(ctx); err != nil {
 			return err
 		}

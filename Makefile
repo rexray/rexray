@@ -4,7 +4,7 @@ export MAKEFLAGS := $(MAKEFLAGS) --no-print-directory -k -j1
 # MAKE_LOG_LEVEL can be 0=quiet, 1=error, 2=verbose
 MAKE_LOG_LEVEL ?= 0
 ifeq ($(MAKE_LOG_LEVEL),0)
-	MAKE_LOG_FD := &> /dev/null
+	MAKE_LOG_FD := \&> /dev/null
 else
 ifeq ($(MAKE_LOG_LEVEL),1)
 	MAKE_LOG_FD := 1> /dev/null

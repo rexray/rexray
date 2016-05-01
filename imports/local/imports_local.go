@@ -21,7 +21,7 @@ import (
 	// _ "github.com/emccode/libstorage/drivers/storage/mock/client"
 	//_ "github.com/emccode/libstorage/drivers/storage/openstack/client"
 	//_ "github.com/emccode/libstorage/drivers/storage/rackspace/client"
-	//_ "github.com/emccode/libstorage/drivers/storage/scaleio/client"
+	// _ "github.com/emccode/libstorage/drivers/storage/scaleio"
 	//_ "github.com/emccode/libstorage/drivers/storage/vbox/client"
 	_ "github.com/emccode/libstorage/drivers/storage/vfs/client"
 	//_ "github.com/emccode/libstorage/drivers/storage/vmax/client"

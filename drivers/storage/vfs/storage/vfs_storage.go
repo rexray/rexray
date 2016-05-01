@@ -257,7 +257,7 @@ func (d *driver) VolumeSnapshot(
 	}
 
 	s := &types.Snapshot{
-		ID:         d.newSnapshotID(),
+		ID:         d.newSnapshotID(v.ID),
 		VolumeID:   v.ID,
 		VolumeSize: v.Size,
 		Name:       snapshotName,
@@ -398,7 +398,7 @@ func (d *driver) SnapshotCopy(
 	}
 
 	newSnap := &types.Snapshot{
-		ID:         d.newSnapshotID(),
+		ID:         d.newSnapshotID(ogSnap.VolumeID),
 		VolumeID:   ogSnap.VolumeID,
 		VolumeSize: ogSnap.VolumeSize,
 		Name:       snapshotName,

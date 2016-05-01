@@ -81,14 +81,9 @@ func NewConfig(
 	if debug, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG")); debug {
 		log.SetLevel(log.DebugLevel)
 		config.ReadConfig(bytes.NewReader([]byte(`libstorage:
-  server:
-    logging:
-      httpRequests: true
-      httpResponses: true
-  client:
-    logging:
-      httpRequests: true
-      httpResponses: true`)))
+  logging:
+    httpRequests: true
+    httpResponses: true`)))
 	}
 
 	var clientTLS, serverTLS string

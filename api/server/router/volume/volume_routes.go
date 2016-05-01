@@ -37,7 +37,8 @@ func (r *router) volumes(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
 
-			if err := httputils.GetServiceContext(&ctx, svc); err != nil {
+			ctx, err := httputils.WithServiceContext(ctx, svc)
+			if err != nil {
 				return nil, err
 			}
 
@@ -361,7 +362,8 @@ func (r *router) volumeDetachAll(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
 
-			if err := httputils.GetServiceContext(&ctx, svc); err != nil {
+			ctx, err := httputils.WithServiceContext(ctx, svc)
+			if err != nil {
 				return nil, err
 			}
 

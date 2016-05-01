@@ -63,12 +63,12 @@ func GetLocalDevicesForService(
 	return nil
 }
 
-// GetServiceContext gets the service types.
-func GetServiceContext(
-	ctx *types.Context,
-	service types.StorageService) error {
+// WithServiceContext gets the service types.
+func WithServiceContext(
+	ctx types.Context,
+	service types.StorageService) (types.Context, error) {
 
-	sctx := *ctx
+	sctx := ctx
 
 	if iid := GetInstanceIDForService(sctx, service); iid != nil {
 		sctx = sctx.WithInstanceID(iid)
@@ -85,10 +85,8 @@ func GetServiceContext(
 	sctx = sctx.WithContextSID(types.ContextService, service.Name())
 	sctx = sctx.WithContextSID(types.ContextDriver, service.Driver().Name())
 
-	*ctx = sctx
-
 	sctx.Debug("set service context")
-	return nil
+	return sctx, nil
 }
 
 // GetStorageDriver gets the RemoteStorageDriver instance from a types.

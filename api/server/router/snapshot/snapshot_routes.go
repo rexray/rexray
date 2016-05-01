@@ -29,7 +29,7 @@ func (r *router) snapshots(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
 
-			err := httputils.GetServiceContext(&ctx, svc)
+			ctx, err := httputils.WithServiceContext(ctx, svc)
 			if err != nil {
 				return nil, err
 			}

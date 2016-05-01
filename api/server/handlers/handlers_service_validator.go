@@ -46,7 +46,7 @@ func (h *serviceValidator) Handle(
 		return utils.NewNotFoundError(serviceName)
 	}
 
-	err := httputils.GetServiceContext(&ctx, service)
+	ctx, err := httputils.WithServiceContext(ctx, service)
 	if err != nil {
 		return err
 	}

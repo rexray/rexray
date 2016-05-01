@@ -63,6 +63,7 @@ func (d *driver) getSnapJSONs() ([]string, error) {
 	return filepath.Glob(d.snapJSONGlobPatt)
 }
 
-func (d *driver) newSnapshotID() string {
-	return fmt.Sprintf("vfs-%3d", atomic.AddInt64(&d.snapCount, 1))
+func (d *driver) newSnapshotID(volumeID string) string {
+	return fmt.Sprintf(
+		"%s-%03d", volumeID, atomic.AddInt64(&d.snapCount, 1))
 }

@@ -17,6 +17,10 @@ func (r *router) servicesList(
 
 	reply := map[string]*types.ServiceInfo{}
 	for service := range services.StorageServices(ctx) {
+		ctx, err := httputils.WithServiceContext(ctx, service)
+		if err != nil {
+			return err
+		}
 		si, err := toServiceInfo(ctx, service, store)
 		if err != nil {
 			return err

@@ -10,7 +10,7 @@ import (
 
 const (
 	// Name is the name of the driver.
-	Name = "libstorage"
+	Name = types.LibStorageDriverName
 )
 
 var (
@@ -29,8 +29,6 @@ func init() {
 			break
 		}
 	}
-
-	registerConfig()
 }
 
 // Close releases system resources.

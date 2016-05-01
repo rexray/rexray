@@ -65,20 +65,11 @@ var (
 var (
 	debugConfig = []byte(`
 libstorage:
-  server:
-    http:
-      timeout: 2m
-      logging:
-        enabled: true
-        logrequest: true
-        logresponse: true
-  client:
-    http:
-      disableKeepAlives: true
-      logging:
-        enabled: true
-        logrequest: true
-        logresponse: true
+  readTimeout: 300
+  writeTimeout: 300
+  logging:
+    httpRequests: true
+    httpResponses: true
 `)
 
 	profilesConfig = []byte(`
@@ -189,19 +180,20 @@ func (th *testHarness) run(
 			wg.Add(1)
 			go func(x int, config gofig.Config) {
 				defer wg.Done()
-				server, errs := apiserver.Serve(config)
+				server, err, errs := apiserver.Serve(config)
+				if err != nil {
+					th.closeServers(t)
+					t.Fatal(err)
+				}
 				go func() {
 					err := <-errs
 					if err != nil {
 						th.closeServers(t)
-						t.Errorf("server (%s) error: %v", configNames[x], err)
-						t.Fail()
+						t.Fatalf("server (%s) error: %v", configNames[x], err)
 					}
 				}()
 
-				if server != nil {
-					th.servers = append(th.servers, server)
-				}
+				th.servers = append(th.servers, server)
 
 				c, err := client.New(config)
 				assert.NoError(t, err)
@@ -221,24 +213,36 @@ func (th *testHarness) run(
 			configNames, configs := getTestConfigs(t, driver, config)
 
 			for x, config := range configs {
+
 				wg.Add(1)
 				go func(test APITestFunc, x int, config gofig.Config) {
+
+					cj, err := config.ToJSON()
+					if err != nil {
+						t.Fatal(err)
+					}
+					t.Logf("client.config=%s\n", cj)
+
 					defer wg.Done()
-					server, errs := apiserver.Serve(config)
+					server, err, errs := apiserver.Serve(config)
+					if err != nil {
+						th.closeServers(t)
+						t.Fatal(err)
+					}
 					go func() {
 						err := <-errs
 						if err != nil {
 							th.closeServers(t)
-							t.Errorf("server (%s) error: %v", configNames[x], err)
-							t.Fail()
+							t.Fatalf("server (%s) error: %v", configNames[x], err)
 						}
 					}()
 
-					if server != nil {
-						th.servers = append(th.servers, server)
-					}
+					th.servers = append(th.servers, server)
 
 					c, err := client.New(config)
+					if err != nil {
+						t.Fatal(err)
+					}
 					assert.NoError(t, err)
 					assert.NotNil(t, c)
 
@@ -262,13 +266,19 @@ func getTestConfig(t *testing.T, configBuf []byte, debug bool) gofig.Config {
 	if debug {
 		log.SetLevel(log.DebugLevel)
 		err := config.ReadConfig(bytes.NewReader(debugConfig))
-		assert.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
-	assert.NoError(t, config.ReadConfig(bytes.NewReader(profilesConfig)))
+	if err := config.ReadConfig(bytes.NewReader(profilesConfig)); err != nil {
+		t.Fatal(err)
+	}
 
 	if configBuf != nil {
-		assert.NoError(t, config.ReadConfig(bytes.NewReader(configBuf)))
+		if err := config.ReadConfig(bytes.NewReader(configBuf)); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	return config
@@ -280,10 +290,15 @@ func getTestConfigs(
 	config gofig.Config) (map[int]string, []gofig.Config) {
 
 	libstorageConfigMap := map[string]interface{}{
-		"driver": driver,
 		"server": map[string]interface{}{
 			"services": map[string]interface{}{
-				driver: nil,
+				driver: map[string]interface{}{
+					"libstorage": map[string]interface{}{
+						"storage": map[string]interface{}{
+							"driver": driver,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -323,8 +338,11 @@ func getTestConfigs(
 
 func (th *testHarness) closeServers(t *testing.T) {
 	for _, server := range th.servers {
+		if server == nil {
+			panic("testharness.server is nil")
+		}
 		if err := server.Close(); err != nil {
-			t.Errorf("error closing server: %v", err)
+			t.Fatalf("error closing server: %v", err)
 		}
 	}
 }

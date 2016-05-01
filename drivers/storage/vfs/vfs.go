@@ -1,7 +1,7 @@
 package vfs
 
 import (
-	"fmt"
+	"path"
 
 	"github.com/akutz/gofig"
 
@@ -18,7 +18,7 @@ func init() {
 }
 
 func configRegistration() {
-	defaultRootDir := fmt.Sprintf("%s/vfs", paths.UsrDirPath())
+	defaultRootDir := paths.UsrFilePath("vfs")
 	r := gofig.NewRegistration("VFS")
 	r.Key(gofig.String, "", defaultRootDir, "", "vfs.root")
 	gofig.Register(r)
@@ -31,15 +31,15 @@ func RootDir(config gofig.Config) string {
 
 // DeviceFilePath returns the path to the VFS devices file.
 func DeviceFilePath(config gofig.Config) string {
-	return fmt.Sprintf("%s/dev", RootDir(config))
+	return path.Join(RootDir(config), "dev")
 }
 
 // VolumesDirPath returns the path to the VFS volumes directory.
 func VolumesDirPath(config gofig.Config) string {
-	return fmt.Sprintf("%s/vol", RootDir(config))
+	return path.Join(RootDir(config), "vol")
 }
 
 // SnapshotsDirPath returns the path to the VFS volumes directory.
 func SnapshotsDirPath(config gofig.Config) string {
-	return fmt.Sprintf("%s/snap", RootDir(config))
+	return path.Join(RootDir(config), "snap")
 }

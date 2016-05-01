@@ -45,7 +45,7 @@ import (
 )
 
 func init() {
-	registerGofigDefaults()
+	registerConfig()
 }
 
 // RegisterStorageDriver registers a new StorageDriver with the
@@ -75,7 +75,7 @@ If the config parameter is nil a default instance is created. The
 libStorage service is served at the address specified by the configuration
 property libstorage.host.
 */
-func Serve(config gofig.Config) (io.Closer, <-chan error) {
+func Serve(config gofig.Config) (io.Closer, error, <-chan error) {
 	return server.Serve(config)
 }
 
@@ -89,25 +89,12 @@ func Dial(config gofig.Config) (client.Client, error) {
 	return client.New(config)
 }
 
-func registerGofigDefaults() {
+func registerConfig() {
 	r := gofig.NewRegistration("libStorage")
 	r.Key(gofig.String, "", "", "", "libstorage.host")
 	r.Key(gofig.String, "", "", "", "libstorage.service")
-	r.Key(gofig.String, "", "", "", "libstorage.driver")
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.enabled")
 	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.client")
 	r.Key(gofig.String, "", "local=127.0.0.1", "", "libstorage.profiles.groups")
-
-	r.Key(gofig.Int, "", 60, "", "libstorage.server.readtimeout")
-	r.Key(gofig.Int, "", 60, "", "libstorage.server.writetimeout")
-	r.Key(gofig.Bool, "", false, "", "libstorage.server.http.logging.enabled")
-	r.Key(gofig.String, "", "", "", "libstorage.server.http.logging.out")
-	r.Key(gofig.String, "", "", "", "libstorage.server.http.logging.err")
-
-	r.Key(gofig.Bool, "",
-		false, "", "libstorage.server.http.logging.logrequest")
-	r.Key(gofig.Bool, "",
-		false, "", "libstorage.server.http.logging.logresponse")
-
 	gofig.Register(r)
 }

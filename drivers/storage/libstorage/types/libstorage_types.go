@@ -1,4 +1,4 @@
-package libstorage
+package types
 
 import (
 	apiclient "github.com/emccode/libstorage/api/client"

@@ -11,5 +11,5 @@ type Driver interface {
 	Name() string
 
 	// Init initializes the driver.
-	Init(config gofig.Config) error
+	Init(ctx Context, config gofig.Config) error
 }

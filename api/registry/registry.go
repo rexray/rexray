@@ -133,7 +133,7 @@ func NewStorageDriver(name string) (types.StorageDriver, error) {
 		return nil, goof.WithField("driver", name, "invalid driver name")
 	}
 
-	return ctor(), nil
+	return NewStorageDriverManager(ctor()), nil
 }
 
 // NewOSDriver returns a new instance of the driver specified by the
@@ -153,7 +153,7 @@ func NewOSDriver(name string) (types.OSDriver, error) {
 		return nil, goof.WithField("driver", name, "invalid driver name")
 	}
 
-	return ctor(), nil
+	return NewOSDriverManager(ctor()), nil
 }
 
 // NewIntegrationDriver returns a new instance of the driver specified by the
@@ -173,7 +173,7 @@ func NewIntegrationDriver(name string) (types.IntegrationDriver, error) {
 		return nil, goof.WithField("driver", name, "invalid driver name")
 	}
 
-	return ctor(), nil
+	return NewIntegrationDriverManager(ctor()), nil
 }
 
 // StorageExecutors returns a channel on which new instances of all registered

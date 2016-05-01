@@ -37,11 +37,20 @@ import (
 	_ "github.com/emccode/libstorage/imports/remote"
 )
 
+// IsNil returns a flag indicating whether a server returned by the Serve
+// function is nil.
+func IsNil(closer io.Closer) bool {
+	return closer == (*server)(nil)
+}
+
 // Run runs the server and blocks until a Kill signal is received by the
 // owner process or the server returns an error via its error channel.
 func Run(host string, tls bool, driversAndServices ...string) error {
-	_, _, errs := Start(host, tls, driversAndServices...)
-	err := <-errs
+	_, _, err, errs := Start(host, tls, driversAndServices...)
+	if err != nil {
+		return err
+	}
+	err = <-errs
 	return err
 }
 
@@ -49,7 +58,7 @@ func Run(host string, tls bool, driversAndServices ...string) error {
 // Kill signal is received by the owner process or the server returns an error
 // via its error channel.
 func Start(host string, tls bool, driversAndServices ...string) (
-	gofig.Config, io.Closer, <-chan error) {
+	gofig.Config, io.Closer, error, <-chan error) {
 
 	if runHost := os.Getenv("LIBSTORAGE_RUN_HOST"); runHost != "" {
 		host = runHost
@@ -66,14 +75,17 @@ func Start(host string, tls bool, driversAndServices ...string) (
 // and blocks until a Kill signal is received by the owner process or the
 // server returns an error via its error channel.
 func RunWithConfig(config gofig.Config) error {
-	_, errs := startWithConfig(config)
-	err := <-errs
+	_, err, errs := startWithConfig(config)
+	if err != nil {
+		return err
+	}
+	err = <-errs
 	return err
 }
 
 // StartWithConfig starts the server by specifying a configuration object and
 // returns a channel when errors occur runs until a Kill signal is received
 // by the owner process or the server returns an error via its error channel.
-func StartWithConfig(config gofig.Config) (io.Closer, <-chan error) {
+func StartWithConfig(config gofig.Config) (io.Closer, error, <-chan error) {
 	return startWithConfig(config)
 }

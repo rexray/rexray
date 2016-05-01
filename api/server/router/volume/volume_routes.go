@@ -2,6 +2,7 @@ package volume
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/akutz/goof"
 
@@ -347,12 +348,12 @@ func (r *router) volumeDetachAll(
 	store types.Store) error {
 
 	var (
-		taskIDs []int
-		tasks   = map[string]*types.Task{}
-		opts    = &types.VolumesOpts{Opts: store}
+		taskIDs  []int
+		tasks                           = map[string]*types.Task{}
+		opts                            = &types.VolumesOpts{Opts: store}
+		reply    types.ServiceVolumeMap = map[string]types.VolumeMap{}
+		replyRWL                        = &sync.Mutex{}
 	)
-
-	var reply types.ServiceVolumeMap = map[string]types.VolumeMap{}
 
 	for service := range services.StorageServices(ctx) {
 
@@ -379,6 +380,8 @@ func (r *router) volumeDetachAll(
 			var volumeMap types.VolumeMap = map[string]*types.Volume{}
 			defer func() {
 				if len(volumeMap) > 0 {
+					replyRWL.Lock()
+					defer replyRWL.Unlock()
 					reply[service.Name()] = volumeMap
 				}
 			}()

@@ -49,7 +49,7 @@ func newDriver() types.IntegrationDriver {
 	return &driver{}
 }
 
-func (d *driver) Init(config gofig.Config) error {
+func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 	return nil
 }

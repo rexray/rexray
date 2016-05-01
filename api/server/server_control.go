@@ -27,7 +27,7 @@ var (
 )
 
 func start(host string, tls bool, driversAndServices ...string) (
-	gofig.Config, io.Closer, <-chan error) {
+	gofig.Config, io.Closer, error, <-chan error) {
 
 	if host == "" {
 		portLock.Lock()
@@ -41,23 +41,27 @@ func start(host string, tls bool, driversAndServices ...string) (
 	}
 
 	config := NewConfig(host, tls, driversAndServices...)
-	server, errs := serve(config)
+	server, err, errs := serve(config)
 
-	if server != nil {
-		servers = append(servers, server)
+	if err != nil {
+		return nil, nil, err, nil
 	}
 
-	return config, server, errs
+	servers = append(servers, server)
+	return config, server, nil, errs
 }
 
-func startWithConfig(config gofig.Config) (io.Closer, <-chan error) {
-	server, errs := serve(config)
+func startWithConfig(config gofig.Config) (io.Closer, error, <-chan error) {
+	server, err, errs := serve(config)
+	if err != nil {
+		return nil, err, nil
+	}
 
 	if server != nil {
 		servers = append(servers, server)
 	}
 
-	return server, errs
+	return server, nil, errs
 }
 
 type server struct {
@@ -92,20 +96,25 @@ func newServer(config gofig.Config) (*server, error) {
 		}
 	}
 
+	ctx := context.Background().WithConfig(config)
+
 	s := &server{
 		name:         randomServerName(),
-		ctx:          context.Background(),
+		ctx:          ctx,
 		config:       config,
 		closeSignal:  make(chan int),
 		closedSignal: make(chan int),
 		closeOnce:    &sync.Once{},
 	}
 
-	s.ctx = s.ctx.WithContextSID(types.CtxKeyServerName, s.name)
-	s.ctx = s.ctx.WithValue(types.CtxKeyServerName, s.name)
+	s.ctx = s.ctx.WithContextSID(
+		types.ContextServerName, s.name,
+	).WithValue(
+		types.ContextServerName, s.name,
+	)
 	s.ctx.Info("initializing server")
 
-	if err := s.initEndpoints(); err != nil {
+	if err := s.initEndpoints(s.ctx); err != nil {
 		return nil, err
 	}
 	s.ctx.Info("initialized endpoints")
@@ -115,18 +124,14 @@ func newServer(config gofig.Config) (*server, error) {
 	}
 	s.ctx.Info("initialized services")
 
-	s.logHTTPEnabled = config.GetBool("libstorage.server.http.logging.enabled")
-	if s.logHTTPEnabled {
-
-		s.logHTTPRequests = config.GetBool(
-			"libstorage.server.http.logging.logrequest")
-		s.logHTTPResponses = config.GetBool(
-			"libstorage.server.http.logging.logresponse")
-
-		s.stdOut = getLogIO(
-			"libstorage.server.http.logging.out", config)
-		s.stdErr = getLogIO(
-			"libstorage.server.http.logging.err", config)
+	logHTTPReq := config.GetBool(types.ConfigLogHTTPRequests)
+	logHTTPRes := config.GetBool(types.ConfigLogHTTPResponses)
+	if logHTTPReq || logHTTPRes {
+		s.logHTTPEnabled = true
+		s.logHTTPRequests = logHTTPReq
+		s.logHTTPResponses = logHTTPRes
+		s.stdOut = getLogIO(types.ConfigLogStdout, config)
+		s.stdErr = getLogIO(types.ConfigLogStderr, config)
 	}
 
 	s.initGlobalMiddleware()
@@ -142,27 +147,22 @@ func newServer(config gofig.Config) (*server, error) {
 // returns a channel on which errors are received. Reading this channel is
 // also the prescribed manner for clients wishing to block until the server is
 // shutdown as the error channel will be closed when the server is stopped.
-func Serve(config gofig.Config) (io.Closer, <-chan error) {
+func Serve(config gofig.Config) (io.Closer, error, <-chan error) {
 	return serve(config)
 }
-func serve(config gofig.Config) (*server, <-chan error) {
+func serve(config gofig.Config) (*server, error, <-chan error) {
 	s, err := newServer(config)
 	if err != nil {
-		errs := make(chan error)
-		go func() {
-			errs <- err
-			close(errs)
-		}()
-		return nil, errs
+		return nil, err, nil
 	}
 
 	errs := make(chan error, len(s.servers))
 	srvErrs := make(chan error, len(s.servers))
 
 	for _, srv := range s.servers {
-		srv.srv.Handler = s.createMux(srv.Context())
+		srv.srv.Handler = s.createMux(srv.ctx)
 		go func(srv *HTTPServer) {
-			srv.Context().Info("api listening")
+			srv.ctx.Info("api listening")
 			if err := srv.Serve(); err != nil {
 				if !strings.Contains(
 					err.Error(), "use of closed network connection") {
@@ -193,7 +193,7 @@ func serve(config gofig.Config) (*server, <-chan error) {
 	<-timeout.C
 
 	s.ctx.Info("server started")
-	return s, errs
+	return s, nil, errs
 }
 
 // Close closes servers and thus stop receiving requests
@@ -213,15 +213,15 @@ func (s *server) close() error {
 	for _, srv := range s.servers {
 		srv.ctx.Info("shutting down endpoint")
 		if err := srv.Close(); err != nil {
-			srv.Context().Error(err)
+			srv.ctx.Error(err)
 		}
 		if srv.l.Addr().Network() == "unix" {
 			laddr := srv.l.Addr().String()
-			srv.Context().WithField(
+			srv.ctx.WithField(
 				"path", laddr).Debug("removed unix socket")
 			os.RemoveAll(laddr)
 		}
-		srv.Context().Debug("shutdown endpoint complete")
+		srv.ctx.Debug("shutdown endpoint complete")
 	}
 
 	if s.stdOut != nil {

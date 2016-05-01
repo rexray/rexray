@@ -1,17 +1,8 @@
 package types
 
-import (
-	"github.com/akutz/gofig"
-)
-
 // Service is the base type for services.
 type Service interface {
-
-	// Name gets the name of the service.
-	Name() string
-
-	// Init initializes the service.
-	Init(config gofig.Config) error
+	Driver
 }
 
 // Services is a service's container.

@@ -13,7 +13,8 @@ import (
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/api/utils/config"
 
-	// load the executors
+	// load the config and executors
+	_ "github.com/emccode/libstorage/imports/config"
 	_ "github.com/emccode/libstorage/imports/executors"
 )
 
@@ -40,6 +41,8 @@ func Run() {
 		printUsageAndExit()
 	}
 
+	ctx := context.Background()
+
 	d, err := registry.NewStorageExecutor(args[1])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -52,7 +55,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	if err := d.Init(config); err != nil {
+	if err := d.Init(ctx, config); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
@@ -63,7 +66,6 @@ func Run() {
 	}
 	cmd = strings.ToLower(cmd)
 
-	ctx := context.Background()
 	store := utils.NewStore()
 
 	var (

@@ -128,93 +128,98 @@ type ContextKey int
 
 // String returns the string-representation of the context key.
 func (ck ContextKey) String() string {
-	return ctxIDKeys[ck]
+	if v, ok := ctxIDKeys[ck]; ok {
+		return v
+	}
+	return ""
 }
 
 const (
 
-	// CtxKeyHTTPRequest is a context key.
-	CtxKeyHTTPRequest ContextKey = iota
+	// ContextHTTPRequest is a context key.
+	ContextHTTPRequest ContextKey = iota
 
-	// CtxKeyConfig is a context key.
-	CtxKeyConfig
+	// ContextConfig is a context key.
+	ContextConfig
 
-	// CtxKeyLogger is a context key.
-	CtxKeyLogger
+	// ContextLogger is a context key.
+	ContextLogger
 
-	// CtxKeyInstanceID is a context key.
-	CtxKeyInstanceID
+	// ContextInstanceID is a context key.
+	ContextInstanceID
 
-	// CtxKeyInstanceIDsByService is a context key.
-	CtxKeyInstanceIDsByService
+	// ContextInstanceIDsByService is a context key.
+	ContextInstanceIDsByService
 
-	// CtxKeyProfile is a context key.
-	CtxKeyProfile
+	// ContextProfile is a context key.
+	ContextProfile
 
-	// CtxKeyRoute is a context key.
-	CtxKeyRoute
+	// ContextRoute is a context key.
+	ContextRoute
 
-	// CtxKeyContextID is a context key.
-	CtxKeyContextID
+	// ContextContextID is a context key.
+	ContextContextID
 
-	// CtxKeyService is a context key.
-	CtxKeyService
+	// ContextService is a context key.
+	ContextService
 
-	// CtxKeyServiceName is a context key.
-	CtxKeyServiceName
+	// ContextServiceName is a context key.
+	ContextServiceName
 
-	// CtxKeyDriver is a context key.
-	CtxKeyDriver
+	// ContextDriver is a context key.
+	ContextDriver
 
-	// CtxKeyDriverName is a context key.
-	CtxKeyDriverName
+	// ContextDriverName is a context key.
+	ContextDriverName
 
-	// CtxKeyLocalDevices is a context key.
-	CtxKeyLocalDevices
+	// ContextLocalDevices is a context key.
+	ContextLocalDevices
 
-	// CtxKeyLocalDevicesByService is a context key.
-	CtxKeyLocalDevicesByService
+	// ContextLocalDevicesByService is a context key.
+	ContextLocalDevicesByService
 
-	// CtxKeyServerName is a context key.
-	CtxKeyServerName
+	// ContextServerName is a context key.
+	ContextServerName
 
-	// CtxKeyTransactionID is a context key.
-	CtxKeyTransactionID
+	// ContextTransactionID is a context key.
+	ContextTransactionID
 
-	// CtxKeyTransactionCreated is a context key.
-	CtxKeyTransactionCreated
+	// ContextTransactionCreated is a context key.
+	ContextTransactionCreated
 
-	// CtxKeyOSDriver is a context key.
-	CtxKeyOSDriver
+	// ContextOSDriver is a context key.
+	ContextOSDriver
 
-	// CtxKeyStorageDriver is a context key.
-	CtxKeyStorageDriver
+	// ContextStorageDriver is a context key.
+	ContextStorageDriver
 
-	// CtxKeyIntegrationDriver is a context key.
-	CtxKeyIntegrationDriver
+	// ContextIntegrationDriver is a context key.
+	ContextIntegrationDriver
+
+	// ContexUser is a context key.
+	ContextUser
+
+	// ContextHost is a context key.
+	ContextHost
 )
 
 var (
 	ctxIDKeys = map[ContextKey]string{
-		CtxKeyHTTPRequest:           "httpRequest",
-		CtxKeyConfig:                "config",
-		CtxKeyLogger:                "logger",
-		CtxKeyInstanceID:            "instanceID",
-		CtxKeyInstanceIDsByService:  "instanceIDsByService",
-		CtxKeyProfile:               "profile",
-		CtxKeyRoute:                 "route",
-		CtxKeyContextID:             "contextID",
-		CtxKeyService:               "service",
-		CtxKeyServiceName:           "serviceName",
-		CtxKeyDriver:                "driver",
-		CtxKeyDriverName:            "driverName",
-		CtxKeyLocalDevices:          "localDevices",
-		CtxKeyLocalDevicesByService: "localDevicesByService",
-		CtxKeyServerName:            "serverName",
-		CtxKeyTransactionID:         "txID",
-		CtxKeyTransactionCreated:    "txCR",
-		CtxKeyOSDriver:              "osDriver",
-		CtxKeyStorageDriver:         "storageDriver",
-		CtxKeyIntegrationDriver:     "integrationDriver",
+		ContextLogger:             "logger",
+		ContextInstanceID:         "instanceID",
+		ContextProfile:            "profile",
+		ContextRoute:              "route",
+		ContextService:            "service",
+		ContextServiceName:        "service",
+		ContextDriver:             "driver",
+		ContextDriverName:         "driver",
+		ContextServerName:         "server",
+		ContextTransactionID:      "txID",
+		ContextTransactionCreated: "txCR",
+		ContextOSDriver:           "osDriver",
+		ContextStorageDriver:      "storageDriver",
+		ContextIntegrationDriver:  "integrationDriver",
+		ContextUser:               "user",
+		ContextHost:               "host",
 	}
 )

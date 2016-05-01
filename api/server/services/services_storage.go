@@ -15,10 +15,10 @@ type storageService struct {
 	taskExecQueue chan *task
 }
 
-func (s *storageService) Init(config gofig.Config) error {
+func (s *storageService) Init(ctx types.Context, config gofig.Config) error {
 	s.config = config
 
-	if err := s.initStorageDriver(); err != nil {
+	if err := s.initStorageDriver(ctx); err != nil {
 		return err
 	}
 
@@ -31,13 +31,16 @@ func (s *storageService) Init(config gofig.Config) error {
 	return nil
 }
 
-func (s *storageService) initStorageDriver() error {
+func (s *storageService) initStorageDriver(ctx types.Context) error {
 	driverName := s.config.GetString("driver")
 	if driverName == "" {
 		driverName = s.config.GetString("libstorage.driver")
 		if driverName == "" {
-			return goof.WithField(
-				"service", s.name, "error getting driver name")
+			driverName = s.config.GetString("libstorage.storage.driver")
+			if driverName == "" {
+				return goof.WithField(
+					"service", s.name, "error getting driver name")
+			}
 		}
 	}
 
@@ -46,7 +49,7 @@ func (s *storageService) initStorageDriver() error {
 		return err
 	}
 
-	if err := driver.Init(s.config); err != nil {
+	if err := driver.Init(ctx, s.config); err != nil {
 		return err
 	}
 

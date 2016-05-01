@@ -26,13 +26,13 @@ func (c *Client) httpDo(
 		txIDUUID, _ := utils.NewUUID()
 		txID = txIDUUID.String()
 		ctx = ctx.WithTransactionID(txID).WithContextSID(
-			types.CtxKeyTransactionID, txID)
+			types.ContextTransactionID, txID)
 	}
 	txCR := ctx.TransactionCreated()
 	if txCR.IsZero() {
 		txCR = time.Now().UTC()
 		ctx = ctx.WithTransactionCreated(txCR).WithContextSID(
-			types.CtxKeyTransactionCreated,
+			types.ContextTransactionCreated,
 			fmt.Sprintf("%d", txCR.Unix()))
 	}
 

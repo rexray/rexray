@@ -2,10 +2,10 @@ package client
 
 import (
 	"github.com/emccode/libstorage/api/types"
-	libstor "github.com/emccode/libstorage/drivers/storage/libstorage"
+	lstypes "github.com/emccode/libstorage/drivers/storage/libstorage/types"
 )
 
-func (c *client) API() libstor.Client {
+func (c *client) API() lstypes.Client {
 	return c.lsc
 }
 

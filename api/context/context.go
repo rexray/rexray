@@ -102,42 +102,42 @@ func WithHTTPRequest(ctx types.Context, val *http.Request) types.Context {
 // WithInstanceIDsByService returns a context with the provided instance ID map.
 func WithInstanceIDsByService(
 	parent context.Context, val map[string]*types.InstanceID) types.Context {
-	return WithValue(parent, types.CtxKeyInstanceIDsByService, val)
+	return WithValue(parent, types.ContextInstanceIDsByService, val)
 }
 
 // WithInstanceID returns a context with the provided instance ID.
 func WithInstanceID(
 	parent context.Context, val *types.InstanceID) types.Context {
-	return WithValue(parent, types.CtxKeyInstanceID, val)
+	return WithValue(parent, types.ContextInstanceID, val)
 }
 
 // WithLocalDevicesByService returns a context with the provided service to
 //  instance ID map.
 func WithLocalDevicesByService(
 	parent context.Context, val map[string]map[string]string) types.Context {
-	return WithValue(parent, types.CtxKeyLocalDevicesByService, val)
+	return WithValue(parent, types.ContextLocalDevicesByService, val)
 }
 
 // WithLocalDevices returns a context with the provided local devices map.
 func WithLocalDevices(
 	parent context.Context, val map[string]string) types.Context {
-	return WithValue(parent, types.CtxKeyLocalDevices, val)
+	return WithValue(parent, types.ContextLocalDevices, val)
 }
 
 // WithProfile returns a context with the provided profile.
 func WithProfile(
 	parent context.Context, val string) types.Context {
-	return WithValue(parent, types.CtxKeyProfile, val)
+	return WithValue(parent, types.ContextProfile, val)
 }
 
 // WithRoute returns a contex with the provided route name.
 func WithRoute(parent context.Context, val string) types.Context {
-	return WithValue(parent, types.CtxKeyRoute, val)
+	return WithValue(parent, types.ContextRoute, val)
 }
 
 // WithServiceName returns a contex with the provided service name.
 func WithServiceName(parent context.Context, val string) types.Context {
-	return WithValue(parent, types.CtxKeyServiceName, val)
+	return WithValue(parent, types.ContextServiceName, val)
 }
 
 // WithContextID returns a context with the provided context ID information.
@@ -148,13 +148,13 @@ func WithContextID(
 
 	contextID := map[string]string{id: val}
 	parentContextID, ok := parent.Value(
-		types.CtxKeyContextID).(map[string]string)
+		types.ContextContextID).(map[string]string)
 	if ok {
 		for k, v := range parentContextID {
 			contextID[k] = v
 		}
 	}
-	return WithValue(parent, types.CtxKeyContextID, contextID)
+	return WithValue(parent, types.ContextContextID, contextID)
 }
 
 // WithContextSID is the same as the WithContextID function except this
@@ -166,33 +166,33 @@ func WithContextSID(
 
 // WithTransactionID returns a context with the provided transaction ID.
 func WithTransactionID(parent context.Context, val string) types.Context {
-	return WithValue(parent, types.CtxKeyTransactionID, val)
+	return WithValue(parent, types.ContextTransactionID, val)
 }
 
 // WithTransactionCreated returns a context with the provided transaction
 // created timestamp.
 func WithTransactionCreated(
 	parent context.Context, val time.Time) types.Context {
-	return WithValue(parent, types.CtxKeyTransactionCreated, val)
+	return WithValue(parent, types.ContextTransactionCreated, val)
 }
 
 // WithStorageDriver returns a context with the provided storage driver.
 func WithStorageDriver(
 	parent context.Context, val types.StorageDriver) types.Context {
-	return WithValue(parent, types.CtxKeyStorageDriver, val)
+	return WithValue(parent, types.ContextStorageDriver, val)
 }
 
 // WithOSDriver returns a context with the provided OS driver.
 func WithOSDriver(
 	parent context.Context, val types.OSDriver) types.Context {
-	return WithValue(parent, types.CtxKeyOSDriver, val)
+	return WithValue(parent, types.ContextOSDriver, val)
 }
 
 // WithIntegrationDriver sreturns a context with the provided integration
 // driver.
 func WithIntegrationDriver(
 	parent context.Context, val types.IntegrationDriver) types.Context {
-	return WithValue(parent, types.CtxKeyIntegrationDriver, val)
+	return WithValue(parent, types.ContextIntegrationDriver, val)
 }
 
 // WithValue returns a context with the provided value.
@@ -217,7 +217,7 @@ func value(
 
 // ServerName returns the context's server name.
 func ServerName(ctx context.Context) (string, error) {
-	val, key, err := value(ctx, types.CtxKeyServerName)
+	val, key, err := value(ctx, types.ContextServerName)
 	if err != nil {
 		return "", err
 	}
@@ -231,7 +231,7 @@ func ServerName(ctx context.Context) (string, error) {
 // InstanceIDsByService gets the context's service to instance IDs map.
 func InstanceIDsByService(
 	ctx context.Context) (map[string]*types.InstanceID, error) {
-	val, key, err := value(ctx, types.CtxKeyInstanceIDsByService)
+	val, key, err := value(ctx, types.ContextInstanceIDsByService)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func InstanceIDsByService(
 
 // InstanceID gets the context's instance ID.
 func InstanceID(ctx context.Context) (*types.InstanceID, error) {
-	val, key, err := value(ctx, types.CtxKeyInstanceID)
+	val, key, err := value(ctx, types.ContextInstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func InstanceID(ctx context.Context) (*types.InstanceID, error) {
 // LocalDevicesByService gets the context's service to local devices map.
 func LocalDevicesByService(
 	ctx context.Context) (map[string]map[string]string, error) {
-	val, key, err := value(ctx, types.CtxKeyLocalDevicesByService)
+	val, key, err := value(ctx, types.ContextLocalDevicesByService)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func LocalDevicesByService(
 
 // LocalDevices gets the context's local devices map.
 func LocalDevices(ctx context.Context) (tval map[string]string, err error) {
-	val, key, err := value(ctx, types.CtxKeyLocalDevices)
+	val, key, err := value(ctx, types.ContextLocalDevices)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func LocalDevices(ctx context.Context) (tval map[string]string, err error) {
 
 // Profile gets the context's profile.
 func Profile(ctx context.Context) (string, error) {
-	val, key, err := value(ctx, types.CtxKeyProfile)
+	val, key, err := value(ctx, types.ContextProfile)
 	if err != nil {
 		return "", err
 	}
@@ -302,7 +302,7 @@ func Profile(ctx context.Context) (string, error) {
 
 // Route gets the context's route name.
 func Route(ctx context.Context) (string, error) {
-	val, key, err := value(ctx, types.CtxKeyRoute)
+	val, key, err := value(ctx, types.ContextRoute)
 	if err != nil {
 		return "", err
 	}
@@ -316,7 +316,7 @@ func Route(ctx context.Context) (string, error) {
 
 // ServiceName returns the name of the context's service.
 func ServiceName(ctx context.Context) (string, error) {
-	val, key, err := value(ctx, types.CtxKeyServiceName)
+	val, key, err := value(ctx, types.ContextServiceName)
 	if err != nil {
 		return "", err
 	}
@@ -330,7 +330,7 @@ func ServiceName(ctx context.Context) (string, error) {
 
 // TransactionID gets the context's transaction ID.
 func TransactionID(ctx context.Context) (string, error) {
-	val, key, err := value(ctx, types.CtxKeyTransactionID)
+	val, key, err := value(ctx, types.ContextTransactionID)
 	if err != nil {
 		return "", err
 	}
@@ -344,7 +344,7 @@ func TransactionID(ctx context.Context) (string, error) {
 
 // TransactionCreated gets the context's transaction created timstamp.
 func TransactionCreated(ctx context.Context) (time.Time, error) {
-	val, key, err := value(ctx, types.CtxKeyTransactionCreated)
+	val, key, err := value(ctx, types.ContextTransactionCreated)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -358,7 +358,7 @@ func TransactionCreated(ctx context.Context) (time.Time, error) {
 
 // HTTPRequest returns the *http.Request associated with ctx using NewContext.
 func HTTPRequest(ctx context.Context) *http.Request {
-	val, _, err := value(ctx, types.CtxKeyHTTPRequest)
+	val, _, err := value(ctx, types.ContextHTTPRequest)
 	if err != nil {
 		return nil
 	}
@@ -370,7 +370,7 @@ func HTTPRequest(ctx context.Context) *http.Request {
 
 // Configs returns the gofig.Config associated with ctx usinng NewContext.
 func Config(ctx context.Context) gofig.Config {
-	val, _, err := value(ctx, types.CtxKeyConfig)
+	val, _, err := value(ctx, types.ContextConfig)
 	if err != nil {
 		return nil
 	}
@@ -382,7 +382,7 @@ func Config(ctx context.Context) gofig.Config {
 
 // OSDriver returns this context's OS driver.
 func OSDriver(ctx context.Context) (types.OSDriver, error) {
-	val, key, err := value(ctx, types.CtxKeyOSDriver)
+	val, key, err := value(ctx, types.ContextOSDriver)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +396,7 @@ func OSDriver(ctx context.Context) (types.OSDriver, error) {
 
 // StorageDriver returns this context's storage driver.
 func StorageDriver(ctx context.Context) (types.StorageDriver, error) {
-	val, key, err := value(ctx, types.CtxKeyStorageDriver)
+	val, key, err := value(ctx, types.ContextStorageDriver)
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +410,7 @@ func StorageDriver(ctx context.Context) (types.StorageDriver, error) {
 
 // IntegrationDriver returns this context's integration driver.
 func IntegrationDriver(ctx context.Context) (types.IntegrationDriver, error) {
-	val, key, err := value(ctx, types.CtxKeyIntegrationDriver)
+	val, key, err := value(ctx, types.ContextIntegrationDriver)
 	if err != nil {
 		return nil, err
 	}
@@ -429,11 +429,11 @@ func (ctx *lsc) Value(key interface{}) interface{} {
 	var val interface{}
 
 	switch key {
-	case types.CtxKeyHTTPRequest:
+	case types.ContextHTTPRequest:
 		val = ctx.req
-	case types.CtxKeyConfig:
+	case types.ContextConfig:
 		val = ctx.Config
-	case types.CtxKeyLogger:
+	case types.ContextLogger:
 		val = ctx.Logger
 	case ctx.req != nil:
 		if reqVal, ok := gcontext.GetOk(ctx.req, key); ok {
@@ -636,7 +636,7 @@ type fieldFormatter struct {
 }
 
 func (f *fieldFormatter) Format(entry *log.Entry) ([]byte, error) {
-	contextID, ok := f.ctx.Value(types.CtxKeyContextID).(map[string]string)
+	contextID, ok := f.ctx.Value(types.ContextContextID).(map[string]string)
 	if !ok {
 		return f.f.Format(entry)
 	}

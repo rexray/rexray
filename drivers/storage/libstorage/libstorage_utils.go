@@ -37,12 +37,12 @@ func withTX(ctx types.Context) types.Context {
 	txID := txIDUUID.String()
 
 	ctx = ctx.WithTransactionID(txID)
-	ctx = ctx.WithContextSID(types.CtxKeyTransactionID, txID)
+	ctx = ctx.WithContextSID(types.ContextTransactionID, txID)
 
 	txCR := time.Now().UTC()
 	ctx = ctx.WithTransactionCreated(txCR)
 	ctx = ctx.WithContextSID(
-		types.CtxKeyTransactionCreated,
+		types.ContextTransactionCreated,
 		fmt.Sprintf("%d", txCR.Unix()))
 
 	return ctx

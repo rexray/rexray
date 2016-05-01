@@ -34,7 +34,7 @@ import (
 func TestMain(m *testing.M) {
 	server.CloseOnAbort()
 	ec := m.Run()
-	removeTestDirs()
+	//removeTestDirs()
 	os.Exit(ec)
 }
 
@@ -352,6 +352,9 @@ func TestVolumeAttach(t *testing.T) {
 		reply, err := client.API().VolumeAttach(
 			nil, vfs.Name, "vfs-002", request)
 		assert.NoError(t, err)
+		if reply == nil {
+			t.FailNow()
+		}
 		assert.Equal(t, "vfs-002", reply.ID)
 		assert.Equal(t, "/dev/xvdc", reply.Attachments[0].DeviceName)
 

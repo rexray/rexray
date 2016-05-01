@@ -21,8 +21,9 @@ import (
 	"github.com/emccode/libstorage/api/utils"
 )
 
-func (s *server) initEndpoints() error {
-	endpointsObj := s.config.Get("libstorage.server.endpoints")
+func (s *server) initEndpoints(ctx types.Context) error {
+
+	endpointsObj := s.config.Get(types.ConfigEndpoints)
 	if endpointsObj == nil {
 		return goof.New("no endpoints defined")
 	}
@@ -34,8 +35,10 @@ func (s *server) initEndpoints() error {
 
 	for endpointName := range endpoints {
 
-		endpoint := fmt.Sprintf("libstorage.server.endpoints.%s", endpointName)
+		endpoint := fmt.Sprintf("%s.%s", types.ConfigEndpoints, endpointName)
 		address := fmt.Sprintf("%s.address", endpoint)
+		s.ctx.WithFields(log.Fields{
+			"endpoint": endpoint, "address": address}).Debug("endpoing info")
 
 		laddr := s.config.GetString(address)
 		if laddr == "" {
@@ -58,14 +61,14 @@ func (s *server) initEndpoints() error {
 			return err
 		}
 
-		log.WithFields(logFields).Info("configured endpoint")
+		ctx.WithFields(logFields).Info("configured endpoint")
 
 		srv, err := s.newHTTPServer(proto, addr, tlsConfig)
 		if err != nil {
 			return err
 		}
 
-		srv.Context().Log().Info("server created")
+		ctx.Info("server created")
 		s.servers = append(s.servers, srv)
 	}
 
@@ -100,18 +103,22 @@ func (s *server) makeHTTPHandler(
 
 		w.Header().Set(types.ServerNameHeader, s.name)
 
-		fctx := context.NewContext(ctx, s.config, req)
-		fctx = ctx.WithContextID("route", route.GetName())
-		fctx = ctx.WithRoute(route.GetName())
+		fctx := context.NewContext(
+			ctx, s.config, req,
+		).WithContextSID(
+			types.ContextRoute, route.GetName(),
+		).WithRoute(
+			route.GetName(),
+		)
 
 		if req.TLS != nil {
 			if len(req.TLS.PeerCertificates) > 0 {
-				fctx = ctx.WithContextID("user",
+				fctx = ctx.WithContextSID(types.ContextUser,
 					req.TLS.PeerCertificates[0].Subject.CommonName)
 			}
 		}
 
-		ctx.Debug("http request")
+		fctx.Debug("http request")
 
 		vars := mux.Vars(req)
 		if vars == nil {
@@ -215,9 +222,7 @@ func (s *HTTPServer) Context() types.Context {
 	return s.ctx
 }
 
-func getLogIO(
-	propName string,
-	config gofig.Config) io.WriteCloser {
+func getLogIO(propName string, config gofig.Config) io.WriteCloser {
 
 	if path := config.GetString(propName); path != "" {
 		logio, err := os.OpenFile(

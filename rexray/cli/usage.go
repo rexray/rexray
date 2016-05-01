@@ -40,7 +40,6 @@ func (c *CLI) initUsageTemplates() {
 		"hf":    hasFlags,
 		"lf":    c.localFlags,
 		"gf":    c.globalFlags,
-		"df":    c.driverFlags,
 		"ihf":   isHelpFlag,
 		"ivf":   isVerboseFlag,
 		"saf":   c.sansAdditionalFlags,
@@ -80,27 +79,13 @@ func (c *CLI) globalFlags(cmd *cobra.Command) *flag.FlagSet {
 	} else {
 		fs.AddFlagSet(cmd.PersistentFlags())
 	}
-	return c.sansDriverFlags(c.sansAdditionalFlags(fs))
-}
-
-func (c *CLI) driverFlags() *flag.FlagSet {
-	return c.r.Config.FlagSets()["Driver Flags"]
+	return c.sansAdditionalFlags(fs)
 }
 
 func (c *CLI) sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
 	fs := &flag.FlagSet{}
 	flags.VisitAll(func(f *flag.Flag) {
 		if c.additionalFlags().Lookup(f.Name) == nil {
-			fs.AddFlag(f)
-		}
-	})
-	return fs
-}
-
-func (c *CLI) sansDriverFlags(flags *flag.FlagSet) *flag.FlagSet {
-	fs := &flag.FlagSet{}
-	flags.VisitAll(func(f *flag.Flag) {
-		if c.driverFlags().Lookup(f.Name) == nil {
 			fs.AddFlag(f)
 		}
 	})
@@ -121,10 +106,11 @@ func (c *CLI) additionalFlags() *flag.FlagSet {
 
 func (c *CLI) additionalFlagSets() map[string]*flag.FlagSet {
 	afs := map[string]*flag.FlagSet{}
-	for fsn, fs := range c.r.Config.FlagSets() {
-		if fsn == "Global Flags" || fsn == "Driver Flags" {
+	for fsn, fs := range c.config.FlagSets() {
+		if fsn == "Global Flags" || !fs.HasFlags() {
 			continue
 		}
+
 		afs[fsn] = fs
 	}
 	return afs
@@ -183,10 +169,7 @@ Flags:
 {{$lf.FlagUsages | rtrim}}{{end}}{{$gf := gf $cmd}}{{if hf $gf}}
 
 Global Flags:
-{{$gf.FlagUsages | rtrim}}{{end}}{{if ivf $cmd}}{{$df := df}}{{if hf $df}}
-
-Driver Flags:
-{{$df.FlagUsages | rtrim}}{{end}}
+{{$gf.FlagUsages | rtrim}}{{end}}{{if ivf $cmd}}
 {{range $fn, $fs := afs}}
 {{$fn}}
 {{$fs.FlagUsages | rtrim}}

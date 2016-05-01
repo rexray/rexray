@@ -28,7 +28,7 @@ func (c *CLI) initOtherCmds() {
 		Use:   "env",
 		Short: "Print the REX-Ray environment",
 		Run: func(cmd *cobra.Command, args []string) {
-			evs := c.r.Config.EnvVars()
+			evs := c.config.EnvVars()
 			for _, ev := range evs {
 				fmt.Println(ev)
 			}
@@ -64,9 +64,11 @@ func (c *CLI) initOtherFlags() {
 		"The path to a custom REX-Ray configuration file")
 	c.c.PersistentFlags().BoolP(
 		"verbose", "v", false, "Print verbose help information")
+	c.c.PersistentFlags().StringVarP(&c.service, "service", "s", "vfs",
+		"The name of the libStorage service")
 
 	// add the flag sets
-	for _, fs := range c.r.Config.FlagSets() {
+	for _, fs := range c.config.FlagSets() {
 		c.c.PersistentFlags().AddFlagSet(fs)
 	}
 

@@ -1,3 +1,5 @@
+// +build ignore
+
 package cli
 
 import (
@@ -6,10 +8,6 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-
-	_ "github.com/emccode/rexray/drivers"
-
-	"github.com/emccode/rexray/drivers/mock"
 )
 
 var defaultFlags = []string{

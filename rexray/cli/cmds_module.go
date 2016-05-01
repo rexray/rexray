@@ -113,7 +113,7 @@ func (c *CLI) initModuleCmds() {
 			modInstStartStr := fmt.Sprintf("%v", c.moduleInstanceStart)
 
 			u := fmt.Sprintf("http://%s/r/module/instances", addr)
-			cfgJSON, cfgJSONErr := c.r.Config.ToJSON()
+			cfgJSON, cfgJSONErr := c.config.ToJSON()
 
 			if cfgJSONErr != nil {
 				panic(cfgJSONErr)

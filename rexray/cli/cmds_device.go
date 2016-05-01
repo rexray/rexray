@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
+	apitypes "github.com/emccode/libstorage/api/types"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +33,8 @@ func (c *CLI) initDeviceCmds() {
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
 
-			mounts, err := c.r.OS.GetMounts(c.deviceName, c.mountPoint)
+			mounts, err := c.r.OS().Mounts(
+				c.ctx, c.deviceName, c.mountPoint, store())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -55,8 +57,12 @@ func (c *CLI) initDeviceCmds() {
 			}
 
 			// mountOptions = fmt.Sprintf("val,%s", mountOptions)
-			err := c.r.OS.Mount(
-				c.deviceName, c.mountPoint, c.mountOptions, c.mountLabel)
+			err := c.r.OS().Mount(
+				c.ctx, c.deviceName, c.mountPoint,
+				&apitypes.DeviceMountOpts{
+					MountOptions: c.mountOptions,
+					MountLabel:   c.mountLabel,
+				})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -73,7 +79,7 @@ func (c *CLI) initDeviceCmds() {
 				log.Fatal("Missing --mountpoint")
 			}
 
-			err := c.r.OS.Unmount(c.mountPoint)
+			err := c.r.OS().Unmount(c.ctx, c.mountPoint, store())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -94,7 +100,12 @@ func (c *CLI) initDeviceCmds() {
 				c.fsType = "ext4"
 			}
 
-			err := c.r.OS.Format(c.deviceName, c.fsType, c.overwriteFs)
+			err := c.r.OS().Format(
+				c.ctx, c.deviceName,
+				&apitypes.DeviceFormatOpts{
+					NewFSType:   c.fsType,
+					OverwriteFS: c.overwriteFs,
+				})
 			if err != nil {
 				log.Fatal(err)
 			}

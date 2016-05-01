@@ -1,11 +1,6 @@
 package cli
 
-import (
-	"fmt"
-
-	log "github.com/Sirupsen/logrus"
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 func (c *CLI) initAdapterCmdsAndFlags() {
 	c.initAdapterCmds()
@@ -31,9 +26,9 @@ func (c *CLI) initAdapterCmds() {
 		Short:   "List the available adapter types",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-			for n := range c.r.DriverNames() {
-				fmt.Printf("Storage Driver: %v\n", n)
-			}
+			//for n := range c.r.DriverNames() {
+			//	fmt.Printf("Storage Driver: %v\n", n)
+			//}
 		},
 	}
 	c.adapterCmd.AddCommand(c.adapterGetTypesCmd)
@@ -43,7 +38,7 @@ func (c *CLI) initAdapterCmds() {
 		Short: "List the configured adapter instances",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			allInstances, err := c.r.Storage.GetInstances()
+			/*allInstances, err := c.r.Storage.GetInstances()
 			if err != nil {
 				panic(err)
 			}
@@ -54,7 +49,7 @@ func (c *CLI) initAdapterCmds() {
 					log.Fatal(err)
 				}
 				fmt.Println(out)
-			}
+			}*/
 		},
 	}
 	c.adapterCmd.AddCommand(c.adapterGetInstancesCmd)

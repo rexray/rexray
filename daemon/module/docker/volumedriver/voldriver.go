@@ -13,10 +13,14 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage/api/context"
+	apitypes "github.com/emccode/libstorage/api/types"
+	apiutils "github.com/emccode/libstorage/api/utils"
+	apiclient "github.com/emccode/libstorage/client"
 
-	"github.com/emccode/rexray/core"
 	"github.com/emccode/rexray/daemon/module"
 )
 
@@ -25,10 +29,12 @@ const (
 )
 
 type mod struct {
-	r    *core.RexRay
-	name string
-	addr string
-	desc string
+	lsc    apiclient.Client
+	ctx    apitypes.Context
+	config gofig.Config
+	name   string
+	addr   string
+	desc   string
 }
 
 var (
@@ -65,14 +71,18 @@ func newModule(c *module.Config) (module.Module, error) {
 		cc.Set("rexray.volume.path.cache", true)
 	}
 
-	r := core.New(cc)
-	r.Context = c.Name
+	ctx := context.Background().WithContextID(
+		"module", c.Name,
+	).WithServiceName(
+		cc.GetString("libstorage.service"),
+	)
 
 	return &mod{
-		r:    r,
-		name: c.Name,
-		desc: c.Description,
-		addr: host,
+		ctx:    ctx,
+		config: cc,
+		name:   c.Name,
+		desc:   c.Description,
+		addr:   host,
 	}, nil
 }
 
@@ -93,11 +103,17 @@ var (
 )
 
 type pluginRequest struct {
-	Name string          `json:"Name,omitempty"`
-	Opts core.VolumeOpts `json:"Opts,omitempty"`
+	Name string            `json:"Name,omitempty"`
+	Opts map[string]string `json:"Opts,omitempty"`
 }
 
 func (m *mod) Start() error {
+
+	lsc, err := apiclient.New(m.config)
+	if err != nil {
+		return err
+	}
+	m.lsc = lsc
 
 	proto, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {
@@ -119,13 +135,6 @@ func (m *mod) Start() error {
 	}
 	if !isProtoValid {
 		return goof.WithField("protocol", proto, "invalid protocol")
-	}
-
-	if err := m.r.InitDrivers(); err != nil {
-		return goof.WithFieldsE(goof.Fields{
-			"m":   m,
-			"m.r": m.r,
-		}, "error initializing drivers", err)
 	}
 
 	if err := os.MkdirAll("/etc/docker/plugins", 0755); err != nil {
@@ -179,7 +188,7 @@ func (m *mod) Start() error {
 		}
 	}()
 
-	spec := m.r.Config.GetString("spec")
+	spec := m.config.GetString("spec")
 	if spec == "" {
 		if m.name == "default-docker" {
 			spec = "/etc/docker/plugins/rexray.spec"
@@ -233,7 +242,18 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		err := m.r.Volume.Create(pr.Name, pr.Opts)
+		store := apiutils.NewStoreWithVars(pr.Opts)
+		_, err := m.lsc.Integration().Create(
+			m.ctx,
+			pr.Name,
+			&apitypes.VolumeCreateOpts{
+				AvailabilityZone: store.GetStringPtr("availabilityZone"),
+				IOPS:             store.GetInt64Ptr("iops"),
+				Size:             store.GetInt64Ptr("size"),
+				Type:             store.GetStringPtr("type"),
+				Opts:             store,
+			})
+
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err.Error()).Error("/VolumeDriver.Create: error creating volume")
@@ -253,7 +273,8 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		err := m.r.Volume.Remove(pr.Name)
+		// TODO We need the service name
+		err := m.lsc.Integration().Remove(m.ctx, pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err.Error()).Error("/VolumeDriver.Remove: error removing volume")
@@ -273,7 +294,8 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		mountPath, err := m.r.Volume.Path(pr.Name, "")
+		mountPath, err := m.lsc.Integration().Path(
+			m.ctx, "", pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err.Error()).Error("/VolumeDriver.Path: error returning path")
@@ -293,7 +315,8 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		mountPath, err := m.r.Volume.Mount(pr.Name, "", false, "", false)
+		mountPath, _, err := m.lsc.Integration().Mount(
+			m.ctx, "", pr.Name, &apitypes.VolumeMountOpts{})
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err.Error()).Error("/VolumeDriver.Mount: error mounting volume")
@@ -313,7 +336,8 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		err := m.r.Volume.Unmount(pr.Name, "")
+		err := m.lsc.Integration().Unmount(
+			m.ctx, "", pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err.Error()).Error("/VolumeDriver.Unmount: error unmounting volume")
@@ -333,7 +357,8 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		vol, err := m.r.Volume.Get(pr.Name)
+		volMapping, err := m.lsc.Integration().Inspect(
+			m.ctx, pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err.Error()).Error("/VolumeDriver.Get: error getting volume")
@@ -341,8 +366,11 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
-		json.NewEncoder(w).Encode(map[string]core.VolumeMap{"Volume": vol})
+		w.Header().Set(
+			"Content-Type", "application/vnd.docker.plugins.v1.2+json")
+		json.NewEncoder(w).Encode(map[string]apitypes.VolumeMapping{
+			"Volume": volMapping,
+		})
 	})
 
 	mux.HandleFunc("/VolumeDriver.List", func(w http.ResponseWriter, r *http.Request) {
@@ -353,7 +381,7 @@ func (m *mod) buildMux() *http.ServeMux {
 			return
 		}
 
-		volList, err := m.r.Volume.List()
+		volMappings, err := m.lsc.Integration().List(m.ctx, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			log.WithField("error", err.Error()).Error("/VolumeDriver.List: error listing volumes")
@@ -362,7 +390,8 @@ func (m *mod) buildMux() *http.ServeMux {
 		}
 
 		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
-		json.NewEncoder(w).Encode(map[string][]core.VolumeMap{"Volumes": volList})
+		json.NewEncoder(w).Encode(
+			map[string][]apitypes.VolumeMapping{"Volumes": volMappings})
 	})
 
 	return mux

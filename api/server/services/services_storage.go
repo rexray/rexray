@@ -43,7 +43,8 @@ func (s *storageService) initStorageDriver(ctx types.Context) error {
 			}
 		}
 	}
-
+	ctx = ctx.WithContextSID(types.ContextDriverName, driverName)
+	ctx.Debug("got driver name")
 	driver, err := registry.NewStorageDriver(driverName)
 	if err != nil {
 		return err

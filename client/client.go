@@ -42,6 +42,10 @@ func New(config gofig.Config) (Client, error) {
 
 	ctx := context.Background().WithConfig(config)
 
+	if config.IsSet(types.ConfigService) {
+		ctx = ctx.WithServiceName(config.GetString(types.ConfigService))
+	}
+
 	osDriverName := ctx.GetString(types.ConfigOSDriver)
 	od, err := registry.NewOSDriver(osDriverName)
 	if err != nil {

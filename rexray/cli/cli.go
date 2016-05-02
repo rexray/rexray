@@ -319,6 +319,10 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	c.updateLogLevel()
 
+	if !c.config.IsSet("docker.mountDirPath") {
+		c.config.Set("docker.mountDirPath", util.LibFilePath("volumes"))
+	}
+
 	c.config = c.config.Scope("rexray.modules.default-docker")
 
 	if isHelpFlag(cmd) {
@@ -346,6 +350,10 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		if c.runAsync {
 			c.ctx = c.ctx.WithValue("async", true)
 		}
+		if !c.config.IsSet("docker.mountDirPath") {
+			c.config.Set("docker.mountDirPath", util.LibFilePath("volumes"))
+		}
+
 		r, rs, err, _ := libstorage.New(c.config.Scope("rexray"))
 		if err == nil {
 			c.r = r

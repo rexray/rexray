@@ -34,6 +34,8 @@ has a minimal set of dependencies in order to avoid a large, runtime footprint.
 package libstorage
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/akutz/gofig"
@@ -41,6 +43,7 @@ import (
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/client"
 )
 
@@ -89,6 +92,41 @@ func Dial(config gofig.Config) (client.Client, error) {
 	return client.New(config)
 }
 
+// New returns a new libStorage client like the `Dial` function, but with
+// one difference. If the `libstorag.host` key is not present in the provided
+// configuration instance, a new server will be automatically started and
+// returned.
+//
+// While a new server may be launched, it's still up to the caller to provide
+// a config instance with the correct properties to specify service
+// information for a libStorage server.
+func New(config gofig.Config) (client.Client, io.Closer, error, <-chan error) {
+
+	var (
+		c    client.Client
+		s    io.Closer
+		err  error
+		errs <-chan error
+	)
+
+	if !config.IsSet("libstorage.host") {
+		addr := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+		yaml := []byte(fmt.Sprintf(embeddedHostPatt, addr))
+		if err := config.ReadConfig(bytes.NewReader(yaml)); err != nil {
+			return nil, nil, err, nil
+		}
+		if s, err, errs = Serve(config); err != nil {
+			return nil, nil, err, nil
+		}
+	}
+
+	if c, err = Dial(config); err != nil {
+		return nil, nil, err, nil
+	}
+
+	return c, s, nil, errs
+}
+
 func registerConfig() {
 	r := gofig.NewRegistration("libStorage")
 	r.Key(gofig.String, "", "", "", "libstorage.host")
@@ -98,3 +136,10 @@ func registerConfig() {
 	r.Key(gofig.String, "", "local=127.0.0.1", "", "libstorage.profiles.groups")
 	gofig.Register(r)
 }
+
+const embeddedHostPatt = `libstorage:
+  host: %[1]s
+  server:
+    endpoints:
+      localhost:
+        address: %[1]s`

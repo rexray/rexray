@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"strconv"
@@ -21,6 +20,7 @@ import (
 
 	apiserver "github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/server/executors"
+	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/client"
 )
 
@@ -357,8 +357,8 @@ func (th *testHarness) closeServers(t *testing.T) {
 func initTestConfigs(config map[string]interface{}) {
 	tcpHost := fmt.Sprintf("tcp://127.0.0.1:%d", gotil.RandomTCPPort())
 	tcpTLSHost := fmt.Sprintf("tcp://127.0.0.1:%d", gotil.RandomTCPPort())
-	unixHost := fmt.Sprintf("unix://%s", getTempSockFile())
-	unixTLSHost := fmt.Sprintf("unix://%s", getTempSockFile())
+	unixHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+	unixTLSHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
 
 	clientTLSConfig := func() map[string]interface{} {
 		return map[string]interface{}{
@@ -441,16 +441,6 @@ func initTestConfigs(config map[string]interface{}) {
 			},
 		},
 	}
-}
-
-func getTempSockFile() string {
-	f, err := ioutil.TempFile("", "")
-	if err != nil {
-		panic(err)
-	}
-	name := f.Name()
-	os.RemoveAll(name)
-	return fmt.Sprintf("%s.sock", name)
 }
 
 // LogAsJSON logs the object as JSON using the test logger.

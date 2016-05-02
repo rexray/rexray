@@ -64,3 +64,9 @@ func NewBatchProcessErr(completed interface{}, err error) error {
 	return &types.ErrBatchProcess{Goof: goof.WithFieldE(
 		"completed", completed, "batch processing error", err)}
 }
+
+// NewBadFilterErr returns a new ErrBadFilter error.
+func NewBadFilterErr(filter string, err error) error {
+	return &types.ErrBadFilter{Goof: goof.WithFieldE(
+		"filter", filter, "bad filter", err)}
+}

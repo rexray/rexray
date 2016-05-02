@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v1"
 
+	"github.com/emccode/libstorage"
 	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
@@ -36,6 +38,7 @@ type subCommandPanic struct{}
 type CLI struct {
 	l      *log.Logger
 	r      apiclient.Client
+	rs     io.Closer
 	c      *cobra.Command
 	config gofig.Config
 	ctx    apitypes.Context
@@ -220,10 +223,12 @@ func ExecuteWithArgs(a ...string) {
 func (c *CLI) Execute() {
 	defer func() {
 		r := recover()
-		if r == nil {
-			return
+		if c.rs != nil {
+			c.rs.Close()
 		}
 		switch r := r.(type) {
+		case nil:
+			return
 		case int:
 			log.Debugf("exiting with error code %d", r)
 			os.Exit(r)
@@ -235,6 +240,9 @@ func (c *CLI) Execute() {
 		}
 	}()
 	c.execute()
+	if c.rs != nil {
+		c.rs.Close()
+	}
 }
 
 func (c *CLI) execute() {
@@ -336,9 +344,10 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		if c.runAsync {
 			c.ctx = c.ctx.WithValue("async", true)
 		}
-		r, err := apiclient.New(c.config)
+		r, rs, err, _ := libstorage.New(c.config.Scope("rexray"))
 		if err == nil {
 			c.r = r
+			c.rs = rs
 		} else {
 			if term.IsTerminal() {
 				printColorizedError(err)

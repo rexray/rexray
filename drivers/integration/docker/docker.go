@@ -7,10 +7,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
+	"strconv"
+	"time"
 )
 
 const (
@@ -19,13 +20,8 @@ const (
 )
 
 type driver struct {
-	config       gofig.Config
-	mountDirPath string
+	config gofig.Config
 }
-
-var (
-	mountDirectoryPath string
-)
 
 type volumeMapping struct {
 	Name             string `json:"Name"`
@@ -66,11 +62,10 @@ func (d *driver) List(
 	vols, err := ctx.Client().Storage().Volumes(
 		ctx,
 		&types.VolumesOpts{
-			Attachments: true,
+			Attachments: false,
 			Opts:        opts,
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -128,8 +123,8 @@ func (d *driver) Mount(
 		"newFSType":   opts.NewFSType,
 		"driverName":  d.Name()}).Info("mounting volume")
 
-	vol, err := d.inspectByIDOrName(
-		ctx, volumeID, volumeName, opts.Opts)
+	vol, err := d.volumeInspectByIDOrName(
+		ctx, volumeID, volumeName, true, opts.Opts)
 	if err != nil {
 		return "", nil, err
 	}
@@ -143,11 +138,28 @@ func (d *driver) Mount(
 		ctx.Debug("performing precautionary unmount")
 		_ = ctx.Client().OS().Unmount(ctx, mp, opts.Opts)
 
-		vol, _, err = ctx.Client().Storage().VolumeAttach(
-			ctx, vol.ID, &types.VolumeAttachOpts{Force: opts.Preempt})
+		var token string
+		vol, token, err = ctx.Client().Storage().VolumeAttach(
+			ctx, vol.ID, &types.VolumeAttachOpts{
+				Force: opts.Preempt,
+				Opts:  utils.NewStore(),
+			})
 		if err != nil {
 			return "", nil, err
 		}
+
+		_, _, err = ctx.Client().Executor().WaitForDevice(ctx,
+			token, *d.attachWaitForDevice(), utils.NewStore())
+		if err != nil {
+			return "", nil, goof.WithError("problem with device discovery", err)
+		}
+
+		vol, err = d.volumeInspectByIDOrName(
+			ctx, vol.ID, "", true, opts.Opts)
+		if err != nil {
+			return "", nil, err
+		}
+
 	}
 
 	if len(vol.Attachments) == 0 {
@@ -207,6 +219,53 @@ func (d *driver) Unmount(
 	ctx types.Context,
 	volumeID, volumeName string,
 	opts types.Store) error {
+
+	log.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"volumeID":   volumeID,
+		"driverName": d.Name()}).Info("unmounting volume")
+
+	if volumeName == "" && volumeID == "" {
+		return goof.New("missing volume name or ID")
+	}
+
+	vol, err := d.volumeInspectByIDOrName(
+		ctx, volumeID, volumeName, true, opts)
+	if err != nil {
+		return err
+	}
+
+	if len(vol.Attachments) == 0 {
+		return nil
+	}
+
+	if vol.Attachments[0].DeviceName == "" {
+		return goof.New("no device name found for attachment")
+	}
+
+	mounts, err := ctx.Client().OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
+	if err != nil {
+		return err
+	}
+
+	for _, mount := range mounts {
+		log.WithField("mount", mount).Debug("retrieved mount")
+	}
+	if len(mounts) > 0 {
+		err = ctx.Client().OS().Unmount(ctx, mounts[0].MountPoint, opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = ctx.Client().Storage().VolumeDetach(ctx, vol.ID,
+		&types.VolumeDetachOpts{
+			Force: opts.GetBool("force"),
+			Opts:  utils.NewStore(),
+		})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -215,7 +274,31 @@ func (d *driver) Path(
 	ctx types.Context,
 	volumeID, volumeName string,
 	opts types.Store) (string, error) {
-	return "", nil
+	ctx.WithFields(log.Fields{
+		"volumeName": volumeName,
+		"volumeID":   volumeID,
+		"driverName": d.Name()}).Info("getting path of volume")
+
+	vol, err := d.volumeInspectByIDOrName(
+		ctx, volumeID, volumeName, true, opts)
+	if err != nil {
+		return "", err
+	}
+
+	if len(vol.Attachments) == 0 {
+		return "", nil
+	}
+
+	mounts, err := ctx.Client().OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
+	if err != nil {
+		return "", err
+	}
+
+	if len(mounts) == 0 {
+		return "", nil
+	}
+
+	return d.volumeMountPath(mounts[0].MountPoint), nil
 }
 
 // Create will create a new volume with the volumeName and opts.
@@ -223,7 +306,28 @@ func (d *driver) Create(
 	ctx types.Context,
 	volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
-	return nil, nil
+	if volumeName == "" {
+		return nil, goof.New("missing volume name or ID")
+	}
+
+	optsNew := &types.VolumeCreateOpts{}
+	if !opts.Opts.IsSet("availabilityZone") {
+		*optsNew.AvailabilityZone = d.availabilityZone()
+	}
+	if !opts.Opts.IsSet("size") {
+		i, _ := strconv.Atoi(d.size())
+		*optsNew.Size = int64(i)
+	}
+	if !opts.Opts.IsSet("volumeType") {
+		*optsNew.Type = d.volumeType()
+	}
+	if !opts.Opts.IsSet("iops") {
+		i, _ := strconv.Atoi(d.iops())
+		*optsNew.IOPS = int64(i)
+	}
+	optsNew.Opts = opts.Opts
+
+	return ctx.Client().Storage().VolumeCreate(ctx, volumeName, optsNew)
 }
 
 // Remove will remove a volume of volumeName.
@@ -231,7 +335,22 @@ func (d *driver) Remove(
 	ctx types.Context,
 	volumeName string,
 	opts types.Store) error {
-	return nil
+
+	if volumeName == "" {
+		return goof.New("missing volume name or ID")
+	}
+
+	vol, err := d.volumeInspectByIDOrName(
+		ctx, "", volumeName, false, opts)
+	if err != nil {
+		return err
+	}
+
+	if vol == nil {
+		return goof.New("volume not found")
+	}
+
+	return ctx.Client().Storage().VolumeRemove(ctx, vol.ID, opts)
 }
 
 // Attach will attach a volume based on volumeName to the instance of
@@ -286,6 +405,19 @@ func (d *driver) fsType() string {
 	return d.config.GetString("docker.fsType")
 }
 
+func (d *driver) mountDirPath() string {
+	return d.config.GetString("docker.mountDirPath")
+}
+
+func (d *driver) attachWaitForDevice() *time.Duration {
+	dur, err := time.ParseDuration(d.config.GetString("docker.mount.attachWaitForDevice"))
+	if err != nil {
+		dur, _ := time.ParseDuration("30s")
+		return &dur
+	}
+	return &dur
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Docker")
 	r.Key(gofig.String, "", "ext4", "", "docker.fsType")
@@ -293,6 +425,9 @@ func configRegistration() *gofig.Registration {
 	r.Key(gofig.String, "", "", "", "docker.iops")
 	r.Key(gofig.String, "", "", "", "docker.size")
 	r.Key(gofig.String, "", "", "", "docker.availabilityZone")
+	r.Key(gofig.String, "", "", "", "docker.attach.waitForDevice")
+	r.Key(gofig.String, "", "/var/lib/libstorage/volumes", "", "docker.mountDirPath")
+	r.Key(gofig.String, "", "30", "", "docker.attachWaitForDevice")
 	r.Key(gofig.String, "", "/data", "", "linux.volume.rootpath")
 	return r
 }

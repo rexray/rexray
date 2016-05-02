@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/akutz/goof"
-
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 )
@@ -16,25 +15,56 @@ func (d *driver) getVolumeMountPath(volumeName string) (string, error) {
 		return "", goof.New("missing volume name")
 	}
 
-	return path.Join(d.mountDirPath, volumeName), nil
+	return path.Join(d.mountDirPath(), volumeName), nil
 }
 
-func (d *driver) inspectByIDOrName(
+func (d *driver) volumeInspectByID(
 	ctx types.Context,
-	volumeID, volumeName string,
+	volumeID string, attachments bool,
 	opts types.Store) (*types.Volume, error) {
-
-	objs, err := ctx.Client().Storage().Volumes(ctx, &types.VolumesOpts{})
+	vol, err := ctx.Client().Storage().VolumeInspect(ctx, volumeID,
+		&types.VolumeInspectOpts{
+			Attachments: attachments})
 	if err != nil {
 		return nil, err
 	}
+	return vol, nil
+}
+
+func (d *driver) volumeInspectByIDOrName(
+	ctx types.Context,
+	volumeID, volumeName string, attachments bool,
+	opts types.Store) (*types.Volume, error) {
+
+	if volumeID != "" && volumeName != "" {
+		return nil, goof.New("specify either volumeID or volumeName")
+	}
 
 	var obj *types.Volume
-	for _, o := range objs {
-		if strings.ToLower(volumeID) == strings.ToLower(o.ID) ||
-			strings.ToLower(volumeName) == strings.ToLower(o.Name) {
-			obj = o
-			break
+	if volumeID != "" {
+		var err error
+		obj, err = d.volumeInspectByID(ctx, volumeID, true, opts)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		objs, err := ctx.Client().Storage().Volumes(ctx, &types.VolumesOpts{
+			Attachments: false})
+		if err != nil {
+			return nil, err
+		}
+		for _, o := range objs {
+			if strings.ToLower(volumeName) == strings.ToLower(o.Name) {
+				if attachments {
+					obj, err = d.volumeInspectByID(ctx, o.ID, true, opts)
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					obj = o
+				}
+				break
+			}
 		}
 	}
 
@@ -42,7 +72,6 @@ func (d *driver) inspectByIDOrName(
 		return nil, utils.NewNotFoundError(
 			fmt.Sprintf("volumeID=%s,volumeName=%s", volumeID, volumeName))
 	}
-
 	return obj, nil
 }
 

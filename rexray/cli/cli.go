@@ -340,7 +340,10 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 	}
 
 	if c.isInitDriverManagersCmd(cmd) {
-		c.ctx = context.Background().WithServiceName(c.service)
+		c.ctx = context.Background()
+		if c.service != "" && !c.config.IsSet(apitypes.ConfigService) {
+			c.ctx = c.ctx.WithServiceName(c.service)
+		}
 		if c.runAsync {
 			c.ctx = c.ctx.WithValue("async", true)
 		}

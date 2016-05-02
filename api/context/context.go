@@ -608,6 +608,10 @@ func (ctx *lsc) WithValue(
 // against the joined context.
 func (ctx *lsc) Join(rightSide types.Context) types.Context {
 
+	if rightSide == nil {
+		return ctx
+	}
+
 	if lscRightSide, ok := rightSide.(*lsc); ok && ctx == lscRightSide {
 		panic(goof.New("context.Join with same contexts"))
 	}
@@ -619,15 +623,36 @@ func (ctx *lsc) Join(rightSide types.Context) types.Context {
 		req:       ctx.req,
 	}
 
+	newCtxID := map[string]string{}
+
+	rsCtxID, ok := rightSide.Value(types.ContextContextID).(map[string]string)
+	if ok {
+		for k, v := range rsCtxID {
+			newCtxID[k] = v
+		}
+	}
+
+	lsCtxID, ok := ctx.Value(types.ContextContextID).(map[string]string)
+	if ok {
+		for k, v := range lsCtxID {
+			newCtxID[k] = v
+		}
+	}
+
 	config := gofig.New()
+	ll := log.GetLevel()
+	config.SetLogLevel(log.WarnLevel)
 	for _, k := range rightSide.AllKeys() {
 		config.Set(k, rightSide.Get(k))
 	}
 	for _, k := range ctx.AllKeys() {
 		config.Set(k, ctx.Get(k))
 	}
+	config.SetLogLevel(ll)
 	newCtx.Config = config
-	return newCtx
+
+	newerCtx := newCtx.WithValue(types.ContextContextID, newCtxID)
+	return newerCtx
 }
 
 type fieldFormatter struct {

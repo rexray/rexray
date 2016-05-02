@@ -49,6 +49,10 @@ func (h *localDevicesHandler) Handle(
 	for _, v := range headers {
 
 		locDevM := locDevRX.FindStringSubmatch(v)
+		if len(locDevM) == 0 {
+			continue
+		}
+
 		driver := locDevM[1]
 
 		devMntPairs := strings.Split(locDevM[2], ",")

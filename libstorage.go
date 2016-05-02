@@ -37,6 +37,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/akutz/gofig"
 
@@ -103,14 +104,19 @@ func Dial(config gofig.Config) (client.Client, error) {
 func New(config gofig.Config) (client.Client, io.Closer, error, <-chan error) {
 
 	var (
-		c    client.Client
-		s    io.Closer
-		err  error
-		errs <-chan error
+		c       client.Client
+		s       io.Closer
+		err     error
+		errs    <-chan error
+		serving bool
 	)
 
 	if !config.IsSet("libstorage.host") {
-		addr := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+		addr := os.Getenv("LIBSTORAGE_RUN_HOST")
+		if addr == "" {
+			addr = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+		}
+
 		yaml := []byte(fmt.Sprintf(embeddedHostPatt, addr))
 		if err := config.ReadConfig(bytes.NewReader(yaml)); err != nil {
 			return nil, nil, err, nil
@@ -118,13 +124,24 @@ func New(config gofig.Config) (client.Client, io.Closer, error, <-chan error) {
 		if s, err, errs = Serve(config); err != nil {
 			return nil, nil, err, nil
 		}
+		serving = true
+		go func() {
+			e := <-errs
+			if e != nil {
+				panic(e)
+			}
+		}()
 	}
 
 	if c, err = Dial(config); err != nil {
 		return nil, nil, err, nil
 	}
 
-	return c, s, nil, errs
+	if serving {
+		return c, s, nil, errs
+	} else {
+		return c, nil, nil, nil
+	}
 }
 
 func registerConfig() {

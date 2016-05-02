@@ -178,11 +178,13 @@ func (th *testHarness) run(
 
 		for x, config := range configs {
 
-			cj, err := config.ToJSON()
-			if err != nil {
-				t.Fatal(err)
+			if testing.Verbose() {
+				cj, err := config.ToJSON()
+				if err != nil {
+					t.Fatal(err)
+				}
+				t.Logf("client.config=%s\n", cj)
 			}
-			t.Logf("client.config=%s\n", cj)
 
 			wg.Add(1)
 			go func(x int, config gofig.Config) {
@@ -224,11 +226,14 @@ func (th *testHarness) run(
 				wg.Add(1)
 				go func(test APITestFunc, x int, config gofig.Config) {
 
-					cj, err := config.ToJSON()
-					if err != nil {
-						t.Fatal(err)
+					if testing.Verbose() {
+						config.SetLogLevel(log.DebugLevel)
+						cj, err := config.ToJSON()
+						if err != nil {
+							t.Fatal(err)
+						}
+						t.Logf("client.config=%s\n", cj)
 					}
-					t.Logf("client.config=%s\n", cj)
 
 					defer wg.Done()
 					server, err, errs := apiserver.Serve(config)

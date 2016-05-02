@@ -63,17 +63,19 @@ func (c *CLI) initVolumeCmds() {
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			for _, v := range vols {
-				if strings.ToLower(v.ID) == strings.ToLower(c.volumeID) ||
-					strings.ToLower(v.Name) == strings.ToLower(c.volumeName) {
-					out, err := c.marshalOutput(v)
-					if err != nil {
-						log.Fatal(err)
+			if c.volumeID != "" || c.volumeName != "" {
+				for _, v := range vols {
+					if strings.ToLower(v.ID) == strings.ToLower(c.volumeID) ||
+						strings.ToLower(v.Name) == strings.ToLower(c.volumeName) {
+						out, err := c.marshalOutput(v)
+						if err != nil {
+							log.Fatal(err)
+						}
+						fmt.Println(out)
+						return
 					}
-					fmt.Println(out)
-					return
 				}
+				return
 			}
 
 			if len(vols) > 0 {

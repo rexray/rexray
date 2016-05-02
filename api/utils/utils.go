@@ -2,7 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 
@@ -32,4 +34,15 @@ func GetHeader(headers http.Header, name string) []string {
 		}
 	}
 	return nil
+}
+
+// GetTempSockFile returns a new sock file in a temp space.
+func GetTempSockFile() string {
+	f, err := ioutil.TempFile("", "")
+	if err != nil {
+		panic(err)
+	}
+	name := f.Name()
+	os.RemoveAll(name)
+	return fmt.Sprintf("%s.sock", name)
 }

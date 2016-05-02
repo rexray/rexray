@@ -2,6 +2,7 @@ package volume
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/akutz/goof"
@@ -10,6 +11,7 @@ import (
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
+	"github.com/emccode/libstorage/api/utils/filters"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
 
@@ -18,6 +20,18 @@ func (r *router) volumes(
 	w http.ResponseWriter,
 	req *http.Request,
 	store types.Store) error {
+
+	filter, err := parseFilter(store)
+	if err != nil {
+		return err
+	}
+	lcaseFLeft := ""
+	lcaseFRight := ""
+	if filter != nil {
+		store.Set("filter", filter)
+		lcaseFLeft = strings.ToLower(filter.Left)
+		lcaseFRight = strings.ToLower(filter.Right)
+	}
 
 	attachments := store.GetBool("attachments")
 
@@ -53,7 +67,13 @@ func (r *router) volumes(
 
 			objMap := map[string]*types.Volume{}
 			for _, obj := range objs {
-				objMap[obj.ID] = obj
+				if lcaseFLeft == "name" {
+					if strings.ToLower(obj.Name) == lcaseFRight {
+						objMap[obj.ID] = obj
+					}
+				} else {
+					objMap[obj.ID] = obj
+				}
 			}
 			return objMap, nil
 		}
@@ -97,6 +117,18 @@ func (r *router) volumesForService(
 	req *http.Request,
 	store types.Store) error {
 
+	filter, err := parseFilter(store)
+	if err != nil {
+		return err
+	}
+	lcaseFLeft := ""
+	lcaseFRight := ""
+	if filter != nil {
+		store.Set("filter", filter)
+		lcaseFLeft = strings.ToLower(filter.Left)
+		lcaseFRight = strings.ToLower(filter.Right)
+	}
+
 	service, err := httputils.GetService(ctx)
 	if err != nil {
 		return err
@@ -124,7 +156,13 @@ func (r *router) volumesForService(
 		}
 
 		for _, obj := range objs {
-			reply[obj.ID] = obj
+			if lcaseFLeft == "name" {
+				if strings.ToLower(obj.Name) == lcaseFRight {
+					reply[obj.ID] = obj
+				}
+			} else {
+				reply[obj.ID] = obj
+			}
 		}
 		return reply, nil
 	}
@@ -158,12 +196,41 @@ func (r *router) volumeInspect(
 		Opts:        store,
 	}
 
-	run := func(
-		ctx types.Context,
-		svc types.StorageService) (interface{}, error) {
+	var run types.StorageTaskRunFunc
+	if store.IsSet("byName") {
+		run = func(
+			ctx types.Context,
+			svc types.StorageService) (interface{}, error) {
 
-		return svc.Driver().VolumeInspect(
-			ctx, store.GetString("volumeID"), opts)
+			vols, err := svc.Driver().Volumes(
+				ctx,
+				&types.VolumesOpts{
+					Attachments: attachments,
+					Opts:        store,
+				})
+
+			if err != nil {
+				return nil, err
+			}
+
+			volID := strings.ToLower(store.GetString("volumeID"))
+			for _, v := range vols {
+				if strings.ToLower(v.Name) == volID {
+					return v, nil
+				}
+			}
+
+			return nil, utils.NewNotFoundError(volID)
+		}
+
+	} else {
+
+		run = func(
+			ctx types.Context,
+			svc types.StorageService) (interface{}, error) {
+			return svc.Driver().VolumeInspect(
+				ctx, store.GetString("volumeID"), opts)
+		}
 	}
 
 	return httputils.WriteTask(
@@ -508,4 +575,16 @@ func (r *router) volumeRemove(
 		store,
 		service.TaskExecute(ctx, run, nil),
 		http.StatusNoContent)
+}
+
+func parseFilter(store types.Store) (*types.Filter, error) {
+	if !store.IsSet("filter") {
+		return nil, nil
+	}
+	fsz := store.GetString("filter")
+	filter, err := filters.CompileFilter(fsz)
+	if err != nil {
+		return nil, utils.NewBadFilterErr(fsz, err)
+	}
+	return filter, nil
 }

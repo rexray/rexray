@@ -45,3 +45,7 @@ type ErrDriverTypeErr struct{ goof.Goof }
 // before the process is complete. This error will contain information about
 // the objects for which the process did complete.
 type ErrBatchProcess struct{ goof.Goof }
+
+// ErrBadFilter occurs when a bad filter is supplied via the filter query
+// string.
+type ErrBadFilter struct{ goof.Goof }

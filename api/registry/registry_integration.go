@@ -40,7 +40,7 @@ func (d *idm) List(
 	ctx types.Context,
 	opts types.Store) ([]types.VolumeMapping, error) {
 
-	volMaps, err := d.IntegrationDriver.List(ctx, opts)
+	volMaps, err := d.IntegrationDriver.List(ctx.Join(d.Context), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (d *idm) Inspect(
 	ctx types.Context,
 	volumeName string,
 	opts types.Store) (types.VolumeMapping, error) {
-	return d.IntegrationDriver.Inspect(ctx, volumeName, opts)
+	return d.IntegrationDriver.Inspect(ctx.Join(d.Context), volumeName, opts)
 }
 
 func (d *idm) Mount(
@@ -78,7 +78,8 @@ func (d *idm) Mount(
 	volumeID, volumeName string,
 	opts *types.VolumeMountOpts) (string, *types.Volume, error) {
 
-	mp, vol, err := d.IntegrationDriver.Mount(ctx, volumeID, volumeName, opts)
+	mp, vol, err := d.IntegrationDriver.Mount(
+		ctx.Join(d.Context), volumeID, volumeName, opts)
 	if err != nil {
 		return "", nil, err
 	}
@@ -96,7 +97,8 @@ func (d *idm) Unmount(
 		!d.isCounted(volumeName) {
 
 		d.initCount(volumeName)
-		return d.IntegrationDriver.Unmount(ctx, volumeID, volumeName, opts)
+		return d.IntegrationDriver.Unmount(
+			ctx.Join(d.Context), volumeID, volumeName, opts)
 	}
 
 	d.decCount(volumeName)
@@ -114,7 +116,8 @@ func (d *idm) Path(
 		"volumeID":   volumeID}
 
 	if !d.pathCache() {
-		return d.IntegrationDriver.Path(ctx, volumeID, volumeName, opts)
+		return d.IntegrationDriver.Path(
+			ctx.Join(d.Context), volumeID, volumeName, opts)
 	}
 
 	if !d.isCounted(volumeName) {
@@ -132,7 +135,7 @@ func (d *idm) Create(
 	if d.disableCreate() {
 		return nil, nil
 	}
-	return d.IntegrationDriver.Create(ctx, volumeName, opts)
+	return d.IntegrationDriver.Create(ctx.Join(d.Context), volumeName, opts)
 }
 
 func (d *idm) Remove(
@@ -142,28 +145,29 @@ func (d *idm) Remove(
 	if d.disableRemove() {
 		return nil
 	}
-	return d.IntegrationDriver.Remove(ctx, volumeName, opts)
+	return d.IntegrationDriver.Remove(ctx.Join(d.Context), volumeName, opts)
 }
 
 func (d *idm) Attach(
 	ctx types.Context,
 	volumeName string,
 	opts *types.VolumeAttachOpts) (string, error) {
-	return d.IntegrationDriver.Attach(ctx, volumeName, opts)
+	return d.IntegrationDriver.Attach(ctx.Join(d.Context), volumeName, opts)
 }
 
 func (d *idm) Detach(
 	ctx types.Context,
 	volumeName string,
 	opts *types.VolumeDetachOpts) error {
-	return d.IntegrationDriver.Detach(ctx, volumeName, opts)
+	return d.IntegrationDriver.Detach(ctx.Join(d.Context), volumeName, opts)
 }
 
 func (d *idm) NetworkName(
 	ctx types.Context,
 	volumeName string,
 	opts types.Store) (string, error) {
-	return d.IntegrationDriver.NetworkName(ctx, volumeName, opts)
+	return d.IntegrationDriver.NetworkName(
+		ctx.Join(d.Context), volumeName, opts)
 }
 
 func (d *idm) initCount(volumeName string) {

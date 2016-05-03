@@ -58,7 +58,7 @@ func TestStorageDriverVolumes(t *testing.T) {
 				context.WithServiceName(context.Background(), mock.Name),
 				&types.VolumesOpts{Attachments: true, Opts: utils.NewStore()})
 			assert.NoError(t, err)
-			assert.Len(t, vols, 3)
+			assert.Len(t, vols, 1)
 		})
 }
 
@@ -178,10 +178,8 @@ func TestVolumesWithAttachments(t *testing.T) {
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		assert.Len(t, reply, 3)
-		assert.Len(t, reply[mock.Name], 3)
+		assert.Len(t, reply[mock.Name], 1)
 		assert.Len(t, reply[mock.Name]["vol-000"].Attachments, 3)
-		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
-		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
 		assert.Equal(
 			t, "/var/log", reply[mock.Name]["vol-000"].Attachments[0].MountPoint)
 		assert.Equal(
@@ -199,10 +197,8 @@ func TestVolumesWithAttachmentsNoLocalDevices(t *testing.T) {
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
 		assert.Len(t, reply, 3)
-		assert.Len(t, reply[mock.Name], 3)
+		assert.Len(t, reply[mock.Name], 1)
 		assert.Len(t, reply[mock.Name]["vol-000"].Attachments, 3)
-		assert.Len(t, reply["mock2"]["vol-000"].Attachments, 0)
-		assert.Len(t, reply["mock3"]["vol-000"].Attachments, 0)
 		assert.NotEqual(
 			t, "/var/log", reply[mock.Name]["vol-000"].Attachments[0].MountPoint)
 		assert.NotEqual(

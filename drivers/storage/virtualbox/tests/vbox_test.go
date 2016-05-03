@@ -1,295 +1,252 @@
-package tests
+package virtualbox
 
 import (
 	"os"
-	"path"
+	"strconv"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/context"
+	"github.com/emccode/libstorage/api/server"
+	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/drivers/storage/virtualbox"
-	"github.com/emccode/libstorage/drivers/storage/virtualbox/executor"
+
+	// load the  driver
+	_ "github.com/emccode/libstorage/drivers/storage/virtualbox"
+	virtualboxx "github.com/emccode/libstorage/drivers/storage/virtualbox/executor"
 )
+
+const name = "virtualbox"
 
 var (
-	lsxbin       string
-	vboxsvr      *mockVboxServer
-	diskByIDPath = "./dev/disk/by-id"
-	diskID       = "scsi-SATA_VBOX_HARDDISK_VB32a50c6d-2c3f5f6a"
-	diskPath     = path.Join(diskByIDPath, diskID)
+	lsxbin string
+
+	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
+	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
+	//lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
+
+	//update username with a valid path on OS X
+	configYAML = []byte(`
+virtualbox:
+  endpoint: http://10.0.2.2:18083
+  tls: false
+  volumePath: /Users/clintonkitson/VirtualBox Volumes
+  controllerName: SATAController
+`)
 )
 
-func createMockDisk() {
-	err := os.MkdirAll(diskByIDPath, 0744)
-	if err != nil {
-		logrus.Error(err)
-	}
-	file, err := os.Create(diskPath)
-	if err != nil {
-		logrus.Error(err)
-	}
-	if err = file.Close(); err != nil {
-		logrus.Error(err)
-	}
-}
-
-func deleteMockDisk() {
-	if err := os.Remove(diskPath); err != nil {
-		logrus.Error(err)
-	}
-	if err := os.RemoveAll("./dev"); err != nil {
-		logrus.Error(err)
+func init() {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); !travis {
+		// semaphore.Unlink(types.LSX)
 	}
 }
 
 func TestMain(m *testing.M) {
-	vboxsvr = newMockVBoxServer()
-	vboxsvr.start()
-	createMockDisk()
-
-	code := m.Run()
-
-	vboxsvr.stop()
-	deleteMockDisk()
-	os.Exit(code)
+	server.CloseOnAbort()
+	ec := m.Run()
+	os.Exit(ec)
 }
 
-func TestExecutorInstanceID(t *testing.T) {
-	exec := &executor.Executor{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	if err := exec.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
+func TestInstanceID(t *testing.T) {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+		t.SkipNow()
 	}
-	id, err := exec.InstanceID(context.Background(), utils.NewStore())
+
+	iid, err := virtualboxx.LocalInstanceID()
+	assert.NoError(t, err)
 	if err != nil {
-		t.Fatal(err)
+		t.FailNow()
 	}
-	if id.ID != "9f49850d-f617-4b43-a46d-272c380e7cc6" {
-		t.Fatal("Executor not getting expected machine ID")
-	}
-}
+	assert.NotEqual(t, iid, "")
 
-func TestExecutorNextDevice(t *testing.T) {
-	exec := &executor.Executor{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	if err := exec.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	_, err := exec.NextDevice(context.Background(), utils.NewStore())
-	if err != types.ErrNotImplemented {
-		t.Fatal("Executor.NextDevice() should not be implemented")
-	}
-}
-
-func TestExecutorLocalDevices(t *testing.T) {
-	exec := &executor.Executor{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	if err := exec.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	conf.Set("virtualbox.diskIDPath", diskByIDPath)
-	devices, err := exec.LocalDevices(context.Background(), utils.NewStore())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(devices) != 1 {
-		t.Fatal("Expected 1 disk device, but got ", len(devices))
-	}
-}
-
-func TestDriverInstanceID(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	id, err := driver.InstanceID(context.Background(), utils.NewStore())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if id.ID != "9f49850d-f617-4b43-a46d-272c380e7cc6" {
-		t.Fatal("Driver not getting expected machine ID")
-	}
-}
-
-func TestDriverNextDevice(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	_, err := driver.NextDevice(context.Background(), utils.NewStore())
-	if err != types.ErrNotImplemented {
-		t.Fatal("Executor.NextDevice() should not be implemented")
-	}
-}
-
-func TestDriverInstanceInspect(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	ins, err := driver.InstanceInspect(context.Background(), utils.NewStore())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if ins == nil {
-		t.Fatal("Unexpected result: instance is nil")
-	}
-	if ins.InstanceID.ID != "9f49850d-f617-4b43-a46d-272c380e7cc6" {
-		t.Fatal("Unexpected InstanceID returned:", ins.InstanceID)
-	}
-}
-
-func TestDriverVolumes(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	conf.Set("virtualbox.diskIDPath", diskByIDPath)
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	vols, err := driver.Volumes(context.Background(), &types.VolumesOpts{})
-	if err != nil {
-		t.Fatal("Volumes method failed: ", err)
-	}
-	if vols == nil {
-		t.Fatal("Unexpected result: volume nil")
-	}
-	if len(vols) != 2 {
-		t.Fatal("Expecting 2 volumes for virtualbox, got ", len(vols))
-	}
-}
-
-func TestDriverVolumeCreate(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	conf.Set("virtualbox.diskIDPath", diskByIDPath)
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	size := int64(2000000)
-	iops := int64(10)
-	vol, err := driver.VolumeCreate(
-		context.Background(),
-		"default-vol",
-		&types.VolumeCreateOpts{Size: &size, IOPS: &iops})
-	if err != nil {
-		t.Fatal("Volumes method failed: ", err)
-	}
-	if vol == nil {
-		t.Fatal("Unexpected result: volume nil")
-	}
-}
-
-func TestDriverVolumeRemove(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	conf.Set("virtualbox.diskIDPath", diskByIDPath)
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	err := driver.VolumeRemove(
-		context.Background(), "32a50c6d-ddcc-4e0a-a3c6-5c126a5f3f2c",
-		utils.NewStore())
-
-	if err != nil {
-		t.Fatal("Volumes method failed: ", err)
-	}
-}
-
-func TestDriverVolumeAttach(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	conf.Set("virtualbox.diskIDPath", diskByIDPath)
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	_, err := driver.VolumeAttach(
-		context.Background(), "32a50c6d-ddcc-4e0a-a3c6-5c126a5f3f2c",
-		&types.VolumeAttachOpts{})
-
-	if err == nil {
-		t.Fatal("Expected failure, volume alread attached")
-	}
-
-}
-
-func TestDriverVolumeAttachWithForce(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	conf.Set("virtualbox.diskIDPath", diskByIDPath)
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	opts := &types.VolumeAttachOpts{Force: true}
-	_, err := driver.VolumeAttach(
-		context.Background(), "32a50c6d-ddcc-4e0a-a3c6-5c126a5f3f2c", opts)
-
-	if err == nil {
-		t.Fatal("Expected failure.")
-	}
-
-}
-
-func TestDriverVolumeDetach(t *testing.T) {
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	conf.Set("virtualbox.endpoint", vboxsvr.url())
-	conf.Set("virtualbox.diskIDPath", diskByIDPath)
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	_, err := driver.VolumeDetach(
-		context.Background(), "32a50c6d-ddcc-4e0a-a3c6-5c126a5f3f2c",
-		&types.VolumeDetachOpts{})
-
-	if err == nil {
-		t.Fatal("Expected error here")
-	}
-
-}
-
-// *****************************************************************************
-// server, driver, and executor integration tests
-// *****************************************************************************
-func TestDriverIntegrationInstanceID(t *testing.T) {
-	// skipping until tests.RunGroup works.
-	t.Skip("Test skipped")
-	// override default server
-	os.Setenv("VIRTUALBOX_ENDPOINT", vboxsvr.url())
-
-	driver := &virtualbox.Driver{}
-	conf := gofig.New()
-	if err := driver.Init(context.Background(), conf); err != nil {
-		t.Fatal(err)
-	}
-	id, err := driver.InstanceID(context.Background(), utils.NewStore())
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	apitests.RunGroup(
-		t, driver.Name(), nil,
+	apitests.Run(
+		t, name, configYAML,
 		(&apitests.InstanceIDTest{
-			Driver:   driver.Name(),
-			Expected: id,
+			Driver:   name,
+			Expected: iid,
 		}).Test)
+}
+
+func TestInstanceInspect(t *testing.T) {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+		t.SkipNow()
+	}
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().InstanceInspect(nil, name)
+		assert.NoError(t, err)
+		assert.NotEqual(t, reply, nil)
+	}
+	apitests.Run(t, name, configYAML, tf)
+}
+
+func TestServices(t *testing.T) {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+		t.SkipNow()
+	}
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().Services(nil)
+		assert.NoError(t, err)
+		assert.Equal(t, len(reply), 1)
+
+		_, ok := reply[name]
+		assert.True(t, ok)
+	}
+	apitests.Run(t, name, configYAML, tf)
+}
+
+func volumeCreate(t *testing.T, client types.Client, volumeName string) *types.Volume {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+		t.SkipNow()
+	}
+
+	size := int64(1)
+
+	opts := map[string]interface{}{
+		"priority": 2,
+		"owner":    "root@example.com",
+	}
+
+	volumeCreateRequest := &types.VolumeCreateRequest{
+		Name: volumeName,
+		Size: &size,
+		Opts: opts,
+	}
+
+	reply, err := client.API().VolumeCreate(
+		nil, name, volumeCreateRequest)
+	assert.NoError(t, err)
+	if err != nil {
+		t.FailNow()
+	}
+	apitests.LogAsJSON(reply, t)
+
+	assert.Equal(t, volumeName, reply.Name)
+	assert.Equal(t, size*1024*1024*1024, reply.Size)
+	return reply
+}
+
+func TestVolumeCreate(t *testing.T) {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+		t.SkipNow()
+	}
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		_ = volumeCreate(t, client, "Volume-001")
+	}
+	apitests.Run(t, name, configYAML, tf)
+}
+
+func TestVolumes(t *testing.T) {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+		t.SkipNow()
+	}
+
+	volumeName := "Volume-002"
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		vols, err := client.API().Volumes(nil, false)
+		assert.NoError(t, err)
+		if err != nil {
+			t.FailNow()
+		}
+		assert.Contains(t, vols, name)
+
+		for _, vol := range vols[name] {
+			if vol.Name == volumeName {
+				err := client.API().VolumeRemove(nil, name, vol.ID)
+				assert.NoError(t, err)
+				if err != nil {
+					t.FailNow()
+				}
+				break
+			}
+		}
+	}
+	apitests.Run(t, name, configYAML, tf)
+
+	var vol *types.Volume
+	tf = func(config gofig.Config, client types.Client, t *testing.T) {
+		vol = volumeCreate(t, client, volumeName)
+		if vol == nil {
+			t.FailNow()
+		}
+	}
+	apitests.Run(t, name, configYAML, tf)
+
+	tf = func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().VolumeInspect(nil, name, vol.ID, false)
+		assert.NoError(t, err)
+		apitests.LogAsJSON(reply, t)
+		assert.Equal(t, volumeName, reply.Name)
+	}
+	apitests.Run(t, name, configYAML, tf)
+}
+
+func TestVolumeAttach(t *testing.T) {
+	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+		t.SkipNow()
+	}
+
+	volumeName := "Volume-013"
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		vols, err := client.API().Volumes(nil, true)
+		assert.NoError(t, err)
+		if err != nil {
+			t.FailNow()
+		}
+		assert.Contains(t, vols, name)
+
+		for _, vol := range vols[name] {
+			if vol.Name == volumeName {
+				if len(vol.Attachments) > 0 {
+					_, err := client.API().VolumeDetach(nil, name, vol.ID, &types.VolumeDetachRequest{})
+					assert.NoError(t, err)
+				}
+				err = client.API().VolumeRemove(nil, name, vol.ID)
+				assert.NoError(t, err)
+				if err != nil {
+					t.FailNow()
+				}
+				break
+			}
+		}
+
+		vol := volumeCreate(t, client, volumeName)
+		if vol == nil {
+			t.FailNow()
+		}
+
+		reply, token, err := client.API().VolumeAttach(nil, name, vol.ID, &types.VolumeAttachRequest{})
+
+		assert.NoError(t, err)
+		if err != nil {
+			t.FailNow()
+		}
+		assert.NotEqual(t, token, "")
+		apitests.LogAsJSON(reply, t)
+		reply, err = client.API().VolumeInspect(nil, name, vol.ID, true)
+		assert.NoError(t, err)
+		apitests.LogAsJSON(reply, t)
+		assert.Len(t, reply.Attachments, 1)
+
+		reply, err = client.API().VolumeDetach(nil, name, vol.ID, &types.VolumeDetachRequest{})
+
+		assert.NoError(t, err)
+		if err != nil {
+			t.FailNow()
+		}
+		apitests.LogAsJSON(reply, t)
+		reply, err = client.API().VolumeInspect(nil, name, vol.ID, true)
+		assert.NoError(t, err)
+		apitests.LogAsJSON(reply, t)
+		assert.Len(t, reply.Attachments, 0)
+
+	}
+	apitests.Run(t, name, configYAML, tf)
+
 }

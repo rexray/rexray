@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
@@ -12,7 +13,6 @@ import (
 	apiclient "github.com/emccode/libstorage/api/client"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	lstypes "github.com/emccode/libstorage/drivers/storage/libstorage/types"
 )
 
 var (
@@ -32,8 +32,7 @@ type driver struct {
 }
 
 func newDriver() types.StorageDriver {
-	var d lstypes.Driver = &driver{}
-	return d
+	return &driver{}
 }
 
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
@@ -53,39 +52,62 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
-	logHTTPReq := config.GetBool(types.ConfigLogHTTPRequests)
-	logHTTPRes := config.GetBool(types.ConfigLogHTTPResponses)
+	host := getHost(proto, lAddr, tlsConfig)
 	disableKeepAlive := config.GetBool(types.ConfigHTTPDisableKeepAlive)
 	lsxPath := config.GetString(types.ConfigExecutorPath)
 
-	d.client = client{
-		Client: apiclient.Client{
-			Host:         getHost(proto, lAddr, tlsConfig),
-			Headers:      http.Header{},
-			LogRequests:  logHTTPReq,
-			LogResponses: logHTTPRes,
-			Client: &http.Client{
-				Transport: &http.Transport{
-					Dial: func(string, string) (net.Conn, error) {
-						if tlsConfig == nil {
-							return net.Dial(proto, lAddr)
-						}
-						return tls.Dial(proto, lAddr, tlsConfig)
-					},
-					DisableKeepAlives: disableKeepAlive,
-				},
-			},
+	logFields["host"] = host
+	logFields["disableKeepAlive"] = disableKeepAlive
+	logFields["lsxPath"] = lsxPath
+
+	httpTransport := &http.Transport{
+		Dial: func(string, string) (net.Conn, error) {
+			if tlsConfig == nil {
+				return net.Dial(proto, lAddr)
+			}
+			return tls.Dial(proto, lAddr, tlsConfig)
 		},
-		ctx:                ctx,
-		config:             config,
-		lsxBinPath:         lsxPath,
-		enableIIDHeader:    EnableInstanceIDHeaders,
-		enableLclDevHeader: EnableLocalDevicesHeaders,
+		DisableKeepAlives: disableKeepAlive,
+	}
+
+	apiClient := apiclient.New(host, httpTransport)
+	apiClient.EnableInstanceIDHeaders(EnableInstanceIDHeaders)
+	apiClient.EnableLocalDevicesHeaders(EnableLocalDevicesHeaders)
+
+	logReq := config.GetBool(types.ConfigLogHTTPRequests)
+	logRes := config.GetBool(types.ConfigLogHTTPResponses)
+	apiClient.LogRequests(logReq)
+	apiClient.LogResponses(logRes)
+
+	logFields["enableInstanceIDHeaders"] = EnableInstanceIDHeaders
+	logFields["enableLocalDevicesHeaders"] = EnableLocalDevicesHeaders
+	logFields["logRequests"] = logReq
+	logFields["logResponses"] = logRes
+
+	newIIDCache := utils.NewStore
+	dur, err := time.ParseDuration(
+		config.GetString(types.ConfigClientCacheInstanceID))
+	if err != nil {
+		logFields["iidCacheDuration"] = dur.String()
+		newIIDCache = func() types.Store {
+			return utils.NewTTLStore(dur, true)
+		}
+	}
+
+	d.client = client{
+		APIClient:       apiClient,
+		ctx:             ctx,
+		config:          config,
+		lsxBinPath:      lsxPath,
+		svcAndLSXCache:  &lss{Store: utils.NewStore()},
+		instanceIDCache: &lss{Store: newIIDCache()},
 	}
 
 	if err := d.dial(ctx); err != nil {
 		return err
 	}
+
+	logFields["server"] = d.ServerName()
 
 	d.ctx.WithFields(logFields).Info(
 		"successfully dialed libStorage")

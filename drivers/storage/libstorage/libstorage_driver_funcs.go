@@ -2,35 +2,34 @@ package libstorage
 
 import (
 	"github.com/emccode/libstorage/api/types"
-	lstypes "github.com/emccode/libstorage/drivers/storage/libstorage/types"
 )
 
 func (d *driver) Name() string {
 	return Name
 }
 
-func (d *driver) API() lstypes.Client {
+func (d *driver) API() types.APIClient {
+	return &d.client
+}
+
+func (d *driver) XCLI() types.StorageExecutorCLI {
 	return &d.client
 }
 
 func (d *driver) NextDeviceInfo(
 	ctx types.Context) (*types.NextDeviceInfo, error) {
-
 	si, err := d.getServiceInfo(ctx.ServiceName())
 	if err != nil {
 		return nil, err
 	}
-
 	return si.Driver.NextDevice, nil
 }
 
 func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
-
 	si, err := d.getServiceInfo(ctx.ServiceName())
 	if err != nil {
 		return "", err
 	}
-
 	return si.Driver.Type, nil
 }
 
@@ -245,4 +244,12 @@ func (d *driver) SnapshotRemove(
 
 	return d.client.SnapshotRemove(
 		ctx, ctx.ServiceName(), snapshotID)
+}
+
+func (d *driver) assertProvidesAPIClient() types.ProvidesAPIClient {
+	return d
+}
+
+func (d *driver) assertProvidesStorageExecutorCLI() types.ProvidesStorageExecutorCLI {
+	return d
 }

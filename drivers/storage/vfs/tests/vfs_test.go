@@ -18,6 +18,7 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
@@ -44,9 +45,6 @@ func TestVolumes(t *testing.T) {
 		reply, err := client.API().Volumes(nil, false)
 		if err != nil {
 			t.Fatal(err)
-		}
-		for _, v := range vols {
-			v.Attachments = nil
 		}
 		for volumeID, volume := range vols {
 			assert.NotNil(t, reply["vfs"][volumeID])
@@ -78,9 +76,6 @@ func TestVolumesByService(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, v := range vols {
-			v.Attachments = nil
-		}
 		for volumeID, volume := range vols {
 			assert.NotNil(t, reply[volumeID])
 			assert.EqualValues(t, volume, reply[volumeID])
@@ -110,9 +105,6 @@ func TestVolumeInspect(t *testing.T) {
 		reply, err := client.API().VolumeInspect(nil, "vfs", "vfs-000", false)
 		if err != nil {
 			t.Fatal(err)
-		}
-		for _, v := range vols {
-			v.Attachments = nil
 		}
 		assert.NotNil(t, reply)
 		assert.EqualValues(t, vols[reply.ID], reply)
@@ -339,7 +331,9 @@ func TestVolumeCreateFromSnapshot(t *testing.T) {
 func TestVolumeAttach(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
 
-		nextDevice, err := client.API().NextDevice(nil, vfs.Name)
+		nextDevice, err := client.Executor().NextDevice(
+			context.Background().WithServiceName(vfs.Name),
+			utils.NewStore())
 		assert.NoError(t, err)
 		if err != nil {
 			t.FailNow()
@@ -547,7 +541,7 @@ func instanceID() (*types.InstanceID, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.InstanceID{ID: hostName}, nil
+	return &types.InstanceID{ID: hostName, Formatted: true}, nil
 }
 
 func assertVolDir(

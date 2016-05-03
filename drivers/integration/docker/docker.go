@@ -63,7 +63,7 @@ func (d *driver) List(
 	ctx types.Context,
 	opts types.Store) ([]types.VolumeMapping, error) {
 
-	vols, err := ctx.StorageDriver().Volumes(
+	vols, err := ctx.Client().Storage().Volumes(
 		ctx,
 		&types.VolumesOpts{
 			Attachments: true,
@@ -141,9 +141,9 @@ func (d *driver) Mount(
 		}
 
 		ctx.Debug("performing precautionary unmount")
-		_ = ctx.OSDriver().Unmount(ctx, mp, opts.Opts)
+		_ = ctx.Client().OS().Unmount(ctx, mp, opts.Opts)
 
-		vol, err = ctx.StorageDriver().VolumeAttach(
+		vol, err = ctx.Client().Storage().VolumeAttach(
 			ctx, vol.ID, &types.VolumeAttachOpts{Force: opts.Preempt})
 		if err != nil {
 			return "", nil, err
@@ -158,7 +158,7 @@ func (d *driver) Mount(
 		return "", nil, goof.New("no device name returned")
 	}
 
-	mounts, err := ctx.OSDriver().Mounts(
+	mounts, err := ctx.Client().OS().Mounts(
 		ctx, vol.Attachments[0].DeviceName, "", opts.Opts)
 	if err != nil {
 		return "", nil, err
@@ -172,7 +172,7 @@ func (d *driver) Mount(
 		opts.NewFSType = d.fsType()
 	}
 
-	if err := ctx.OSDriver().Format(
+	if err := ctx.Client().OS().Format(
 		ctx,
 		vol.Attachments[0].DeviceName,
 		&types.DeviceFormatOpts{
@@ -191,7 +191,7 @@ func (d *driver) Mount(
 		return "", nil, err
 	}
 
-	if err := ctx.OSDriver().Mount(
+	if err := ctx.Client().OS().Mount(
 		ctx,
 		vol.Attachments[0].DeviceName,
 		mountPath,

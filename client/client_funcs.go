@@ -2,11 +2,10 @@ package client
 
 import (
 	"github.com/emccode/libstorage/api/types"
-	lstypes "github.com/emccode/libstorage/drivers/storage/libstorage/types"
 )
 
-func (c *client) API() lstypes.Client {
-	return c.lsc
+func (c *client) API() types.APIClient {
+	return c.api
 }
 
 func (c *client) OS() types.OSDriver {
@@ -19,4 +18,8 @@ func (c *client) Storage() types.StorageDriver {
 
 func (c *client) Integration() types.IntegrationDriver {
 	return c.id
+}
+
+func (c *client) Executor() types.StorageExecutorCLI {
+	return c.xli
 }

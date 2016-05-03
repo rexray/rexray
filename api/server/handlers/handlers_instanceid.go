@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
 )
 
 // instanceIDHandler is a global HTTP filter for grokking the InstanceIDs
@@ -44,7 +44,7 @@ func (h *instanceIDHandler) Handle(
 	if err := parseInstanceIDHeaders(
 		ctx,
 		types.InstanceIDHeader,
-		utils.GetHeader(req.Header, types.InstanceIDHeader),
+		req.Header[types.InstanceIDHeader],
 		valMap); err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (h *instanceIDHandler) Handle(
 	if err := parseInstanceIDHeaders(
 		ctx,
 		types.InstanceID64Header,
-		utils.GetHeader(req.Header, types.InstanceID64Header),
+		req.Header[types.InstanceID64Header],
 		valMap); err != nil {
 		return err
 	}
@@ -80,7 +80,11 @@ func parseInstanceIDHeaders(
 		iid := &types.InstanceID{}
 
 		if name == types.InstanceIDHeader {
-			iid.ID = iidValue
+			iidValueParts := strings.Split(iidValue, ",")
+			iid.ID = iidValueParts[0]
+			if len(iidValueParts) > 1 {
+				iid.Formatted, _ = strconv.ParseBool(iidValueParts[1])
+			}
 		} else {
 			buf, err := base64.StdEncoding.DecodeString(iidValue)
 			if err != nil {

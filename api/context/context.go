@@ -33,14 +33,8 @@ var (
 	loggerTypeName = utils.GetTypePkgPathAndName(
 		&log.Logger{})
 
-	osDriverTypeName = utils.GetTypePkgPathAndName(
-		(*types.OSDriver)(nil))
-
-	storageDriverTypeName = utils.GetTypePkgPathAndName(
-		(*types.StorageDriver)(nil))
-
-	integrationDriverTypeName = utils.GetTypePkgPathAndName(
-		(*types.IntegrationDriver)(nil))
+	clientTypeName = utils.GetTypePkgPathAndName(
+		(*types.Client)(nil))
 )
 
 type lsc struct {
@@ -176,23 +170,10 @@ func WithTransactionCreated(
 	return WithValue(parent, types.ContextTransactionCreated, val)
 }
 
-// WithStorageDriver returns a context with the provided storage driver.
-func WithStorageDriver(
-	parent context.Context, val types.StorageDriver) types.Context {
-	return WithValue(parent, types.ContextStorageDriver, val)
-}
-
-// WithOSDriver returns a context with the provided OS driver.
-func WithOSDriver(
-	parent context.Context, val types.OSDriver) types.Context {
-	return WithValue(parent, types.ContextOSDriver, val)
-}
-
-// WithIntegrationDriver sreturns a context with the provided integration
-// driver.
-func WithIntegrationDriver(
-	parent context.Context, val types.IntegrationDriver) types.Context {
-	return WithValue(parent, types.ContextIntegrationDriver, val)
+// WithClient returns a context with the provided client.
+func WithClient(
+	parent context.Context, val types.Client) types.Context {
+	return WithValue(parent, types.ContextClient, val)
 }
 
 // WithValue returns a context with the provided value.
@@ -380,45 +361,17 @@ func Config(ctx context.Context) gofig.Config {
 	return nil
 }
 
-// OSDriver returns this context's OS driver.
-func OSDriver(ctx context.Context) (types.OSDriver, error) {
-	val, key, err := value(ctx, types.ContextOSDriver)
+// Client returns this context's storage driver.
+func Client(ctx context.Context) (types.Client, error) {
+	val, key, err := value(ctx, types.ContextClient)
 	if err != nil {
 		return nil, err
 	}
-	if tval, ok := val.(types.OSDriver); ok {
+	if tval, ok := val.(types.Client); ok {
 		return tval, nil
 	}
 	return nil, utils.NewContextTypeErr(
-		key, osDriverTypeName,
-		utils.GetTypePkgPathAndName(val))
-}
-
-// StorageDriver returns this context's storage driver.
-func StorageDriver(ctx context.Context) (types.StorageDriver, error) {
-	val, key, err := value(ctx, types.ContextStorageDriver)
-	if err != nil {
-		return nil, err
-	}
-	if tval, ok := val.(types.StorageDriver); ok {
-		return tval, nil
-	}
-	return nil, utils.NewContextTypeErr(
-		key, storageDriverTypeName,
-		utils.GetTypePkgPathAndName(val))
-}
-
-// IntegrationDriver returns this context's integration driver.
-func IntegrationDriver(ctx context.Context) (types.IntegrationDriver, error) {
-	val, key, err := value(ctx, types.ContextIntegrationDriver)
-	if err != nil {
-		return nil, err
-	}
-	if tval, ok := val.(types.IntegrationDriver); ok {
-		return tval, nil
-	}
-	return nil, utils.NewContextTypeErr(
-		key, integrationDriverTypeName,
+		key, clientTypeName,
 		utils.GetTypePkgPathAndName(val))
 }
 
@@ -510,18 +463,8 @@ func (ctx *lsc) TransactionCreated() time.Time {
 	return v
 }
 
-func (ctx *lsc) StorageDriver() types.StorageDriver {
-	v, _ := StorageDriver(ctx)
-	return v
-}
-
-func (ctx *lsc) OSDriver() types.OSDriver {
-	v, _ := OSDriver(ctx)
-	return v
-}
-
-func (ctx *lsc) IntegrationDriver() types.IntegrationDriver {
-	v, _ := IntegrationDriver(ctx)
+func (ctx *lsc) Client() types.Client {
+	v, _ := Client(ctx)
 	return v
 }
 
@@ -581,21 +524,8 @@ func (ctx *lsc) WithTransactionCreated(val time.Time) types.Context {
 	return WithTransactionCreated(ctx, val)
 }
 
-// WithStorageDriver returns a context with the provided storage driver.
-func (ctx *lsc) WithStorageDriver(val types.StorageDriver) types.Context {
-	return WithStorageDriver(ctx, val)
-}
-
-// WithOSDriver returns a context with the provided OS driver.
-func (ctx *lsc) WithOSDriver(val types.OSDriver) types.Context {
-	return WithOSDriver(ctx, val)
-}
-
-// WithIntegrationDriver sreturns a context with the provided integration
-// driver.
-func (ctx *lsc) WithIntegrationDriver(
-	val types.IntegrationDriver) types.Context {
-	return WithIntegrationDriver(ctx, val)
+func (ctx *lsc) WithClient(val types.Client) types.Context {
+	return WithClient(ctx, val)
 }
 
 func (ctx *lsc) WithValue(

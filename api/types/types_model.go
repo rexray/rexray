@@ -42,6 +42,10 @@ type InstanceID struct {
 	// ID is the instance ID
 	ID string `json:"id"`
 
+	// Formatted is a flag indicating whether or not the instance ID has
+	// been formatted by an instance inspection.
+	Formatted bool `json:"formatted,omitempty"`
+
 	// Metadata is any extra information about the instance ID.
 	Metadata json.RawMessage `json:"metadata,omitempty"`
 }

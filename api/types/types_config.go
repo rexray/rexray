@@ -78,4 +78,7 @@ const (
 
 	// ConfigVolPathCache is a config key.
 	ConfigVolPathCache = ConfigRoot + ".volume.path.cache"
+
+	// ConfigClientCacheInstanceID is a config key.
+	ConfigClientCacheInstanceID = ConfigClient + ".cache.instanceID"
 )

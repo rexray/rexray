@@ -14,10 +14,10 @@ const (
 )
 
 func init() {
-	configRegistration()
+	registerConfig()
 }
 
-func configRegistration() {
+func registerConfig() {
 	defaultRootDir := paths.UsrFilePath("vfs")
 	r := gofig.NewRegistration("VFS")
 	r.Key(gofig.String, "", defaultRootDir, "", "vfs.root")

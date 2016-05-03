@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
@@ -43,6 +44,7 @@ func (d *driver) Name() string {
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 
+	d.rootDir = vfs.RootDir(config)
 	d.devFilePath = vfs.DeviceFilePath(config)
 	if !gotil.FileExists(d.devFilePath) {
 		err := ioutil.WriteFile(d.devFilePath, initialDeviceFile, 0644)
@@ -118,6 +120,11 @@ var (
 func (d *driver) LocalDevices(
 	ctx types.Context,
 	opts types.Store) (map[string]string, error) {
+
+	ctx.WithFields(log.Fields{
+		"vfs.root": d.rootDir,
+		"dev.path": d.devFilePath,
+	}).Debug("config info")
 
 	var devFileRWL *sync.RWMutex
 	func() {

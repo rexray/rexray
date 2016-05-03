@@ -37,7 +37,7 @@ func (h *transactionHandler) Handle(
 	req *http.Request,
 	store types.Store) error {
 
-	txIDHeaders := utils.GetHeader(req.Header, types.TransactionIDHeader)
+	txIDHeaders := req.Header[types.TransactionIDHeader]
 	ctx.WithField(
 		types.TransactionIDHeader, txIDHeaders).Debug("http header")
 
@@ -51,7 +51,7 @@ func (h *transactionHandler) Handle(
 	ctx = ctx.WithTransactionID(txID)
 	ctx = ctx.WithContextSID(types.ContextTransactionID, txID)
 
-	txCRHeaders := utils.GetHeader(req.Header, types.TransactionCreatedHeader)
+	txCRHeaders := req.Header[types.TransactionCreatedHeader]
 	ctx.WithField(
 		types.TransactionCreatedHeader, txCRHeaders).Debug("http header")
 

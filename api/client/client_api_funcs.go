@@ -11,7 +11,7 @@ import (
 )
 
 // Root returns a list of root resources.
-func (c *Client) Root(ctx types.Context) ([]string, error) {
+func (c *client) Root(ctx types.Context) ([]string, error) {
 	cctx(&ctx)
 	reply := []string{}
 	if _, err := c.httpGet(ctx, "/", &reply); err != nil {
@@ -27,21 +27,22 @@ const (
 type ctxInstanceForSvcT struct{}
 
 // Instances returns a list of instances.
-func (c *Client) Instances(ctx types.Context) ([]*types.Instance, error) {
+func (c *client) Instances(
+	ctx types.Context) (map[string]*types.Instance, error) {
 	sis, err := c.Services(
 		ctx.WithValue(ctxInstanceForSvc, &ctxInstanceForSvcT{}))
 	if err != nil {
 		return nil, err
 	}
-	instances := []*types.Instance{}
-	for _, si := range sis {
-		instances = append(instances, si.Instance)
+	instances := map[string]*types.Instance{}
+	for service, si := range sis {
+		instances[service] = si.Instance
 	}
 	return instances, nil
 }
 
 // InstanceInspect inspects an instance.
-func (c *Client) InstanceInspect(
+func (c *client) InstanceInspect(
 	ctx types.Context, service string) (*types.Instance, error) {
 	si, err := c.ServiceInspect(
 		ctx.WithValue(ctxInstanceForSvc, &ctxInstanceForSvcT{}), service)
@@ -52,7 +53,7 @@ func (c *Client) InstanceInspect(
 }
 
 // Services returns a map of the configured Services.
-func (c *Client) Services(
+func (c *client) Services(
 	ctx types.Context) (map[string]*types.ServiceInfo, error) {
 
 	cctx(&ctx)
@@ -70,7 +71,7 @@ func (c *Client) Services(
 }
 
 // ServiceInspect returns information about a service.
-func (c *Client) ServiceInspect(
+func (c *client) ServiceInspect(
 	ctx types.Context, name string) (*types.ServiceInfo, error) {
 
 	cctx(&ctx)
@@ -88,7 +89,7 @@ func (c *Client) ServiceInspect(
 }
 
 // Volumes returns a list of all Volumes for all Services.
-func (c *Client) Volumes(
+func (c *client) Volumes(
 	ctx types.Context,
 	attachments bool) (types.ServiceVolumeMap, error) {
 	cctx(&ctx)
@@ -101,7 +102,7 @@ func (c *Client) Volumes(
 }
 
 // VolumesByService returns a list of all Volumes for a service.
-func (c *Client) VolumesByService(
+func (c *client) VolumesByService(
 	ctx types.Context,
 	service string,
 	attachments bool) (types.VolumeMap, error) {
@@ -115,7 +116,7 @@ func (c *Client) VolumesByService(
 }
 
 // VolumeInspect gets information about a single volume.
-func (c *Client) VolumeInspect(
+func (c *client) VolumeInspect(
 	ctx types.Context,
 	service, volumeID string,
 	attachments bool) (*types.Volume, error) {
@@ -130,7 +131,7 @@ func (c *Client) VolumeInspect(
 }
 
 // VolumeCreate creates a single volume.
-func (c *Client) VolumeCreate(
+func (c *client) VolumeCreate(
 	ctx types.Context,
 	service string,
 	request *types.VolumeCreateRequest) (*types.Volume, error) {
@@ -144,7 +145,7 @@ func (c *Client) VolumeCreate(
 }
 
 // VolumeCreateFromSnapshot creates a single volume from a snapshot.
-func (c *Client) VolumeCreateFromSnapshot(
+func (c *client) VolumeCreateFromSnapshot(
 	ctx types.Context,
 	service, snapshotID string,
 	request *types.VolumeCreateRequest) (*types.Volume, error) {
@@ -159,7 +160,7 @@ func (c *Client) VolumeCreateFromSnapshot(
 }
 
 // VolumeCopy copies a single volume.
-func (c *Client) VolumeCopy(
+func (c *client) VolumeCopy(
 	ctx types.Context,
 	service, volumeID string,
 	request *types.VolumeCopyRequest) (*types.Volume, error) {
@@ -174,7 +175,7 @@ func (c *Client) VolumeCopy(
 }
 
 // VolumeRemove removes a single volume.
-func (c *Client) VolumeRemove(
+func (c *client) VolumeRemove(
 	ctx types.Context,
 	service, volumeID string) error {
 	cctx(&ctx)
@@ -186,7 +187,7 @@ func (c *Client) VolumeRemove(
 }
 
 // VolumeAttach attaches a single volume.
-func (c *Client) VolumeAttach(
+func (c *client) VolumeAttach(
 	ctx types.Context,
 	service string,
 	volumeID string,
@@ -202,7 +203,7 @@ func (c *Client) VolumeAttach(
 }
 
 // VolumeDetach attaches a single volume.
-func (c *Client) VolumeDetach(
+func (c *client) VolumeDetach(
 	ctx types.Context,
 	service string,
 	volumeID string,
@@ -218,7 +219,7 @@ func (c *Client) VolumeDetach(
 }
 
 // VolumeDetachAll attaches all volumes from all types.
-func (c *Client) VolumeDetachAll(
+func (c *client) VolumeDetachAll(
 	ctx types.Context,
 	request *types.VolumeDetachRequest) (types.ServiceVolumeMap, error) {
 	cctx(&ctx)
@@ -231,7 +232,7 @@ func (c *Client) VolumeDetachAll(
 }
 
 // VolumeDetachAllForService detaches all volumes from a service.
-func (c *Client) VolumeDetachAllForService(
+func (c *client) VolumeDetachAllForService(
 	ctx types.Context,
 	service string,
 	request *types.VolumeDetachRequest) (types.VolumeMap, error) {
@@ -246,7 +247,7 @@ func (c *Client) VolumeDetachAllForService(
 }
 
 // VolumeSnapshot creates a single snapshot.
-func (c *Client) VolumeSnapshot(
+func (c *client) VolumeSnapshot(
 	ctx types.Context,
 	service string,
 	volumeID string,
@@ -262,7 +263,7 @@ func (c *Client) VolumeSnapshot(
 }
 
 // Snapshots returns a list of all Snapshots for all types.
-func (c *Client) Snapshots(
+func (c *client) Snapshots(
 	ctx types.Context) (types.ServiceSnapshotMap, error) {
 	cctx(&ctx)
 	reply := types.ServiceSnapshotMap{}
@@ -273,7 +274,7 @@ func (c *Client) Snapshots(
 }
 
 // SnapshotsByService returns a list of all Snapshots for a single service.
-func (c *Client) SnapshotsByService(
+func (c *client) SnapshotsByService(
 	ctx types.Context, service string) (types.SnapshotMap, error) {
 	cctx(&ctx)
 	reply := types.SnapshotMap{}
@@ -285,7 +286,7 @@ func (c *Client) SnapshotsByService(
 }
 
 // SnapshotInspect gets information about a single snapshot.
-func (c *Client) SnapshotInspect(
+func (c *client) SnapshotInspect(
 	ctx types.Context,
 	service, snapshotID string) (*types.Snapshot, error) {
 	cctx(&ctx)
@@ -299,7 +300,7 @@ func (c *Client) SnapshotInspect(
 }
 
 // SnapshotRemove removes a single snapshot.
-func (c *Client) SnapshotRemove(
+func (c *client) SnapshotRemove(
 	ctx types.Context,
 	service, snapshotID string) error {
 	cctx(&ctx)
@@ -311,7 +312,7 @@ func (c *Client) SnapshotRemove(
 }
 
 // SnapshotCopy copies a snapshot to a new snapshot.
-func (c *Client) SnapshotCopy(
+func (c *client) SnapshotCopy(
 	ctx types.Context,
 	service, snapshotID string,
 	request *types.SnapshotCopyRequest) (*types.Snapshot, error) {
@@ -326,7 +327,7 @@ func (c *Client) SnapshotCopy(
 }
 
 // Executors returns information about the executors.
-func (c *Client) Executors(
+func (c *client) Executors(
 	ctx types.Context) (map[string]*types.ExecutorInfo, error) {
 	cctx(&ctx)
 	reply := map[string]*types.ExecutorInfo{}
@@ -337,7 +338,7 @@ func (c *Client) Executors(
 }
 
 // ExecutorHead returns information about an executor.
-func (c *Client) ExecutorHead(
+func (c *client) ExecutorHead(
 	ctx types.Context,
 	name string) (*types.ExecutorInfo, error) {
 	cctx(&ctx)
@@ -365,7 +366,7 @@ func (c *Client) ExecutorHead(
 }
 
 // ExecutorGet downloads an executor.
-func (c *Client) ExecutorGet(
+func (c *client) ExecutorGet(
 	ctx types.Context, name string) (io.ReadCloser, error) {
 	cctx(&ctx)
 	res, err := c.httpGet(ctx, fmt.Sprintf("/executors/%s", name), nil)

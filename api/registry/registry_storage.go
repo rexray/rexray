@@ -2,7 +2,6 @@ package registry
 
 import (
 	"github.com/emccode/libstorage/api/types"
-	lstypes "github.com/emccode/libstorage/drivers/storage/libstorage/types"
 )
 
 type sdm struct {
@@ -16,9 +15,16 @@ func NewStorageDriverManager(
 	return &sdm{StorageDriver: d}
 }
 
-func (d *sdm) API() lstypes.Client {
-	if sd, ok := d.StorageDriver.(lstypes.Driver); ok {
+func (d *sdm) API() types.APIClient {
+	if sd, ok := d.StorageDriver.(types.ProvidesAPIClient); ok {
 		return sd.API()
+	}
+	return nil
+}
+
+func (d *sdm) XCLI() types.StorageExecutorCLI {
+	if sd, ok := d.StorageDriver.(types.ProvidesStorageExecutorCLI); ok {
+		return sd.XCLI()
 	}
 	return nil
 }

@@ -82,9 +82,11 @@ func (d *driver) NextDeviceInfo(
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
+	iid := ctx.InstanceID()
+	iid.Formatted = true
 	return &types.Instance{
 		Name:       "vfsInstance",
-		InstanceID: ctx.InstanceID(),
+		InstanceID: iid,
 	}, nil
 }
 
@@ -104,9 +106,6 @@ func (d *driver) Volumes(
 		if err != nil {
 			return nil, err
 		}
-		if !opts.Attachments {
-			v.Attachments = nil
-		}
 		volumes = append(volumes, v)
 	}
 
@@ -120,9 +119,6 @@ func (d *driver) VolumeInspect(
 	v, err := d.getVolumeByID(volumeID)
 	if err != nil {
 		return nil, err
-	}
-	if !opts.Attachments {
-		v.Attachments = nil
 	}
 	return v, nil
 }

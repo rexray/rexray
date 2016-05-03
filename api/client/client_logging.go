@@ -11,9 +11,9 @@ import (
 	"github.com/akutz/gotil"
 )
 
-func (c *Client) logRequest(req *http.Request) {
+func (c *client) logRequest(req *http.Request) {
 
-	if !c.LogRequests {
+	if !c.logRequests {
 		return
 	}
 
@@ -33,9 +33,9 @@ func (c *Client) logRequest(req *http.Request) {
 	fmt.Fprintln(w)
 }
 
-func (c *Client) logResponse(res *http.Response) {
+func (c *client) logResponse(res *http.Response) {
 
-	if !c.LogResponses {
+	if !c.logResponses {
 		return
 	}
 

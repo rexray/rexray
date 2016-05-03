@@ -25,21 +25,15 @@ func (r *router) volumes(
 	if err != nil {
 		return err
 	}
-	lcaseFLeft := ""
-	lcaseFRight := ""
 	if filter != nil {
 		store.Set("filter", filter)
-		lcaseFLeft = strings.ToLower(filter.Left)
-		lcaseFRight = strings.ToLower(filter.Right)
 	}
-
-	attachments := store.GetBool("attachments")
 
 	var (
 		tasks   = map[string]*types.Task{}
 		taskIDs []int
 		opts    = &types.VolumesOpts{
-			Attachments: attachments,
+			Attachments: store.GetBool("attachments"),
 			Opts:        store,
 		}
 		reply = types.ServiceVolumeMap{}
@@ -56,26 +50,7 @@ func (r *router) volumes(
 				return nil, err
 			}
 
-			if attachments && ctx.InstanceID() == nil {
-				return nil, utils.NewMissingInstanceIDError(service.Name())
-			}
-
-			objs, err := svc.Driver().Volumes(ctx, opts)
-			if err != nil {
-				return nil, err
-			}
-
-			objMap := map[string]*types.Volume{}
-			for _, obj := range objs {
-				if lcaseFLeft == "name" {
-					if strings.ToLower(obj.Name) == lcaseFRight {
-						objMap[obj.ID] = obj
-					}
-				} else {
-					objMap[obj.ID] = obj
-				}
-			}
-			return objMap, nil
+			return getFilteredVolumes(ctx, svc, opts, filter)
 		}
 
 		task := service.TaskExecute(ctx, run, schema.VolumeMapSchema)
@@ -92,10 +67,10 @@ func (r *router) volumes(
 				return nil, utils.NewBatchProcessErr(reply, v.Error)
 			}
 
-			objMap, ok := v.Result.(map[string]*types.Volume)
+			objMap, ok := v.Result.(types.VolumeMap)
 			if !ok {
 				return nil, utils.NewBatchProcessErr(
-					reply, goof.New("error casting to []*types.Volume"))
+					reply, goof.New("error casting to types.VolumeMap"))
 			}
 			reply[k] = objMap
 		}
@@ -121,12 +96,8 @@ func (r *router) volumesForService(
 	if err != nil {
 		return err
 	}
-	lcaseFLeft := ""
-	lcaseFRight := ""
 	if filter != nil {
 		store.Set("filter", filter)
-		lcaseFLeft = strings.ToLower(filter.Left)
-		lcaseFRight = strings.ToLower(filter.Right)
 	}
 
 	service, err := httputils.GetService(ctx)
@@ -134,13 +105,8 @@ func (r *router) volumesForService(
 		return err
 	}
 
-	attachments := store.GetBool("attachments")
-	if attachments && ctx.InstanceID() == nil {
-		return utils.NewMissingInstanceIDError(service.Name())
-	}
-
 	opts := &types.VolumesOpts{
-		Attachments: attachments,
+		Attachments: store.GetBool("attachments"),
 		Opts:        store,
 	}
 
@@ -148,23 +114,7 @@ func (r *router) volumesForService(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		var reply types.VolumeMap = map[string]*types.Volume{}
-
-		objs, err := svc.Driver().Volumes(ctx, opts)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, obj := range objs {
-			if lcaseFLeft == "name" {
-				if strings.ToLower(obj.Name) == lcaseFRight {
-					reply[obj.ID] = obj
-				}
-			} else {
-				reply[obj.ID] = obj
-			}
-		}
-		return reply, nil
+		return getFilteredVolumes(ctx, svc, opts, filter)
 	}
 
 	return httputils.WriteTask(
@@ -173,6 +123,70 @@ func (r *router) volumesForService(
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeMapSchema),
 		http.StatusOK)
+}
+
+func getFilteredVolumes(
+	ctx types.Context,
+	storSvc types.StorageService,
+	opts *types.VolumesOpts,
+	filter *types.Filter) (types.VolumeMap, error) {
+
+	var (
+		iid         = ctx.InstanceID()
+		filterOp    types.FilterOperator
+		filterLeft  string
+		filterRight string
+		objMap      = types.VolumeMap{}
+	)
+
+	if opts.Attachments && iid == nil {
+		return nil, utils.NewMissingInstanceIDError(storSvc.Name())
+	}
+
+	objs, err := storSvc.Driver().Volumes(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	lcaseIID := ""
+	if iid != nil {
+		lcaseIID = strings.ToLower(iid.ID)
+	}
+
+	if filter != nil {
+		filterOp = filter.Op
+		filterLeft = strings.ToLower(filter.Left)
+		filterRight = strings.ToLower(filter.Right)
+	}
+
+	for _, obj := range objs {
+
+		objFiltered := false
+		if filterOp == types.FilterEqualityMatch && filterLeft == "name" {
+			objFiltered = strings.ToLower(obj.Name) != filterRight
+		}
+
+		if objFiltered {
+			continue
+		}
+
+		attsToRemove := []int{}
+		if opts.Attachments {
+			atts := obj.Attachments
+			for x, a := range atts {
+				if lcaseIID != strings.ToLower(a.InstanceID.ID) {
+					attsToRemove = append(attsToRemove, x)
+				}
+			}
+			for _, x := range attsToRemove {
+				atts = append(atts[:x], atts[x+1:]...)
+			}
+		}
+
+		objMap[obj.ID] = obj
+	}
+
+	return objMap, nil
 }
 
 func (r *router) volumeInspect(

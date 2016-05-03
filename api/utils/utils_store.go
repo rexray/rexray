@@ -18,6 +18,7 @@ type keyValueStore struct {
 	store  map[string]interface{}
 	ttl    time.Duration
 	timers map[string]*ttlTimer
+	hl     bool
 }
 
 type ttlTimer struct {
@@ -43,18 +44,20 @@ func (t *ttlTimer) expired() bool {
 
 // NewStore initializes a new instance of the Store type.
 func NewStore() types.Store {
-	return newKeyValueStore(map[string]interface{}{}, -1)
+	return newKeyValueStore(map[string]interface{}{}, -1, false)
 }
 
 // NewTTLStore initializes a new instance of the Store type, but has a TTL
-// that expires contents after a sliding duration.
-func NewTTLStore(duration time.Duration) types.Store {
-	return newKeyValueStore(map[string]interface{}{}, duration)
+// that expires contents after a specific duration. The parameter hardLimit
+// can be set to true to change the TTL from a sliding expiration to a hard
+// limit.
+func NewTTLStore(duration time.Duration, hardLimit bool) types.Store {
+	return newKeyValueStore(map[string]interface{}{}, duration, hardLimit)
 }
 
 // NewStoreWithData initializes a new instance of the Store type.
 func NewStoreWithData(data map[string]interface{}) types.Store {
-	return newKeyValueStore(data, -1)
+	return newKeyValueStore(data, -1, false)
 }
 
 // NewStoreWithVars initializes a new instance of the Store type.
@@ -63,16 +66,21 @@ func NewStoreWithVars(vars map[string]string) types.Store {
 	for k, v := range vars {
 		m[k] = v
 	}
-	return newKeyValueStore(m, -1)
+	return newKeyValueStore(m, -1, false)
 }
 
-func newKeyValueStore(m map[string]interface{}, ttl time.Duration) types.Store {
+func newKeyValueStore(
+	m map[string]interface{},
+	ttl time.Duration,
+	hardLimit bool) types.Store {
+
 	cm := map[string]interface{}{}
 	for k, v := range m {
 		cm[strings.ToLower(k)] = v
 	}
 	store := &keyValueStore{store: cm}
 	if ttl > -1 {
+		store.hl = hardLimit
 		store.ttl = ttl
 		store.timers = map[string]*ttlTimer{}
 		for k := range cm {
@@ -144,7 +152,9 @@ func (s *keyValueStore) IsSet(k string) bool {
 	if !tok || ttlt.expired() {
 		return false
 	}
-	ttlt.touch(s.ttl)
+	if !s.hl {
+		ttlt.touch(s.ttl)
+	}
 	return true
 }
 
@@ -160,7 +170,9 @@ func (s *keyValueStore) Get(k string) interface{} {
 	if !tok || ttlt.expired() {
 		return nil
 	}
-	ttlt.touch(s.ttl)
+	if !s.hl {
+		ttlt.touch(s.ttl)
+	}
 	return v
 }
 

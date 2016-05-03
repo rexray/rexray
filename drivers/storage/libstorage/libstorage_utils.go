@@ -1,36 +1,15 @@
 package libstorage
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
 	"time"
 
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 )
-
-func (c *client) runExecutor(
-	ctx types.Context, driverName, cmdName string) ([]byte, error) {
-
-	ctx.Debug("waiting on executor lock")
-	if err := lsxMutex.Wait(); err != nil {
-		return nil, err
-	}
-	defer func() {
-		ctx.Debug("signalling executor lock")
-		if err := lsxMutex.Signal(); err != nil {
-			panic(err)
-		}
-	}()
-	cmd := exec.Command(c.lsxBinPath, driverName, cmdName)
-	cmd.Env = os.Environ()
-	for _, cev := range c.config.EnvVars() {
-		ctx.WithField("value", cev).Debug("set executor env var")
-		cmd.Env = append(cmd.Env, cev)
-	}
-	return cmd.CombinedOutput()
-}
 
 func withTX(ctx types.Context) types.Context {
 	txIDUUID, _ := utils.NewUUID()
@@ -49,7 +28,7 @@ func withTX(ctx types.Context) types.Context {
 }
 
 func withContext(ctx types.Context, parent types.Context) types.Context {
-	if ctx == nil {
+	if ctx == nil || ctx == parent {
 		return withTX(parent)
 	}
 	return ctx.Join(parent)
@@ -57,4 +36,44 @@ func withContext(ctx types.Context, parent types.Context) types.Context {
 
 func (c *client) withContext(ctx types.Context) types.Context {
 	return withContext(ctx, c.ctx)
+}
+
+func (c *client) updateInstanceIDHeaders(
+	driverName string,
+	iid *types.InstanceID) error {
+
+	headerKey := types.InstanceIDHeader
+	headerValue := fmt.Sprintf("%s,%v", iid.ID, iid.Formatted)
+
+	if len(iid.Metadata) > 0 {
+		buf, err := json.Marshal(iid)
+		if err != nil {
+			return err
+		}
+		headerKey = types.InstanceID64Header
+		headerValue = base64.StdEncoding.EncodeToString(buf)
+	}
+
+	c.AddHeaderForDriver(driverName, headerKey, headerValue)
+	return nil
+}
+
+func (c *client) updateLocalDevicesHeaders(
+	driverName string,
+	ldm map[string]string) error {
+
+	buf := &bytes.Buffer{}
+	for k, v := range ldm {
+		if _, err := fmt.Fprintf(buf, "%s=%s, ", k, v); err != nil {
+			return nil
+		}
+	}
+
+	if buf.Len() > 2 {
+		buf.Truncate(buf.Len() - 2)
+	}
+
+	c.AddHeaderForDriver(driverName, types.LocalDevicesHeader, buf.String())
+
+	return nil
 }

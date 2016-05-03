@@ -17,7 +17,7 @@ import (
 	"github.com/emccode/libstorage/client"
 
 	// load the  driver
-	"github.com/emccode/libstorage/drivers/storage/libstorage"
+
 	"github.com/emccode/libstorage/drivers/storage/mock"
 	mockx "github.com/emccode/libstorage/drivers/storage/mock/executor"
 )
@@ -65,36 +65,46 @@ func TestStorageDriverVolumes(t *testing.T) {
 func TestClient(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML,
 		func(config gofig.Config, client client.Client, t *testing.T) {
-			iid, err := client.API().InstanceID(nil, mock.Name)
+			iid, err := client.Executor().InstanceID(
+				context.Background().WithServiceName(mock.Name),
+				utils.NewStore())
 			assert.NoError(t, err)
 			assert.NotNil(t, iid)
 
-			iid, err = client.API().InstanceID(nil, "mock2")
+			iid, err = client.Executor().InstanceID(
+				context.Background().WithServiceName("mock2"),
+				utils.NewStore())
 			assert.NoError(t, err)
 			assert.NotNil(t, iid)
 
-			iid, err = client.API().InstanceID(nil, "mock3")
+			iid, err = client.Executor().InstanceID(
+				context.Background().WithServiceName("mock3"),
+				utils.NewStore())
 			assert.NoError(t, err)
 			assert.NotNil(t, iid)
 		})
 }
 
 func TestInstanceID(t *testing.T) {
+	iid := mockx.GetInstanceID()
+	iid.Formatted = true
 	apitests.Run(
 		t, mock.Name, nil,
 		(&apitests.InstanceIDTest{
 			Driver:   mock.Name,
-			Expected: mockx.GetInstanceID(),
+			Expected: iid,
 		}).Test)
 }
 
 func TestInstance(t *testing.T) {
+	iid := mockx.GetInstanceID()
+	iid.Formatted = true
 	apitests.Run(
 		t, mock.Name, nil,
 		(&apitests.InstanceTest{
 			Driver: mock.Name,
 			Expected: &types.Instance{
-				InstanceID: mockx.GetInstanceID(),
+				InstanceID: iid,
 				Name:       "mockInstance",
 			},
 		}).Test)
@@ -184,6 +194,7 @@ func TestVolumesWithAttachments(t *testing.T) {
 
 func TestVolumesWithAttachmentsNoLocalDevices(t *testing.T) {
 	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+		client.API().EnableLocalDevicesHeaders(false)
 		reply, err := client.API().Volumes(nil, true)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
@@ -199,9 +210,7 @@ func TestVolumesWithAttachmentsNoLocalDevices(t *testing.T) {
 		assert.NotEqual(
 			t, "/net/share", reply[mock.Name]["vol-000"].Attachments[2].MountPoint)
 	}
-	libstorage.EnableLocalDevicesHeaders = false
 	apitests.Run(t, mock.Name, configYAML, tf)
-	libstorage.EnableLocalDevicesHeaders = true
 }
 
 func TestVolumesByService(t *testing.T) {
@@ -405,7 +414,9 @@ func TestVolumeAttach(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		nd, _ := client.API().NextDevice(nil, mock.Name)
+		nd, _ := client.Executor().NextDevice(
+			context.Background().WithServiceName(mock.Name),
+			utils.NewStore())
 		request := &types.VolumeAttachRequest{
 			NextDeviceName: &nd,
 			Opts:           opts,
@@ -450,7 +461,9 @@ func TestVolumeDetachAllForService(t *testing.T) {
 			"owner":    "root@example.com",
 		}
 
-		nd, err := client.API().NextDevice(nil, "mock2")
+		nd, err := client.Executor().NextDevice(
+			context.Background().WithServiceName(mock.Name),
+			utils.NewStore())
 		assert.NoError(t, err)
 		request := &types.VolumeAttachRequest{
 			NextDeviceName: &nd,

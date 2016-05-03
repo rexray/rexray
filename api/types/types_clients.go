@@ -1,0 +1,189 @@
+package types
+
+import "io"
+
+// Client is the libStorage client.
+type Client interface {
+
+	// API returns the underlying libStorage API client.
+	API() APIClient
+
+	// OS returns the client's OS driver instance.
+	OS() OSDriver
+
+	// Storage returns the client's storage driver instance.
+	Storage() StorageDriver
+
+	// IntegrationDriver returns the client's integration driver instance.
+	Integration() IntegrationDriver
+
+	// Executor returns the storage executor CLI.
+	Executor() StorageExecutorCLI
+}
+
+// ProvidesAPIClient is any type that provides the API client.
+type ProvidesAPIClient interface {
+
+	// API provides the API client.
+	API() APIClient
+}
+
+// APIClient is the libStorage API client used for communicating with a remote
+// libStorage endpoint.
+type APIClient interface {
+
+	// EnableInstanceIDHeaders is a flag indicating whether or not the
+	// client will automatically send the instance ID header(s) along with
+	// storage-related API requests. The default is enabled.
+	EnableInstanceIDHeaders(enabled bool)
+
+	// EnableLocalDevicesHeaders is a flag indicating whether or not the
+	// client will automatically send the local devices header(s) along with
+	// storage-related API requests. The default is enabled.
+	EnableLocalDevicesHeaders(enabled bool)
+
+	// ServerName returns the name of the server to which the client is
+	// connected. This is not the same as the host name, rather it's the
+	// randomly generated name the server creates for unique identification
+	// when the server starts for the first time.
+	ServerName() string
+
+	// LogRequests enables or disables the logging of client HTTP requests.
+	LogRequests(enabled bool)
+
+	// LogResponses enables or disables the logging of client HTTP responses.
+	LogResponses(enabled bool)
+
+	// AddHeader provides the API client with a key/value pair that are
+	// added to all outgoing HTTP requests as a header.
+	AddHeader(key, value string)
+
+	// AddHeaderForDriver is a variant of AddHeader and adds a header in the
+	// format HEADER_KEY: DRIVER_NAME=HEADER_VALUE_KEY=HEADER_VALUE_VALUE.
+	// If there's an existing header with the same HEADER_KEY and
+	// DRIVER_NAME it is replaced.
+	AddHeaderForDriver(driverName, key, value string)
+
+	// Root returns a list of root resources.
+	Root(ctx Context) ([]string, error)
+
+	// Instances returns a list of instances.
+	Instances(ctx Context) (map[string]*Instance, error)
+
+	// InstanceInspect inspects an instance.
+	InstanceInspect(ctx Context, service string) (*Instance, error)
+
+	// Services returns a map of the configured Services.
+	Services(ctx Context) (map[string]*ServiceInfo, error)
+
+	// ServiceInspect returns information about a service.
+	ServiceInspect(ctx Context, name string) (*ServiceInfo, error)
+
+	// Volumes returns a list of all Volumes for all Services.
+	Volumes(
+		ctx Context,
+		attachments bool) (ServiceVolumeMap, error)
+
+	// VolumesByService returns a list of all Volumes for a service.
+	VolumesByService(
+		ctx Context,
+		service string,
+		attachments bool) (VolumeMap, error)
+
+	// VolumeInspect gets information about a single volume.
+	VolumeInspect(
+		ctx Context,
+		service, volumeID string,
+		attachments bool) (*Volume, error)
+
+	// VolumeCreate creates a single volume.
+	VolumeCreate(
+		ctx Context,
+		service string,
+		request *VolumeCreateRequest) (*Volume, error)
+
+	// VolumeCreateFromSnapshot creates a single volume from a snapshot.
+	VolumeCreateFromSnapshot(
+		ctx Context,
+		service, snapshotID string,
+		request *VolumeCreateRequest) (*Volume, error)
+
+	// VolumeCopy copies a single volume.
+	VolumeCopy(
+		ctx Context,
+		service, volumeID string,
+		request *VolumeCopyRequest) (*Volume, error)
+
+	// VolumeRemove removes a single volume.
+	VolumeRemove(
+		ctx Context,
+		service, volumeID string) error
+
+	// VolumeAttach attaches a single volume.
+	VolumeAttach(
+		ctx Context,
+		service string,
+		volumeID string,
+		request *VolumeAttachRequest) (*Volume, error)
+
+	// VolumeDetach attaches a single volume.
+	VolumeDetach(
+		ctx Context,
+		service string,
+		volumeID string,
+		request *VolumeDetachRequest) (*Volume, error)
+
+	// VolumeDetachAll attaches all volumes from all
+	VolumeDetachAll(
+		ctx Context,
+		request *VolumeDetachRequest) (ServiceVolumeMap, error)
+
+	// VolumeDetachAllForService detaches all volumes from a service.
+	VolumeDetachAllForService(
+		ctx Context,
+		service string,
+		request *VolumeDetachRequest) (VolumeMap, error)
+
+	// VolumeSnapshot creates a single snapshot.
+	VolumeSnapshot(
+		ctx Context,
+		service string,
+		volumeID string,
+		request *VolumeSnapshotRequest) (*Snapshot, error)
+
+	// Snapshots returns a list of all Snapshots for all
+	Snapshots(ctx Context) (ServiceSnapshotMap, error)
+
+	// SnapshotsByService returns a list of all Snapshots for a single service.
+	SnapshotsByService(
+		ctx Context, service string) (SnapshotMap, error)
+
+	// SnapshotInspect gets information about a single snapshot.
+	SnapshotInspect(
+		ctx Context,
+		service, snapshotID string) (*Snapshot, error)
+
+	// SnapshotRemove removes a single snapshot.
+	SnapshotRemove(
+		ctx Context,
+		service, snapshotID string) error
+
+	// SnapshotCopy copies a snapshot to a new snapshot.
+	SnapshotCopy(
+		ctx Context,
+		service, snapshotID string,
+		request *SnapshotCopyRequest) (*Snapshot, error)
+
+	// Executors returns information about the executors.
+	Executors(
+		ctx Context) (map[string]*ExecutorInfo, error)
+
+	// ExecutorHead returns information about an executor.
+	ExecutorHead(
+		ctx Context,
+		name string) (*ExecutorInfo, error)
+
+	// ExecutorGet downloads an executor.
+	ExecutorGet(
+		ctx Context, name string) (io.ReadCloser, error)
+}

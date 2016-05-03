@@ -87,6 +87,10 @@ const (
                     "type": "string",
                     "description": "The instance ID."
                 },
+                "formatted": {
+                    "type": "boolean",
+                    "description": "A flag indicating whether or not the instance ID has been formatted by an instance inspection."
+                },
                 "metadata": {
                     "type": "object",
                     "description": "Extra information about the instance ID."

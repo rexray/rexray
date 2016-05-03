@@ -3,8 +3,11 @@ package config
 import (
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils/paths"
 )
 
@@ -13,10 +16,10 @@ func NewConfig() (gofig.Config, error) {
 	config := gofig.New()
 
 	etcYML := fmt.Sprintf("%s/config.yml", paths.EtcDirPath())
-	usrYML := fmt.Sprintf("%s/config.yml", paths.UsrDirPath)
+	usrYML := fmt.Sprintf("%s/config.yml", paths.UsrDirPath())
 
 	etcYAML := fmt.Sprintf("%s/config.yaml", paths.EtcDirPath())
-	usrYAML := fmt.Sprintf("%s/config.yaml", paths.UsrDirPath)
+	usrYAML := fmt.Sprintf("%s/config.yaml", paths.UsrDirPath())
 
 	if err := readConfigFile(config, etcYML); err != nil {
 		return nil, err
@@ -32,6 +35,15 @@ func NewConfig() (gofig.Config, error) {
 	}
 
 	return config, nil
+}
+
+// UpdateLogLevel updates the log level based on the config.
+func UpdateLogLevel(config gofig.Config) {
+	ll, err := log.ParseLevel(config.GetString(types.ConfigLogLevel))
+	if err != nil {
+		return
+	}
+	log.SetLevel(ll)
 }
 
 func readConfigFile(config gofig.Config, path string) error {

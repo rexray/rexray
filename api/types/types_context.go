@@ -55,14 +55,8 @@ type Context interface {
 	// ServiceName returns the name of the context's service.
 	ServiceName() string
 
-	// StorageDriver returns this context's storage driver.
-	StorageDriver() StorageDriver
-
-	// OSDriver returns this context's OS driver.
-	OSDriver() OSDriver
-
-	// IntegrationDriver returns this context's integration driver.
-	IntegrationDriver() IntegrationDriver
+	// Client returns this context's client.
+	Client() Client
 
 	// WithConfig returns a context with the provided config.
 	WithConfig(config gofig.Config) Context
@@ -112,15 +106,8 @@ type Context interface {
 	// created timestamp.
 	WithTransactionCreated(timestamp time.Time) Context
 
-	// WithStorageDriver returns a context with the provided storage driver.
-	WithStorageDriver(driver StorageDriver) Context
-
-	// WithOSDriver returns a context with the provided OS driver.
-	WithOSDriver(driver OSDriver) Context
-
-	// WithIntegrationDriver returns a context with the provided integration
-	// driver.
-	WithIntegrationDriver(driver IntegrationDriver) Context
+	// WithClient returns a context with the provided client.
+	WithClient(client Client) Context
 }
 
 // ContextKey is the type used as a context key.
@@ -185,6 +172,9 @@ const (
 
 	// ContextTransactionCreated is a context key.
 	ContextTransactionCreated
+
+	// ContextClient is a context key.
+	ContextClient
 
 	// ContextOSDriver is a context key.
 	ContextOSDriver

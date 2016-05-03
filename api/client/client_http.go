@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/akutz/goof"
@@ -16,7 +17,7 @@ import (
 	"github.com/emccode/libstorage/api/utils"
 )
 
-func (c *Client) httpDo(
+func (c *client) httpDo(
 	ctx types.Context,
 	method, path string,
 	payload, reply interface{}) (*http.Response, error) {
@@ -41,14 +42,31 @@ func (c *Client) httpDo(
 		return nil, err
 	}
 
-	url := fmt.Sprintf("http://%s%s", c.Host, path)
+	url := fmt.Sprintf("http://%s%s", c.host, path)
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		return nil, err
 	}
 
-	for k, v := range c.Headers {
-		req.Header[k] = v
+	liidh := strings.ToLower(types.InstanceIDHeader)
+	liid64h := strings.ToLower(types.InstanceID64Header)
+	ldh := strings.ToLower(types.LocalDevicesHeader)
+
+	for k, v := range c.headers {
+		lk := strings.ToLower(k)
+		switch lk {
+		case liidh, liid64h:
+			if c.enableInstanceIDHeaders {
+				req.Header[k] = v
+			}
+		case ldh:
+			if c.enableLocalDevicesHeaders {
+				req.Header[k] = v
+			}
+		default:
+			req.Header[k] = v
+		}
+
 	}
 
 	req.Header.Set(types.TransactionIDHeader, txID)
@@ -56,7 +74,7 @@ func (c *Client) httpDo(
 		types.TransactionCreatedHeader, fmt.Sprintf("%d", txCR.Unix()))
 	c.logRequest(req)
 
-	res, err := ctxhttp.Do(ctx, c.Client, req)
+	res, err := ctxhttp.Do(ctx, &c.Client, req)
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +99,11 @@ func (c *Client) httpDo(
 	return res, nil
 }
 
-func (c *Client) setServerName(res *http.Response) {
-	snh := utils.GetHeader(res.Header, types.ServerNameHeader)
-	if len(snh) > 0 {
-		c.ServerName = snh[0]
-	}
+func (c *client) setServerName(res *http.Response) {
+	c.serverName = res.Header.Get(types.ServerNameHeader)
 }
 
-func (c *Client) httpGet(
+func (c *client) httpGet(
 	ctx types.Context,
 	path string,
 	reply interface{}) (*http.Response, error) {
@@ -96,14 +111,14 @@ func (c *Client) httpGet(
 	return c.httpDo(ctx, "GET", path, nil, reply)
 }
 
-func (c *Client) httpHead(
+func (c *client) httpHead(
 	ctx types.Context,
 	path string) (*http.Response, error) {
 
 	return c.httpDo(ctx, "HEAD", path, nil, nil)
 }
 
-func (c *Client) httpPost(
+func (c *client) httpPost(
 	ctx types.Context,
 	path string,
 	payload interface{},
@@ -112,7 +127,7 @@ func (c *Client) httpPost(
 	return c.httpDo(ctx, "POST", path, payload, reply)
 }
 
-func (c *Client) httpDelete(
+func (c *client) httpDelete(
 	ctx types.Context,
 	path string,
 	reply interface{}) (*http.Response, error) {

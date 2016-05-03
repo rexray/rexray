@@ -24,7 +24,7 @@ func (d *driver) inspectByIDOrName(
 	volumeID, volumeName string,
 	opts types.Store) (*types.Volume, error) {
 
-	objs, err := ctx.StorageDriver().Volumes(ctx, &types.VolumesOpts{})
+	objs, err := ctx.Client().Storage().Volumes(ctx, &types.VolumesOpts{})
 	if err != nil {
 		return nil, err
 	}

@@ -17,6 +17,10 @@ const (
 )
 
 func init() {
+	gofig.LogGetAndSet = false
+	gofig.LogSecureKey = false
+	gofig.LogFlattenEnvVars = false
+
 	logLevel, err := log.ParseLevel(os.Getenv("LIBSTORAGE_LOGGING_LEVEL"))
 	if err != nil {
 		logLevel = log.InfoLevel
@@ -62,6 +66,7 @@ func init() {
 	rk(gofig.Bool, false, "", types.ConfigVolRemoveDisable)
 	rk(gofig.Bool, false, "", types.ConfigVolUnmountIgnoreUsed)
 	rk(gofig.Bool, false, "", types.ConfigVolPathCache)
+	rk(gofig.String, "30m", "", types.ConfigClientCacheInstanceID)
 
 	gofig.Register(r)
 }

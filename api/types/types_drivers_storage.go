@@ -3,9 +3,6 @@ package types
 // LibStorageDriverName is the name of the libStorage storage driver.
 const LibStorageDriverName = "libstorage"
 
-// NewStorageExecutor is a function that constructs a new StorageExecutors.
-type NewStorageExecutor func() StorageExecutor
-
 // NewStorageDriver is a function that constructs a new StorageDriver.
 type NewStorageDriver func() StorageDriver
 
@@ -41,27 +38,6 @@ type VolumeAttachOpts struct {
 type VolumeDetachOpts struct {
 	Force bool
 	Opts  Store
-}
-
-// StorageExecutor is the part of a storage driver that is downloaded at
-// runtime by the libStorage client.
-type StorageExecutor interface {
-	Driver
-
-	// InstanceID returns the local system's InstanceID.
-	InstanceID(
-		ctx Context,
-		opts Store) (*InstanceID, error)
-
-	// NextDevice returns the next available device.
-	NextDevice(
-		ctx Context,
-		opts Store) (string, error)
-
-	// LocalDevices returns a map of the system's local devices.
-	LocalDevices(
-		ctx Context,
-		opts Store) (map[string]string, error)
 }
 
 // StorageDriverManager is the management wrapper for a StorageDriver.

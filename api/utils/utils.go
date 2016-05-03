@@ -3,10 +3,8 @@ package utils
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"reflect"
-	"strings"
 
 	_ "github.com/akutz/golf"
 )
@@ -24,16 +22,6 @@ func GetTypePkgPathAndName(i interface{}) string {
 		return typeName
 	}
 	return fmt.Sprintf("%s.%s", pkgPath, typeName)
-}
-
-// GetHeader is a case-insensitive way to retrieve a header's value.
-func GetHeader(headers http.Header, name string) []string {
-	for k, v := range headers {
-		if strings.ToLower(k) == strings.ToLower(name) {
-			return v
-		}
-	}
-	return nil
 }
 
 // GetTempSockFile returns a new sock file in a temp space.

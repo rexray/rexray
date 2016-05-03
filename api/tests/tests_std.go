@@ -43,7 +43,8 @@ func (tt *InstanceIDTest) Test(
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
 
-	iid, err := client.API().InstanceID(nil, tt.Driver)
+	iid, err := client.Executor().InstanceID(
+		context.Background().WithServiceName(tt.Driver), utils.NewStore())
 	assert.NoError(t, err)
 
 	iidBuf, err := json.Marshal(iid)
@@ -70,6 +71,7 @@ func (tt *InstanceTest) Test(
 	client client.Client,
 	t *testing.T) {
 
+	tt.Expected.InstanceID.Formatted = true
 	expectedBuf, err := json.Marshal(tt.Expected)
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
@@ -101,7 +103,8 @@ func (tt *NextDeviceTest) Test(
 	config gofig.Config,
 	client client.Client,
 	t *testing.T) {
-	val, err := client.API().NextDevice(nil, tt.Driver)
+	val, err := client.Executor().NextDevice(
+		context.Background().WithServiceName(tt.Driver), utils.NewStore())
 	assert.NoError(t, err)
 	assert.Equal(t, tt.Expected, val)
 }
@@ -127,7 +130,8 @@ func (tt *LocalDevicesTest) Test(
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
 
-	val, err := client.API().LocalDevices(nil, tt.Driver)
+	val, err := client.Executor().LocalDevices(
+		context.Background().WithServiceName(tt.Driver), utils.NewStore())
 	assert.NoError(t, err)
 
 	buf, err := json.Marshal(val)

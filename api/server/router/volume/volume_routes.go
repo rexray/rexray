@@ -181,6 +181,13 @@ func getFilteredVolumes(
 			for _, x := range attsToRemove {
 				atts = append(atts[:x], atts[x+1:]...)
 			}
+			if len(atts) == 0 {
+				objFiltered = true
+			}
+		}
+
+		if objFiltered {
+			continue
 		}
 
 		objMap[obj.ID] = obj

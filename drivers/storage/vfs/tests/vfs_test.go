@@ -35,7 +35,7 @@ import (
 func TestMain(m *testing.M) {
 	server.CloseOnAbort()
 	ec := m.Run()
-	//removeTestDirs()
+	removeTestDirs()
 	os.Exit(ec)
 }
 
@@ -61,10 +61,12 @@ func TestVolumesWithAttachments(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for volumeID, volume := range vols {
-			assert.NotNil(t, reply["vfs"][volumeID])
-			assert.EqualValues(t, volume, reply["vfs"][volumeID])
-		}
+
+		assert.NotNil(t, reply["vfs"]["vfs-000"])
+		assert.NotNil(t, reply["vfs"]["vfs-001"])
+		assert.Nil(t, reply["vfs"]["vfs-002"])
+		assert.EqualValues(t, vols["vfs-000"], reply["vfs"]["vfs-000"])
+		assert.EqualValues(t, vols["vfs-001"], reply["vfs"]["vfs-001"])
 	}
 	apitests.Run(t, vfs.Name, tc, tf)
 }
@@ -91,10 +93,11 @@ func TestVolumesByServiceWithAttachments(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for volumeID, volume := range vols {
-			assert.NotNil(t, reply[volumeID])
-			assert.EqualValues(t, volume, reply[volumeID])
-		}
+		assert.NotNil(t, reply["vfs-000"])
+		assert.NotNil(t, reply["vfs-001"])
+		assert.Nil(t, reply["vfs-002"])
+		assert.EqualValues(t, vols["vfs-000"], reply["vfs-000"])
+		assert.EqualValues(t, vols["vfs-001"], reply["vfs-001"])
 	}
 	apitests.Run(t, vfs.Name, tc, tf)
 }
@@ -390,6 +393,11 @@ func TestVolumeDetachAllForService(t *testing.T) {
 		reply, err = client.API().VolumesByService(
 			nil, vfs.Name, true)
 		assert.NoError(t, err)
+		assert.Equal(t, 0, len(reply))
+
+		reply, err = client.API().VolumesByService(
+			nil, vfs.Name, false)
+		assert.NoError(t, err)
 		assert.Equal(t, 3, len(reply))
 		assert.EqualValues(t, vols, reply)
 	}
@@ -413,8 +421,12 @@ func TestVolumeDetachAll(t *testing.T) {
 		reply, err = client.API().Volumes(nil, true)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(reply))
+		assert.Equal(t, 0, len(reply[vfs.Name]))
+
+		reply, err = client.API().Volumes(nil, false)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(reply))
 		assert.Equal(t, 3, len(reply[vfs.Name]))
-		assert.EqualValues(t, vols, reply[vfs.Name])
 	}
 	apitests.Run(t, vfs.Name, tc, tf)
 }

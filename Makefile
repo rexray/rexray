@@ -191,6 +191,12 @@ RPMDIR := $(BUILDS)/rpm
 
 all: install
 
+VEND_LIBSTR := vendor/github.com/emccode/libstorage
+EXEC_GEN_GO := $(VEND_LIBSTR)/api/server/executors/executors_generated.go
+executors: $(EXEC_GEN_GO)
+$(EXEC_GEN_GO):
+	cd $(VEND_LIBSTR) && $(MAKE) $(subst $(VEND_LIBSTR)/,,$@) && cd -
+
 _pre-make:
 	@if [ "$(CWD)" != "$(BASEDIR)" ]; then \
 		if [ -e "$(BASEDIR)" ]; then \
@@ -220,6 +226,7 @@ _deps:
 		printf "  ...go get..."; \
 			go get -d $(GOFLAGS) $(NV); \
 			$(PRINT_STATUS); \
+		$(MAKE) executors; \
 	fi
 
 build: _pre-make _build _post-make
@@ -286,7 +293,6 @@ build-linux-amd64_:
 rebuild-linux-amd64: _pre-make _clean _build-linux-amd64 _post-make
 rebuild-all-linux-amd64: _pre-make _clean-all _build-linux-amd64 _post-make
 
-
 build-darwin-amd64: _pre-make _build-darwin-amd64 _post-make
 _build-darwin-amd64: _deps _fmt build-darwin-amd64_
 build-darwin-amd64_:
@@ -295,7 +301,6 @@ build-darwin-amd64_:
 	fi
 rebuild-darwin-amd64: _pre-make _clean _build-darwin-amd64 _post-make
 rebuild-all-darwin-amd64: _pre-make _clean-all _build-darwin-amd64 _post-make
-
 
 install: _pre-make version-noarch _install _post-make
 _install: _deps _fmt

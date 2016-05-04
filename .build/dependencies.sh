@@ -6,6 +6,18 @@ cwd=$(pwd)
 tmp=$HOME/.tmp && mkdir -p $tmp
 
 ########################################################################
+##                         go-bindata                                 ##
+########################################################################
+GBD_GIT=https://github.com/akutz/go-bindata.git
+GBD_DIR=$GOPATH/src/github.com/jteeuwen/go-bindata
+mkdir -p $GBD_DIR && \
+    cd $GBD_DIR && \
+    git clone $GBD_GIT . && \
+    git checkout feature/md5checksum && \
+    go install ./... && \
+    cd -
+
+########################################################################
 ##                           coverage                                 ##
 ########################################################################
 

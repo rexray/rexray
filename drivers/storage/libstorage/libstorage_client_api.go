@@ -204,8 +204,9 @@ func (c *client) VolumeAttach(
 	ctx types.Context,
 	service string,
 	volumeID string,
-	request *types.VolumeAttachRequest) (*types.Volume, error) {
-	return c.APIClient.VolumeAttach(c.withContext(ctx), service, volumeID, request)
+	request *types.VolumeAttachRequest) (*types.Volume, string, error) {
+	return c.APIClient.VolumeAttach(
+		c.withContext(ctx), service, volumeID, request)
 }
 
 func (c *client) VolumeDetach(
@@ -213,7 +214,8 @@ func (c *client) VolumeDetach(
 	service string,
 	volumeID string,
 	request *types.VolumeDetachRequest) (*types.Volume, error) {
-	return c.APIClient.VolumeDetach(c.withContext(ctx), service, volumeID, request)
+	return c.APIClient.VolumeDetach(
+		c.withContext(ctx), service, volumeID, request)
 }
 
 func (c *client) VolumeDetachAll(
@@ -235,7 +237,8 @@ func (c *client) VolumeSnapshot(
 	service string,
 	volumeID string,
 	request *types.VolumeSnapshotRequest) (*types.Snapshot, error) {
-	return c.APIClient.VolumeSnapshot(c.withContext(ctx), service, volumeID, request)
+	return c.APIClient.VolumeSnapshot(
+		c.withContext(ctx), service, volumeID, request)
 }
 
 func (c *client) Snapshots(
@@ -264,7 +267,8 @@ func (c *client) SnapshotCopy(
 	ctx types.Context,
 	service, snapshotID string,
 	request *types.SnapshotCopyRequest) (*types.Snapshot, error) {
-	return c.APIClient.SnapshotCopy(c.withContext(ctx), service, snapshotID, request)
+	return c.APIClient.SnapshotCopy(
+		c.withContext(ctx), service, snapshotID, request)
 }
 
 func (c *client) Executors(

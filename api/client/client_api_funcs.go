@@ -191,15 +191,15 @@ func (c *client) VolumeAttach(
 	ctx types.Context,
 	service string,
 	volumeID string,
-	request *types.VolumeAttachRequest) (*types.Volume, error) {
+	request *types.VolumeAttachRequest) (*types.Volume, string, error) {
 	cctx(&ctx)
-	reply := types.Volume{}
+	reply := types.VolumeAttachResponse{}
 	if _, err := c.httpPost(ctx,
 		fmt.Sprintf("/volumes/%s/%s?attach",
 			service, volumeID), request, &reply); err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return &reply, nil
+	return reply.Volume, reply.AttachToken, nil
 }
 
 // VolumeDetach attaches a single volume.

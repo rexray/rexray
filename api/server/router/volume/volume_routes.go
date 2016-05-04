@@ -438,7 +438,7 @@ func (r *router) volumeAttach(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		v, err := svc.Driver().VolumeAttach(
+		v, attTokn, err := svc.Driver().VolumeAttach(
 			ctx,
 			store.GetString("volumeID"),
 			&types.VolumeAttachOpts{
@@ -461,14 +461,17 @@ func (r *router) volumeAttach(
 			}
 		}
 
-		return v, nil
+		return &types.VolumeAttachResponse{
+			Volume:      v,
+			AttachToken: attTokn,
+		}, nil
 	}
 
 	return httputils.WriteTask(
 		ctx,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		service.TaskExecute(ctx, run, schema.VolumeAttachResponseSchema),
 		http.StatusOK)
 }
 

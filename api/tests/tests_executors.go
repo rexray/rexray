@@ -8,13 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/client"
 )
 
 // TestExecutors tests the GET /executors route.
 var TestExecutors = func(
 	config gofig.Config,
-	client client.Client, t *testing.T) {
+	client types.Client, t *testing.T) {
 
 	reply, err := client.API().Executors(nil)
 	if err != nil {
@@ -28,7 +27,7 @@ var TestExecutors = func(
 // TestHeadExecutorWindows tests the HEAD /executors/lsx-windows.exe route.
 /*var TestHeadExecutorWindows = func(
 	config gofig.Config,
-	client client.Client, t *testing.T) {
+	client types.Client, t *testing.T) {
 
 	reply, err := client.API().ExecutorHead(nil, "lsx-windows.exe")
 	if err != nil {
@@ -40,7 +39,7 @@ var TestExecutors = func(
 // TestHeadExecutorLinux tests the HEAD /executors/lsx-linux route.
 var TestHeadExecutorLinux = func(
 	config gofig.Config,
-	client client.Client, t *testing.T) {
+	client types.Client, t *testing.T) {
 
 	reply, err := client.API().ExecutorHead(nil, "lsx-linux")
 	if err != nil {
@@ -52,7 +51,7 @@ var TestHeadExecutorLinux = func(
 // TestHeadExecutorDarwin tests the HEAD /executors/lsx-darwin route.
 var TestHeadExecutorDarwin = func(
 	config gofig.Config,
-	client client.Client, t *testing.T) {
+	client types.Client, t *testing.T) {
 
 	reply, err := client.API().ExecutorHead(nil, "lsx-darwin")
 	if err != nil {
@@ -64,7 +63,7 @@ var TestHeadExecutorDarwin = func(
 // TestGetExecutorWindows tests the GET /executors/lsx-windows.exe route.
 /*var TestGetExecutorWindows = func(
 	config gofig.Config,
-	client client.Client, t *testing.T) {
+	client types.Client, t *testing.T) {
 
 	reply, err := client.API().ExecutorGet(nil, "lsx-windows.exe")
 	if err != nil {
@@ -81,7 +80,7 @@ var TestHeadExecutorDarwin = func(
 // TestGetExecutorLinux tests the GET /executors/lsx-linux route.
 var TestGetExecutorLinux = func(
 	config gofig.Config,
-	client client.Client, t *testing.T) {
+	client types.Client, t *testing.T) {
 
 	reply, err := client.API().ExecutorGet(nil, "lsx-linux")
 	if err != nil {
@@ -98,7 +97,7 @@ var TestGetExecutorLinux = func(
 // TestGetExecutorDarwin tests the GET /executors/lsx-darwin route.
 var TestGetExecutorDarwin = func(
 	config gofig.Config,
-	client client.Client, t *testing.T) {
+	client types.Client, t *testing.T) {
 
 	reply, err := client.API().ExecutorGet(nil, "lsx-darwin")
 	if err != nil {

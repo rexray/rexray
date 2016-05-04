@@ -116,11 +116,12 @@ type StorageDriver interface {
 		volumeID string,
 		opts Store) error
 
-	// VolumeAttach attaches a volume.
+	// VolumeAttach attaches a volume and provides a token clients can use
+	// to validate that device has appeared locally.
 	VolumeAttach(
 		ctx Context,
 		volumeID string,
-		opts *VolumeAttachOpts) (*Volume, error)
+		opts *VolumeAttachOpts) (*Volume, string, error)
 
 	// VolumeDetach detaches a volume.
 	VolumeDetach(

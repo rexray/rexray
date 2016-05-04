@@ -23,7 +23,6 @@ import (
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/client"
 
 	// load the vfs driver packages
 
@@ -41,7 +40,7 @@ func TestMain(m *testing.M) {
 
 func TestVolumes(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Volumes(nil, false)
 		if err != nil {
 			t.Fatal(err)
@@ -56,7 +55,7 @@ func TestVolumes(t *testing.T) {
 
 func TestVolumesWithAttachments(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Volumes(nil, true)
 		if err != nil {
 			t.Fatal(err)
@@ -73,7 +72,7 @@ func TestVolumesWithAttachments(t *testing.T) {
 
 func TestVolumesByService(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().VolumesByService(nil, "vfs", false)
 		if err != nil {
 			t.Fatal(err)
@@ -88,7 +87,7 @@ func TestVolumesByService(t *testing.T) {
 
 func TestVolumesByServiceWithAttachments(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().VolumesByService(nil, "vfs", true)
 		if err != nil {
 			t.Fatal(err)
@@ -104,7 +103,7 @@ func TestVolumesByServiceWithAttachments(t *testing.T) {
 
 func TestVolumeInspect(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().VolumeInspect(nil, "vfs", "vfs-000", false)
 		if err != nil {
 			t.Fatal(err)
@@ -117,7 +116,7 @@ func TestVolumeInspect(t *testing.T) {
 
 func TestVolumeInspectWithAttachments(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().VolumeInspect(nil, "vfs", "vfs-000", true)
 		if err != nil {
 			t.Fatal(err)
@@ -130,7 +129,7 @@ func TestVolumeInspectWithAttachments(t *testing.T) {
 
 func TestSnapshots(t *testing.T) {
 	tc, _, _, snaps := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Snapshots(nil)
 		if err != nil {
 			t.Fatal(err)
@@ -145,7 +144,7 @@ func TestSnapshots(t *testing.T) {
 
 func TestSnapshotsByService(t *testing.T) {
 	tc, _, _, snaps := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().SnapshotsByService(nil, "vfs")
 		if err != nil {
 			t.Fatal(err)
@@ -159,7 +158,7 @@ func TestSnapshotsByService(t *testing.T) {
 }
 
 func TestVolumeCreate(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		volumeName := "Volume 003"
 		availabilityZone := "US"
 		iops := int64(1000)
@@ -201,7 +200,7 @@ func TestVolumeCreate(t *testing.T) {
 }
 
 func TestVolumeCopy(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		request := &types.VolumeCopyRequest{
 			VolumeName: "Copy of Volume 000",
 			Opts: map[string]interface{}{
@@ -230,7 +229,7 @@ func TestVolumeCopy(t *testing.T) {
 
 func TestVolumeRemove(t *testing.T) {
 
-	tf1 := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf1 := func(config gofig.Config, client types.Client, t *testing.T) {
 		assertVolDir(t, config, "vfs-002", true)
 		err := client.API().VolumeRemove(nil, vfs.Name, "vfs-002")
 		assert.NoError(t, err)
@@ -239,7 +238,7 @@ func TestVolumeRemove(t *testing.T) {
 
 	apitests.Run(t, vfs.Name, newTestConfig(t), tf1)
 
-	tf2 := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf2 := func(config gofig.Config, client types.Client, t *testing.T) {
 		err := client.API().VolumeRemove(nil, vfs.Name, "vfs-002")
 		assert.Error(t, err)
 		assert.IsType(t, &types.JSONError{}, err)
@@ -252,7 +251,7 @@ func TestVolumeRemove(t *testing.T) {
 }
 
 func TestVolumeSnapshot(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		volumeID := "vfs-000"
 		snapshotName := "snapshot1"
 		opts := map[string]interface{}{
@@ -292,7 +291,7 @@ func TestVolumeSnapshot(t *testing.T) {
 }
 
 func TestVolumeCreateFromSnapshot(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		ogVol, err := client.API().VolumeInspect(nil, "vfs", "vfs-000", true)
 		assert.NoError(t, err)
@@ -332,7 +331,7 @@ func TestVolumeCreateFromSnapshot(t *testing.T) {
 }
 
 func TestVolumeAttach(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		nextDevice, err := client.Executor().NextDevice(
 			context.Background().WithServiceName(vfs.Name),
@@ -346,12 +345,13 @@ func TestVolumeAttach(t *testing.T) {
 			NextDeviceName: &nextDevice,
 		}
 
-		reply, err := client.API().VolumeAttach(
+		reply, attTokn, err := client.API().VolumeAttach(
 			nil, vfs.Name, "vfs-002", request)
 		assert.NoError(t, err)
 		if reply == nil {
 			t.FailNow()
 		}
+		assert.Equal(t, "1234", attTokn)
 		assert.Equal(t, "vfs-002", reply.ID)
 		assert.Equal(t, "/dev/xvdc", reply.Attachments[0].DeviceName)
 
@@ -360,7 +360,7 @@ func TestVolumeAttach(t *testing.T) {
 }
 
 func TestVolumeDetach(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		request := &types.VolumeDetachRequest{}
 		reply, err := client.API().VolumeDetach(
 			nil, vfs.Name, "vfs-001", request)
@@ -379,7 +379,7 @@ func TestVolumeDetach(t *testing.T) {
 
 func TestVolumeDetachAllForService(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		request := &types.VolumeDetachRequest{}
 		reply, err := client.API().VolumeDetachAllForService(
 			nil, vfs.Name, request)
@@ -406,7 +406,7 @@ func TestVolumeDetachAllForService(t *testing.T) {
 
 func TestVolumeDetachAll(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		request := &types.VolumeDetachRequest{}
 		reply, err := client.API().VolumeDetachAll(
 			nil, request)
@@ -432,7 +432,7 @@ func TestVolumeDetachAll(t *testing.T) {
 }
 
 func TestSnapshotCopy(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		snapshotName := "Snapshot from vfs-000-000"
 
 		opts := map[string]interface{}{
@@ -460,7 +460,7 @@ func TestSnapshotCopy(t *testing.T) {
 }
 
 func TestSnapshotRemove(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().SnapshotInspect(nil, "vfs", "vfs-000-002")
 		assert.NoError(t, err)
 		assert.NotNil(t, reply)

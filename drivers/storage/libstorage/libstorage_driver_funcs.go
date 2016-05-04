@@ -156,7 +156,7 @@ func (d *driver) VolumeRemove(
 func (d *driver) VolumeAttach(
 	ctx types.Context,
 	volumeID string,
-	opts *types.VolumeAttachOpts) (*types.Volume, error) {
+	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
 	ctx = d.withContext(ctx)
 

@@ -20,6 +20,7 @@ import (
 
 	apiserver "github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/server/executors"
+	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/client"
 )
@@ -87,7 +88,7 @@ libstorage:
 //  2 - tcp+tls
 //  3 - sock
 //  4 - sock+tls
-type APITestFunc func(config gofig.Config, client client.Client, t *testing.T)
+type APITestFunc func(config gofig.Config, client types.Client, t *testing.T)
 
 // testHarness can be used by StorageDriver developers to quickly create
 // test suites for their drivers.

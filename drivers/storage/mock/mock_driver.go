@@ -331,7 +331,7 @@ func (d *driver) VolumeRemove(
 func (d *driver) VolumeAttach(
 	ctx types.Context,
 	volumeID string,
-	opts *types.VolumeAttachOpts) (*types.Volume, error) {
+	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
 	var modVol *types.Volume
 	for _, vol := range d.volumes {
@@ -351,7 +351,7 @@ func (d *driver) VolumeAttach(
 		},
 	}
 
-	return modVol, nil
+	return modVol, "1234", nil
 }
 
 func (d *driver) VolumeDetach(

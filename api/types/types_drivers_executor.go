@@ -44,7 +44,7 @@ type ProvidesStorageExecutorCLI interface {
 type StorageExecutorCLI interface {
 	StorageExecutorFunctions
 
-	// WaitForDevice blocks until the provided volume ID appears in the
+	// WaitForDevice blocks until the provided attach token appears in the
 	// map returned from LocalDevices or until the timeout expires, whichever
 	// occurs first.
 	//
@@ -53,7 +53,7 @@ type StorageExecutorCLI interface {
 	// match is discovered or the timeout expires.
 	WaitForDevice(
 		ctx Context,
-		volumeID string,
+		attachToken string,
 		timeout time.Duration,
 		opts Store) (bool, map[string]string, error)
 }

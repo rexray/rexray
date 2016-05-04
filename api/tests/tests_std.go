@@ -10,11 +10,10 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/client"
 )
 
 // TestRoot tests the GET / route.
-var TestRoot = func(config gofig.Config, client client.Client, t *testing.T) {
+var TestRoot = func(config gofig.Config, client types.Client, t *testing.T) {
 	reply, err := client.API().Root(nil)
 	if err != nil {
 		t.Fatal(err)
@@ -36,7 +35,7 @@ type InstanceIDTest struct {
 // Test is the APITestFunc for the InstanceIDTest.
 func (tt *InstanceIDTest) Test(
 	config gofig.Config,
-	client client.Client,
+	client types.Client,
 	t *testing.T) {
 
 	expectedBuf, err := json.Marshal(tt.Expected)
@@ -68,7 +67,7 @@ type InstanceTest struct {
 // Test is the APITestFunc for the InstanceTest.
 func (tt *InstanceTest) Test(
 	config gofig.Config,
-	client client.Client,
+	client types.Client,
 	t *testing.T) {
 
 	tt.Expected.InstanceID.Formatted = true
@@ -101,7 +100,7 @@ type NextDeviceTest struct {
 // Test is the APITestFunc for the NextDeviceTest.
 func (tt *NextDeviceTest) Test(
 	config gofig.Config,
-	client client.Client,
+	client types.Client,
 	t *testing.T) {
 	val, err := client.Executor().NextDevice(
 		context.Background().WithServiceName(tt.Driver), utils.NewStore())
@@ -123,7 +122,7 @@ type LocalDevicesTest struct {
 // Test is the APITestFunc for the LocalDevicesTest.
 func (tt *LocalDevicesTest) Test(
 	config gofig.Config,
-	client client.Client,
+	client types.Client,
 	t *testing.T) {
 
 	expectedBuf, err := json.Marshal(tt.Expected)

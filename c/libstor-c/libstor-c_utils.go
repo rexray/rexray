@@ -87,7 +87,7 @@ func toCInstanceID(i *types.InstanceID) (*C.instance_id, error) {
 	}, nil
 }
 
-func newWithConfig(configPath string) (client.Client, error) {
+func newWithConfig(configPath string) (types.Client, error) {
 	config := gofig.New()
 	if err := config.ReadConfigFile(configPath); err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func newWithConfig(configPath string) (client.Client, error) {
 	return client.New(config)
 }
 
-func getClient(clientID C.h) (client.Client, error) {
+func getClient(clientID C.h) (types.Client, error) {
 	clientsRWL.RLock()
 	defer clientsRWL.RUnlock()
 	c, ok := clients[clientID]

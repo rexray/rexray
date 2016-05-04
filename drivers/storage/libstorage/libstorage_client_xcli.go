@@ -115,7 +115,7 @@ func (c *client) NextDevice(
 
 func (c *client) WaitForDevice(
 	ctx types.Context,
-	volumeID string,
+	attachToken string,
 	timeout time.Duration,
 	opts types.Store) (bool, map[string]string, error) {
 
@@ -128,7 +128,8 @@ func (c *client) WaitForDevice(
 	driverName := si.Driver.Name
 
 	exitCode := 0
-	out, err := c.runExecutor(ctx, driverName, executors.WaitForDevice)
+	out, err := c.runExecutor(
+		ctx, driverName, executors.WaitForDevice, attachToken, timeout.String())
 	if exitError, ok := err.(*exec.ExitError); ok {
 		exitCode = exitError.Sys().(syscall.WaitStatus).ExitStatus()
 	}
@@ -159,7 +160,7 @@ func (c *client) WaitForDevice(
 }
 
 func (c *client) runExecutor(
-	ctx types.Context, driverName, cmdName string) ([]byte, error) {
+	ctx types.Context, args ...string) ([]byte, error) {
 
 	ctx.Debug("waiting on executor lock")
 	if err := lsxMutex.Wait(); err != nil {
@@ -173,7 +174,7 @@ func (c *client) runExecutor(
 		}
 	}()
 
-	cmd := exec.Command(c.lsxBinPath, driverName, cmdName)
+	cmd := exec.Command(c.lsxBinPath, args...)
 	cmd.Env = os.Environ()
 
 	ogLogLevel := c.config.GetLogLevel()

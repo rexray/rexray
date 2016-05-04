@@ -291,11 +291,11 @@ func (d *driver) VolumeRemove(
 func (d *driver) VolumeAttach(
 	ctx types.Context,
 	volumeID string,
-	opts *types.VolumeAttachOpts) (*types.Volume, error) {
+	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
 	vol, err := d.getVolumeByID(volumeID)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	nextDevice := ""
@@ -312,12 +312,12 @@ func (d *driver) VolumeAttach(
 
 	vol.Attachments = append(vol.Attachments, att)
 	if err := d.writeVolume(vol); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	vol.Attachments = []*types.VolumeAttachment{att}
 
-	return vol, nil
+	return vol, "1234", nil
 }
 
 func (d *driver) VolumeDetach(

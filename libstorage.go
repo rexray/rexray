@@ -48,10 +48,6 @@ import (
 	"github.com/emccode/libstorage/client"
 )
 
-func init() {
-	registerConfig()
-}
-
 // RegisterStorageDriver registers a new StorageDriver with the
 // libStorage service.
 func RegisterStorageDriver(
@@ -89,7 +85,7 @@ func Serve(config gofig.Config) (io.Closer, error, <-chan error) {
 // If the config parameter is nil a default instance is created. The
 // function dials the libStorage service specified by the configuration
 // property libstorage.host.
-func Dial(config gofig.Config) (client.Client, error) {
+func Dial(config gofig.Config) (types.Client, error) {
 	return client.New(config)
 }
 
@@ -101,10 +97,10 @@ func Dial(config gofig.Config) (client.Client, error) {
 // While a new server may be launched, it's still up to the caller to provide
 // a config instance with the correct properties to specify service
 // information for a libStorage server.
-func New(config gofig.Config) (client.Client, io.Closer, error, <-chan error) {
+func New(config gofig.Config) (types.Client, io.Closer, error, <-chan error) {
 
 	var (
-		c       client.Client
+		c       types.Client
 		s       io.Closer
 		err     error
 		errs    <-chan error
@@ -142,16 +138,6 @@ func New(config gofig.Config) (client.Client, io.Closer, error, <-chan error) {
 	} else {
 		return c, nil, nil, nil
 	}
-}
-
-func registerConfig() {
-	r := gofig.NewRegistration("libStorage")
-	r.Key(gofig.String, "", "", "", "libstorage.host")
-	r.Key(gofig.String, "", "", "", "libstorage.service")
-	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.enabled")
-	r.Key(gofig.Bool, "", false, "", "libstorage.profiles.client")
-	r.Key(gofig.String, "", "local=127.0.0.1", "", "libstorage.profiles.groups")
-	gofig.Register(r)
 }
 
 const embeddedHostPatt = `libstorage:

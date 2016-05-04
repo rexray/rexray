@@ -16,6 +16,7 @@ cli/semaphores/open
 cli/semaphores/wait
 cli/semaphores/signal
 cli/semaphores/unlink
+api/server/executors/executors_generated.go
 
 # Created by https://www.gitignore.io
 

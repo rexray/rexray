@@ -5,6 +5,7 @@ import (
 
 	"github.com/akutz/goof"
 	"github.com/emccode/libstorage/api/server/httputils"
+	"github.com/emccode/libstorage/api/server/router/volume"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -188,7 +189,7 @@ func (r *router) volumeCreate(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		return svc.Driver().VolumeCreateFromSnapshot(
+		v, err := svc.Driver().VolumeCreateFromSnapshot(
 			ctx,
 			store.GetString("snapshotID"),
 			store.GetString("name"),
@@ -199,6 +200,22 @@ func (r *router) volumeCreate(
 				Type:             store.GetStringPtr("type"),
 				Opts:             store,
 			})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if volume.OnVolume != nil {
+			ok, err := volume.OnVolume(ctx, req, store, v)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				return nil, utils.NewNotFoundError(v.ID)
+			}
+		}
+
+		return v, nil
 	}
 
 	return httputils.WriteTask(

@@ -1,6 +1,8 @@
 package volume
 
 import (
+	"net/http"
+
 	"github.com/akutz/gofig"
 
 	"github.com/emccode/libstorage/api/registry"
@@ -9,6 +11,18 @@ import (
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
+
+// OnVolume is a handler to which an external provider can attach that is
+// invoked for every Volume object produced prior to it being written to
+// the response writer.
+//
+// If a false value is returned the volume will not be provided to the
+// response writer.
+var OnVolume func(
+	ctx types.Context,
+	req *http.Request,
+	store types.Store,
+	volume *types.Volume) (bool, error)
 
 func init() {
 	registry.RegisterRouter(&router{})

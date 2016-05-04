@@ -50,7 +50,7 @@ func (r *router) volumes(
 				return nil, err
 			}
 
-			return getFilteredVolumes(ctx, svc, opts, filter)
+			return getFilteredVolumes(ctx, req, store, svc, opts, filter)
 		}
 
 		task := service.TaskExecute(ctx, run, schema.VolumeMapSchema)
@@ -114,7 +114,7 @@ func (r *router) volumesForService(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		return getFilteredVolumes(ctx, svc, opts, filter)
+		return getFilteredVolumes(ctx, req, store, svc, opts, filter)
 	}
 
 	return httputils.WriteTask(
@@ -127,6 +127,8 @@ func (r *router) volumesForService(
 
 func getFilteredVolumes(
 	ctx types.Context,
+	req *http.Request,
+	store types.Store,
 	storSvc types.StorageService,
 	opts *types.VolumesOpts,
 	filter *types.Filter) (types.VolumeMap, error) {
@@ -161,13 +163,10 @@ func getFilteredVolumes(
 
 	for _, obj := range objs {
 
-		objFiltered := false
 		if filterOp == types.FilterEqualityMatch && filterLeft == "name" {
-			objFiltered = strings.ToLower(obj.Name) != filterRight
-		}
-
-		if objFiltered {
-			continue
+			if strings.ToLower(obj.Name) != filterRight {
+				continue
+			}
 		}
 
 		if opts.Attachments {
@@ -179,12 +178,18 @@ func getFilteredVolumes(
 			}
 			obj.Attachments = atts
 			if len(obj.Attachments) == 0 {
-				objFiltered = true
+				continue
 			}
 		}
 
-		if objFiltered {
-			continue
+		if OnVolume != nil {
+			ok, err := OnVolume(ctx, req, store, obj)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				continue
+			}
 		}
 
 		objMap[obj.ID] = obj
@@ -234,6 +239,17 @@ func (r *router) volumeInspect(
 			volID := strings.ToLower(store.GetString("volumeID"))
 			for _, v := range vols {
 				if strings.ToLower(v.Name) == volID {
+
+					if OnVolume != nil {
+						ok, err := OnVolume(ctx, req, store, v)
+						if err != nil {
+							return nil, err
+						}
+						if !ok {
+							return nil, utils.NewNotFoundError(volID)
+						}
+					}
+
 					return v, nil
 				}
 			}
@@ -246,8 +262,25 @@ func (r *router) volumeInspect(
 		run = func(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
-			return svc.Driver().VolumeInspect(
+
+			v, err := svc.Driver().VolumeInspect(
 				ctx, store.GetString("volumeID"), opts)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if OnVolume != nil {
+				ok, err := OnVolume(ctx, req, store, v)
+				if err != nil {
+					return nil, err
+				}
+				if !ok {
+					return nil, utils.NewNotFoundError(v.ID)
+				}
+			}
+
+			return v, nil
 		}
 	}
 
@@ -274,7 +307,7 @@ func (r *router) volumeCreate(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		return svc.Driver().VolumeCreate(
+		v, err := svc.Driver().VolumeCreate(
 			ctx,
 			store.GetString("name"),
 			&types.VolumeCreateOpts{
@@ -284,6 +317,22 @@ func (r *router) volumeCreate(
 				Type:             store.GetStringPtr("type"),
 				Opts:             store,
 			})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if OnVolume != nil {
+			ok, err := OnVolume(ctx, req, store, v)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				return nil, utils.NewNotFoundError(v.ID)
+			}
+		}
+
+		return v, nil
 	}
 
 	return httputils.WriteTask(
@@ -309,11 +358,27 @@ func (r *router) volumeCopy(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		return svc.Driver().VolumeCopy(
+		v, err := svc.Driver().VolumeCopy(
 			ctx,
 			store.GetString("volumeID"),
 			store.GetString("volumeName"),
 			store)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if OnVolume != nil {
+			ok, err := OnVolume(ctx, req, store, v)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				return nil, utils.NewNotFoundError(v.ID)
+			}
+		}
+
+		return v, nil
 	}
 
 	return httputils.WriteTask(
@@ -373,7 +438,7 @@ func (r *router) volumeAttach(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		return svc.Driver().VolumeAttach(
+		v, err := svc.Driver().VolumeAttach(
 			ctx,
 			store.GetString("volumeID"),
 			&types.VolumeAttachOpts{
@@ -381,6 +446,22 @@ func (r *router) volumeAttach(
 				Force:      store.GetBool("force"),
 				Opts:       store,
 			})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if OnVolume != nil {
+			ok, err := OnVolume(ctx, req, store, v)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				return nil, utils.NewNotFoundError(v.ID)
+			}
+		}
+
+		return v, nil
 	}
 
 	return httputils.WriteTask(
@@ -410,13 +491,29 @@ func (r *router) volumeDetach(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		return svc.Driver().VolumeDetach(
+		v, err := svc.Driver().VolumeDetach(
 			ctx,
 			store.GetString("volumeID"),
 			&types.VolumeDetachOpts{
 				Force: store.GetBool("force"),
 				Opts:  store,
 			})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if v != nil && OnVolume != nil {
+			ok, err := OnVolume(ctx, req, store, v)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				return nil, utils.NewNotFoundError(v.ID)
+			}
+		}
+
+		return v, nil
 	}
 
 	return httputils.WriteTask(
@@ -474,7 +571,7 @@ func (r *router) volumeDetachAll(
 			}()
 
 			for _, volume := range volumes {
-				vol, err := driver.VolumeDetach(
+				v, err := driver.VolumeDetach(
 					ctx,
 					volume.ID,
 					&types.VolumeDetachOpts{
@@ -484,7 +581,22 @@ func (r *router) volumeDetachAll(
 				if err != nil {
 					return nil, err
 				}
-				volumeMap[volume.ID] = vol
+
+				if err != nil {
+					return nil, err
+				}
+
+				if v != nil && OnVolume != nil {
+					ok, err := OnVolume(ctx, req, store, v)
+					if err != nil {
+						return nil, err
+					}
+					if !ok {
+						return nil, utils.NewNotFoundError(v.ID)
+					}
+				}
+
+				volumeMap[v.ID] = v
 			}
 
 			return nil, nil
@@ -542,7 +654,7 @@ func (r *router) volumeDetachAllForService(
 		}
 
 		for _, volume := range volumes {
-			vol, err := driver.VolumeDetach(
+			v, err := driver.VolumeDetach(
 				ctx,
 				volume.ID,
 				&types.VolumeDetachOpts{
@@ -552,7 +664,22 @@ func (r *router) volumeDetachAllForService(
 			if err != nil {
 				return nil, utils.NewBatchProcessErr(reply, err)
 			}
-			reply[volume.ID] = vol
+
+			if err != nil {
+				return nil, err
+			}
+
+			if v != nil && OnVolume != nil {
+				ok, err := OnVolume(ctx, req, store, v)
+				if err != nil {
+					return nil, err
+				}
+				if !ok {
+					return nil, utils.NewNotFoundError(v.ID)
+				}
+			}
+
+			reply[v.ID] = v
 		}
 
 		return reply, nil

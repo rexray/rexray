@@ -439,8 +439,6 @@ func printNonColorizedError(err error) {
 
 func (c *CLI) isInitDriverManagersCmd(cmd *cobra.Command) bool {
 	return cmd.Parent() != nil &&
-		cmd != c.adapterCmd &&
-		cmd != c.adapterGetTypesCmd &&
 		cmd != c.versionCmd &&
 		cmd != c.envCmd &&
 		c.isServiceCmd(cmd) &&

@@ -16,6 +16,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage"
 	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
@@ -62,10 +63,14 @@ func newModule(c *module.Config) (module.Module, error) {
 
 	c.Address = host
 
-	cc, err := c.Config.Copy()
+	/*cc, err := c.Config.Copy()
 	if err != nil {
 		return nil, err
-	}
+	}*/
+
+	// TODO The config should be copied, but it was causing an issue with
+	// duplicate, explicit values not being removed.
+	cc := c.Config
 
 	if !cc.GetBool("rexray.volume.path.disableCache") {
 		cc.Set("rexray.volume.path.cache", true)
@@ -75,7 +80,7 @@ func newModule(c *module.Config) (module.Module, error) {
 		"module", c.Name,
 	).WithServiceName(
 		cc.GetString("libstorage.service"),
-	)
+	).WithConfig(cc)
 
 	return &mod{
 		ctx:    ctx,
@@ -109,9 +114,14 @@ type pluginRequest struct {
 
 func (m *mod) Start() error {
 
-	lsc, err := apiclient.New(m.config)
+	m.config.SetLogLevel(log.DebugLevel)
+	lsc, _, err, _ := libstorage.New(m.config)
+
 	if err != nil {
-		return err
+		for k, v := range m.config.AllSettings() {
+			log.Errorf("%s=%v", k, v)
+		}
+		log.Fatal(err)
 	}
 	m.lsc = lsc
 

@@ -276,7 +276,7 @@ func StartModule(name string) error {
 
 	go func() {
 
-		defer func() {
+		/*defer func() {
 			r := recover()
 			m := "error starting module"
 
@@ -298,7 +298,7 @@ func StartModule(name string) error {
 			default:
 				startError <- goof.WithFields(lf, m)
 			}
-		}()
+		}()*/
 
 		sErr := mod.Inst.Start()
 		if sErr != nil {

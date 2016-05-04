@@ -59,8 +59,10 @@ func (c *CLI) start() {
 	}
 
 	if c.fg || c.client != "" {
+		log.Debug("starting in foreground")
 		c.startDaemon()
 	} else {
+		log.Debug("starting in background")
 		c.tryToStartDaemon()
 	}
 }

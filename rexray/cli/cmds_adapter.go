@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -28,12 +29,20 @@ func (c *CLI) initAdapterCmds() {
 
 	c.adapterGetTypesCmd = &cobra.Command{
 		Use:     "types",
-		Short:   "List the available adapter types",
+		Short:   "List the configured services",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-			//for n := range c.r.DriverNames() {
-			//	fmt.Printf("Storage Driver: %v\n", n)
-			//}
+			services, err := c.r.API().Services(c.ctx)
+			if err != nil {
+				log.Fatalf("Error: %s", err)
+			}
+			if len(services) > 0 {
+				out, err := c.marshalOutput(&services)
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println(out)
+			}
 		},
 	}
 	c.adapterCmd.AddCommand(c.adapterGetTypesCmd)
@@ -48,6 +57,11 @@ func (c *CLI) initAdapterCmds() {
 				log.Fatalf("Error: %s", err)
 			}
 
+			if strings.ToUpper(c.outputFormat) != "JSON" {
+				for _, i := range instances {
+					i.InstanceID.Metadata = nil
+				}
+			}
 			if len(instances) > 0 {
 				out, err := c.marshalOutput(&instances)
 				if err != nil {
@@ -61,5 +75,6 @@ func (c *CLI) initAdapterCmds() {
 }
 
 func (c *CLI) initAdapterFlags() {
+	c.addOutputFormatFlag(c.adapterGetTypesCmd.Flags())
 	c.addOutputFormatFlag(c.adapterGetInstancesCmd.Flags())
 }

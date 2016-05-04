@@ -11,9 +11,6 @@ import:
   - package: github.com/spf13/cobra
     ref:     363816bb13ce1710460c2345017fd35593cbf5ed
     repo:    https://github.com/akutz/cobra
-  - package: github.com/spf13/viper
-    ref:     support/rexray
-    repo:    https://github.com/akutz/viper.git
   - package: github.com/akutz/golf
     ref:     v0.1.1
   - package: github.com/akutz/gofig

@@ -17,3 +17,7 @@ import:
     ref:     53ea76f52205380ab52b9c1f4ad89321c286bb95
     repo:    https://github.com/emccode/goscaleio
     vcs:     git
+  - package: github.com/appropriate/go-virtualboxclient
+    ref:     e0978ab2ed407095400a69d5933958dd260058cd
+    repo:    https://github.com/clintonskitson/go-virtualboxclient
+    vcs:     git

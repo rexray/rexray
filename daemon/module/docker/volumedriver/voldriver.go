@@ -20,7 +20,6 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
-	apiclient "github.com/emccode/libstorage/client"
 
 	"github.com/emccode/rexray/daemon/module"
 )
@@ -30,7 +29,7 @@ const (
 )
 
 type mod struct {
-	lsc    apiclient.Client
+	lsc    apitypes.Client
 	ctx    apitypes.Context
 	config gofig.Config
 	name   string

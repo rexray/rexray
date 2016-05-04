@@ -165,7 +165,7 @@ func (c *CLI) initVolumeCmds() {
 				log.Fatalf("missing --volumeid")
 			}
 
-			vol, err := c.r.Storage().VolumeAttach(
+			vol, _, err := c.r.Storage().VolumeAttach(
 				c.ctx, c.volumeID,
 				&apitypes.VolumeAttachOpts{Force: c.force})
 

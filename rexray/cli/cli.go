@@ -20,7 +20,6 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
-	apiclient "github.com/emccode/libstorage/client"
 
 	"github.com/emccode/rexray/rexray/cli/term"
 	"github.com/emccode/rexray/util"
@@ -37,7 +36,7 @@ type subCommandPanic struct{}
 // CLI is the REX-Ray command line interface.
 type CLI struct {
 	l      *log.Logger
-	r      apiclient.Client
+	r      apitypes.Client
 	rs     io.Closer
 	c      *cobra.Command
 	config gofig.Config

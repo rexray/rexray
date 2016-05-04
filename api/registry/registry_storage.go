@@ -113,7 +113,7 @@ func (d *sdm) VolumeRemove(
 func (d *sdm) VolumeAttach(
 	ctx types.Context,
 	volumeID string,
-	opts *types.VolumeAttachOpts) (*types.Volume, error) {
+	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
 	return d.StorageDriver.VolumeAttach(
 		ctx.Join(d.Context), volumeID, opts)

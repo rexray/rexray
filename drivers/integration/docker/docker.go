@@ -143,7 +143,7 @@ func (d *driver) Mount(
 		ctx.Debug("performing precautionary unmount")
 		_ = ctx.Client().OS().Unmount(ctx, mp, opts.Opts)
 
-		vol, err = ctx.Client().Storage().VolumeAttach(
+		vol, _, err = ctx.Client().Storage().VolumeAttach(
 			ctx, vol.ID, &types.VolumeAttachOpts{Force: opts.Preempt})
 		if err != nil {
 			return "", nil, err

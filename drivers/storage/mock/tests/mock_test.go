@@ -14,7 +14,6 @@ import (
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/client"
 
 	// load the  driver
 
@@ -53,7 +52,7 @@ func TestMain(m *testing.M) {
 
 func TestStorageDriverVolumes(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML,
-		func(config gofig.Config, client client.Client, t *testing.T) {
+		func(config gofig.Config, client types.Client, t *testing.T) {
 			vols, err := client.Storage().Volumes(
 				context.WithServiceName(context.Background(), mock.Name),
 				&types.VolumesOpts{Attachments: true, Opts: utils.NewStore()})
@@ -64,7 +63,7 @@ func TestStorageDriverVolumes(t *testing.T) {
 
 func TestClient(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML,
-		func(config gofig.Config, client client.Client, t *testing.T) {
+		func(config gofig.Config, client types.Client, t *testing.T) {
 			iid, err := client.Executor().InstanceID(
 				context.Background().WithServiceName(mock.Name),
 				utils.NewStore())
@@ -115,7 +114,7 @@ func TestRoot(t *testing.T) {
 }
 
 func TestServices(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Services(nil)
 		assert.NoError(t, err)
 		assert.Equal(t, len(reply), 3)
@@ -133,7 +132,7 @@ func TestServices(t *testing.T) {
 }
 
 func TestServiceInpspect(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().ServiceInspect(nil, "mock2")
 		assert.NoError(t, err)
 		assert.Equal(t, "mock2", reply.Name)
@@ -146,7 +145,7 @@ func TestServiceInpspect(t *testing.T) {
 }
 
 func TestSnapshotsByService(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().SnapshotsByService(nil, mock.Name)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
@@ -158,7 +157,7 @@ func TestSnapshotsByService(t *testing.T) {
 }
 
 func TestVolumes(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Volumes(nil, false)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
@@ -173,7 +172,7 @@ func TestVolumes(t *testing.T) {
 }
 
 func TestVolumesWithAttachments(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Volumes(nil, true)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
@@ -191,7 +190,7 @@ func TestVolumesWithAttachments(t *testing.T) {
 }
 
 func TestVolumesWithAttachmentsNoLocalDevices(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		client.API().EnableLocalDevicesHeaders(false)
 		reply, err := client.API().Volumes(nil, true)
 		assert.NoError(t, err)
@@ -210,7 +209,7 @@ func TestVolumesWithAttachmentsNoLocalDevices(t *testing.T) {
 }
 
 func TestVolumesByService(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().VolumesByService(nil, mock.Name, false)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
@@ -223,7 +222,7 @@ func TestVolumesByService(t *testing.T) {
 
 func TestVolumeCreate(t *testing.T) {
 
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		volumeName := "Volume 001"
 		availabilityZone := "US"
 		iops := int64(1000)
@@ -263,14 +262,14 @@ func TestVolumeCreate(t *testing.T) {
 
 func TestVolumeRemove(t *testing.T) {
 
-	tf1 := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf1 := func(config gofig.Config, client types.Client, t *testing.T) {
 		err := client.API().VolumeRemove(nil, mock.Name, "vol-000")
 		assert.NoError(t, err)
 	}
 
 	apitests.Run(t, mock.Name, configYAML, tf1, tf1)
 
-	tf2 := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf2 := func(config gofig.Config, client types.Client, t *testing.T) {
 		err := client.API().VolumeRemove(nil, mock.Name, "vol-000")
 		assert.Error(t, err)
 		assert.IsType(t, &types.JSONError{}, err)
@@ -284,7 +283,7 @@ func TestVolumeRemove(t *testing.T) {
 
 func TestVolumeSnapshot(t *testing.T) {
 
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		volumeID := "vol-000"
 		snapshotName := "snapshot1"
 		opts := map[string]interface{}{
@@ -309,7 +308,7 @@ func TestVolumeSnapshot(t *testing.T) {
 }
 
 func TestSnapshots(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Snapshots(nil)
 		assert.NoError(t, err)
 		apitests.LogAsJSON(reply, t)
@@ -321,7 +320,7 @@ func TestSnapshots(t *testing.T) {
 }
 
 func TestSnapshotInspect(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().SnapshotInspect(nil, mock.Name, "snap-000")
 		assert.NoError(t, err)
 		assert.Equal(t, "Snapshot 0", reply.Name)
@@ -333,7 +332,7 @@ func TestSnapshotInspect(t *testing.T) {
 }
 
 func TestVolumeCreateFromSnapshot(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		volumeName := "Volume from snap-000"
 
 		availabilityZone := "US"
@@ -369,7 +368,7 @@ func TestVolumeCreateFromSnapshot(t *testing.T) {
 }
 
 func TestSnapshotRemove(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		assert.NoError(t, client.API().SnapshotRemove(
 			nil, mock.Name, "snap-000"))
 	}
@@ -377,7 +376,7 @@ func TestSnapshotRemove(t *testing.T) {
 }
 
 func TestSnapshotCopy(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		snapshotName := "Snapshot from snap-000"
 
 		opts := map[string]interface{}{
@@ -403,7 +402,7 @@ func TestSnapshotCopy(t *testing.T) {
 }
 
 func TestVolumeAttach(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		opts := map[string]interface{}{
 			"priority": 2,
@@ -418,17 +417,19 @@ func TestVolumeAttach(t *testing.T) {
 			Opts:           opts,
 		}
 
-		reply, err := client.API().VolumeAttach(nil, mock.Name, "vol-001", request)
+		reply, attTokn, err := client.API().VolumeAttach(
+			nil, mock.Name, "vol-001", request)
 		assert.NoError(t, err)
-		apitests.LogAsJSON(reply, t)
+		assert.Equal(t, "1234", attTokn)
 		assert.Equal(
 			t, "vol-001", reply.ID)
 		assert.Equal(
 			t, "/dev/xvde", reply.Attachments[0].DeviceName)
 
-		reply, err = client.API().VolumeAttach(nil, mock.Name, "vol-002", request)
+		reply, attTokn, err = client.API().VolumeAttach(
+			nil, mock.Name, "vol-002", request)
 		assert.NoError(t, err)
-		apitests.LogAsJSON(reply, t)
+		assert.Equal(t, "1234", attTokn)
 		assert.Equal(
 			t, "vol-002", reply.ID)
 		assert.Equal(
@@ -439,7 +440,7 @@ func TestVolumeAttach(t *testing.T) {
 }
 
 func TestVolumeDetach(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		request := &types.VolumeDetachRequest{}
 		vol, err := client.API().VolumeDetach(nil, mock.Name, "vol-000", request)
 		assert.NoError(t, err)
@@ -450,7 +451,7 @@ func TestVolumeDetach(t *testing.T) {
 }
 
 func TestVolumeDetachAllForService(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		opts := map[string]interface{}{
 			"priority": 2,
@@ -466,7 +467,7 @@ func TestVolumeDetachAllForService(t *testing.T) {
 			Opts:           opts,
 		}
 
-		_, err = client.API().VolumeAttach(nil, "mock2", "vol-000", request)
+		_, _, err = client.API().VolumeAttach(nil, "mock2", "vol-000", request)
 		assert.NoError(t, err)
 		var vol *types.Volume
 		vol, err = client.API().VolumeInspect(nil, "mock2", "vol-000", true)
@@ -484,7 +485,7 @@ func TestVolumeDetachAllForService(t *testing.T) {
 }
 
 func TestVolumeDetachAll(t *testing.T) {
-	tf := func(config gofig.Config, client client.Client, t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		opts := map[string]interface{}{
 			"priority": 2,

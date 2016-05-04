@@ -459,6 +459,17 @@ const (
         },
 
 
+        "volumeAttachResponse": {
+            "type": "object",
+            "properties": {
+                "volume": { "$ref" : "#/definitions/volume" },
+                "attachToken" : { "type": "string" }
+            },
+            "required": [ "volume", "attachToken" ],
+            "additionalProperties": false
+        },
+
+
         "volumeDetachRequest": {
             "type": "object",
             "properties": {

@@ -110,7 +110,7 @@ func Run() {
 			os.Exit(1)
 		}
 		op = "wait"
-		volID := args[3]
+		attachToken := args[3]
 		timeout, parseErr := time.ParseDuration(args[4])
 		if parseErr != nil {
 			err = parseErr
@@ -122,7 +122,7 @@ func Run() {
 					return false, nil, err
 				}
 				for k, _ := range ldm {
-					if strings.ToLower(k) == strings.ToLower(volID) {
+					if strings.ToLower(k) == strings.ToLower(attachToken) {
 						return true, ldm, nil
 					}
 				}
@@ -187,7 +187,7 @@ func Run() {
 
 func printUsage() {
 	buf := &bytes.Buffer{}
-	waitCmd := "wait {volumeID} {timeout}"
+	waitCmd := "wait {attachToken} {timeout}"
 	fmt.Fprintf(buf, "usage: %s {executor} ", os.Args[0])
 	lpad := fmt.Sprintf("%%%ds\n", buf.Len()+len(waitCmd))
 	fmt.Fprintf(buf, "instanceID|nextDevice|localDevices\n")

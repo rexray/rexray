@@ -71,6 +71,10 @@ var (
 	// request.
 	VolumeAttachRequestSchema = buildSchemaVar("volumeAttachRequest")
 
+	// VolumeAttachResponseSchema is the JSON schema for a Volume attach
+	// response.
+	VolumeAttachResponseSchema = buildSchemaVar("volumeAttachResponse")
+
 	// VolumeDetachRequestSchema is the JSON schema for a Volume detach
 	// request.
 	VolumeDetachRequestSchema = buildSchemaVar("volumeDetachRequest")

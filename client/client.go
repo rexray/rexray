@@ -11,25 +11,6 @@ import (
 	_ "github.com/emccode/libstorage/imports/local"
 )
 
-// Client is the libStorage client.
-type Client interface {
-
-	// API returns the underlying libStorage API client.
-	API() types.APIClient
-
-	// OS returns the client's OS driver instance.
-	OS() types.OSDriver
-
-	// Storage returns the client's storage driver instance.
-	Storage() types.StorageDriver
-
-	// IntegrationDriver returns the client's integration driver instance.
-	Integration() types.IntegrationDriver
-
-	// Executor returns the storage executor CLI.
-	Executor() types.StorageExecutorCLI
-}
-
 type client struct {
 	config gofig.Config
 	sd     types.StorageDriver
@@ -41,7 +22,7 @@ type client struct {
 }
 
 // New returns a new libStorage client.
-func New(config gofig.Config) (Client, error) {
+func New(config gofig.Config) (types.Client, error) {
 
 	var (
 		c   *client

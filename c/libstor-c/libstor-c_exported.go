@@ -8,11 +8,11 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/emccode/libstorage/client"
+	"github.com/emccode/libstorage/api/types"
 )
 
 var (
-	clients    = map[C.h]client.Client{}
+	clients    = map[C.h]types.Client{}
 	clientsRWL = sync.RWMutex{}
 )
 

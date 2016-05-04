@@ -124,7 +124,7 @@ type APIClient interface {
 		ctx Context,
 		service string,
 		volumeID string,
-		request *VolumeAttachRequest) (*Volume, error)
+		request *VolumeAttachRequest) (*Volume, string, error)
 
 	// VolumeDetach attaches a single volume.
 	VolumeDetach(

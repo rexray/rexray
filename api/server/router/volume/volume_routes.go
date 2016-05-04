@@ -170,18 +170,15 @@ func getFilteredVolumes(
 			continue
 		}
 
-		attsToRemove := []int{}
 		if opts.Attachments {
-			atts := obj.Attachments
-			for x, a := range atts {
-				if lcaseIID != strings.ToLower(a.InstanceID.ID) {
-					attsToRemove = append(attsToRemove, x)
+			atts := []*types.VolumeAttachment{}
+			for _, a := range obj.Attachments {
+				if lcaseIID == strings.ToLower(a.InstanceID.ID) {
+					atts = append(atts, a)
 				}
 			}
-			for _, x := range attsToRemove {
-				atts = append(atts[:x], atts[x+1:]...)
-			}
-			if len(atts) == 0 {
+			obj.Attachments = atts
+			if len(obj.Attachments) == 0 {
 				objFiltered = true
 			}
 		}

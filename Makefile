@@ -1,14 +1,6 @@
 all: build
 
 ################################################################################
-##                                  CONFIG                                    ##
-################################################################################
-
-# a space-delimited, ordered list of drivers for which to build the libstorage
-# server, client(s), and executor(s)
-DRIVERS ?= mock vfs
-
-################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
 EMPTY :=
@@ -60,6 +52,10 @@ GOARCH ?= $(word 5,$(BUILD_INFO))
 BUILD_TAGS := $(word 6,$(BUILD_INFO))
 BUILD_TAGS := $(subst $(COMMA), ,$(BUILD_TAGS))
 BUILD_TAGS := $(wordlist 2,$(words $(BUILD_TAGS)),$(BUILD_TAGS))
+VENDORED := 0
+ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
+VENDORED := 1
+endif
 
 ################################################################################
 ##                              PROJECT DETAIL                                ##
@@ -177,6 +173,7 @@ info:
 	$(info Project Import Path....$(ROOT_IMPORT_PATH))
 	$(info Project Name...........$(ROOT_IMPORT_NAME))
 	$(info OS / Arch..............$(GOOS)_$(GOARCH))
+	$(info Vendored...............$(VENDORED))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
@@ -207,6 +204,7 @@ TEST_EXT_DEPS_SRCS := $(sort $(TEST_EXT_DEPS_SRCS))
 ALL_EXT_DEPS := $(sort $(EXT_DEPS) $(TEST_EXT_DEPS))
 ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
+ifneq (1,$(VENDORED))
 ifneq (,$(GLIDE_YAML))
 $(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK)
 
@@ -227,6 +225,7 @@ $(GOGET_LOCK)-clean:
 	rm -f $(GOGET_LOCK)
 GO_PHONY += $(GOGET_LOCK)-clean
 GO_CLOBBER += $(GOGET_LOCK)-clean
+endif
 endif
 
 ################################################################################
@@ -338,8 +337,6 @@ $(LIBSTORAGE_SCHEMA_GENERATED): $(LIBSTORAGE_JSON)
 ################################################################################
 ##                                 EXECUTORS                                  ##
 ################################################################################
-ifneq (true,$(TRAVIS))
-
 EXECUTOR := $(shell go list -f '{{.Target}}' ./cli/executors/lsx-$(GOOS))
 EXECUTOR_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/executors/lsx-linux)
 EXECUTOR_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/executors/lsx-darwin)
@@ -382,8 +379,6 @@ GO_PHONY += $(EXECUTORS_GENERATED)-clean
 GO_CLEAN += $(EXECUTORS_GENERATED)-clean
 
 $(API_SERVER_EXECUTORS_A): $(EXECUTORS_GENERATED)
-
-endif
 
 ################################################################################
 ##                               SEMAPHORE BINS                               ##

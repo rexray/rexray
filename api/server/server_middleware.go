@@ -17,11 +17,10 @@ func (s *server) initGlobalMiddleware() {
 	}
 
 	s.addGlobalMiddleware(handlers.NewTransactionHandler())
-
 	s.addGlobalMiddleware(handlers.NewErrorHandler())
-
 	s.addGlobalMiddleware(handlers.NewInstanceIDHandler())
 	s.addGlobalMiddleware(handlers.NewLocalDevicesHandler())
+	s.addGlobalMiddleware(handlers.NewOnRequestHandler())
 }
 
 func (s *server) initRouteMiddleware() {

@@ -46,7 +46,6 @@ func (h *localDevicesHandler) Handle(
 
 	valMap := map[string]map[string]string{}
 	for _, v := range headers {
-
 		locDevM := locDevRX.FindStringSubmatch(v)
 		if len(locDevM) == 0 {
 			continue

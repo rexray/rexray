@@ -13,3 +13,7 @@ import:
     vcs:     git
   - package: github.com/cesanta/validate-json
   - package: github.com/stretchr/testify
+  - package: github.com/emccode/goscaleio
+    ref:     53ea76f52205380ab52b9c1f4ad89321c286bb95
+    repo:    https://github.com/emccode/goscaleio
+    vcs:     git

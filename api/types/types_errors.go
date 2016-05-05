@@ -4,18 +4,6 @@ import (
 	"github.com/akutz/goof"
 )
 
-// JSONError is the base type for errors returned from the REST API.
-type JSONError struct {
-	Message    string      `json:"message"`
-	Status     int         `json:"status"`
-	InnerError interface{} `json:"error,omitempty"`
-}
-
-// Error returns the error message.
-func (je *JSONError) Error() string {
-	return je.Message
-}
-
 // ErrNotImplemented is the error that Driver implementations should return if
 // a function is not implemented.
 var ErrNotImplemented = goof.New("not implemented")

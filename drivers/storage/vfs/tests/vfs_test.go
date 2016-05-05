@@ -15,6 +15,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	"github.com/stretchr/testify/assert"
 
@@ -241,10 +242,9 @@ func TestVolumeRemove(t *testing.T) {
 	tf2 := func(config gofig.Config, client types.Client, t *testing.T) {
 		err := client.API().VolumeRemove(nil, vfs.Name, "vfs-002")
 		assert.Error(t, err)
-		assert.IsType(t, &types.JSONError{}, err)
-		je := err.(*types.JSONError)
-		assert.Equal(t, "resource not found", je.Error())
-		assert.Equal(t, 404, je.Status)
+		httpErr := err.(goof.HTTPError)
+		assert.Equal(t, "resource not found", httpErr.Error())
+		assert.Equal(t, 404, httpErr.Status())
 	}
 
 	apitests.RunGroup(t, vfs.Name, newTestConfig(t), tf1, tf2)

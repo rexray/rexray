@@ -83,11 +83,11 @@ func (c *client) httpDo(
 	c.logResponse(res)
 
 	if res.StatusCode > 299 {
-		je := &types.JSONError{}
-		if err := json.NewDecoder(res.Body).Decode(je); err != nil {
+		httpErr, err := goof.DecodeHTTPError(res.Body)
+		if err != nil {
 			return res, goof.WithField("status", res.StatusCode, "http error")
 		}
-		return res, je
+		return res, httpErr
 	}
 
 	if req.Method != http.MethodHead && reply != nil {

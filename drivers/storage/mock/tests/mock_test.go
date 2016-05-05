@@ -1,11 +1,13 @@
 package mock
 
 import (
+	"encoding/json"
 	"os"
 	"strconv"
 	"testing"
 
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/emccode/libstorage/api/context"
@@ -260,6 +262,53 @@ func TestVolumeCreate(t *testing.T) {
 	apitests.Run(t, mock.Name, configYAML, tf)
 }
 
+func TestVolumeCreateWithError(t *testing.T) {
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		volumeName := "Volume 010"
+		availabilityZone := "US"
+		iops := int64(1000)
+		size := int64(10240)
+		volType := "myType"
+
+		opts := map[string]interface{}{
+			"priority": 2,
+			"owner":    "root@example.com",
+		}
+
+		volumeCreateRequest := &types.VolumeCreateRequest{
+			Name:             volumeName,
+			AvailabilityZone: &availabilityZone,
+			IOPS:             &iops,
+			Size:             &size,
+			Type:             &volType,
+			Opts:             opts,
+		}
+
+		expectedError := goof.NewHTTPError(goof.WithFieldE(
+			"iops", volumeCreateRequest.IOPS,
+			"iops required",
+			goof.WithFieldE(
+				"size", volumeCreateRequest.Size,
+				"size required",
+				goof.New("bzzzzT BROKEN"),
+			),
+		), 500)
+
+		_, err := client.API().VolumeCreate(
+			nil, mock.Name, volumeCreateRequest)
+
+		assert.Error(t, err)
+
+		expBuf, _ := json.Marshal(expectedError)
+		actBuf, _ := json.Marshal(err)
+		assert.EqualValues(t, expBuf, actBuf)
+
+		apitests.LogAsJSON(err, t)
+	}
+	apitests.Run(t, mock.Name, configYAML, tf)
+}
+
 func TestVolumeRemove(t *testing.T) {
 
 	tf1 := func(config gofig.Config, client types.Client, t *testing.T) {
@@ -272,10 +321,9 @@ func TestVolumeRemove(t *testing.T) {
 	tf2 := func(config gofig.Config, client types.Client, t *testing.T) {
 		err := client.API().VolumeRemove(nil, mock.Name, "vol-000")
 		assert.Error(t, err)
-		assert.IsType(t, &types.JSONError{}, err)
-		je := err.(*types.JSONError)
-		assert.Equal(t, "resource not found", je.Error())
-		assert.Equal(t, 404, je.Status)
+		httpErr := err.(goof.HTTPError)
+		assert.Equal(t, "resource not found", httpErr.Error())
+		assert.Equal(t, 404, httpErr.Status())
 	}
 
 	apitests.RunGroup(t, mock.Name, configYAML, tf1, tf2)

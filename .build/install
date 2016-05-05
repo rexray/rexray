@@ -87,19 +87,29 @@ install() {
 
     # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
     if [ -e "/etc/redhat-release" -o -e "/etc/redhat-version" ]; then
+    if [ "$VERSION" = "latest" ]; then
+        FILE_NAME=$BIN_NAME-latest-$ARCH.rpm
+    else
+        FILE_NAME=$BIN_NAME-$BIN_NAME-$VERSION-$ARCH.rpm
+    fi
 
         #echo "installing rpm"
-        sudo rpm -ih --quiet $URL/$BIN_NAME-latest-$ARCH.rpm > /dev/null
+        sudo rpm -ih --quiet $URL/$FILE_NAME > /dev/null
 
     elif [ "$ARCH" = "x86_64" -a -z "$IS_COREOS" ] && \
          [ -e "/etc/debian-release" -o \
            -e "/etc/debian-version" -o \
            -e "/etc/lsb-release" ]; then
 
+        if [ "$VERSION" = "latest" ]; then
+            FILE_NAME=$BIN_NAME-latest-$ARCH.deb
+        else
+            FILE_NAME=$BIN_NAME-$VERSION-$ARCH.deb
+        fi
         #echo "installing deb"
-        curl -sSLO $URL/$BIN_NAME-latest-$ARCH.deb && \
-            sudo dpkg -i $BIN_NAME-latest-$ARCH.deb && \
-            rm -f $BIN_NAME-latest-$ARCH.deb
+        curl -sSLO $URL/$FILE_NAME && \
+            sudo dpkg -i $FILE_NAME && \
+            rm -f $FILE_NAME
 
     else
         if [ -n "$IS_COREOS" ]; then

@@ -10,6 +10,8 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+
+	"github.com/emccode/libstorage/api/types"
 )
 
 // ParseTLSConfig returns a new TLS configuration.
@@ -23,27 +25,35 @@ func ParseTLSConfig(
 		fields[k] = v
 	}
 
-	if !config.IsSet("tls") {
+	if !config.IsSet(types.ConfigTLS) {
 		return nil, nil
 	}
 
-	if !config.IsSet("tls.keyFile") {
+	if config.IsSet(types.ConfigTLSDisabled) {
+		tlsDisabled := config.GetBool(types.ConfigTLSDisabled)
+		if tlsDisabled {
+			f(types.ConfigTLSDisabled, true)
+			return nil, nil
+		}
+	}
+
+	if !config.IsSet(types.ConfigTLSKeyFile) {
 		return nil, goof.New("keyFile required")
 	}
-	keyFile := config.GetString("tls.keyFile")
+	keyFile := config.GetString(types.ConfigTLSKeyFile)
 	if !gotil.FileExists(keyFile) {
 		return nil, goof.WithField("path", keyFile, "invalid key file")
 	}
-	f("tls.keyFile", keyFile)
+	f(types.ConfigTLSKeyFile, keyFile)
 
-	if !config.IsSet("tls.certFile") {
+	if !config.IsSet(types.ConfigTLSCertFile) {
 		return nil, goof.New("certFile required")
 	}
-	certFile := config.GetString("tls.certFile")
+	certFile := config.GetString(types.ConfigTLSCertFile)
 	if !gotil.FileExists(certFile) {
 		return nil, goof.WithField("path", certFile, "invalid cert file")
 	}
-	f("tls.certFile", certFile)
+	f(types.ConfigTLSCertFile, certFile)
 
 	cer, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -52,29 +62,29 @@ func ParseTLSConfig(
 
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
 
-	if config.IsSet("tls.serverName") {
-		serverName := config.GetString("tls.serverName")
+	if config.IsSet(types.ConfigTLSServerName) {
+		serverName := config.GetString(types.ConfigTLSServerName)
 		tlsConfig.ServerName = serverName
-		f("tls.serverName", serverName)
+		f(types.ConfigTLSServerName, serverName)
 	}
 
-	if config.IsSet("tls.clientCertRequired") {
-		clientCertRequired := config.GetBool("tls.clientCertRequired")
+	if config.IsSet(types.ConfigTLSClientCertRequired) {
+		clientCertRequired := config.GetBool(types.ConfigTLSClientCertRequired)
 		if clientCertRequired {
 			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
 		}
-		f("tls.clientCertRequired", clientCertRequired)
+		f(types.ConfigTLSClientCertRequired, clientCertRequired)
 	}
 
-	if config.IsSet("tls.trustedCertsFile") {
-		trustedCertsFile := config.GetString("tls.trustedCertsFile")
+	if config.IsSet(types.ConfigTLSTrustedCertsFile) {
+		trustedCertsFile := config.GetString(types.ConfigTLSTrustedCertsFile)
 
 		if !gotil.FileExists(trustedCertsFile) {
 			return nil, goof.WithField(
 				"path", trustedCertsFile, "invalid trust file")
 		}
 
-		f("tls.trustedCertsFile", trustedCertsFile)
+		f(types.ConfigTLSTrustedCertsFile, trustedCertsFile)
 
 		buf, err := func() ([]byte, error) {
 			f, err := os.Open(trustedCertsFile)

@@ -81,4 +81,25 @@ const (
 
 	// ConfigClientCacheInstanceID is a config key.
 	ConfigClientCacheInstanceID = ConfigClient + ".cache.instanceID"
+
+	// ConfigTLS is a config key.
+	ConfigTLS = ConfigRoot + ".tls"
+
+	// ConfigTLSDisabled is a config key.
+	ConfigTLSDisabled = ConfigTLS + ".disabled"
+
+	// ConfigTLSServerName is a config key.
+	ConfigTLSServerName = ConfigTLS + ".serverName"
+
+	// ConfigTLSClientCertRequired is a config key.
+	ConfigTLSClientCertRequired = ConfigTLS + ".clientCertRequired"
+
+	// ConfigTLSTrustedCertsFile is a config key.
+	ConfigTLSTrustedCertsFile = ConfigTLS + ".trustedCertsFile"
+
+	// ConfigTLSCertFile is a config key.
+	ConfigTLSCertFile = ConfigTLS + ".certFile"
+
+	// ConfigTLSKeyFile is a config key.
+	ConfigTLSKeyFile = ConfigTLS + ".keyFile"
 )

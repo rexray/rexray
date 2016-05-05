@@ -9,6 +9,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/akutz/gofig"
+
+	apiconfig "github.com/emccode/libstorage/api/utils/config"
 )
 
 var (
@@ -76,7 +78,10 @@ func NewConfig(
 	if host == "" {
 		host = "tcp://127.0.0.1:7979"
 	}
-	config := gofig.New()
+	config, err := apiconfig.NewConfig()
+	if err != nil {
+		panic(err)
+	}
 
 	if debug, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG")); debug {
 		log.SetLevel(log.DebugLevel)

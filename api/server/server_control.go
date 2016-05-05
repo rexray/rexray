@@ -96,6 +96,11 @@ func newServer(config gofig.Config) (*server, error) {
 		}
 	}
 
+	if s := config.GetScope(); s != "" {
+		config = config.Scope(fmt.Sprintf("%s.%s", s, types.ConfigServer))
+	}
+	config = config.Scope(types.ConfigServer)
+
 	ctx := context.Background().WithConfig(config)
 
 	s := &server{

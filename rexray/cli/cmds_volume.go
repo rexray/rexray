@@ -167,7 +167,10 @@ func (c *CLI) initVolumeCmds() {
 
 			vol, _, err := c.r.Storage().VolumeAttach(
 				c.ctx, c.volumeID,
-				&apitypes.VolumeAttachOpts{Force: c.force})
+				&apitypes.VolumeAttachOpts{
+					Force: c.force,
+					Opts:  store(),
+				})
 
 			if err != nil {
 				log.Fatal(err)
@@ -193,7 +196,10 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			_, err := c.r.Storage().VolumeDetach(
-				c.ctx, c.volumeID, &apitypes.VolumeDetachOpts{Force: c.force})
+				c.ctx, c.volumeID, &apitypes.VolumeDetachOpts{
+					Force: c.force,
+					Opts:  store(),
+				})
 			if err != nil {
 				log.Fatal(err)
 			}

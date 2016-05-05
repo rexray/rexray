@@ -157,6 +157,17 @@ func (d *driver) VolumeCreate(
 	name string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
+	if name == "Volume 010" {
+		return nil, goof.WithFieldE(
+			"iops", opts.IOPS,
+			"iops required",
+			goof.WithFieldE(
+				"size", opts.Size,
+				"size required",
+				goof.New("bzzzzT BROKEN"),
+			),
+		)
+	}
 	lenVols := len(d.volumes)
 
 	volume := &types.Volume{

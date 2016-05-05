@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/akutz/goof"
+
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/types"
 )
@@ -39,13 +41,8 @@ func (h *errorHandler) Handle(
 
 	ctx.Error(err)
 
-	jsonError := types.JSONError{
-		Status:     getStatus(err),
-		Message:    err.Error(),
-		InnerError: err,
-	}
-
-	httputils.WriteJSON(w, jsonError.Status, jsonError)
+	httpErr := goof.NewHTTPError(err, getStatus(err))
+	httputils.WriteJSON(w, httpErr.Status(), httpErr)
 	return nil
 }
 

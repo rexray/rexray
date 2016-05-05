@@ -1,11 +1,14 @@
 package client
 
 import (
+	"fmt"
+
 	"github.com/akutz/gofig"
 
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
+	apicnfg "github.com/emccode/libstorage/api/utils/config"
 
 	// load the local imports
 	_ "github.com/emccode/libstorage/imports/local"
@@ -23,6 +26,18 @@ type client struct {
 
 // New returns a new libStorage client.
 func New(config gofig.Config) (types.Client, error) {
+
+	if config == nil {
+		var err error
+		if config, err = apicnfg.NewConfig(); err != nil {
+			return nil, err
+		}
+	}
+
+	if s := config.GetScope(); s != "" {
+		config = config.Scope(fmt.Sprintf("%s.%s", s, types.ConfigClient))
+	}
+	config = config.Scope(types.ConfigClient)
 
 	var (
 		c   *client

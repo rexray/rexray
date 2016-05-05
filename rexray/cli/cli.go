@@ -198,7 +198,7 @@ func NewWithArgs(a ...string) *CLI {
 	c.initAdapterCmdsAndFlags()
 	c.initDeviceCmdsAndFlags()
 	c.initVolumeCmdsAndFlags()
-	c.initSnapshotCmdsAndFlags()
+	// c.initSnapshotCmdsAndFlags()
 
 	c.initServiceCmdsAndFlags()
 	c.initModuleCmdsAndFlags()

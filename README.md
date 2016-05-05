@@ -23,15 +23,21 @@ level abstraction of local host processes (request for volume attachment,
 
 Irrespective of platform, `REX-Ray` provides common functionality for the
 following.
+
+Cloud platforms:
 - AWS EC2 (EBS)
-- OpenStack (Cinder)
-- EMC Isilon
-- EMC ScaleIO
-- EMC VMAX
-- EMC XtremIO
-- Google Compute Engine (GCE)
-- VirtualBox
-- ..more coming
+- Google Compute Engine
+- OpenStack
+ - Private Cloud
+ - Public Cloud (RackSpace, and others)
+
+Storage platforms:
+ - EMC ScaleIO
+  - XtremIO
+  - VMAX
+  - Isilon
+ - Others
+ - VirtualBox
 
 ## Operating System Support
 By default we prescribe the curl-bash method of installing `REX-Ray`.  Other

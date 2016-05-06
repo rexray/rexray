@@ -19,7 +19,8 @@ type client struct {
 	types.APIClient
 	ctx             types.Context
 	config          gofig.Config
-	svcAndLSXCache  *lss
+	serviceCache    *lss
+	lsxCache        *lss
 	instanceIDCache types.Store
 }
 
@@ -68,7 +69,7 @@ func getHost(proto, lAddr string, tlsConfig *tls.Config) string {
 }
 
 func (c *client) getServiceInfo(service string) (*types.ServiceInfo, error) {
-	if si := c.svcAndLSXCache.GetServiceInfo(service); si != nil {
+	if si := c.serviceCache.GetServiceInfo(service); si != nil {
 		return si, nil
 	}
 	return nil, goof.WithField("name", service, "unknown service")
@@ -78,7 +79,7 @@ func (c *client) updateExecutor(ctx types.Context) error {
 
 	ctx.Debug("updating executor")
 
-	lsxi := c.svcAndLSXCache.GetExecutorInfo(types.LSX)
+	lsxi := c.lsxCache.GetExecutorInfo(types.LSX)
 	if lsxi == nil {
 		return goof.WithField("lsx", types.LSX, "unknown executor")
 	}

@@ -162,14 +162,6 @@ func (d *idm) Detach(
 	return d.IntegrationDriver.Detach(ctx.Join(d.Context), volumeName, opts)
 }
 
-func (d *idm) NetworkName(
-	ctx types.Context,
-	volumeName string,
-	opts types.Store) (string, error) {
-	return d.IntegrationDriver.NetworkName(
-		ctx.Join(d.Context), volumeName, opts)
-}
-
 func (d *idm) initCount(volumeName string) {
 	d.Lock()
 	defer d.Unlock()

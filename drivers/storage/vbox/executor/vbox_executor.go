@@ -10,38 +10,32 @@ import (
 	"time"
 
 	"github.com/akutz/gofig"
+
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/drivers/storage/vbox"
 )
 
-const (
-	// Name is the name of the storage executor and driver.
-	Name = "virtualbox"
-)
-
-// driver is the storage executor for the VFS storage driver.
+// driver is the storage executor for the vbox storage driver.
 type driver struct {
-	config     gofig.Config
-	instanceID *types.InstanceID
+	config gofig.Config
 }
 
 func init() {
-	registry.RegisterStorageExecutor(Name, newdriver)
+	registry.RegisterStorageExecutor(vbox.Name, newDriver)
 }
 
-func newdriver() types.StorageExecutor {
+func newDriver() types.StorageExecutor {
 	return &driver{}
 }
 
-// Init initializes the executor by connecting to the vbox endpoint
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 	return nil
 }
 
-// Name returns the human-readable name of the executor
 func (d *driver) Name() string {
-	return Name
+	return vbox.Name
 }
 
 func getMacs() ([]string, error) {
@@ -52,7 +46,8 @@ func getMacs() ([]string, error) {
 
 	var macs []string
 	for _, intf := range interfaces {
-		macUp := strings.ToUpper(strings.Replace(intf.HardwareAddr.String(), ":", "", -1))
+		macUp := strings.ToUpper(strings.Replace(
+			intf.HardwareAddr.String(), ":", "", -1))
 		if macUp != "" {
 			macs = append(macs, macUp)
 		}
@@ -60,43 +55,38 @@ func getMacs() ([]string, error) {
 	return macs, nil
 }
 
-// LocalInstanceID returns the local system's InstanceID.
-func LocalInstanceID() (*types.InstanceID, error) {
-	json, err := getInstanceID()
-	if err != nil {
-		return nil, err
-	}
-	return &types.InstanceID{Metadata: json}, nil
-}
-
-// getInstanceID gets the local instance ID
-func getInstanceID() ([]byte, error) {
+func instanceIDJSON() ([]byte, error) {
 	macs, err := getMacs()
 	if err != nil {
 		return nil, err
 	}
-
 	return json.Marshal(macs)
 }
 
-// InstanceID returns the local system's InstanceID.
+// InstanceID returns the local instance ID.
+func InstanceID() (*types.InstanceID, error) {
+	buf, err := instanceIDJSON()
+	if err != nil {
+		return nil, err
+	}
+	return &types.InstanceID{Metadata: buf}, nil
+}
+
 func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
-	return LocalInstanceID()
+	return InstanceID()
 }
 
-// NextDevice returns the next available device (not implemented).
 func (d *driver) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
 	return "", types.ErrNotImplemented
 }
 
-// LocalDevices returns a map of the system's local devices.
 func (d *driver) LocalDevices(
 	ctx types.Context,
-	opts types.Store) (map[string]string, error) {
+	opts *types.LocalDevicesOpts) (map[string]string, error) {
 
 	mapDiskByID := make(map[string]string)
 	files, err := ioutil.ReadDir(d.diskIDPath())
@@ -111,7 +101,8 @@ func (d *driver) LocalDevices(
 			if sid == "" {
 				continue
 			}
-			devPath, _ := filepath.EvalSymlinks(fmt.Sprintf("%s/%s", d.diskIDPath(), f.Name()))
+			devPath, _ := filepath.EvalSymlinks(
+				fmt.Sprintf("%s/%s", d.diskIDPath(), f.Name()))
 			mapDiskByID[sid] = devPath
 		}
 	}

@@ -96,9 +96,6 @@ func newServer(config gofig.Config) (*server, error) {
 		}
 	}
 
-	if s := config.GetScope(); s != "" {
-		config = config.Scope(fmt.Sprintf("%s.%s", s, types.ConfigServer))
-	}
 	config = config.Scope(types.ConfigServer)
 
 	ctx := context.Background().WithConfig(config)
@@ -144,6 +141,8 @@ func newServer(config gofig.Config) (*server, error) {
 	if err := s.initRouters(); err != nil {
 		return nil, err
 	}
+
+	servers = append(servers, s)
 
 	return s, nil
 }

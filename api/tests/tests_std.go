@@ -130,7 +130,11 @@ func (tt *LocalDevicesTest) Test(
 	expectedJSON := string(expectedBuf)
 
 	val, err := client.Executor().LocalDevices(
-		context.Background().WithServiceName(tt.Driver), utils.NewStore())
+		context.Background().WithServiceName(tt.Driver),
+		&types.LocalDevicesOpts{
+			ScanType: types.DeviceScanQuick,
+			Opts:     utils.NewStore(),
+		})
 	assert.NoError(t, err)
 
 	buf, err := json.Marshal(val)

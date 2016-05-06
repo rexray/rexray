@@ -119,7 +119,7 @@ var (
 // LocalDevices returns a map of the system's local devices.
 func (d *driver) LocalDevices(
 	ctx types.Context,
-	opts types.Store) (map[string]string, error) {
+	opts *types.LocalDevicesOpts) (map[string]string, error) {
 
 	ctx.WithFields(log.Fields{
 		"vfs.root": d.rootDir,

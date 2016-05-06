@@ -570,15 +570,12 @@ func (ctx *lsc) Join(rightSide types.Context) types.Context {
 	}
 
 	config := gofig.New()
-	ll := log.GetLevel()
-	config.SetLogLevel(log.WarnLevel)
 	for _, k := range rightSide.AllKeys() {
 		config.Set(k, rightSide.Get(k))
 	}
 	for _, k := range ctx.AllKeys() {
 		config.Set(k, ctx.Get(k))
 	}
-	config.SetLogLevel(ll)
 	newCtx.Config = config
 
 	newerCtx := newCtx.WithValue(types.ContextContextID, newCtxID)

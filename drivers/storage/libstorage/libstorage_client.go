@@ -9,10 +9,10 @@ import (
 
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
+	"github.com/emccode/libstorage/api/utils/paths"
 )
 
 type client struct {
@@ -20,7 +20,6 @@ type client struct {
 	ctx             types.Context
 	config          gofig.Config
 	svcAndLSXCache  *lss
-	lsxBinPath      string
 	instanceIDCache types.Store
 }
 
@@ -51,11 +50,6 @@ func (c *client) dial(ctx types.Context) error {
 
 		ctx.Info("initializing instance ID cache")
 		if _, err := c.InstanceID(ctx, store); err != nil {
-			return err
-		}
-
-		ctx.Info("initializing local devices cache")
-		if _, err := c.LocalDevices(ctx, store); err != nil {
 			return err
 		}
 	}
@@ -100,7 +94,7 @@ func (c *client) updateExecutor(ctx types.Context) error {
 		}
 	}()
 
-	if !gotil.FileExists(c.lsxBinPath) {
+	if !paths.LSX.Exists() {
 		return c.downloadExecutor(ctx)
 	}
 
@@ -119,7 +113,7 @@ func (c *client) updateExecutor(ctx types.Context) error {
 func (c *client) getExecutorChecksum(ctx types.Context) (string, error) {
 	ctx.Debug("getting executor checksum")
 
-	f, err := os.Open(c.lsxBinPath)
+	f, err := os.Open(paths.LSX.String())
 	if err != nil {
 		return "", err
 	}
@@ -148,7 +142,7 @@ func (c *client) downloadExecutor(ctx types.Context) error {
 	ctx.Debug("downloading executor")
 
 	f, err := os.OpenFile(
-		c.lsxBinPath,
+		paths.LSX.String(),
 		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
 		0755)
 	if err != nil {

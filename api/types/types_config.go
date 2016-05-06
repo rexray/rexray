@@ -16,6 +16,9 @@ const (
 	// ConfigHost is a config key.
 	ConfigHost = ConfigRoot + ".host"
 
+	// ConfigEmbedded is a config key.
+	ConfigEmbedded = ConfigRoot + ".embedded"
+
 	// ConfigService is a config key.
 	ConfigService = ConfigRoot + ".service"
 
@@ -102,4 +105,10 @@ const (
 
 	// ConfigTLSKeyFile is a config key.
 	ConfigTLSKeyFile = ConfigTLS + ".keyFile"
+
+	// ConfigDeviceAttachTimeout is a config key.
+	ConfigDeviceAttachTimeout = ConfigRoot + ".device.attachTimeout"
+
+	// ConfigDeviceScanType is a config key.
+	ConfigDeviceScanType = ConfigRoot + ".device.scanType"
 )

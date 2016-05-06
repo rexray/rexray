@@ -19,3 +19,16 @@ func SortVolumeByID(volumes []*types.Volume) []*types.Volume {
 	sort.Sort(ByVolumeID(volumes))
 	return volumes
 }
+
+// ByString  implements sort.Interface for []string.
+type ByString []string
+
+func (a ByString) Len() int           { return len(a) }
+func (a ByString) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByString) Less(i, j int) bool { return a[i] < a[j] }
+
+// SortByString sorts the strings.
+func SortByString(strings []string) []string {
+	sort.Sort(ByString(strings))
+	return strings
+}

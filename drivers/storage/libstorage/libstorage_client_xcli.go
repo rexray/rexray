@@ -7,13 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
-	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/cli/executors"
+	"github.com/emccode/libstorage/api/utils/paths"
+	"github.com/emccode/libstorage/cli/lsx"
 )
 
 func (c *client) InstanceID(
@@ -33,7 +32,7 @@ func (c *client) InstanceID(
 	}
 	driverName := si.Driver.Name
 
-	out, err := c.runExecutor(ctx, driverName, executors.InstanceID)
+	out, err := c.runExecutor(ctx, driverName, lsx.InstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,12 +61,33 @@ func (c *client) InstanceID(
 
 	c.instanceIDCache.Set(serviceName, iid)
 
+	ctx.Debug("xli instanceID success")
 	return iid, nil
+}
+
+func (c *client) NextDevice(
+	ctx types.Context,
+	opts types.Store) (string, error) {
+
+	si, err := c.getServiceInfo(ctx.ServiceName())
+	if err != nil {
+		return "", err
+	}
+	driverName := si.Driver.Name
+
+	out, err := c.runExecutor(
+		c.withContext(ctx), driverName, lsx.NextDevice)
+	if err != nil {
+		return "", err
+	}
+
+	ctx.Debug("xli nextdevice success")
+	return gotil.Trim(string(out)), nil
 }
 
 func (c *client) LocalDevices(
 	ctx types.Context,
-	opts types.Store) (map[string]string, error) {
+	opts *types.LocalDevicesOpts) (map[string]string, error) {
 
 	ctx = c.withContext(ctx)
 	serviceName := ctx.ServiceName()
@@ -78,7 +98,8 @@ func (c *client) LocalDevices(
 	}
 	driverName := si.Driver.Name
 
-	out, err := c.runExecutor(ctx, driverName, executors.LocalDevices)
+	out, err := c.runExecutor(
+		ctx, driverName, lsx.LocalDevices, opts.ScanType.String())
 	if err != nil {
 		return nil, err
 	}
@@ -92,32 +113,13 @@ func (c *client) LocalDevices(
 		return nil, err
 	}
 
+	ctx.Debug("xli localdevices success")
 	return ldm, nil
-}
-
-func (c *client) NextDevice(
-	ctx types.Context,
-	opts types.Store) (string, error) {
-
-	si, err := c.getServiceInfo(ctx.ServiceName())
-	if err != nil {
-		return "", err
-	}
-	driverName := si.Driver.Name
-
-	out, err := c.runExecutor(c.withContext(ctx), driverName, executors.NextDevice)
-	if err != nil {
-		return "", err
-	}
-
-	return gotil.Trim(string(out)), nil
 }
 
 func (c *client) WaitForDevice(
 	ctx types.Context,
-	attachToken string,
-	timeout time.Duration,
-	opts types.Store) (bool, map[string]string, error) {
+	opts *types.WaitForDeviceOpts) (bool, map[string]string, error) {
 
 	ctx = c.withContext(ctx)
 
@@ -129,7 +131,8 @@ func (c *client) WaitForDevice(
 
 	exitCode := 0
 	out, err := c.runExecutor(
-		ctx, driverName, executors.WaitForDevice, attachToken, timeout.String())
+		ctx, driverName, lsx.WaitForDevice,
+		opts.ScanType.String(), opts.Token, opts.Timeout.String())
 	if exitError, ok := err.(*exec.ExitError); ok {
 		exitCode = exitError.Sys().(syscall.WaitStatus).ExitStatus()
 	}
@@ -156,6 +159,7 @@ func (c *client) WaitForDevice(
 
 	c.AddHeaderForDriver(driverName, types.LocalDevicesHeader, buf.String())
 
+	ctx.Debug("xli waitfordevice success")
 	return matched, ldm, nil
 }
 
@@ -174,14 +178,10 @@ func (c *client) runExecutor(
 		}
 	}()
 
-	cmd := exec.Command(c.lsxBinPath, args...)
+	cmd := exec.Command(paths.LSX.String(), args...)
 	cmd.Env = os.Environ()
 
-	ogLogLevel := c.config.GetLogLevel()
-	c.config.SetLogLevel(log.WarnLevel)
 	configEnvVars := c.config.EnvVars()
-	c.config.SetLogLevel(ogLogLevel)
-
 	for _, cev := range configEnvVars {
 		// ctx.WithField("value", cev).Debug("set executor env var")
 		cmd.Env = append(cmd.Env, cev)

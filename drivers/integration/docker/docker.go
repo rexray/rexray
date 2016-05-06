@@ -4,14 +4,15 @@ import (
 	"os"
 	"strings"
 
+	"strconv"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	"strconv"
-	"time"
+	apiconfig "github.com/emccode/libstorage/api/utils/config"
 )
 
 const (
@@ -148,8 +149,16 @@ func (d *driver) Mount(
 			return "", nil, err
 		}
 
-		_, _, err = ctx.Client().Executor().WaitForDevice(ctx,
-			token, *d.attachWaitForDevice(), utils.NewStore())
+		opts := &types.WaitForDeviceOpts{
+			LocalDevicesOpts: types.LocalDevicesOpts{
+				ScanType: apiconfig.DeviceScanType(d.config),
+				Opts:     opts.Opts,
+			},
+			Token:   token,
+			Timeout: apiconfig.DeviceAttachTimeout(d.config),
+		}
+
+		_, _, err = ctx.Client().Executor().WaitForDevice(ctx, opts)
 		if err != nil {
 			return "", nil, goof.WithError("problem with device discovery", err)
 		}
@@ -409,15 +418,6 @@ func (d *driver) mountDirPath() string {
 	return d.config.GetString("docker.mountDirPath")
 }
 
-func (d *driver) attachWaitForDevice() *time.Duration {
-	dur, err := time.ParseDuration(d.config.GetString("docker.mount.attachWaitForDevice"))
-	if err != nil {
-		dur, _ := time.ParseDuration("30s")
-		return &dur
-	}
-	return &dur
-}
-
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Docker")
 	r.Key(gofig.String, "", "ext4", "", "docker.fsType")
@@ -425,9 +425,7 @@ func configRegistration() *gofig.Registration {
 	r.Key(gofig.String, "", "", "", "docker.iops")
 	r.Key(gofig.String, "", "", "", "docker.size")
 	r.Key(gofig.String, "", "", "", "docker.availabilityZone")
-	r.Key(gofig.String, "", "", "", "docker.attach.waitForDevice")
 	r.Key(gofig.String, "", "/var/lib/libstorage/volumes", "", "docker.mountDirPath")
-	r.Key(gofig.String, "", "30", "", "docker.attachWaitForDevice")
 	r.Key(gofig.String, "", "/data", "", "linux.volume.rootpath")
 	return r
 }

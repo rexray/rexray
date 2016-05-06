@@ -37,7 +37,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/akutz/gofig"
 
@@ -100,6 +99,8 @@ func Dial(config gofig.Config) (types.Client, error) {
 func New(config gofig.Config) (types.Client, io.Closer, error, <-chan error) {
 
 	var (
+		h       = config.GetString(types.ConfigHost)
+		em      = config.GetBool(types.ConfigEmbedded)
 		c       types.Client
 		s       io.Closer
 		err     error
@@ -107,13 +108,13 @@ func New(config gofig.Config) (types.Client, io.Closer, error, <-chan error) {
 		serving bool
 	)
 
-	if !config.IsSet("libstorage.host") {
-		addr := os.Getenv("LIBSTORAGE_RUN_HOST")
-		if addr == "" {
-			addr = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+	if h == "" || em {
+
+		if h == "" {
+			h = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
 		}
 
-		yaml := []byte(fmt.Sprintf(embeddedHostPatt, addr))
+		yaml := []byte(fmt.Sprintf(embeddedHostPatt, h))
 		if err := config.ReadConfig(bytes.NewReader(yaml)); err != nil {
 			return nil, nil, err, nil
 		}

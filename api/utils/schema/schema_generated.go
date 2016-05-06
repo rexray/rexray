@@ -5,13 +5,18 @@ const (
 	JSONSchema = `{
     "id": "https://github.com/emccode/libstorage",
     "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "libStorage JSON Schema",
     "definitions": {
+
+
         "volume": {
+            "title": "Volume",
+            "description": "Volume provides information about a storage volume.",
             "type": "object",
             "properties": {
                 "id": {
                     "type": "string",
-                    "description": "The volume ID."
+                    "description": "ID is a piece of information that uniquely identifies the volume on the storage platform to which the volume belongs. A volume ID is not guaranteed to be unique across multiple, configured services."
                 },
                 "name": {
                     "type": "string",
@@ -54,6 +59,8 @@ const (
 
 
         "volumeAttachment": {
+            "title": "VolumeAttachment",
+            "description": " VolumeAttachment provides information about an object attached to a storage volume.",
             "type": "object",
             "properties": {
                 "instanceID": { "$ref": "#/definitions/instanceID" },
@@ -81,6 +88,8 @@ const (
 
 
         "instanceID": {
+            "title": "InstanceID",
+            "description": "InstanceID identifies a host to a remote storage platform.",
             "type": "object",
             "properties": {
                 "id": {
@@ -102,6 +111,8 @@ const (
 
 
         "instance": {
+            "title": "Instnace",
+            "description": "Instance is additional information about a host, generated using the InstanceID.",
             "type": "object",
             "properties": {
                 "instanceID": { "$ref": "#/definitions/instanceID" },
@@ -125,6 +136,8 @@ const (
 
 
         "snapshot": {
+            "title": "Snapshot",
+            "description": "Snapshot provides information about a storage volume snapshot.",
             "type": "object",
             "properties": {
                 "id": {

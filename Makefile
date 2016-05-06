@@ -337,10 +337,10 @@ $(LIBSTORAGE_SCHEMA_GENERATED): $(LIBSTORAGE_JSON)
 ################################################################################
 ##                                 EXECUTORS                                  ##
 ################################################################################
-EXECUTOR := $(shell go list -f '{{.Target}}' ./cli/executors/lsx-$(GOOS))
-EXECUTOR_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/executors/lsx-linux)
-EXECUTOR_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/executors/lsx-darwin)
-EXECUTOR_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/executors/lsx-windows)
+EXECUTOR := $(shell go list -f '{{.Target}}' ./cli/lsx/lsx-$(GOOS))
+EXECUTOR_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
+EXECUTOR_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
+EXECUTOR_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/lsx/lsx-windows)
 build-executor-linux: $(EXECUTOR_LINUX)
 build-executor-darwin: $(EXECUTOR_DARWIN)
 build-executor-windows: $(EXECUTOR_WINDOWS)
@@ -490,15 +490,48 @@ $(C_LIBSTOR_S_BIN):  $(C_LIBSTOR_TYPES_H) \
 		-lstor-s
 
 ################################################################################
+##                                  SERVERS                                   ##
+################################################################################
+LSS_BIN := $(shell go list -f '{{.Target}}' ./cli/lss/lss-$(GOOS))
+LSS_ALL += $(LSS_BIN)
+LSS_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/lss/lss-linux)
+LSS_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/lss/lss-darwin)
+LSS_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/lss/lss-windows)
+build-lss-linux: $(LSS_LINUX)
+build-lss-darwin: $(LSS_DARWIN)
+build-lss-windows: $(LSS_WINDOWS)
+
+define LSS_RULES
+ifneq ($2,$$(GOOS))
+$1:
+	env GOOS=$2 GOARCH=amd64 $$(MAKE) -j $$@
+$1-clean:
+	rm -f $1
+GO_PHONY += $1-clean
+GO_CLEAN += $1-clean
+endif
+
+LSS_ALL += $1
+endef
+
+#$(eval $(call LSS_RULES,$(LSS_LINUX),linux))
+#$(eval $(call LSS_RULES,$(LSS_DARWIN),darwin))
+#$(eval $(call LSS_RULES,$(LSS_WINDOWS),windows))
+
+
+################################################################################
 ##                                  TARGETS                                   ##
 ################################################################################
 
 build-tests: $(GO_BUILD_TESTS)
 
-build-executors: $(EXECUTORS_EMBEDDED)
+build-lsx: $(EXECUTORS_EMBEDDED)
+
+build-lss: $(LSS_ALL)
 
 build: sem-tools $(GO_BUILD)
 	$(MAKE) -j libstor-c libstor-s
+	$(MAKE) build-lss
 
 test: $(GO_TEST)
 

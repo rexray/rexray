@@ -1,13 +1,14 @@
 package config
 
 import (
-	"fmt"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/api/utils/paths"
 )
 
@@ -15,11 +16,12 @@ import (
 func NewConfig() (gofig.Config, error) {
 	config := gofig.New()
 
-	etcYML := fmt.Sprintf("%s/config.yml", paths.EtcDirPath())
-	usrYML := fmt.Sprintf("%s/config.yml", paths.UsrDirPath())
+	etcYML := paths.Etc.Join("config.yml")
+	etcYAML := paths.Etc.Join("config.yaml")
 
-	etcYAML := fmt.Sprintf("%s/config.yaml", paths.EtcDirPath())
-	usrYAML := fmt.Sprintf("%s/config.yaml", paths.UsrDirPath())
+	userHomeDir := gotil.HomeDir()
+	usrYML := paths.Join(userHomeDir, "config.yml")
+	usrYAML := paths.Join(userHomeDir, "config.yaml")
 
 	if err := readConfigFile(config, etcYML); err != nil {
 		return nil, err
@@ -51,4 +53,15 @@ func readConfigFile(config gofig.Config, path string) error {
 		return nil
 	}
 	return config.ReadConfigFile(path)
+}
+
+// DeviceAttachTimeout gets the configured device attach timeout.
+func DeviceAttachTimeout(config gofig.Config) time.Duration {
+	return utils.DeviceAttachTimeout(
+		config.GetString(types.ConfigDeviceAttachTimeout))
+}
+
+// DeviceScanType gets the configured device scan type.
+func DeviceScanType(config gofig.Config) types.DeviceScanType {
+	return types.ParseDeviceScanType(config.GetInt(types.ConfigDeviceScanType))
 }

@@ -107,21 +107,22 @@ func (sc *serviceContainer) initStorageServices(ctx types.Context) error {
 	for serviceName := range cfgSvcsMap {
 		serviceName = strings.ToLower(serviceName)
 
-		ctx = ctx.WithContextSID(types.ContextServiceName, serviceName)
-		ctx.Debug("processing service config")
+		svcCtx := ctx.WithContextSID(types.ContextServiceName, serviceName)
+		svcCtx.Debug("processing service config")
 
 		scope := fmt.Sprintf("libstorage.server.services.%s", serviceName)
-		ctx.WithField("scope", scope).Debug("getting scoped config for service")
+		svcCtx.WithField("scope", scope).Debug(
+			"getting scoped config for service")
 		config := sc.config.Scope(scope)
 
 		storSvc := &storageService{name: serviceName}
-		if err := storSvc.Init(ctx, config); err != nil {
+		if err := storSvc.Init(svcCtx, config); err != nil {
 			return err
 		}
 
-		ctx = ctx.WithContextSID(
+		svcCtx = svcCtx.WithContextSID(
 			types.ContextDriverName, storSvc.Driver().Name())
-		ctx.Info("created new service")
+		svcCtx.Info("created new service")
 
 		sc.storageServices[serviceName] = storSvc
 	}

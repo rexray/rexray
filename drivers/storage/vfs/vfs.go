@@ -18,7 +18,7 @@ func init() {
 }
 
 func registerConfig() {
-	defaultRootDir := paths.UsrFilePath("vfs")
+	defaultRootDir := paths.Lib.Join("vfs")
 	r := gofig.NewRegistration("VFS")
 	r.Key(gofig.String, "", defaultRootDir, "", "vfs.root")
 	gofig.Register(r)

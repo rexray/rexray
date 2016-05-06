@@ -4,14 +4,15 @@ import (
 	"github.com/akutz/gofig"
 
 	"fmt"
-	"github.com/akutz/goof"
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/akutz/goof"
+	"github.com/emccode/libstorage/api/registry"
+	"github.com/emccode/libstorage/api/types"
 )
 
 const (
@@ -57,7 +58,7 @@ func (d *driver) NextDevice(
 // LocalDevices returns a map of the system's local devices.
 func (d *driver) LocalDevices(
 	ctx types.Context,
-	opts types.Store) (map[string]string, error) {
+	opts *types.LocalDevicesOpts) (map[string]string, error) {
 	return getLocalVolumeMap()
 }
 

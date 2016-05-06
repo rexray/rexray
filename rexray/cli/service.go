@@ -230,6 +230,9 @@ func (c *CLI) tryToStartDaemon() {
 	if c.host() != "" {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", c.host()))
 	}
+	if c.cfgFile != "" {
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--config=%s", c.cfgFile))
+	}
 
 	cmd := exec.Command(thisAbsPath, cmdArgs...)
 

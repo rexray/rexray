@@ -314,6 +314,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		if err := c.config.ReadConfigFile(c.cfgFile); err != nil {
 			panic(err)
 		}
+		os.Setenv("REXRAY_CONFIG_FILE", c.cfgFile)
 		cmd.Flags().Parse(os.Args[1:])
 	}
 

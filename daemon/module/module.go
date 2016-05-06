@@ -2,6 +2,7 @@ package module
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -9,6 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 )
 
 // Module is the interface to which types adhere in order to participate as
@@ -147,6 +149,15 @@ func InitializeDefaultModules() error {
 	defer modTypesRwl.RUnlock()
 
 	c := gofig.New().Scope("rexray")
+
+	if cfgFile := os.Getenv("REXRAY_CONFIG_FILE"); cfgFile != "" {
+		if gotil.FileExists(cfgFile) {
+			if err := c.ReadConfigFile(cfgFile); err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	modConfigs, err := getConfiguredModules(c)
 	if err != nil {
 		return err

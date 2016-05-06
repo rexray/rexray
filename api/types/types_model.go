@@ -162,7 +162,9 @@ type Volume struct {
 	// The volume status.
 	Status string `json:"status,omitempty"`
 
-	// The volume ID.
+	// ID is a piece of information that uniquely identifies the volume on
+	// the storage platform to which the volume belongs. A volume ID is not
+	// guaranteed to be unique across multiple, configured services.
 	ID string `json:"id"`
 
 	// The volume type.

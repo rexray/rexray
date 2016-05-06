@@ -98,7 +98,6 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		APIClient:       apiClient,
 		ctx:             ctx,
 		config:          config,
-		lsxBinPath:      lsxPath,
 		svcAndLSXCache:  &lss{Store: utils.NewStore()},
 		instanceIDCache: &lss{Store: newIIDCache()},
 	}

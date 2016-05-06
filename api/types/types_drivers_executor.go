@@ -1,8 +1,81 @@
 package types
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
+
+// DeviceScanType is a type of device scan algorithm.
+type DeviceScanType int
+
+const (
+
+	// DeviceScanQuick performs a shallow, quick scan.
+	DeviceScanQuick DeviceScanType = iota
+
+	// DeviceScanDeep performs a deep, longer scan.
+	DeviceScanDeep
+)
+
+// String returns the string representation of a DeviceScanType.
+func (st DeviceScanType) String() string {
+	switch st {
+	case DeviceScanQuick:
+		return "quick"
+	case DeviceScanDeep:
+		return "deep"
+	}
+	return ""
+}
+
+// ParseDeviceScanType parses a device scan type.
+func ParseDeviceScanType(i interface{}) DeviceScanType {
+	switch ti := i.(type) {
+	case string:
+		lti := strings.ToLower(ti)
+		if lti == DeviceScanQuick.String() {
+			return DeviceScanQuick
+		} else if lti == DeviceScanDeep.String() {
+			return DeviceScanDeep
+		}
+		i, err := strconv.Atoi(ti)
+		if err != nil {
+			return DeviceScanQuick
+		}
+		return ParseDeviceScanType(i)
+	case int:
+		st := DeviceScanType(ti)
+		if st == DeviceScanQuick || st == DeviceScanDeep {
+			return st
+		}
+		return DeviceScanQuick
+	default:
+		return ParseDeviceScanType(fmt.Sprintf("%v", ti))
+	}
+}
+
+// LocalDevicesOpts are options when getting a list of local devices.
+type LocalDevicesOpts struct {
+	ScanType DeviceScanType
+	Opts     Store
+}
+
+// WaitForDeviceOpts are options when waiting on specific local device to
+// appear.
+type WaitForDeviceOpts struct {
+	LocalDevicesOpts
+
+	// Token is the value returned by a remote VolumeAttach call that the
+	// client can use to block until a specific device has appeared in the
+	// local devices list.
+	Token string
+
+	// Timeout is the maximum duration for which to wait for a device to
+	// appear in the local devices list.
+	Timeout time.Duration
+}
 
 // NewStorageExecutor is a function that constructs a new StorageExecutors.
 type NewStorageExecutor func() StorageExecutor
@@ -30,7 +103,7 @@ type StorageExecutorFunctions interface {
 	// LocalDevices returns a map of the system's local devices.
 	LocalDevices(
 		ctx Context,
-		opts Store) (map[string]string, error)
+		opts *LocalDevicesOpts) (map[string]string, error)
 }
 
 // ProvidesStorageExecutorCLI is a type that provides the StorageExecutorCLI.
@@ -53,7 +126,5 @@ type StorageExecutorCLI interface {
 	// match is discovered or the timeout expires.
 	WaitForDevice(
 		ctx Context,
-		attachToken string,
-		timeout time.Duration,
-		opts Store) (bool, map[string]string, error)
+		opts *WaitForDeviceOpts) (bool, map[string]string, error)
 }

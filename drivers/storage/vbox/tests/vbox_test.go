@@ -1,32 +1,31 @@
-package virtualbox
+package vbox
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
-	"github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/server/executors"
-	apitests "github.com/emccode/libstorage/api/tests"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 
-	// load the  driver
-	_ "github.com/emccode/libstorage/drivers/storage/virtualbox"
-	virtualboxx "github.com/emccode/libstorage/drivers/storage/virtualbox/executor"
-)
+	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
+	"github.com/stretchr/testify/assert"
 
-const name = "virtualbox"
+	"github.com/emccode/libstorage/api/server"
+	"github.com/emccode/libstorage/api/server/executors"
+	apitests "github.com/emccode/libstorage/api/tests"
+	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
+
+	// load the  driver
+	"github.com/emccode/libstorage/drivers/storage/vbox"
+	vboxx "github.com/emccode/libstorage/drivers/storage/vbox/executor"
+)
 
 var (
 	lsxbin string
 
 	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
 	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
-	//lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
 
 	configYAML = []byte(`
 virtualbox:
@@ -36,6 +35,12 @@ virtualbox:
   controllerName: SATAController
 `)
 )
+
+func skipTests() bool {
+	travis, _ := strconv.ParseBool(os.Getenv("TRAVIS"))
+	noTest, _ := strconv.ParseBool(os.Getenv("TEST_SKIP_VBOX"))
+	return travis || noTest
+}
 
 var volumeName string
 var volumeName2 string
@@ -56,11 +61,12 @@ func TestMain(m *testing.M) {
 }
 
 func TestInstanceID(t *testing.T) {
-	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+
+	if skipTests() {
 		t.SkipNow()
 	}
 
-	iid, err := virtualboxx.LocalInstanceID()
+	iid, err := vboxx.InstanceID()
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed TestInstanceID")
@@ -69,15 +75,15 @@ func TestInstanceID(t *testing.T) {
 	assert.NotEqual(t, iid, "")
 
 	apitests.Run(
-		t, name, configYAML,
+		t, vbox.Name, configYAML,
 		(&apitests.InstanceIDTest{
-			Driver:   name,
+			Driver:   vbox.Name,
 			Expected: iid,
 		}).Test)
 }
 
 func TestServices(t *testing.T) {
-	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+	if skipTests() {
 		t.SkipNow()
 	}
 
@@ -86,13 +92,14 @@ func TestServices(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len(reply), 1)
 
-		_, ok := reply[name]
+		_, ok := reply[vbox.Name]
 		assert.True(t, ok)
 	}
-	apitests.Run(t, name, configYAML, tf)
+	apitests.Run(t, vbox.Name, configYAML, tf)
 }
 
-func volumeCreate(t *testing.T, client types.Client, volumeName string) *types.Volume {
+func volumeCreate(
+	t *testing.T, client types.Client, volumeName string) *types.Volume {
 	log.WithField("volumeName", volumeName).Info("creating volume")
 	size := int64(1)
 
@@ -107,7 +114,7 @@ func volumeCreate(t *testing.T, client types.Client, volumeName string) *types.V
 		Opts: opts,
 	}
 
-	reply, err := client.API().VolumeCreate(nil, name, volumeCreateRequest)
+	reply, err := client.API().VolumeCreate(nil, vbox.Name, volumeCreateRequest)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -120,15 +127,17 @@ func volumeCreate(t *testing.T, client types.Client, volumeName string) *types.V
 	return reply
 }
 
-func volumeByName(t *testing.T, client types.Client, volumeName string) *types.Volume {
-	log.WithField("volumeName", volumeName).Info("get volume by name")
+func volumeByName(
+	t *testing.T, client types.Client, volumeName string) *types.Volume {
+
+	log.WithField("volumeName", volumeName).Info("get volume byvbox.Name")
 	vols, err := client.API().Volumes(nil, false)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
 	}
-	assert.Contains(t, vols, name)
-	for _, vol := range vols[name] {
+	assert.Contains(t, vols, vbox.Name)
+	for _, vol := range vols[vbox.Name] {
 		if vol.Name == volumeName {
 			return vol
 		}
@@ -139,7 +148,7 @@ func volumeByName(t *testing.T, client types.Client, volumeName string) *types.V
 }
 
 func TestVolumeCreateRemove(t *testing.T) {
-	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+	if skipTests() {
 		t.SkipNow()
 	}
 
@@ -147,13 +156,13 @@ func TestVolumeCreateRemove(t *testing.T) {
 		vol := volumeCreate(t, client, volumeName)
 		volumeRemove(t, client, vol.ID)
 	}
-	apitests.Run(t, name, configYAML, tf)
+	apitests.Run(t, vbox.Name, configYAML, tf)
 }
 
 func volumeRemove(t *testing.T, client types.Client, volumeID string) {
 	log.WithField("volumeID", volumeID).Info("removing volume")
 	err := client.API().VolumeRemove(
-		nil, name, volumeID)
+		nil, vbox.Name, volumeID)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeRemove")
@@ -162,7 +171,7 @@ func volumeRemove(t *testing.T, client types.Client, volumeID string) {
 }
 
 func TestVolumes(t *testing.T) {
-	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+	if skipTests() {
 		t.SkipNow()
 	}
 
@@ -176,13 +185,15 @@ func TestVolumes(t *testing.T) {
 		volumeRemove(t, client, vol1.ID)
 		volumeRemove(t, client, vol2.ID)
 	}
-	apitests.Run(t, name, configYAML, tf)
+	apitests.Run(t, vbox.Name, configYAML, tf)
 }
 
-func volumeAttach(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeAttach(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("attaching volume")
 	reply, token, err := client.API().VolumeAttach(
-		nil, name, volumeID, &types.VolumeAttachRequest{})
+		nil, vbox.Name, volumeID, &types.VolumeAttachRequest{})
 
 	assert.NoError(t, err)
 	if err != nil {
@@ -195,9 +206,11 @@ func volumeAttach(t *testing.T, client types.Client, volumeID string) *types.Vol
 	return reply
 }
 
-func volumeInspect(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspect(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, name, volumeID, false)
+	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, false)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -208,9 +221,11 @@ func volumeInspect(t *testing.T, client types.Client, volumeID string) *types.Vo
 	return reply
 }
 
-func volumeInspectAttached(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectAttached(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, name, volumeID, true)
+	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, true)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -222,9 +237,11 @@ func volumeInspectAttached(t *testing.T, client types.Client, volumeID string) *
 	return reply
 }
 
-func volumeInspectAttachedFail(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectAttachedFail(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, name, volumeID, true)
+	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, true)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -236,9 +253,11 @@ func volumeInspectAttachedFail(t *testing.T, client types.Client, volumeID strin
 	return reply
 }
 
-func volumeInspectDetached(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectDetached(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, name, volumeID, true)
+	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, true)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -251,9 +270,11 @@ func volumeInspectDetached(t *testing.T, client types.Client, volumeID string) *
 	return reply
 }
 
-func volumeInspectDetachedFail(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectDetachedFail(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, name, volumeID, false)
+	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, false)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -266,10 +287,12 @@ func volumeInspectDetachedFail(t *testing.T, client types.Client, volumeID strin
 	return reply
 }
 
-func volumeDetach(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeDetach(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("detaching volume")
 	reply, err := client.API().VolumeDetach(
-		nil, name, volumeID, &types.VolumeDetachRequest{})
+		nil, vbox.Name, volumeID, &types.VolumeDetachRequest{})
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeDetach")
@@ -280,8 +303,10 @@ func volumeDetach(t *testing.T, client types.Client, volumeID string) *types.Vol
 	return reply
 }
 
+// TestVolumeAttach TODO how many times did I instruct people to use RunGroup
+// for situations exactly like this? Fix it.
 func TestVolumeAttach(t *testing.T) {
-	if travis, _ := strconv.ParseBool(os.Getenv("TRAVIS")); travis {
+	if skipTests() {
 		t.SkipNow()
 	}
 	var vol *types.Volume
@@ -294,5 +319,5 @@ func TestVolumeAttach(t *testing.T) {
 		_ = volumeInspectDetached(t, client, vol.ID)
 		volumeRemove(t, client, vol.ID)
 	}
-	apitests.Run(t, name, configYAML, tf)
+	apitests.Run(t, vbox.Name, configYAML, tf)
 }

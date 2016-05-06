@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"time"
 
 	_ "github.com/akutz/golf"
 )
@@ -33,4 +34,13 @@ func GetTempSockFile() string {
 	name := f.Name()
 	os.RemoveAll(name)
 	return fmt.Sprintf("%s.sock", name)
+}
+
+// DeviceAttachTimeout gets the configured device attach timeout.
+func DeviceAttachTimeout(val string) time.Duration {
+	dur, err := time.ParseDuration(val)
+	if err != nil {
+		return time.Duration(30) * time.Second
+	}
+	return dur
 }

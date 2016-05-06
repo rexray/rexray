@@ -228,7 +228,6 @@ func (th *testHarness) run(
 				go func(test APITestFunc, x int, config gofig.Config) {
 
 					if testing.Verbose() {
-						config.SetLogLevel(log.DebugLevel)
 						cj, err := config.ToJSON()
 						if err != nil {
 							t.Fatal(err)

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"runtime"
 
@@ -21,12 +20,16 @@ func init() {
 	gofig.LogSecureKey = false
 	gofig.LogFlattenEnvVars = false
 
-	logLevel, err := log.ParseLevel(os.Getenv("LIBSTORAGE_LOGGING_LEVEL"))
+	logLevelSz := os.Getenv("LIBSTORAGE_LOGGING_LEVEL")
+	logLevel, err := log.ParseLevel(logLevelSz)
 	if err != nil {
-		logLevel = log.InfoLevel
+		logLevel = log.WarnLevel
 	}
+	log.SetLevel(logLevel)
 
-	lsxBinPath := fmt.Sprintf("%s/%s", paths.UsrDirPath(), types.LSX)
+	paths.Init()
+
+	lsxBinPath := paths.Lib.Join(types.LSX)
 
 	r := gofig.NewRegistration("libStorage")
 
@@ -67,6 +70,9 @@ func init() {
 	rk(gofig.Bool, false, "", types.ConfigVolUnmountIgnoreUsed)
 	rk(gofig.Bool, false, "", types.ConfigVolPathCache)
 	rk(gofig.String, "30m", "", types.ConfigClientCacheInstanceID)
+	rk(gofig.String, "30s", "", types.ConfigDeviceAttachTimeout)
+	rk(gofig.Int, 0, "", types.ConfigDeviceScanType)
+	rk(gofig.Bool, false, "", types.ConfigEmbedded)
 
 	gofig.Register(r)
 }

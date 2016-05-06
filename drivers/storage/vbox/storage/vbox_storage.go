@@ -1,4 +1,4 @@
-package virtualbox
+package storage
 
 import (
 	"encoding/json"
@@ -9,16 +9,12 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-	vboxwebsrv "github.com/appropriate/go-virtualboxclient/vboxwebsrv"
-	vbox "github.com/appropriate/go-virtualboxclient/virtualboxclient"
+	vboxw "github.com/appropriate/go-virtualboxclient/vboxwebsrv"
+	vboxc "github.com/appropriate/go-virtualboxclient/virtualboxclient"
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-)
-
-const (
-	// Name is the name of the driver.
-	Name = "virtualbox"
+	"github.com/emccode/libstorage/drivers/storage/vbox"
 )
 
 // Driver represents a vbox driver implementation of StorageDriver
@@ -26,12 +22,11 @@ type driver struct {
 	sync.Mutex
 	ctx    types.Context
 	config gofig.Config
-	vbox   *vbox.VirtualBox
+	vbox   *vboxc.VirtualBox
 }
 
 func init() {
-	registry.RegisterStorageDriver(Name, newDriver)
-	configRegistration()
+	registry.RegisterStorageDriver(vbox.Name, newDriver)
 }
 
 func newDriver() types.StorageDriver {
@@ -40,7 +35,7 @@ func newDriver() types.StorageDriver {
 
 // Name returns the name of the driver
 func (d *driver) Name() string {
-	return Name
+	return vbox.Name
 }
 
 // Init initializes the driver.
@@ -49,8 +44,8 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.ctx = ctx
 
 	fields := map[string]interface{}{
-		"provider":        Name,
-		"moduleName":      Name,
+		"provider":        vbox.Name,
+		"moduleName":      vbox.Name,
 		"endpoint":        d.endpoint(),
 		"userName":        d.username(),
 		"tls":             d.tls(),
@@ -60,7 +55,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	}
 
 	log.Info("initializing driver: ", fields)
-	d.vbox = vbox.New(d.username(), d.password(),
+	d.vbox = vboxc.New(d.username(), d.password(),
 		d.endpoint(), d.tls(), d.controllerName())
 
 	if err := d.vbox.Logon(); err != nil {
@@ -152,8 +147,8 @@ func (d *driver) getVolumeMapping(
 
 	var err error
 	var mapDiskByID map[string]string
-	var mas []*vboxwebsrv.IMediumAttachment
-	var m *vbox.Machine
+	var mas []*vboxw.IMediumAttachment
+	var m *vboxc.Machine
 
 	m, err = d.findMachine(ctx, d.machineNameID(), getMacs(ctx))
 	if err != nil {
@@ -218,7 +213,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	}
 
 	fields := map[string]interface{}{
-		"provider":   Name,
+		"provider":   vbox.Name,
 		"volumeName": volumeName,
 		"size":       *opts.Size,
 	}
@@ -298,7 +293,7 @@ func (d *driver) VolumeRemove(
 	d.refreshSession()
 
 	fields := map[string]interface{}{
-		"provider": Name,
+		"provider": vbox.Name,
 		"volumeID": volumeID,
 	}
 
@@ -343,7 +338,7 @@ func (d *driver) VolumeAttach(
 	if err != nil {
 		return nil, "", goof.WithFieldsE(
 			log.Fields{
-				"provider": Name,
+				"provider": vbox.Name,
 				"volumeID": volumeID},
 			"error attaching volume",
 			err,
@@ -387,7 +382,7 @@ func (d *driver) VolumeDetach(
 	if err := d.detachVolume(ctx, volumeID, ""); err != nil {
 		return nil, goof.WithFieldsE(
 			log.Fields{
-				"provier":  Name,
+				"provier":  vbox.Name,
 				"volumeID": volumeID}, "error detaching volume", err)
 	}
 
@@ -521,10 +516,13 @@ func (d *driver) GetVolume(
 	return volumesSD, nil
 }
 
-func (d *driver) findMachine(ctx types.Context, nameOrID string, macs []string) (*vbox.Machine, error) {
+func (d *driver) findMachine(
+	ctx types.Context, nameOrID string, macs []string) (*vboxc.Machine, error) {
 	log.Debug("finding local machine for ID: ", nameOrID)
 
-	if nameOrID == "" && (ctx.InstanceID() != nil && ctx.InstanceID().ID != "") {
+	if nameOrID == "" &&
+		(ctx.InstanceID() != nil &&
+			ctx.InstanceID().ID != "") {
 		nameOrID = ctx.InstanceID().ID
 	}
 
@@ -623,7 +621,7 @@ func (d *driver) refreshSession() {
 	}
 }
 
-func (d *driver) createVolume(name string, size int64) (*vbox.Medium, error) {
+func (d *driver) createVolume(name string, size int64) (*vboxc.Medium, error) {
 	d.Lock()
 	defer d.Unlock()
 	d.refreshSession()
@@ -635,7 +633,8 @@ func (d *driver) createVolume(name string, size int64) (*vbox.Medium, error) {
 	return d.vbox.CreateMedium("vmdk", path, size)
 }
 
-func (d *driver) attachVolume(ctx types.Context, volumeID, volumeName string) error {
+func (d *driver) attachVolume(
+	ctx types.Context, volumeID, volumeName string) error {
 	d.Lock()
 	defer d.Unlock()
 	d.refreshSession()
@@ -669,7 +668,8 @@ func (d *driver) attachVolume(ctx types.Context, volumeID, volumeName string) er
 	return nil
 }
 
-func (d *driver) detachVolume(ctx types.Context, volumeID, volumeName string) error {
+func (d *driver) detachVolume(
+	ctx types.Context, volumeID, volumeName string) error {
 	d.Lock()
 	defer d.Unlock()
 	d.refreshSession()
@@ -729,19 +729,4 @@ func (d *driver) tls() bool {
 
 func (d *driver) machineNameID() string {
 	return d.config.GetString("virtualbox.localMachineNameOrId")
-}
-
-//LoadConfig loads configuration
-func configRegistration() {
-	r := gofig.NewRegistration("virtualbox")
-	r.Key(gofig.String, "", "", "", "virtualbox.username")
-	r.Key(gofig.String, "", "", "", "virtualbox.password")
-	r.Key(gofig.String, "", "http://127.0.0.1:18083", "", "virtualbox.endpoint")
-	r.Key(gofig.String, "", "", "", "virtualbox.volumePath")
-	r.Key(gofig.String, "", "", "", "virtualbox.localMachineNameOrId")
-	r.Key(gofig.Bool, "", false, "", "virtualbox.tls")
-	r.Key(gofig.String, "", "", "", "virtualbox.controllerName")
-	r.Key(gofig.String, "", "/dev/disk/by-id", "", "virtualbox.diskIDPath")
-	r.Key(gofig.String, "", "/sys/class/scsi_host/", "", "virtualbox.scsiHostPath")
-	gofig.Register(r)
 }

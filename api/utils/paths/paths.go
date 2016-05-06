@@ -1,142 +1,291 @@
 package paths
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"regexp"
+	"runtime"
+	"sync"
+	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 )
 
-var (
-	etcDirPathSuffix = "/etc/libstorage"
-	libDirPathSuffix = "/var/lib/libstorage"
-	logDirPathSuffix = "/var/log/libstorage"
-	runDirPathSuffix = "/var/run/libstorage"
+type fileKey int
+
+const (
+
+	// Home is the application home directory.
+	Home fileKey = iota
+
+	minDirKey
+
+	// Etc is the application etc directory.
+	Etc
+
+	// Lib is the application lib directory.
+	Lib
+
+	// Log is the application log directory.
+	Log
+
+	// Run is the application run directory.
+	Run
+
+	maxDirKey
+
+	minFileKey fileKey = maxDirKey + 1
+
+	// LSX is the path to the libStorage executor.
+	LSX
 )
 
-var (
-	thisExeDir     string
-	thisExeName    string
-	thisExeAbsPath string
-
-	prefix string
-
-	etcDirPath string
-	libDirPath string
-	logDirPath string
-	runDirPath string
-	usrDirPath string
-)
-
-func init() {
-	prefix = os.Getenv("LIBSTORAGE_HOME")
-	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
+// Exists returns a flag indicating whether or not the file/directory exists.
+func (k fileKey) Exists() bool {
+	return gotil.FileExists(k.String())
 }
 
-// GetPrefix gets the root path to the libStorage data.
-func GetPrefix() string {
-	return prefix
+// Format may call Sprint(f) or Fprint(f) etc. to generate its output.
+func (k fileKey) Format(f fmt.State, c rune) {
+	fs := &bytes.Buffer{}
+	fs.WriteRune('%')
+	if f.Flag('+') {
+		fs.WriteRune('+')
+	}
+	if f.Flag('-') {
+		fs.WriteRune('-')
+	}
+	if f.Flag('#') {
+		fs.WriteRune('#')
+	}
+	if f.Flag(' ') {
+		fs.WriteRune(' ')
+	}
+	if f.Flag('0') {
+		fs.WriteRune('0')
+	}
+	if w, ok := f.Width(); ok {
+		fs.WriteString(fmt.Sprintf("%d", w))
+	}
+	if p, ok := f.Precision(); ok {
+		fs.WriteString(fmt.Sprintf("%d", p))
+	}
+	var (
+		s  string
+		cc = c
+	)
+	if c == 'k' {
+		s = k.key()
+		cc = 's'
+	} else {
+		s = k.String()
+	}
+	fs.WriteRune(cc)
+	fmt.Fprintf(f, fs.String(), s)
 }
 
-// Prefix sets the root path to the libStorage data.
-func Prefix(p string) {
-	if p == "" || p == "/" {
+func (k fileKey) parent() fileKey {
+	if k < maxDirKey {
+		return Home
+	}
+	return Lib
+}
+
+func (k fileKey) perms() os.FileMode {
+	if k <= LSX {
+		return 0755
+	}
+	return 0644
+}
+
+func (k fileKey) key() string {
+	switch k {
+	case Home:
+		return "home"
+	case Etc:
+		return "etc"
+	case Lib:
+		return "lib"
+	case Log:
+		return "log"
+	case Run:
+		return "run"
+	case LSX:
+		return "lsx"
+	}
+	return ""
+}
+
+func (k fileKey) defaultVal() string {
+	switch k {
+	case Home:
+		return libstorageHome
+	case Etc:
+		return "/etc/libstorage"
+	case Lib:
+		return "/var/lib/libstorage"
+	case Log:
+		return "/var/log/libstorage"
+	case Run:
+		return "/var/run/libstorage"
+	case LSX:
+		return fmt.Sprintf("lsx-%s", runtime.GOOS)
+	}
+	return ""
+}
+
+func (k fileKey) get() string {
+	if v, ok := keyCache[k]; ok {
+		return v
+	}
+	if k == Home {
+		return libstorageHome
+	}
+
+	if p, ok := keyCache[k.parent()]; ok {
+		return Join(p, k.defaultVal())
+	}
+	return k.defaultVal()
+}
+
+func (k fileKey) Join(elem ...string) string {
+	elems := []string{Home.String()}
+	if k != Home {
+		elems = append(elems, k.String())
+	}
+	elems = append(elems, elem...)
+	return path.Join(elems...)
+}
+
+func (k fileKey) String() string {
+	if k == Home {
+		homeLock.Lock()
+		defer homeLock.Unlock()
+	}
+
+	if v, ok := keyCache[k]; ok {
+		return v
+	}
+
+	log.WithFields(log.Fields{
+		"key": k.key(),
+	}).Debug("must init path")
+
+	k.init()
+	k.cache()
+
+	return keyCache[k]
+}
+
+func (k fileKey) cache() {
+	keyCache[k] = k.get()
+	log.WithFields(log.Fields{
+		"key":  k.key(),
+		"path": k.get(),
+	}).Debug("cached key")
+}
+
+func (k fileKey) init() {
+
+	if k == Home {
+		if !checkPerms(k, false) {
+			failedPath := k.get()
+			libstorageHome = Join(gotil.HomeDir(), ".libstorage")
+			log.WithFields(log.Fields{
+				"failedPath": failedPath,
+				"newPath":    k.get(),
+			}).Debug("first make homedir failed, trying again")
+			checkPerms(k, true)
+		}
 		return
 	}
 
-	logDirPath = ""
-	etcDirPath = ""
-
-	prefix = p
+	checkPerms(k, true)
 }
 
-// IsPrefixed returns a flag indicating whether or not a prefix value is set.
-func IsPrefixed() bool {
-	return !(prefix == "" || prefix == "/")
-}
+var (
+	libstorageHome = os.Getenv("LIBSTORAGE_HOME")
+	keyCache       = map[fileKey]string{}
+	homeLock       = &sync.Mutex{}
+	thisExeDir     string
+	thisExeName    string
+	thisExeAbsPath string
+	slashRX        = regexp.MustCompile(`^((?:/)|(?:[a-zA-Z]\:\\?))?$`)
+)
 
-// EtcDirPath returns the path to the REX-Ray etc directory.
-func EtcDirPath() string {
-	if etcDirPath == "" {
-		etcDirPath = fmt.Sprintf("%s%s", prefix, etcDirPathSuffix)
-		os.MkdirAll(etcDirPath, 0755)
+func init() {
+	if libstorageHome == "" && os.Geteuid() != 0 {
+		libstorageHome = Join(gotil.HomeDir(), ".libstorage")
 	}
-	return etcDirPath
+	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
 }
 
-// LibDirPath returns the path to the lib directory.
-func LibDirPath() string {
-	if libDirPath == "" {
-		libDirPath = fmt.Sprintf("%s%s", prefix, libDirPathSuffix)
-		os.MkdirAll(libDirPath, 0755)
-	}
-	return libDirPath
+// Init is a way to manually initialize the package.
+func Init() {
+	Home.init()
 }
 
-// LogDirPath returns the path to the log directory.
-func LogDirPath() string {
-	if logDirPath == "" {
-		logDirPath = fmt.Sprintf("%s%s", prefix, logDirPathSuffix)
-		os.MkdirAll(logDirPath, 0755)
-	}
-	return logDirPath
+// Join joins one or more paths.
+func Join(elem ...string) string {
+	return path.Join(elem...)
 }
 
-// RunDirPath returns the path to the run directory.
-func RunDirPath() string {
-	if runDirPath == "" {
-		runDirPath = fmt.Sprintf("%s%s", prefix, runDirPathSuffix)
-		os.MkdirAll(runDirPath, 0755)
-	}
-	return runDirPath
-}
-
-// UsrDirPath is the path to the user libStorage config directory.
-func UsrDirPath() string {
-	if usrDirPath == "" {
-		usrDirPath = fmt.Sprintf("%s/.libstorage", gotil.HomeDir())
-		os.MkdirAll(usrDirPath, 0755)
+func checkPerms(k fileKey, mustPerm bool) bool {
+	if k > maxDirKey {
+		return true
 	}
 
-	return usrDirPath
-}
+	p := k.get()
 
-// EtcFilePath returns the path to a file inside the etc directory with the
-// provided file name.
-func EtcFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", EtcDirPath(), fileName)
-}
+	fields := log.Fields{
+		"path":     p,
+		"perms":    k.perms(),
+		"mustPerm": mustPerm,
+	}
 
-// LibFilePath returns the path to a file inside the lib directory with the
-// the provided file name.
-func LibFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", LibDirPath(), fileName)
-}
+	if gotil.FileExists(p) {
+		if log.GetLevel() == log.DebugLevel {
+			log.WithField("path", p).Debug("file exists")
+		}
+	} else {
+		log.WithFields(fields).Info("making libStorage directory")
+		noPermMkdirErr := fmt.Sprintf("mkdir %s: permission denied", p)
+		if err := os.MkdirAll(p, k.perms()); err != nil {
+			if err.Error() == noPermMkdirErr {
+				if mustPerm {
+					log.WithFields(fields).Panic(noPermMkdirErr)
+				}
+				return false
+			}
+		}
+	}
 
-// LogFilePath returns the path to a file inside the log directory with the
-// provided file name.
-func LogFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", LogDirPath(), fileName)
-}
+	touchFilePath := Join(p, fmt.Sprintf(".touch-%v", time.Now().Unix()))
+	defer os.RemoveAll(touchFilePath)
 
-// RunFilePath returns the path to a file inside the run directory with the
-// provided file name.
-func RunFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", RunDirPath(), fileName)
-}
+	noPermTouchErr := fmt.Sprintf("open %s: permission denied", touchFilePath)
 
-// UsrFilePath returns the path to a file inside the usr directory with the
-// provided file name.
-func UsrFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", UsrDirPath(), fileName)
+	if _, err := os.Create(touchFilePath); err != nil {
+		if err.Error() == noPermTouchErr {
+			if mustPerm {
+				log.WithFields(fields).Panic(noPermTouchErr)
+			}
+			return false
+		}
+	}
+
+	return true
 }
 
 // LogFile returns a writer to a file inside the log directory with the
 // provided file name.
 func LogFile(fileName string) (io.Writer, error) {
 	return os.OpenFile(
-		LogFilePath(fileName), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+		Log.Join(fileName), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 }
 
 // StdOutAndLogFile returns a mutltiplexed writer for the current process's

@@ -146,7 +146,7 @@ func InitializeDefaultModules() error {
 	modTypesRwl.RLock()
 	defer modTypesRwl.RUnlock()
 
-	c := gofig.New()
+	c := gofig.New().Scope("rexray")
 	modConfigs, err := getConfiguredModules(c)
 	if err != nil {
 		return err

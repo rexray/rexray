@@ -113,7 +113,6 @@ type pluginRequest struct {
 
 func (m *mod) Start() error {
 
-	m.config.SetLogLevel(log.DebugLevel)
 	lsc, _, err, _ := libstorage.New(m.config)
 
 	if err != nil {

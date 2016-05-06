@@ -115,21 +115,21 @@ func (d *driver) Volumes(
 		d.volumes[0].Attachments = []*types.VolumeAttachment{
 			&types.VolumeAttachment{
 				DeviceName: "/dev/xvda",
-				MountPoint: "/var/log",
+				MountPoint: ctx.LocalDevices()["/dev/xvda"],
 				InstanceID: ctx.InstanceID(),
 				Status:     "attached",
 				VolumeID:   d.volumes[0].ID,
 			},
 			&types.VolumeAttachment{
 				DeviceName: "/dev/xvdb",
-				MountPoint: "/home",
+				MountPoint: ctx.LocalDevices()["/dev/xvdb"],
 				InstanceID: ctx.InstanceID(),
 				Status:     "attached",
 				VolumeID:   d.volumes[1].ID,
 			},
 			&types.VolumeAttachment{
 				DeviceName: "/dev/xvdc",
-				MountPoint: "/net/share",
+				MountPoint: ctx.LocalDevices()["/dev/xvdc"],
 				InstanceID: ctx.InstanceID(),
 				Status:     "attached",
 				VolumeID:   d.volumes[2].ID,

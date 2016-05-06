@@ -45,35 +45,70 @@ func (c *client) Services(
 		return nil, err
 	}
 	for k, v := range svcInfo {
-		c.svcAndLSXCache.Set(k, v)
+		c.serviceCache.Set(k, v)
 	}
 	return svcInfo, err
 }
 
 func (c *client) ServiceInspect(
 	ctx types.Context, name string) (*types.ServiceInfo, error) {
+
 	return c.APIClient.ServiceInspect(c.withContext(ctx), name)
 }
 
 func (c *client) Volumes(
 	ctx types.Context,
 	attachments bool) (types.ServiceVolumeMap, error) {
-	return c.APIClient.Volumes(c.withContext(ctx), attachments)
+
+	ctx = c.withContext(ctx)
+
+	if attachments {
+		for _, serviceName := range c.serviceCache.Keys() {
+			sctx := ctx.WithServiceName(serviceName)
+			_, err := c.LocalDevices(sctx, &types.LocalDevicesOpts{})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return c.APIClient.Volumes(ctx, attachments)
 }
 
 func (c *client) VolumesByService(
 	ctx types.Context,
 	service string,
 	attachments bool) (types.VolumeMap, error) {
-	return c.APIClient.VolumesByService(c.withContext(ctx), service, attachments)
+
+	ctx = c.withContext(ctx)
+
+	if attachments {
+		_, err := c.LocalDevices(
+			ctx.WithServiceName(service), &types.LocalDevicesOpts{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c.APIClient.VolumesByService(ctx, service, attachments)
 }
 
 func (c *client) VolumeInspect(
 	ctx types.Context,
 	service, volumeID string,
 	attachments bool) (*types.Volume, error) {
-	return c.APIClient.VolumeInspect(
-		c.withContext(ctx), service, volumeID, attachments)
+
+	ctx = c.withContext(ctx)
+
+	if attachments {
+		_, err := c.LocalDevices(
+			ctx.WithServiceName(service), &types.LocalDevicesOpts{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c.APIClient.VolumeInspect(ctx, service, volumeID, attachments)
 }
 
 func (c *client) VolumeCreate(
@@ -279,7 +314,7 @@ func (c *client) Executors(
 		return nil, err
 	}
 	for k, v := range lsxInfo {
-		c.svcAndLSXCache.Set(k, v)
+		c.lsxCache.Set(k, v)
 	}
 	return lsxInfo, nil
 }

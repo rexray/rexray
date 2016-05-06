@@ -217,10 +217,17 @@ var (
 	slashRX        = regexp.MustCompile(`^((?:/)|(?:[a-zA-Z]\:\\?))?$`)
 )
 
+// TODO Fix this logic
 func init() {
-	if libstorageHome == "" && os.Geteuid() != 0 {
+	if libstorageHome == "" {
+		libstorageHome = "/"
+	}
+
+	// if not root and home is /, change home to user's home dir
+	if os.Geteuid() != 0 && libstorageHome == "/" {
 		libstorageHome = Join(gotil.HomeDir(), ".libstorage")
 	}
+
 	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
 }
 

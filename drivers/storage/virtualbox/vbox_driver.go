@@ -254,7 +254,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	newVol := &types.Volume{
 		ID:   vol.ID,
 		Name: vol.Name,
-		Size: vol.LogicalSize,
+		Size: vol.LogicalSize / 1024 / 1024 / 1024,
 		IOPS: iops,
 		Type: string(vol.DeviceType),
 	}
@@ -618,7 +618,7 @@ func (d *driver) findMachine(ctx types.Context, nameOrID string, macs []string) 
 func (d *driver) refreshSession() {
 	_, err := d.vbox.GetSession()
 	if err != nil {
-		log.Debug("logging in again")
+		d.ctx.Debug("logging in again")
 		d.vbox.Logon()
 	}
 }

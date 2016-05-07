@@ -14,7 +14,7 @@
 
     "files": [
         {
-            "includePattern": ".build/deploy/(.+)/(.*\.tar\.gz)",
+            "includePattern": ".build/deploy/(.+)/(.*\.(?:(?:tar\.gz)|rpm|deb))",
             "excludePattern": ".build/deploy/latest/(.*)",
             "uploadPattern": "staged/${SEMVER}/$2"
         },

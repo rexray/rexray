@@ -39,7 +39,7 @@ func New(config gofig.Config) (types.Client, error) {
 		err error
 	)
 
-	c = &client{ctx: context.Background().WithConfig(config), config: config}
+	c = &client{ctx: context.Background(), config: config}
 	c.ctx = c.ctx.WithClient(c)
 
 	if config.IsSet(types.ConfigService) {

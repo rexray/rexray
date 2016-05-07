@@ -6,14 +6,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
 	"golang.org/x/net/context"
 )
 
 // Context is a libStorage context.
 type Context interface {
 	context.Context
-	gofig.Config
 	log.FieldLogger
 
 	// Join joins this context with another, such that value lookups will first
@@ -57,9 +55,6 @@ type Context interface {
 
 	// Client returns this context's client.
 	Client() Client
-
-	// WithConfig returns a context with the provided config.
-	WithConfig(config gofig.Config) Context
 
 	// WithHTTPRequest returns a context with the provided HTTP request.
 	WithHTTPRequest(req *http.Request) Context
@@ -124,9 +119,6 @@ func (ck ContextKey) String() string {
 const (
 	// ContextHTTPRequest is a context key.
 	ContextHTTPRequest ContextKey = 5000 + iota
-
-	// ContextConfig is a context key.
-	ContextConfig
 
 	// ContextLogger is a context key.
 	ContextLogger

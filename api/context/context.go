@@ -6,7 +6,6 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	gcontext "github.com/gorilla/context"
 	"golang.org/x/net/context"
@@ -39,7 +38,6 @@ var (
 
 type lsc struct {
 	context.Context
-	gofig.Config
 	*log.Logger
 	req       *http.Request
 	rightSide context.Context
@@ -47,14 +45,10 @@ type lsc struct {
 
 // Background initializes a new, empty context.
 func Background() types.Context {
-	return NewContext(context.Background(), nil, nil)
+	return newContext(context.Background(), nil)
 }
 
-// NewContext initializes a new libStorage context.
-func NewContext(
-	parent context.Context,
-	config gofig.Config,
-	r *http.Request) types.Context {
+func newContext(parent context.Context, r *http.Request) types.Context {
 
 	var parentLogger *log.Logger
 	if parentCtx, ok := parent.(*lsc); ok {
@@ -63,13 +57,8 @@ func NewContext(
 		parentLogger = log.StandardLogger()
 	}
 
-	if config == nil {
-		config = gofig.New()
-	}
-
 	ctx := &lsc{
 		Context: parent,
-		Config:  config,
 		req:     r,
 	}
 
@@ -83,14 +72,9 @@ func NewContext(
 	return ctx
 }
 
-// WithConfig returns a context with the provided config.
-func WithConfig(ctx types.Context, val gofig.Config) types.Context {
-	return NewContext(ctx, val, nil)
-}
-
 // WithHTTPRequest returns a context with the provided HTTP request.
 func WithHTTPRequest(ctx types.Context, val *http.Request) types.Context {
-	return NewContext(ctx, nil, val)
+	return newContext(ctx, val)
 }
 
 // WithInstanceIDsByService returns a context with the provided instance ID map.
@@ -181,9 +165,8 @@ func WithValue(
 	parent context.Context,
 	key interface{},
 	val interface{}) types.Context {
-	return NewContext(
+	return newContext(
 		context.WithValue(parent, key, val),
-		Config(parent),
 		HTTPRequest(parent))
 }
 
@@ -349,18 +332,6 @@ func HTTPRequest(ctx context.Context) *http.Request {
 	return nil
 }
 
-// Configs returns the gofig.Config associated with ctx usinng NewContext.
-func Config(ctx context.Context) gofig.Config {
-	val, _, err := value(ctx, types.ContextConfig)
-	if err != nil {
-		return nil
-	}
-	if tval, ok := val.(gofig.Config); ok {
-		return tval
-	}
-	return nil
-}
-
 // Client returns this context's storage driver.
 func Client(ctx context.Context) (types.Client, error) {
 	val, key, err := value(ctx, types.ContextClient)
@@ -384,8 +355,6 @@ func (ctx *lsc) Value(key interface{}) interface{} {
 	switch key {
 	case types.ContextHTTPRequest:
 		val = ctx.req
-	case types.ContextConfig:
-		val = ctx.Config
 	case types.ContextLogger:
 		val = ctx.Logger
 	case ctx.req != nil:
@@ -466,10 +435,6 @@ func (ctx *lsc) TransactionCreated() time.Time {
 func (ctx *lsc) Client() types.Client {
 	v, _ := Client(ctx)
 	return v
-}
-
-func (ctx *lsc) WithConfig(val gofig.Config) types.Context {
-	return WithConfig(ctx, val)
 }
 
 func (ctx *lsc) WithHTTPRequest(val *http.Request) types.Context {
@@ -568,15 +533,6 @@ func (ctx *lsc) Join(rightSide types.Context) types.Context {
 			newCtxID[k] = v
 		}
 	}
-
-	config := gofig.New()
-	for _, k := range rightSide.AllKeys() {
-		config.Set(k, rightSide.Get(k))
-	}
-	for _, k := range ctx.AllKeys() {
-		config.Set(k, ctx.Get(k))
-	}
-	newCtx.Config = config
 
 	newerCtx := newCtx.WithValue(types.ContextContextID, newCtxID)
 	return newerCtx

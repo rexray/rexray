@@ -98,7 +98,7 @@ func newServer(config gofig.Config) (*server, error) {
 
 	config = config.Scope(types.ConfigServer)
 
-	ctx := context.Background().WithConfig(config)
+	ctx := context.Background()
 
 	s := &server{
 		name:         randomServerName(),

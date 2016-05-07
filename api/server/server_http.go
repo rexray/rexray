@@ -15,7 +15,6 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/gorilla/mux"
 
-	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -103,22 +102,22 @@ func (s *server) makeHTTPHandler(
 
 		w.Header().Set(types.ServerNameHeader, s.name)
 
-		fctx := context.NewContext(
-			ctx, s.config, req,
-		).WithContextSID(
-			types.ContextRoute, route.GetName(),
+		ctx := ctx.WithHTTPRequest(
+			req,
 		).WithRoute(
 			route.GetName(),
+		).WithContextSID(
+			types.ContextRoute, route.GetName(),
 		)
 
 		if req.TLS != nil {
 			if len(req.TLS.PeerCertificates) > 0 {
-				fctx = ctx.WithContextSID(types.ContextUser,
+				ctx = ctx.WithContextSID(types.ContextUser,
 					req.TLS.PeerCertificates[0].Subject.CommonName)
 			}
 		}
 
-		fctx.Debug("http request")
+		ctx.Debug("http request")
 
 		vars := mux.Vars(req)
 		if vars == nil {
@@ -126,9 +125,9 @@ func (s *server) makeHTTPHandler(
 		}
 		store := utils.NewStoreWithVars(vars)
 
-		handlerFunc := s.handleWithMiddleware(fctx, route)
-		if err := handlerFunc(fctx, w, req, store); err != nil {
-			fctx.Error(err)
+		handlerFunc := s.handleWithMiddleware(ctx, route)
+		if err := handlerFunc(ctx, w, req, store); err != nil {
+			ctx.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

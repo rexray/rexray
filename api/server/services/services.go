@@ -96,11 +96,20 @@ func (sc *serviceContainer) initStorageServices(ctx types.Context) error {
 	cfgSvcs := sc.config.Get(types.ConfigServices)
 	cfgSvcsMap, ok := cfgSvcs.(map[string]interface{})
 	if !ok {
-		err := goof.WithFields(goof.Fields{
-			"configKey": types.ConfigServices,
-			"obj":       cfgSvcs,
-		}, "invalid format")
-		return err
+		driverName := sc.config.GetString("libstorage.driver")
+		if driverName == "" {
+			err := goof.WithFields(goof.Fields{
+				"configKey": types.ConfigServices,
+				"obj":       cfgSvcs,
+			}, "invalid format")
+			return err
+		}
+
+		cfgSvcsMap = map[string]interface{}{
+			driverName: map[string]interface{}{
+				"driver": driverName,
+			},
+		}
 	}
 	ctx.WithField("count", len(cfgSvcsMap)).Debug("got services map")
 

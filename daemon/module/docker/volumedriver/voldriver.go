@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage"
 	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
@@ -113,6 +113,16 @@ type pluginRequest struct {
 
 func (m *mod) Start() error {
 
+	lsc, _, err, _ := libstorage.New(m.config)
+
+	if err != nil {
+		for k, v := range m.config.AllSettings() {
+			m.ctx.Errorf("%s=%v", k, v)
+		}
+		m.ctx.Fatal(err)
+	}
+	m.lsc = lsc
+
 	proto, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {
 		return parseAddrErr
@@ -196,7 +206,7 @@ func (m *mod) Start() error {
 		}
 	}
 
-	log.WithField("path", spec).Debug("docker voldriver spec file")
+	m.ctx.WithField("path", spec).Debug("docker voldriver spec file")
 
 	if !gotil.FileExists(spec) {
 		if err := ioutil.WriteFile(spec, []byte(specPath), 0644); err != nil {
@@ -226,21 +236,28 @@ func (m *mod) Address() string {
 func (m *mod) buildMux() *http.ServeMux {
 
 	mux := http.NewServeMux()
+	m.ctx.WithServiceName(m.ctx.ServiceName())
 
 	mux.HandleFunc("/Plugin.Activate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, `{"Implements": ["VolumeDriver"]}`)
+		m.ctx.Debug("/VolumeDriver.Create")
 	})
 
 	mux.HandleFunc("/VolumeDriver.Create", func(w http.ResponseWriter, r *http.Request) {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Create: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.Create: error decoding json")
 			return
 		}
 
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Create")
 		store := apiutils.NewStoreWithVars(pr.Opts)
+		vtype := store.GetStringPtr("type")
+		if vtype == nil {
+			vtype = store.GetStringPtr("volumetype")
+		}
 		_, err := m.lsc.Integration().Create(
 			m.ctx,
 			pr.Name,
@@ -248,14 +265,13 @@ func (m *mod) buildMux() *http.ServeMux {
 				AvailabilityZone: store.GetStringPtr("availabilityZone"),
 				IOPS:             store.GetInt64Ptr("iops"),
 				Size:             store.GetInt64Ptr("size"),
-				Type:             store.GetStringPtr("type"),
+				Type:             vtype,
 				Opts:             store,
 			})
 
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.Create: error creating volume")
-			log.Error(err)
+			m.ctx.WithError(err).Error("/VolumeDriver.Create: error creating volume")
 			return
 		}
 
@@ -267,16 +283,17 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Remove: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.Remove: error decoding json")
 			return
 		}
+
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Remove")
 
 		// TODO We need the service name
 		err := m.lsc.Integration().Remove(m.ctx, pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.Remove: error removing volume")
-			log.Error(err)
+			m.ctx.WithError(err).Error("/VolumeDriver.Remove: error removing volume")
 			return
 		}
 
@@ -288,16 +305,17 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Path: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.Path: error decoding json")
 			return
 		}
+
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Path")
 
 		mountPath, err := m.lsc.Integration().Path(
 			m.ctx, "", pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.Path: error returning path")
-			log.Error(err)
+			m.ctx.WithError(err).Error("/VolumeDriver.Path: error returning path")
 			return
 		}
 
@@ -309,16 +327,17 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Mount: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.Mount: error decoding json")
 			return
 		}
+
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Mount")
 
 		mountPath, _, err := m.lsc.Integration().Mount(
 			m.ctx, "", pr.Name, &apitypes.VolumeMountOpts{})
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.Mount: error mounting volume")
-			log.Error(err)
+			m.ctx.WithError(err).Error("/VolumeDriver.Mount: error mounting volume")
 			return
 		}
 
@@ -330,16 +349,17 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Unmount: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.Unmount: error decoding json")
 			return
 		}
+
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Unmount")
 
 		err := m.lsc.Integration().Unmount(
 			m.ctx, "", pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.Unmount: error unmounting volume")
-			log.Error(err)
+			m.ctx.WithError(err).Error("/VolumeDriver.Unmount: error unmounting volume")
 			return
 		}
 
@@ -351,16 +371,17 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.Path: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.Path: error decoding json")
 			return
 		}
+
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Get")
 
 		volMapping, err := m.lsc.Integration().Inspect(
 			m.ctx, pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.Get: error getting volume")
-			log.Error(err)
+			m.ctx.WithError(err).Error("/VolumeDriver.Get: error getting volume")
 			return
 		}
 
@@ -375,15 +396,16 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err).Error("/VolumeDriver.List: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.List: error decoding json")
 			return
 		}
+
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.List")
 
 		volMappings, err := m.lsc.Integration().List(m.ctx, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			log.WithField("error", err.Error()).Error("/VolumeDriver.List: error listing volumes")
-			log.Error(err)
+			m.ctx.WithError(err).Error("/VolumeDriver.List: error listing volumes")
 			return
 		}
 

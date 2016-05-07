@@ -177,7 +177,7 @@ const (
 	// ContextIntegrationDriver is a context key.
 	ContextIntegrationDriver
 
-	// ContexUser is a context key.
+	// ContextUser is a context key.
 	ContextUser
 
 	// ContextHost is a context key.

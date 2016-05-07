@@ -34,6 +34,8 @@ func New(config gofig.Config) (types.Client, error) {
 
 	config = config.Scope(types.ConfigClient)
 
+	types.BackCompat(config)
+
 	var (
 		c   *client
 		err error

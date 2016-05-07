@@ -64,15 +64,16 @@ func init() {
 	rk(gofig.Int, 300, "", types.ConfigHTTPReadTimeout)
 	rk(gofig.String, lsxBinPath, "", types.ConfigExecutorPath)
 	rk(gofig.Bool, false, "", types.ConfigExecutorNoDownload)
-	rk(gofig.Bool, false, "", types.ConfigVolMountPreempt)
-	rk(gofig.Bool, false, "", types.ConfigVolCreateDisable)
-	rk(gofig.Bool, false, "", types.ConfigVolRemoveDisable)
-	rk(gofig.Bool, false, "", types.ConfigVolUnmountIgnoreUsed)
-	rk(gofig.Bool, false, "", types.ConfigVolPathCache)
+	rk(gofig.Bool, false, "", types.ConfigIntegrationVolMountPreempt)
+	rk(gofig.Bool, false, "", types.ConfigIntegrationVolCreateDisable)
+	rk(gofig.Bool, false, "", types.ConfigIntegrationVolRemoveDisable)
+	rk(gofig.Bool, false, "", types.ConfigIntegrationVolUnmountIgnoreUsed)
+	rk(gofig.Bool, true, "", types.ConfigIntegrationVolPathCache)
 	rk(gofig.String, "30m", "", types.ConfigClientCacheInstanceID)
 	rk(gofig.String, "30s", "", types.ConfigDeviceAttachTimeout)
 	rk(gofig.Int, 0, "", types.ConfigDeviceScanType)
 	rk(gofig.Bool, false, "", types.ConfigEmbedded)
 
 	gofig.Register(r)
+
 }

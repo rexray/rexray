@@ -18,6 +18,9 @@ type VolumeMapping interface {
 
 	// MountPoint returns the volume's mount point.
 	MountPoint() string
+
+	// Status returns the volume's details for an inspect.
+	Status() map[string]interface{}
 }
 
 // IntegrationDriverManager is the management wrapper for an IntegrationDriver.

@@ -16,7 +16,6 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
-	"github.com/emccode/libstorage"
 	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
@@ -83,6 +82,7 @@ func newModule(c *module.Config) (module.Module, error) {
 
 	return &mod{
 		ctx:    ctx,
+		lsc:    c.Client,
 		config: cc,
 		name:   c.Name,
 		desc:   c.Description,
@@ -112,16 +112,6 @@ type pluginRequest struct {
 }
 
 func (m *mod) Start() error {
-
-	lsc, _, err, _ := libstorage.New(m.config)
-
-	if err != nil {
-		for k, v := range m.config.AllSettings() {
-			log.Errorf("%s=%v", k, v)
-		}
-		log.Fatal(err)
-	}
-	m.lsc = lsc
 
 	proto, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {

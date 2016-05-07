@@ -78,7 +78,7 @@ func newModule(c *module.Config) (module.Module, error) {
 		"module", c.Name,
 	).WithServiceName(
 		cc.GetString("libstorage.service"),
-	).WithConfig(cc)
+	)
 
 	return &mod{
 		ctx:    ctx,

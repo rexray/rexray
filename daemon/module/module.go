@@ -11,6 +11,8 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage"
+	apitypes "github.com/emccode/libstorage/api/types"
 )
 
 // Module is the interface to which types adhere in order to participate as
@@ -55,11 +57,12 @@ func GetModOptVal(opts map[string]string, key string) string {
 
 // Config is a struct used to configure a module.
 type Config struct {
-	Name        string       `json:"name"`
-	Type        string       `json:"type"`
-	Description string       `json:"description"`
-	Address     string       `json:"address"`
-	Config      gofig.Config `json:"config,omitempty"`
+	Name        string          `json:"name"`
+	Type        string          `json:"type"`
+	Description string          `json:"description"`
+	Address     string          `json:"address"`
+	Config      gofig.Config    `json:"config,omitempty"`
+	Client      apitypes.Client `json:"-"`
 }
 
 // Type is a struct that describes a module type
@@ -158,12 +161,24 @@ func InitializeDefaultModules() error {
 		}
 	}
 
+	lsc, _, err, errs := libstorage.New(c)
+	if err != nil {
+		panic(err)
+	}
+	go func() {
+		err := <-errs
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	modConfigs, err := getConfiguredModules(c)
 	if err != nil {
 		return err
 	}
 
 	for _, mc := range modConfigs {
+		mc.Client = lsc
 		mod, err := InitializeModule(mc)
 		if err != nil {
 			return err

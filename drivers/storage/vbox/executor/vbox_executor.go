@@ -94,7 +94,10 @@ func (d *driver) LocalDevices(
 		return nil, err
 	}
 
-	d.rescanScsiHosts()
+	if opts.ScanType == types.DeviceScanDeep {
+		d.rescanScsiHosts()
+	}
+
 	for _, f := range files {
 		if strings.Contains(f.Name(), "VBOX_HARDDISK_VB") {
 			sid := d.getShortDeviceID(f.Name())

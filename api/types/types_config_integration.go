@@ -18,4 +18,7 @@ const (
 
 	// ConfigIntegrationVolPathCache is a config key.
 	ConfigIntegrationVolPathCache = ConfigIntegration + ".volume.path.cache"
+
+	//ConfigDockerVolumeCreateImplicit is a config key.
+	ConfigIntegrationVolCreateImplicit = ConfigIntegration + ".volume.create.implicit"
 )

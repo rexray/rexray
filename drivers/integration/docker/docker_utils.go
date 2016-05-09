@@ -75,6 +75,15 @@ func (d *driver) volumeInspectByIDOrName(
 	return obj, nil
 }
 
+func isErrNotFound(err error) bool {
+	switch err.(type) {
+	case *types.ErrNotFound:
+		return true
+	default:
+		return false
+	}
+}
+
 func (d *driver) volumeMountPath(target string) string {
 	return path.Join(target, d.volumeRootPath())
 }

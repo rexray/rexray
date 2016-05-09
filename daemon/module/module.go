@@ -167,7 +167,7 @@ func InitializeDefaultModules() error {
 			util.LibFilePath("volumes"))
 	}
 
-	lsc, _, err, errs := libstorage.New(c)
+	_, _, err, errs := libstorage.New(c)
 	if err != nil {
 		return err
 	}
@@ -184,6 +184,10 @@ func InitializeDefaultModules() error {
 	}
 
 	for _, mc := range modConfigs {
+		lsc, err := libstorage.Dial(mc.Config)
+		if err != nil {
+			panic(err)
+		}
 		mc.Client = lsc
 		mod, err := InitializeModule(mc)
 		if err != nil {

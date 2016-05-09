@@ -13,6 +13,7 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage"
 	apitypes "github.com/emccode/libstorage/api/types"
+	"github.com/emccode/rexray/util"
 )
 
 // Module is the interface to which types adhere in order to participate as
@@ -159,6 +160,11 @@ func InitializeDefaultModules() error {
 				panic(err)
 			}
 		}
+	}
+
+	if !c.IsSet("libstorage.integration.docker.mountDirPath") {
+		c.Set("libstorage.integration.docker.mountDirPath",
+			util.LibFilePath("volumes"))
 	}
 
 	lsc, _, err, errs := libstorage.New(c)

@@ -196,6 +196,7 @@ endif
 GOGET_LOCK := goget.lock
 GLIDE_LOCK := glide.lock
 GLIDE_YAML := glide.yaml
+GLIDE_LOCK_D := glide.lock.d
 
 EXT_DEPS := $(sort $(EXT_DEPS))
 EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS))
@@ -205,11 +206,14 @@ ALL_EXT_DEPS := $(sort $(EXT_DEPS) $(TEST_EXT_DEPS))
 ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
 ifneq (1,$(VENDORED))
-ifneq (,$(GLIDE_YAML))
-$(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK)
+ifneq (,$(wildcard $(GLIDE_YAML)))
+$(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
+
+$(GLIDE_LOCK_D): $(GLIDE_LOCK)
+	glide up && touch $@
 
 $(GLIDE_LOCK): $(GLIDE_YAML)
-	glide up
+	touch $@
 
 $(GLIDE_LOCK)-clean:
 	rm -f $(GLIDE_LOCK)

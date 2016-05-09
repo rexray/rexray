@@ -20,6 +20,7 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
+	dtypes "github.com/emccode/libstorage/drivers/integration/docker"
 
 	"github.com/emccode/rexray/rexray/cli/term"
 	"github.com/emccode/rexray/util"
@@ -321,16 +322,15 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 	c.updateLogLevel()
 
 	if !c.config.IsSet(
-		"libstorage.integration.docker.mountDirPath") {
+		dtypes.ConfigDockerMountDirPath) {
 		c.config.Set(
-			"libstorage.integration.docker.mountDirPath",
+			dtypes.ConfigDockerMountDirPath,
 			util.LibFilePath("volumes"))
 	}
 
-	if !c.config.IsSet(
-		"libstorage.integration.volume.path.cache") {
+	if !c.config.IsSet(apitypes.ConfigIntegrationVolPathCache) {
 		c.config.Set(
-			"libstorage.integration.volume.path.cache",
+			apitypes.ConfigIntegrationVolPathCache,
 			false)
 	}
 

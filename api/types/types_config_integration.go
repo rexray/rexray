@@ -18,4 +18,7 @@ const (
 
 	// ConfigIntegrationVolPathCache is a config key.
 	ConfigIntegrationVolPathCache = ConfigIntegration + ".volume.path.cache"
+
+	//ConfigIntegrationVolCreateImplicit is a config key.
+	ConfigIntegrationVolCreateImplicit = ConfigIntegration + ".volume.create.implicit"
 )

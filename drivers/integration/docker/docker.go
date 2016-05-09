@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"fmt"
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
@@ -53,6 +54,7 @@ func newDriver() types.IntegrationDriver {
 
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
+
 	backCompat(d.config)
 	ctx.WithField(ConfigDockerLinuxVolumeRootPath, d.volumeRootPath()).Info(
 		"subdirectory to append to volume mount path")
@@ -68,6 +70,9 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		"default filesystem type")
 	ctx.WithField(ConfigDockerMountDirPath, d.mountDirPath()).Info(
 		"default path for mounting volumes")
+	ctx.WithField(types.ConfigIntegrationVolCreateImplicit,
+		d.volumeCreateImplicit()).Info(
+		"create a volume if it does not exist on mount")
 
 	return nil
 }
@@ -170,8 +175,19 @@ func (d *driver) Mount(
 
 	vol, err := d.volumeInspectByIDOrName(
 		ctx, volumeID, volumeName, true, opts.Opts)
-	if err != nil {
+	if isErrNotFound(err) && d.volumeCreateImplicit() {
+		var err error
+		if vol, err = d.Create(ctx, volumeName, &types.VolumeCreateOpts{
+			Opts: utils.NewStore(),
+		}); err != nil {
+			return "", nil, goof.WithError("problem creating volume implicitly", err)
+		}
+	} else if err != nil {
 		return "", nil, err
+	}
+
+	if vol == nil {
+		return "", nil, goof.New("no volume returned or created")
 	}
 
 	if len(vol.Attachments) == 0 {
@@ -352,6 +368,9 @@ func (d *driver) Path(
 		ctx, volumeID, volumeName, true, opts)
 	if err != nil {
 		return "", err
+	} else if vol == nil {
+		return "", utils.NewNotFoundError(
+			fmt.Sprintf("volumeID=%s,volumeName=%s", volumeID, volumeName))
 	}
 
 	if len(vol.Attachments) == 0 {
@@ -515,6 +534,10 @@ func (d *driver) mountDirPath() string {
 	return d.config.GetString(ConfigDockerMountDirPath)
 }
 
+func (d *driver) volumeCreateImplicit() bool {
+	return d.config.GetBool(types.ConfigIntegrationVolCreateImplicit)
+}
+
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Docker")
 	r.Key(gofig.String, "", "ext4", "", ConfigDockerFsType)
@@ -524,5 +547,6 @@ func configRegistration() *gofig.Registration {
 	r.Key(gofig.String, "", "", "", ConfigDockerAvailabilityZone)
 	r.Key(gofig.String, "", "/var/lib/libstorage/volumes", "", ConfigDockerMountDirPath)
 	r.Key(gofig.String, "", "/data", "", ConfigDockerLinuxVolumeRootPath)
+	r.Key(gofig.Bool, "", true, "", types.ConfigIntegrationVolCreateImplicit)
 	return r
 }

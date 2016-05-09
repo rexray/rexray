@@ -163,12 +163,12 @@ func InitializeDefaultModules() error {
 
 	lsc, _, err, errs := libstorage.New(c)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	go func() {
 		err := <-errs
 		if err != nil {
-			panic(err)
+			log.Error(err)
 		}
 	}()
 

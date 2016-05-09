@@ -321,16 +321,15 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 	c.updateLogLevel()
 
 	if !c.config.IsSet(
-		"libstorage.integration.docker.mountDirPath") {
+		apitypes.ConfigIgVolOpsMountPath) {
 		c.config.Set(
-			"libstorage.integration.docker.mountDirPath",
+			apitypes.ConfigIgVolOpsMountPath,
 			util.LibFilePath("volumes"))
 	}
 
-	if !c.config.IsSet(
-		"libstorage.integration.volume.path.cache") {
+	if !c.config.IsSet(apitypes.ConfigIgVolOpsPathCache) {
 		c.config.Set(
-			"libstorage.integration.volume.path.cache",
+			apitypes.ConfigIgVolOpsPathCache,
 			false)
 	}
 

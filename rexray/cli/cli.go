@@ -326,6 +326,14 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 			"libstorage.integration.docker.mountDirPath",
 			util.LibFilePath("volumes"))
 	}
+
+	if !c.config.IsSet(
+		"libstorage.integration.volume.path.cache") {
+		c.config.Set(
+			"libstorage.integration.volume.path.cache",
+			false)
+	}
+
 	c.config = c.config.Scope("rexray.modules.default-docker")
 
 	if isHelpFlag(cmd) {

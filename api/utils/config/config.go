@@ -36,6 +36,8 @@ func NewConfig() (gofig.Config, error) {
 		return nil, err
 	}
 
+	types.BackCompat(config)
+
 	return config, nil
 }
 

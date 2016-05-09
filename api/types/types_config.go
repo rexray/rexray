@@ -67,21 +67,6 @@ const (
 	// ConfigExecutorNoDownload is a config key.
 	ConfigExecutorNoDownload = ConfigRoot + ".executor.disableDownload"
 
-	// ConfigVolMountPreempt is a config key.
-	ConfigVolMountPreempt = ConfigRoot + ".volume.mount.preempt"
-
-	// ConfigVolCreateDisable is a config key.
-	ConfigVolCreateDisable = ConfigRoot + ".volume.mount.disable"
-
-	// ConfigVolRemoveDisable is a config key.
-	ConfigVolRemoveDisable = ConfigRoot + ".volume.remove.disable"
-
-	// ConfigVolUnmountIgnoreUsed is a config key.
-	ConfigVolUnmountIgnoreUsed = ConfigRoot + ".volume.unmount.ignoreusedcount"
-
-	// ConfigVolPathCache is a config key.
-	ConfigVolPathCache = ConfigRoot + ".volume.path.cache"
-
 	// ConfigClientCacheInstanceID is a config key.
 	ConfigClientCacheInstanceID = ConfigClient + ".cache.instanceID"
 

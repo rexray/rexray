@@ -13,7 +13,6 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage"
 	apitypes "github.com/emccode/libstorage/api/types"
-	dtypes "github.com/emccode/libstorage/drivers/integration/docker"
 	"github.com/emccode/rexray/util"
 )
 
@@ -163,9 +162,8 @@ func InitializeDefaultModules() error {
 		}
 	}
 
-	if !c.IsSet(dtypes.ConfigDockerMountDirPath) {
-		c.Set(dtypes.ConfigDockerMountDirPath,
-			util.LibFilePath("volumes"))
+	if !c.IsSet(apitypes.ConfigIgVolOpsMountPath) {
+		c.Set(apitypes.ConfigIgVolOpsMountPath, util.LibFilePath("volumes"))
 	}
 
 	_, _, err, errs := libstorage.New(c)

@@ -55,22 +55,21 @@ func newDriver() types.IntegrationDriver {
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 
-	backCompat(d.config)
-	ctx.WithField(ConfigDockerLinuxVolumeRootPath, d.volumeRootPath()).Info(
-		"subdirectory to append to volume mount path")
-	ctx.WithField(ConfigDockerVolumeType, d.volumeType()).Info(
+	ctx.WithField(types.ConfigIgVolOpsMountRootPath, d.volumeRootPath()).Info(
+		"subdirectory to append to the mounted volume path")
+	ctx.WithField(types.ConfigIgVolOpsCreateDefaultType, d.volumeType()).Info(
 		"default volume type")
-	ctx.WithField(ConfigDockerIOPS, d.iops()).Info(
-		"default IOPS")
-	ctx.WithField(ConfigDockerSize, d.size()).Info(
+	ctx.WithField(types.ConfigIgVolOpsCreateDefaultIOPS, d.iops()).Info(
+		"default DefaultIOPS")
+	ctx.WithField(types.ConfigIgVolOpsCreateDefaultSize, d.size()).Info(
 		"default size in gb")
-	ctx.WithField(ConfigDockerAvailabilityZone, d.availabilityZone()).Info(
+	ctx.WithField(types.ConfigIgVolOpsCreateDefaultAZ, d.availabilityZone()).Info(
 		"default availability zone")
-	ctx.WithField(ConfigDockerFsType, d.fsType()).Info(
+	ctx.WithField(types.ConfigIgVolOpsCreateDefaultFsType, d.fsType()).Info(
 		"default filesystem type")
-	ctx.WithField(ConfigDockerMountDirPath, d.mountDirPath()).Info(
+	ctx.WithField(types.ConfigIgVolOpsMountPath, d.mountDirPath()).Info(
 		"default path for mounting volumes")
-	ctx.WithField(types.ConfigIntegrationVolCreateImplicit,
+	ctx.WithField(types.ConfigIgVolOpsCreateImplicit,
 		d.volumeCreateImplicit()).Info(
 		"create a volume if it does not exist on mount")
 
@@ -507,46 +506,46 @@ func (d *driver) NetworkName(
 }
 
 func (d *driver) volumeRootPath() string {
-	return d.config.GetString(ConfigDockerLinuxVolumeRootPath)
+	return d.config.GetString(types.ConfigIgVolOpsMountRootPath)
 }
 
 func (d *driver) volumeType() string {
-	return d.config.GetString(ConfigDockerVolumeType)
+	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultType)
 }
 
 func (d *driver) iops() string {
-	return d.config.GetString(ConfigDockerIOPS)
+	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultIOPS)
 }
 
 func (d *driver) size() string {
-	return d.config.GetString(ConfigDockerSize)
+	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultSize)
 }
 
 func (d *driver) availabilityZone() string {
-	return d.config.GetString(ConfigDockerAvailabilityZone)
+	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultAZ)
 }
 
 func (d *driver) fsType() string {
-	return d.config.GetString(ConfigDockerFsType)
+	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultFsType)
 }
 
 func (d *driver) mountDirPath() string {
-	return d.config.GetString(ConfigDockerMountDirPath)
+	return d.config.GetString(types.ConfigIgVolOpsMountPath)
 }
 
 func (d *driver) volumeCreateImplicit() bool {
-	return d.config.GetBool(types.ConfigIntegrationVolCreateImplicit)
+	return d.config.GetBool(types.ConfigIgVolOpsCreateImplicit)
 }
 
 func configRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Docker")
-	r.Key(gofig.String, "", "ext4", "", ConfigDockerFsType)
-	r.Key(gofig.String, "", "", "", ConfigDockerVolumeType)
-	r.Key(gofig.String, "", "", "", ConfigDockerIOPS)
-	r.Key(gofig.String, "", "16", "", ConfigDockerSize)
-	r.Key(gofig.String, "", "", "", ConfigDockerAvailabilityZone)
-	r.Key(gofig.String, "", "/var/lib/libstorage/volumes", "", ConfigDockerMountDirPath)
-	r.Key(gofig.String, "", "/data", "", ConfigDockerLinuxVolumeRootPath)
-	r.Key(gofig.Bool, "", true, "", types.ConfigIntegrationVolCreateImplicit)
+	r.Key(gofig.String, "", "ext4", "", types.ConfigIgVolOpsCreateDefaultFsType)
+	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultType)
+	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultIOPS)
+	r.Key(gofig.String, "", "16", "", types.ConfigIgVolOpsCreateDefaultSize)
+	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultAZ)
+	r.Key(gofig.String, "", "/var/lib/libstorage/volumes", "", types.ConfigIgVolOpsMountPath)
+	r.Key(gofig.String, "", "/data", "", types.ConfigIgVolOpsMountRootPath)
+	r.Key(gofig.Bool, "", true, "", types.ConfigIgVolOpsCreateImplicit)
 	return r
 }

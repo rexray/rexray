@@ -44,15 +44,15 @@ func (d *idm) Init(ctx types.Context, config gofig.Config) error {
 		_, _ = d.List(context.Background(), store)
 	}
 
-	ctx.WithField(types.ConfigIntegrationVolPathCache,
+	ctx.WithField(types.ConfigIgVolOpsPathCache,
 		d.pathCache()).Info("cache empty path for unused volume setting")
-	ctx.WithField(types.ConfigIntegrationVolUnmountIgnoreUsed,
+	ctx.WithField(types.ConfigIgVolOpsUnmountIgnoreUsed,
 		d.ignoreUsedCount()).Info("ignore used count on unmount setting")
-	ctx.WithField(types.ConfigIntegrationVolMountPreempt,
+	ctx.WithField(types.ConfigIgVolOpsMountPreempt,
 		d.preempt()).Info("pre-emptive mount setting")
-	ctx.WithField(types.ConfigIntegrationVolCreateDisable,
+	ctx.WithField(types.ConfigIgVolOpsCreateDisable,
 		d.disableCreate()).Info("volume creation disabled setting")
-	ctx.WithField(types.ConfigIntegrationVolRemoveDisable,
+	ctx.WithField(types.ConfigIgVolOpsRemoveDisable,
 		d.disableRemove()).Info("volume removal disabled setting")
 
 	return nil
@@ -292,21 +292,21 @@ func (d *idm) decCount(volumeName string) {
 }
 
 func (d *idm) preempt() bool {
-	return d.config.GetBool(types.ConfigIntegrationVolMountPreempt)
+	return d.config.GetBool(types.ConfigIgVolOpsMountPreempt)
 }
 
 func (d *idm) disableCreate() bool {
-	return d.config.GetBool(types.ConfigIntegrationVolCreateDisable)
+	return d.config.GetBool(types.ConfigIgVolOpsCreateDisable)
 }
 
 func (d *idm) disableRemove() bool {
-	return d.config.GetBool(types.ConfigIntegrationVolRemoveDisable)
+	return d.config.GetBool(types.ConfigIgVolOpsRemoveDisable)
 }
 
 func (d *idm) ignoreUsedCount() bool {
-	return d.config.GetBool(types.ConfigIntegrationVolUnmountIgnoreUsed)
+	return d.config.GetBool(types.ConfigIgVolOpsUnmountIgnoreUsed)
 }
 
 func (d *idm) pathCache() bool {
-	return d.config.GetBool(types.ConfigIntegrationVolPathCache)
+	return d.config.GetBool(types.ConfigIgVolOpsPathCache)
 }

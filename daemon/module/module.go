@@ -162,9 +162,8 @@ func InitializeDefaultModules() error {
 		}
 	}
 
-	if !c.IsSet("libstorage.integration.docker.mountDirPath") {
-		c.Set("libstorage.integration.docker.mountDirPath",
-			util.LibFilePath("volumes"))
+	if !c.IsSet(apitypes.ConfigIgVolOpsMountPath) {
+		c.Set(apitypes.ConfigIgVolOpsMountPath, util.LibFilePath("volumes"))
 	}
 
 	_, _, err, errs := libstorage.New(c)

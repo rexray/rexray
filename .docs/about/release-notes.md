@@ -18,6 +18,39 @@ You can determine your currently installed version using `rexray version`:
     Commit: 36ccc425faeab49d792eda4851e3d72a85744874
     Formed: Tue, 27 Oct 2015 12:54:19 CDT
 
+## Version 0.4.0 (TBA)
+REX-Ray 0.4.0 introduces centralized configuration and control along with
+a new client/server architecture -- features made possible by
+[libStorage](https://github.com/emccode/libstorage). Users are no longer
+required to configure storage drivers or store privileged information on all
+systems running the REX-Ray client. The new client delegates storage-platform
+related operations to a remote, libStorage-compatible server such as REX-Ray
+or [Poly](https://github.com/emccode/polly).
+
+Please note that the initial release of REX-Ray 0.4 includes support for only
+the following storage platforms:
+
+* ScaleIO
+* VirtualBox
+
+Support for the full compliment of drivers present in earlier versions of
+REX-Ray will be reintroduced over the course of several, incremental updates,
+beginning with 0.4.1.
+
+### New Features
+* Distributed architecture ([#399](https://github.com/emccode/rexray/issues/399), [#401](https://github.com/emccode/rexray/issues/401), [#411](https://github.com/emccode/rexray/issues/411), [#417](https://github.com/emccode/rexray/issues/417), [#418](https://github.com/emccode/rexray/issues/418), [#419](https://github.com/emccode/rexray/issues/419), [#420](https://github.com/emccode/rexray/issues/420), [#423](https://github.com/emccode/rexray/issues/423))
+* Volume locking mechanism ([#171](https://github.com/emccode/rexray/issues/171))
+* Volume creation with initial data ([#169](https://github.com/emccode/rexray/issues/169))
+
+### Enhancements
+* Improved storage driver logging ([#396](https://github.com/emccode/rexray/issues/396))
+* Docker mount path ([#403](https://github.com/emccode/rexray/issues/403))
+
+### Bug Fixes
+* Fixed issue with install script ([#409](https://github.com/emccode/rexray/issues/409))
+* Fixed volume ls filter ([#400](https://github.com/emccode/rexray/issues/400))
+* Fixed panic during access attempt of offline REX-Ray daemon ([#148](https://github.com/emccode/rexray/issues/148))
+
 ## Version 0.3.3 (2016/04/21)
 
 ### New Features

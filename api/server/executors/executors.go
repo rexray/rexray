@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"regexp"
 
+	// depend upon this tool with a nil import in order to preserve it
+	// in the dependency list
+	_ "github.com/jteeuwen/go-bindata"
+
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 )

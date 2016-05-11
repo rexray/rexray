@@ -1,5 +1,5 @@
-hash: b6ce4db8859652b3409531cfd29d1beeda92e8607d9e7d5c491a29f09cdf7462
-updated: 2016-05-11T15:04:35.328798636-05:00
+hash: a40b76f83c0a061d7e78be85db4b98d3dc59dce7d6128a33353ed30fd8c028ab
+updated: 2016-05-11T18:47:36.326739551-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
@@ -43,6 +43,9 @@ imports:
   version: a8d44e7d8e4d532b6a27a02dd82abb31cc1b01bd
 - name: github.com/gorilla/mux
   version: 9c19ed558d5df4da88e2ade9c8940d742aef0e7e
+- name: github.com/jteeuwen/go-bindata
+  version: 1dd44b25b79c4d9060e582e90798e4d72537818c
+  repo: https://github.com/akutz/go-bindata
 - name: github.com/kardianos/osext
   version: 29ae4ffbc9a6fe9fb2bc5029050ce6996ea1d3bc
   repo: https://github.com/kardianos/osext.git

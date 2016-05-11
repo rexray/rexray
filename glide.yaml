@@ -21,3 +21,6 @@ import:
     ref:     e0978ab2ed407095400a69d5933958dd260058cd
     repo:    https://github.com/clintonskitson/go-virtualboxclient
     vcs:     git
+  - package: github.com/jteeuwen/go-bindata
+    ref:     feature/md5checksum
+    repo:    https://github.com/akutz/go-bindata

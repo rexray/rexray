@@ -13,7 +13,14 @@ install:
   - GBD_GIT=https://github.com/akutz/go-bindata.git; GBD_DIR=$GOPATH/src/github.com/jteeuwen/go-bindata; mkdir -p $GBD_DIR && cd $GBD_DIR && git clone $GBD_GIT . && git checkout feature/md5checksum && go install ./... && cd -
 script:
   - make glide.lock.d
+  - make -j
   - make -j cover
 cache:
   directories:
   - vendor
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8

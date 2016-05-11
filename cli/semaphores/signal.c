@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <semaphore.h>
 #include <errno.h>
+#include <fcntl.h>
 
 int main(int argc, char** argv) {
 	if (argc < 2) {

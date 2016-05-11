@@ -375,7 +375,7 @@ $(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin))
 #$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
 
 $(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
-	go-bindata -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
+	$(GOPATH)/bin/go-bindata -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
 
 $(EXECUTORS_GENERATED)-clean:
 	rm -fr $(dir $(EXECUTORS_GENERATED))/bin
@@ -430,7 +430,7 @@ GO_CLEAN += $(SEM_UNLINK)-clean
 
 sem-tools: $(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK)
 sem-tools-clean: $(addsuffix -clean,$(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK))
-	
+
 
 ################################################################################
 ##                                  C CLIENT                                  ##

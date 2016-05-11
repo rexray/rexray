@@ -38,6 +38,7 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 			 text/tabwriter text/template text/template/parse time unicode \
 			 unicode/utf16 unicode/utf8 unsafe
 
+
 ################################################################################
 ##                               PROJECT INFO                                 ##
 ################################################################################
@@ -193,6 +194,9 @@ endif
 ################################################################################
 ##                               DEPENDENCIES                                 ##
 ################################################################################
+GO_BINDATA := $(GOPATH)/bin/go-bindata
+go-bindata: $(GO_BINDATA)
+
 GOGET_LOCK := goget.lock
 GLIDE_LOCK := glide.lock
 GLIDE_YAML := glide.yaml
@@ -206,7 +210,7 @@ ALL_EXT_DEPS := $(sort $(EXT_DEPS) $(TEST_EXT_DEPS))
 ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
 ifneq (1,$(VENDORED))
-ifneq (,$(wildcard $(GLIDE_YAML)))
+GO_DEPS += $(GLIDE_LOCK_D)
 $(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
 
 $(GLIDE_LOCK_D): $(GLIDE_LOCK)
@@ -219,18 +223,21 @@ $(GLIDE_LOCK)-clean:
 	rm -f $(GLIDE_LOCK)
 GO_PHONY += $(GLIDE_LOCK)-clean
 GO_CLOBBER += $(GLIDE_LOCK)-clean
+endif
+
+GO_BINDATA_IMPORT_PATH := vendor/github.com/jteeuwen/go-bindata/go-bindata
+ifneq (1,$(VENDORED))
+GO_BINDATA_IMPORT_PATH := $(ROOT_IMPORT_PATH)/$(GO_BINDATA_IMPORT_PATH)
 else
-$(ALL_EXT_DEPS_SRCS): $(GOGET_LOCK)
-
-$(GOGET_LOCK):
-	go get -d $(ALL_EXT_DEPS) && touch $@
-
-$(GOGET_LOCK)-clean:
-	rm -f $(GOGET_LOCK)
-GO_PHONY += $(GOGET_LOCK)-clean
-GO_CLOBBER += $(GOGET_LOCK)-clean
+GO_BINDATA_IMPORT_PATH := $(firstword $(subst /vendor/, ,$(ROOT_IMPORT_PATH)))/$(GO_BINDATA_IMPORT_PATH)
 endif
+
+ifneq (1,$(VENDORED))
+$(GO_BINDATA): $(GLIDE_LOCK_D)
 endif
+$(GO_BINDATA):
+	go install $(GO_BINDATA_IMPORT_PATH)
+GO_DEPS += $(GO_BINDATA)
 
 ################################################################################
 ##                               PROJECT BUILD                                ##
@@ -374,8 +381,8 @@ $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux))
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin))
 #$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
 
-$(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
-	$(GOPATH)/bin/go-bindata -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
+$(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED) | $(GO_BINDATA)
+	$(GO_BINDATA) -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
 
 $(EXECUTORS_GENERATED)-clean:
 	rm -fr $(dir $(EXECUTORS_GENERATED))/bin
@@ -556,6 +563,7 @@ cover-debug:
 ################################################################################
 ##                                  TARGETS                                   ##
 ################################################################################
+deps: $(GO_DEPS)
 
 build-tests: $(GO_BUILD_TESTS)
 

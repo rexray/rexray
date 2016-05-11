@@ -8,6 +8,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 )
 
@@ -24,7 +25,12 @@ type serviceContainer struct {
 
 // Init initializes the types.
 func Init(ctx types.Context, config gofig.Config) error {
-	serverName := ctx.ServerName()
+
+	serverName, ok := context.Server(ctx)
+	if !ok {
+		panic("ctx is missing ServerName")
+	}
+
 	ctx.Info("initializing server services")
 
 	sc := &serviceContainer{
@@ -59,7 +65,13 @@ func (sc *serviceContainer) Init(ctx types.Context, config gofig.Config) error {
 
 func getStorageServices(
 	ctx types.Context) map[string]types.StorageService {
-	return servicesByServer[ctx.ServerName()].storageServices
+
+	serverName, ok := context.Server(ctx)
+	if !ok {
+		panic("ctx is missing ServerName")
+	}
+
+	return servicesByServer[serverName].storageServices
 }
 
 // GetStorageService returns the storage service specified by the given name;
@@ -116,23 +128,21 @@ func (sc *serviceContainer) initStorageServices(ctx types.Context) error {
 	for serviceName := range cfgSvcsMap {
 		serviceName = strings.ToLower(serviceName)
 
-		svcCtx := ctx.WithContextSID(types.ContextServiceName, serviceName)
-		svcCtx.Debug("processing service config")
+		storSvc := &storageService{name: serviceName}
+
+		ctx := ctx.WithValue(context.StorageServiceKey, storSvc)
+		ctx.Debug("processing service config")
 
 		scope := fmt.Sprintf("libstorage.server.services.%s", serviceName)
-		svcCtx.WithField("scope", scope).Debug(
+		ctx.WithField("scope", scope).Debug(
 			"getting scoped config for service")
 		config := sc.config.Scope(scope)
 
-		storSvc := &storageService{name: serviceName}
-		if err := storSvc.Init(svcCtx, config); err != nil {
+		if err := storSvc.Init(ctx, config); err != nil {
 			return err
 		}
 
-		svcCtx = svcCtx.WithContextSID(
-			types.ContextDriverName, storSvc.Driver().Name())
-		svcCtx.Info("created new service")
-
+		ctx.Info("created new service")
 		sc.storageServices[serviceName] = storSvc
 	}
 
@@ -140,10 +150,17 @@ func (sc *serviceContainer) initStorageServices(ctx types.Context) error {
 }
 
 func getTaskService(ctx types.Context) *globalTaskService {
+
+	serverName, ok := context.Server(ctx)
+	if !ok {
+		panic("ctx is missing ServerName")
+	}
+
 	servicesByServerRWL.RLock()
 	defer servicesByServerRWL.RUnlock()
+
 	ctx.Debug("getting task service")
-	return servicesByServer[ctx.ServerName()].taskService
+	return servicesByServer[serverName].taskService
 }
 
 // Tasks returns a channel on which all tasks are received.

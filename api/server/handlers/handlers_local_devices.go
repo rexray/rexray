@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 )
 
@@ -41,33 +41,17 @@ func (h *localDevicesHandler) Handle(
 	store types.Store) error {
 
 	headers := req.Header[types.LocalDevicesHeader]
-	ctx.WithField(
-		types.LocalDevicesHeader, headers).Debug("http header")
+	ctx.WithField(types.LocalDevicesHeader, headers).Debug("http header")
 
-	valMap := map[string]map[string]string{}
-	for _, v := range headers {
-		locDevM := locDevRX.FindStringSubmatch(v)
-		if len(locDevM) == 0 {
-			continue
+	valMap := types.LocalDevicesMap{}
+	for _, h := range headers {
+		val := &types.LocalDevices{}
+		if err := val.UnmarshalText([]byte(h)); err != nil {
+			return err
 		}
-
-		driver := locDevM[1]
-
-		devMntPairs := strings.Split(locDevM[2], ",")
-		for _, dmp := range devMntPairs {
-			dmpParts := strings.Split(dmp, "=")
-			device := gotil.Trim(dmpParts[0])
-			mountPoint := gotil.Trim(dmpParts[1])
-			if _, ok := valMap[driver]; !ok {
-				valMap[driver] = map[string]string{}
-			}
-			valMap[driver][device] = mountPoint
-		}
+		valMap[strings.ToLower(val.Driver)] = val
 	}
 
-	if len(valMap) > 0 {
-		ctx = ctx.WithLocalDevicesByService(valMap)
-	}
-
+	ctx = ctx.WithValue(context.AllLocalDevicesKey, valMap)
 	return h.handler(ctx, w, req, store)
 }

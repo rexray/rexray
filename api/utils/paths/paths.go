@@ -153,11 +153,17 @@ func (k fileKey) get() string {
 }
 
 func (k fileKey) Join(elem ...string) string {
-	elems := []string{Home.String()}
+	log.WithField("elem", elem).Debug("enter join")
+
+	var elems []string
+	if _, ok := keyCache[k]; !ok {
+		elems = []string{Home.String()}
+	}
 	if k != Home {
 		elems = append(elems, k.String())
 	}
 	elems = append(elems, elem...)
+	log.WithField("elem", elems).Debug("exit join")
 	return path.Join(elems...)
 }
 

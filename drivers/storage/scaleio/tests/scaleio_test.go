@@ -8,12 +8,12 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	"github.com/stretchr/testify/assert"
 
 	// load the  driver
 	sio "github.com/emccode/libstorage/drivers/storage/scaleio"
@@ -49,10 +49,10 @@ func skipTests() bool {
 }
 
 func init() {
-	uuid, _ := utils.NewUUID()
+	uuid, _ := types.NewUUID()
 	uuids := strings.Split(uuid.String(), "-")
 	volumeName = uuids[0]
-	uuid, _ = utils.NewUUID()
+	uuid, _ = types.NewUUID()
 	uuids = strings.Split(uuid.String(), "-")
 	volumeName2 = uuids[0]
 }

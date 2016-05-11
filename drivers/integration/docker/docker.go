@@ -10,6 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -85,11 +86,8 @@ func (d *driver) List(
 	ctx types.Context,
 	opts types.Store) ([]types.VolumeMapping, error) {
 
-	fields := log.Fields{
-		"opts": opts}
-	ctx.WithFields(fields).Info("listing volumes")
-
-	vols, err := ctx.Client().Storage().Volumes(
+	client := context.MustClient(ctx)
+	vols, err := client.Storage().Volumes(
 		ctx,
 		&types.VolumesOpts{
 			Attachments: opts.GetBool("attachments"),
@@ -98,6 +96,11 @@ func (d *driver) List(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	serviceName, serviceNameOK := context.ServiceName(ctx)
+	if !serviceNameOK {
+		return nil, goof.New("service name is missing")
 	}
 
 	volMaps := []types.VolumeMapping{}
@@ -109,8 +112,8 @@ func (d *driver) List(
 		vs["type"] = v.Type
 		vs["availabilityZone"] = v.AvailabilityZone
 		vs["fields"] = v.Fields
-		vs["service"] = ctx.ServiceName()
-		vs["server"] = ctx.ServiceName()
+		vs["service"] = serviceName
+		vs["server"] = serviceName
 		volMaps = append(volMaps, &volumeMapping{
 			Name:             v.Name,
 			VolumeMountPoint: v.MountPoint(),
@@ -189,6 +192,7 @@ func (d *driver) Mount(
 		return "", nil, goof.New("no volume returned or created")
 	}
 
+	client := context.MustClient(ctx)
 	if len(vol.Attachments) == 0 {
 		mp, err := d.getVolumeMountPath(vol.Name)
 		if err != nil {
@@ -196,10 +200,10 @@ func (d *driver) Mount(
 		}
 
 		ctx.Debug("performing precautionary unmount")
-		_ = ctx.Client().OS().Unmount(ctx, mp, opts.Opts)
+		_ = client.OS().Unmount(ctx, mp, opts.Opts)
 
 		var token string
-		vol, token, err = ctx.Client().Storage().VolumeAttach(
+		vol, token, err = client.Storage().VolumeAttach(
 			ctx, vol.ID, &types.VolumeAttachOpts{
 				Force: opts.Preempt,
 				Opts:  utils.NewStore(),
@@ -217,7 +221,7 @@ func (d *driver) Mount(
 			Timeout: apiconfig.DeviceAttachTimeout(d.config),
 		}
 
-		_, _, err = ctx.Client().Executor().WaitForDevice(ctx, opts)
+		_, _, err = client.Executor().WaitForDevice(ctx, opts)
 		if err != nil {
 			return "", nil, goof.WithError("problem with device discovery", err)
 		}
@@ -238,7 +242,7 @@ func (d *driver) Mount(
 		return "", nil, goof.New("no device name returned")
 	}
 
-	mounts, err := ctx.Client().OS().Mounts(
+	mounts, err := client.OS().Mounts(
 		ctx, vol.Attachments[0].DeviceName, "", opts.Opts)
 	if err != nil {
 		return "", nil, err
@@ -252,7 +256,7 @@ func (d *driver) Mount(
 		opts.NewFSType = d.fsType()
 	}
 
-	if err := ctx.Client().OS().Format(
+	if err := client.OS().Format(
 		ctx,
 		vol.Attachments[0].DeviceName,
 		&types.DeviceFormatOpts{
@@ -271,7 +275,7 @@ func (d *driver) Mount(
 		return "", nil, err
 	}
 
-	if err := ctx.Client().OS().Mount(
+	if err := client.OS().Mount(
 		ctx,
 		vol.Attachments[0].DeviceName,
 		mountPath,
@@ -319,7 +323,9 @@ func (d *driver) Unmount(
 		return goof.New("no device name found for attachment")
 	}
 
-	mounts, err := ctx.Client().OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
+	client := context.MustClient(ctx)
+
+	mounts, err := client.OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
 	if err != nil {
 		return err
 	}
@@ -327,17 +333,18 @@ func (d *driver) Unmount(
 	for _, mount := range mounts {
 		ctx.WithField("mount", mount).Debug("retrieved mount")
 	}
+
 	if len(mounts) > 0 {
 		for _, mount := range mounts {
 			ctx.WithField("mount", mount).Debug("unmounting mount point")
-			err = ctx.Client().OS().Unmount(ctx, mount.MountPoint, opts)
+			err = client.OS().Unmount(ctx, mount.MountPoint, opts)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	_, err = ctx.Client().Storage().VolumeDetach(ctx, vol.ID,
+	_, err = client.Storage().VolumeDetach(ctx, vol.ID,
 		&types.VolumeDetachOpts{
 			Force: opts.GetBool("force"),
 			Opts:  utils.NewStore(),
@@ -376,7 +383,9 @@ func (d *driver) Path(
 		return "", nil
 	}
 
-	mounts, err := ctx.Client().OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
+	client := context.MustClient(ctx)
+
+	mounts, err := client.OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
 	if err != nil {
 		return "", err
 	}
@@ -442,7 +451,8 @@ func (d *driver) Create(
 		"IOPS":             IOPS,
 		"opts":             opts}).Info("creating volume")
 
-	vol, err := ctx.Client().Storage().VolumeCreate(ctx, volumeName, optsNew)
+	client := context.MustClient(ctx)
+	vol, err := client.Storage().VolumeCreate(ctx, volumeName, optsNew)
 	if err != nil {
 		return nil, err
 	}
@@ -474,7 +484,9 @@ func (d *driver) Remove(
 		return goof.New("volume not found")
 	}
 
-	return ctx.Client().Storage().VolumeRemove(ctx, vol.ID, opts)
+	client := context.MustClient(ctx)
+
+	return client.Storage().VolumeRemove(ctx, vol.ID, opts)
 }
 
 // Attach will attach a volume based on volumeName to the instance of

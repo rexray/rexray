@@ -1,15 +1,15 @@
 package libstorage
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
+	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils/paths"
 	"github.com/emccode/libstorage/cli/lsx"
@@ -19,8 +19,12 @@ func (c *client) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 
-	ctx = c.withContext(ctx)
-	serviceName := ctx.ServiceName()
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	if iid := c.instanceIDCache.GetInstanceID(serviceName); iid != nil {
 		return iid, nil
@@ -30,7 +34,7 @@ func (c *client) InstanceID(
 	if err != nil {
 		return nil, err
 	}
-	driverName := si.Driver.Name
+	driverName := strings.ToLower(si.Driver.Name)
 
 	out, err := c.runExecutor(ctx, driverName, lsx.InstanceID)
 	if err != nil {
@@ -38,27 +42,17 @@ func (c *client) InstanceID(
 	}
 
 	iid := &types.InstanceID{}
-	if err := json.Unmarshal(out, iid); err != nil {
+	if err := iid.UnmarshalText(out); err != nil {
 		return nil, err
 	}
 
-	if err := c.updateInstanceIDHeaders(driverName, iid); err != nil {
-		return nil, err
-	}
-
+	ctx = ctx.WithValue(context.InstanceIDKey, iid)
 	instance, err := c.InstanceInspect(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
 
 	iid = instance.InstanceID
-
-	// add the formatted instance ID back to the headers, replacing the
-	// unformatted one
-	if err := c.updateInstanceIDHeaders(driverName, iid); err != nil {
-		return nil, err
-	}
-
 	c.instanceIDCache.Set(serviceName, iid)
 
 	ctx.Debug("xli instanceID success")
@@ -69,14 +63,20 @@ func (c *client) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
 
-	si, err := c.getServiceInfo(ctx.ServiceName())
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return "", goof.New("missing service name")
+	}
+
+	si, err := c.getServiceInfo(serviceName)
 	if err != nil {
 		return "", err
 	}
 	driverName := si.Driver.Name
 
-	out, err := c.runExecutor(
-		c.withContext(ctx), driverName, lsx.NextDevice)
+	out, err := c.runExecutor(ctx, driverName, lsx.NextDevice)
 	if err != nil {
 		return "", err
 	}
@@ -87,10 +87,14 @@ func (c *client) NextDevice(
 
 func (c *client) LocalDevices(
 	ctx types.Context,
-	opts *types.LocalDevicesOpts) (map[string]string, error) {
+	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
 
-	ctx = c.withContext(ctx)
-	serviceName := ctx.ServiceName()
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	si, err := c.getServiceInfo(serviceName)
 	if err != nil {
@@ -104,26 +108,27 @@ func (c *client) LocalDevices(
 		return nil, err
 	}
 
-	ldm := map[string]string{}
-	if err := json.Unmarshal(out, &ldm); err != nil {
-		return nil, err
-	}
-
-	if err := c.updateLocalDevicesHeaders(driverName, ldm); err != nil {
+	ld := &types.LocalDevices{}
+	if err := ld.UnmarshalText(out); err != nil {
 		return nil, err
 	}
 
 	ctx.Debug("xli localdevices success")
-	return ldm, nil
+	return ld, nil
 }
 
 func (c *client) WaitForDevice(
 	ctx types.Context,
-	opts *types.WaitForDeviceOpts) (bool, map[string]string, error) {
+	opts *types.WaitForDeviceOpts) (bool, *types.LocalDevices, error) {
 
-	ctx = c.withContext(ctx)
+	ctx = context.RequireTX(ctx.Join(c.ctx))
 
-	si, err := c.getServiceInfo(ctx.ServiceName())
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return false, nil, goof.New("missing service name")
+	}
+
+	si, err := c.getServiceInfo(serviceName)
 	if err != nil {
 		return false, nil, err
 	}
@@ -143,24 +148,13 @@ func (c *client) WaitForDevice(
 
 	matched := exitCode == 0
 
-	ldm := map[string]string{}
-	if err := json.Unmarshal(out, &ldm); err != nil {
-		return matched, nil, err
+	ld := &types.LocalDevices{}
+	if err := ld.UnmarshalText(out); err != nil {
+		return false, nil, err
 	}
-
-	buf := &bytes.Buffer{}
-	for k, v := range ldm {
-		fmt.Fprintf(buf, "%s=%s, ", k, v)
-	}
-
-	if buf.Len() > 0 {
-		buf.Truncate(buf.Len() - 2)
-	}
-
-	c.AddHeaderForDriver(driverName, types.LocalDevicesHeader, buf.String())
 
 	ctx.Debug("xli waitfordevice success")
-	return matched, ldm, nil
+	return matched, ld, nil
 }
 
 func (c *client) runExecutor(

@@ -1,12 +1,40 @@
 package types
 
 import (
-	"fmt"
-	"net/http"
-	"time"
-
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/net/context"
+)
+
+// Level is a log level.
+type Level log.Level
+
+// These are the different logging levels.
+const (
+	// PanicLevel level, highest level of severity. Logs and then calls panic
+	// with the message passed to Debug, Info, ...
+	PanicLevel Level = Level(log.PanicLevel) + iota
+
+	// FatalLevel level. Logs and then calls `os.Exit(1)`. It will exit even
+	// if the logging level is set to Panic.
+	FatalLevel
+
+	// ErrorLevel level. Logs. Used for errors that should definitely be noted.
+	// Commonly used for hooks to send errors to an error tracking service.
+	ErrorLevel
+
+	// WarnLevel level. Non-critical entries that deserve eyes.
+	WarnLevel
+
+	// InfoLevel level. General operational entries about what's going on
+	// inside the application.
+	InfoLevel
+
+	// DebugLevel level. Usually only enabled when debugging. Very verbose
+	// logging.
+	DebugLevel
+
+	// TraceLevel level. An even more verbose levle of logging than DebugLevel.
+	TraceLevel
 )
 
 // Context is a libStorage context.
@@ -14,193 +42,32 @@ type Context interface {
 	context.Context
 	log.FieldLogger
 
+	// WithValue returns a copy of parent in which the value associated with
+	// key is val.
+	WithValue(key, value interface{}) Context
+
 	// Join joins this context with another, such that value lookups will first
-	// check this context, and if no such value exist, a lookup will be
-	// performed against the joined context.
-	Join(rightSide Context) Context
-
-	// Log returns the underlying logger instance.
-	Log() *log.Logger
-
-	// ServerName gets the server name.
-	ServerName() string
-
-	// TransactionID gets the transaction ID.
-	TransactionID() string
-
-	// TransactionCreated gets the timestamp of when the transaction was
-	// created.
-	TransactionCreated() time.Time
-
-	// InstanceIDsByService returns the context's service to instance ID map.
-	InstanceIDsByService() map[string]*InstanceID
-
-	// InstanceID returns the context's instance ID.
-	InstanceID() *InstanceID
-
-	// LocalDevicesByService returns the context's service to local devices map.
-	LocalDevicesByService() map[string]map[string]string
-
-	// LocalDevices returns the context's local devices map.
-	LocalDevices() map[string]string
-
-	// Profile returns the context's profile name.
-	Profile() string
-
-	// Route returns the name of context's route.
-	Route() string
-
-	// ServiceName returns the name of the context's service.
-	ServiceName() string
-
-	// Client returns this context's client.
-	Client() Client
-
-	// WithHTTPRequest returns a context with the provided HTTP request.
-	WithHTTPRequest(req *http.Request) Context
-
-	// WithValue returns a context with the provided value.
-	WithValue(key interface{}, val interface{}) Context
-
-	// WithInstanceIDsByService returns a context with the provided service to
-	// instance ID map.
-	WithInstanceIDsByService(val map[string]*InstanceID) Context
-
-	// WithInstanceID returns a context with the provided instance ID.
-	WithInstanceID(val *InstanceID) Context
-
-	// WithLocalDevicesByService returns a context with the provided service to
-	// local devices map.
-	WithLocalDevicesByService(val map[string]map[string]string) Context
-
-	// WithLocalDevices returns a context with the provided local devices map.
-	WithLocalDevices(val map[string]string) Context
-
-	// WithProfile returns a context with the provided profile.
-	WithProfile(profile string) Context
-
-	// WithRoute returns a contex with the provided route name.
-	WithRoute(routeName string) Context
-
-	// WithServiceName returns a contex with the provided service name.
-	WithServiceName(serviceName string) Context
-
-	// WithContextID returns a context with the provided context ID information.
-	// The context ID is often used with logging to identify a log statement's
-	// origin.
-	WithContextID(id, value string) Context
-
-	// WithContextSID is the same as the WithContextID function except this
-	// variant only accepts fmt.Stringer values for its id argument.
-	WithContextSID(id fmt.Stringer, value string) Context
-
-	// WithTransactionID returns a context with the provided transaction ID.
-	WithTransactionID(transactionID string) Context
-
-	// WithTransactionCreated returns a context with the provided transaction
-	// created timestamp.
-	WithTransactionCreated(timestamp time.Time) Context
-
-	// WithClient returns a context with the provided client.
-	WithClient(client Client) Context
+	// first check the current context, and if no such value exist, a lookup
+	// will be performed against the right side.
+	Join(ctx context.Context) Context
 }
 
-// ContextKey is the type used as a context key.
-type ContextKey int
+// ContextLoggerFieldAware is used by types that will be logged by the
+// Context logger. The key/value pair returned by the type is then emitted
+// as part of  the Context's log entry.
+type ContextLoggerFieldAware interface {
 
-// String returns the string-representation of the context key.
-func (ck ContextKey) String() string {
-	if v, ok := ctxIDKeys[ck]; ok {
-		return v
-	}
-	return ""
+	// ContextLoggerField is the fields that is logged as part of a Context's
+	// log entry.
+	ContextLoggerField() (string, interface{})
 }
 
-const (
-	// ContextHTTPRequest is a context key.
-	ContextHTTPRequest ContextKey = 5000 + iota
+// ContextLoggerFieldsAware is used by types that will be logged by the
+// Context logger. The fields returned by the type are then emitted as part of
+// the Context's log entry.
+type ContextLoggerFieldsAware interface {
 
-	// ContextLogger is a context key.
-	ContextLogger
-
-	// ContextInstanceID is a context key.
-	ContextInstanceID
-
-	// ContextInstanceIDsByService is a context key.
-	ContextInstanceIDsByService
-
-	// ContextProfile is a context key.
-	ContextProfile
-
-	// ContextRoute is a context key.
-	ContextRoute
-
-	// ContextContextID is a context key.
-	ContextContextID
-
-	// ContextService is a context key.
-	ContextService
-
-	// ContextServiceName is a context key.
-	ContextServiceName
-
-	// ContextDriver is a context key.
-	ContextDriver
-
-	// ContextDriverName is a context key.
-	ContextDriverName
-
-	// ContextLocalDevices is a context key.
-	ContextLocalDevices
-
-	// ContextLocalDevicesByService is a context key.
-	ContextLocalDevicesByService
-
-	// ContextServerName is a context key.
-	ContextServerName
-
-	// ContextTransactionID is a context key.
-	ContextTransactionID
-
-	// ContextTransactionCreated is a context key.
-	ContextTransactionCreated
-
-	// ContextClient is a context key.
-	ContextClient
-
-	// ContextOSDriver is a context key.
-	ContextOSDriver
-
-	// ContextStorageDriver is a context key.
-	ContextStorageDriver
-
-	// ContextIntegrationDriver is a context key.
-	ContextIntegrationDriver
-
-	// ContextUser is a context key.
-	ContextUser
-
-	// ContextHost is a context key.
-	ContextHost
-)
-
-var (
-	ctxIDKeys = map[ContextKey]string{
-		ContextLogger:             "logger",
-		ContextInstanceID:         "instanceID",
-		ContextProfile:            "profile",
-		ContextRoute:              "route",
-		ContextService:            "service",
-		ContextServiceName:        "service",
-		ContextDriver:             "driver",
-		ContextDriverName:         "driver",
-		ContextServerName:         "server",
-		ContextTransactionID:      "txID",
-		ContextTransactionCreated: "txCR",
-		ContextOSDriver:           "osDriver",
-		ContextStorageDriver:      "storageDriver",
-		ContextIntegrationDriver:  "integrationDriver",
-		ContextUser:               "user",
-		ContextHost:               "host",
-	}
-)
+	// ContextLoggerFields are the fields that are logged as part of a
+	// Context's log entry.
+	ContextLoggerFields() map[string]interface{}
+}

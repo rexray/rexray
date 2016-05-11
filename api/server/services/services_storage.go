@@ -4,6 +4,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 )
@@ -43,12 +44,14 @@ func (s *storageService) initStorageDriver(ctx types.Context) error {
 			}
 		}
 	}
-	ctx = ctx.WithContextSID(types.ContextDriverName, driverName)
-	ctx.Debug("got driver name")
+
+	ctx.WithField("driverName", driverName).Debug("got driver name")
 	driver, err := registry.NewStorageDriver(driverName)
 	if err != nil {
 		return err
 	}
+
+	ctx = ctx.WithValue(context.DriverKey, driver)
 
 	if err := driver.Init(ctx, s.config); err != nil {
 		return err

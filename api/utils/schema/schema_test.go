@@ -17,7 +17,8 @@ func TestVolumeObject(t *testing.T) {
 		Attachments: []*types.VolumeAttachment{
 			&types.VolumeAttachment{
 				InstanceID: &types.InstanceID{
-					ID: "iid-000",
+					ID:     "iid-000",
+					Driver: "vfs",
 				},
 				VolumeID:   "vol-000",
 				DeviceName: "/dev/xvd000",
@@ -47,7 +48,8 @@ func TestVolumeSchema(t *testing.T) {
     "attachments": [
         {
             "instanceID": {
-               "id": "iid-000"
+               "id": "iid-000",
+               "driver": "vfs"
             },
             "volumeID": "vol-000",
             "deviceName": "/dev/xvd00"
@@ -69,7 +71,8 @@ func TestVolumeSchema(t *testing.T) {
     "attachments": [
         {
             "instanceID": {
-               "id": "iid-000"
+               "id": "iid-000",
+               "driver": "vfs"
             },
             "volumeID": "vol-000",
             "deviceName": "/dev/xvd00"
@@ -92,7 +95,8 @@ func TestVolumeSchema(t *testing.T) {
     "attachments": [
         {
             "instanceID": {
-               "id": null
+               "id": null,
+               "driver": null
             },
             "volumeID": "vol-000",
             "deviceName": "/dev/xvd00"
@@ -106,7 +110,10 @@ func TestVolumeSchema(t *testing.T) {
 
 	err = Validate(nil, s, d)
 	assert.Error(t, err)
-	assert.EqualError(t, err, `"#/attachments/[0]/instanceID/id": must be of type "string"`)
+
+	errTxt1 := `"#/attachments/[0]/instanceID/id": must be of type "string"`
+	errTxt2 := `"#/attachments/[0]/instanceID/driver": must be of type "string"`
+	assert.True(t, err.Error() == errTxt1 || err.Error() == errTxt2)
 
 	d = []byte(`{
     "id": "vol-000",
@@ -115,7 +122,8 @@ func TestVolumeSchema(t *testing.T) {
     "attachments": [
         {
             "instanceID": {
-               "id": "iid-000"
+               "id": "iid-000",
+               "driver": "vfs"
             },
             "volumeID": "vol-000",
             "deviceName": "/dev/xvd00"

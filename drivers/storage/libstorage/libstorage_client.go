@@ -10,6 +10,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/api/utils/paths"
@@ -32,7 +33,7 @@ func (c *client) dial(ctx types.Context) error {
 	}
 
 	store := utils.NewStore()
-	c.ctx = c.ctx.WithContextSID(types.ContextServerName, c.ServerName())
+	c.ctx = c.ctx.WithValue(context.ServerKey, c.ServerName())
 
 	if !c.config.GetBool(types.ConfigExecutorNoDownload) {
 
@@ -47,8 +48,7 @@ func (c *client) dial(ctx types.Context) error {
 	}
 
 	for service, _ := range svcInfos {
-		ctx := c.ctx.WithServiceName(service)
-
+		ctx := c.ctx.WithValue(context.ServiceKey, service)
 		ctx.Info("initializing instance ID cache")
 		if _, err := c.InstanceID(ctx, store); err != nil {
 			return err
@@ -69,6 +69,7 @@ func getHost(proto, lAddr string, tlsConfig *tls.Config) string {
 }
 
 func (c *client) getServiceInfo(service string) (*types.ServiceInfo, error) {
+
 	if si := c.serviceCache.GetServiceInfo(service); si != nil {
 		return si, nil
 	}

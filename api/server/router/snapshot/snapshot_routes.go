@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/akutz/goof"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/router/volume"
 	"github.com/emccode/libstorage/api/server/services"
@@ -30,10 +31,7 @@ func (r *router) snapshots(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
 
-			ctx, err := httputils.WithServiceContext(ctx, svc)
-			if err != nil {
-				return nil, err
-			}
+			ctx = context.WithStorageService(ctx, svc)
 
 			objs, err := svc.Driver().Snapshots(ctx, store)
 			if err != nil {
@@ -86,10 +84,7 @@ func (r *router) snapshotsForService(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,
@@ -122,10 +117,7 @@ func (r *router) snapshotInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,
@@ -151,10 +143,7 @@ func (r *router) snapshotRemove(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,
@@ -180,10 +169,7 @@ func (r *router) volumeCreate(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,
@@ -232,10 +218,7 @@ func (r *router) snapshotCopy(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,

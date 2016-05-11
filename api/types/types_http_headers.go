@@ -6,20 +6,12 @@ const (
 	// InstanceIDHeader is the HTTP header that contains an InstanceID.
 	InstanceIDHeader = "Libstorage-Instanceid"
 
-	// InstanceID64Header is the HTTP header that contains a base64-encoded
-	// InstanceID.
-	InstanceID64Header = "Libstorage-Instanceid64"
-
 	// LocalDevicesHeader is the HTTP header that contains a local device pair.
 	LocalDevicesHeader = "Libstorage-Localdevices"
 
-	// TransactionIDHeader is the HTTP header that contains the transaction ID
+	// TransactionHeader is the HTTP header that contains the transaction
 	// sent from the client.
-	TransactionIDHeader = "Libstorage-Txid"
-
-	// TransactionCreatedHeader is the HTTP header that contains the UTC
-	// epoch of the time that the transaction was created.
-	TransactionCreatedHeader = "Libstorage-Txcr"
+	TransactionHeader = "Libstorage-Tx"
 
 	// ServerNameHeader is the HTTP header that contains the randomly generated
 	// name the server creates for unique identification when the server starts

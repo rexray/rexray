@@ -86,7 +86,7 @@ func (d *driver) NextDevice(
 
 func (d *driver) LocalDevices(
 	ctx types.Context,
-	opts *types.LocalDevicesOpts) (map[string]string, error) {
+	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
 
 	mapDiskByID := make(map[string]string)
 	files, err := ioutil.ReadDir(d.diskIDPath())
@@ -109,7 +109,11 @@ func (d *driver) LocalDevices(
 			mapDiskByID[sid] = devPath
 		}
 	}
-	return mapDiskByID, nil
+
+	return &types.LocalDevices{
+		Driver:    vbox.Name,
+		DeviceMap: mapDiskByID,
+	}, nil
 }
 
 func (d *driver) rescanScsiHosts() {

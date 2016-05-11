@@ -3,6 +3,7 @@ package service
 import (
 	"net/http"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
@@ -17,10 +18,7 @@ func (r *router) servicesList(
 
 	reply := map[string]*types.ServiceInfo{}
 	for service := range services.StorageServices(ctx) {
-		ctx, err := httputils.WithServiceContext(ctx, service)
-		if err != nil {
-			return err
-		}
+		ctx := context.WithStorageService(ctx, service)
 		si, err := toServiceInfo(ctx, service, store)
 		if err != nil {
 			return err
@@ -38,16 +36,11 @@ func (r *router) serviceInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
-
+	service := context.MustService(ctx)
 	si, err := toServiceInfo(ctx, service, store)
 	if err != nil {
 		return err
 	}
-
 	httputils.WriteJSON(w, http.StatusOK, si)
 	return nil
 }
@@ -61,9 +54,11 @@ func toServiceInfo(
 
 	var instance *types.Instance
 	if store.GetBool("instance") {
-		if ctx.InstanceID() == nil {
+
+		if _, ok := context.InstanceID(ctx); !ok {
 			return nil, utils.NewMissingInstanceIDError(service.Name())
 		}
+
 		var err error
 		instance, err = d.InstanceInspect(ctx, store)
 		if err != nil {

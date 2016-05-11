@@ -21,6 +21,12 @@ type keyValueStore struct {
 	hl     bool
 }
 
+func (s *keyValueStore) String() string {
+	s.RLock()
+	defer s.RUnlock()
+	return fmt.Sprintf("%v", s.store)
+}
+
 type ttlTimer struct {
 	sync.RWMutex
 	expires *time.Time

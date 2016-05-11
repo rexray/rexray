@@ -1,79 +1,77 @@
 package libstorage
 
 import (
-	"bytes"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
-	"time"
+	"strings"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
 )
 
-func withTX(ctx types.Context) types.Context {
-	txIDUUID, _ := utils.NewUUID()
-	txID := txIDUUID.String()
-
-	ctx = ctx.WithTransactionID(txID)
-	ctx = ctx.WithContextSID(types.ContextTransactionID, txID)
-
-	txCR := time.Now().UTC()
-	ctx = ctx.WithTransactionCreated(txCR)
-	ctx = ctx.WithContextSID(
-		types.ContextTransactionCreated,
-		fmt.Sprintf("%d", txCR.Unix()))
-
-	return ctx
-}
-
-func withContext(ctx types.Context, parent types.Context) types.Context {
-	if ctx == nil || ctx == parent {
-		return withTX(parent)
+func (c *client) requireCtx(ctx types.Context) types.Context {
+	if ctx == nil {
+		ctx = c.ctx
+	} else {
+		ctx = ctx.Join(c.ctx)
 	}
-	return ctx.Join(parent)
+	return context.RequireTX(ctx)
 }
 
-func (c *client) withContext(ctx types.Context) types.Context {
-	return withContext(ctx, c.ctx)
+func (c *driver) requireCtx(ctx types.Context) types.Context {
+	if ctx == nil {
+		ctx = c.ctx
+	} else {
+		ctx = ctx.Join(c.ctx)
+	}
+	return context.RequireTX(ctx)
 }
 
-func (c *client) updateInstanceIDHeaders(
-	driverName string,
-	iid *types.InstanceID) error {
+func (c *client) withAllInstanceIDs(ctx types.Context) types.Context {
 
-	headerKey := types.InstanceIDHeader
-	headerValue := fmt.Sprintf("%s,%v", iid.ID, iid.Formatted)
+	iidm := types.InstanceIDMap{}
+	for _, k := range c.instanceIDCache.Keys() {
+		iidm[k] = c.instanceIDCache.GetInstanceID(k)
+	}
 
-	if len(iid.Metadata) > 0 {
-		buf, err := json.Marshal(iid)
+	if len(iidm) == 0 {
+		return ctx
+	}
+
+	return ctx.WithValue(context.AllInstanceIDsKey, iidm)
+}
+
+func (c *client) withInstanceID(
+	ctx types.Context, service string) types.Context {
+
+	if !c.instanceIDCache.IsSet(service) {
+		return ctx
+	}
+
+	ctx = ctx.WithValue(context.ServiceKey, service)
+
+	iid := c.instanceIDCache.GetInstanceID(service)
+	return ctx.WithValue(context.InstanceIDKey, iid)
+}
+
+func (c *client) withAllLocalDevices(ctx types.Context) (types.Context, error) {
+
+	ldm := types.LocalDevicesMap{}
+
+	hit := map[string]bool{}
+
+	for _, service := range c.serviceCache.Keys() {
+		si := c.serviceCache.GetServiceInfo(service)
+		dn := strings.ToLower(si.Driver.Name)
+		if _, ok := hit[dn]; ok {
+			continue
+		}
+		ctx := ctx.WithValue(context.ServiceKey, service)
+		ld, err := c.LocalDevices(ctx, &types.LocalDevicesOpts{})
 		if err != nil {
-			return err
+			return nil, err
 		}
-		headerKey = types.InstanceID64Header
-		headerValue = base64.StdEncoding.EncodeToString(buf)
+		hit[dn] = true
+		ldm[dn] = ld
 	}
 
-	c.AddHeaderForDriver(driverName, headerKey, headerValue)
-	return nil
-}
-
-func (c *client) updateLocalDevicesHeaders(
-	driverName string,
-	ldm map[string]string) error {
-
-	buf := &bytes.Buffer{}
-	for k, v := range ldm {
-		if _, err := fmt.Fprintf(buf, "%s=%s, ", k, v); err != nil {
-			return nil
-		}
-	}
-
-	if buf.Len() > 2 {
-		buf.Truncate(buf.Len() - 2)
-	}
-
-	c.AddHeaderForDriver(driverName, types.LocalDevicesHeader, buf.String())
-
-	return nil
+	return ctx.WithValue(context.AllLocalDevicesKey, ldm), nil
 }

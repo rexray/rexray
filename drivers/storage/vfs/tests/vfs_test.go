@@ -334,7 +334,7 @@ func TestVolumeAttach(t *testing.T) {
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		nextDevice, err := client.Executor().NextDevice(
-			context.Background().WithServiceName(vfs.Name),
+			context.Background().WithValue(context.ServiceKey, vfs.Name),
 			utils.NewStore())
 		assert.NoError(t, err)
 		if err != nil {
@@ -535,7 +535,7 @@ func TestLocalDevices(t *testing.T) {
 		t, vfs.Name, cfg,
 		(&apitests.LocalDevicesTest{
 			Driver:   vfs.Name,
-			Expected: dfcMap,
+			Expected: &types.LocalDevices{Driver: vfs.Name, DeviceMap: dfcMap},
 		}).Test)
 }
 
@@ -553,7 +553,11 @@ func instanceID() (*types.InstanceID, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.InstanceID{ID: hostName, Formatted: true}, nil
+	return &types.InstanceID{
+		ID:        hostName,
+		Driver:    vfs.Name,
+		Formatted: true,
+	}, nil
 }
 
 func assertVolDir(

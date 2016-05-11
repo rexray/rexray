@@ -119,7 +119,7 @@ var (
 // LocalDevices returns a map of the system's local devices.
 func (d *driver) LocalDevices(
 	ctx types.Context,
-	opts *types.LocalDevicesOpts) (map[string]string, error) {
+	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
 
 	ctx.WithFields(log.Fields{
 		"vfs.root": d.rootDir,
@@ -167,7 +167,7 @@ func (d *driver) LocalDevices(
 		localDevs[string(dev)] = string(mountPoint)
 	}
 
-	return localDevs, nil
+	return &types.LocalDevices{Driver: vfs.Name, DeviceMap: localDevs}, nil
 }
 
 func instanceID() (*types.InstanceID, error) {
@@ -175,7 +175,7 @@ func instanceID() (*types.InstanceID, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.InstanceID{ID: hostName}, nil
+	return &types.InstanceID{ID: hostName, Driver: vfs.Name}, nil
 }
 
 var initialDeviceFile = []byte(`/dev/xvda

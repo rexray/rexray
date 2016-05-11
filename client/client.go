@@ -42,10 +42,11 @@ func New(config gofig.Config) (types.Client, error) {
 	)
 
 	c = &client{ctx: context.Background(), config: config}
-	c.ctx = c.ctx.WithClient(c)
+	c.ctx = c.ctx.WithValue(context.ClientKey, c)
 
 	if config.IsSet(types.ConfigService) {
-		c.ctx = c.ctx.WithServiceName(config.GetString(types.ConfigService))
+		c.ctx = c.ctx.WithValue(
+			context.ServiceKey, config.GetString(types.ConfigService))
 	}
 
 	storageDriverName := config.GetString(types.ConfigStorageDriver)
@@ -62,7 +63,6 @@ func New(config gofig.Config) (types.Client, error) {
 		c.xli = pxli.XCLI()
 	}
 
-	c.ctx = c.ctx.WithContextSID(types.ContextStorageDriver, storageDriverName)
 	c.ctx.Info("storage driver initialized")
 
 	// if the API or XLI are nil, then the storage driver is not the libStorage
@@ -79,7 +79,6 @@ func New(config gofig.Config) (types.Client, error) {
 	if err = c.od.Init(c.ctx, config); err != nil {
 		return nil, err
 	}
-	c.ctx = c.ctx.WithContextSID(types.ContextOSDriver, osDriverName)
 	c.ctx.Info("os driver initialized")
 
 	integrationDriverName := config.GetString(types.ConfigIntegrationDriver)
@@ -90,8 +89,6 @@ func New(config gofig.Config) (types.Client, error) {
 	if err := c.id.Init(c.ctx, config); err != nil {
 		return nil, err
 	}
-	c.ctx = c.ctx.WithContextSID(
-		types.ContextIntegrationDriver, integrationDriverName)
 	c.ctx.Info("integration driver initialized")
 
 	c.ctx.Info("created libStorage client")

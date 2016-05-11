@@ -42,8 +42,9 @@ func (tt *InstanceIDTest) Test(
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
 
-	iid, err := client.Executor().InstanceID(
-		context.Background().WithServiceName(tt.Driver), utils.NewStore())
+	ctx := context.Background().WithValue(context.ServiceKey, tt.Driver)
+
+	iid, err := client.Executor().InstanceID(ctx, utils.NewStore())
 	assert.NoError(t, err)
 
 	iidBuf, err := json.Marshal(iid)
@@ -75,7 +76,7 @@ func (tt *InstanceTest) Test(
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)
 
-	ctx := context.Background().WithServiceName(tt.Driver)
+	ctx := context.Background().WithValue(context.ServiceKey, tt.Driver)
 	iid, err := client.Storage().InstanceInspect(ctx, utils.NewStore())
 	assert.NoError(t, err)
 
@@ -102,8 +103,9 @@ func (tt *NextDeviceTest) Test(
 	config gofig.Config,
 	client types.Client,
 	t *testing.T) {
-	val, err := client.Executor().NextDevice(
-		context.Background().WithServiceName(tt.Driver), utils.NewStore())
+
+	ctx := context.Background().WithValue(context.ServiceKey, tt.Driver)
+	val, err := client.Executor().NextDevice(ctx, utils.NewStore())
 	assert.NoError(t, err)
 	assert.Equal(t, tt.Expected, val)
 }
@@ -116,7 +118,7 @@ type LocalDevicesTest struct {
 	Driver string
 
 	// Expected is the expected local devices.
-	Expected map[string]string
+	Expected *types.LocalDevices
 }
 
 // Test is the APITestFunc for the LocalDevicesTest.
@@ -125,21 +127,21 @@ func (tt *LocalDevicesTest) Test(
 	client types.Client,
 	t *testing.T) {
 
-	expectedBuf, err := json.Marshal(tt.Expected)
+	expectedBuf, err := tt.Expected.MarshalText()
 	assert.NoError(t, err)
-	expectedJSON := string(expectedBuf)
+	expectedText := string(expectedBuf)
 
-	val, err := client.Executor().LocalDevices(
-		context.Background().WithServiceName(tt.Driver),
-		&types.LocalDevicesOpts{
-			ScanType: types.DeviceScanQuick,
-			Opts:     utils.NewStore(),
-		})
+	ctx := context.Background().WithValue(context.ServiceKey, tt.Driver)
+
+	val, err := client.Executor().LocalDevices(ctx, &types.LocalDevicesOpts{
+		ScanType: types.DeviceScanQuick,
+		Opts:     utils.NewStore(),
+	})
 	assert.NoError(t, err)
 
-	buf, err := json.Marshal(val)
+	buf, err := val.MarshalText()
 	assert.NoError(t, err)
-	actualJSON := string(buf)
+	actualText := string(buf)
 
-	assert.Equal(t, expectedJSON, actualJSON)
+	assert.Equal(t, expectedText, actualText)
 }

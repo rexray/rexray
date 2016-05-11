@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/emccode/libstorage/api/server/httputils"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -46,10 +46,6 @@ func (h *serviceValidator) Handle(
 		return utils.NewNotFoundError(serviceName)
 	}
 
-	ctx, err := httputils.WithServiceContext(ctx, service)
-	if err != nil {
-		return err
-	}
-
+	ctx = context.WithStorageService(ctx, service)
 	return h.handler(ctx, w, req, store)
 }

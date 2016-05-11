@@ -27,30 +27,6 @@ func NewStoreKeyErr(key string) error {
 	}
 }
 
-// NewContextKeyErr returns a new ErrContextKey error.
-func NewContextKeyErr(key types.ContextKey) error {
-	return &types.ErrContextKey{
-		Goof: goof.WithField("contextKey", key.String(), "missing context key"),
-	}
-}
-
-// NewContextErr returns a new ErrContextKey error.
-func NewContextErr(key types.ContextKey) error {
-	return NewContextKeyErr(key)
-}
-
-// NewContextTypeErr returns a new ErrContextType error.
-func NewContextTypeErr(
-	contextKey types.ContextKey, expectedType, actualType string) error {
-	return &types.ErrContextType{
-		Goof: goof.WithFields(
-			goof.Fields{
-				"contextKey":   contextKey.String(),
-				"expectedType": expectedType,
-				"actualType":   actualType,
-			}, "invalid context type")}
-}
-
 // NewDriverTypeErr returns a new ErrDriverTypeErr error.
 func NewDriverTypeErr(expectedType, actualType string) error {
 	return &types.ErrDriverTypeErr{Goof: goof.WithFields(goof.Fields{

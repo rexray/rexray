@@ -7,6 +7,7 @@ import (
 
 	"github.com/akutz/goof"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/httputils"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
@@ -45,11 +46,7 @@ func (r *router) volumes(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
 
-			ctx, err := httputils.WithServiceContext(ctx, svc)
-			if err != nil {
-				return nil, err
-			}
-
+			ctx = context.WithStorageService(ctx, svc)
 			return getFilteredVolumes(ctx, req, store, svc, opts, filter)
 		}
 
@@ -100,10 +97,7 @@ func (r *router) volumesForService(
 		store.Set("filter", filter)
 	}
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	opts := &types.VolumesOpts{
 		Attachments: store.GetBool("attachments"),
@@ -134,14 +128,15 @@ func getFilteredVolumes(
 	filter *types.Filter) (types.VolumeMap, error) {
 
 	var (
-		iid         = ctx.InstanceID()
 		filterOp    types.FilterOperator
 		filterLeft  string
 		filterRight string
 		objMap      = types.VolumeMap{}
 	)
 
-	if opts.Attachments && iid == nil {
+	iid, iidOK := context.InstanceID(ctx)
+
+	if opts.Attachments && !iidOK {
 		return nil, utils.NewMissingInstanceIDError(storSvc.Name())
 	}
 
@@ -204,13 +199,10 @@ func (r *router) volumeInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
-
 	attachments := store.GetBool("attachments")
-	if attachments && ctx.InstanceID() == nil {
+
+	service := context.MustService(ctx)
+	if _, ok := context.InstanceID(ctx); !ok && attachments {
 		return utils.NewMissingInstanceIDError(service.Name())
 	}
 
@@ -298,10 +290,7 @@ func (r *router) volumeCreate(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,
@@ -349,10 +338,7 @@ func (r *router) volumeCopy(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,
@@ -395,10 +381,7 @@ func (r *router) volumeSnapshot(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,
@@ -425,12 +408,8 @@ func (r *router) volumeAttach(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
-
-	if ctx.InstanceID() == nil {
+	service := context.MustService(ctx)
+	if _, ok := context.InstanceID(ctx); !ok {
 		return utils.NewMissingInstanceIDError(service.Name())
 	}
 
@@ -481,12 +460,8 @@ func (r *router) volumeDetach(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
-
-	if ctx.InstanceID() == nil {
+	service := context.MustService(ctx)
+	if _, ok := context.InstanceID(ctx); !ok {
 		return utils.NewMissingInstanceIDError(service.Name())
 	}
 
@@ -547,12 +522,8 @@ func (r *router) volumeDetachAll(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
 
-			ctx, err := httputils.WithServiceContext(ctx, svc)
-			if err != nil {
-				return nil, err
-			}
-
-			if ctx.InstanceID() == nil {
+			ctx = context.WithStorageService(ctx, svc)
+			if _, ok := context.InstanceID(ctx); !ok {
 				return nil, utils.NewMissingInstanceIDError(service.Name())
 			}
 
@@ -634,12 +605,8 @@ func (r *router) volumeDetachAllForService(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
-
-	if ctx.InstanceID() == nil {
+	service := context.MustService(ctx)
+	if _, ok := context.InstanceID(ctx); !ok {
 		return utils.NewMissingInstanceIDError(service.Name())
 	}
 
@@ -702,10 +669,7 @@ func (r *router) volumeRemove(
 	req *http.Request,
 	store types.Store) error {
 
-	service, err := httputils.GetService(ctx)
-	if err != nil {
-		return err
-	}
+	service := context.MustService(ctx)
 
 	run := func(
 		ctx types.Context,

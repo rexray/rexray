@@ -385,6 +385,14 @@ GO_CLEAN += $(EXECUTORS_GENERATED)-clean
 $(API_SERVER_EXECUTORS_A): $(EXECUTORS_GENERATED)
 
 ################################################################################
+##                                    C                                       ##
+################################################################################
+CC := gcc -Wall -pedantic -std=c99
+ifneq (,$(wildcard /usr/include))
+CC += -I/usr/include
+endif
+
+################################################################################
 ##                               SEMAPHORE BINS                               ##
 ################################################################################
 SEM_OPEN := ./cli/semaphores/open
@@ -393,42 +401,36 @@ SEM_SIGNAL := ./cli/semaphores/signal
 SEM_UNLINK := ./cli/semaphores/unlink
 
 $(SEM_OPEN): $(SEM_OPEN).c
-	gcc $? -o $@
+	$(CC) $? -o $@ -lpthread
+$(SEM_OPEN)-clean:
+	rm -f $(SEM_OPEN)
+GO_PHONY += $(SEM_OPEN)-clean
+GO_CLEAN += $(SEM_OPEN)-clean
 
 $(SEM_WAIT): $(SEM_WAIT).c
-	gcc $? -o $@
+	$(CC) $? -o $@ -lpthread
+$(SEM_WAIT)-clean:
+	rm -f $(SEM_WAIT)
+GO_PHONY += $(SEM_WAIT)-clean
+GO_CLEAN += $(SEM_WAIT)-clean
 
 $(SEM_SIGNAL): $(SEM_SIGNAL).c
-	gcc $? -o $@
+	$(CC) $? -o $@ -lpthread
+$(SEM_SIGNAL)-clean:
+	rm -f $(SEM_SIGNAL)
+GO_PHONY += $(SEM_SIGNAL)-clean
+GO_CLEAN += $(SEM_SIGNAL)-clean
 
 $(SEM_UNLINK): $(SEM_UNLINK).c
-	gcc $? -o $@
+	$(CC) $? -o $@ -lpthread
+$(SEM_UNLINK)-clean:
+	rm -f $(SEM_UNLINK)
+GO_PHONY += $(SEM_UNLINK)-clean
+GO_CLEAN += $(SEM_UNLINK)-clean
 
 sem-tools: $(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK)
-
-################################################################################
-##                                  COVERAGE                                  ##
-################################################################################
-COVERAGE := coverage.out
-GO_COVERAGE := $(COVERAGE)
-$(COVERAGE): $(TEST_PROFILES)
-	printf "mode: set\n" > $@
-	$(foreach f,$?,grep -v "mode: set" $(f) >> $@ &&) true
-
-$(COVERAGE)-clean:
-	rm -f $(COVERAGE)
-GO_CLEAN += $(COVERAGE)-clean
-GO_PHONY += $(COVERAGE)-clean
-
-cover: $(COVERAGE)
-ifneq (1,$(CODECOV_OFFLINE))
-	curl -sSL https://codecov.io/bash | bash -s -- -f $?
-else
-	@echo codecov offline
-endif
-
-cover-debug:
-	env LIBSTORAGE_DEBUG=true $(MAKE) cover
+sem-tools-clean: $(addsuffix -clean,$(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK))
+	
 
 ################################################################################
 ##                                  C CLIENT                                  ##
@@ -455,12 +457,12 @@ GO_CLEAN += $(C_LIBSTOR_C_SO)-clean
 $(C_LIBSTOR_C_BIN):  $(C_LIBSTOR_C_BIN_SRC) \
 				 	 $(C_LIBSTOR_C_SO) \
 					 $(C_LIBSTOR_C_GO_DEPS)
-	gcc -I$(abspath $(C_LIBSTOR_C_DIR)) \
-		-I$(dir $(C_LIBSTOR_C_SO)) \
-		-L$(dir $(C_LIBSTOR_C_SO)) \
-		-o $@ \
-		$(C_LIBSTOR_C_BIN_SRC) \
-		-lstor-c
+	$(CC) -I$(abspath $(C_LIBSTOR_C_DIR)) \
+          -I$(dir $(C_LIBSTOR_C_SO)) \
+          -L$(dir $(C_LIBSTOR_C_SO)) \
+          -o $@ \
+          $(C_LIBSTOR_C_BIN_SRC) \
+          -lstor-c
 
 ################################################################################
 ##                                  C SERVER                                  ##
@@ -486,12 +488,12 @@ $(C_LIBSTOR_S_BIN):  $(C_LIBSTOR_TYPES_H) \
 					 $(C_LIBSTOR_S_BIN_SRC) \
 					 $(C_LIBSTOR_S_SO) \
 					 $(C_LIBSTOR_S_GO_DEPS)
-	gcc -I$(abspath $(C_LIBSTOR_DIR)) \
-		-I$(dir $(C_LIBSTOR_S_SO)) \
-		-L$(dir $(C_LIBSTOR_S_SO)) \
-		-o $@ \
-		$(C_LIBSTOR_S_BIN_SRC) \
-		-lstor-s
+	$(CC) -I$(abspath $(C_LIBSTOR_DIR)) \
+          -I$(dir $(C_LIBSTOR_S_SO)) \
+          -L$(dir $(C_LIBSTOR_S_SO)) \
+          -o $@ \
+          $(C_LIBSTOR_S_BIN_SRC) \
+          -lstor-s
 
 ################################################################################
 ##                                  SERVERS                                   ##
@@ -521,6 +523,30 @@ endef
 #$(eval $(call LSS_RULES,$(LSS_LINUX),linux))
 #$(eval $(call LSS_RULES,$(LSS_DARWIN),darwin))
 #$(eval $(call LSS_RULES,$(LSS_WINDOWS),windows))
+
+################################################################################
+##                                  COVERAGE                                  ##
+################################################################################
+COVERAGE := coverage.out
+GO_COVERAGE := $(COVERAGE)
+$(COVERAGE): $(TEST_PROFILES)
+	printf "mode: set\n" > $@
+	$(foreach f,$?,grep -v "mode: set" $(f) >> $@ &&) true
+
+$(COVERAGE)-clean:
+	rm -f $(COVERAGE)
+GO_CLEAN += $(COVERAGE)-clean
+GO_PHONY += $(COVERAGE)-clean
+
+cover: $(COVERAGE)
+ifneq (1,$(CODECOV_OFFLINE))
+	curl -sSL https://codecov.io/bash | bash -s -- -f $?
+else
+	@echo codecov offline
+endif
+
+cover-debug:
+	env LIBSTORAGE_DEBUG=true $(MAKE) cover
 
 
 ################################################################################

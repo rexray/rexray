@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include "libstor-c.h"
 
 int main(int argc, char** argv) {
@@ -35,8 +36,8 @@ int main(int argc, char** argv) {
             printf("\n");
             printf("  - volume: %s\n", vm.volume_ids[y]);
             printf("            name:   %s\n", vol.name);
-            printf("            iops:   %lld\n", vol.iops);
-            printf("            size:   %lld\n", vol.size);
+            printf("            iops:   %" PRId64 "\n", vol.iops);
+            printf("            size:   %" PRId64 "\n", vol.size);
             printf("            type:   %s\n", vol.volume_type);
             printf("            zone:   %s\n", vol.availability_zone);
             printf("            status: %s\n", vol.status);

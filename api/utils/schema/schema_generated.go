@@ -53,7 +53,7 @@ const (
                 },
                 "fields": { "$ref": "#/definitions/fields" }
             },
-            "required": [ "id", "name", "size" ],
+            "required": [ "id", "name" ],
             "additionalProperties": false
         },
 

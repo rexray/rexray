@@ -212,18 +212,20 @@ func (d *driver) Mount(
 			return "", nil, err
 		}
 
-		opts := &types.WaitForDeviceOpts{
-			LocalDevicesOpts: types.LocalDevicesOpts{
-				ScanType: apiconfig.DeviceScanType(d.config),
-				Opts:     opts.Opts,
-			},
-			Token:   token,
-			Timeout: apiconfig.DeviceAttachTimeout(d.config),
-		}
+		if token != "" {
+			opts := &types.WaitForDeviceOpts{
+				LocalDevicesOpts: types.LocalDevicesOpts{
+					ScanType: apiconfig.DeviceScanType(d.config),
+					Opts:     opts.Opts,
+				},
+				Token:   token,
+				Timeout: apiconfig.DeviceAttachTimeout(d.config),
+			}
 
-		_, _, err = client.Executor().WaitForDevice(ctx, opts)
-		if err != nil {
-			return "", nil, goof.WithError("problem with device discovery", err)
+			_, _, err = client.Executor().WaitForDevice(ctx, opts)
+			if err != nil {
+				return "", nil, goof.WithError("problem with device discovery", err)
+			}
 		}
 
 		vol, err = d.volumeInspectByIDOrName(

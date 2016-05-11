@@ -7,6 +7,7 @@ import (
 
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -82,7 +83,8 @@ func (d *driver) NextDeviceInfo(
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
-	iid := ctx.InstanceID()
+
+	iid := context.MustInstanceID(ctx)
 	iid.Formatted = true
 	return &types.Instance{
 		Name:       "vfsInstance",
@@ -305,7 +307,7 @@ func (d *driver) VolumeAttach(
 
 	att := &types.VolumeAttachment{
 		VolumeID:   vol.ID,
-		InstanceID: ctx.InstanceID(),
+		InstanceID: context.MustInstanceID(ctx),
 		DeviceName: nextDevice,
 		Status:     "attached",
 	}
@@ -330,9 +332,11 @@ func (d *driver) VolumeDetach(
 		return nil, err
 	}
 
+	iid := context.MustInstanceID(ctx)
+
 	y := -1
 	for x, att := range vol.Attachments {
-		if att.InstanceID.ID == ctx.InstanceID().ID {
+		if att.InstanceID.ID == iid.ID {
 			y = x
 			break
 		}

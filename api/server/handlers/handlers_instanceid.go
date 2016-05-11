@@ -1,14 +1,10 @@
 package handlers
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
-
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 )
 
@@ -39,68 +35,18 @@ func (h *instanceIDHandler) Handle(
 	req *http.Request,
 	store types.Store) error {
 
-	valMap := map[string]*types.InstanceID{}
+	headers := req.Header[types.InstanceIDHeader]
+	ctx.WithField(types.InstanceIDHeader, headers).Debug("http header")
 
-	if err := parseInstanceIDHeaders(
-		ctx,
-		types.InstanceIDHeader,
-		req.Header[types.InstanceIDHeader],
-		valMap); err != nil {
-		return err
-	}
-
-	if err := parseInstanceIDHeaders(
-		ctx,
-		types.InstanceID64Header,
-		req.Header[types.InstanceID64Header],
-		valMap); err != nil {
-		return err
-	}
-
-	if len(valMap) > 0 {
-		ctx = ctx.WithInstanceIDsByService(valMap)
-	}
-
-	return h.handler(ctx, w, req, store)
-}
-
-func parseInstanceIDHeaders(
-	ctx types.Context,
-	name string,
-	headers []string,
-	instanceIDs map[string]*types.InstanceID) error {
-
-	ctx.WithField(name, headers).Debug("http header")
-
-	for _, v := range headers {
-		iidParts := strings.SplitN(v, "=", 2)
-		iidDriver := strings.ToLower(iidParts[0])
-		iidValue := iidParts[1]
-
-		iid := &types.InstanceID{}
-
-		if name == types.InstanceIDHeader {
-			iidValueParts := strings.Split(iidValue, ",")
-			iid.ID = iidValueParts[0]
-			if len(iidValueParts) > 1 {
-				iid.Formatted, _ = strconv.ParseBool(iidValueParts[1])
-			}
-		} else {
-			buf, err := base64.StdEncoding.DecodeString(iidValue)
-			if err != nil {
-				return err
-			}
-			if err := json.Unmarshal(buf, iid); err != nil {
-				return err
-			}
+	valMap := types.InstanceIDMap{}
+	for _, h := range headers {
+		val := &types.InstanceID{}
+		if err := val.UnmarshalText([]byte(h)); err != nil {
+			return err
 		}
-
-		instanceIDs[iidDriver] = iid
-		ctx.WithFields(log.Fields{
-			"driver":     iidDriver,
-			"instanceID": iid.ID,
-		}).Debug("set instanceID")
+		valMap[strings.ToLower(val.Driver)] = val
 	}
 
-	return nil
+	ctx = ctx.WithValue(context.AllInstanceIDsKey, valMap)
+	return h.handler(ctx, w, req, store)
 }

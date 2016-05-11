@@ -1,13 +1,10 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
-	"time"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
 )
 
 // transactionHandler is a global HTTP filter for grokking the transaction info
@@ -37,36 +34,18 @@ func (h *transactionHandler) Handle(
 	req *http.Request,
 	store types.Store) error {
 
-	txIDHeaders := req.Header[types.TransactionIDHeader]
-	ctx.WithField(
-		types.TransactionIDHeader, txIDHeaders).Debug("http header")
+	txHeader := req.Header.Get(types.TransactionHeader)
+	ctx.WithField(types.TransactionHeader, txHeader).Debug("http header")
 
-	var txID string
-	if len(txIDHeaders) > 0 {
-		txID = txIDHeaders[0]
+	if txHeader == "" {
+		ctx = context.RequireTX(ctx)
 	} else {
-		txIDUUID, _ := utils.NewUUID()
-		txID = txIDUUID.String()
-	}
-	ctx = ctx.WithTransactionID(txID)
-	ctx = ctx.WithContextSID(types.ContextTransactionID, txID)
-
-	txCRHeaders := req.Header[types.TransactionCreatedHeader]
-	ctx.WithField(
-		types.TransactionCreatedHeader, txCRHeaders).Debug("http header")
-
-	txCR := time.Now().UTC()
-	if len(txCRHeaders) > 0 {
-		epoch, err := strconv.ParseInt(txCRHeaders[0], 10, 64)
-		if err != nil {
+		tx := &types.Transaction{}
+		if err := tx.UnmarshalText([]byte(txHeader)); err != nil {
 			return err
 		}
-		txCR = time.Unix(epoch, 0)
+		ctx = ctx.WithValue(context.Transaction, tx)
 	}
-	ctx = ctx.WithTransactionCreated(txCR)
-	ctx = ctx.WithContextSID(
-		types.ContextTransactionCreated,
-		fmt.Sprintf("%d", txCR.Unix()))
 
 	return h.handler(ctx, w, req, store)
 }

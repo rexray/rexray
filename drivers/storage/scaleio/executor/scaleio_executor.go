@@ -58,8 +58,17 @@ func (d *driver) NextDevice(
 // LocalDevices returns a map of the system's local devices.
 func (d *driver) LocalDevices(
 	ctx types.Context,
-	opts *types.LocalDevicesOpts) (map[string]string, error) {
-	return getLocalVolumeMap()
+	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
+
+	lvm, err := getLocalVolumeMap()
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.LocalDevices{
+		Driver:    Name,
+		DeviceMap: lvm,
+	}, nil
 }
 
 type sdcMappedVolume struct {

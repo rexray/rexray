@@ -2,6 +2,7 @@ package lsx
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -54,6 +55,8 @@ func Run() {
 		os.Exit(1)
 	}
 
+	driverName := strings.ToLower(d.Name())
+
 	config, err := apiconfig.NewConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -73,7 +76,6 @@ func Run() {
 		printUsageAndExit()
 	}
 	cmd = strings.ToLower(cmd)
-
 	store := utils.NewStore()
 
 	var (
@@ -88,6 +90,7 @@ func Run() {
 		if opErr != nil {
 			err = opErr
 		} else {
+			opResult.Driver = driverName
 			result = opResult
 		}
 	} else if cmd == "nextdevice" {
@@ -107,6 +110,7 @@ func Run() {
 			ScanType: apitypes.ParseDeviceScanType(args[3]),
 			Opts:     store,
 		})
+		opResult.Driver = driverName
 		if opErr != nil {
 			err = opErr
 		} else {
@@ -126,12 +130,12 @@ func Run() {
 			Timeout: utils.DeviceAttachTimeout(args[5]),
 		}
 
-		ldl := func() (bool, map[string]string, error) {
+		ldl := func() (bool, *apitypes.LocalDevices, error) {
 			ldm, err := d.LocalDevices(ctx, &opts.LocalDevicesOpts)
 			if err != nil {
 				return false, nil, err
 			}
-			for k := range ldm {
+			for k := range ldm.DeviceMap {
 				if strings.ToLower(k) == opts.Token {
 					return true, ldm, nil
 				}
@@ -142,7 +146,7 @@ func Run() {
 		var (
 			found    bool
 			opErr    error
-			opResult map[string]string
+			opResult *apitypes.LocalDevices
 			timeoutC = time.After(opts.Timeout)
 			tick     = time.Tick(500 * time.Millisecond)
 		)
@@ -164,6 +168,7 @@ func Run() {
 		if opErr != nil {
 			err = opErr
 		} else {
+			opResult.Driver = driverName
 			result = opResult
 		}
 	}
@@ -174,24 +179,45 @@ func Run() {
 		os.Exit(1)
 	}
 
-	switch result.(type) {
+	switch tr := result.(type) {
 	case string:
 		fmt.Fprintln(os.Stdout, result)
+	case encoding.TextMarshaler:
+		buf, err := tr.MarshalText()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: error encoding %s: %v\n", op, err)
+			os.Exit(1)
+		}
+		os.Stdout.Write(buf)
 	default:
 		buf, err := json.Marshal(result)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: error encoding %s: %v\n", op, err)
 			os.Exit(1)
 		}
-		str := string(buf)
-		if str == "null" {
-			fmt.Fprintf(os.Stdout, "{}\n")
+		if isNullBuf(buf) {
+			os.Stdout.Write(emptyJSONBuff)
 		} else {
-			fmt.Fprintf(os.Stdout, "%s\n", str)
+			os.Stdout.Write(buf)
 		}
 	}
 
 	os.Exit(exitCode)
+}
+
+const (
+	newline = 10
+)
+
+var (
+	nullBuff      = []byte{110, 117, 108, 108}
+	emptyJSONBuff = []byte{123, 125}
+)
+
+func isNullBuf(buf []byte) bool {
+	return len(buf) == len(nullBuff) &&
+		buf[0] == nullBuff[0] && buf[1] == nullBuff[1] &&
+		buf[2] == nullBuff[2] && buf[3] == nullBuff[3]
 }
 
 func executorNames() <-chan string {

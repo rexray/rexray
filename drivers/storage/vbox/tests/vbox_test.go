@@ -11,10 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
 
 	// load the  driver
 	"github.com/emccode/libstorage/drivers/storage/vbox"
@@ -22,36 +20,14 @@ import (
 )
 
 var (
-	lsxbin string
-
-	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
-	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
-
-	configYAML = []byte(`
-virtualbox:
-  endpoint: http://10.0.2.2:18083
-  tls: false
-  volumePath: /Users/clintonkitson/VirtualBox Volumes
-  controllerName: SATAController
-`)
+	volumeName  = strings.Split(types.MustNewUUID().String(), "-")[0]
+	volumeName2 = strings.Split(types.MustNewUUID().String(), "-")[0]
 )
 
 func skipTests() bool {
 	travis, _ := strconv.ParseBool(os.Getenv("TRAVIS"))
 	noTest, _ := strconv.ParseBool(os.Getenv("TEST_SKIP_VBOX"))
 	return travis || noTest
-}
-
-var volumeName string
-var volumeName2 string
-
-func init() {
-	uuid, _ := utils.NewUUID()
-	uuids := strings.Split(uuid.String(), "-")
-	volumeName = uuids[0]
-	uuid, _ = utils.NewUUID()
-	uuids = strings.Split(uuid.String(), "-")
-	volumeName2 = uuids[0]
 }
 
 func TestMain(m *testing.M) {
@@ -75,7 +51,7 @@ func TestInstanceID(t *testing.T) {
 	assert.NotEqual(t, iid, "")
 
 	apitests.Run(
-		t, vbox.Name, configYAML,
+		t, vbox.Name, nil,
 		(&apitests.InstanceIDTest{
 			Driver:   vbox.Name,
 			Expected: iid,
@@ -95,7 +71,7 @@ func TestServices(t *testing.T) {
 		_, ok := reply[vbox.Name]
 		assert.True(t, ok)
 	}
-	apitests.Run(t, vbox.Name, configYAML, tf)
+	apitests.Run(t, vbox.Name, nil, tf)
 }
 
 func volumeCreate(
@@ -156,7 +132,7 @@ func TestVolumeCreateRemove(t *testing.T) {
 		vol := volumeCreate(t, client, volumeName)
 		volumeRemove(t, client, vol.ID)
 	}
-	apitests.Run(t, vbox.Name, configYAML, tf)
+	apitests.Run(t, vbox.Name, nil, tf)
 }
 
 func volumeRemove(t *testing.T, client types.Client, volumeID string) {
@@ -185,7 +161,7 @@ func TestVolumes(t *testing.T) {
 		volumeRemove(t, client, vol1.ID)
 		volumeRemove(t, client, vol2.ID)
 	}
-	apitests.Run(t, vbox.Name, configYAML, tf)
+	apitests.Run(t, vbox.Name, nil, tf)
 }
 
 func volumeAttach(
@@ -319,5 +295,5 @@ func TestVolumeAttach(t *testing.T) {
 		_ = volumeInspectDetached(t, client, vol.ID)
 		volumeRemove(t, client, vol.ID)
 	}
-	apitests.Run(t, vbox.Name, configYAML, tf)
+	apitests.Run(t, vbox.Name, nil, tf)
 }

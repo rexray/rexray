@@ -12,6 +12,7 @@ import (
 	vboxw "github.com/appropriate/go-virtualboxclient/vboxwebsrv"
 	vboxc "github.com/appropriate/go-virtualboxclient/virtualboxclient"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/vbox"
@@ -67,9 +68,12 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 // LocalDevices returns a map of the system's local devices.
 func (d *driver) LocalDevices(
-	ctx types.Context,
-	opts types.Store) (map[string]string, error) {
-	return ctx.LocalDevices(), nil
+	ctx types.Context, opts types.Store) (*types.LocalDevices, error) {
+
+	if ld, ok := context.LocalDevices(ctx); ok {
+		return ld, nil
+	}
+	return nil, goof.New("missing local devices")
 }
 
 // NextDevice returns the next available device (not implemented).
@@ -92,14 +96,17 @@ func (d *driver) NextDeviceInfo(
 }
 
 func getMacs(ctx types.Context) []string {
-	if ctx.InstanceID() == nil {
-		return nil
+	iid := context.MustInstanceID(ctx)
+	var macs []string
+	if err := json.Unmarshal(iid.Metadata, &macs); err != nil {
+		panic(err)
 	}
-	ctx.WithField("instanceID", ctx.InstanceID().ID).Debug("checking instance ID")
-	iidj, _ := ctx.InstanceID().Metadata.MarshalJSON()
-	var iid []string
-	json.Unmarshal(iidj, &iid)
-	return iid
+
+	ctx.WithField("instanceID", iid.ID).Debug("checking instance ID")
+	iidMetadataJSON, _ := iid.Metadata.MarshalJSON()
+	var iidMetadata []string
+	json.Unmarshal(iidMetadataJSON, &iidMetadata)
+	return iidMetadata
 }
 
 // getInstanceID returns the local system's InstanceID.
@@ -155,7 +162,11 @@ func (d *driver) getVolumeMapping(
 	}
 	defer m.Release()
 
-	mapDiskByID = ctx.LocalDevices()
+	ld, ok := context.LocalDevices(ctx)
+	if !ok {
+		return nil, goof.New("missing local devices")
+	}
+	mapDiskByID = ld.DeviceMap
 
 	mas, err = m.GetMediumAttachments()
 	if err != nil {
@@ -508,12 +519,11 @@ func (d *driver) findMachine(
 	ctx types.Context, nameOrID string, macs []string) (*vboxc.Machine, error) {
 	log.WithField("nameOrID", nameOrID).Debug("finding local machine")
 
-	if nameOrID == "" &&
-		(ctx.InstanceID() != nil &&
-			ctx.InstanceID().ID != "") {
-		log.WithField("instanceID", ctx.InstanceID().ID).Debug(
+	iid, iidOK := context.InstanceID(ctx)
+	if nameOrID == "" && (iidOK && iid.ID != "") {
+		log.WithField("instanceID", iid.ID).Debug(
 			"proceeding with cached instanceID")
-		nameOrID = ctx.InstanceID().ID
+		nameOrID = iid.ID
 	}
 
 	log.WithFields(log.Fields{
@@ -707,8 +717,9 @@ func (d *driver) tls() bool {
 }
 
 func (d *driver) machineNameID(ctx types.Context) string {
-	if ctx.InstanceID() != nil && ctx.InstanceID().ID != "" {
-		return ctx.InstanceID().ID
+	iid, iidOK := context.InstanceID(ctx)
+	if iidOK && iid.ID != "" {
+		return iid.ID
 	}
 	return d.config.GetString("virtualbox.localMachineNameOrId")
 }

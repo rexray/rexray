@@ -11,6 +11,7 @@ import (
 	"github.com/akutz/gotil"
 
 	apiclient "github.com/emccode/libstorage/api/client"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 )
@@ -39,7 +40,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	logFields := log.Fields{}
 
 	addr := config.GetString(types.ConfigHost)
-	ctx = ctx.WithContextSID(types.ContextHost, addr)
+	d.ctx = ctx.WithValue(context.HostKey, addr)
 	ctx.Debug("got configured host address")
 
 	proto, lAddr, err := gotil.ParseAddress(addr)
@@ -71,9 +72,6 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	}
 
 	apiClient := apiclient.New(host, httpTransport)
-	apiClient.EnableInstanceIDHeaders(EnableInstanceIDHeaders)
-	apiClient.EnableLocalDevicesHeaders(EnableLocalDevicesHeaders)
-
 	logReq := config.GetBool(types.ConfigLogHTTPRequests)
 	logRes := config.GetBool(types.ConfigLogHTTPResponses)
 	apiClient.LogRequests(logReq)

@@ -1,6 +1,8 @@
 package libstorage
 
 import (
+	"github.com/akutz/goof"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 )
 
@@ -18,7 +20,13 @@ func (d *driver) XCLI() types.StorageExecutorCLI {
 
 func (d *driver) NextDeviceInfo(
 	ctx types.Context) (*types.NextDeviceInfo, error) {
-	si, err := d.getServiceInfo(ctx.ServiceName())
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
+
+	si, err := d.getServiceInfo(serviceName)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +34,13 @@ func (d *driver) NextDeviceInfo(
 }
 
 func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
-	si, err := d.getServiceInfo(ctx.ServiceName())
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return "", goof.New("missing service name")
+	}
+
+	si, err := d.getServiceInfo(serviceName)
 	if err != nil {
 		return "", err
 	}
@@ -36,18 +50,26 @@ func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
-	return d.client.InstanceInspect(ctx, ctx.ServiceName())
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
+
+	return d.client.InstanceInspect(ctx, serviceName)
 }
 
 func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
-	objMap, err := d.client.VolumesByService(
-		ctx, ctx.ServiceName(), opts.Attachments)
-
+	objMap, err := d.client.VolumesByService(ctx, serviceName, opts.Attachments)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +87,13 @@ func (d *driver) VolumeInspect(
 	volumeID string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
-	return d.client.VolumeInspect(
-		ctx, ctx.ServiceName(), volumeID, opts.Attachments)
+	return d.client.VolumeInspect(ctx, serviceName, volumeID, opts.Attachments)
 }
 
 func (d *driver) VolumeCreate(
@@ -76,7 +101,11 @@ func (d *driver) VolumeCreate(
 	name string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	req := &types.VolumeCreateRequest{
 		Name:             name,
@@ -87,7 +116,7 @@ func (d *driver) VolumeCreate(
 		Opts:             opts.Opts.Map(),
 	}
 
-	return d.client.VolumeCreate(ctx, ctx.ServiceName(), req)
+	return d.client.VolumeCreate(ctx, serviceName, req)
 }
 
 func (d *driver) VolumeCreateFromSnapshot(
@@ -95,7 +124,11 @@ func (d *driver) VolumeCreateFromSnapshot(
 	snapshotID, volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	req := &types.VolumeCreateRequest{
 		Name:             volumeName,
@@ -106,8 +139,7 @@ func (d *driver) VolumeCreateFromSnapshot(
 		Opts:             opts.Opts.Map(),
 	}
 
-	return d.client.VolumeCreateFromSnapshot(
-		ctx, ctx.ServiceName(), snapshotID, req)
+	return d.client.VolumeCreateFromSnapshot(ctx, serviceName, snapshotID, req)
 }
 
 func (d *driver) VolumeCopy(
@@ -115,15 +147,18 @@ func (d *driver) VolumeCopy(
 	volumeID, volumeName string,
 	opts types.Store) (*types.Volume, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	req := &types.VolumeCopyRequest{
 		VolumeName: volumeName,
 		Opts:       opts.Map(),
 	}
 
-	return d.client.VolumeCopy(
-		ctx, ctx.ServiceName(), volumeID, req)
+	return d.client.VolumeCopy(ctx, serviceName, volumeID, req)
 }
 
 func (d *driver) VolumeSnapshot(
@@ -131,15 +166,18 @@ func (d *driver) VolumeSnapshot(
 	volumeID, snapshotName string,
 	opts types.Store) (*types.Snapshot, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	req := &types.VolumeSnapshotRequest{
 		SnapshotName: snapshotName,
 		Opts:         opts.Map(),
 	}
 
-	return d.client.VolumeSnapshot(
-		ctx, ctx.ServiceName(), volumeID, req)
+	return d.client.VolumeSnapshot(ctx, serviceName, volumeID, req)
 }
 
 func (d *driver) VolumeRemove(
@@ -147,10 +185,13 @@ func (d *driver) VolumeRemove(
 	volumeID string,
 	opts types.Store) error {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return goof.New("missing service name")
+	}
 
-	return d.client.VolumeRemove(
-		ctx, ctx.ServiceName(), volumeID)
+	return d.client.VolumeRemove(ctx, serviceName, volumeID)
 }
 
 func (d *driver) VolumeAttach(
@@ -158,7 +199,11 @@ func (d *driver) VolumeAttach(
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, "", goof.New("missing service name")
+	}
 
 	req := &types.VolumeAttachRequest{
 		NextDeviceName: opts.NextDevice,
@@ -166,8 +211,7 @@ func (d *driver) VolumeAttach(
 		Opts:           opts.Opts.Map(),
 	}
 
-	return d.client.VolumeAttach(
-		ctx, ctx.ServiceName(), volumeID, req)
+	return d.client.VolumeAttach(ctx, serviceName, volumeID, req)
 }
 
 func (d *driver) VolumeDetach(
@@ -175,25 +219,31 @@ func (d *driver) VolumeDetach(
 	volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	req := &types.VolumeDetachRequest{
 		Force: opts.Force,
 		Opts:  opts.Opts.Map(),
 	}
 
-	return d.client.VolumeDetach(
-		ctx, ctx.ServiceName(), volumeID, req)
+	return d.client.VolumeDetach(ctx, serviceName, volumeID, req)
 }
 
 func (d *driver) Snapshots(
 	ctx types.Context,
 	opts types.Store) ([]*types.Snapshot, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
-	objMap, err := d.client.SnapshotsByService(
-		ctx, ctx.ServiceName())
+	objMap, err := d.client.SnapshotsByService(ctx, serviceName)
 
 	if err != nil {
 		return nil, err
@@ -212,10 +262,13 @@ func (d *driver) SnapshotInspect(
 	snapshotID string,
 	opts types.Store) (*types.Snapshot, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
-	return d.client.SnapshotInspect(
-		ctx, ctx.ServiceName(), snapshotID)
+	return d.client.SnapshotInspect(ctx, serviceName, snapshotID)
 }
 
 func (d *driver) SnapshotCopy(
@@ -223,7 +276,11 @@ func (d *driver) SnapshotCopy(
 	snapshotID, snapshotName, destinationID string,
 	opts types.Store) (*types.Snapshot, error) {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
 
 	req := &types.SnapshotCopyRequest{
 		SnapshotName:  snapshotName,
@@ -231,8 +288,7 @@ func (d *driver) SnapshotCopy(
 		Opts:          opts.Map(),
 	}
 
-	return d.client.SnapshotCopy(
-		ctx, ctx.ServiceName(), snapshotID, req)
+	return d.client.SnapshotCopy(ctx, serviceName, snapshotID, req)
 }
 
 func (d *driver) SnapshotRemove(
@@ -240,10 +296,13 @@ func (d *driver) SnapshotRemove(
 	snapshotID string,
 	opts types.Store) error {
 
-	ctx = d.withContext(ctx)
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return goof.New("missing service name")
+	}
 
-	return d.client.SnapshotRemove(
-		ctx, ctx.ServiceName(), snapshotID)
+	return d.client.SnapshotRemove(ctx, serviceName, snapshotID)
 }
 
 func (d *driver) assertProvidesAPIClient() types.ProvidesAPIClient {

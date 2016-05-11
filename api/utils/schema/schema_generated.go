@@ -96,6 +96,10 @@ const (
                     "type": "string",
                     "description": "The instance ID."
                 },
+                "driver": {
+                    "type": "string",
+                    "description": "The name of the driver that created the instance ID."
+                },
                 "formatted": {
                     "type": "boolean",
                     "description": "A flag indicating whether or not the instance ID has been formatted by an instance inspection."
@@ -105,7 +109,7 @@ const (
                     "description": "Extra information about the instance ID."
                 }
             },
-            "required": [ "id" ],
+            "required": [ "id", "driver" ],
             "additionalProperties": false
         },
 

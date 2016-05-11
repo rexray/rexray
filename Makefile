@@ -392,6 +392,7 @@ ifneq (,$(wildcard /usr/include))
 CC += -I/usr/include
 endif
 
+
 ################################################################################
 ##                               SEMAPHORE BINS                               ##
 ################################################################################
@@ -427,6 +428,7 @@ $(SEM_UNLINK)-clean:
 	rm -f $(SEM_UNLINK)
 GO_PHONY += $(SEM_UNLINK)-clean
 GO_CLEAN += $(SEM_UNLINK)-clean
+
 
 sem-tools: $(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK)
 sem-tools-clean: $(addsuffix -clean,$(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK))
@@ -464,6 +466,7 @@ $(C_LIBSTOR_C_BIN):  $(C_LIBSTOR_C_BIN_SRC) \
           $(C_LIBSTOR_C_BIN_SRC) \
           -lstor-c
 
+
 ################################################################################
 ##                                  C SERVER                                  ##
 ################################################################################
@@ -494,6 +497,7 @@ $(C_LIBSTOR_S_BIN):  $(C_LIBSTOR_TYPES_H) \
           -o $@ \
           $(C_LIBSTOR_S_BIN_SRC) \
           -lstor-s
+
 
 ################################################################################
 ##                                  SERVERS                                   ##

@@ -87,6 +87,10 @@ type server struct {
 	stdErr io.WriteCloser
 }
 
+func (s *server) ContextLoggerField() (string, interface{}) {
+	return "server", s.name
+}
+
 func newServer(config gofig.Config) (*server, error) {
 
 	if config == nil {
@@ -96,24 +100,18 @@ func newServer(config gofig.Config) (*server, error) {
 		}
 	}
 
+	serverName := randomServerName()
 	config = config.Scope(types.ConfigServer)
 
-	ctx := context.Background()
-
 	s := &server{
-		name:         randomServerName(),
-		ctx:          ctx,
+		name:         serverName,
 		config:       config,
 		closeSignal:  make(chan int),
 		closedSignal: make(chan int),
 		closeOnce:    &sync.Once{},
 	}
 
-	s.ctx = s.ctx.WithContextSID(
-		types.ContextServerName, s.name,
-	).WithValue(
-		types.ContextServerName, s.name,
-	)
+	s.ctx = context.Background().WithValue(context.ServerKey, serverName)
 	s.ctx.Info("initializing server")
 
 	if err := s.initEndpoints(s.ctx); err != nil {

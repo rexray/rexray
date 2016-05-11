@@ -15,6 +15,7 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/gorilla/mux"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -102,18 +103,12 @@ func (s *server) makeHTTPHandler(
 
 		w.Header().Set(types.ServerNameHeader, s.name)
 
-		ctx := ctx.WithHTTPRequest(
-			req,
-		).WithRoute(
-			route.GetName(),
-		).WithContextSID(
-			types.ContextRoute, route.GetName(),
-		)
+		ctx := context.WithRequestRoute(ctx, req, route)
 
 		if req.TLS != nil {
 			if len(req.TLS.PeerCertificates) > 0 {
-				ctx = ctx.WithContextSID(types.ContextUser,
-					req.TLS.PeerCertificates[0].Subject.CommonName)
+				userName := req.TLS.PeerCertificates[0].Subject.CommonName
+				ctx = ctx.WithValue(context.UserKey, userName)
 			}
 		}
 
@@ -137,14 +132,17 @@ func (s *server) createMux(ctx types.Context) *mux.Router {
 	m := mux.NewRouter()
 	for _, apiRouter := range s.routers {
 		for _, r := range apiRouter.Routes() {
-			rctx := ctx.WithContextID("route", r.GetName())
-			f := s.makeHTTPHandler(rctx, r)
+
+			ctx := ctx.WithValue(context.RouteKey, r)
+
+			f := s.makeHTTPHandler(ctx, r)
 			mr := m.Path(r.GetPath())
 			mr = mr.Name(r.GetName())
 			mr = mr.Methods(r.GetMethod())
 			mr = mr.Queries(r.GetQueries()...)
 			mr.Handler(f)
-			if rctx.Log().Level >= log.DebugLevel {
+
+			if l, ok := context.GetLogLevel(ctx); ok && l >= log.DebugLevel {
 				ctx.WithFields(log.Fields{
 					"path":         r.GetPath(),
 					"method":       r.GetMethod(),
@@ -152,7 +150,7 @@ func (s *server) createMux(ctx types.Context) *mux.Router {
 					"len(queries)": len(r.GetQueries()),
 				}).Debug("registered route")
 			} else {
-				rctx.Info("registered route")
+				ctx.Info("registered route")
 			}
 		}
 	}
@@ -178,10 +176,11 @@ func (s *server) newHTTPServer(
 	}
 
 	host := fmt.Sprintf("%s://%s", proto, laddr)
-	ctx := s.ctx
-	ctx = ctx.WithContextID("host", host)
-	ctx = ctx.WithContextID("tls", fmt.Sprintf("%v", tlsConfig != nil))
-	errLogger := &httpServerErrLogger{ctx.Log()}
+	ctx := s.ctx.WithValue(context.HostKey, host)
+	ctx = ctx.WithValue(context.TLSKey, tlsConfig != nil)
+
+	logger := ctx.Value(context.LoggerKey).(*log.Logger)
+	errLogger := &httpServerErrLogger{logger}
 
 	srv := &http.Server{Addr: l.Addr().String()}
 	srv.ErrorLog = golog.New(errLogger, "", 0)

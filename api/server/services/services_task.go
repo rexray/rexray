@@ -9,6 +9,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils/schema"
 )
@@ -148,7 +149,7 @@ func (s *globalTaskService) taskTrack(ctx types.Context) *task {
 			ID:        taskID,
 			QueueTime: now,
 		},
-		ctx: ctx.WithContextID("task", fmt.Sprintf("%d", taskID)),
+		ctx: ctx.WithValue(context.TaskKey, fmt.Sprintf("%d", taskID)),
 	}
 
 	s.Lock()

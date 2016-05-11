@@ -103,7 +103,7 @@ type StorageExecutorFunctions interface {
 	// LocalDevices returns a map of the system's local devices.
 	LocalDevices(
 		ctx Context,
-		opts *LocalDevicesOpts) (map[string]string, error)
+		opts *LocalDevicesOpts) (*LocalDevices, error)
 }
 
 // ProvidesStorageExecutorCLI is a type that provides the StorageExecutorCLI.
@@ -126,5 +126,5 @@ type StorageExecutorCLI interface {
 	// match is discovered or the timeout expires.
 	WaitForDevice(
 		ctx Context,
-		opts *WaitForDeviceOpts) (bool, map[string]string, error)
+		opts *WaitForDeviceOpts) (bool, *LocalDevices, error)
 }

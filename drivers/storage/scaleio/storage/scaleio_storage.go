@@ -10,6 +10,7 @@ import (
 	"github.com/akutz/goof"
 	"github.com/emccode/goscaleio"
 	goscaleioTypes "github.com/emccode/goscaleio/types/v1"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/scaleio"
@@ -118,7 +119,8 @@ func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
 	return types.Block, nil
 }
 
-func (d *driver) NextDeviceInfo(ctx types.Context) (*types.NextDeviceInfo, error) {
+func (d *driver) NextDeviceInfo(
+	ctx types.Context) (*types.NextDeviceInfo, error) {
 	return nil, nil
 }
 
@@ -127,7 +129,7 @@ func (d *driver) InstanceInspect(
 	opts types.Store) (*types.Instance, error) {
 
 	//if transformed return
-	guid, _, err := d.verifySdc(ctx, ctx.InstanceID().ID)
+	guid, _, err := d.verifySdc(ctx, context.MustInstanceID(ctx).ID)
 	if err != nil {
 		return nil, goof.WithError("problem looking up instanceID", err)
 	}
@@ -144,7 +146,9 @@ func (d *driver) Volumes(
 
 	sdcMappedVolumes := make(map[string]string)
 	if opts.Attachments {
-		sdcMappedVolumes = ctx.LocalDevices()
+		if ld, ok := context.LocalDevices(ctx); ok {
+			sdcMappedVolumes = ld.DeviceMap
+		}
 	}
 
 	mapStoragePoolName, err := d.getStoragePoolIDs()
@@ -234,7 +238,9 @@ func (d *driver) VolumeInspect(
 
 	sdcMappedVolumes := make(map[string]string)
 	if opts.Attachments {
-		sdcMappedVolumes = ctx.LocalDevices()
+		if ld, ok := context.LocalDevices(ctx); ok {
+			sdcMappedVolumes = ld.DeviceMap
+		}
 	}
 
 	volumes, err := d.getVolume(volumeID, "", opts.Attachments)
@@ -419,10 +425,6 @@ func (d *driver) VolumeRemove(
 		"volumeId": volumeID,
 	})
 
-	if volumeID == "" {
-		return goof.WithFields(fields, "volumeId is required")
-	}
-
 	var err error
 	var volumes []*goscaleioTypes.Volume
 
@@ -446,26 +448,18 @@ func (d *driver) VolumeAttach(
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
-	fields := eff(map[string]interface{}{
-		"volumeId":   volumeID,
-		"instanceId": ctx.InstanceID().ID,
-	})
-
-	if ctx.InstanceID().ID == "" {
-		return nil, "", goof.WithFields(fields, "instanceID is missing")
+	iid, iidOK := context.InstanceID(ctx)
+	if !iidOK {
+		return nil, "", goof.New("instanceID is missing")
 	}
 
 	var sdcID string
 	var exists bool
 	var err error
-	if sdcID, exists, err = d.verifySdc(ctx, ctx.InstanceID().ID); err != nil {
-		return nil, "", goof.WithFields(fields, "error looking up instance ID")
+	if sdcID, exists, err = d.verifySdc(ctx, iid.ID); err != nil {
+		return nil, "", goof.New("error looking up instance ID")
 	} else if !exists {
-		return nil, "", goof.WithFields(fields, "instanceID not found in MDM")
-	}
-
-	if volumeID == "" {
-		return nil, "", goof.WithFields(fields, "volumeId is required")
+		return nil, "", goof.New("instanceID not found in MDM")
 	}
 
 	mapVolumeSdcParam := &goscaleioTypes.MapVolumeSdcParam{
@@ -476,11 +470,11 @@ func (d *driver) VolumeAttach(
 
 	volumes, err := d.getVolume(volumeID, "", false)
 	if err != nil {
-		return nil, "", goof.WithFieldsE(fields, "error getting volume", err)
+		return nil, "", goof.WithError("error getting volume", err)
 	}
 
 	if len(volumes) == 0 {
-		return nil, "", goof.WithFields(fields, "no volumes returned")
+		return nil, "", goof.New("no volumes returned")
 	}
 
 	targetVolume := goscaleio.NewVolume(d.client)
@@ -488,24 +482,16 @@ func (d *driver) VolumeAttach(
 
 	err = targetVolume.MapVolumeSdc(mapVolumeSdcParam)
 	if err != nil {
-		return nil, "", goof.WithFieldsE(fields, "error mapping volume sdc", err)
+		return nil, "", goof.WithError("error mapping volume sdc", err)
 	}
 
-	instanceID := ctx.InstanceID().ID
-	volumeInspectOpts := &types.VolumeInspectOpts{
-		Attachments: true,
-		Opts:        opts.Opts,
-	}
-
-	log.WithFields(log.Fields{
-		"provider":   d.Name(),
-		"volumeId":   volumeID,
-		"instanceId": instanceID,
-	}).Debug("attached volume to instance")
-
-	attachedVol, err := d.VolumeInspect(ctx, volumeID, volumeInspectOpts)
+	attachedVol, err := d.VolumeInspect(
+		ctx, volumeID, &types.VolumeInspectOpts{
+			Attachments: true,
+			Opts:        opts.Opts,
+		})
 	if err != nil {
-		return nil, "", goof.WithFieldsE(fields, "error getting volume", err)
+		return nil, "", goof.WithError("error getting volume", err)
 	}
 
 	return attachedVol, attachedVol.ID, nil
@@ -516,35 +502,25 @@ func (d *driver) VolumeDetach(
 	volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
-	fields := eff(map[string]interface{}{
-		"volumeId":   volumeID,
-		"instanceId": ctx.InstanceID().ID,
-	})
-
-	if volumeID == "" {
-		return nil, goof.WithFields(fields, "volumeId is required")
-	}
-
-	if ctx.InstanceID().ID == "" {
-		return nil, goof.WithFields(fields, "instanceID is missing")
-	}
-
-	var sdcID string
-	var exists bool
-	var err error
-	if sdcID, exists, err = d.verifySdc(ctx, ctx.InstanceID().ID); err != nil {
-		return nil, goof.WithFields(fields, "error looking up instance ID")
+	var (
+		iid    = context.MustInstanceID(ctx)
+		sdcID  string
+		exists bool
+		err    error
+	)
+	if sdcID, exists, err = d.verifySdc(ctx, iid.ID); err != nil {
+		return nil, goof.New("error looking up instance ID")
 	} else if !exists {
-		return nil, goof.WithFields(fields, "instanceID not found in MDM")
+		return nil, goof.New("instanceID not found in MDM")
 	}
 
 	volumes, err := d.getVolume(volumeID, "", false)
 	if err != nil {
-		return nil, goof.WithFieldsE(fields, "error getting volume", err)
+		return nil, goof.WithError("error getting volume", err)
 	}
 
 	if len(volumes) == 0 {
-		return nil, goof.WithFields(fields, "no volumes returned")
+		return nil, goof.New("no volumes returned")
 	}
 
 	targetVolume := goscaleio.NewVolume(d.client)
@@ -711,9 +687,11 @@ func eff(fields goof.Fields) map[string]interface{} {
 	return errFields
 }
 
-func (d *driver) verifySdc(ctx types.Context, sdcGUID string) (string, bool, error) {
-	if ctx.InstanceID().Formatted {
-		return ctx.InstanceID().ID, true, nil
+func (d *driver) verifySdc(
+	ctx types.Context, sdcGUID string) (string, bool, error) {
+
+	if iid := context.MustInstanceID(ctx); iid.Formatted {
+		return iid.ID, true, nil
 	}
 
 	sdc, err := d.system.FindSdc("SdcGuid", strings.ToUpper(sdcGUID))

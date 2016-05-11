@@ -7,6 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -108,34 +109,46 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	if ctx.ServiceName() == "mock" &&
-		opts.Attachments &&
-		ctx.InstanceID().ID == executor.GetInstanceID().ID {
+	xiid := executor.GetInstanceID()
 
-		d.volumes[0].Attachments = []*types.VolumeAttachment{
-			&types.VolumeAttachment{
-				DeviceName: "/dev/xvda",
-				MountPoint: ctx.LocalDevices()["/dev/xvda"],
-				InstanceID: ctx.InstanceID(),
-				Status:     "attached",
-				VolumeID:   d.volumes[0].ID,
-			},
-			&types.VolumeAttachment{
-				DeviceName: "/dev/xvdb",
-				MountPoint: ctx.LocalDevices()["/dev/xvdb"],
-				InstanceID: ctx.InstanceID(),
-				Status:     "attached",
-				VolumeID:   d.volumes[1].ID,
-			},
-			&types.VolumeAttachment{
-				DeviceName: "/dev/xvdc",
-				MountPoint: ctx.LocalDevices()["/dev/xvdc"],
-				InstanceID: ctx.InstanceID(),
-				Status:     "attached",
-				VolumeID:   d.volumes[2].ID,
-			},
+	if serviceName, ok := context.ServiceName(ctx); ok && serviceName == Name {
+		if ld, ok := context.LocalDevices(ctx); ok {
+			ldm := ld.DeviceMap
+
+			if opts.Attachments {
+
+				iid := context.MustInstanceID(ctx)
+				if iid.ID == xiid.ID {
+
+					d.volumes[0].Attachments = []*types.VolumeAttachment{
+						&types.VolumeAttachment{
+							DeviceName: "/dev/xvda",
+							MountPoint: ldm["/dev/xvda"],
+							InstanceID: iid,
+							Status:     "attached",
+							VolumeID:   d.volumes[0].ID,
+						},
+						&types.VolumeAttachment{
+							DeviceName: "/dev/xvdb",
+							MountPoint: ldm["/dev/xvdb"],
+							InstanceID: iid,
+							Status:     "attached",
+							VolumeID:   d.volumes[1].ID,
+						},
+						&types.VolumeAttachment{
+							DeviceName: "/dev/xvdc",
+							MountPoint: ldm["/dev/xvdc"],
+							InstanceID: iid,
+							Status:     "attached",
+							VolumeID:   d.volumes[2].ID,
+						},
+					}
+				}
+			}
+
 		}
 	}
+
 	return d.volumes, nil
 }
 
@@ -356,7 +369,7 @@ func (d *driver) VolumeAttach(
 		&types.VolumeAttachment{
 			DeviceName: *opts.NextDevice,
 			MountPoint: "",
-			InstanceID: ctx.InstanceID(),
+			InstanceID: context.MustInstanceID(ctx),
 			Status:     "attached",
 			VolumeID:   modVol.ID,
 		},

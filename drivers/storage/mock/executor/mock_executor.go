@@ -67,12 +67,15 @@ func (d *Executor) NextDevice(
 // LocalDevices returns a map of the system's local devices.
 func (d *Executor) LocalDevices(
 	ctx types.Context,
-	opts *types.LocalDevicesOpts) (map[string]string, error) {
-	return map[string]string{
-		"/dev/xvda": "/var/log",
-		"/dev/xvdb": "/home",
-		"/dev/xvdc": "/net/share",
-		"/dev/xvdd": "/var/lib/backup",
+	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
+	return &types.LocalDevices{
+		Driver: Name,
+		DeviceMap: map[string]string{
+			"/dev/xvda": "/var/log",
+			"/dev/xvdb": "/home",
+			"/dev/xvdc": "/net/share",
+			"/dev/xvdd": "/var/lib/backup",
+		},
 	}, nil
 }
 

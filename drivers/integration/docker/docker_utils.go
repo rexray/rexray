@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/akutz/goof"
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 )
@@ -22,7 +23,8 @@ func (d *driver) volumeInspectByID(
 	ctx types.Context,
 	volumeID string, attachments bool,
 	opts types.Store) (*types.Volume, error) {
-	vol, err := ctx.Client().Storage().VolumeInspect(ctx, volumeID,
+	client := context.MustClient(ctx)
+	vol, err := client.Storage().VolumeInspect(ctx, volumeID,
 		&types.VolumeInspectOpts{
 			Attachments: attachments})
 	if err != nil {
@@ -40,6 +42,8 @@ func (d *driver) volumeInspectByIDOrName(
 		return nil, goof.New("specify either volumeID or volumeName")
 	}
 
+	client := context.MustClient(ctx)
+
 	var obj *types.Volume
 	if volumeID != "" {
 		var err error
@@ -48,7 +52,7 @@ func (d *driver) volumeInspectByIDOrName(
 			return nil, err
 		}
 	} else {
-		objs, err := ctx.Client().Storage().Volumes(ctx, &types.VolumesOpts{
+		objs, err := client.Storage().Volumes(ctx, &types.VolumesOpts{
 			Attachments: false})
 		if err != nil {
 			return nil, err

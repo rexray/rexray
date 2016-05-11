@@ -7,35 +7,18 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/akutz/goof"
 	"golang.org/x/net/context/ctxhttp"
 
+	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
 )
 
 func (c *client) httpDo(
 	ctx types.Context,
 	method, path string,
 	payload, reply interface{}) (*http.Response, error) {
-
-	txID := ctx.TransactionID()
-	if txID == "" {
-		txIDUUID, _ := utils.NewUUID()
-		txID = txIDUUID.String()
-		ctx = ctx.WithTransactionID(txID).WithContextSID(
-			types.ContextTransactionID, txID)
-	}
-	txCR := ctx.TransactionCreated()
-	if txCR.IsZero() {
-		txCR = time.Now().UTC()
-		ctx = ctx.WithTransactionCreated(txCR).WithContextSID(
-			types.ContextTransactionCreated,
-			fmt.Sprintf("%d", txCR.Unix()))
-	}
 
 	reqBody, err := encPayload(payload)
 	if err != nil {
@@ -48,30 +31,29 @@ func (c *client) httpDo(
 		return nil, err
 	}
 
-	liidh := strings.ToLower(types.InstanceIDHeader)
-	liid64h := strings.ToLower(types.InstanceID64Header)
-	ldh := strings.ToLower(types.LocalDevicesHeader)
+	ctx = context.RequireTX(ctx)
+	tx := context.MustTransaction(ctx)
+	req.Header.Set(types.TransactionHeader, tx.String())
 
-	for k, v := range c.headers {
-		lk := strings.ToLower(k)
-		switch lk {
-		case liidh, liid64h:
-			if c.enableInstanceIDHeaders {
-				req.Header[k] = v
-			}
-		case ldh:
-			if c.enableLocalDevicesHeaders {
-				req.Header[k] = v
-			}
-		default:
-			req.Header[k] = v
+	if iid, iidOK := context.InstanceID(ctx); iidOK {
+		req.Header.Set(types.InstanceIDHeader, iid.String())
+	} else if iidMap, ok := ctx.Value(
+		context.AllInstanceIDsKey).(types.InstanceIDMap); ok {
+		for _, v := range iidMap {
+			req.Header.Add(types.InstanceIDHeader, v.String())
 		}
 
 	}
 
-	req.Header.Set(types.TransactionIDHeader, txID)
-	req.Header.Set(
-		types.TransactionCreatedHeader, fmt.Sprintf("%d", txCR.Unix()))
+	if ld, ldOK := context.LocalDevices(ctx); ldOK {
+		req.Header.Set(types.LocalDevicesHeader, ld.String())
+	} else if ldMap, ok := ctx.Value(
+		context.AllLocalDevicesKey).(types.LocalDevicesMap); ok {
+		for _, v := range ldMap {
+			req.Header.Add(types.LocalDevicesHeader, v.String())
+		}
+	}
+
 	c.logRequest(req)
 
 	res, err := ctxhttp.Do(ctx, &c.Client, req)

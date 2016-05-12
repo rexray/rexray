@@ -64,7 +64,13 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
-	return instanceID()
+
+	hostName, err := utils.HostName()
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.InstanceID{ID: hostName, Driver: vfs.Name}, nil
 }
 
 var (
@@ -168,14 +174,6 @@ func (d *driver) LocalDevices(
 	}
 
 	return &types.LocalDevices{Driver: vfs.Name, DeviceMap: localDevs}, nil
-}
-
-func instanceID() (*types.InstanceID, error) {
-	hostName, err := utils.HostName()
-	if err != nil {
-		return nil, err
-	}
-	return &types.InstanceID{ID: hostName, Driver: vfs.Name}, nil
 }
 
 var initialDeviceFile = []byte(`/dev/xvda

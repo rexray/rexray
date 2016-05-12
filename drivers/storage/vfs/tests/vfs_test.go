@@ -39,6 +39,80 @@ func TestMain(m *testing.M) {
 	os.Exit(ec)
 }
 
+func TestClient(t *testing.T) {
+	apitests.Run(t, vfs.Name, newTestConfig(t),
+		func(config gofig.Config, client types.Client, t *testing.T) {
+			ctx := context.Background()
+			iid, err := client.Executor().InstanceID(
+				ctx.WithValue(context.ServiceKey, vfs.Name),
+				utils.NewStore())
+			assert.NoError(t, err)
+			assert.NotNil(t, iid)
+		})
+}
+
+func TestRoot(t *testing.T) {
+	apitests.Run(t, vfs.Name, newTestConfig(t), apitests.TestRoot)
+}
+
+func TestServices(t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		reply, err := client.API().Services(nil)
+		assert.NoError(t, err)
+		assert.Equal(t, len(reply), 1)
+
+		_, ok := reply[vfs.Name]
+		assert.True(t, ok)
+	}
+	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+}
+
+func TestServiceInpspect(t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		reply, err := client.API().ServiceInspect(nil, vfs.Name)
+		assert.NoError(t, err)
+		assert.Equal(t, vfs.Name, reply.Name)
+		assert.Equal(t, vfs.Name, reply.Driver.Name)
+		assert.True(t, reply.Driver.NextDevice.Ignore)
+	}
+	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+}
+
+func TestExecutors(t *testing.T) {
+	apitests.Run(t, vfs.Name, newTestConfig(t), apitests.TestExecutors)
+}
+
+func TestExecutorHead(t *testing.T) {
+	apitests.RunGroup(
+		t, vfs.Name, newTestConfig(t),
+		apitests.TestHeadExecutorLinux,
+		apitests.TestHeadExecutorDarwin)
+	//apitests.TestHeadExecutorWindows)
+}
+
+func TestExecutorGet(t *testing.T) {
+	apitests.RunGroup(
+		t, vfs.Name, newTestConfig(t),
+		apitests.TestGetExecutorLinux,
+		apitests.TestGetExecutorDarwin)
+	//apitests.TestGetExecutorWindows)
+}
+
+func TestStorageDriverVolumes(t *testing.T) {
+	apitests.Run(t, vfs.Name, newTestConfig(t),
+		func(config gofig.Config, client types.Client, t *testing.T) {
+
+			vols, err := client.Storage().Volumes(
+				context.Background().WithValue(
+					context.ServiceKey, vfs.Name),
+				&types.VolumesOpts{Attachments: true, Opts: utils.NewStore()})
+			assert.NoError(t, err)
+			assert.Len(t, vols, 2)
+		})
+}
+
 func TestVolumes(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {

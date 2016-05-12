@@ -4,17 +4,16 @@ import (
 	"strconv"
 	"strings"
 
-	// "fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-	"github.com/emccode/goscaleio"
-	goscaleioTypes "github.com/emccode/goscaleio/types/v1"
+	sio "github.com/emccode/goscaleio"
+	siotypes "github.com/emccode/goscaleio/types/v1"
+
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/scaleio"
-	"github.com/emccode/libstorage/drivers/storage/scaleio/executor"
 )
 
 const (
@@ -23,15 +22,14 @@ const (
 
 type driver struct {
 	config           gofig.Config
-	client           *goscaleio.Client
-	system           *goscaleio.System
-	protectionDomain *goscaleio.ProtectionDomain
-	storagePool      *goscaleio.StoragePool
+	client           *sio.Client
+	system           *sio.System
+	protectionDomain *sio.ProtectionDomain
+	storagePool      *sio.StoragePool
 }
 
 func init() {
-	registry.RegisterStorageDriver(executor.Name, newDriver)
-	configRegistration()
+	registry.RegisterStorageDriver(scaleio.Name, newDriver)
 }
 
 func newDriver() types.StorageDriver {
@@ -54,7 +52,7 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 
 	var err error
 
-	if d.client, err = goscaleio.NewClientWithArgs(
+	if d.client, err = sio.NewClientWithArgs(
 		d.endpoint(),
 		d.version(),
 		d.insecure(),
@@ -63,7 +61,7 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	}
 
 	if _, err = d.client.Authenticate(
-		&goscaleio.ConfigConnect{
+		&sio.ConfigConnect{
 			Endpoint: d.endpoint(),
 			Version:  d.version(),
 			Username: d.userName(),
@@ -85,7 +83,7 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 		return goof.WithFieldsE(fields, "error finding system", err)
 	}
 
-	var pd *goscaleioTypes.ProtectionDomain
+	var pd *siotypes.ProtectionDomain
 	if pd, err = d.system.FindProtectionDomain(
 		d.protectionDomainID(),
 		d.protectionDomainName(), ""); err != nil {
@@ -95,10 +93,10 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 		return goof.WithFieldsE(fields,
 			"error finding protection domain", err)
 	}
-	d.protectionDomain = goscaleio.NewProtectionDomain(d.client)
+	d.protectionDomain = sio.NewProtectionDomain(d.client)
 	d.protectionDomain.ProtectionDomain = pd
 
-	var sp *goscaleioTypes.StoragePool
+	var sp *siotypes.StoragePool
 	if sp, err = d.protectionDomain.FindStoragePool(
 		d.storagePoolID(),
 		d.storagePoolName(), ""); err != nil {
@@ -107,7 +105,7 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 		log.WithFields(fields).Debug(err.Error())
 		return goof.WithFieldsE(fields, "error finding storage pool", err)
 	}
-	d.storagePool = goscaleio.NewStoragePool(d.client)
+	d.storagePool = sio.NewStoragePool(d.client)
 	d.storagePool.StoragePool = sp
 
 	log.WithFields(fields).Info("storage driver initialized")
@@ -128,16 +126,35 @@ func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
 
-	//if transformed return
-	guid, _, err := d.verifySdc(ctx, context.MustInstanceID(ctx).ID)
-	if err != nil {
-		return nil, goof.WithError("problem looking up instanceID", err)
-	}
-	iid := &types.InstanceID{
-		ID: guid,
+	iid := context.MustInstanceID(ctx)
+	if iid.ID != "" {
+		return &types.Instance{InstanceID: iid}, nil
 	}
 
-	return &types.Instance{InstanceID: iid}, nil
+	var (
+		err     error
+		sdcGUID string
+		sdc     *sio.Sdc
+	)
+
+	if err = iid.UnmarshalMetadata(&sdcGUID); err != nil {
+		return nil, err
+	}
+
+	sdcGUID = strings.ToUpper(sdcGUID)
+	if sdc, err = d.system.FindSdc("SdcGuid", sdcGUID); err != nil {
+		return nil, scaleio.ErrFindingSDC(sdcGUID, err)
+	}
+
+	if sdc != nil {
+		return &types.Instance{
+			InstanceID: &types.InstanceID{
+				ID: sdc.Sdc.ID,
+			},
+		}, nil
+	}
+
+	return nil, scaleio.ErrNoSDCGUID
 }
 
 func (d *driver) Volumes(
@@ -170,7 +187,7 @@ func (d *driver) Volumes(
 
 	getProtectionDomainName := func(poolID string) string {
 		var ok bool
-		var pool *goscaleioTypes.StoragePool
+		var pool *siotypes.StoragePool
 
 		if pool, ok = mapStoragePoolName[poolID]; !ok {
 			return ""
@@ -271,7 +288,7 @@ func (d *driver) VolumeInspect(
 
 	getProtectionDomainName := func(poolID string) string {
 		var ok bool
-		var pool *goscaleioTypes.StoragePool
+		var pool *siotypes.StoragePool
 
 		if pool, ok = mapStoragePoolName[poolID]; !ok {
 			return ""
@@ -426,13 +443,13 @@ func (d *driver) VolumeRemove(
 	})
 
 	var err error
-	var volumes []*goscaleioTypes.Volume
+	var volumes []*siotypes.Volume
 
 	if volumes, err = d.getVolume(volumeID, "", false); err != nil {
 		return goof.WithFieldsE(fields, "error getting volume", err)
 	}
 
-	targetVolume := goscaleio.NewVolume(d.client)
+	targetVolume := sio.NewVolume(d.client)
 	targetVolume.Volume = volumes[0]
 
 	if err = targetVolume.RemoveVolume("ONLY_ME"); err != nil {
@@ -450,20 +467,11 @@ func (d *driver) VolumeAttach(
 
 	iid, iidOK := context.InstanceID(ctx)
 	if !iidOK {
-		return nil, "", goof.New("instanceID is missing")
+		return nil, "", goof.New("missing instanceID")
 	}
 
-	var sdcID string
-	var exists bool
-	var err error
-	if sdcID, exists, err = d.verifySdc(ctx, iid.ID); err != nil {
-		return nil, "", goof.New("error looking up instance ID")
-	} else if !exists {
-		return nil, "", goof.New("instanceID not found in MDM")
-	}
-
-	mapVolumeSdcParam := &goscaleioTypes.MapVolumeSdcParam{
-		SdcID: sdcID,
+	mapVolumeSdcParam := &siotypes.MapVolumeSdcParam{
+		SdcID: iid.ID,
 		AllowMultipleMappings: "false",
 		AllSdcs:               "",
 	}
@@ -477,7 +485,7 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.New("no volumes returned")
 	}
 
-	targetVolume := goscaleio.NewVolume(d.client)
+	targetVolume := sio.NewVolume(d.client)
 	targetVolume.Volume = volumes[0]
 
 	err = targetVolume.MapVolumeSdc(mapVolumeSdcParam)
@@ -502,17 +510,7 @@ func (d *driver) VolumeDetach(
 	volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
-	var (
-		iid    = context.MustInstanceID(ctx)
-		sdcID  string
-		exists bool
-		err    error
-	)
-	if sdcID, exists, err = d.verifySdc(ctx, iid.ID); err != nil {
-		return nil, goof.New("error looking up instance ID")
-	} else if !exists {
-		return nil, goof.New("instanceID not found in MDM")
-	}
+	iid := context.MustInstanceID(ctx)
 
 	volumes, err := d.getVolume(volumeID, "", false)
 	if err != nil {
@@ -523,10 +521,10 @@ func (d *driver) VolumeDetach(
 		return nil, goof.New("no volumes returned")
 	}
 
-	targetVolume := goscaleio.NewVolume(d.client)
+	targetVolume := sio.NewVolume(d.client)
 	targetVolume.Volume = volumes[0]
 
-	unmapVolumeSdcParam := &goscaleioTypes.UnmapVolumeSdcParam{
+	unmapVolumeSdcParam := &siotypes.UnmapVolumeSdcParam{
 		SdcID:                "",
 		IgnoreScsiInitiators: "true",
 		AllSdcs:              "",
@@ -535,7 +533,7 @@ func (d *driver) VolumeDetach(
 	if opts.Force {
 		unmapVolumeSdcParam.AllSdcs = "true"
 	} else {
-		unmapVolumeSdcParam.SdcID = sdcID
+		unmapVolumeSdcParam.SdcID = iid.ID
 	}
 
 	if err := targetVolume.UnmapVolumeSdc(unmapVolumeSdcParam); err != nil {
@@ -598,13 +596,13 @@ func shrink(n string) string {
 }
 
 func (d *driver) getStoragePoolIDs() (
-	map[string]*goscaleioTypes.StoragePool, error) {
+	map[string]*siotypes.StoragePool, error) {
 	storagePools, err := d.client.GetStoragePool("")
 	if err != nil {
 		return nil, err
 	}
 
-	mapPoolID := make(map[string]*goscaleioTypes.StoragePool)
+	mapPoolID := make(map[string]*siotypes.StoragePool)
 
 	for _, pool := range storagePools {
 		mapPoolID[pool.ID] = pool
@@ -613,13 +611,13 @@ func (d *driver) getStoragePoolIDs() (
 }
 
 func (d *driver) getProtectionDomainIDs() (
-	map[string]*goscaleioTypes.ProtectionDomain, error) {
+	map[string]*siotypes.ProtectionDomain, error) {
 	protectionDomains, err := d.system.GetProtectionDomain("")
 	if err != nil {
 		return nil, err
 	}
 
-	mapProtectionDomainID := make(map[string]*goscaleioTypes.ProtectionDomain)
+	mapProtectionDomainID := make(map[string]*siotypes.ProtectionDomain)
 
 	for _, protectionDomain := range protectionDomains {
 		mapProtectionDomainID[protectionDomain.ID] = protectionDomain
@@ -629,7 +627,7 @@ func (d *driver) getProtectionDomainIDs() (
 
 func (d *driver) getVolume(
 	volumeID, volumeName string, getSnapshots bool) (
-	[]*goscaleioTypes.Volume, error) {
+	[]*siotypes.Volume, error) {
 
 	volumeName = shrink(volumeName)
 
@@ -641,7 +639,7 @@ func (d *driver) getVolume(
 }
 
 func (d *driver) createVolume(ctx types.Context, volumeName string,
-	vol *types.Volume) (*goscaleioTypes.VolumeResp, error) {
+	vol *types.Volume) (*siotypes.VolumeResp, error) {
 
 	volumeName = shrink(volumeName)
 
@@ -654,7 +652,7 @@ func (d *driver) createVolume(ctx types.Context, volumeName string,
 		"availabilityZone": vol.AvailabilityZone,
 	})
 
-	volumeParam := &goscaleioTypes.VolumeParam{
+	volumeParam := &siotypes.VolumeParam{
 		Name:           volumeName,
 		VolumeSizeInKb: strconv.Itoa(int(vol.Size) * 1024 * 1024),
 		VolumeType:     d.thinOrThick(),
@@ -685,25 +683,6 @@ func eff(fields goof.Fields) map[string]interface{} {
 		}
 	}
 	return errFields
-}
-
-func (d *driver) verifySdc(
-	ctx types.Context, sdcGUID string) (string, bool, error) {
-
-	if iid := context.MustInstanceID(ctx); iid.Formatted {
-		return iid.ID, true, nil
-	}
-
-	sdc, err := d.system.FindSdc("SdcGuid", strings.ToUpper(sdcGUID))
-	if err != nil {
-		fields := log.Fields{"sdcGuid": sdcGUID}
-		log.WithFields(fields).Debug(err.Error())
-		return "", false, goof.WithFieldsE(fields, "error finding sdc", err)
-	}
-	if sdc != nil {
-		return sdc.Sdc.ID, true, nil
-	}
-	return "", false, goof.New("no sdc guid returned")
 }
 
 // func (d *driver) GetVolumeAttach(
@@ -742,25 +721,6 @@ func (d *driver) verifySdc(
 ///////////////////////////////////////////////////////////////////////
 //////                  CONFIG HELPER STUFF                   /////////
 ///////////////////////////////////////////////////////////////////////
-
-func configRegistration() {
-	r := gofig.NewRegistration("ScaleIO")
-	r.Key(gofig.String, "", "", "", "scaleio.endpoint")
-	r.Key(gofig.Bool, "", false, "", "scaleio.insecure")
-	r.Key(gofig.Bool, "", false, "", "scaleio.useCerts")
-	r.Key(gofig.String, "", "", "", "scaleio.userID")
-	r.Key(gofig.String, "", "", "", "scaleio.userName")
-	r.Key(gofig.String, "", "", "", "scaleio.password")
-	r.Key(gofig.String, "", "", "", "scaleio.systemID")
-	r.Key(gofig.String, "", "", "", "scaleio.systemName")
-	r.Key(gofig.String, "", "", "", "scaleio.protectionDomainID")
-	r.Key(gofig.String, "", "", "", "scaleio.protectionDomainName")
-	r.Key(gofig.String, "", "", "", "scaleio.storagePoolID")
-	r.Key(gofig.String, "", "", "", "scaleio.storagePoolName")
-	r.Key(gofig.String, "", "", "", "scaleio.thinOrThick")
-	r.Key(gofig.String, "", "", "", "scaleio.version")
-	gofig.Register(r)
-}
 
 func (d *driver) endpoint() string {
 	return d.config.GetString("scaleio.endpoint")

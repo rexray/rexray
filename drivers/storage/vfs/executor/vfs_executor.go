@@ -70,7 +70,13 @@ func (d *driver) InstanceID(
 		return nil, err
 	}
 
-	return &types.InstanceID{ID: hostName, Driver: vfs.Name}, nil
+	iid := &types.InstanceID{Driver: vfs.Name}
+
+	if err := iid.MarshalMetadata(hostName); err != nil {
+		return nil, err
+	}
+
+	return iid, nil
 }
 
 var (

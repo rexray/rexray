@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strconv"
 
 	"github.com/akutz/goof"
 )
@@ -16,6 +15,7 @@ type InstanceIDMap map[string]*InstanceID
 
 // InstanceID identifies a host to a remote storage platform.
 type InstanceID struct {
+
 	// ID is the simple part of the InstanceID.
 	ID string `json:"id"`
 
@@ -24,13 +24,23 @@ type InstanceID struct {
 	// valid.
 	Driver string `json:"driver"`
 
-	// Formatted is a flag indicating whether or not the InstanceID has
-	// been formatted by an instance inspection.
-	Formatted bool `json:"formatted,omitempty"`
-
-	// Metadata is any extra information about the InstanceID.
-	Metadata json.RawMessage `json:"metadata,omitempty"`
+	metadata json.RawMessage
 }
+
+var (
+	// ErrIIDMetadataNil is returned by *InstanceID.UnmarshalMetadata when
+	// the InstanceID's metadata is empty or nil.
+	ErrIIDMetadataNil = goof.New("cannot unmarshal nil metadata")
+
+	// ErrIIDMetadataNilData is returned by *InstanceID.MarshalMetadata when
+	// the provided object to marshal is nil.
+	ErrIIDMetadataNilData = goof.New("cannot marshal nil metadata")
+
+	// ErrIIDMetadataNilDest is returned by *InstanceID.UnmarshalMetadata when
+	// the provided destination into which the metadata should be unmarshaled
+	// is nil.
+	ErrIIDMetadataNilDest = goof.New("cannot unmarshal into nil receiver")
+)
 
 // String returns the string representation of an InstanceID object.
 func (i *InstanceID) String() string {
@@ -41,42 +51,58 @@ func (i *InstanceID) String() string {
 	return string(buf)
 }
 
-// AddMetadata encodes the provided data to JSON and assigns the result to
-// the InstanceID's Metadata field.
-func (i *InstanceID) AddMetadata(data interface{}) error {
+// DeleteMetadata deletes the metadata from the InstanceID.
+func (i *InstanceID) DeleteMetadata() {
+	i.metadata = json.RawMessage{}
+}
 
-	buf, err := json.Marshal(data)
-	if err != nil {
+// MarshalMetadata encodes the provided object to JSON and assigns the result
+// to the InstanceID's metadata field.
+func (i *InstanceID) MarshalMetadata(data interface{}) error {
+
+	if fmt.Sprintf("%v", data) == "<nil>" {
+		return ErrIIDMetadataNilData
+	}
+
+	var err error
+	if i.metadata, err = json.Marshal(data); err != nil {
 		return err
 	}
-	i.Metadata = buf
+	return nil
+}
+
+// UnmarshalMetadata decodes the InstanceID's metadata into the provided object.
+func (i *InstanceID) UnmarshalMetadata(dest interface{}) error {
+
+	if fmt.Sprintf("%v", dest) == "<nil>" {
+		return ErrIIDMetadataNilDest
+	}
+
+	if len(i.metadata) == 0 {
+		return ErrIIDMetadataNil
+	}
+	if err := json.Unmarshal(i.metadata, dest); err != nil {
+		return err
+	}
 	return nil
 }
 
 // MarshalText marshals InstanceID to a text string that adheres to the format
-// `DRIVER=ID[,FORMATTED][,METADATA]`. The formatted flag may be omitted if
-// it is false or if there is no metadata; otherwise the flag is included
-// regardless of its value. If metadata is present it is encoded as a base64
+// `DRIVER=ID[,METADATA]`. If metadata is present it is encoded as a base64
 // string.
 func (i *InstanceID) MarshalText() ([]byte, error) {
 
 	t := &bytes.Buffer{}
 	fmt.Fprintf(t, "%s=%s", i.Driver, i.ID)
 
-	hasMetadata := len(i.Metadata) > 0
-
-	if i.Formatted || hasMetadata {
-		fmt.Fprintf(t, ",%v", i.Formatted)
-	}
-
-	if !hasMetadata {
+	if len(i.metadata) == 0 {
 		return t.Bytes(), nil
 	}
 
 	t.WriteByte(',')
 
 	enc := b64.NewEncoder(b64.StdEncoding, t)
-	if _, err := enc.Write(i.Metadata); err != nil {
+	if _, err := enc.Write(i.metadata); err != nil {
 		return nil, err
 	}
 	if err := enc.Close(); err != nil {
@@ -86,7 +112,7 @@ func (i *InstanceID) MarshalText() ([]byte, error) {
 }
 
 var iidRX = regexp.MustCompile(
-	`(?i)^([^=]+)=([^,]*)(?:,(true|false|0|1)(?:,(.+))?)?$`)
+	`(?i)^([^=]+)=([^,]*)(?:,(.+))?$`)
 
 // UnmarshalText unmarshals the data into a an InstanceID provided the data
 // adheres to the format described in the MarshalText function.
@@ -103,18 +129,14 @@ func (i *InstanceID) UnmarshalText(value []byte) error {
 	i.ID = string(m[2])
 
 	if lm > 3 && len(m[3]) > 0 {
-		i.Formatted, _ = strconv.ParseBool(string(m[3]))
-	}
-
-	if lm > 4 && len(m[4]) > 0 {
-		enc := m[4]
+		enc := m[3]
 		dec := b64.NewDecoder(b64.StdEncoding, bytes.NewReader(enc))
-		i.Metadata = make([]byte, b64.StdEncoding.DecodedLen(len(enc)))
-		n, err := dec.Read(i.Metadata)
+		i.metadata = make([]byte, b64.StdEncoding.DecodedLen(len(enc)))
+		n, err := dec.Read(i.metadata)
 		if err != nil {
 			return err
 		}
-		i.Metadata = i.Metadata[:n]
+		i.metadata = i.metadata[:n]
 	}
 
 	return nil
@@ -124,11 +146,10 @@ func (i *InstanceID) UnmarshalText(value []byte) error {
 func (i *InstanceID) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
-		ID        string          `json:"id"`
-		Driver    string          `json:"driver"`
-		Formatted bool            `json:"formatted,omitempty"`
-		Metadata  json.RawMessage `json:"metadata,omitempty"`
-	}{i.ID, i.Driver, i.Formatted, i.Metadata})
+		ID       string          `json:"id"`
+		Driver   string          `json:"driver"`
+		Metadata json.RawMessage `json:"metadata,omitempty"`
+	}{i.ID, i.Driver, i.metadata})
 
 }
 
@@ -136,10 +157,9 @@ func (i *InstanceID) MarshalJSON() ([]byte, error) {
 func (i *InstanceID) UnmarshalJSON(data []byte) error {
 
 	iid := &struct {
-		ID        string          `json:"id"`
-		Driver    string          `json:"driver"`
-		Formatted bool            `json:"formatted,omitempty"`
-		Metadata  json.RawMessage `json:"metadata,omitempty"`
+		ID       string          `json:"id"`
+		Driver   string          `json:"driver"`
+		Metadata json.RawMessage `json:"metadata,omitempty"`
 	}{}
 
 	if err := json.Unmarshal(data, iid); err != nil {
@@ -148,8 +168,7 @@ func (i *InstanceID) UnmarshalJSON(data []byte) error {
 
 	i.ID = iid.ID
 	i.Driver = iid.Driver
-	i.Formatted = iid.Formatted
-	i.Metadata = iid.Metadata
+	i.metadata = iid.Metadata
 
 	return nil
 }

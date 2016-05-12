@@ -44,7 +44,7 @@ func (h *transactionHandler) Handle(
 		if err := tx.UnmarshalText([]byte(txHeader)); err != nil {
 			return err
 		}
-		ctx = ctx.WithValue(context.Transaction, tx)
+		ctx = ctx.WithValue(context.TransactionKey, tx)
 	}
 
 	return h.handler(ctx, w, req, store)

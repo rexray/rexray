@@ -12,8 +12,6 @@ enum STORAGE_TYPES {
 // identifies a host to a remote storage platform
 typedef struct {
     char*       id;
-    char*       metadata;   // extra information about the instance id,
-                            // marshaled as a JSON string
 } instance_id;
 
 instance_id* new_instance_id();

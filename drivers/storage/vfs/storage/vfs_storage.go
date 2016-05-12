@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/akutz/gofig"
+	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
@@ -85,16 +86,34 @@ func (d *driver) InstanceInspect(
 	opts types.Store) (*types.Instance, error) {
 
 	iid := context.MustInstanceID(ctx)
-	iid.Formatted = true
+	if iid.ID != "" {
+		return &types.Instance{Name: "vfsInstance", InstanceID: iid}, nil
+	}
+
+	var hostname string
+	if err := iid.UnmarshalMetadata(&hostname); err != nil {
+		return nil, err
+	}
+
 	return &types.Instance{
-		Name:       "vfsInstance",
-		InstanceID: iid,
+		Name: "vfsInstance",
+		InstanceID: &types.InstanceID{
+			ID:     hostname,
+			Driver: iid.Driver,
+		},
 	}, nil
 }
 
 func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
+
+	iid, iidOK := context.InstanceID(ctx)
+	if iidOK {
+		if iid.ID == "" {
+			return nil, goof.New("missing instance ID")
+		}
+	}
 
 	volJSONPaths, err := d.getVolJSONs()
 	if err != nil {

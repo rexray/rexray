@@ -71,7 +71,6 @@ func (tt *InstanceTest) Test(
 	client types.Client,
 	t *testing.T) {
 
-	tt.Expected.InstanceID.Formatted = true
 	expectedBuf, err := json.Marshal(tt.Expected)
 	assert.NoError(t, err)
 	expectedJSON := string(expectedBuf)

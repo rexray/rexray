@@ -1,5 +1,5 @@
 hash: a40b76f83c0a061d7e78be85db4b98d3dc59dce7d6128a33353ed30fd8c028ab
-updated: 2016-05-11T18:47:36.326739551-05:00
+updated: 2016-05-12T12:47:33.754933078-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
@@ -88,7 +88,7 @@ imports:
   - context/ctxhttp
   - context
 - name: golang.org/x/sys
-  version: 806cb00533e5af545ce95e84b349404f8e5ff7a8
+  version: e82cb4d7dffc35bcec7bc8bf9e402377e0ecf3f4
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1

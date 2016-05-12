@@ -627,11 +627,7 @@ func instanceID() (*types.InstanceID, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.InstanceID{
-		ID:        hostName,
-		Driver:    vfs.Name,
-		Formatted: true,
-	}, nil
+	return &types.InstanceID{ID: hostName, Driver: vfs.Name}, nil
 }
 
 func assertVolDir(

@@ -135,7 +135,6 @@ func getFilteredVolumes(
 	)
 
 	iid, iidOK := context.InstanceID(ctx)
-
 	if opts.Attachments && !iidOK {
 		return nil, utils.NewMissingInstanceIDError(storSvc.Name())
 	}
@@ -178,6 +177,7 @@ func getFilteredVolumes(
 		}
 
 		if OnVolume != nil {
+			ctx.Debug("invoking OnVolume handler")
 			ok, err := OnVolume(ctx, req, store, obj)
 			if err != nil {
 				return nil, err

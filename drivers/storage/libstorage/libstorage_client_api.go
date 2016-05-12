@@ -10,32 +10,17 @@ import (
 
 func (c *client) Instances(
 	ctx types.Context) (map[string]*types.Instance, error) {
-
 	ctx = c.withAllInstanceIDs(c.requireCtx(ctx))
-
-	imap, err := c.APIClient.Instances(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for service, i := range imap {
-		i.InstanceID.Formatted = true
-		c.instanceIDCache.Set(service, i)
-	}
-	return imap, nil
+	return c.APIClient.Instances(ctx)
 }
 
 func (c *client) InstanceInspect(
 	ctx types.Context, service string) (*types.Instance, error) {
-
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
-
 	i, err := c.APIClient.InstanceInspect(ctx, service)
 	if err != nil {
 		return nil, err
 	}
-	i.InstanceID.Driver = c.serviceCache.GetServiceInfo(service).Driver.Name
-	i.InstanceID.Formatted = true
-	c.instanceIDCache.Set(service, i)
 	return i, nil
 }
 
@@ -73,15 +58,11 @@ func (c *client) Volumes(
 
 	ctx = c.requireCtx(ctx)
 
-	if attachments {
-		ctxA, err := c.withAllLocalDevices(ctx)
-		if err != nil {
-			return nil, err
-		}
-		ctx = ctxA
-
-		ctx = c.withAllInstanceIDs(ctx)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
 	}
+	ctx = c.withAllInstanceIDs(ctxA)
 
 	return c.APIClient.Volumes(ctx, attachments)
 }
@@ -91,16 +72,12 @@ func (c *client) VolumesByService(
 	service string,
 	attachments bool) (types.VolumeMap, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
-
-	if attachments {
-		ctxA, err := c.withAllLocalDevices(ctx)
-		if err != nil {
-			return nil, err
-		}
-		ctx = ctxA
-		ctx = c.withInstanceID(ctx, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
 	}
+	ctx = ctxA
 
 	return c.APIClient.VolumesByService(ctx, service, attachments)
 }
@@ -110,16 +87,12 @@ func (c *client) VolumeInspect(
 	service, volumeID string,
 	attachments bool) (*types.Volume, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
-
-	if attachments {
-		ctxA, err := c.withAllLocalDevices(ctx)
-		if err != nil {
-			return nil, err
-		}
-		ctx = ctxA
-		ctx = c.withInstanceID(ctx, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
 	}
+	ctx = ctxA
 
 	return c.APIClient.VolumeInspect(ctx, service, volumeID, attachments)
 }
@@ -129,7 +102,12 @@ func (c *client) VolumeCreate(
 	service string,
 	request *types.VolumeCreateRequest) (*types.Volume, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = ctxA
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
@@ -255,6 +233,12 @@ func (c *client) VolumeAttach(
 	request *types.VolumeAttachRequest) (*types.Volume, string, error) {
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+	ctx = ctxA
+
 	return c.APIClient.VolumeAttach(ctx, service, volumeID, request)
 }
 
@@ -265,6 +249,12 @@ func (c *client) VolumeDetach(
 	request *types.VolumeDetachRequest) (*types.Volume, error) {
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = ctxA
+
 	return c.APIClient.VolumeDetach(ctx, service, volumeID, request)
 }
 
@@ -273,6 +263,12 @@ func (c *client) VolumeDetachAll(
 	request *types.VolumeDetachRequest) (types.ServiceVolumeMap, error) {
 
 	ctx = c.withAllInstanceIDs(c.requireCtx(ctx))
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = ctxA
+
 	return c.APIClient.VolumeDetachAll(ctx, request)
 }
 
@@ -282,6 +278,12 @@ func (c *client) VolumeDetachAllForService(
 	request *types.VolumeDetachRequest) (types.VolumeMap, error) {
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = ctxA
+
 	return c.APIClient.VolumeDetachAllForService(ctx, service, request)
 }
 

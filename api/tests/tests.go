@@ -36,6 +36,9 @@ var (
 	tcpTLSTest, _  = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_TCP_TLS"))
 	sockTest, _    = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_SOCK"))
 	sockTLSTest, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_SOCK_TLS"))
+
+	printConfigOnFail, _ = strconv.ParseBool(os.Getenv(
+		"LIBSTORAGE_TEST_PRINT_CONFIG_ON_FAIL"))
 )
 
 func init() {
@@ -207,7 +210,7 @@ func (th *testHarness) run(
 				for _, test := range tests {
 					test(config, c, t)
 
-					if t.Failed() {
+					if t.Failed() && printConfigOnFail {
 						cj, err := config.ToJSON()
 						if err != nil {
 							t.Fatal(err)
@@ -256,7 +259,7 @@ func (th *testHarness) run(
 
 					test(config, c, t)
 
-					if t.Failed() {
+					if t.Failed() && printConfigOnFail {
 						cj, err := config.ToJSON()
 						if err != nil {
 							t.Fatal(err)

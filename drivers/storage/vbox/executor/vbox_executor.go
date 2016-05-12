@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -55,26 +54,26 @@ func getMacs() ([]string, error) {
 	return macs, nil
 }
 
-func instanceIDJSON() ([]byte, error) {
+// InstanceID returns the local instance ID.
+func InstanceID() (*types.InstanceID, error) {
+
 	macs, err := getMacs()
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(macs)
-}
 
-// InstanceID returns the local instance ID.
-func InstanceID() (*types.InstanceID, error) {
-	buf, err := instanceIDJSON()
-	if err != nil {
+	iid := &types.InstanceID{Driver: vbox.Name}
+	if err := iid.MarshalMetadata(macs); err != nil {
 		return nil, err
 	}
-	return &types.InstanceID{Metadata: buf}, nil
+
+	return iid, nil
 }
 
 func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
+
 	return InstanceID()
 }
 

@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"encoding/json"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -95,18 +94,14 @@ func (d *driver) NextDeviceInfo(
 	return nil, nil
 }
 
-func getMacs(ctx types.Context) []string {
+func getMacs(ctx types.Context) ([]string, error) {
+
 	iid := context.MustInstanceID(ctx)
 	var macs []string
-	if err := json.Unmarshal(iid.Metadata, &macs); err != nil {
-		panic(err)
+	if err := iid.UnmarshalMetadata(&macs); err != nil {
+		return nil, err
 	}
-
-	ctx.WithField("instanceID", iid.ID).Debug("checking instance ID")
-	iidMetadataJSON, _ := iid.Metadata.MarshalJSON()
-	var iidMetadata []string
-	json.Unmarshal(iidMetadataJSON, &iidMetadata)
-	return iidMetadata
+	return macs, nil
 }
 
 // getInstanceID returns the local system's InstanceID.
@@ -114,9 +109,14 @@ func (d *driver) getInstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 
-	m, err := d.findMachine(ctx, d.machineNameID(ctx), getMacs(ctx))
+	macAddrs, err := getMacs(ctx)
 	if err != nil {
-		goof.WithFieldE("metadata", getMacs(ctx),
+		return nil, err
+	}
+
+	m, err := d.findMachine(ctx, d.machineNameID(ctx), macAddrs)
+	if err != nil {
+		goof.WithFieldE("metadata", macAddrs,
 			"failed to find local machine", err)
 	}
 
@@ -132,27 +132,38 @@ func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
 
+	iid := context.MustInstanceID(ctx)
+	if iid.ID != "" {
+		return &types.Instance{InstanceID: iid}, nil
+	}
+
 	d.refreshSession(ctx)
 
-	instanceID, err := d.getInstanceID(ctx, opts)
+	iid, err := d.getInstanceID(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	instanceID.Formatted = true
 
-	return &types.Instance{InstanceID: instanceID}, nil
+	return &types.Instance{InstanceID: iid}, nil
 }
 
 // Volumes returns all volumes or a filtered list of volumes.
 func (d *driver) getVolumeMapping(
 	ctx types.Context) ([]*types.Volume, error) {
 
-	var err error
-	var mapDiskByID map[string]string
-	var mas []*vboxw.IMediumAttachment
-	var m *vboxc.Machine
+	var (
+		err         error
+		mapDiskByID map[string]string
+		mas         []*vboxw.IMediumAttachment
+		m           *vboxc.Machine
+		macAddrs    []string
+	)
 
-	m, err = d.findMachine(ctx, d.machineNameID(ctx), getMacs(ctx))
+	if macAddrs, err = getMacs(ctx); err != nil {
+		return nil, err
+	}
+
+	m, err = d.findMachine(ctx, d.machineNameID(ctx), macAddrs)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +642,12 @@ func (d *driver) createVolume(ctx types.Context, name string, size int64) (*vbox
 func (d *driver) attachVolume(
 	ctx types.Context, volumeID, volumeName string) error {
 
-	m, err := d.findMachine(ctx, d.machineNameID(ctx), getMacs(ctx))
+	macAddrs, err := getMacs(ctx)
+	if err != nil {
+		return err
+	}
+
+	m, err := d.findMachine(ctx, d.machineNameID(ctx), macAddrs)
 	if err != nil {
 		return err
 	}
@@ -663,7 +679,12 @@ func (d *driver) attachVolume(
 func (d *driver) detachVolume(
 	ctx types.Context, volumeID, volumeName string) error {
 
-	m, err := d.findMachine(ctx, d.machineNameID(ctx), getMacs(ctx))
+	macAddrs, err := getMacs(ctx)
+	if err != nil {
+		return err
+	}
+
+	m, err := d.findMachine(ctx, d.machineNameID(ctx), macAddrs)
 	if err != nil {
 		return err
 	}

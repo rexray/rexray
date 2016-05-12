@@ -82,8 +82,7 @@ func toCVolumeAttachment(
 
 func toCInstanceID(i *types.InstanceID) (*C.instance_id, error) {
 	return &C.instance_id{
-		id:       C.CString(i.ID),
-		metadata: C.CString(string(i.Metadata)),
+		id: C.CString(i.ID),
 	}, nil
 }
 

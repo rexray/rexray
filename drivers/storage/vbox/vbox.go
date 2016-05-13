@@ -27,7 +27,7 @@ func registerConfig() {
 	r.Key(gofig.String, "", volumePath, "", "virtualbox.volumePath")
 	r.Key(gofig.String, "", "", "", "virtualbox.localMachineNameOrId")
 	r.Key(gofig.Bool, "", false, "", "virtualbox.tls")
-	r.Key(gofig.String, "", "SATAController", "", "virtualbox.controllerName")
+	r.Key(gofig.String, "", "SATA", "", "virtualbox.controllerName")
 	r.Key(gofig.String, "", "/dev/disk/by-id", "", "virtualbox.diskIDPath")
 	r.Key(gofig.String,
 		"", "/sys/class/scsi_host/", "", "virtualbox.scsiHostPath")

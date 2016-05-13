@@ -10,13 +10,17 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/emccode/libstorage/api/context"
+	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 
 	// load the  driver
 	"github.com/emccode/libstorage/drivers/storage/vbox"
 	vboxx "github.com/emccode/libstorage/drivers/storage/vbox/executor"
+	_ "github.com/emccode/libstorage/drivers/storage/vbox/storage"
 )
 
 var (
@@ -42,13 +46,28 @@ func TestInstanceID(t *testing.T) {
 		t.SkipNow()
 	}
 
-	iid, err := vboxx.InstanceID()
-	assert.NoError(t, err)
+	sd, err := registry.NewStorageDriver(vbox.Name)
 	if err != nil {
-		t.Error("failed TestInstanceID")
-		t.FailNow()
+		t.Fatal(err)
 	}
-	assert.NotEqual(t, iid, "")
+
+	ctx := context.Background()
+	if err := sd.Init(ctx, gofig.New()); err != nil {
+		t.Fatal(err)
+	}
+
+	iid, err := vboxx.InstanceID()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx = ctx.WithValue(context.InstanceIDKey, iid)
+	i, err := sd.InstanceInspect(ctx, utils.NewStore())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	iid = i.InstanceID
 
 	apitests.Run(
 		t, vbox.Name, nil,

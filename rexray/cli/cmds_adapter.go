@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -57,11 +56,6 @@ func (c *CLI) initAdapterCmds() {
 				log.Fatalf("Error: %s", err)
 			}
 
-			if strings.ToUpper(c.outputFormat) != "JSON" {
-				for _, i := range instances {
-					i.InstanceID.Metadata = nil
-				}
-			}
 			if len(instances) > 0 {
 				out, err := c.marshalOutput(&instances)
 				if err != nil {

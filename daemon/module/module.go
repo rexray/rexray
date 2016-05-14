@@ -106,6 +106,7 @@ rexray:
             spec:     /etc/docker/plugins/rexray.spec
             disabled: false
 `)
+	cfg.Key(gofig.String, "", "10s", "", "rexray.module.startTimeout")
 	gofig.Register(cfg)
 }
 
@@ -344,7 +345,7 @@ func StartModule(name string) error {
 	}()
 
 	go func() {
-		time.Sleep(3 * time.Second)
+		time.Sleep(startTimeout())
 		timeout <- true
 	}()
 
@@ -406,4 +407,13 @@ func getConfiguredModules(c gofig.Config) ([]*Config, error) {
 	}
 
 	return modConfigs, nil
+}
+
+func startTimeout() time.Duration {
+	c := gofig.New()
+	dur, err := time.ParseDuration(c.GetString("rexray.module.startTimeout"))
+	if err != nil {
+		return time.Duration(10) * time.Second
+	}
+	return dur
 }

@@ -1,7 +1,6 @@
 package: github.com/emccode/rexray
 import:
   - package: github.com/emccode/libstorage
-    ref:     8d0aaaec8cc523697e6ee8de80a22585a4ab58e1
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus

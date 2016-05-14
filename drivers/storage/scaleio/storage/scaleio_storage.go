@@ -465,10 +465,7 @@ func (d *driver) VolumeAttach(
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
-	iid, iidOK := context.InstanceID(ctx)
-	if !iidOK {
-		return nil, "", goof.New("missing instanceID")
-	}
+	iid := context.MustInstanceID(ctx)
 
 	mapVolumeSdcParam := &siotypes.MapVolumeSdcParam{
 		SdcID: iid.ID,

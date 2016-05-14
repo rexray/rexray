@@ -130,9 +130,11 @@ func GetInstanceID() (*types.InstanceID, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.InstanceID{
-		ID: sg,
-	}, nil
+	iid := &types.InstanceID{Driver: Name}
+	if err := iid.MarshalMetadata(sg); err != nil {
+		return nil, err
+	}
+	return iid, nil
 }
 
 func getSdcLocalGUID() (sdcGUID string, err error) {

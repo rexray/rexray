@@ -1,28 +1,50 @@
 package: github.com/emccode/libstorage
 import:
+
+################################################################################
+##                           Framework Dependencies                           ##
+################################################################################
+
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
-    vcs:     git
   - package: github.com/akutz/gofig
   - package: github.com/akutz/gotil
   - package: github.com/akutz/goof
   - package: github.com/akutz/golf
   - package: github.com/blang/semver
     ref:     v3.0.1
-    vcs:     git
   - package: github.com/cesanta/validate-json
-  - package: github.com/stretchr/testify
+
+################################################################################
+##                         Storage Driver Dependencies                        ##
+################################################################################
+
+### ScaleIO
   - package: github.com/emccode/goscaleio
     ref:     53ea76f52205380ab52b9c1f4ad89321c286bb95
     repo:    https://github.com/emccode/goscaleio
-    vcs:     git
+
+### VirtualBox
   - package: github.com/appropriate/go-virtualboxclient
     ref:     e0978ab2ed407095400a69d5933958dd260058cd
     repo:    https://github.com/clintonskitson/go-virtualboxclient
-    vcs:     git
+
+### Isilon
+  - package: github.com/emccode/goisilon
+    ref:     f9b53f0aaadb12a26b134830142fc537f492cb13
+
+################################################################################
+##                             Build System Tools                             ##
+################################################################################
+
   - package: github.com/jteeuwen/go-bindata
     ref:     feature/md5checksum
     repo:    https://github.com/akutz/go-bindata
-  - package: github.com/emccode/goisilon
-    ref:     f9b53f0aaadb12a26b134830142fc537f492cb13
+
+
+################################################################################
+##                              Test Dependencies                             ##
+################################################################################
+
+  - package: github.com/stretchr/testify

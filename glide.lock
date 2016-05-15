@@ -1,5 +1,5 @@
-hash: a40b76f83c0a061d7e78be85db4b98d3dc59dce7d6128a33353ed30fd8c028ab
-updated: 2016-05-12T14:11:07.282703504-05:00
+hash: d6559abd3ea20b3a72bed1dd5c6ae09923450cfaf1e9c9ad78b871a8830a22d6
+updated: 2016-05-15T16:48:49.75033911-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
@@ -17,7 +17,7 @@ imports:
   - vboxwebsrv
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
-  version: 5b6e9375cbf581a9008064f7216e816b568d6daa
+  version: 37d5f827499d1c346df42f2ad7fcb7f453833a57
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
   vcs: git
@@ -33,6 +33,10 @@ imports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
+- name: github.com/emccode/goisilon
+  version: f9b53f0aaadb12a26b134830142fc537f492cb13
+  subpackages:
+  - api/v1
 - name: github.com/emccode/goscaleio
   version: 53ea76f52205380ab52b9c1f4ad89321c286bb95
   repo: https://github.com/emccode/goscaleio
@@ -83,12 +87,12 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: 96dbb961a39ddccf16860cdd355bfa639c497f23
+  version: ef00b378c73f107bf44d5c9b69875255ce89b79a
   subpackages:
   - context/ctxhttp
   - context
 - name: golang.org/x/sys
-  version: e82cb4d7dffc35bcec7bc8bf9e402377e0ecf3f4
+  version: f78f5183ff267d751d0af20bbe59158f3e4cd53e
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1

@@ -1,5 +1,5 @@
-hash: d6559abd3ea20b3a72bed1dd5c6ae09923450cfaf1e9c9ad78b871a8830a22d6
-updated: 2016-05-15T16:48:49.75033911-05:00
+hash: 16c0dc20aeee51fe83c1886d99725d468e012571bb715dd21e13d105181de208
+updated: 2016-05-15T17:00:33.967583462-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
@@ -12,7 +12,6 @@ imports:
 - name: github.com/appropriate/go-virtualboxclient
   version: e0978ab2ed407095400a69d5933958dd260058cd
   repo: https://github.com/clintonskitson/go-virtualboxclient
-  vcs: git
   subpackages:
   - vboxwebsrv
   - virtualboxclient
@@ -20,7 +19,6 @@ imports:
   version: 37d5f827499d1c346df42f2ad7fcb7f453833a57
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
-  vcs: git
 - name: github.com/BurntSushi/toml
   version: f0aeabca5a127c4078abb8c8d64298b147264b55
 - name: github.com/cesanta/ucl
@@ -40,7 +38,6 @@ imports:
 - name: github.com/emccode/goscaleio
   version: 53ea76f52205380ab52b9c1f4ad89321c286bb95
   repo: https://github.com/emccode/goscaleio
-  vcs: git
   subpackages:
   - types/v1
 - name: github.com/gorilla/context
@@ -69,7 +66,6 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: 5f376aa629ac60c3215cc368e674bd996093a01a
   repo: https://github.com/akutz/logrus
-  vcs: git
 - name: github.com/spf13/cast
   version: 27b586b42e29bec072fe7379259cc719e1289da6
 - name: github.com/spf13/jwalterweatherman

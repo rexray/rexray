@@ -1,10 +1,30 @@
 package context
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	RegisterCustomKey(testLogKeyHello, CustomLoggerKey|CustomHeaderKey)
+	os.Exit(m.Run())
+}
+
+type testLogKey int
+
+const (
+	testLogKeyHello testLogKey = iota
+)
+
+func (k testLogKey) String() string {
+	switch k {
+	case testLogKeyHello:
+		return "hello"
+	}
+	panic("unkown testLogKey")
+}
 
 const (
 	serverName  = "box-head-us"
@@ -77,4 +97,14 @@ func TestContextIDLog(t *testing.T) {
 	ctx.Info("no storage driver")
 	ctx = WithValue(ctx, DriverKey, &driver{})
 	ctx.Info("storage driver set")
+}
+
+func TestContextIDLogCustomLoggerKey(t *testing.T) {
+	ctx := WithValue(Background(), ServerKey, &server{})
+	ctx.Info("no storage driver")
+	ctx = WithValue(ctx, DriverKey, &driver{})
+	ctx.Info("storage driver set")
+
+	ctx = ctx.WithValue(testLogKeyHello, "world")
+	ctx.Info("testing custom log keys")
 }

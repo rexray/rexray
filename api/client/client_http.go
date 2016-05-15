@@ -15,6 +15,26 @@ import (
 	"github.com/emccode/libstorage/api/types"
 )
 
+type headerKey int
+
+const (
+	transactionHeaderKey headerKey = iota
+	instanceIDHeaderKey
+	localDevicesHeaderKey
+)
+
+func (k headerKey) String() string {
+	switch k {
+	case transactionHeaderKey:
+		return types.TransactionHeader
+	case instanceIDHeaderKey:
+		return types.InstanceIDHeader
+	case localDevicesHeaderKey:
+		return types.LocalDevicesHeader
+	}
+	panic("invalid header key")
+}
+
 func (c *client) httpDo(
 	ctx types.Context,
 	method, path string,
@@ -33,24 +53,69 @@ func (c *client) httpDo(
 
 	ctx = context.RequireTX(ctx)
 	tx := context.MustTransaction(ctx)
-	req.Header.Set(types.TransactionHeader, tx.String())
+	ctx = ctx.WithValue(transactionHeaderKey, tx)
 
-	if iid, iidOK := context.InstanceID(ctx); iidOK {
-		req.Header.Set(types.InstanceIDHeader, iid.String())
+	if iid, ok := context.InstanceID(ctx); ok {
+		ctx = ctx.WithValue(instanceIDHeaderKey, iid)
 	} else if iidMap, ok := ctx.Value(
 		context.AllInstanceIDsKey).(types.InstanceIDMap); ok {
-		for _, v := range iidMap {
-			req.Header.Add(types.InstanceIDHeader, v.String())
+		if len(iidMap) > 0 {
+			var iids []fmt.Stringer
+			for _, iid := range iidMap {
+				iids = append(iids, iid)
+			}
+			ctx = ctx.WithValue(instanceIDHeaderKey, iids)
 		}
-
 	}
 
-	if ld, ldOK := context.LocalDevices(ctx); ldOK {
-		req.Header.Set(types.LocalDevicesHeader, ld.String())
-	} else if ldMap, ok := ctx.Value(
+	if lds, ok := context.LocalDevices(ctx); ok {
+		ctx = ctx.WithValue(localDevicesHeaderKey, lds)
+	} else if ldsMap, ok := ctx.Value(
 		context.AllLocalDevicesKey).(types.LocalDevicesMap); ok {
-		for _, v := range ldMap {
-			req.Header.Add(types.LocalDevicesHeader, v.String())
+		if len(ldsMap) > 0 {
+			var ldsess []fmt.Stringer
+			for _, lds := range ldsMap {
+				ldsess = append(ldsess, lds)
+			}
+			ctx = ctx.WithValue(localDevicesHeaderKey, ldsess)
+		}
+	}
+
+	for key := range context.CustomHeaderKeys() {
+
+		var headerName string
+
+		switch tk := key.(type) {
+		case string:
+			headerName = tk
+		case fmt.Stringer:
+			headerName = tk.String()
+		default:
+			headerName = fmt.Sprintf("%v", key)
+		}
+
+		if headerName == "" {
+			continue
+		}
+
+		val := ctx.Value(key)
+		switch tv := val.(type) {
+		case string:
+			req.Header.Add(headerName, tv)
+		case fmt.Stringer:
+			req.Header.Add(headerName, tv.String())
+		case []string:
+			for _, sv := range tv {
+				req.Header.Add(headerName, sv)
+			}
+		case []fmt.Stringer:
+			for _, sv := range tv {
+				req.Header.Add(headerName, sv.String())
+			}
+		default:
+			if val != nil {
+				req.Header.Add(headerName, fmt.Sprintf("%v", val))
+			}
 		}
 	}
 

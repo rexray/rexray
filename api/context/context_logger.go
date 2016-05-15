@@ -13,40 +13,62 @@ const (
 )
 
 func (ctx *lsc) ctxFields() map[string]interface{} {
-	f := map[string]interface{}{}
-	for k := Key(keyLoggable - 1); k > keyEOF; k-- {
-		val := ctx.Value(k)
-		switch tv := val.(type) {
-		case types.Client:
-			if tv.OS() != nil {
-				f["osDriver"] = tv.OS().Name()
-			}
-			if tv.Storage() != nil {
-				f["storageDriver"] = tv.Storage().Name()
-			}
-			if tv.Integration() != nil {
-				f["integrationDriver"] = tv.Integration().Name()
-			}
-		case types.ContextLoggerFieldAware:
-			k, v := tv.ContextLoggerField()
-			f[k] = v
-		case types.ContextLoggerFieldsAware:
-			for k, v := range tv.ContextLoggerFields() {
-				f[k] = v
-			}
-		case string:
-			f[k.String()] = tv
-		case hasName:
-			f[k.String()] = tv.Name()
-		case hasID:
-			f[k.String()] = tv.ID()
-		case fmt.Stringer:
-			f[k.String()] = tv.String()
-		case bool, uint, uint32, uint64, int, int32, int64, float32, float64:
-			f[k.String()] = fmt.Sprintf("%v", tv)
-		}
+
+	fields := map[string]interface{}{}
+
+	for key := Key(keyLoggable - 1); key > keyEOF; key-- {
+		ctxFieldsProcessValue(key.String(), ctx.Value(key), fields)
 	}
-	return f
+
+	for key := range CustomLoggerKeys() {
+		ctxFieldsProcessValue(key, ctx.Value(key), fields)
+	}
+
+	return fields
+}
+
+func ctxFieldsProcessValue(
+	key interface{}, val interface{}, fields map[string]interface{}) {
+
+	var keyName string
+	switch tk := key.(type) {
+	case string:
+		keyName = tk
+	case fmt.Stringer:
+		keyName = tk.String()
+	default:
+		keyName = fmt.Sprintf("%v", key)
+	}
+
+	switch tv := val.(type) {
+	case types.Client:
+		if tv.OS() != nil {
+			fields["osDriver"] = tv.OS().Name()
+		}
+		if tv.Storage() != nil {
+			fields["storageDriver"] = tv.Storage().Name()
+		}
+		if tv.Integration() != nil {
+			fields["integrationDriver"] = tv.Integration().Name()
+		}
+	case types.ContextLoggerFieldAware:
+		k, v := tv.ContextLoggerField()
+		fields[k] = v
+	case types.ContextLoggerFieldsAware:
+		for k, v := range tv.ContextLoggerFields() {
+			fields[k] = v
+		}
+	case string:
+		fields[keyName] = tv
+	case hasName:
+		fields[keyName] = tv.Name()
+	case hasID:
+		fields[keyName] = tv.ID()
+	case fmt.Stringer:
+		fields[keyName] = tv.String()
+	case bool, uint, uint32, uint64, int, int32, int64, float32, float64:
+		fields[keyName] = fmt.Sprintf("%v", tv)
+	}
 }
 
 func (ctx *lsc) addkeyFieldOffsetFieldsToEntry(entry *log.Entry) {

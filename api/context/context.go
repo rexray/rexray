@@ -91,6 +91,9 @@ func WithStorageService(
 // WithValue returns a copy of parent in which the value associated with
 // key is val.
 func WithValue(ctx context.Context, key, val interface{}) types.Context {
+	if customKeyID, ok := isCustomKey(key); ok {
+		key = customKeyID
+	}
 	return newContext(context.WithValue(ctx, key, val), nil, nil)
 }
 
@@ -106,6 +109,10 @@ func Value(ctx context.Context, key interface{}) interface{} {
 }
 
 func (ctx *lsc) Value(key interface{}) interface{} {
+
+	if customKeyID, ok := isCustomKey(key); ok {
+		key = customKeyID
+	}
 
 	if key == HTTPRequestKey {
 		return ctx.req

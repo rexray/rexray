@@ -74,11 +74,7 @@ func newModule(c *module.Config) (module.Module, error) {
 		cc.Set("rexray.volume.path.cache", true)
 	}
 
-	ctx := context.Background().WithContextID(
-		"module", c.Name,
-	).WithServiceName(
-		cc.GetString("libstorage.service"),
-	)
+	ctx := context.Background()
 
 	return &mod{
 		ctx:    ctx,
@@ -236,7 +232,7 @@ func (m *mod) Address() string {
 func (m *mod) buildMux() *http.ServeMux {
 
 	mux := http.NewServeMux()
-	m.ctx.WithServiceName(m.ctx.ServiceName())
+	// m.ctx.WithServiceName(m.ctx.ServiceName())
 
 	mux.HandleFunc("/Plugin.Activate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")

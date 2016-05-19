@@ -14,6 +14,10 @@ type route struct {
 	middlewares []types.Middleware
 }
 
+func (r *route) ContextLoggerField() (string, interface{}) {
+	return "route", r.name
+}
+
 // Method specifies the method for the route.
 func (r *route) Method(method string) types.Route {
 	r.method = method

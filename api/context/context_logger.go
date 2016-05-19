@@ -2,6 +2,7 @@ package context
 
 import (
 	"fmt"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -14,7 +15,9 @@ const (
 
 func (ctx *lsc) ctxFields() map[string]interface{} {
 
-	fields := map[string]interface{}{}
+	fields := map[string]interface{}{
+		"time": time.Now().UTC().Unix(),
+	}
 
 	for key := Key(keyLoggable - 1); key > keyEOF; key-- {
 		ctxFieldsProcessValue(key.String(), ctx.Value(key), fields)

@@ -10,6 +10,7 @@ import (
 	"github.com/akutz/gotil"
 	flag "github.com/spf13/pflag"
 
+	"github.com/emccode/libstorage/api"
 	"github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -28,6 +29,7 @@ var (
 	flagLogLvl  *string
 	flagHelp    *bool
 	flagVerbose *bool
+	flagVersion *bool
 	config      gofig.Config
 )
 
@@ -37,6 +39,7 @@ func init() {
 	flagHost = cliFlags.StringP("host", "h", "", "<proto>://<addr>")
 	flagLogLvl = cliFlags.StringP("log", "l", "info", "error|warn|info|debug")
 	flagHelp = cliFlags.BoolP("help", "?", false, "print usage")
+	flagVersion = cliFlags.Bool("version", false, "print version info")
 	flagVerbose = cliFlags.BoolP("verbose", "v", false, "print verbose usage")
 	flag.CommandLine.AddFlagSet(cliFlags)
 }
@@ -47,6 +50,13 @@ func Run() {
 
 	flag.Usage = printUsage
 	flag.Parse()
+
+	if flagVersion != nil && *flagVersion {
+		_, _, thisExeAbsPath := gotil.GetThisPathParts()
+		fmt.Fprintf(os.Stdout, "Binary: %s\n", thisExeAbsPath)
+		fmt.Fprint(os.Stdout, api.Version.String())
+		os.Exit(0)
+	}
 
 	// if a config is specified then do not care about any other options
 	if flagConfig != nil && gotil.FileExists(*flagConfig) {
@@ -134,6 +144,7 @@ func Run() {
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: %s [-options] ", os.Args[0])
 	fmt.Fprintf(os.Stderr, "-c,--config <configFilePath>")
+	fmt.Fprintf(os.Stderr, "--version")
 	fmt.Fprintf(os.Stderr, "<driver>[:<service>] [<driver>[:<service>]...]")
 	fmt.Fprintf(os.Stderr, "\n\n")
 

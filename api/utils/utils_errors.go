@@ -6,6 +6,13 @@ import (
 	"github.com/emccode/libstorage/api/types"
 )
 
+// NewBadAdminTokenError returns a new ErrBadAdminToken error.
+func NewBadAdminTokenError(token string) error {
+	return &types.ErrBadAdminToken{
+		Goof: goof.WithField("token", token, "invalid admin token"),
+	}
+}
+
 // NewNotFoundError returns a new ErrNotFound error.
 func NewNotFoundError(resourceID string) error {
 	return &types.ErrNotFound{

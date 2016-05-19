@@ -18,9 +18,6 @@ type Router interface {
 	Init(config gofig.Config)
 }
 
-// NewRouteFunc returns a new route.
-type NewRouteFunc func(config gofig.Config) Route
-
 // Route defines an individual API route in the server.
 type Route interface {
 

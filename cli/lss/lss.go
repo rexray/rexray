@@ -23,14 +23,16 @@ import (
 )
 
 var (
-	cliFlags    *flag.FlagSet
-	flagHost    *string
-	flagConfig  *string
-	flagLogLvl  *string
-	flagHelp    *bool
-	flagVerbose *bool
-	flagVersion *bool
-	config      gofig.Config
+	cliFlags        *flag.FlagSet
+	flagHost        *string
+	flagConfig      *string
+	flagLogLvl      *string
+	flagHelp        *bool
+	flagVerbose     *bool
+	flagVersion     *bool
+	flagEnv         *bool
+	flagPrintConfig *bool
+	config          gofig.Config
 )
 
 func init() {
@@ -40,6 +42,8 @@ func init() {
 	flagLogLvl = cliFlags.StringP("log", "l", "info", "error|warn|info|debug")
 	flagHelp = cliFlags.BoolP("help", "?", false, "print usage")
 	flagVersion = cliFlags.Bool("version", false, "print version info")
+	flagEnv = cliFlags.Bool("env", false, "print env info")
+	flagPrintConfig = cliFlags.Bool("printConfig", false, "print config info")
 	flagVerbose = cliFlags.BoolP("verbose", "v", false, "print verbose usage")
 	flag.CommandLine.AddFlagSet(cliFlags)
 }
@@ -58,6 +62,13 @@ func Run() {
 		os.Exit(0)
 	}
 
+	if flagEnv != nil && *flagEnv {
+		for _, v := range os.Environ() {
+			fmt.Fprintf(os.Stdout, "%s\n", v)
+		}
+		os.Exit(0)
+	}
+
 	// if a config is specified then do not care about any other options
 	if flagConfig != nil && gotil.FileExists(*flagConfig) {
 
@@ -66,6 +77,16 @@ func Run() {
 		if err := config.ReadConfigFile(*flagConfig); err != nil {
 			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 			os.Exit(1)
+		}
+
+		if flagPrintConfig != nil && *flagPrintConfig {
+			jstr, err := config.ToJSON()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+				os.Exit(1)
+			}
+			fmt.Fprintln(os.Stdout, jstr)
+			os.Exit(0)
 		}
 
 		s, err, errs := server.Serve(config)
@@ -116,6 +137,16 @@ func Run() {
 		log.SetLevel(lvl)
 	}
 
+	if flagPrintConfig != nil && *flagPrintConfig {
+		jstr, err := config.ToJSON()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			os.Exit(1)
+		}
+		fmt.Fprintln(os.Stdout, jstr)
+		os.Exit(0)
+	}
+
 	driversAndServices := []string{}
 	for _, ds := range flag.Args() {
 		dsp := strings.Split(ds, ":")
@@ -142,11 +173,14 @@ func Run() {
 }
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "usage: %s [-options] ", os.Args[0])
-	fmt.Fprintf(os.Stderr, "-c,--config <configFilePath>")
-	fmt.Fprintf(os.Stderr, "--version")
-	fmt.Fprintf(os.Stderr, "<driver>[:<service>] [<driver>[:<service>]...]")
-	fmt.Fprintf(os.Stderr, "\n\n")
+	firstLine := fmt.Sprintf("usage: %s", os.Args[0])
+	fmt.Fprintf(os.Stderr, "%s\n", firstLine)
+	padFmt := fmt.Sprintf("%%%ds\n", len(firstLine))
+	fmt.Fprintf(os.Stderr, padFmt, "-c,--config <configFilePath> [--printConfig]")
+	fmt.Fprintf(os.Stderr, padFmt, "--version")
+	fmt.Fprintf(os.Stderr, padFmt, "--env")
+	fmt.Fprintf(os.Stderr, padFmt, "[-options] <driver>[:<service>] [<driver>[:<service>]...]")
+	fmt.Fprintf(os.Stderr, "\n")
 
 	fmt.Fprintln(os.Stderr, cliFlags.FlagUsages())
 	fmt.Fprintln(os.Stderr, hostUsage)

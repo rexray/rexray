@@ -1,6 +1,4 @@
-all:
-	$(MAKE) deps
-	$(MAKE) build
+all: build
 
 ################################################################################
 ##                                 CONSTANTS                                  ##
@@ -359,21 +357,32 @@ func init() {
 }
 
 endef
+export API_GENERATED_CONTENT
 
 API_GENERATED_SRC := ./api/api_generated.go
 $(API_GENERATED_SRC):
-	$(file >$@,$(API_GENERATED_CONTENT))
-GO_PHONY += $(API_GENERATED_SRC)
-
-API_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api.a
-$(API_A): $(API_GENERATED_SRC)
-
-version:
 	@echo SemVer: $(V_SEMVER)
 	@echo Binary: $(V_OS_ARCH)
 	@echo Branch: $(V_BRANCH)
 	@echo Commit: $(V_SHA_LONG)
 	@echo Formed: $(V_BUILD_DATE)
+	@echo generating $(API_GENERATED_SRC)
+	@echo "$$API_GENERATED_CONTENT" > $@
+
+$(API_GENERATED_SRC)-clean:
+	rm -f $(API_GENERATED_SRC)
+GO_CLEAN += $(API_GENERATED_SRC)-clean
+GO_PHONE += $(API_GENERATED_SRC)-clean
+
+API_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api.a
+$(API_A): $(API_GENERATED_SRC)
+
+version:
+	$(info SemVer: $(V_SEMVER))
+	$(info Binary: $(V_OS_ARCH))
+	$(info Branch: $(V_BRANCH))
+	$(info Commit: $(V_SHA_LONG))
+	$(info Formed: $(V_BUILD_DATE))
 
 GO_PHONY += version
 

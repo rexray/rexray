@@ -17,6 +17,7 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 	apicnfg "github.com/emccode/libstorage/api/utils/config"
 	"github.com/emccode/libstorage/api/utils/semaphore"
 )
@@ -113,11 +114,21 @@ func newServer(config gofig.Config) (*server, error) {
 
 	s.ctx = context.Background().WithValue(context.ServerKey, serverName)
 
-	// always update the server context's log level
 	if lvl, err := log.ParseLevel(
 		config.GetString(types.ConfigLogLevel)); err == nil {
 		context.SetLogLevel(s.ctx, lvl)
 	}
+
+	logFields := log.Fields{}
+	logConfig, err := utils.ParseLoggingConfig(
+		config, logFields, "libstorage.server")
+	if err != nil {
+		return nil, err
+	}
+
+	// always update the server context's log level
+	context.SetLogLevel(s.ctx, logConfig.Level)
+	s.ctx.WithFields(logFields).Info("configured logging")
 
 	s.ctx.Info("initializing server")
 
@@ -131,14 +142,12 @@ func newServer(config gofig.Config) (*server, error) {
 	}
 	s.ctx.Info("initialized services")
 
-	logHTTPReq := config.GetBool(types.ConfigLogHTTPRequests)
-	logHTTPRes := config.GetBool(types.ConfigLogHTTPResponses)
-	if logHTTPReq || logHTTPRes {
+	if logConfig.HTTPRequests || logConfig.HTTPResponses {
 		s.logHTTPEnabled = true
-		s.logHTTPRequests = logHTTPReq
-		s.logHTTPResponses = logHTTPRes
-		s.stdOut = getLogIO(types.ConfigLogStdout, config)
-		s.stdErr = getLogIO(types.ConfigLogStderr, config)
+		s.logHTTPRequests = logConfig.HTTPRequests
+		s.logHTTPResponses = logConfig.HTTPResponses
+		s.stdOut = getLogIO(logConfig.Stdout, types.ConfigLogStdout)
+		s.stdErr = getLogIO(logConfig.Stderr, types.ConfigLogStderr)
 	}
 
 	s.initGlobalMiddleware()

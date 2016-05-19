@@ -48,7 +48,8 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
-	tlsConfig, err := utils.ParseTLSConfig(config, logFields)
+	tlsConfig, err := utils.ParseTLSConfig(
+		config, logFields, "libstorage.client")
 	if err != nil {
 		return err
 	}

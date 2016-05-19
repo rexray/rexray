@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	"github.com/gorilla/mux"
@@ -115,7 +114,7 @@ func (s *server) initEndpoints(ctx types.Context) error {
 		}
 
 		tlsConfig, err :=
-			utils.ParseTLSConfig(s.config.Scope(endpoint), logFields)
+			utils.ParseTLSConfig(s.config.Scope(endpoint), logFields, endpoint)
 		if err != nil {
 			return err
 		}
@@ -279,9 +278,9 @@ func (s *HTTPServer) Context() types.Context {
 	return s.ctx
 }
 
-func getLogIO(propName string, config gofig.Config) io.WriteCloser {
+func getLogIO(path, propName string) io.WriteCloser {
 
-	if path := config.GetString(propName); path != "" {
+	if path != "" {
 		logio, err := os.OpenFile(
 			path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {

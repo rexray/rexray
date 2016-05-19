@@ -49,6 +49,7 @@ func init() {
 		r.Key(keyType, "", defaultVal, description, args...)
 	}
 
+	rk(gofig.String, "unix", "", types.ConfigServerAutoEndpointMode)
 	rk(gofig.String, "", "", types.ConfigHost)
 	rk(gofig.String, "", "", types.ConfigService)
 	rk(gofig.String, runtime.GOOS, "", types.ConfigOSDriver)

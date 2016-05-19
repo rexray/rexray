@@ -43,19 +43,41 @@ func init() {
 
 // Run the server.
 func Run() {
+	server.CloseOnAbort()
+
 	flag.Usage = printUsage
 	flag.Parse()
+
+	// if a config is specified then do not care about any other options
+	if flagConfig != nil && gotil.FileExists(*flagConfig) {
+
+		config = gofig.New()
+
+		if err := config.ReadConfigFile(*flagConfig); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			os.Exit(1)
+		}
+
+		s, err, errs := server.Serve(config)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			os.Exit(1)
+		}
+
+		err = <-errs
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			os.Exit(1)
+		}
+
+		s.Close()
+		os.Exit(0)
+	}
 
 	cfg, err := apiconfig.NewConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)
-	}
-	if flagConfig != nil && gotil.FileExists(*flagConfig) {
-		if err := cfg.ReadConfigFile(*flagConfig); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
-			os.Exit(1)
-		}
 	}
 
 	config = cfg
@@ -111,6 +133,7 @@ func Run() {
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: %s [-options] ", os.Args[0])
+	fmt.Fprintf(os.Stderr, "-c,--config <configFilePath>")
 	fmt.Fprintf(os.Stderr, "<driver>[:<service>] [<driver>[:<service>]...]")
 	fmt.Fprintf(os.Stderr, "\n\n")
 

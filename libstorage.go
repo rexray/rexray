@@ -36,7 +36,6 @@ package libstorage
 import (
 	"bytes"
 	"fmt"
-	"io"
 
 	"github.com/akutz/gofig"
 
@@ -74,7 +73,7 @@ If the config parameter is nil a default instance is created. The
 libStorage service is served at the address specified by the configuration
 property libstorage.host.
 */
-func Serve(config gofig.Config) (io.Closer, error, <-chan error) {
+func Serve(config gofig.Config) (types.Server, error, <-chan error) {
 	return server.Serve(config)
 }
 
@@ -96,13 +95,14 @@ func Dial(config gofig.Config) (types.Client, error) {
 // While a new server may be launched, it's still up to the caller to provide
 // a config instance with the correct properties to specify service
 // information for a libStorage server.
-func New(config gofig.Config) (types.Client, io.Closer, error, <-chan error) {
+func New(
+	config gofig.Config) (types.Client, types.Server, error, <-chan error) {
 
 	var (
 		h       = config.GetString(types.ConfigHost)
 		em      = config.GetBool(types.ConfigEmbedded)
 		c       types.Client
-		s       io.Closer
+		s       types.Server
 		err     error
 		errs    <-chan error
 		serving bool

@@ -1,5 +1,5 @@
 hash: 16c0dc20aeee51fe83c1886d99725d468e012571bb715dd21e13d105181de208
-updated: 2016-05-15T17:00:33.967583462-05:00
+updated: 2016-05-18T20:12:48.384193609-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
@@ -16,7 +16,7 @@ imports:
   - vboxwebsrv
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
-  version: 37d5f827499d1c346df42f2ad7fcb7f453833a57
+  version: 68c9ffa338c6d71d29c643a61862909d2db75b28
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
 - name: github.com/BurntSushi/toml
@@ -83,12 +83,12 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: ef00b378c73f107bf44d5c9b69875255ce89b79a
+  version: 8aacbecd63e105fa5f07afbd49472fd3e17a19d1
   subpackages:
   - context/ctxhttp
   - context
 - name: golang.org/x/sys
-  version: f78f5183ff267d751d0af20bbe59158f3e4cd53e
+  version: d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1

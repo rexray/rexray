@@ -30,6 +30,8 @@ import (
 
 	"github.com/akutz/gofig"
 
+	"github.com/emccode/libstorage/api/types"
+
 	// imported to load routers
 	_ "github.com/emccode/libstorage/imports/routers"
 
@@ -58,7 +60,7 @@ func Run(host string, tls bool, driversAndServices ...string) error {
 // Kill signal is received by the owner process or the server returns an error
 // via its error channel.
 func Start(host string, tls bool, driversAndServices ...string) (
-	gofig.Config, io.Closer, error, <-chan error) {
+	gofig.Config, types.Server, error, <-chan error) {
 
 	if runHost := os.Getenv("LIBSTORAGE_RUN_HOST"); runHost != "" {
 		host = runHost
@@ -86,6 +88,6 @@ func RunWithConfig(config gofig.Config) error {
 // StartWithConfig starts the server by specifying a configuration object and
 // returns a channel when errors occur runs until a Kill signal is received
 // by the owner process or the server returns an error via its error channel.
-func StartWithConfig(config gofig.Config) (io.Closer, error, <-chan error) {
+func StartWithConfig(config gofig.Config) (types.Server, error, <-chan error) {
 	return startWithConfig(config)
 }

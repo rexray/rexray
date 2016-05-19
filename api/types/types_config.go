@@ -58,6 +58,9 @@ const (
 	// ConfigServices is a config key.
 	ConfigServices = ConfigServer + ".services"
 
+	// ConfigServerAutoEndpointMode is a config key.
+	ConfigServerAutoEndpointMode = ConfigServer + ".autoEndpointMode"
+
 	// ConfigEndpoints is a config key.
 	ConfigEndpoints = ConfigServer + ".endpoints"
 

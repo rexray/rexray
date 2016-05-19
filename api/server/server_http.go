@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
@@ -21,11 +23,49 @@ import (
 	"github.com/emccode/libstorage/api/utils"
 )
 
+const defaultEndpointConfig = `
+libstorage:
+  server:
+    endpoints:
+      localhost:
+        address: %s
+`
+
+func (s *server) initDefaultEndpoint() error {
+
+	var endpointConfig string
+
+	if host := s.config.GetString(types.ConfigHost); host != "" {
+
+		s.ctx.WithField("host", host).Info("initializing default endpoint")
+		endpointConfig = fmt.Sprintf(defaultEndpointConfig, host)
+
+	} else {
+
+		aem := s.config.GetString(types.ConfigServerAutoEndpointMode)
+		switch strings.ToLower(aem) {
+		case "tcp":
+			aem = "tcp"
+		default:
+			aem = "unix"
+		}
+		s.ctx.WithField("autoEndpointMode", aem).Info(
+			"initializing default endpoint")
+		endpointConfig = fmt.Sprintf(defaultEndpointConfig, aem)
+
+	}
+
+	return s.config.ReadConfig(bytes.NewReader([]byte(endpointConfig)))
+}
+
 func (s *server) initEndpoints(ctx types.Context) error {
 
 	endpointsObj := s.config.Get(types.ConfigEndpoints)
 	if endpointsObj == nil {
-		return goof.New("no endpoints defined")
+		if err := s.initDefaultEndpoint(); err != nil {
+			return goof.WithError("no endpoints defined", err)
+		}
+		endpointsObj = s.config.Get(types.ConfigEndpoints)
 	}
 
 	endpoints, ok := endpointsObj.(map[string]interface{})
@@ -33,17 +73,36 @@ func (s *server) initEndpoints(ctx types.Context) error {
 		return goof.New("endpoints invalid type")
 	}
 
+	if len(endpoints) == 0 {
+		if err := s.initDefaultEndpoint(); err != nil {
+			return err
+		}
+	}
+
 	for endpointName := range endpoints {
 
 		endpoint := fmt.Sprintf("%s.%s", types.ConfigEndpoints, endpointName)
 		address := fmt.Sprintf("%s.address", endpoint)
-		s.ctx.WithFields(log.Fields{
-			"endpoint": endpoint, "address": address}).Debug("endpoing info")
-
 		laddr := s.config.GetString(address)
 		if laddr == "" {
 			return goof.WithField("endpoint", endpoint, "missing address")
 		}
+
+		switch laddr {
+		case "tcp":
+			laddr = fmt.Sprintf("tcp://127.0.0.1:%d", gotil.RandomTCPPort())
+			s.ctx.WithField("endpoint", endpoint).Info(
+				"initializing auto tcp endpoint")
+		case "unix":
+			laddr = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+			s.ctx.WithField("endpoint", endpoint).Info(
+				"initializing auto unix endpoint")
+		}
+
+		s.ctx.WithFields(log.Fields{
+			"endpoint": endpoint, "address": laddr}).Debug("endpoint info")
+
+		s.addrs = append(s.addrs, laddr)
 
 		proto, addr, err := gotil.ParseAddress(laddr)
 		if err != nil {

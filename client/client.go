@@ -1,6 +1,7 @@
 package client
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
 	"github.com/emccode/libstorage/api/context"
@@ -43,6 +44,12 @@ func New(config gofig.Config) (types.Client, error) {
 
 	c = &client{ctx: context.Background(), config: config}
 	c.ctx = c.ctx.WithValue(context.ClientKey, c)
+
+	// always update the server context's log level
+	if lvl, err := log.ParseLevel(
+		config.GetString(types.ConfigLogLevel)); err == nil {
+		context.SetLogLevel(c.ctx, lvl)
+	}
 
 	if config.IsSet(types.ConfigService) {
 		c.ctx = c.ctx.WithValue(

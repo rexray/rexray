@@ -27,7 +27,7 @@ var (
 )
 
 func start(host string, tls bool, driversAndServices ...string) (
-	gofig.Config, io.Closer, error, <-chan error) {
+	gofig.Config, types.Server, error, <-chan error) {
 
 	if host == "" {
 		portLock.Lock()
@@ -51,7 +51,7 @@ func start(host string, tls bool, driversAndServices ...string) (
 	return config, server, nil, errs
 }
 
-func startWithConfig(config gofig.Config) (io.Closer, error, <-chan error) {
+func startWithConfig(config gofig.Config) (types.Server, error, <-chan error) {
 	server, err, errs := serve(config)
 	if err != nil {
 		return nil, err, nil
@@ -112,6 +112,13 @@ func newServer(config gofig.Config) (*server, error) {
 	}
 
 	s.ctx = context.Background().WithValue(context.ServerKey, serverName)
+
+	// always update the server context's log level
+	if lvl, err := log.ParseLevel(
+		config.GetString(types.ConfigLogLevel)); err == nil {
+		context.SetLogLevel(s.ctx, lvl)
+	}
+
 	s.ctx.Info("initializing server")
 
 	if err := s.initEndpoints(s.ctx); err != nil {
@@ -149,7 +156,7 @@ func newServer(config gofig.Config) (*server, error) {
 // returns a channel on which errors are received. Reading this channel is
 // also the prescribed manner for clients wishing to block until the server is
 // shutdown as the error channel will be closed when the server is stopped.
-func Serve(config gofig.Config) (io.Closer, error, <-chan error) {
+func Serve(config gofig.Config) (types.Server, error, <-chan error) {
 	return serve(config)
 }
 func serve(config gofig.Config) (*server, error, <-chan error) {
@@ -196,6 +203,16 @@ func serve(config gofig.Config) (*server, error, <-chan error) {
 
 	s.ctx.Info("server started")
 	return s, nil, errs
+}
+
+// Name returns the name of the server.
+func (s *server) Name() string {
+	return s.name
+}
+
+// Addrs returns the server's configured endpoint addresses.
+func (s *server) Addrs() []string {
+	return s.addrs
 }
 
 // Close closes servers and thus stop receiving requests

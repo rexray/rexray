@@ -6,5 +6,3 @@ var (
 	// Version of the current REST API
 	Version *types.VersionInfo
 )
-
-//go:generate make -C ../ ./api/api_generated.go

@@ -48,6 +48,8 @@ func (h *errorHandler) Handle(
 
 func getStatus(err error) int {
 	switch err.(type) {
+	case *types.ErrBadAdminToken:
+		return http.StatusUnauthorized
 	case *types.ErrNotFound:
 		return http.StatusNotFound
 	default:

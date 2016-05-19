@@ -1,4 +1,4 @@
-package version
+package help
 
 import (
 	"github.com/akutz/gofig"
@@ -13,14 +13,16 @@ func init() {
 }
 
 type router struct {
+	config gofig.Config
 	routes []types.Route
 }
 
 func (r *router) Name() string {
-	return "version-router"
+	return "help-router"
 }
 
 func (r *router) Init(config gofig.Config) {
+	r.config = config
 	r.initRoutes()
 }
 
@@ -32,6 +34,9 @@ func (r *router) Routes() []types.Route {
 func (r *router) initRoutes() {
 	r.routes = []types.Route{
 		// GET
-		httputils.NewGetRoute("version", "/version", r.versionInspect),
+		httputils.NewGetRoute("version", "/help", r.helpInspect),
+		httputils.NewGetRoute("version", "/help/config", r.configInspect),
+		httputils.NewGetRoute("version", "/help/env", r.envInspect),
+		httputils.NewGetRoute("version", "/help/version", r.versionInspect),
 	}
 }

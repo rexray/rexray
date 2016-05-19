@@ -30,6 +30,9 @@ const (
 	// value that maps all drivers to their instance IDs.
 	AllLocalDevicesKey
 
+	// AdminTokenKey is the key for the server's admin token.
+	AdminTokenKey
+
 	// keyLoggable is the minimum value from which the succeeding keys should
 	// be checked when logging.
 	keyLoggable

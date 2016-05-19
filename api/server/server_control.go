@@ -14,6 +14,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 
+	"github.com/emccode/libstorage/api"
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
@@ -67,6 +68,7 @@ func startWithConfig(config gofig.Config) (types.Server, error, <-chan error) {
 
 type server struct {
 	name         string
+	adminToken   string
 	ctx          types.Context
 	addrs        []string
 	config       gofig.Config
@@ -101,18 +103,37 @@ func newServer(config gofig.Config) (*server, error) {
 		}
 	}
 
+	adminTokenUUID, err := types.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+
 	serverName := randomServerName()
 	config = config.Scope(types.ConfigServer)
 
 	s := &server{
 		name:         serverName,
+		adminToken:   adminTokenUUID.String(),
 		config:       config,
 		closeSignal:  make(chan int),
 		closedSignal: make(chan int),
 		closeOnce:    &sync.Once{},
 	}
 
+	fmt.Fprintf(
+		os.Stdout,
+		serverStartupHeader,
+		s.name,
+		s.adminToken,
+		api.Version.SemVer,
+		api.Version.Arch,
+		api.Version.Branch,
+		api.Version.ShaLong,
+		api.Version.BuildTimestamp.Format(time.RFC1123),
+	)
+
 	s.ctx = context.Background().WithValue(context.ServerKey, serverName)
+	s.ctx = s.ctx.WithValue(context.AdminTokenKey, s.adminToken)
 
 	if lvl, err := log.ParseLevel(
 		config.GetString(types.ConfigLogLevel)); err == nil {

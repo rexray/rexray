@@ -1,5 +1,5 @@
 hash: 16c0dc20aeee51fe83c1886d99725d468e012571bb715dd21e13d105181de208
-updated: 2016-05-18T20:12:48.384193609-05:00
+updated: 2016-05-19T00:48:53.231195713-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
@@ -83,7 +83,7 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: 8aacbecd63e105fa5f07afbd49472fd3e17a19d1
+  version: 5916dcb167ed985a5b9e6871fbfd74848a4c170b
   subpackages:
   - context/ctxhttp
   - context

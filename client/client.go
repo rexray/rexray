@@ -7,6 +7,7 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 	apicnfg "github.com/emccode/libstorage/api/utils/config"
 
 	// load the local imports
@@ -34,7 +35,6 @@ func New(config gofig.Config) (types.Client, error) {
 	}
 
 	config = config.Scope(types.ConfigClient)
-
 	types.BackCompat(config)
 
 	var (
@@ -45,11 +45,16 @@ func New(config gofig.Config) (types.Client, error) {
 	c = &client{ctx: context.Background(), config: config}
 	c.ctx = c.ctx.WithValue(context.ClientKey, c)
 
-	// always update the server context's log level
-	if lvl, err := log.ParseLevel(
-		config.GetString(types.ConfigLogLevel)); err == nil {
-		context.SetLogLevel(c.ctx, lvl)
+	logFields := log.Fields{}
+	logConfig, err := utils.ParseLoggingConfig(
+		config, logFields, "libstorage.client")
+	if err != nil {
+		return nil, err
 	}
+
+	// always update the server context's log level
+	context.SetLogLevel(c.ctx, logConfig.Level)
+	c.ctx.WithFields(logFields).Info("configured logging")
 
 	if config.IsSet(types.ConfigService) {
 		c.ctx = c.ctx.WithValue(

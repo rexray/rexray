@@ -16,7 +16,9 @@ import (
 
 // ParseTLSConfig returns a new TLS configuration.
 func ParseTLSConfig(
-	config gofig.Config, fields log.Fields) (*tls.Config, error) {
+	config gofig.Config,
+	fields log.Fields,
+	roots ...string) (*tls.Config, error) {
 
 	f := func(k string, v interface{}) {
 		if fields == nil {
@@ -25,31 +27,31 @@ func ParseTLSConfig(
 		fields[k] = v
 	}
 
-	if !config.IsSet(types.ConfigTLS) {
+	if !isSet(config, types.ConfigTLS, roots...) {
 		return nil, nil
 	}
 
-	if config.IsSet(types.ConfigTLSDisabled) {
-		tlsDisabled := config.GetBool(types.ConfigTLSDisabled)
+	if isSet(config, types.ConfigTLSDisabled, roots...) {
+		tlsDisabled := getBool(config, types.ConfigTLSDisabled, roots...)
 		if tlsDisabled {
 			f(types.ConfigTLSDisabled, true)
 			return nil, nil
 		}
 	}
 
-	if !config.IsSet(types.ConfigTLSKeyFile) {
+	if !isSet(config, types.ConfigTLSKeyFile, roots...) {
 		return nil, goof.New("keyFile required")
 	}
-	keyFile := config.GetString(types.ConfigTLSKeyFile)
+	keyFile := getString(config, types.ConfigTLSKeyFile, roots...)
 	if !gotil.FileExists(keyFile) {
 		return nil, goof.WithField("path", keyFile, "invalid key file")
 	}
 	f(types.ConfigTLSKeyFile, keyFile)
 
-	if !config.IsSet(types.ConfigTLSCertFile) {
+	if !isSet(config, types.ConfigTLSCertFile, roots...) {
 		return nil, goof.New("certFile required")
 	}
-	certFile := config.GetString(types.ConfigTLSCertFile)
+	certFile := getString(config, types.ConfigTLSCertFile, roots...)
 	if !gotil.FileExists(certFile) {
 		return nil, goof.WithField("path", certFile, "invalid cert file")
 	}
@@ -62,22 +64,24 @@ func ParseTLSConfig(
 
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
 
-	if config.IsSet(types.ConfigTLSServerName) {
-		serverName := config.GetString(types.ConfigTLSServerName)
+	if isSet(config, types.ConfigTLSServerName, roots...) {
+		serverName := getString(config, types.ConfigTLSServerName, roots...)
 		tlsConfig.ServerName = serverName
 		f(types.ConfigTLSServerName, serverName)
 	}
 
-	if config.IsSet(types.ConfigTLSClientCertRequired) {
-		clientCertRequired := config.GetBool(types.ConfigTLSClientCertRequired)
+	if isSet(config, types.ConfigTLSClientCertRequired, roots...) {
+		clientCertRequired := getBool(
+			config, types.ConfigTLSClientCertRequired, roots...)
 		if clientCertRequired {
 			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
 		}
 		f(types.ConfigTLSClientCertRequired, clientCertRequired)
 	}
 
-	if config.IsSet(types.ConfigTLSTrustedCertsFile) {
-		trustedCertsFile := config.GetString(types.ConfigTLSTrustedCertsFile)
+	if isSet(config, types.ConfigTLSTrustedCertsFile, roots...) {
+		trustedCertsFile := getString(
+			config, types.ConfigTLSTrustedCertsFile, roots...)
 
 		if !gotil.FileExists(trustedCertsFile) {
 			return nil, goof.WithField(

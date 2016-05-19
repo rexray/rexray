@@ -31,20 +31,23 @@ const (
 	// ConfigIntegrationDriver is a config key.
 	ConfigIntegrationDriver = ConfigRoot + ".integration.driver"
 
+	// ConfigLogging is a config key.
+	ConfigLogging = ConfigRoot + ".logging"
+
 	// ConfigLogLevel is a config key.
-	ConfigLogLevel = ConfigRoot + ".logging.level"
+	ConfigLogLevel = ConfigLogging + ".level"
 
 	// ConfigLogStdout is a config key.
-	ConfigLogStdout = ConfigRoot + ".logging.stdout"
+	ConfigLogStdout = ConfigLogging + ".stdout"
 
 	// ConfigLogStderr is a config key.
-	ConfigLogStderr = ConfigRoot + ".logging.stderr"
+	ConfigLogStderr = ConfigLogging + ".stderr"
 
 	// ConfigLogHTTPRequests is a config key.
-	ConfigLogHTTPRequests = ConfigRoot + ".logging.httpRequests"
+	ConfigLogHTTPRequests = ConfigLogging + ".httpRequests"
 
 	// ConfigLogHTTPResponses is a config key.
-	ConfigLogHTTPResponses = ConfigRoot + ".logging.httpResponses"
+	ConfigLogHTTPResponses = ConfigLogging + ".httpResponses"
 
 	// ConfigHTTPDisableKeepAlive is a config key.
 	ConfigHTTPDisableKeepAlive = ConfigRoot + ".http.disableKeepAlive"

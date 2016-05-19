@@ -30,6 +30,7 @@ func (r *router) root(
 		fmt.Sprintf("%s/services", rootURL),
 		fmt.Sprintf("%s/snapshots", rootURL),
 		fmt.Sprintf("%s/tasks", rootURL),
+		fmt.Sprintf("%s/version", rootURL),
 		fmt.Sprintf("%s/volumes", rootURL),
 	}
 

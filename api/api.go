@@ -1,13 +1,10 @@
 package api
 
-import (
-	"github.com/blang/semver"
-)
+import "github.com/emccode/libstorage/api/types"
 
 var (
 	// Version of the current REST API
-	Version = semver.MustParse("1.0.0")
-
-	// MinVersion represents Minimun REST API version supported
-	MinVersion = semver.MustParse("1.0.0")
+	Version *types.VersionInfo
 )
+
+//go:generate make -C ../ ./api/api_generated.go

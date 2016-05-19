@@ -18,7 +18,7 @@ var TestRoot = func(config gofig.Config, client types.Client, t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, len(reply), 5)
+	assert.Equal(t, len(reply), 6)
 }
 
 // InstanceIDTest is the test harness for testing the instance ID.

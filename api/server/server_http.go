@@ -170,7 +170,7 @@ func (s *server) makeHTTPHandler(
 			}
 		}
 
-		ctx.Debug("http request")
+		ctx.Info("http request")
 
 		vars := mux.Vars(req)
 		if vars == nil {

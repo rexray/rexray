@@ -1,0 +1,30 @@
+h2 {
+    padding-top: 55px;
+    margin-top: -40px;
+}
+
+h2:not(:first-of-type)::after {
+    content: " ";
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+h3 {
+    padding-top: 50px;
+    margin-top: -40px;
+}
+h3::after{
+    content: " ";
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+h4 {
+    padding-top: 45px;
+    margin-top: -40px;
+}
+h4::after {
+    content: " ";
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}

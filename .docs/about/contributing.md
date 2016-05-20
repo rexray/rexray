@@ -1,10 +1,10 @@
-# Contributing to LibStorage
+# Contributing to libStorage
 
-An introduction to contributing to the LibStorage project
+An introduction to contributing to the libStorage project
 
 ---
 
-The LibStorage project welcomes, and depends, on contributions from developers
+The libStorage project welcomes, and depends, on contributions from developers
 and users in the open source community. Contributions can be made in a number of
 ways, a few examples are:
 
@@ -17,7 +17,7 @@ ways, a few examples are:
 Please include as much detail as you can. This includes:
 
   * The OS type and version
-  * The LibStorage commit
+  * The libStorage commit
   * The storage system in question
   * A set of logs with debug-logging enabled that show the problem
 

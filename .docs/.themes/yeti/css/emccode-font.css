@@ -29,7 +29,7 @@
     content: " EMC{code}";
 }
 
-.icon-rexray-logo:before {
-    content: "r";
+.icon-libstorage-logo:before {
+    content: "l";
     vertical-align: middle;
 }

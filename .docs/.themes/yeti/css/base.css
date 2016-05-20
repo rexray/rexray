@@ -3,22 +3,38 @@ div.injected {
     display: none !important;
 }
 
+div.admonition.note {
+    background-color: rgba(254, 241, 134, 0.5);
+    padding: 10px 20px 10px 20px;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+div.admonition.note .admonition-title {
+    color: black;
+    text-transform: uppercase;
+    font-weight: bolder;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, .15);
+}
+
 li.divider {
     background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-h1#rex-ray::before {
-    content: "r";
-    display: block;
-    font-family: "emccode" !important;
-    height: 100px;
-    font-size: 100px;
+h1#libstorage::before {
+    background-image: url('../img/libstorage.svg');
+    background-size: 128px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: content-box;
+    height: 128px;
     margin-top: -25px;
-    text-shadow: 2px 2px 3px rgba(0, 0, 0, .25);
 }
 
 @media (max-width: 768px) {
-    h1#rex-ray::before {
+    h1#libstorage::before {
         padding-top: 10px;
     }
 }
@@ -30,7 +46,7 @@ div.col-md-9 h1:first-of-type {
     text-shadow: 2px 2px 3px rgba(0, 0, 0, .25);
 }
 
-div.col-md-9 p:first-of-type {
+div.col-md-9 > p:first-of-type {
     text-align: center;
     text-shadow: 2px 2px 3px rgba(0, 0, 0, .15);
 }
@@ -124,6 +140,11 @@ div.source-links {
     padding-bottom: 3px;
     padding-left: 30px;
     font-size: 90%;
+}
+
+.bs-sidebar .nav .nav .nav > li > a {
+    font-size: 80%;
+    padding-left: 40px;
 }
 
 /* Show and affix the side nav when space allows it */

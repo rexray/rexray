@@ -1,15 +1,23 @@
-site_name: LibStorage
+site_name: libStorage
 site_url: https://github.com/emccode/libstorage
 repo_url: https://github.com/emccode/libstorage.git
 docs_dir: .docs
 site_dir: .site
 theme_dir: .docs/.themes/yeti
-#site_favicon: favicon.png
-
+site_favicon: favicon.ico
+extra_css:
+    - css/emccode-font.css
+    - css/hX.css
 pages:
 - Home: index.md
 - User Guide:
-     - Model: user-guide/model.md
+    - Configuration: user-guide/config.md
+    - Storage Providers: user-guide/storage-providers.md
+    - Schedulers: user-guide/schedulers.md
+- Developers Guide:
+    - Project Guidelines: dev-guide/project-guidelines.md
+    - Build Reference: dev-guide/build-reference.md
+    - Release Process: dev-guide/release-process.md
 - About:
     - Contributing: about/contributing.md
     - License: about/license.md

@@ -13,6 +13,7 @@
 
             <!-- Main title -->
             <a class="navbar-brand" href="{{ homepage_url }}">
+                <i class="fa icon-libstorage-logo"></i>
                 {{ site_name }}
             </a>
         </div>
@@ -27,16 +28,36 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ nav_item.title }} <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     {% for nav_item in nav_item.children %}
-                        {% if nav_item.title == "Amazon EC2" or
-                              nav_item.title == "Docker" %}
-                        <li role="separator" class="divider"></li>
-                        {% endif %}
                         <li {% if nav_item.active %}class="active"{% endif %}>
                             <a href="{{ nav_item.url }}">{{ nav_item.title }}</a>
                         </li>
                     {% endfor %}
                     </ul>
                 </li>
+                <!--
+                smart menus
+                <li><a href="#">{{ nav_item.title }} <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    {% for nav_item in nav_item.children %}
+                    {% if nav_item.children %}
+                        <li><a href="#">{{ nav_item.title }} <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                {% for nav_item in nav_item.children %}
+                                <li {% if nav_item.active %}class="active"{% endif %}>
+                                    <a href="{{ nav_item.url }}">{{ nav_item.title }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li {% if nav_item.active %}class="active"{% endif %}>
+                            <a href="{{ nav_item.url }}">{{ nav_item.title }}</a>
+                        </li>
+                    {% endif %}
+                    {% endfor %}
+                    </ul>
+                </li>
+                -->
             {% else %}
                 <li {% if nav_item.active %}class="active"{% endif %}>
                     <a href="{{ nav_item.url }}">{{ nav_item.title }}</a>

@@ -12,8 +12,6 @@ import:
   - package: github.com/akutz/gotil
   - package: github.com/akutz/goof
   - package: github.com/akutz/golf
-  - package: github.com/blang/semver
-    ref:     v3.0.1
   - package: github.com/cesanta/validate-json
 
 ################################################################################

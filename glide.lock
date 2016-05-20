@@ -1,8 +1,8 @@
-hash: 16c0dc20aeee51fe83c1886d99725d468e012571bb715dd21e13d105181de208
-updated: 2016-05-19T00:48:53.231195713-05:00
+hash: 0b1c2794d82975d611e966e8102fd95d1bee1ff1b81e2d592f26026e41c2d65e
+updated: 2016-05-20T14:35:29.682213872-05:00
 imports:
 - name: github.com/akutz/gofig
-  version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
+  version: 021bbefbfe234a3b72dc9137847483f5b997cbd0
 - name: github.com/akutz/golf
   version: e26bdd995cb746e431d42ea303ebe7622389d29f
 - name: github.com/akutz/goof
@@ -16,9 +16,7 @@ imports:
   - vboxwebsrv
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
-  version: 68c9ffa338c6d71d29c643a61862909d2db75b28
-- name: github.com/blang/semver
-  version: 31b736133b98f26d5e078ec9eb591666edfd091f
+  version: df81827fdd59d8b4fb93d8910b286ab7a3919520
 - name: github.com/BurntSushi/toml
   version: f0aeabca5a127c4078abb8c8d64298b147264b55
 - name: github.com/cesanta/ucl
@@ -83,7 +81,7 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: 5916dcb167ed985a5b9e6871fbfd74848a4c170b
+  version: 8a52c78636f6b7be1b1e5cb58b01a85f1e082659
   subpackages:
   - context/ctxhttp
   - context

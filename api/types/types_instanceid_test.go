@@ -128,3 +128,9 @@ func TestInstanceIDMetadata(t *testing.T) {
 	expectedBuf, _ := json.Marshal(newMetadata())
 	assert.Equal(t, string(expectedBuf), string(actualBuf))
 }
+
+func TestInstanceIDUnmarshalText(t *testing.T) {
+	iid := &InstanceID{}
+	err := iid.UnmarshalText([]byte("scaleio="))
+	assert.NoError(t, err)
+}

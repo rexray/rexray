@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/emccode/libstorage/api/context"
@@ -28,10 +27,6 @@ func (h *localDevicesHandler) Name() string {
 func (h *localDevicesHandler) Handler(m types.APIFunc) types.APIFunc {
 	return (&localDevicesHandler{m}).Handle
 }
-
-var (
-	locDevRX = regexp.MustCompile(`^(.+?)=((?:(?:.+?)=(?:.+?)(?:,\s*)?)+)$`)
-)
 
 // Handle is the type's Handler function.
 func (h *localDevicesHandler) Handle(

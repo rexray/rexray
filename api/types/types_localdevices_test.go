@@ -30,6 +30,13 @@ func TestLocalDevicesMarshalText(t *testing.T) {
 	assert.EqualValues(t, ld1, ld2)
 }
 
+func TestLocalDevicesUnmarshalText(t *testing.T) {
+
+	ld1 := &LocalDevices{}
+	err := ld1.UnmarshalText([]byte("scaleio="))
+	assert.NoError(t, err)
+}
+
 func TestLocalDevicesMarshalJSON(t *testing.T) {
 
 	ld1 := newLocalDevicesObj()

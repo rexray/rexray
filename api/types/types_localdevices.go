@@ -61,7 +61,7 @@ func (l *LocalDevices) MarshalText() ([]byte, error) {
 }
 
 var (
-	ldRX         = regexp.MustCompile(`^(.+?)=(\S+:\S+(?:(\s*,\s*\S+:\S+)*))$`)
+	ldRX         = regexp.MustCompile(`^(.+?)=(\S+:\S+(?:\s*,\s*\S+:\S+)*)?$`)
 	commaByteSep = []byte{','}
 	colonByteSep = []byte{':'}
 )

@@ -10,6 +10,7 @@ SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
 5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
 
+
 # a list of the go 1.6 stdlib pacakges as grepped from https://golang.org/pkg/
 GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 			 compress/bzip2 compress/flate compress/gzip compress/lzw \
@@ -61,6 +62,44 @@ VENDORED := 1
 endif
 
 ################################################################################
+##                               OS/ARCH INFO                                 ##
+################################################################################
+ifeq ($(GOOS),windows)
+	OS ?= Windows_NT
+endif
+ifeq ($(GOOS),linux)
+	OS ?= Linux
+endif
+ifeq ($(GOOS),darwin)
+	OS ?= Darwin
+endif
+ifeq ($(GOARCH),386)
+	ARCH ?= i386
+endif
+ifeq ($(GOARCH),amd64)
+	ARCH ?= x86_64
+endif
+
+export OS
+export ARCH
+
+ifeq ($(OS),Linux)
+NUMPROCS := $(shell grep -c ^processor /proc/cpuinfo)
+else ifeq ($(OS),Darwin)
+NUMPROCS := $(shell sysctl hw.logicalcpu | awk '{print $$2}')
+endif # $(OS)
+
+
+################################################################################
+##                                MAKE FLAGS                                  ##
+################################################################################
+ifeq (,$(MAKEFLAGS))
+MAKEFLAGS := --no-print-directory
+export $(MAKEFLAGS)
+endif
+
+
+################################################################################
 ##                              PROJECT DETAIL                                ##
 ################################################################################
 
@@ -102,12 +141,11 @@ INT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)/vendor/%,$$(DEPS_$1))
 INT_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)%,$$(INT_DEPS_$1))
 
 EXT_VENDORED_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)/vendor/%,$$(DEPS_$1))
-EXT_VENDORED_DEPS_$1 := $$(subst $$(ROOT_IMPORT_PATH)/vendor/,,$$(EXT_VENDORED_DEPS_$1))
-EXT_VENDORED_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)%,$$(EXT_VENDORED_DEPS_$1))
 EXT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)%,$$(DEPS_$1))
 EXT_DEPS_$1 += $$(EXT_VENDORED_DEPS_$1)
 EXT_DEPS += $$(EXT_DEPS_$1)
 EXT_DEPS_SRCS_$1 := $$(addprefix $$(GOPATH)/src/,$$(addsuffix /*.go,$$(EXT_DEPS_$1)))
+EXT_DEPS_SRCS_$1 := $$(subst $$(GOPATH)/src/$$(ROOT_IMPORT_PATH)/vendor/,./vendor/,$$(EXT_DEPS_SRCS_$1))
 ifneq (,$$(filter $$(GOPATH)/src/C/%,$$(EXT_DEPS_SRCS_$1)))
 EXT_DEPS_SRCS_$1 := $$(filter-out $$(GOPATH)/src/C/%,$$(EXT_DEPS_SRCS_$1))
 ifeq (main,$$(NAME_$1))
@@ -142,13 +180,12 @@ TEST_INT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)/vendor/%,$$(TEST_DEPS_$1)
 TEST_INT_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)%,$$(TEST_INT_DEPS_$1))
 
 TEST_EXT_VENDORED_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)/vendor/%,$$(TEST_DEPS_$1))
-TEST_EXT_VENDORED_DEPS_$1 := $$(subst $$(ROOT_IMPORT_PATH)/vendor/,,$$(TEST_EXT_VENDORED_DEPS_$1))
-TEST_EXT_VENDORED_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)%,$$(TEST_EXT_VENDORED_DEPS_$1))
 TEST_EXT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)%,$$(TEST_DEPS_$1))
 TEST_EXT_DEPS_$1 := $$(filter-out $$(GOPATH)/src/C/%,$$(TEST_EXT_DEPS_$1))
 TEST_EXT_DEPS_$1 += $$(TEST_EXT_VENDORED_DEPS_$1)
 TEST_EXT_DEPS += $$(TEST_EXT_DEPS_$1)
 TEST_EXT_DEPS_SRCS_$1 := $$(addprefix $$(GOPATH)/src/,$$(addsuffix /*.go,$$(TEST_EXT_DEPS_$1)))
+TEST_EXT_DEPS_SRCS_$1 := $$(subst $$(GOPATH)/src/$$(ROOT_IMPORT_PATH)/vendor/,./vendor/,$$(TEST_EXT_DEPS_SRCS_$1))
 ifneq (,$$(filter $$(GOPATH)/src/C/%,$$(TEST_EXT_DEPS_SRCS_$1)))
 TEST_EXT_DEPS_SRCS_$1 := $$(filter-out $$(GOPATH)/src/C/%,$$(TEST_EXT_DEPS_SRCS_$1))
 ifeq (main,$$(NAME_$1))
@@ -173,25 +210,30 @@ $(foreach i,\
 ##                                  INFO                                      ##
 ################################################################################
 info:
-	$(info Project Import Path....$(ROOT_IMPORT_PATH))
-	$(info Project Name...........$(ROOT_IMPORT_NAME))
-	$(info OS / Arch..............$(GOOS)_$(GOARCH))
-	$(info Vendored...............$(VENDORED))
+	$(info Project Import Path.........$(ROOT_IMPORT_PATH))
+	$(info Project Name................$(ROOT_IMPORT_NAME))
+	$(info OS / Arch...................$(GOOS)_$(GOARCH))
+	$(info Vendored....................$(VENDORED))
 ifneq (,$(strip $(SRCS)))
-	$(info Sources................$(patsubst ./%,%,$(firstword $(SRCS))))
+	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
-		$(info $(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
 endif
 ifneq (,$(strip $(TEST_SRCS)))
-	$(info Test Sources...........$(patsubst ./%,%,$(firstword $(TEST_SRCS))))
+	$(info Test Sources................$(patsubst ./%,%,$(firstword $(TEST_SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_SRCS)),$(TEST_SRCS))),\
-		$(info $(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
 endif
-#ifneq (,$(strip $(EXT_DEPS_SRCS)))
-#	$(info Dependency Sources.....$(patsubst ./%,%,$(firstword $(EXT_DEPS_SRCS))))
-#	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(EXT_DEPS_SRCS)),$(EXT_DEPS_SRCS))),\
-#		$(info $(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
-#endif
+ifneq (,$(strip $(EXT_DEPS_SRCS)))
+	$(info Dependency Sources..........$(patsubst ./%,%,$(firstword $(EXT_DEPS_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(EXT_DEPS_SRCS)),$(EXT_DEPS_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(TEST_EXT_DEPS_SRCS)))
+	$(info Test Dependency Sources.....$(patsubst ./%,%,$(firstword $(TEST_EXT_DEPS_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_EXT_DEPS_SRCS)),$(TEST_EXT_DEPS_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
 
 ################################################################################
 ##                               DEPENDENCIES                                 ##
@@ -238,7 +280,8 @@ ifneq (1,$(VENDORED))
 $(GO_BINDATA): $(GLIDE_LOCK_D)
 endif
 $(GO_BINDATA):
-	go install $(GO_BINDATA_IMPORT_PATH)
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
+	@touch $@
 GO_DEPS += $(GO_BINDATA)
 
 ################################################################################
@@ -262,22 +305,8 @@ V_BUILD := $(call PARSE_GIT_DESCRIBE,$$5)
 V_SHA_SHORT := $(call PARSE_GIT_DESCRIBE,$$6)
 V_DIRTY := $(call PARSE_GIT_DESCRIBE,$$7)
 
-# the version's binary os and architecture type
-ifeq ($(GOOS),windows)
-	V_OS := Windows_NT
-endif
-ifeq ($(GOOS),linux)
-	V_OS := Linux
-endif
-ifeq ($(GOOS),darwin)
-	V_OS := Darwin
-endif
-ifeq ($(GOARCH),386)
-	V_ARCH := i386
-endif
-ifeq ($(GOARCH),amd64)
-	V_ARCH := x86_64
-endif
+V_OS := $(OS)
+V_ARCH := $(ARCH)
 V_OS_ARCH := $(V_OS)-$(V_ARCH)
 
 # the long commit hash
@@ -361,14 +390,12 @@ func init() {
 endef
 export API_GENERATED_CONTENT
 
+PRINTF_VERSION_CMD += @printf "SemVer: %s\nBinary: %s\nBranch: %s\nCommit:
+PRINTF_VERSION_CMD += %s\nFormed: %s\n" "$(V_SEMVER)" "$(V_OS_ARCH)"
+PRINTF_VERSION_CMD += "$(V_BRANCH)" "$(V_SHA_LONG)" "$(V_BUILD_DATE)"
 API_GENERATED_SRC := ./api/api_generated.go
 $(API_GENERATED_SRC):
-	@echo SemVer: $(V_SEMVER)
-	@echo Binary: $(V_OS_ARCH)
-	@echo Branch: $(V_BRANCH)
-	@echo Commit: $(V_SHA_LONG)
-	@echo Formed: $(V_BUILD_DATE)
-	@echo generating $(API_GENERATED_SRC)
+	$(PRINTF_VERSION_CMD) && echo generating $@
 	@echo "$$API_GENERATED_CONTENT" > $@
 
 $(API_GENERATED_SRC)-clean:
@@ -380,11 +407,7 @@ API_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api.a
 $(API_A): $(API_GENERATED_SRC)
 
 version:
-	$(info SemVer: $(V_SEMVER))
-	$(info Binary: $(V_OS_ARCH))
-	$(info Branch: $(V_BRANCH))
-	$(info Commit: $(V_SHA_LONG))
-	$(info Formed: $(V_BUILD_DATE))
+	$(PRINTF_VERSION_CMD)
 
 GO_PHONY += version
 
@@ -409,7 +432,7 @@ $$(PKG_D_$1)-clean:
 GO_CLEAN += $$(PKG_D_$1)-clean
 
 $$(PKG_A_$1): $$(EXT_DEPS_SRCS_$1) $$(SRCS_$1) | $$(DEPS_ARKS_$1)
-	go install $1
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $1
 
 ifeq (true,$$(STALE_$1))
 GO_PHONY += $$(PKG_A_$1)
@@ -513,7 +536,7 @@ LSX_EMBEDDED_$2 := ./api/server/executors/bin/$$(notdir $1)
 
 ifneq ($2,$$(GOOS))
 $1:
-	env GOOS=$2 GOARCH=amd64 $$(MAKE) -j $$@
+	env GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 GO_PHONY += $1-clean
@@ -530,7 +553,7 @@ $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux))
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin))
 #$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
 
-$(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED) | $(GO_BINDATA)
+$(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
 	$(GO_BINDATA) -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
 
 $(EXECUTORS_GENERATED)-clean:
@@ -670,7 +693,7 @@ build-lss-windows: $(LSS_WINDOWS)
 define LSS_RULES
 ifneq ($2,$$(GOOS))
 $1:
-	env GOOS=$2 GOARCH=amd64 $$(MAKE) -j $$@
+	env GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 GO_PHONY += $1-clean
@@ -683,6 +706,7 @@ endef
 #$(eval $(call LSS_RULES,$(LSS_LINUX),linux))
 #$(eval $(call LSS_RULES,$(LSS_DARWIN),darwin))
 #$(eval $(call LSS_RULES,$(LSS_WINDOWS),windows))
+
 
 ################################################################################
 ##                                  COVERAGE                                  ##
@@ -720,8 +744,17 @@ build-lsx: $(EXECUTORS_EMBEDDED)
 
 build-lss: $(LSS_ALL)
 
-build: sem-tools $(GO_BUILD)
-	$(MAKE) -j libstor-c libstor-s
+build-libstorage: $(GO_BUILD)
+
+build-generated:
+	$(MAKE) build-lsx
+	$(MAKE) $(API_GENERATED_SRC)
+
+build:
+	$(MAKE) sem-tools
+	$(MAKE) build-generated
+	$(MAKE) build-libstorage
+	$(MAKE) libstor-c libstor-s
 	$(MAKE) build-lss
 
 test: $(GO_TEST)

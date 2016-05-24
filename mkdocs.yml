@@ -8,6 +8,8 @@ site_favicon: favicon.ico
 extra_css:
     - css/emccode-font.css
     - css/hX.css
+markdown_extensions:
+    - admonition
 pages:
 - Home: index.md
 - User Guide:

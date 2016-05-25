@@ -21,21 +21,6 @@ import (
 	_ "github.com/emccode/libstorage/imports/executors"
 )
 
-const (
-	// InstanceID is the command to execute to get the instance ID.
-	InstanceID = "instanceID"
-
-	// LocalDevices is the command to execute to get the local devices map.
-	LocalDevices = "localDevices"
-
-	// NextDevice is the command to execute to get the next device.
-	NextDevice = "nextDevice"
-
-	// WaitForDevice is the command to execute to wait until a device,
-	// identified by volume ID, is presented to the system.
-	WaitForDevice = "wait"
-)
-
 var (
 	cmdRx = regexp.MustCompile(
 		`(?i)^instanceid|nextdevice|localdevices|wait$`)

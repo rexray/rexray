@@ -11,6 +11,22 @@ import (
 type DeviceScanType int
 
 const (
+	// LSXCmdInstanceID is the command to execute to get the instance ID.
+	LSXCmdInstanceID = "instanceID"
+
+	// LSXCmdLocalDevices is the command to execute to get the local devices
+	// map.
+	LSXCmdLocalDevices = "localDevices"
+
+	// LSXCmdNextDevice is the command to execute to get the next device.
+	LSXCmdNextDevice = "nextDevice"
+
+	// LSXCmdWaitForDevice is the command to execute to wait until a device,
+	// identified by volume ID, is presented to the system.
+	LSXCmdWaitForDevice = "wait"
+)
+
+const (
 
 	// DeviceScanQuick performs a shallow, quick scan.
 	DeviceScanQuick DeviceScanType = iota

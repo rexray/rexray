@@ -12,7 +12,6 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils/paths"
-	"github.com/emccode/libstorage/cli/lsx"
 )
 
 func (c *client) InstanceID(
@@ -36,7 +35,7 @@ func (c *client) InstanceID(
 	}
 	driverName := strings.ToLower(si.Driver.Name)
 
-	out, err := c.runExecutor(ctx, driverName, lsx.InstanceID)
+	out, err := c.runExecutor(ctx, driverName, types.LSXCmdInstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +79,7 @@ func (c *client) NextDevice(
 	}
 	driverName := si.Driver.Name
 
-	out, err := c.runExecutor(ctx, driverName, lsx.NextDevice)
+	out, err := c.runExecutor(ctx, driverName, types.LSXCmdNextDevice)
 	if err != nil {
 		return "", err
 	}
@@ -107,7 +106,7 @@ func (c *client) LocalDevices(
 	driverName := si.Driver.Name
 
 	out, err := c.runExecutor(
-		ctx, driverName, lsx.LocalDevices, opts.ScanType.String())
+		ctx, driverName, types.LSXCmdLocalDevices, opts.ScanType.String())
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +139,7 @@ func (c *client) WaitForDevice(
 
 	exitCode := 0
 	out, err := c.runExecutor(
-		ctx, driverName, lsx.WaitForDevice,
+		ctx, driverName, types.LSXCmdWaitForDevice,
 		opts.ScanType.String(), opts.Token, opts.Timeout.String())
 	if exitError, ok := err.(*exec.ExitError); ok {
 		exitCode = exitError.Sys().(syscall.WaitStatus).ExitStatus()

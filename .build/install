@@ -68,8 +68,8 @@ list() {
     else
         URL="$URL/$PKG"
         for v in $(curl -sSL $URL | \
-                   grep '<a' | grep -v 'latest' | \
-                   perl -pe 's/^.*?<a.+?>([^<]+?)\/?<\/a>.*$/$1/gm'); do
+                    grep 'onclick' | grep -v 'latest' | \
+                    cut -d '>' -f3 | cut -d'/' -f1); do
             echo "$SCRIPT_CMD -- $PKG $v"
         done
     fi

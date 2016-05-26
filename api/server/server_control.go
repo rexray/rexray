@@ -14,7 +14,6 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 
-	"github.com/emccode/libstorage/api"
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
@@ -119,17 +118,7 @@ func newServer(config gofig.Config) (*server, error) {
 		closeOnce:    &sync.Once{},
 	}
 
-	fmt.Fprintf(
-		os.Stdout,
-		serverStartupHeader,
-		s.name,
-		s.adminToken,
-		api.Version.SemVer,
-		api.Version.Arch,
-		api.Version.Branch,
-		api.Version.ShaLong,
-		api.Version.BuildTimestamp.Format(time.RFC1123),
-	)
+	s.PrintServerStartupHeader(os.Stdout)
 
 	s.ctx = context.Background().WithValue(context.ServerKey, serverName)
 	s.ctx = s.ctx.WithValue(context.AdminTokenKey, s.adminToken)
@@ -231,6 +220,9 @@ func serve(config gofig.Config) (*server, error, <-chan error) {
 	<-timeout.C
 
 	s.ctx.Info("server started")
+
+	s.PrintServerStartupFooter(os.Stdout)
+
 	return s, nil, errs
 }
 

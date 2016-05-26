@@ -573,47 +573,6 @@ endif
 
 
 ################################################################################
-##                               SEMAPHORE BINS                               ##
-################################################################################
-SEM_OPEN := ./cli/semaphores/open
-SEM_WAIT := ./cli/semaphores/wait
-SEM_SIGNAL := ./cli/semaphores/signal
-SEM_UNLINK := ./cli/semaphores/unlink
-
-$(SEM_OPEN): $(SEM_OPEN).c
-	$(CC) $? -o $@ -lpthread
-$(SEM_OPEN)-clean:
-	rm -f $(SEM_OPEN)
-GO_PHONY += $(SEM_OPEN)-clean
-GO_CLEAN += $(SEM_OPEN)-clean
-
-$(SEM_WAIT): $(SEM_WAIT).c
-	$(CC) $? -o $@ -lpthread
-$(SEM_WAIT)-clean:
-	rm -f $(SEM_WAIT)
-GO_PHONY += $(SEM_WAIT)-clean
-GO_CLEAN += $(SEM_WAIT)-clean
-
-$(SEM_SIGNAL): $(SEM_SIGNAL).c
-	$(CC) $? -o $@ -lpthread
-$(SEM_SIGNAL)-clean:
-	rm -f $(SEM_SIGNAL)
-GO_PHONY += $(SEM_SIGNAL)-clean
-GO_CLEAN += $(SEM_SIGNAL)-clean
-
-$(SEM_UNLINK): $(SEM_UNLINK).c
-	$(CC) $? -o $@ -lpthread
-$(SEM_UNLINK)-clean:
-	rm -f $(SEM_UNLINK)
-GO_PHONY += $(SEM_UNLINK)-clean
-GO_CLEAN += $(SEM_UNLINK)-clean
-
-
-sem-tools: $(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK)
-sem-tools-clean: $(addsuffix -clean,$(SEM_OPEN) $(SEM_WAIT) $(SEM_SIGNAL) $(SEM_UNLINK))
-
-
-################################################################################
 ##                                  C CLIENT                                  ##
 ################################################################################
 C_LIBSTOR_DIR := ./c
@@ -751,7 +710,6 @@ build-generated:
 	$(MAKE) $(API_GENERATED_SRC)
 
 build:
-	$(MAKE) sem-tools
 	$(MAKE) build-generated
 	$(MAKE) build-libstorage
 	$(MAKE) libstor-c libstor-s

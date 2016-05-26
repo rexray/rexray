@@ -225,6 +225,8 @@ var (
 
 // TODO Fix this logic
 func init() {
+	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
+
 	if libstorageHome == "" {
 		libstorageHome = "/"
 	}
@@ -234,12 +236,12 @@ func init() {
 		libstorageHome = Join(gotil.HomeDir(), ".libstorage")
 	}
 
-	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
-}
-
-// Init is a way to manually initialize the package.
-func Init() {
-	Home.init()
+	for i := Home; i < maxDirKey; i++ {
+		if i == minDirKey {
+			continue
+		}
+		log.WithField(i.key(), i.String()).Info("libStorage path")
+	}
 }
 
 // Join joins one or more paths.

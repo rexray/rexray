@@ -1,5 +1,5 @@
 hash: 0b1c2794d82975d611e966e8102fd95d1bee1ff1b81e2d592f26026e41c2d65e
-updated: 2016-05-24T15:15:42.183038-05:00
+updated: 2016-05-25T15:02:43.516034046-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 021bbefbfe234a3b72dc9137847483f5b997cbd0
@@ -41,7 +41,7 @@ imports:
 - name: github.com/gorilla/context
   version: a8d44e7d8e4d532b6a27a02dd82abb31cc1b01bd
 - name: github.com/gorilla/mux
-  version: 9c19ed558d5df4da88e2ade9c8940d742aef0e7e
+  version: bd09be08ed4377796d312df0a45314e11b8f5dc1
 - name: github.com/jteeuwen/go-bindata
   version: 1dd44b25b79c4d9060e582e90798e4d72537818c
   repo: https://github.com/akutz/go-bindata
@@ -77,7 +77,7 @@ imports:
   repo: https://github.com/akutz/viper.git
   vcs: git
 - name: github.com/stretchr/testify
-  version: 6cb3b85ef5a0efef77caef88363ec4d4b5c0976d
+  version: 8d64eb7173c7753d6419fd4a9caf057398611364
   subpackages:
   - assert
 - name: golang.org/x/net

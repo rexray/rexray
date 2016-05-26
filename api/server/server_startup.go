@@ -1,57 +1,188 @@
 package server
 
-const serverStartupHeader = `
-                       ''''.--.'''
-                 ''''.-:/+oyyyso+:-.'''
-            '''..:/+osyyyyyyyyyyyyyso+/-..'''
-      '''..-/+osyyyyyyyyyyyyyyyyyyyyyyyyso+/-.'''
-  ''.-:/osyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyso+/-..''
-'.-://osyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyso+:-.''
-..++++/////+osyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyysso++ooo..
-.:oooo++++++////+osyyyyyyyyyyyyyyyyyyyyyyyssooooosyhhddh.'
-./ooooooooooo++++////+osyyyyyyyyyyyyssoo+ooshhddhddddddh.'
-.-oosssssssssoooooo+++////+ossssoooooshddddhyso+sddhyhdh.'
-..+oooossssssssssssooooo+++//:oshdmmddhys+o++o+ohddhyhdh.'
-'.-/+++ooooosssssssssssooooo/oNNdyyyyyyhhoysyhyhdddddddh..'
- '.---://+++oooooossssssssso/yMNmdddmmmmmhdddmmmmdhhso+/-..'
-  .:hs+/:--::/++++oooooooooo/yMMMNNNNNNNNmmmdhys+/:---::/:.'
-  '/MMMNmdhs+/:--://+++++ooo+/NMMMMNNNmdhso/::--:://+++oo+-.
-  '/MMMMMMMMMNmdyo+::--://+++:yNNmdyo+/:--:://++oooooooooo:.
-  '+MMMMMMMMMMMMMMMNmhyo/::--::+/:---://++oooooossssssssso:.
- '.+MMMMMMMMMMMMMMMMMMMMMNmhy+--//+++ooooosssssssssssooooo-.
- '.+mNNMMMMMMMMMMMMMMMMMMMMMMMh:ooooossssssssssssooooo+++/..
- '.--:+oydmNMMMMMMMMMMMMMMMMMMM:ossssssssssoooooo++++/::-..
-'.://:-----/+shdmNMMMMMMMMMMMMM:ooooooooooo++++//:----:/-.'
-..+++++++//:----:/+shmNNMMMMMMm:oooo+++++//:----:/+osyhh-.
-.-oooooooo++++//:-----:/oydmNNo/+++//:-----/+oyyhddddddd-.
-.-ossssssoooooooo+++//:-----:/-:-----:+oyhddhysoodddyhdd:.
-..+ooossssssssssoooooo+++//::--:/oyhdmdhhso+o++ooddhyydd:.
-'.-+oooooossssssssssssoooooo+/hNNdhyyssyysooyyyhhmddhddd:.'
- '.-//++++oooooosssssssssssoo/NMdhhhdddmmhhhdddmmdddhys+:..'
-  ''...--://++++ooooooossssso/NMMNNNNNNNNmmmmmdhyo/:-...'''
-       '''...--://+++++oooooo:dMMMMNNNNNmdhs+/--..'''
-             ''''..--://+++++/oMMMNmdys+:-..''''
-                   ''''..--://:syo/--..''''
-                         ''''.....'''
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
-              _ _ _     _____ _
-             | (_) |   / ____| |
-             | |_| |__| (___ | |_ ___  _ __ __ _  __ _  ___
-             | | | '_ \\___ \| __/ _ \| '__/ _' |/ _' |/ _ \
-             | | | |_) |___) | || (_) | | | (_| | (_| |  __/
-             |_|_|_.__/_____/ \__\___/|_|  \__,_|\__, |\___|
-                                                  __/ |
-                                                 |___/
+	"github.com/emccode/libstorage/api"
+	"github.com/emccode/libstorage/api/server/services"
+	"github.com/emccode/libstorage/api/utils/paths"
+)
 
-    server:      %[1]s
-    admin token: %[2]s
+var (
+	// DisableStartupInfo is a flag that indicates whether or not to print
+	// startup info. This is sometimes disabled for CI systems to reduce logs.
+	DisableStartupInfo, _ = strconv.ParseBool(os.Getenv(
+		"LIBSTORAGE_DISABLE_STARTUP_INFO"))
+)
 
-    semver:      %[3]s
-    osarch:      %[4]s
-    branch:      %[5]s
-    commit:      %[6]s
-    formed:      %[7]s
+const (
+	dateFormat = "2006/01/02 15:04:05.000"
 
-    starting...
+	serverStartupLogo = `
+                  _ _ _     _____ _
+                 | (_) |   / ____| |
+                 | |_| |__| (___ | |_ ___  _ __ __ _  __ _  ___
+                 | | | '_ \\___ \| __/ _ \| '__/ _' |/ _' |/ _ \
+                 | | | |_) |___) | || (_) | | | (_| | (_| |  __/
+                 |_|_|_.__/_____/ \__\___/|_|  \__,_|\__, |\___|
+                                                      __/ |
+                                                     |___/
 
 `
+)
+
+func (s *server) PrintServerStartupHeader(w io.Writer) {
+
+	if DisableStartupInfo {
+		return
+	}
+
+	var (
+		n    int
+		v    = api.Version
+		b    = &bytes.Buffer{}
+		bar  = strings.Repeat("#", 80)
+		barl = fmt.Sprintf("##%s##", strings.Repeat(" ", 76))
+		now  = time.Now().UTC().Format(dateFormat)
+		vts  = v.BuildTimestamp.Format(time.RFC1123)
+	)
+
+	fmt.Fprint(b, serverStartupLogo)
+	fmt.Fprintln(b, bar)
+	fmt.Fprintln(b, barl)
+	fmt.Fprint(b, "##                  ")
+	fmt.Fprintf(b, "libStorage starting - %s", now)
+	fmt.Fprintln(b, "             ##")
+	fmt.Fprintln(b, barl)
+
+	n, _ = fmt.Fprintf(b, "##     server:      %s", s.name)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+
+	n, _ = fmt.Fprintf(b, "##      token:      %s", s.adminToken)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+
+	fmt.Fprintln(b, barl)
+
+	n, _ = fmt.Fprintf(b, "##     semver:      %s", v.SemVer)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##     osarch:      %s", v.Arch)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##     branch:      %s", v.Branch)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##     commit:      %s", v.ShaLong)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##     formed:      %s", vts)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+
+	fmt.Fprintln(b, barl)
+
+	n, _ = fmt.Fprintf(b, "##        etc:      %s", paths.Etc)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##        lib:      %s", paths.Lib)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##        log:      %s", paths.Log)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##        run:      %s", paths.Run)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+
+	fmt.Fprintln(b, barl)
+
+	fmt.Fprintln(b, bar)
+	fmt.Fprintln(b)
+	io.Copy(w, b)
+}
+
+func (s *server) PrintServerStartupFooter(w io.Writer) {
+
+	if DisableStartupInfo {
+		return
+	}
+
+	var (
+		n     int
+		srvcs []string
+		drvrs []string
+		addrs = s.Addrs()
+		b     = &bytes.Buffer{}
+		bar   = strings.Repeat("#", 80)
+		barl  = fmt.Sprintf("##%s##", strings.Repeat(" ", 76))
+		now   = time.Now().UTC().Format(dateFormat)
+	)
+
+	fmt.Fprintln(b)
+	fmt.Fprintln(b, bar)
+	fmt.Fprintln(b, barl)
+	fmt.Fprint(b, "##                  ")
+	fmt.Fprintf(b, "libStorage started  - %s", now)
+	fmt.Fprintln(b, "             ##")
+	fmt.Fprintln(b, barl)
+
+	n, _ = fmt.Fprintf(b, "##     endpoints:   %s", addrs[0])
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+
+	if len(addrs) > 1 {
+		for x := range addrs {
+			if x == 0 {
+				continue
+			}
+			n, _ = fmt.Fprintf(b, "##                  %s", addrs[x])
+			fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+			fmt.Fprintln(b, "##")
+		}
+	}
+
+	fmt.Fprintln(b, barl)
+
+	for v := range services.StorageServices(s.ctx) {
+		srvcs = append(srvcs, v.Name())
+		drvrs = append(drvrs, v.Driver().Name())
+	}
+
+	n, _ = fmt.Fprintf(b, "##      services:   name=%s, driver=%s",
+		srvcs[0], drvrs[0])
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+
+	if len(srvcs) > 1 {
+		for x := range srvcs {
+			if x == 0 {
+				continue
+			}
+			n, _ = fmt.Fprintf(b, "##                  name=%s, driver=%s",
+				srvcs[x], drvrs[x])
+			fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+			fmt.Fprintln(b, "##")
+		}
+	}
+
+	fmt.Fprintln(b, barl)
+	fmt.Fprintln(b, bar)
+	fmt.Fprintln(b)
+	io.Copy(w, b)
+}
+
+func trunc80(n int) int {
+	i := 80 - (n + 2)
+	if i < 0 {
+		return 0
+	}
+	return i
+}

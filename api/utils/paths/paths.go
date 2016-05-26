@@ -223,7 +223,6 @@ var (
 	slashRX        = regexp.MustCompile(`^((?:/)|(?:[a-zA-Z]\:\\?))?$`)
 )
 
-// TODO Fix this logic
 func init() {
 	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
 
@@ -240,7 +239,9 @@ func init() {
 		if i == minDirKey {
 			continue
 		}
-		log.WithField(i.key(), i.String()).Info("libStorage path")
+
+		// this initialized the value
+		_ = i.String()
 	}
 }
 

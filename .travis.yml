@@ -3,6 +3,9 @@ go:
   - 1.6
 go_import_path: github.com/emccode/libstorage
 before_install:
+  - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
+  - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
+  - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
   - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
   - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
 install:

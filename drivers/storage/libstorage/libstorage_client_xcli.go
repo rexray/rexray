@@ -184,6 +184,5 @@ func (c *client) runExecutor(
 		cmd.Env = append(cmd.Env, cev)
 	}
 
-	out, err := cmd.CombinedOutput()
-	return out, err
+	return cmd.Output()
 }

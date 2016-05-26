@@ -20,7 +20,6 @@ import (
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 	apicnfg "github.com/emccode/libstorage/api/utils/config"
-	"github.com/emccode/libstorage/api/utils/semaphore"
 )
 
 var (
@@ -306,7 +305,6 @@ func CloseOnAbort() {
 		fmt.Println("received abort signal")
 		for range Close() {
 		}
-		semaphore.Unlink(types.LSX)
 		os.Exit(1)
 	}()
 }

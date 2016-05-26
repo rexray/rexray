@@ -14,6 +14,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestPaths(t *testing.T) {
+
+	t.Logf("lsx.lock=%s", Run.Join("lsx.lock"))
+
 	if Home.get() == "" {
 		td, err := ioutil.TempDir("", "")
 		if err != nil {
@@ -23,6 +26,9 @@ func TestPaths(t *testing.T) {
 		libstorageHome = td
 	}
 
+	// gometalinter (go vet) complains here because of 'k' being an unrecognized
+	// printf verb. it's a custom verb, as is supported by the fmt pkg. The
+	// vet tool just doesn't handle validating custom verbs.
 	t.Logf("%5[1]k  %[1]s", Home)
 	t.Logf("%5[1]k  %[1]s", Etc)
 	t.Logf("%5[1]k  %[1]s", Lib)

@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
@@ -164,13 +165,13 @@ func (c *client) runExecutor(
 	ctx types.Context, args ...string) ([]byte, error) {
 
 	ctx.Debug("waiting on executor lock")
-	if err := lsxMutex.Wait(); err != nil {
+	if err := lsxMutexWait(); err != nil {
 		return nil, err
 	}
 
 	defer func() {
 		ctx.Debug("signalling executor lock")
-		if err := lsxMutex.Signal(); err != nil {
+		if err := lsxMutexSignal(); err != nil {
 			panic(err)
 		}
 	}()
@@ -185,4 +186,19 @@ func (c *client) runExecutor(
 	}
 
 	return cmd.Output()
+}
+
+func lsxMutexWait() error {
+	for {
+		f, err := os.OpenFile(lsxMutex, os.O_CREATE|os.O_EXCL, 0644)
+		if err != nil {
+			time.Sleep(time.Millisecond * 500)
+			continue
+		}
+		return f.Close()
+	}
+}
+
+func lsxMutexSignal() error {
+	return os.RemoveAll(lsxMutex)
 }

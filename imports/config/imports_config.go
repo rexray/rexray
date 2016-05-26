@@ -27,8 +27,6 @@ func init() {
 	}
 	log.SetLevel(logLevel)
 
-	paths.Init()
-
 	lsxBinPath := paths.Lib.Join(types.LSX)
 
 	r := gofig.NewRegistration("libStorage")

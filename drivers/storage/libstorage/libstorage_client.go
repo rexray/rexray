@@ -27,6 +27,8 @@ type client struct {
 
 func (c *client) dial(ctx types.Context) error {
 
+	ctx.WithField("path", lsxMutex).Info("lsx lock file path")
+
 	svcInfos, err := c.Services(ctx)
 	if err != nil {
 		return err
@@ -86,12 +88,12 @@ func (c *client) updateExecutor(ctx types.Context) error {
 	}
 
 	ctx.Debug("waiting on executor lock")
-	if err := lsxMutex.Wait(); err != nil {
+	if err := lsxMutexWait(); err != nil {
 		return err
 	}
 	defer func() {
 		ctx.Debug("signalling executor lock")
-		if err := lsxMutex.Signal(); err != nil {
+		if err := lsxMutexSignal(); err != nil {
 			panic(err)
 		}
 	}()

@@ -1,11 +1,9 @@
 package libstorage
 
 import (
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils/semaphore"
+	"github.com/emccode/libstorage/api/utils/paths"
 )
 
 const (
@@ -14,24 +12,9 @@ const (
 )
 
 var (
-	lsxMutex semaphore.Semaphore
+	lsxMutex = paths.Run.Join("lsx.lock")
 )
 
 func init() {
 	registry.RegisterStorageDriver(Name, newDriver)
-
-	var err error
-	for {
-		lsxMutex, err = semaphore.Open(types.LSX, false, 0644, 1)
-		if err != nil {
-			log.WithError(err).Warn(err)
-		} else {
-			break
-		}
-	}
-}
-
-// Close releases system resources.
-func Close() error {
-	return lsxMutex.Close()
 }

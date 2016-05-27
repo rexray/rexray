@@ -55,6 +55,10 @@ func New(
 		return nil, nil, nil, err
 	}
 
+	if h := config.GetString(types.ConfigHost); h == "" {
+		config.Set(types.ConfigHost, s.Addrs()[0])
+	}
+
 	c, err := client.New(config)
 	if err != nil {
 		return nil, nil, nil, err

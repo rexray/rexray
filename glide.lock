@@ -1,5 +1,5 @@
-hash: f78129ed26a924511ba87b96e2b199fbe1929e7613e5120690b9e1af765181e0
-updated: 2016-05-27T04:35:21.973932209-05:00
+hash: 50269d22a3dfe92a2ff238ced28120d628b87ab77dc16f6274963226c4fc4e4d
+updated: 2016-05-27T05:03:06.427592333-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 021bbefbfe234a3b72dc9137847483f5b997cbd0
@@ -41,7 +41,7 @@ imports:
   subpackages:
   - types/v1
 - name: github.com/emccode/libstorage
-  version: 02b6480b597dded46177986e160695023c1aab15
+  version: dc81db934a68963844df99ea2b20cfe0d85bc610
   subpackages:
   - imports/local
   - imports/remote

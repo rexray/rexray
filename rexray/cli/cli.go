@@ -18,6 +18,7 @@ import (
 
 	"github.com/emccode/libstorage"
 	"github.com/emccode/libstorage/api/context"
+	apiserver "github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
 
@@ -361,7 +362,8 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 			c.ctx = c.ctx.WithValue("async", true)
 		}
 
-		r, rs, err, _ := libstorage.New(c.config.Scope("rexray"))
+		apiserver.DisableStartupInfo = true
+		r, rs, _, err := libstorage.New(c.config.Scope("rexray"))
 		if err == nil {
 			c.r = r
 			c.rs = rs

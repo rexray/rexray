@@ -1,8 +1,8 @@
-hash: 4c7f8e3cf9ed48e8c70c1878c1de92d7f7da0b94d74017bcc36231fd951f622f
-updated: 2016-05-16T23:21:53.794193001-05:00
+hash: f78129ed26a924511ba87b96e2b199fbe1929e7613e5120690b9e1af765181e0
+updated: 2016-05-27T04:35:21.973932209-05:00
 imports:
 - name: github.com/akutz/gofig
-  version: 84e1fb25c0a0fd2f2da6d7ce7827881f7c80eef5
+  version: 021bbefbfe234a3b72dc9137847483f5b997cbd0
 - name: github.com/akutz/golf
   version: e26bdd995cb746e431d42ea303ebe7622389d29f
   subpackages:
@@ -18,7 +18,7 @@ imports:
   - vboxwebsrv
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
-  version: 37d5f827499d1c346df42f2ad7fcb7f453833a57
+  version: df81827fdd59d8b4fb93d8910b286ab7a3919520
 - name: github.com/BurntSushi/toml
   version: f0aeabca5a127c4078abb8c8d64298b147264b55
 - name: github.com/cesanta/ucl
@@ -41,16 +41,16 @@ imports:
   subpackages:
   - types/v1
 - name: github.com/emccode/libstorage
-  version: e3d7a070f066e332554c3bc5efae7f2722dc9247
+  version: 02b6480b597dded46177986e160695023c1aab15
   subpackages:
   - imports/local
   - imports/remote
+  - api/server
   - api/types
+  - client
   - api/context
   - api/utils
-  - api/registry
-  - api/server
-  - client
+  - api
   - drivers/integration/docker
   - drivers/os/darwin
   - drivers/os/linux
@@ -61,14 +61,12 @@ imports:
   - drivers/storage/scaleio/storage
   - drivers/storage/vbox/storage
   - drivers/storage/vfs/storage
+  - api/registry
   - api/server/handlers
   - api/server/services
   - api/utils/config
-  - api/utils/semaphore
   - imports/routers
   - api/client
-  - api/utils/paths
-  - cli/lsx
   - drivers/storage/vfs
   - drivers/storage/isilon
   - drivers/storage/scaleio
@@ -76,27 +74,23 @@ imports:
   - api/server/httputils
   - api/utils/schema
   - api/server/router/executor
+  - api/server/router/help
   - api/server/router/root
   - api/server/router/service
   - api/server/router/snapshot
   - api/server/router/tasks
   - api/server/router/volume
-  - imports/executors
   - api/server/executors
   - api/utils/filters
-  - drivers/storage/isilon/executor
-  - drivers/storage/scaleio/executor
-  - drivers/storage/vbox/executor
-  - drivers/storage/vfs/executor
 - name: github.com/go-yaml/yaml
   version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
   repo: https://github.com/akutz/yaml.git
 - name: github.com/gorilla/context
-  version: a8d44e7d8e4d532b6a27a02dd82abb31cc1b01bd
+  version: aed02d124ae4a0e94fea4541c8effd05bf0c8296
 - name: github.com/gorilla/handlers
   version: 66e6c6f01d8da976ee113437745ca029c2b585a6
 - name: github.com/gorilla/mux
-  version: 9c19ed558d5df4da88e2ade9c8940d742aef0e7e
+  version: bd09be08ed4377796d312df0a45314e11b8f5dc1
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jteeuwen/go-bindata
@@ -136,7 +130,7 @@ imports:
   repo: https://github.com/akutz/viper.git
   vcs: git
 - name: golang.org/x/net
-  version: ef00b378c73f107bf44d5c9b69875255ce89b79a
+  version: 30db96677b74e24b967e23f911eb3364fc61a011
   repo: https://github.com/golang/net
   subpackages:
   - context

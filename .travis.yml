@@ -14,7 +14,7 @@ before_script:
   - source .build/dependencies.sh
 
 script:
-  - make build-all test rpm-all deb-all deploy-prep
+  - make deps build-all test rpm-all deb-all deploy-prep
 
 notifications:
   - slack: $SLACK_BUILDS

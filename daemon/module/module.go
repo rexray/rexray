@@ -11,8 +11,9 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
-	"github.com/emccode/libstorage"
+	apiserver "github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
+	apiclient "github.com/emccode/libstorage/client"
 	"github.com/emccode/rexray/util"
 )
 
@@ -167,7 +168,7 @@ func InitializeDefaultModules() error {
 		c.Set(apitypes.ConfigIgVolOpsMountPath, util.LibFilePath("volumes"))
 	}
 
-	_, _, err, errs := libstorage.New(c)
+	s, errs, err := apiserver.Serve(c)
 	if err != nil {
 		return err
 	}
@@ -178,13 +179,18 @@ func InitializeDefaultModules() error {
 		}
 	}()
 
+	if h := c.GetString(apitypes.ConfigHost); h == "" {
+		c.Set(apitypes.ConfigHost, s.Addrs()[0])
+	}
+
 	modConfigs, err := getConfiguredModules(c)
 	if err != nil {
 		return err
 	}
 
 	for _, mc := range modConfigs {
-		lsc, err := libstorage.Dial(mc.Config)
+
+		lsc, err := apiclient.New(mc.Config)
 		if err != nil {
 			panic(err)
 		}

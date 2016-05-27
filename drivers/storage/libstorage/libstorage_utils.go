@@ -27,6 +27,10 @@ func (c *driver) requireCtx(ctx types.Context) types.Context {
 
 func (c *client) withAllInstanceIDs(ctx types.Context) types.Context {
 
+	if c.isController() {
+		return ctx
+	}
+
 	iidm := types.InstanceIDMap{}
 	for _, k := range c.instanceIDCache.Keys() {
 		iidm[k] = c.instanceIDCache.GetInstanceID(k)
@@ -42,17 +46,25 @@ func (c *client) withAllInstanceIDs(ctx types.Context) types.Context {
 func (c *client) withInstanceID(
 	ctx types.Context, service string) types.Context {
 
-	if !c.instanceIDCache.IsSet(service) {
+	ctx = ctx.WithValue(context.ServiceKey, service)
+
+	if c.isController() {
 		return ctx
 	}
 
-	ctx = ctx.WithValue(context.ServiceKey, service)
+	if !c.instanceIDCache.IsSet(service) {
+		return ctx
+	}
 
 	iid := c.instanceIDCache.GetInstanceID(service)
 	return ctx.WithValue(context.InstanceIDKey, iid)
 }
 
 func (c *client) withAllLocalDevices(ctx types.Context) (types.Context, error) {
+
+	if c.isController() {
+		return ctx, nil
+	}
 
 	ldm := types.LocalDevicesMap{}
 

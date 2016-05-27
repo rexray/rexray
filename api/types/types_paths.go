@@ -1,4 +1,4 @@
-package paths
+package types
 
 import (
 	"bytes"
@@ -38,11 +38,18 @@ const (
 
 	maxDirKey
 
-	minFileKey fileKey = maxDirKey + 1
+	minFileKey
 
 	// LSX is the path to the libStorage executor.
 	LSX
+
+	maxFileKey
 )
+
+func (k fileKey) isFileKeyMarker() bool {
+	return k == minDirKey || k == maxDirKey ||
+		k == minFileKey || k == maxFileKey
+}
 
 // Exists returns a flag indicating whether or not the file/directory exists.
 func (k fileKey) Exists() bool {
@@ -133,30 +140,37 @@ func (k fileKey) defaultVal() string {
 	case Run:
 		return "/var/run/libstorage"
 	case LSX:
-		return fmt.Sprintf("lsx-%s", runtime.GOOS)
+		switch runtime.GOOS {
+		case "linux", "darwin":
+			return fmt.Sprintf("lsx-%s", runtime.GOOS)
+		case "windows":
+			return "lsx-windows.exe"
+		}
 	}
 	return ""
 }
 
 func (k fileKey) get() string {
-	if v, ok := keyCache[k]; ok {
+	if v, ok := fileKeyCache[k]; ok {
 		return v
 	}
 	if k == Home {
 		return libstorageHome
 	}
 
-	if p, ok := keyCache[k.parent()]; ok {
-		return Join(p, k.defaultVal())
+	if p, ok := fileKeyCache[k.parent()]; ok {
+		return path.Join(p, k.defaultVal())
 	}
 	return k.defaultVal()
 }
 
+// Join concatenates the filePath's fully-qualified path with the provided
+// path elements using the local operating system's path separator.
 func (k fileKey) Join(elem ...string) string {
 	log.WithField("elem", elem).Debug("enter join")
 
 	var elems []string
-	if _, ok := keyCache[k]; !ok {
+	if _, ok := fileKeyCache[k]; !ok {
 		elems = []string{Home.String()}
 	}
 	if k != Home {
@@ -167,13 +181,19 @@ func (k fileKey) Join(elem ...string) string {
 	return path.Join(elems...)
 }
 
-func (k fileKey) String() string {
+// Name returns the last part of the fileKey's fully-qualified path.
+func (k fileKey) Name() string {
+	return path.Base(k.Path())
+}
+
+// Path returns the fileKey's fully-qualified path.
+func (k fileKey) Path() string {
 	if k == Home {
 		homeLock.Lock()
 		defer homeLock.Unlock()
 	}
 
-	if v, ok := keyCache[k]; ok {
+	if v, ok := fileKeyCache[k]; ok {
 		return v
 	}
 
@@ -184,11 +204,16 @@ func (k fileKey) String() string {
 	k.init()
 	k.cache()
 
-	return keyCache[k]
+	return fileKeyCache[k]
+}
+
+// String delegates to the fileKey's Path function.
+func (k fileKey) String() string {
+	return k.Path()
 }
 
 func (k fileKey) cache() {
-	keyCache[k] = k.get()
+	fileKeyCache[k] = k.get()
 	log.WithFields(log.Fields{
 		"key":  k.key(),
 		"path": k.get(),
@@ -200,7 +225,7 @@ func (k fileKey) init() {
 	if k == Home {
 		if !checkPerms(k, false) {
 			failedPath := k.get()
-			libstorageHome = Join(gotil.HomeDir(), ".libstorage")
+			libstorageHome = path.Join(gotil.HomeDir(), ".libstorage")
 			log.WithFields(log.Fields{
 				"failedPath": failedPath,
 				"newPath":    k.get(),
@@ -215,7 +240,7 @@ func (k fileKey) init() {
 
 var (
 	libstorageHome = os.Getenv("LIBSTORAGE_HOME")
-	keyCache       = map[fileKey]string{}
+	fileKeyCache   = map[fileKey]string{}
 	homeLock       = &sync.Mutex{}
 	thisExeDir     string
 	thisExeName    string
@@ -223,7 +248,8 @@ var (
 	slashRX        = regexp.MustCompile(`^((?:/)|(?:[a-zA-Z]\:\\?))?$`)
 )
 
-func init() {
+func initPaths() {
+
 	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
 
 	if libstorageHome == "" {
@@ -232,22 +258,21 @@ func init() {
 
 	// if not root and home is /, change home to user's home dir
 	if os.Geteuid() != 0 && libstorageHome == "/" {
-		libstorageHome = Join(gotil.HomeDir(), ".libstorage")
+		libstorageHome = path.Join(gotil.HomeDir(), ".libstorage")
 	}
 
-	for i := Home; i < maxDirKey; i++ {
-		if i == minDirKey {
+	for i := Home; i < maxFileKey; i++ {
+		if i.isFileKeyMarker() {
 			continue
 		}
 
 		// this initialized the value
 		_ = i.String()
-	}
-}
 
-// Join joins one or more paths.
-func Join(elem ...string) string {
-	return path.Join(elem...)
+		if Debug {
+			log.WithField(i.key(), i.String()).Info("libStorage path")
+		}
+	}
 }
 
 func checkPerms(k fileKey, mustPerm bool) bool {
@@ -280,7 +305,7 @@ func checkPerms(k fileKey, mustPerm bool) bool {
 		}
 	}
 
-	touchFilePath := Join(p, fmt.Sprintf(".touch-%v", time.Now().Unix()))
+	touchFilePath := path.Join(p, fmt.Sprintf(".touch-%v", time.Now().Unix()))
 	defer os.RemoveAll(touchFilePath)
 
 	noPermTouchErr := fmt.Sprintf("open %s: permission denied", touchFilePath)
@@ -297,17 +322,17 @@ func checkPerms(k fileKey, mustPerm bool) bool {
 	return true
 }
 
-// LogFile returns a writer to a file inside the log directory with the
+// logFile returns a writer to a file inside the log directory with the
 // provided file name.
-func LogFile(fileName string) (io.Writer, error) {
+func logFile(fileName string) (io.Writer, error) {
 	return os.OpenFile(
 		Log.Join(fileName), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 }
 
-// StdOutAndLogFile returns a mutltiplexed writer for the current process's
+// stdOutAndLogFile returns a mutltiplexed writer for the current process's
 // stdout descriptor and alog file with the provided name.
-func StdOutAndLogFile(fileName string) (io.Writer, error) {
-	lf, lfErr := LogFile(fileName)
+func stdOutAndLogFile(fileName string) (io.Writer, error) {
+	lf, lfErr := logFile(fileName)
 	if lfErr != nil {
 		return nil, lfErr
 	}

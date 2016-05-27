@@ -1,17 +1,16 @@
 package types
 
 import (
-	"fmt"
-	"runtime"
+	"os"
+	"strconv"
 )
 
-// LSX is the default  name of the libStorage executor for the current OS.
-var LSX string
+var (
+	// Debug is a flag that indicates whether or not the environment variable
+	// `LIBSTORAGE_DEBUG` is set to a boolean true value.
+	Debug, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG"))
+)
 
 func init() {
-	if runtime.GOOS == "windows" {
-		LSX = "lsx-windows.exe"
-	} else {
-		LSX = fmt.Sprintf("lsx-%s", runtime.GOOS)
-	}
+	initPaths()
 }

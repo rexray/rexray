@@ -13,16 +13,20 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/api/utils/paths"
 )
 
 type client struct {
 	types.APIClient
 	ctx             types.Context
 	config          gofig.Config
+	clientType      types.ClientType
 	serviceCache    *lss
 	lsxCache        *lss
 	instanceIDCache types.Store
+}
+
+func (c *client) isController() bool {
+	return c.clientType == types.ControllerClient
 }
 
 func (c *client) dial(ctx types.Context) error {
@@ -32,6 +36,11 @@ func (c *client) dial(ctx types.Context) error {
 	svcInfos, err := c.Services(ctx)
 	if err != nil {
 		return err
+	}
+
+	// controller clients do not have any additional dialer logic
+	if c.isController() {
+		return nil
 	}
 
 	store := utils.NewStore()
@@ -80,25 +89,30 @@ func (c *client) getServiceInfo(service string) (*types.ServiceInfo, error) {
 
 func (c *client) updateExecutor(ctx types.Context) error {
 
+	if c.isController() {
+		return utils.NewUnsupportedForClientTypeError(
+			c.clientType, "updateExecutor")
+	}
+
 	ctx.Debug("updating executor")
 
-	lsxi := c.lsxCache.GetExecutorInfo(types.LSX)
+	lsxi := c.lsxCache.GetExecutorInfo(types.LSX.Name())
 	if lsxi == nil {
 		return goof.WithField("lsx", types.LSX, "unknown executor")
 	}
 
 	ctx.Debug("waiting on executor lock")
-	if err := lsxMutexWait(); err != nil {
+	if err := c.lsxMutexWait(); err != nil {
 		return err
 	}
 	defer func() {
 		ctx.Debug("signalling executor lock")
-		if err := lsxMutexSignal(); err != nil {
+		if err := c.lsxMutexSignal(); err != nil {
 			panic(err)
 		}
 	}()
 
-	if !paths.LSX.Exists() {
+	if !types.LSX.Exists() {
 		return c.downloadExecutor(ctx)
 	}
 
@@ -115,9 +129,15 @@ func (c *client) updateExecutor(ctx types.Context) error {
 }
 
 func (c *client) getExecutorChecksum(ctx types.Context) (string, error) {
+
+	if c.isController() {
+		return "", utils.NewUnsupportedForClientTypeError(
+			c.clientType, "getExecutorChecksum")
+	}
+
 	ctx.Debug("getting executor checksum")
 
-	f, err := os.Open(paths.LSX.String())
+	f, err := os.Open(types.LSX.String())
 	if err != nil {
 		return "", err
 	}
@@ -143,10 +163,15 @@ func (c *client) getExecutorChecksum(ctx types.Context) (string, error) {
 
 func (c *client) downloadExecutor(ctx types.Context) error {
 
+	if c.isController() {
+		return utils.NewUnsupportedForClientTypeError(
+			c.clientType, "downloadExecutor")
+	}
+
 	ctx.Debug("downloading executor")
 
 	f, err := os.OpenFile(
-		paths.LSX.String(),
+		types.LSX.String(),
 		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
 		0755)
 	if err != nil {
@@ -155,7 +180,7 @@ func (c *client) downloadExecutor(ctx types.Context) error {
 
 	defer f.Close()
 
-	rdr, err := c.APIClient.ExecutorGet(ctx, types.LSX)
+	rdr, err := c.APIClient.ExecutorGet(ctx, types.LSX.Name())
 	if _, err := io.Copy(f, rdr); err != nil {
 		return err
 	}

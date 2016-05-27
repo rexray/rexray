@@ -3,7 +3,6 @@ package libstorage
 import (
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils/paths"
 )
 
 const (
@@ -12,7 +11,7 @@ const (
 )
 
 var (
-	lsxMutex = paths.Run.Join("lsx.lock")
+	lsxMutex = types.Run.Join("lsx.lock")
 )
 
 func init() {

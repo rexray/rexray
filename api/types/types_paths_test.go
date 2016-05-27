@@ -1,17 +1,10 @@
-package paths
+package types
 
 import (
 	"io/ioutil"
 	"os"
 	"testing"
-
-	log "github.com/Sirupsen/logrus"
 )
-
-func TestMain(m *testing.M) {
-	log.SetLevel(log.DebugLevel)
-	os.Exit(m.Run())
-}
 
 func TestPaths(t *testing.T) {
 
@@ -29,10 +22,10 @@ func TestPaths(t *testing.T) {
 	// gometalinter (go vet) complains here because of 'k' being an unrecognized
 	// printf verb. it's a custom verb, as is supported by the fmt pkg. The
 	// vet tool just doesn't handle validating custom verbs.
-	t.Logf("%5[1]k  %[1]s", Home)
-	t.Logf("%5[1]k  %[1]s", Etc)
-	t.Logf("%5[1]k  %[1]s", Lib)
-	t.Logf("%5[1]k  %[1]s", Log)
-	t.Logf("%5[1]k  %[1]s", Run)
-	t.Logf("%5[1]k  %[1]s", LSX)
+	t.Logf("%5[1]s  %[2]s", Home.key(), Home)
+	t.Logf("%5[1]s  %[2]s", Etc.key(), Etc)
+	t.Logf("%5[1]s  %[2]s", Lib.key(), Lib)
+	t.Logf("%5[1]s  %[2]s", Log.key(), Log)
+	t.Logf("%5[1]s  %[2]s", Run.key(), Run)
+	t.Logf("%5[1]s  %[2]s", LSX.key(), LSX)
 }

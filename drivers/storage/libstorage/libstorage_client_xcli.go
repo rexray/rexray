@@ -12,12 +12,17 @@ import (
 
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils/paths"
+	"github.com/emccode/libstorage/api/utils"
 )
 
 func (c *client) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "InstanceID")
+	}
 
 	ctx = context.RequireTX(ctx.Join(c.ctx))
 
@@ -67,6 +72,11 @@ func (c *client) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
 
+	if c.isController() {
+		return "", utils.NewUnsupportedForClientTypeError(
+			c.clientType, "NextDevice")
+	}
+
 	ctx = context.RequireTX(ctx.Join(c.ctx))
 
 	serviceName, ok := context.ServiceName(ctx)
@@ -92,6 +102,11 @@ func (c *client) NextDevice(
 func (c *client) LocalDevices(
 	ctx types.Context,
 	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "LocalDevices")
+	}
 
 	ctx = context.RequireTX(ctx.Join(c.ctx))
 
@@ -124,6 +139,11 @@ func (c *client) LocalDevices(
 func (c *client) WaitForDevice(
 	ctx types.Context,
 	opts *types.WaitForDeviceOpts) (bool, *types.LocalDevices, error) {
+
+	if c.isController() {
+		return false, nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "WaitForDevice")
+	}
 
 	ctx = context.RequireTX(ctx.Join(c.ctx))
 
@@ -164,19 +184,24 @@ func (c *client) WaitForDevice(
 func (c *client) runExecutor(
 	ctx types.Context, args ...string) ([]byte, error) {
 
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "runExecutor")
+	}
+
 	ctx.Debug("waiting on executor lock")
-	if err := lsxMutexWait(); err != nil {
+	if err := c.lsxMutexWait(); err != nil {
 		return nil, err
 	}
 
 	defer func() {
 		ctx.Debug("signalling executor lock")
-		if err := lsxMutexSignal(); err != nil {
+		if err := c.lsxMutexSignal(); err != nil {
 			panic(err)
 		}
 	}()
 
-	cmd := exec.Command(paths.LSX.String(), args...)
+	cmd := exec.Command(types.LSX.String(), args...)
 	cmd.Env = os.Environ()
 
 	configEnvVars := c.config.EnvVars()
@@ -188,7 +213,13 @@ func (c *client) runExecutor(
 	return cmd.Output()
 }
 
-func lsxMutexWait() error {
+func (c *client) lsxMutexWait() error {
+
+	if c.isController() {
+		return utils.NewUnsupportedForClientTypeError(
+			c.clientType, "lsxMutexWait")
+	}
+
 	for {
 		f, err := os.OpenFile(lsxMutex, os.O_CREATE|os.O_EXCL, 0644)
 		if err != nil {
@@ -199,6 +230,10 @@ func lsxMutexWait() error {
 	}
 }
 
-func lsxMutexSignal() error {
+func (c *client) lsxMutexSignal() error {
+	if c.isController() {
+		return utils.NewUnsupportedForClientTypeError(
+			c.clientType, "lsxMutexSignal")
+	}
 	return os.RemoveAll(lsxMutex)
 }

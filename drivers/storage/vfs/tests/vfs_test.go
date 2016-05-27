@@ -55,17 +55,24 @@ func TestRoot(t *testing.T) {
 	apitests.Run(t, vfs.Name, newTestConfig(t), apitests.TestRoot)
 }
 
+var testServicesFunc = func(
+	config gofig.Config, client types.Client, t *testing.T) {
+
+	reply, err := client.API().Services(nil)
+	assert.NoError(t, err)
+	assert.Equal(t, len(reply), 1)
+
+	_, ok := reply[vfs.Name]
+	assert.True(t, ok)
+}
+
 func TestServices(t *testing.T) {
-	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+	apitests.Run(t, vfs.Name, newTestConfig(t), testServicesFunc)
+}
 
-		reply, err := client.API().Services(nil)
-		assert.NoError(t, err)
-		assert.Equal(t, len(reply), 1)
-
-		_, ok := reply[vfs.Name]
-		assert.True(t, ok)
-	}
-	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+func TestServicesWithControllerClient(t *testing.T) {
+	apitests.RunWithClientType(
+		t, types.ControllerClient, vfs.Name, newTestConfig(t), testServicesFunc)
 }
 
 func TestServiceInpspect(t *testing.T) {
@@ -82,6 +89,12 @@ func TestServiceInpspect(t *testing.T) {
 
 func TestExecutors(t *testing.T) {
 	apitests.Run(t, vfs.Name, newTestConfig(t), apitests.TestExecutors)
+}
+
+func TestExecutorsWithControllerClient(t *testing.T) {
+	apitests.RunWithClientType(
+		t, types.ControllerClient, vfs.Name, newTestConfig(t),
+		apitests.TestExecutorsWithControllerClient)
 }
 
 func TestExecutorHead(t *testing.T) {
@@ -126,6 +139,7 @@ func TestVolumes(t *testing.T) {
 		}
 	}
 	apitests.Run(t, vfs.Name, tc, tf)
+	apitests.RunWithClientType(t, types.ControllerClient, vfs.Name, tc, tf)
 }
 
 func TestVolumesWithAttachments(t *testing.T) {
@@ -143,6 +157,18 @@ func TestVolumesWithAttachments(t *testing.T) {
 		assert.EqualValues(t, vols["vfs-001"], reply["vfs"]["vfs-001"])
 	}
 	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsWithControllerClient(t *testing.T) {
+	tc, _, _, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		_, err := client.API().Volumes(nil, true)
+		assert.Error(t, err)
+		assert.Equal(t, "batch processing error", err.Error())
+	}
+
+	apitests.RunWithClientType(t, types.ControllerClient, vfs.Name, tc, tf)
 }
 
 func TestVolumesByService(t *testing.T) {
@@ -433,6 +459,25 @@ func TestVolumeAttach(t *testing.T) {
 	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
 }
 
+func TestVolumeAttachWithControllerClient(t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		_, err := client.Executor().NextDevice(
+			context.Background().WithValue(context.ServiceKey, vfs.Name),
+			utils.NewStore())
+		assert.Error(t, err)
+		assert.Equal(t, "unsupported op for client type", err.Error())
+
+		_, _, err = client.API().VolumeAttach(
+			nil, vfs.Name, "vfs-002", &types.VolumeAttachRequest{})
+		assert.Error(t, err)
+		assert.Equal(t, "unsupported op for client type", err.Error())
+	}
+
+	apitests.RunWithClientType(
+		t, types.ControllerClient, vfs.Name, newTestConfig(t), tf)
+}
+
 func TestVolumeDetach(t *testing.T) {
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		request := &types.VolumeDetachRequest{}
@@ -449,6 +494,17 @@ func TestVolumeDetach(t *testing.T) {
 		assert.Equal(t, 0, len(reply.Attachments))
 	}
 	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+}
+
+func TestVolumeDetachWithControllerClient(t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		_, err := client.API().VolumeDetach(
+			nil, vfs.Name, "vfs-001", &types.VolumeDetachRequest{})
+		assert.Error(t, err)
+		assert.Equal(t, "unsupported op for client type", err.Error())
+	}
+	apitests.RunWithClientType(
+		t, types.ControllerClient, vfs.Name, newTestConfig(t), tf)
 }
 
 func TestVolumeDetachAllForService(t *testing.T) {
@@ -478,6 +534,17 @@ func TestVolumeDetachAllForService(t *testing.T) {
 	apitests.Run(t, vfs.Name, tc, tf)
 }
 
+func TestVolumeDetachAllForServiceWithControllerClient(t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		_, err := client.API().VolumeDetachAllForService(
+			nil, vfs.Name, &types.VolumeDetachRequest{})
+		assert.Error(t, err)
+		assert.Equal(t, "unsupported op for client type", err.Error())
+	}
+	apitests.RunWithClientType(
+		t, types.ControllerClient, vfs.Name, newTestConfig(t), tf)
+}
+
 func TestVolumeDetachAll(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
@@ -503,6 +570,17 @@ func TestVolumeDetachAll(t *testing.T) {
 		assert.Equal(t, 3, len(reply[vfs.Name]))
 	}
 	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumeDetachAllWithControllerClient(t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		_, err := client.API().VolumeDetachAll(
+			nil, &types.VolumeDetachRequest{})
+		assert.Error(t, err)
+		assert.Equal(t, "unsupported op for client type", err.Error())
+	}
+	apitests.RunWithClientType(
+		t, types.ControllerClient, vfs.Name, newTestConfig(t), tf)
 }
 
 func TestSnapshotCopy(t *testing.T) {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"path"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -9,19 +10,18 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/api/utils/paths"
 )
 
 // NewConfig returns a new configuration instance.
 func NewConfig() (gofig.Config, error) {
 	config := gofig.New()
 
-	etcYML := paths.Etc.Join("config.yml")
-	etcYAML := paths.Etc.Join("config.yaml")
+	etcYML := types.Etc.Join("config.yml")
+	etcYAML := types.Etc.Join("config.yaml")
 
 	userHomeDir := gotil.HomeDir()
-	usrYML := paths.Join(userHomeDir, "config.yml")
-	usrYAML := paths.Join(userHomeDir, "config.yaml")
+	usrYML := path.Join(userHomeDir, "config.yml")
+	usrYAML := path.Join(userHomeDir, "config.yaml")
 
 	if err := readConfigFile(config, etcYML); err != nil {
 		return nil, err

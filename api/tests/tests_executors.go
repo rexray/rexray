@@ -24,6 +24,17 @@ var TestExecutors = func(
 	assertLSXDarwin(t, reply["lsx-darwin"])
 }
 
+// TestExecutorsWithControllerClient tests the GET /executors route using a
+// controller client.
+var TestExecutorsWithControllerClient = func(
+	config gofig.Config,
+	client types.Client, t *testing.T) {
+
+	_, err := client.API().Executors(nil)
+	assert.Error(t, err)
+	assert.Equal(t, "unsupported op for client type", err.Error())
+}
+
 // TestHeadExecutorWindows tests the HEAD /executors/lsx-windows.exe route.
 /*var TestHeadExecutorWindows = func(
 	config gofig.Config,

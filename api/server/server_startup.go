@@ -11,7 +11,7 @@ import (
 
 	"github.com/emccode/libstorage/api"
 	"github.com/emccode/libstorage/api/server/services"
-	"github.com/emccode/libstorage/api/utils/paths"
+	"github.com/emccode/libstorage/api/types"
 )
 
 var (
@@ -89,16 +89,16 @@ func (s *server) PrintServerStartupHeader(w io.Writer) {
 
 	fmt.Fprintln(b, barl)
 
-	n, _ = fmt.Fprintf(b, "##        etc:      %s", paths.Etc)
+	n, _ = fmt.Fprintf(b, "##        etc:      %s", types.Etc)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##        lib:      %s", paths.Lib)
+	n, _ = fmt.Fprintf(b, "##        lib:      %s", types.Lib)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##        log:      %s", paths.Log)
+	n, _ = fmt.Fprintf(b, "##        log:      %s", types.Log)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##        run:      %s", paths.Run)
+	n, _ = fmt.Fprintf(b, "##        run:      %s", types.Run)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
 

@@ -6,16 +6,29 @@ import (
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 )
 
 func (c *client) Instances(
 	ctx types.Context) (map[string]*types.Instance, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "Instances")
+	}
+
 	ctx = c.withAllInstanceIDs(c.requireCtx(ctx))
 	return c.APIClient.Instances(ctx)
 }
 
 func (c *client) InstanceInspect(
 	ctx types.Context, service string) (*types.Instance, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "InstanceInspect")
+	}
+
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	i, err := c.APIClient.InstanceInspect(ctx, service)
 	if err != nil {
@@ -232,6 +245,11 @@ func (c *client) VolumeAttach(
 	volumeID string,
 	request *types.VolumeAttachRequest) (*types.Volume, string, error) {
 
+	if c.isController() {
+		return nil, "", utils.NewUnsupportedForClientTypeError(
+			c.clientType, "VolumeAttach")
+	}
+
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	ctxA, err := c.withAllLocalDevices(ctx)
 	if err != nil {
@@ -248,6 +266,11 @@ func (c *client) VolumeDetach(
 	volumeID string,
 	request *types.VolumeDetachRequest) (*types.Volume, error) {
 
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "VolumeDetach")
+	}
+
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	ctxA, err := c.withAllLocalDevices(ctx)
 	if err != nil {
@@ -261,6 +284,11 @@ func (c *client) VolumeDetach(
 func (c *client) VolumeDetachAll(
 	ctx types.Context,
 	request *types.VolumeDetachRequest) (types.ServiceVolumeMap, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "VolumeDetachAll")
+	}
 
 	ctx = c.withAllInstanceIDs(c.requireCtx(ctx))
 	ctxA, err := c.withAllLocalDevices(ctx)
@@ -276,6 +304,11 @@ func (c *client) VolumeDetachAllForService(
 	ctx types.Context,
 	service string,
 	request *types.VolumeDetachRequest) (types.VolumeMap, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "VolumeDetachAllForService")
+	}
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	ctxA, err := c.withAllLocalDevices(ctx)
@@ -339,6 +372,11 @@ func (c *client) SnapshotCopy(
 func (c *client) Executors(
 	ctx types.Context) (map[string]*types.ExecutorInfo, error) {
 
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "Executors")
+	}
+
 	ctx = c.requireCtx(ctx)
 	lsxInfo, err := c.APIClient.Executors(ctx)
 	if err != nil {
@@ -354,12 +392,22 @@ func (c *client) ExecutorHead(
 	ctx types.Context,
 	name string) (*types.ExecutorInfo, error) {
 
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "ExecutorHead")
+	}
+
 	ctx = c.requireCtx(ctx)
 	return c.APIClient.ExecutorHead(ctx, name)
 }
 
 func (c *client) ExecutorGet(
 	ctx types.Context, name string) (io.ReadCloser, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "ExecutorGet")
+	}
 
 	ctx = c.requireCtx(ctx)
 	return c.APIClient.ExecutorGet(ctx, name)

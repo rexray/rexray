@@ -6,8 +6,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
+
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils/paths"
 )
 
 const (
@@ -27,8 +27,6 @@ func init() {
 	}
 	log.SetLevel(logLevel)
 
-	lsxBinPath := paths.Lib.Join(types.LSX)
-
 	r := gofig.NewRegistration("libStorage")
 
 	rk := func(
@@ -47,13 +45,21 @@ func init() {
 		r.Key(keyType, "", defaultVal, description, args...)
 	}
 
-	rk(gofig.String, "unix", "", types.ConfigServerAutoEndpointMode)
+	defaultAEM := types.UnixEndpoint.String()
+	defaultOSDriver := runtime.GOOS
+	defaultStorageDriver := types.LibStorageDriverName
+	defaultIntDriver := "docker"
+	defaultLogLevel := logLevel.String()
+	defaultClientType := types.IntegrationClient.String()
+
 	rk(gofig.String, "", "", types.ConfigHost)
 	rk(gofig.String, "", "", types.ConfigService)
-	rk(gofig.String, runtime.GOOS, "", types.ConfigOSDriver)
-	rk(gofig.String, types.LibStorageDriverName, "", types.ConfigStorageDriver)
-	rk(gofig.String, "docker", "", types.ConfigIntegrationDriver)
-	rk(gofig.String, logLevel.String(), "", types.ConfigLogLevel)
+	rk(gofig.String, defaultAEM, "", types.ConfigServerAutoEndpointMode)
+	rk(gofig.String, defaultOSDriver, "", types.ConfigOSDriver)
+	rk(gofig.String, defaultStorageDriver, "", types.ConfigStorageDriver)
+	rk(gofig.String, defaultIntDriver, "", types.ConfigIntegrationDriver)
+	rk(gofig.String, defaultClientType, "", types.ConfigClientType)
+	rk(gofig.String, defaultLogLevel, "", types.ConfigLogLevel)
 	rk(gofig.String, "", logStdoutDesc, types.ConfigLogStderr)
 	rk(gofig.String, "", logStderrDesc, types.ConfigLogStdout)
 	rk(gofig.Bool, false, "", types.ConfigLogHTTPRequests)
@@ -61,7 +67,7 @@ func init() {
 	rk(gofig.Bool, false, "", types.ConfigHTTPDisableKeepAlive)
 	rk(gofig.Int, 300, "", types.ConfigHTTPWriteTimeout)
 	rk(gofig.Int, 300, "", types.ConfigHTTPReadTimeout)
-	rk(gofig.String, lsxBinPath, "", types.ConfigExecutorPath)
+	rk(gofig.String, types.LSX.String(), "", types.ConfigExecutorPath)
 	rk(gofig.Bool, false, "", types.ConfigExecutorNoDownload)
 	rk(gofig.Bool, false, "", types.ConfigIgVolOpsMountPreempt)
 	rk(gofig.Bool, false, "", types.ConfigIgVolOpsCreateDisable)
@@ -74,5 +80,4 @@ func init() {
 	rk(gofig.Bool, false, "", types.ConfigEmbedded)
 
 	gofig.Register(r)
-
 }

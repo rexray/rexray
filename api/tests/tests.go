@@ -107,7 +107,20 @@ func Run(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, driverName, config, false, false, tests...)
+	run(t, types.IntegrationClient, driverName, config, false, false, tests...)
+}
+
+// RunWithClientType executes the provided tests in a new test harness with
+// the specified client type. Each test is executed against a new server
+// instance.
+func RunWithClientType(
+	t *testing.T,
+	clientType types.ClientType,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(t, clientType, driverName, config, false, false, tests...)
 }
 
 // RunGroup executes the provided tests in a new test harness. All tests are
@@ -118,7 +131,20 @@ func RunGroup(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, driverName, config, false, true, tests...)
+	run(t, types.IntegrationClient, driverName, config, false, true, tests...)
+}
+
+// RunGroupWithClientType executes the provided tests in a new test harness
+// with the specified client type. All tests are executed against the same
+// server instance.
+func RunGroupWithClientType(
+	t *testing.T,
+	clientType types.ClientType,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(t, clientType, driverName, config, false, true, tests...)
 }
 
 // Debug is the same as Run except with additional logging.
@@ -128,7 +154,7 @@ func Debug(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, driverName, config, true, false, tests...)
+	run(t, types.IntegrationClient, driverName, config, true, false, tests...)
 }
 
 // DebugGroup is the same as RunGroup except with additional logging.
@@ -138,11 +164,12 @@ func DebugGroup(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, driverName, config, true, true, tests...)
+	run(t, types.IntegrationClient, driverName, config, true, true, tests...)
 }
 
 func run(
 	t *testing.T,
+	clientType types.ClientType,
 	driver string,
 	configBuf []byte,
 	debug, group bool,
@@ -154,11 +181,12 @@ func run(
 		debug, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG"))
 	}
 
-	th.run(t, driver, configBuf, debug, group, tests...)
+	th.run(t, clientType, driver, configBuf, debug, group, tests...)
 }
 
 func (th *testHarness) run(
 	t *testing.T,
+	clientType types.ClientType,
 	driver string,
 	configBuf []byte,
 	debug, group bool,
@@ -177,7 +205,7 @@ func (th *testHarness) run(
 	wg := &sync.WaitGroup{}
 
 	if group {
-		config := getTestConfig(t, configBuf, debug)
+		config := getTestConfig(t, clientType, configBuf, debug)
 		configNames, configs := getTestConfigs(t, driver, config)
 
 		for x, config := range configs {
@@ -222,7 +250,7 @@ func (th *testHarness) run(
 		}
 	} else {
 		for _, test := range tests {
-			config := getTestConfig(t, configBuf, debug)
+			config := getTestConfig(t, clientType, configBuf, debug)
 			configNames, configs := getTestConfigs(t, driver, config)
 
 			for x, config := range configs {
@@ -275,7 +303,18 @@ func (th *testHarness) run(
 	th.closeServers(t)
 }
 
-func getTestConfig(t *testing.T, configBuf []byte, debug bool) gofig.Config {
+var clientTypeConfigFormat = `
+libstorage:
+  client:
+    type: %s
+`
+
+func getTestConfig(
+	t *testing.T,
+	clientType types.ClientType,
+	configBuf []byte,
+	debug bool) gofig.Config {
+
 	config := gofig.New()
 
 	if debug {
@@ -284,6 +323,11 @@ func getTestConfig(t *testing.T, configBuf []byte, debug bool) gofig.Config {
 		if err != nil {
 			t.Fatal(err)
 		}
+	}
+
+	clientTypeConfig := []byte(fmt.Sprintf(clientTypeConfigFormat, clientType))
+	if err := config.ReadConfig(bytes.NewReader(clientTypeConfig)); err != nil {
+		t.Fatal(err)
 	}
 
 	if err := config.ReadConfig(bytes.NewReader(profilesConfig)); err != nil {

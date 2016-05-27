@@ -8,7 +8,7 @@ import (
 	"time"
 
 	_ "github.com/akutz/golf"
-	"github.com/emccode/libstorage/api/utils/paths"
+	"github.com/emccode/libstorage/api/types"
 )
 
 // GetTypePkgPathAndName gets ths type and package path of the provided
@@ -28,7 +28,7 @@ func GetTypePkgPathAndName(i interface{}) string {
 
 // GetTempSockFile returns a new sock file in a temp space.
 func GetTempSockFile() string {
-	f, err := ioutil.TempFile(paths.Run.String(), "")
+	f, err := ioutil.TempFile(types.Run.String(), "")
 	if err != nil {
 		panic(err)
 	}

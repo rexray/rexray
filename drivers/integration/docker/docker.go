@@ -46,7 +46,7 @@ func (v *volumeMapping) Status() map[string]interface{} {
 
 func init() {
 	registry.RegisterIntegrationDriver(providerName, newDriver)
-	gofig.Register(configRegistration())
+	registerConfig()
 }
 
 func newDriver() types.IntegrationDriver {
@@ -56,23 +56,23 @@ func newDriver() types.IntegrationDriver {
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 
-	ctx.WithField(types.ConfigIgVolOpsMountRootPath, d.volumeRootPath()).Info(
-		"subdirectory to append to the mounted volume path")
-	ctx.WithField(types.ConfigIgVolOpsCreateDefaultType, d.volumeType()).Info(
-		"default volume type")
-	ctx.WithField(types.ConfigIgVolOpsCreateDefaultIOPS, d.iops()).Info(
-		"default DefaultIOPS")
-	ctx.WithField(types.ConfigIgVolOpsCreateDefaultSize, d.size()).Info(
-		"default size in gb")
-	ctx.WithField(types.ConfigIgVolOpsCreateDefaultAZ, d.availabilityZone()).Info(
-		"default availability zone")
-	ctx.WithField(types.ConfigIgVolOpsCreateDefaultFsType, d.fsType()).Info(
-		"default filesystem type")
-	ctx.WithField(types.ConfigIgVolOpsMountPath, d.mountDirPath()).Info(
-		"default path for mounting volumes")
-	ctx.WithField(types.ConfigIgVolOpsCreateImplicit,
-		d.volumeCreateImplicit()).Info(
-		"create a volume if it does not exist on mount")
+	// TODO - replace the description data removed from this location.
+	//
+	//        8879d4ce41bdb6617413df9e18172b131ce155cc was the last commit
+	//        that contained the info.
+	//
+	//        this info was removed due to its being mishandled with regards
+	//        to its approach being orthagonal to what was recommended by the
+	//        project lead in addition to the verbosity of the information.
+	//
+	//        additionally, the choice to log the information so far removed
+	//        from its application is misguided as configuration data is
+	//        dynamic and may be invalid or incorrect from what would be shown
+	//        at this location compared to when it is used
+	//
+	//        the excised data will be reintroduced later in a more considered
+	//        manner that's consistent with the project's overall architecture
+	//        and design
 
 	return nil
 }
@@ -182,7 +182,8 @@ func (d *driver) Mount(
 		if vol, err = d.Create(ctx, volumeName, &types.VolumeCreateOpts{
 			Opts: utils.NewStore(),
 		}); err != nil {
-			return "", nil, goof.WithError("problem creating volume implicitly", err)
+			return "", nil, goof.WithError(
+				"problem creating volume implicitly", err)
 		}
 	} else if err != nil {
 		return "", nil, err
@@ -224,7 +225,8 @@ func (d *driver) Mount(
 
 			_, _, err = client.Executor().WaitForDevice(ctx, opts)
 			if err != nil {
-				return "", nil, goof.WithError("problem with device discovery", err)
+				return "", nil, goof.WithError(
+					"problem with device discovery", err)
 			}
 		}
 
@@ -327,7 +329,8 @@ func (d *driver) Unmount(
 
 	client := context.MustClient(ctx)
 
-	mounts, err := client.OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
+	mounts, err := client.OS().Mounts(
+		ctx, vol.Attachments[0].DeviceName, "", opts)
 	if err != nil {
 		return err
 	}
@@ -387,7 +390,8 @@ func (d *driver) Path(
 
 	client := context.MustClient(ctx)
 
-	mounts, err := client.OS().Mounts(ctx, vol.Attachments[0].DeviceName, "", opts)
+	mounts, err := client.OS().Mounts(
+		ctx, vol.Attachments[0].DeviceName, "", opts)
 	if err != nil {
 		return "", err
 	}
@@ -551,15 +555,17 @@ func (d *driver) volumeCreateImplicit() bool {
 	return d.config.GetBool(types.ConfigIgVolOpsCreateImplicit)
 }
 
-func configRegistration() *gofig.Registration {
+func registerConfig() {
 	r := gofig.NewRegistration("Docker")
-	r.Key(gofig.String, "", "ext4", "", types.ConfigIgVolOpsCreateDefaultFsType)
+	r.Key(gofig.String, "", "ext4", "",
+		types.ConfigIgVolOpsCreateDefaultFsType)
 	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultType)
 	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultIOPS)
 	r.Key(gofig.String, "", "16", "", types.ConfigIgVolOpsCreateDefaultSize)
 	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultAZ)
-	r.Key(gofig.String, "", "/var/lib/libstorage/volumes", "", types.ConfigIgVolOpsMountPath)
+	r.Key(gofig.String, "", types.Lib.Join("volumes"), "",
+		types.ConfigIgVolOpsMountPath)
 	r.Key(gofig.String, "", "/data", "", types.ConfigIgVolOpsMountRootPath)
 	r.Key(gofig.Bool, "", true, "", types.ConfigIgVolOpsCreateImplicit)
-	return r
+	gofig.Register(r)
 }

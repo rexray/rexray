@@ -4,6 +4,7 @@ import (
 	"github.com/akutz/goof"
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
 )
 
 func (d *driver) Name() string {
@@ -50,6 +51,11 @@ func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
+
+	if d.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			d.clientType, "InstanceInspect")
+	}
 
 	serviceName, ok := context.ServiceName(ctx)
 	if !ok {
@@ -199,6 +205,11 @@ func (d *driver) VolumeAttach(
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
+	if d.isController() {
+		return nil, "", utils.NewUnsupportedForClientTypeError(
+			d.clientType, "VolumeAttach")
+	}
+
 	ctx = d.requireCtx(ctx)
 	serviceName, ok := context.ServiceName(ctx)
 	if !ok {
@@ -218,6 +229,11 @@ func (d *driver) VolumeDetach(
 	ctx types.Context,
 	volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
+
+	if d.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			d.clientType, "VolumeDetach")
+	}
 
 	ctx = d.requireCtx(ctx)
 	serviceName, ok := context.ServiceName(ctx)

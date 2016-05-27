@@ -4,8 +4,7 @@ import (
 	"path"
 
 	"github.com/akutz/gofig"
-
-	"github.com/emccode/libstorage/api/utils/paths"
+	"github.com/emccode/libstorage/api/types"
 )
 
 const (
@@ -18,7 +17,7 @@ func init() {
 }
 
 func registerConfig() {
-	defaultRootDir := paths.Lib.Join("vfs")
+	defaultRootDir := types.Lib.Join("vfs")
 	r := gofig.NewRegistration("VFS")
 	r.Key(gofig.String, "", defaultRootDir, "", "vfs.root")
 	gofig.Register(r)

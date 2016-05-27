@@ -1,6 +1,50 @@
 package types
 
-import "io"
+import (
+	"io"
+	"strings"
+)
+
+// ClientType is a client's type.
+type ClientType int
+
+const (
+	// UnknownClientType is an unknown client type.
+	UnknownClientType ClientType = iota
+
+	// IntegrationClient is the default client type -- a client that both
+	// communicates with a remote libStorage endpoint as well as interacts with
+	// the local host.
+	IntegrationClient
+
+	// ControllerClient is a libStorage client that has no interaction with
+	// the local host, removing any need for access to libStorage executors.
+	ControllerClient
+)
+
+// String returns the client type's string representation.
+func (t ClientType) String() string {
+	switch t {
+	case IntegrationClient:
+		return "integration"
+	case ControllerClient:
+		return "controller"
+	default:
+		return ""
+	}
+}
+
+// ParseClientType parses a new client type.
+func ParseClientType(str string) ClientType {
+	str = strings.ToLower(str)
+	switch str {
+	case "integration":
+		return IntegrationClient
+	case "controller":
+		return ControllerClient
+	}
+	return UnknownClientType
+}
 
 // Client is the libStorage client.
 type Client interface {

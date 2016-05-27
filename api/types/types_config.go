@@ -13,6 +13,9 @@ const (
 	// ConfigClient is a config key.
 	ConfigClient = ConfigRoot + ".client"
 
+	// ConfigClientType is a config key.
+	ConfigClientType = ConfigClient + ".type"
+
 	// ConfigHost is a config key.
 	ConfigHost = ConfigRoot + ".host"
 

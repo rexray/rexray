@@ -55,12 +55,14 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	}
 
 	host := getHost(proto, lAddr, tlsConfig)
-	disableKeepAlive := config.GetBool(types.ConfigHTTPDisableKeepAlive)
 	lsxPath := config.GetString(types.ConfigExecutorPath)
+	cliType := types.ParseClientType(config.GetString(types.ConfigClientType))
+	disableKeepAlive := config.GetBool(types.ConfigHTTPDisableKeepAlive)
 
 	logFields["host"] = host
-	logFields["disableKeepAlive"] = disableKeepAlive
 	logFields["lsxPath"] = lsxPath
+	logFields["clientType"] = cliType
+	logFields["disableKeepAlive"] = disableKeepAlive
 
 	httpTransport := &http.Transport{
 		Dial: func(string, string) (net.Conn, error) {
@@ -83,33 +85,36 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	logFields["logRequests"] = logReq
 	logFields["logResponses"] = logRes
 
-	newIIDCache := utils.NewStore
-	dur, err := time.ParseDuration(
-		config.GetString(types.ConfigClientCacheInstanceID))
-	if err != nil {
-		logFields["iidCacheDuration"] = dur.String()
-		newIIDCache = func() types.Store {
-			return utils.NewTTLStore(dur, true)
-		}
+	d.client = client{
+		APIClient:    apiClient,
+		ctx:          ctx,
+		config:       config,
+		clientType:   cliType,
+		serviceCache: &lss{Store: utils.NewStore()},
 	}
 
-	d.client = client{
-		APIClient:       apiClient,
-		ctx:             ctx,
-		config:          config,
-		serviceCache:    &lss{Store: utils.NewStore()},
-		lsxCache:        &lss{Store: utils.NewStore()},
-		instanceIDCache: &lss{Store: newIIDCache()},
+	if d.clientType == types.IntegrationClient {
+
+		newIIDCache := utils.NewStore
+		dur, err := time.ParseDuration(
+			config.GetString(types.ConfigClientCacheInstanceID))
+		if err != nil {
+			logFields["iidCacheDuration"] = dur.String()
+			newIIDCache = func() types.Store {
+				return utils.NewTTLStore(dur, true)
+			}
+		}
+
+		d.lsxCache = &lss{Store: utils.NewStore()}
+		d.instanceIDCache = &lss{Store: newIIDCache()}
 	}
+
+	d.ctx.WithFields(logFields).Info("created libStorage client")
 
 	if err := d.dial(ctx); err != nil {
 		return err
 	}
 
-	logFields["server"] = d.ServerName()
-
-	d.ctx.WithFields(logFields).Info(
-		"successfully dialed libStorage")
-
+	d.ctx.Info("successefully dialed libStorage server")
 	return nil
 }

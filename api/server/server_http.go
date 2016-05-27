@@ -9,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -42,17 +41,11 @@ func (s *server) initDefaultEndpoint() error {
 
 	} else {
 
-		aem := s.config.GetString(types.ConfigServerAutoEndpointMode)
-		switch strings.ToLower(aem) {
-		case "tcp":
-			aem = "tcp"
-		default:
-			aem = "unix"
-		}
+		aem := types.ParseEndpointType(
+			s.config.GetString(types.ConfigServerAutoEndpointMode))
 		s.ctx.WithField("autoEndpointMode", aem).Info(
 			"initializing default endpoint")
 		endpointConfig = fmt.Sprintf(defaultEndpointConfig, aem)
-
 	}
 
 	return s.config.ReadConfig(bytes.NewReader([]byte(endpointConfig)))
@@ -92,8 +85,10 @@ func (s *server) initEndpoints(ctx types.Context) error {
 			return goof.WithField("endpoint", endpoint, "missing address")
 		}
 
-		switch laddr {
-		case "tcp":
+		laddrET := types.ParseEndpointType(laddr)
+		switch laddrET {
+
+		case types.TCPEndpoint:
 
 			var tcpPort int
 			func() {
@@ -106,7 +101,8 @@ func (s *server) initEndpoints(ctx types.Context) error {
 			s.ctx.WithField("endpoint", endpoint).Info(
 				"initializing auto tcp endpoint")
 
-		case "unix":
+		case types.UnixEndpoint:
+
 			laddr = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
 			s.ctx.WithField("endpoint", endpoint).Info(
 				"initializing auto unix endpoint")

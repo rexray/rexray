@@ -34,116 +34,31 @@ has a minimal set of dependencies in order to avoid a large, runtime footprint.
 package libstorage
 
 import (
-	"bytes"
-	"fmt"
-
 	"github.com/akutz/gofig"
 
-	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/client"
 )
 
-// RegisterStorageDriver registers a new StorageDriver with the
-// libStorage service.
-func RegisterStorageDriver(
-	name string, ctor types.NewStorageDriver) {
-	registry.RegisterStorageDriver(name, ctor)
-}
-
-// RegisterOSDriver registers a new StorageDriver with the libStorage
-// service.
-func RegisterOSDriver(name string, ctor types.NewOSDriver) {
-	registry.RegisterOSDriver(name, ctor)
-}
-
-// RegisterIntegrationDriver registers a new IntegrationDriver with the
-// libStorage service.
-func RegisterIntegrationDriver(name string, ctor types.NewIntegrationDriver) {
-	registry.RegisterIntegrationDriver(name, ctor)
-}
-
-/*
-Serve starts the reference implementation of a server hosting an
-HTTP/JSON service that implements the libStorage API endpoint.
-
-If the config parameter is nil a default instance is created. The
-libStorage service is served at the address specified by the configuration
-property libstorage.host.
-*/
-func Serve(config gofig.Config) (types.Server, error, <-chan error) {
-	return server.Serve(config)
-}
-
-// Dial opens a connection to a remote libStorage serice and returns the client
-// that can be used to communicate with said endpoint.
-//
-// If the config parameter is nil a default instance is created. The
-// function dials the libStorage service specified by the configuration
-// property libstorage.host.
-func Dial(config gofig.Config) (types.Client, error) {
-	return client.New(config)
-}
-
-// New returns a new libStorage client like the `Dial` function, but with
-// one difference. If the `libstorag.host` key is not present in the provided
-// configuration instance, a new server will be automatically started and
-// returned.
+// New starts an embedded libStorage server and returns both the server
+// instnace as well as a client connected to said instnace.
 //
 // While a new server may be launched, it's still up to the caller to provide
 // a config instance with the correct properties to specify service
 // information for a libStorage server.
 func New(
-	config gofig.Config) (types.Client, types.Server, error, <-chan error) {
+	config gofig.Config) (types.Client, types.Server, <-chan error, error) {
 
-	var (
-		h       = config.GetString(types.ConfigHost)
-		em      = config.GetBool(types.ConfigEmbedded)
-		c       types.Client
-		s       types.Server
-		err     error
-		errs    <-chan error
-		serving bool
-	)
-
-	if h == "" || em {
-
-		if h == "" {
-			h = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
-		}
-
-		yaml := []byte(fmt.Sprintf(embeddedHostPatt, h))
-		if err := config.ReadConfig(bytes.NewReader(yaml)); err != nil {
-			return nil, nil, err, nil
-		}
-		if s, err, errs = Serve(config); err != nil {
-			return nil, nil, err, nil
-		}
-		serving = true
-		go func() {
-			e := <-errs
-			if e != nil {
-				panic(e)
-			}
-		}()
+	s, errs, err := server.Serve(config)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
-	if c, err = Dial(config); err != nil {
-		return nil, nil, err, nil
+	c, err := client.New(config)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
-	if serving {
-		return c, s, nil, errs
-	} else {
-		return c, nil, nil, nil
-	}
+	return c, s, errs, nil
 }
-
-const embeddedHostPatt = `libstorage:
-  host: %[1]s
-  server:
-    endpoints:
-      localhost:
-        address: %[1]s`

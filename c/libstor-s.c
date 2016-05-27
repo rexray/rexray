@@ -9,6 +9,6 @@ int main(int argc, char** argv) {
     }
 
     closeOnAbort();
-    serve("", 0, argc-1, argv[1]);
+    serve("", argc-1, argv[1]);
 	return 0;
 }

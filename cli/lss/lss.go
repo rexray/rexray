@@ -1,6 +1,7 @@
 package lss
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/emccode/libstorage/api"
 	"github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
 	apiconfig "github.com/emccode/libstorage/api/utils/config"
 
 	// load the drivers
@@ -89,7 +89,7 @@ func Run() {
 			os.Exit(0)
 		}
 
-		s, err, errs := server.Serve(config)
+		s, errs, err := server.Serve(config)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 			os.Exit(1)
@@ -147,29 +147,31 @@ func Run() {
 		os.Exit(0)
 	}
 
-	driversAndServices := []string{}
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf, "libstorage:\n  server:\n    services:\n")
 	for _, ds := range flag.Args() {
 		dsp := strings.Split(ds, ":")
-		driversAndServices = append(driversAndServices, dsp[0])
+		dn := dsp[0]
+		sn := dsp[0]
 		if len(dsp) > 1 {
-			driversAndServices = append(driversAndServices, dsp[1])
+			sn = dsp[1]
 		}
+		fmt.Fprintf(buf, "      %s:\n        driver: %s\n", sn, dn)
+	}
+	if err := config.ReadConfig(buf); err != nil {
+		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+		os.Exit(1)
 	}
 
 	server.CloseOnAbort()
 
-	host := config.GetString(apitypes.ConfigHost)
-	if host == "" {
-		host = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
-	}
-
-	if err := server.Run(
-		host,
-		false,
-		driversAndServices...); err != nil {
+	_, errs, err := server.Serve(config)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)
 	}
+
+	<-errs
 }
 
 func printUsage() {

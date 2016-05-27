@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
@@ -57,6 +58,10 @@ func (s *server) initDefaultEndpoint() error {
 	return s.config.ReadConfig(bytes.NewReader([]byte(endpointConfig)))
 }
 
+var (
+	tcpPortLock = &sync.Mutex{}
+)
+
 func (s *server) initEndpoints(ctx types.Context) error {
 
 	endpointsObj := s.config.Get(types.ConfigEndpoints)
@@ -89,13 +94,23 @@ func (s *server) initEndpoints(ctx types.Context) error {
 
 		switch laddr {
 		case "tcp":
-			laddr = fmt.Sprintf("tcp://127.0.0.1:%d", gotil.RandomTCPPort())
+
+			var tcpPort int
+			func() {
+				tcpPortLock.Lock()
+				defer tcpPortLock.Unlock()
+				tcpPort = gotil.RandomTCPPort()
+			}()
+
+			laddr = fmt.Sprintf("tcp://127.0.0.1:%d", tcpPort)
 			s.ctx.WithField("endpoint", endpoint).Info(
 				"initializing auto tcp endpoint")
+
 		case "unix":
 			laddr = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
 			s.ctx.WithField("endpoint", endpoint).Info(
 				"initializing auto unix endpoint")
+
 		}
 
 		s.ctx.WithFields(log.Fields{

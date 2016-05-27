@@ -1,36 +1,23 @@
-/*
-Package server is the homeo of the reference implementation of the  libStorage
-API server. There are five functions that will start a server instance:
-
-    1. Run
-    2. Start
-    3. RunWithConfig
-    4. StartWithConfig
-    5. Serve
-
-The Run functions start a server and block until a signal is received by the
-owner process. The Start functions will start a server and return a channel
-on which any server errors are returned. This channel can be used to block or
-ignored to start a server asynchronously.
-
-The Serve function is ultimately what the above functions invoke, but with an
-important distinction. The above functions 1-4 all track the servers that are
-started inside a single process and upon the process's abrupt termination will
-enable the graceful shutdown of all running/started server instances. However,
-the Server function is the low-level method for creating and running a server,
-and it's up to the end-user to do any type of resource tracking in order to
-enable graceful shutdowns if that method is used directly.
-*/
 package server
 
 import (
+	"fmt"
 	"io"
 	"os"
-	"strconv"
+	"os/signal"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
+	"github.com/emccode/libstorage/api/context"
+	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
+	"github.com/emccode/libstorage/api/utils"
+	apicnfg "github.com/emccode/libstorage/api/utils/config"
 
 	// imported to load routers
 	_ "github.com/emccode/libstorage/imports/routers"
@@ -39,55 +26,251 @@ import (
 	_ "github.com/emccode/libstorage/imports/remote"
 )
 
-// IsNil returns a flag indicating whether a server returned by the Serve
-// function is nil.
-func IsNil(closer io.Closer) bool {
-	return closer == (*server)(nil)
+var (
+	servers []*server
+)
+
+type server struct {
+	name         string
+	adminToken   string
+	ctx          types.Context
+	addrs        []string
+	config       gofig.Config
+	servers      []*HTTPServer
+	closeSignal  chan int
+	closedSignal chan int
+	closeOnce    *sync.Once
+
+	routers        []types.Router
+	routeHandlers  map[string][]types.Middleware
+	globalHandlers []types.Middleware
+
+	logHTTPEnabled   bool
+	logHTTPRequests  bool
+	logHTTPResponses bool
+
+	stdOut io.WriteCloser
+	stdErr io.WriteCloser
 }
 
-// Run runs the server and blocks until a Kill signal is received by the
-// owner process or the server returns an error via its error channel.
-func Run(host string, tls bool, driversAndServices ...string) error {
-	_, _, err, errs := Start(host, tls, driversAndServices...)
+func newServer(config gofig.Config) (*server, error) {
+
+	if config == nil {
+		var err error
+		if config, err = apicnfg.NewConfig(); err != nil {
+			return nil, err
+		}
+	}
+
+	adminTokenUUID, err := types.NewUUID()
 	if err != nil {
-		return err
-	}
-	err = <-errs
-	return err
-}
-
-// Start starts the server and returns a channel when errors occur runs until a
-// Kill signal is received by the owner process or the server returns an error
-// via its error channel.
-func Start(host string, tls bool, driversAndServices ...string) (
-	gofig.Config, types.Server, error, <-chan error) {
-
-	if runHost := os.Getenv("LIBSTORAGE_RUN_HOST"); runHost != "" {
-		host = runHost
-	}
-	if runTLS, err := strconv.ParseBool(
-		os.Getenv("LIBSTORAGE_RUN_TLS")); err != nil {
-		tls = runTLS
+		return nil, err
 	}
 
-	return start(host, tls, driversAndServices...)
-}
+	serverName := randomServerName()
+	config = config.Scope(types.ConfigServer)
 
-// RunWithConfig runs the server by specifying a configuration object
-// and blocks until a Kill signal is received by the owner process or the
-// server returns an error via its error channel.
-func RunWithConfig(config gofig.Config) error {
-	_, err, errs := startWithConfig(config)
+	s := &server{
+		name:         serverName,
+		adminToken:   adminTokenUUID.String(),
+		config:       config,
+		closeSignal:  make(chan int),
+		closedSignal: make(chan int),
+		closeOnce:    &sync.Once{},
+	}
+
+	s.PrintServerStartupHeader(os.Stdout)
+
+	s.ctx = context.Background().WithValue(context.ServerKey, serverName)
+	s.ctx = s.ctx.WithValue(context.AdminTokenKey, s.adminToken)
+
+	if lvl, err := log.ParseLevel(
+		config.GetString(types.ConfigLogLevel)); err == nil {
+		context.SetLogLevel(s.ctx, lvl)
+	}
+
+	logFields := log.Fields{}
+	logConfig, err := utils.ParseLoggingConfig(
+		config, logFields, "libstorage.server")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = <-errs
-	return err
+
+	// always update the server context's log level
+	context.SetLogLevel(s.ctx, logConfig.Level)
+	s.ctx.WithFields(logFields).Info("configured logging")
+
+	s.ctx.Info("initializing server")
+
+	if err := s.initEndpoints(s.ctx); err != nil {
+		return nil, err
+	}
+	s.ctx.Info("initialized endpoints")
+
+	if err := services.Init(s.ctx, s.config); err != nil {
+		return nil, err
+	}
+	s.ctx.Info("initialized services")
+
+	if logConfig.HTTPRequests || logConfig.HTTPResponses {
+		s.logHTTPEnabled = true
+		s.logHTTPRequests = logConfig.HTTPRequests
+		s.logHTTPResponses = logConfig.HTTPResponses
+		s.stdOut = getLogIO(logConfig.Stdout, types.ConfigLogStdout)
+		s.stdErr = getLogIO(logConfig.Stderr, types.ConfigLogStderr)
+	}
+
+	s.initGlobalMiddleware()
+
+	if err := s.initRouters(); err != nil {
+		return nil, err
+	}
+
+	servers = append(servers, s)
+
+	return s, nil
 }
 
-// StartWithConfig starts the server by specifying a configuration object and
-// returns a channel when errors occur runs until a Kill signal is received
-// by the owner process or the server returns an error via its error channel.
-func StartWithConfig(config gofig.Config) (types.Server, error, <-chan error) {
-	return startWithConfig(config)
+// Serve starts serving the configured libStorage endpoints. This function
+// returns a channel on which errors are received. Reading this channel is
+// also the prescribed manner for clients wishing to block until the server is
+// shutdown as the error channel will be closed when the server is stopped.
+func Serve(config gofig.Config) (types.Server, <-chan error, error) {
+	s, err := newServer(config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	errs := make(chan error, len(s.servers))
+	srvErrs := make(chan error, len(s.servers))
+
+	for _, srv := range s.servers {
+		srv.srv.Handler = s.createMux(srv.ctx)
+		go func(srv *HTTPServer) {
+			srv.ctx.Info("api listening")
+			if err := srv.Serve(); err != nil {
+				if !strings.Contains(
+					err.Error(), "use of closed network connection") {
+					srvErrs <- err
+				}
+			}
+		}(srv)
+	}
+
+	go func() {
+		s.ctx.Info("waiting for err or close signal")
+		select {
+		case err := <-srvErrs:
+			errs <- err
+			s.ctx.Error("received server error")
+		case <-s.closeSignal:
+			s.ctx.Debug("received close signal")
+		}
+		close(errs)
+		s.ctx.Info("closed server error channel")
+		s.closedSignal <- 1
+	}()
+
+	// wait a second for all the configured endpoints to start. this isn't
+	// pretty, but the underlying golang http package doesn't really provide
+	// a better option
+	timeout := time.NewTimer(time.Second * 1)
+	<-timeout.C
+
+	s.ctx.Info("server started")
+
+	s.PrintServerStartupFooter(os.Stdout)
+
+	return s, errs, nil
+}
+
+// Name returns the name of the server.
+func (s *server) Name() string {
+	return s.name
+}
+
+// Addrs returns the server's configured endpoint addresses.
+func (s *server) Addrs() []string {
+	return s.addrs
+}
+
+// Close closes servers and thus stop receiving requests
+func (s *server) Close() (err error) {
+	s.closeOnce.Do(
+		func() {
+			err = s.close()
+			s.closeSignal <- 1
+			<-s.closedSignal
+		})
+	return
+}
+
+func (s *server) close() error {
+	s.ctx.Info("shutting down server")
+
+	for _, srv := range s.servers {
+		srv.ctx.Info("shutting down endpoint")
+		if err := srv.Close(); err != nil {
+			srv.ctx.Error(err)
+		}
+		if srv.l.Addr().Network() == "unix" {
+			laddr := srv.l.Addr().String()
+			srv.ctx.WithField(
+				"path", laddr).Debug("removed unix socket")
+			os.RemoveAll(laddr)
+		}
+		srv.ctx.Debug("shutdown endpoint complete")
+	}
+
+	if s.stdOut != nil {
+		if err := s.stdOut.Close(); err != nil {
+			log.Error(err)
+		}
+	}
+
+	if s.stdErr != nil {
+		if err := s.stdErr.Close(); err != nil {
+			log.Error(err)
+		}
+	}
+
+	s.ctx.Debug("shutdown server complete")
+
+	return nil
+}
+
+// CloseOnAbort is a helper function that can be called by programs, such as
+// tests or a command line or service application.
+func CloseOnAbort() {
+	// make sure all servers get closed even if the test is abrubptly aborted
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc,
+		syscall.SIGKILL,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+	go func() {
+		<-sigc
+		fmt.Println("received abort signal")
+		for range Close() {
+		}
+		os.Exit(1)
+	}()
+}
+
+// Close closes all servers. This function can be used when a calling program
+// traps UNIX signals or when it exits gracefully.
+func Close() <-chan error {
+	errs := make(chan error)
+	go func() {
+		for _, server := range servers {
+			if err := server.Close(); err != nil {
+				errs <- err
+			}
+		}
+		close(errs)
+		log.Info("all servers closed")
+	}()
+	return errs
 }

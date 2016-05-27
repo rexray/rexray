@@ -3,11 +3,13 @@ package main
 import "C"
 
 import (
+	"os"
 	"unsafe"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/emccode/libstorage/api/server"
+	apicfg "github.com/emccode/libstorage/api/utils/config"
 )
 
 // closeOnAbort is a helper function that can be called by programs, such as
@@ -24,8 +26,6 @@ func closeOnAbort() {
 //   char*  host    the golang network-style address. if no value is provided
 //                  then a random TCP port bound to localhost is used
 //
-//   int    tls     a flag indicating whether or not to use TLS. >0 = true
-//
 //   short  argc    the length of the argv array
 //
 //   void*  argv    a pointer to an array of char* strings that represent the
@@ -33,10 +33,10 @@ func closeOnAbort() {
 //                  array is odd-numbered then the service for the trailing
 //                  driver takes the name of the driver
 //
-// char* serve(char* host, short tls, int argc, void* argv);
+// char* serve(char* host, int argc, void* argv);
 //export serve
 func serve(
-	host *C.char, tls C.short, argc C.int, argv unsafe.Pointer) *C.char {
+	host *C.char, argc C.int, argv unsafe.Pointer) *C.char {
 
 	iargc := int(argc)
 	args := make([]string, iargc)
@@ -53,16 +53,26 @@ func serve(
 	}
 
 	szHost := C.GoString(host)
-	bTLS := tls > 0
 
 	log.WithFields(log.Fields{
 		"host": szHost,
-		"tls":  bTLS,
 		"args": args,
 	}).Info("serving")
 
-	if err := server.Run(szHost, bTLS, args...); err != nil {
+	config, err := apicfg.NewConfig()
+	if err != nil {
 		return C.CString(err.Error())
 	}
+
+	if len(szHost) > 0 {
+		os.Setenv("LIBSTORAGE_HOST", szHost)
+	}
+
+	_, errs, err := server.Serve(config)
+	if err != nil {
+		return C.CString(err.Error())
+	}
+
+	<-errs
 	return nil
 }

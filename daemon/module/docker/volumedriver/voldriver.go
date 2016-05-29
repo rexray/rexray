@@ -109,8 +109,7 @@ type pluginRequest struct {
 
 func (m *mod) Start() error {
 
-	lsc, _, err, _ := libstorage.New(m.config)
-
+	lsc, _, _, err := libstorage.New(m.config)
 	if err != nil {
 		for k, v := range m.config.AllSettings() {
 			m.ctx.Errorf("%s=%v", k, v)

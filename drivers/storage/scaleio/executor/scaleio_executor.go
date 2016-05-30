@@ -1,8 +1,6 @@
 package executor
 
 import (
-	"github.com/akutz/gofig"
-
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -10,24 +8,19 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
-)
-
-const (
-	// Name is the name of the driver.
-	Name = "scaleio"
+	"github.com/emccode/libstorage/drivers/storage/scaleio"
 )
 
 // driver is the storage executor for the VFS storage driver.
-type driver struct {
-	Config     gofig.Config
-	instanceID *types.InstanceID
-}
+type driver struct{}
 
 func init() {
-	registry.RegisterStorageExecutor(Name, newdriver)
+	registry.RegisterStorageExecutor(scaleio.Name, newdriver)
 }
 
 func newdriver() types.StorageExecutor {
@@ -35,17 +28,11 @@ func newdriver() types.StorageExecutor {
 }
 
 func (d *driver) Init(context types.Context, config gofig.Config) error {
-	d.Config = config
-	id, err := GetInstanceID()
-	if err != nil {
-		return err
-	}
-	d.instanceID = id
 	return nil
 }
 
 func (d *driver) Name() string {
-	return Name
+	return scaleio.Name
 }
 
 // NextDevice returns the next available device.
@@ -66,7 +53,7 @@ func (d *driver) LocalDevices(
 	}
 
 	return &types.LocalDevices{
-		Driver:    Name,
+		Driver:    scaleio.Name,
 		DeviceMap: lvm,
 	}, nil
 }
@@ -82,7 +69,8 @@ func getLocalVolumeMap() (map[string]string, error) {
 	mappedVolumesMap := make(map[string]*sdcMappedVolume)
 	volumeMap := make(map[string]string)
 
-	out, err := exec.Command("/opt/emc/scaleio/sdc/bin/drv_cfg", "--query_vols").Output()
+	out, err := exec.Command(
+		"/opt/emc/scaleio/sdc/bin/drv_cfg", "--query_vols").Output()
 	if err != nil {
 		return nil, goof.WithError("error querying volumes", err)
 	}
@@ -93,8 +81,12 @@ func getLocalVolumeMap() (map[string]string, error) {
 	for _, line := range lines {
 		split := strings.Split(line, " ")
 		if split[0] == "VOL-ID" {
-			mappedVolume := &sdcMappedVolume{mdmID: split[3], volumeID: split[1]}
-			mappedVolume.mdmVolumeID = fmt.Sprintf("%s-%s", mappedVolume.mdmID, mappedVolume.volumeID)
+			mappedVolume := &sdcMappedVolume{
+				mdmID:    split[3],
+				volumeID: split[1],
+			}
+			mappedVolume.mdmVolumeID = fmt.Sprintf(
+				"%s-%s", mappedVolume.mdmID, mappedVolume.volumeID)
 			mappedVolumesMap[mappedVolume.mdmVolumeID] = mappedVolume
 		}
 	}
@@ -106,7 +98,8 @@ func getLocalVolumeMap() (map[string]string, error) {
 		matched := r.MatchString(f.Name())
 		if matched {
 			mdmVolumeID := strings.Replace(f.Name(), "emc-vol-", "", 1)
-			devPath, _ := filepath.EvalSymlinks(fmt.Sprintf("%s/%s", diskIDPath, f.Name()))
+			devPath, _ := filepath.EvalSymlinks(
+				fmt.Sprintf("%s/%s", diskIDPath, f.Name()))
 			if _, ok := mappedVolumesMap[mdmVolumeID]; ok {
 				volumeID := mappedVolumesMap[mdmVolumeID].volumeID
 				volumeMap[volumeID] = devPath
@@ -121,7 +114,8 @@ func getLocalVolumeMap() (map[string]string, error) {
 func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
-	return d.instanceID, nil
+
+	return GetInstanceID()
 }
 
 // GetInstanceID returns the instance ID object
@@ -130,7 +124,7 @@ func GetInstanceID() (*types.InstanceID, error) {
 	if err != nil {
 		return nil, err
 	}
-	iid := &types.InstanceID{Driver: Name}
+	iid := &types.InstanceID{Driver: scaleio.Name}
 	if err := iid.MarshalMetadata(sg); err != nil {
 		return nil, err
 	}
@@ -138,7 +132,8 @@ func GetInstanceID() (*types.InstanceID, error) {
 }
 
 func getSdcLocalGUID() (sdcGUID string, err error) {
-	out, err := exec.Command("/opt/emc/scaleio/sdc/bin/drv_cfg", "--query_guid").Output()
+	out, err := exec.Command(
+		"/opt/emc/scaleio/sdc/bin/drv_cfg", "--query_guid").Output()
 	if err != nil {
 		return "", goof.WithError("problem getting sdc guid", err)
 	}

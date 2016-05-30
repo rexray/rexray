@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/server/executors"
 	apitests "github.com/emccode/libstorage/api/tests"
 	"github.com/emccode/libstorage/api/types"
 
@@ -21,12 +20,6 @@ import (
 )
 
 var (
-	lsxbin string
-
-	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
-	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
-	//lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
-
 	configYAML = []byte(`
 scaleio:
   endpoint: https://192.168.50.12/api
@@ -100,7 +93,9 @@ func TestServices(t *testing.T) {
 	apitests.Run(t, sio.Name, configYAML, tf)
 }
 
-func volumeCreate(t *testing.T, client types.Client, volumeName string) *types.Volume {
+func volumeCreate(
+	t *testing.T, client types.Client, volumeName string) *types.Volume {
+
 	log.WithField("volumeName", volumeName).Info("creating volume")
 	size := int64(8)
 
@@ -128,7 +123,9 @@ func volumeCreate(t *testing.T, client types.Client, volumeName string) *types.V
 	return reply
 }
 
-func volumeByName(t *testing.T, client types.Client, volumeName string) *types.Volume {
+func volumeByName(
+	t *testing.T, client types.Client, volumeName string) *types.Volume {
+
 	log.WithField("volumeName", volumeName).Info("get volume bysio.Name")
 	vols, err := client.API().Volumes(nil, false)
 	assert.NoError(t, err)
@@ -187,7 +184,9 @@ func TestVolumes(t *testing.T) {
 	apitests.Run(t, sio.Name, configYAML, tf)
 }
 
-func volumeAttach(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeAttach(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("attaching volume")
 	reply, token, err := client.API().VolumeAttach(
 		nil, sio.Name, volumeID, &types.VolumeAttachRequest{})
@@ -203,7 +202,9 @@ func volumeAttach(t *testing.T, client types.Client, volumeID string) *types.Vol
 	return reply
 }
 
-func volumeInspect(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspect(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(nil, sio.Name, volumeID, false)
 	assert.NoError(t, err)
@@ -216,7 +217,9 @@ func volumeInspect(t *testing.T, client types.Client, volumeID string) *types.Vo
 	return reply
 }
 
-func volumeInspectAttached(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectAttached(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(nil, sio.Name, volumeID, true)
 	assert.NoError(t, err)
@@ -230,7 +233,9 @@ func volumeInspectAttached(t *testing.T, client types.Client, volumeID string) *
 	return reply
 }
 
-func volumeInspectAttachedFail(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectAttachedFail(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(nil, sio.Name, volumeID, true)
 	assert.NoError(t, err)
@@ -244,7 +249,9 @@ func volumeInspectAttachedFail(t *testing.T, client types.Client, volumeID strin
 	return reply
 }
 
-func volumeInspectDetached(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectDetached(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(nil, sio.Name, volumeID, true)
 	assert.NoError(t, err)
@@ -259,7 +266,9 @@ func volumeInspectDetached(t *testing.T, client types.Client, volumeID string) *
 	return reply
 }
 
-func volumeInspectDetachedFail(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeInspectDetachedFail(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(nil, sio.Name, volumeID, false)
 	assert.NoError(t, err)
@@ -274,7 +283,9 @@ func volumeInspectDetachedFail(t *testing.T, client types.Client, volumeID strin
 	return reply
 }
 
-func volumeDetach(t *testing.T, client types.Client, volumeID string) *types.Volume {
+func volumeDetach(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
 	log.WithField("volumeID", volumeID).Info("detaching volume")
 	reply, err := client.API().VolumeDetach(
 		nil, sio.Name, volumeID, &types.VolumeDetachRequest{})
@@ -304,174 +315,3 @@ func TestVolumeAttach(t *testing.T) {
 	}
 	apitests.Run(t, sio.Name, configYAML, tf)
 }
-
-// func TestVolumes(t *testing.T) {
-// 	if skipTests() { t.SkipNow() }
-//
-// 	volumeName := "Volume-010"
-//
-// 	TestVolumeRemove(t)
-//
-// 	var vol *types.Volume
-// 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-// 		vol = volumeCreate(t, client, volumeName)
-// 		if vol == nil {
-// 			t.FailNow()
-// 		}
-// 	}
-// 	apitests.Run(t,sio.Name, configYAML, tf)
-//
-// 	if vol == nil {
-// 		t.FailNow()
-// 	}
-//
-// 	tf = func(config gofig.Config, client types.Client, t *testing.T) {
-// 		reply, err := client.API().VolumeInspect(
-// 			nil,sio.Name, vol.ID, false)
-// 		assert.NoError(t, err)
-// 		apitests.LogAsJSON(reply, t)
-// 		assert.Equal(t, volumeName, reply.Name)
-// 	}
-// 	apitests.Run(t,sio.Name, configYAML, tf)
-// }
-
-// if len(vol.Attachments) > 0 {
-// 	_, err := client.API().VolumeDetach(
-// 		nil,sio.Name, vol.ID, &types.VolumeDetachRequest{})
-// 	assert.NoError(t, err)
-// 	if err != nil {
-// 		t.FailNow()
-// 	}
-// }
-
-//
-// func TestVolumeRemoveIfPresent(t *testing.T) {
-// 	if skipTests() { t.SkipNow() }
-//
-// 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-// 		vols, err := client.API().Volumes(nil, false)
-// 		assert.NoError(t, err)
-// 		if err != nil {
-// 			t.FailNow()
-// 		}
-// 		assert.Contains(t, vols,sio.Name)
-// 		for _, vol := range vols[name] {
-// 			if vol.Name == volumeName {
-// 				if len(vol.Attachments) > 0 {
-// 					_, err := client.API().VolumeDetach(
-// 						nil,sio.Name, vol.ID, &types.VolumeDetachRequest{})
-// 					assert.NoError(t, err)
-// 					if err != nil {
-// 						t.FailNow()
-// 					}
-// 				}
-// 				err = client.API().VolumeRemove(
-// 					nil,sio.Name, vol.ID)
-// 				assert.NoError(t, err)
-// 				if err != nil {
-// 					t.FailNow()
-// 				}
-// 				break
-// 			}
-// 		}
-// 	}
-// 	apitests.Run(t,sio.Name, configYAML, tf)
-// }
-//
-// func TestVolumes(t *testing.T) {
-// 	if skipTests() { t.SkipNow() }
-//
-// 	volumeName := "Volume-010"
-//
-// 	TestVolumeRemove(t)
-//
-// 	var vol *types.Volume
-// 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-// 		vol = volumeCreate(t, client, volumeName)
-// 		if vol == nil {
-// 			t.FailNow()
-// 		}
-// 	}
-// 	apitests.Run(t,sio.Name, configYAML, tf)
-//
-// 	if vol == nil {
-// 		t.FailNow()
-// 	}
-//
-// 	tf = func(config gofig.Config, client types.Client, t *testing.T) {
-// 		reply, err := client.API().VolumeInspect(
-// 			nil,sio.Name, vol.ID, false)
-// 		assert.NoError(t, err)
-// 		apitests.LogAsJSON(reply, t)
-// 		assert.Equal(t, volumeName, reply.Name)
-// 	}
-// 	apitests.Run(t,sio.Name, configYAML, tf)
-// }
-//
-// func TestVolumeAttach(t *testing.T) {
-// 	if skipTests() { t.SkipNow() }
-//
-// 	volumeName := "Volume-007"
-//
-// 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-// 		vols, err := client.API().Volumes(
-// 			nil, false)
-// 		assert.NoError(t, err)
-// 		if err != nil {
-// 			t.FailNow()
-// 		}
-// 		assert.Contains(t, vols,sio.Name)
-//
-// 		for _, vol := range vols[name] {
-// 			if vol.Name == volumeName {
-// 				if len(vol.Attachments) > 0 {
-// 					_, err := client.API().VolumeDetach(
-// 						nil,sio.Name, vol.ID, &types.VolumeDetachRequest{})
-// 					assert.NoError(t, err)
-// 				}
-// 				err = client.API().VolumeRemove(
-// 					nil,sio.Name, vol.ID)
-// 				assert.NoError(t, err)
-// 				if err != nil {
-// 					t.FailNow()
-// 				}
-// 				break
-// 			}
-// 		}
-//
-// 		vol := volumeCreate(t, client, volumeName)
-// 		if vol == nil {
-// 			t.FailNow()
-// 		}
-//
-// 		reply, token, err := client.API().VolumeAttach(
-// 			nil,sio.Name, vol.ID, &types.VolumeAttachRequest{})
-//
-// 		assert.NoError(t, err)
-// 		if err != nil {
-// 			t.FailNow()
-// 		}
-// 		assert.NotEqual(t, token, "")
-// 		apitests.LogAsJSON(reply, t)
-// 		reply, err = client.API().VolumeInspect(nil,sio.Name, vol.ID, true)
-// 		assert.NoError(t, err)
-// 		apitests.LogAsJSON(reply, t)
-// 		assert.Len(t, reply.Attachments, 1)
-//
-// 		reply, err = client.API().VolumeDetach(nil,
-// 		sio.Name, vol.ID, &types.VolumeDetachRequest{})
-//
-// 		assert.NoError(t, err)
-// 		if err != nil {
-// 			t.FailNow()
-// 		}
-// 		apitests.LogAsJSON(reply, t)
-// 		reply, err = client.API().VolumeInspect(nil,sio.Name, vol.ID, true)
-// 		assert.NoError(t, err)
-// 		apitests.LogAsJSON(reply, t)
-// 		assert.Len(t, reply.Attachments, 0)
-//
-// 	}
-// 	apitests.Run(t,sio.Name, configYAML, tf)
-//
-// }

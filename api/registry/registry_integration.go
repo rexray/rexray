@@ -117,6 +117,8 @@ func (d *idm) Mount(
 	volumeID, volumeName string,
 	opts *types.VolumeMountOpts) (string, *types.Volume, error) {
 
+	opts.Preempt = d.preempt()
+
 	fields := log.Fields{
 		"volumeName": volumeName,
 		"volumeID":   volumeID,

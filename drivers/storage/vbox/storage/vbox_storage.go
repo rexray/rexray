@@ -326,7 +326,8 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.New("missing volume id")
 	}
 
-	volumes, err := d.getVolume(ctx, volumeID, "", true)
+	// review volume with attachments to any host
+	volumes, err := d.getVolume(ctx, volumeID, "", false)
 	if err != nil {
 		return nil, "", err
 	}
@@ -512,7 +513,7 @@ func (d *driver) getVolume(
 			dn, _ := mapDN[v.ID]
 			attachmentSD := &types.VolumeAttachment{
 				VolumeID:   v.ID,
-				InstanceID: &types.InstanceID{ID: mid},
+				InstanceID: &types.InstanceID{ID: mid, Driver: vbox.Name},
 				DeviceName: dn,
 				Status:     v.Location,
 			}

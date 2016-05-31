@@ -17,7 +17,7 @@ func newLocalDevicesObj() *LocalDevices {
 	}
 }
 
-var expectedLD1String = "vfs=vfs-000:/dev/xvda,vfs-001:/dev/xvdb,vfs-002:/dev/xvdc"
+var expectedLD1String = "vfs=vfs-000::/dev/xvda,vfs-001::/dev/xvdb,vfs-002::/dev/xvdc"
 
 func TestLocalDevicesMarshalText(t *testing.T) {
 

@@ -35,7 +35,7 @@ func (l *LocalDevices) String() string {
 }
 
 // MarshalText marshals LocalDevices to a text string that adheres to the
-// format `DRIVER=VOLUMEID:DEVICEID[,VOLUMEID:DEVICEID,...]`.
+// format `DRIVER=VOLUMEID::DEVICEID[,VOLUMEID::DEVICEID,...]`.
 func (l *LocalDevices) MarshalText() ([]byte, error) {
 
 	t := &bytes.Buffer{}
@@ -50,7 +50,7 @@ func (l *LocalDevices) MarshalText() ([]byte, error) {
 	sort.Sort(byString(keys))
 
 	for _, k := range keys {
-		fmt.Fprintf(t, "%s:%s,", k, l.DeviceMap[k])
+		fmt.Fprintf(t, "%s::%s,", k, l.DeviceMap[k])
 	}
 
 	if len(l.DeviceMap) > 0 {
@@ -61,9 +61,9 @@ func (l *LocalDevices) MarshalText() ([]byte, error) {
 }
 
 var (
-	ldRX         = regexp.MustCompile(`^(.+?)=(\S+:\S+(?:\s*,\s*\S+:\S+)*)?$`)
+	ldRX         = regexp.MustCompile(`^(.+?)=(\S+::\S+(?::\s*,\s*\S+::\S+)*)?$`)
 	commaByteSep = []byte{','}
-	colonByteSep = []byte{':'}
+	colonByteSep = []byte{':', ':'}
 )
 
 // UnmarshalText unmarshals the data into a an InstanceID provided the data

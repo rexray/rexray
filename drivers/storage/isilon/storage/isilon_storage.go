@@ -132,7 +132,7 @@ func (d *driver) InstanceInspect(
 	if err != nil {
 		return nil, err
 	}
-	instanceID := &types.InstanceID{ID: id, Driver: isilon.Name}
+	instanceID := &types.InstanceID{ID: id, Driver: d.Name()}
 
 	return &types.Instance{InstanceID: instanceID}, nil
 }
@@ -206,7 +206,7 @@ func (d *driver) getVolumeAttachments(ctx types.Context) (
 			}
 			attachmentSD := &types.VolumeAttachment{
 				VolumeID:   export.Volume.Name,
-				InstanceID: iid,
+				InstanceID: &types.InstanceID{ID: c, Driver: d.Name()},
 				DeviceName: dev,
 				Status:     status,
 			}
@@ -225,7 +225,8 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	return d.getVolume(ctx, "", "", opts.Attachments)
+	// always return attachments to align against other drivers for now
+	return d.getVolume(ctx, "", "", true)
 }
 
 func (d *driver) VolumeInspect(
@@ -328,7 +329,7 @@ func (d *driver) VolumeAttach(
 
 	// ensure the volume exists and is exported
 	vol, err := d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: false})
+		&types.VolumeInspectOpts{Attachments: true})
 	if err != nil {
 		return nil, "", err
 	}
@@ -346,25 +347,24 @@ func (d *driver) VolumeAttach(
 
 	// clear out any existing clients if necessary.  if force is false and
 	// we have existing clients, we need to exit.
-	if len(clients) > 0 && !d.sharedMounts() {
-		if opts.Force == false {
-			return nil, "", goof.New("Volume already attached to another host")
+	if len(clients) > 0 && !d.sharedMounts() && opts.Force == false {
+		for _, c := range clients {
+			if c == instanceID.InstanceID.ID {
+				return nil, "", goof.New("volume already attached to instance")
+			}
 		}
 
-		// remove all clients
-		err = d.client.ClearExportClients(volumeID)
-		if err != nil {
-			return nil, "", err
-		}
+		return nil, "", goof.New("volume already attached to another host")
 	}
 
-	var iids []string
-	for _, att := range vol.Attachments {
-		iids = append(iids, att.InstanceID.ID)
+	if d.sharedMounts() {
+		clients = append(clients, instanceID.InstanceID.ID)
+	} else {
+		clients = []string{instanceID.InstanceID.ID}
 	}
-	iids = append(iids, instanceID.InstanceID.ID)
 
-	err = d.client.SetExportClients(volumeID, iids)
+	log.WithField("clients", clients).Info("setting exports")
+	err = d.client.SetExportClients(volumeID, clients)
 	if err != nil {
 		return nil, "", err
 	}
@@ -399,8 +399,33 @@ func (d *driver) VolumeDetach(
 		return nil, goof.New("no volumes returned")
 	}
 
-	if err := d.client.UnexportVolume(volumeID); err != nil {
-		return nil, goof.WithError("problem unexporting volume", err)
+	instanceID, err := d.InstanceInspect(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	clients, err := d.client.GetExportClients(volumeID)
+	if err != nil {
+		return nil, goof.WithError("problem getting export client", err)
+	}
+
+	var newClients []string
+	for _, c := range clients {
+		if c != instanceID.InstanceID.ID {
+			newClients = append(newClients, c)
+		}
+	}
+
+	if len(newClients) > 0 {
+		log.WithField("clients", clients).Info("setting exports")
+		err = d.client.SetExportClients(volumeID, newClients)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		if err := d.client.UnexportVolume(volumeID); err != nil {
+			return nil, goof.WithError("problem unexporting volume", err)
+		}
 	}
 
 	return d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{

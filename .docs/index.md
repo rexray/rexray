@@ -5,40 +5,30 @@ Opening up storage for all
 ---
 
 ## Overview
-`libStorage` provides a vendor agnostic storage orchestration model,
-API, and reference client and server implementations. It focuses on being a
-portable storage driver framework that brings external storage functionality to
-any platform or application.
+`libStorage` is an open source, platform agnostic, storage provisioning and
+orchestration framework, model, and API.
 
 ## Features
-The project has some very unique qualities that make it perfect for embedding
-in upstream projects to centralize external storage functionality.
+The following features unique to this project make it a perfect choice for
+adding value to upstream applications by centralizing storage management:
 
-- Lightweight client package enable minimal dependencies to provide full
-featured storage functionality to platforms
-- Embedded and remotable modes for providing choice of centralized control of
-storage operations
-- Optionally enables storage platforms to serve as libStorage servers making
-integration of application platforms native
-- Dynamically downloaded executors run specific storage tasks without critical
-long running plugins per host
-- Includes Go client/server packages for simple integration to other platforms
-and applications
-- Flexible HTTP/JSON API for other deployment opportunities
+- A standardized storage orchestration [model and API](http://docs.libstorage.apiary.io)
+- A lightweight, reference client implementation with a minimal dependency
+  footprint
+- The ability to embed both the libStorage client and server, creating native
+  application integration opportunities
 
 ## Operations
-Today `libStorage` supports the following volume management features.
+`libStorage` supports the following operations:
 
-- List/Inspect for retrieving volumes and detailed information
-- Create/Remove for managing volume lifecycle
-- Attach/Detach for getting volumes to instaces to be used
-- Mount/Unmount to comprehensively get volumes to instances, discover,
-optionally format, and mount
-- Path to review the existing mounted path of a volume
-- Map to list the current attached volumes to an instance
-
-The operations for `Snapshots` and `Storage Pools` is planned for future
-releases.
+Resource Type | Operation | Description
+--------------|-----------|------------
+Volume | List / Inspect | Get detailed information about one to many volumes
+       | Create / Remote | Manage the volume lifecycle
+       | Attach / Detach | Provision volumes to a client
+       | Mount / Unmount | Make attached volumes ready-to-use, local file systems
+Snapshot | | Coming soon
+Storage Pool | | Coming soon
 
 ## Getting Started
 Using libStorage can be broken down into several, distinct steps:

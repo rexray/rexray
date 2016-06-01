@@ -149,7 +149,8 @@ func (d *driver) InstanceInspect(
 	if sdc != nil {
 		return &types.Instance{
 			InstanceID: &types.InstanceID{
-				ID: sdc.Sdc.ID,
+				ID:     sdc.Sdc.ID,
+				Driver: d.Name(),
 			},
 		}, nil
 	}
@@ -213,7 +214,8 @@ func (d *driver) Volumes(
 				deviceName = sdcMappedVolumes[volume.ID]
 			}
 			instanceID := &types.InstanceID{
-				ID: attachment.SdcID,
+				ID:     attachment.SdcID,
+				Driver: d.Name(),
 			}
 			attachmentSD := &types.VolumeAttachment{
 				VolumeID:   volume.ID,
@@ -309,7 +311,8 @@ func (d *driver) VolumeInspect(
 				deviceName = sdcMappedVolumes[volume.ID]
 			}
 			instanceID := &types.InstanceID{
-				ID: attachment.SdcID,
+				ID:     attachment.SdcID,
+				Driver: d.Name(),
 			}
 			attachmentSD := &types.VolumeAttachment{
 				VolumeID:   volume.ID,
@@ -473,17 +476,27 @@ func (d *driver) VolumeAttach(
 		AllSdcs:               "",
 	}
 
-	volumes, err := d.getVolume(volumeID, "", false)
+	vol, err := d.VolumeInspect(
+		ctx, volumeID, &types.VolumeInspectOpts{
+			Attachments: true,
+		})
 	if err != nil {
 		return nil, "", goof.WithError("error getting volume", err)
 	}
 
-	if len(volumes) == 0 {
-		return nil, "", goof.New("no volumes returned")
+	if len(vol.Attachments) > 0 && !opts.Force {
+		return nil, "", goof.New("volume already attached to a host")
+	}
+
+	if len(vol.Attachments) > 0 && opts.Force {
+		if _, err := d.VolumeDetach(ctx, volumeID,
+			&types.VolumeDetachOpts{Force: opts.Force}); err != nil {
+			return nil, "", err
+		}
 	}
 
 	targetVolume := sio.NewVolume(d.client)
-	targetVolume.Volume = volumes[0]
+	targetVolume.Volume = &siotypes.Volume{ID: vol.ID}
 
 	err = targetVolume.MapVolumeSdc(mapVolumeSdcParam)
 	if err != nil {

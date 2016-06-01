@@ -170,10 +170,9 @@ func (d *driver) Mount(
 	opts *types.VolumeMountOpts) (string, *types.Volume, error) {
 
 	ctx.WithFields(log.Fields{
-		"volumeName":  volumeName,
-		"volumeID":    volumeID,
-		"overwriteFS": opts.OverwriteFS,
-		"newFSType":   opts.NewFSType}).Info("mounting volume")
+		"volumeName": volumeName,
+		"volumeID":   volumeID,
+		"opts":       opts}).Info("mounting volume")
 
 	vol, err := d.volumeInspectByIDOrName(
 		ctx, volumeID, volumeName, true, opts.Opts)
@@ -194,7 +193,7 @@ func (d *driver) Mount(
 	}
 
 	client := context.MustClient(ctx)
-	if len(vol.Attachments) == 0 {
+	if len(vol.Attachments) == 0 || opts.Preempt {
 		mp, err := d.getVolumeMountPath(vol.Name)
 		if err != nil {
 			return "", nil, err
@@ -242,12 +241,28 @@ func (d *driver) Mount(
 		return "", nil, goof.New("volume did not attach")
 	}
 
-	if vol.Attachments[0].DeviceName == "" {
+	inst, err := client.Storage().InstanceInspect(ctx, utils.NewStore())
+	if err != nil {
+		return "", nil, goof.New("problem getting instance ID")
+	}
+	var ma *types.VolumeAttachment
+	for _, att := range vol.Attachments {
+		if att.InstanceID.ID == inst.InstanceID.ID {
+			ma = att
+			break
+		}
+	}
+
+	if ma == nil {
+		return "", nil, goof.New("no local attachment found")
+	}
+
+	if ma.DeviceName == "" {
 		return "", nil, goof.New("no device name returned")
 	}
 
 	mounts, err := client.OS().Mounts(
-		ctx, vol.Attachments[0].DeviceName, "", opts.Opts)
+		ctx, ma.DeviceName, "", opts.Opts)
 	if err != nil {
 		return "", nil, err
 	}
@@ -262,7 +277,7 @@ func (d *driver) Mount(
 
 	if err := client.OS().Format(
 		ctx,
-		vol.Attachments[0].DeviceName,
+		ma.DeviceName,
 		&types.DeviceFormatOpts{
 			NewFSType:   opts.NewFSType,
 			OverwriteFS: opts.OverwriteFS,
@@ -281,7 +296,7 @@ func (d *driver) Mount(
 
 	if err := client.OS().Mount(
 		ctx,
-		vol.Attachments[0].DeviceName,
+		ma.DeviceName,
 		mountPath,
 		&types.DeviceMountOpts{}); err != nil {
 		return "", nil, err
@@ -323,14 +338,30 @@ func (d *driver) Unmount(
 		return nil
 	}
 
-	if vol.Attachments[0].DeviceName == "" {
+	client := context.MustClient(ctx)
+
+	inst, err := client.Storage().InstanceInspect(ctx, utils.NewStore())
+	if err != nil {
+		return goof.New("problem getting instance ID")
+	}
+	var ma *types.VolumeAttachment
+	for _, att := range vol.Attachments {
+		if att.InstanceID.ID == inst.InstanceID.ID {
+			ma = att
+			break
+		}
+	}
+
+	if ma == nil {
+		return goof.New("no attachment found for instance")
+	}
+
+	if ma.DeviceName == "" {
 		return goof.New("no device name found for attachment")
 	}
 
-	client := context.MustClient(ctx)
-
 	mounts, err := client.OS().Mounts(
-		ctx, vol.Attachments[0].DeviceName, "", opts)
+		ctx, ma.DeviceName, "", opts)
 	if err != nil {
 		return err
 	}
@@ -567,5 +598,6 @@ func registerConfig() {
 		types.ConfigIgVolOpsMountPath)
 	r.Key(gofig.String, "", "/data", "", types.ConfigIgVolOpsMountRootPath)
 	r.Key(gofig.Bool, "", true, "", types.ConfigIgVolOpsCreateImplicit)
+	r.Key(gofig.Bool, "", false, "", types.ConfigIgVolOpsMountPreempt)
 	gofig.Register(r)
 }

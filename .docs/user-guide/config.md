@@ -221,7 +221,7 @@ Notice how the `virtualbox-01` service includes an added `integration` section.
 The integration definition refers to the integration interface and parameters
 specific to incoming requests through this layer. In this case we defined
 `libstorage.server.services.virtualbox-01` with the
-`integration.volume.create.default.size` parameter set. This enables all
+`integration.volume.operations.create.default.size` parameter set. This enables all
 create requests that come in through `virtualbox-01` to have a default size of
 1GB. So although it is technically the same platform below the covers,
 `virtualbox-00` requests may have different default values than those defined
@@ -247,9 +247,10 @@ libstorage:
           controllerName: SATA
         integration:
           volume:
-            create:
-              default:
-                size: 1 # GB
+            operations:
+              create:
+                default:
+                  size: 1 # GB
       scaleio:
         driver: scaleio
         scaleio:
@@ -425,9 +426,10 @@ can be rewritten and simplified in the process:
 libstorage:
   integration:
     volume:
-      create:
-        default:
-          size: 1 # GB
+      operations:
+        create:
+          default:
+            size: 1 # GB
   server:
     virtualbox:
       endpoint:       http://10.0.2.2:18083
@@ -473,9 +475,10 @@ libstorage:
     level: warn
   integration:
     volume:
-      create:
-        default:
-          size: 1 # GB
+      operations:
+        create:
+          default:
+            size: 1 # GB
   server:
     logging:
       level: info
@@ -573,22 +576,22 @@ driver's volume-related properties.
 
 parameter|description
 ---------|-----------
-`libstorage.integration.volume.mount.preempt`|Forcefully take control of volumes when requested
-`libstorage.integration.volume.mount.path`|The default host path for mounting volumes
-`libstorage.integration.volume.mount.rootPath`|The path within the volume to return to the integrator (ex. `/data`)
-`libstorage.integration.volume.create.disable`|Disable the ability for a volume to be created
-`libstorage.integration.volume.remove.disable`|Disable the ability for a volume to be removed
+`libstorage.integration.volume.operations.mount.preempt`|Forcefully take control of volumes when requested
+`libstorage.integration.volume.operations.mount.path`|The default host path for mounting volumes
+`libstorage.integration.volume.operations.mount.rootPath`|The path within the volume to return to the integrator (ex. `/data`)
+`libstorage.integration.volume.operations.create.disable`|Disable the ability for a volume to be created
+`libstorage.integration.volume.operations.remove.disable`|Disable the ability for a volume to be removed
 
 The properties in the next table are the configurable parameters that affect
 the default values for volume creation requests.
 
 parameter|description
 ---------|-----------
-`libstorage.integration.volume.create.default.size`|Size in GB
-`libstorage.integration.volume.create.default.iops`|IOPS
-`libstorage.integration.volume.create.default.type`|Type of Volume or Storage Pool
-`libstorage.integration.volume.create.default.fsType`|Type of filesystem for new volumes (ext4/xfs)
-`libstorage.integration.volume.create.default.availabilityZone`|Extensible parameter per storage driver
+`libstorage.integration.volume.operations.create.default.size`|Size in GB
+`libstorage.integration.volume.operations.create.default.iops`|IOPS
+`libstorage.integration.volume.operations.create.default.type`|Type of Volume or Storage Pool
+`libstorage.integration.volume.operations.create.default.fsType`|Type of filesystem for new volumes (ext4/xfs)
+`libstorage.integration.volume.operations.create.default.availabilityZone`|Extensible parameter per storage driver
 
 #### Disable Create
 The disable create feature enables you to disallow any volume creation activity.
@@ -599,8 +602,9 @@ get passed to the backend storage platform.
 libstorage:
   integration:
     volume:
-      create:
-        disable: true
+      operations:
+        create:
+          disable: true
 ```
 
 #### Disable Remove
@@ -612,8 +616,9 @@ get passed to the backend storage platform.
 libstorage:
   integration:
     volume:
-      remove:
-        disable: true
+      operations:
+        remove:
+          disable: true
 ```
 
 #### Preemption
@@ -629,8 +634,9 @@ Example configuration file follows:
 libstorage:
   integration:
     volume:
-      mount:
-        preempt: true
+      operations:
+        mount:
+          preempt: true
 ```
 
 Driver|Supported
@@ -659,8 +665,9 @@ higher layers and all unmount operations should proceed without control.
 libstorage:
   integration:
     volume:
-      unmount:
-        ignoreUsedCount: true
+      operations:
+        unmount:
+          ignoreUsedCount: true
 ```
 
 Currently a reset of the service will cause the counts to be reset.  This
@@ -669,21 +676,22 @@ sharing volumes, it is recommended that you reset the service along with the
 accompanying container runtime (if this setting is false) to ensure they are
 synchronized.  
 
-#### Volume Path Disable Cache
+#### Volume Path Cache
 In order to minimize the impact to return `Path` requests, a caching
 capability has been introduced by default. A `List` request will cause the
 returned volumes and paths to be evaluated and those with active mounts are
 recorded. Subsequent `Path` requests for volumes that have no recorded mounts
 will not result in active path lookups. Once the mount counter is initialized or
 a `List` operation occurs where a mount is recorded, the volume will be looked
-up for future `Path` operations.
+up for future `Path` operations. By default the setting is `true`.
 
 ```yaml
 libstorage:
   integration:
     volume:
-      path:
-        disableCache: true
+      operations:
+        path:
+          cache: false
 ```
 
 #### Volume Root Path
@@ -692,12 +700,13 @@ be created and passed as the valid mount point.  This is required for certain
 applications that do not want to place data from the root of a mount point.
 
 The default is the `/data` path.  If a value is set by
-`linux.integration.volume.mount.rootPath`, then the default will be overwritten.
+`linux.integration.volume.operations.mount.rootPath`, then the default will be overwritten.
 
 ```yaml
 libstorage:
   integration:
     volume:
-      mount:
-        rootPath: /data
+      operations:
+        mount:
+          rootPath: /data
 ```

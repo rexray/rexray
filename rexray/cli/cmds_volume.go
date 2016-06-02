@@ -18,8 +18,9 @@ func (c *CLI) initVolumeCmdsAndFlags() {
 func (c *CLI) initVolumeCmds() {
 
 	c.volumeCmd = &cobra.Command{
-		Use:   "volume",
-		Short: "The volume manager",
+		Use:              "volume",
+		Short:            "The volume manager",
+		PersistentPreRun: c.preRunActivateLibStorage,
 		Run: func(cmd *cobra.Command, args []string) {
 			if isHelpFlags(cmd) {
 				cmd.Usage()

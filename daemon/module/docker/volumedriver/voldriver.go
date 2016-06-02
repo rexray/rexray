@@ -15,8 +15,6 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
-	"github.com/emccode/libstorage"
-	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
 
@@ -46,7 +44,7 @@ func init() {
 	module.RegisterModule(modName, newModule)
 }
 
-func newModule(c *module.Config) (module.Module, error) {
+func newModule(ctx apitypes.Context, c *module.Config) (module.Module, error) {
 
 	host := strings.Trim(c.Address, " ")
 
@@ -60,26 +58,16 @@ func newModule(c *module.Config) (module.Module, error) {
 	}
 
 	c.Address = host
+	config := c.Config
 
-	/*cc, err := c.Config.Copy()
-	if err != nil {
-		return nil, err
-	}*/
-
-	// TODO The config should be copied, but it was causing an issue with
-	// duplicate, explicit values not being removed.
-	cc := c.Config
-
-	if !cc.GetBool("rexray.volume.path.disableCache") {
-		cc.Set("rexray.volume.path.cache", true)
+	if !config.GetBool("rexray.volume.path.disableCache") {
+		config.Set("rexray.volume.path.cache", true)
 	}
-
-	ctx := context.Background()
 
 	return &mod{
 		ctx:    ctx,
+		config: config,
 		lsc:    c.Client,
-		config: cc,
 		name:   c.Name,
 		desc:   c.Description,
 		addr:   host,
@@ -108,15 +96,6 @@ type pluginRequest struct {
 }
 
 func (m *mod) Start() error {
-
-	lsc, _, _, err := libstorage.New(m.config)
-	if err != nil {
-		for k, v := range m.config.AllSettings() {
-			m.ctx.Errorf("%s=%v", k, v)
-		}
-		m.ctx.Fatal(err)
-	}
-	m.lsc = lsc
 
 	proto, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {

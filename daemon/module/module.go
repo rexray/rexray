@@ -2,7 +2,6 @@ package module
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -10,10 +9,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage/api/context"
 	apiserver "github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiclient "github.com/emccode/libstorage/client"
+
 	"github.com/emccode/rexray/util"
 )
 
@@ -39,7 +39,7 @@ type Module interface {
 }
 
 // Init initializes the module.
-type Init func(config *Config) (Module, error)
+type Init func(ctx apitypes.Context, config *Config) (Module, error)
 
 var (
 	modTypes    map[string]*Type
@@ -150,42 +150,58 @@ func Instances() <-chan *Instance {
 }
 
 // InitializeDefaultModules initializes the default modules.
-func InitializeDefaultModules() error {
+func InitializeDefaultModules(
+	ctx apitypes.Context,
+	config gofig.Config) (<-chan error, error) {
+
 	modTypesRwl.RLock()
 	defer modTypesRwl.RUnlock()
 
-	c := gofig.New().Scope("rexray")
+	config = config.Scope("rexray")
 
-	if cfgFile := os.Getenv("REXRAY_CONFIG_FILE"); cfgFile != "" {
-		if gotil.FileExists(cfgFile) {
-			if err := c.ReadConfigFile(cfgFile); err != nil {
-				panic(err)
+	if !config.IsSet(apitypes.ConfigIgVolOpsMountPath) {
+		config.Set(
+			apitypes.ConfigIgVolOpsMountPath, util.LibFilePath("volumes"))
+	}
+
+	var serverErrChan <-chan error
+
+	if config.GetBool(apitypes.ConfigEmbedded) {
+
+		var (
+			err    error
+			server apitypes.Server
+			errs   <-chan error
+		)
+
+		host, isRunning := util.IsLocalServerActive(ctx, config)
+
+		if isRunning {
+			ctx = ctx.WithValue(context.HostKey, host)
+			ctx.WithField("host", host).Debug(
+				"not starting embeddded server; " +
+					"local server already running")
+		} else {
+			if server, errs, err = apiserver.Serve(config); err != nil {
+				return nil, err
 			}
+			go func() {
+				if err = <-errs; err != nil {
+					ctx.Error(err)
+				}
+			}()
+			if host == "" {
+				config.Set(apitypes.ConfigHost, server.Addrs()[0])
+			}
+
+			serverErrChan = errs
 		}
+
 	}
 
-	if !c.IsSet(apitypes.ConfigIgVolOpsMountPath) {
-		c.Set(apitypes.ConfigIgVolOpsMountPath, util.LibFilePath("volumes"))
-	}
-
-	s, errs, err := apiserver.Serve(c)
+	modConfigs, err := getConfiguredModules(ctx, config)
 	if err != nil {
-		return err
-	}
-	go func() {
-		err := <-errs
-		if err != nil {
-			log.Error(err)
-		}
-	}()
-
-	if h := c.GetString(apitypes.ConfigHost); h == "" {
-		c.Set(apitypes.ConfigHost, s.Addrs()[0])
-	}
-
-	modConfigs, err := getConfiguredModules(c)
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, mc := range modConfigs {
@@ -195,9 +211,9 @@ func InitializeDefaultModules() error {
 			panic(err)
 		}
 		mc.Client = lsc
-		mod, err := InitializeModule(mc)
+		mod, err := InitializeModule(ctx, mc)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		func() {
 			modInstancesRwl.Lock()
@@ -206,11 +222,12 @@ func InitializeDefaultModules() error {
 		}()
 	}
 
-	return nil
+	return serverErrChan, nil
 }
 
 // InitializeModule initializes a module.
-func InitializeModule(modConfig *Config) (*Instance, error) {
+func InitializeModule(
+	ctx apitypes.Context, modConfig *Config) (*Instance, error) {
 
 	modInstancesRwl.Lock()
 	defer modInstancesRwl.Unlock()
@@ -227,7 +244,7 @@ func InitializeModule(modConfig *Config) (*Instance, error) {
 		return nil, goof.WithFields(lf, "unknown module type")
 	}
 
-	mod, initErr := mt.InitFunc(modConfig)
+	mod, initErr := mt.InitFunc(ctx, modConfig)
 	if initErr != nil {
 		return nil, initErr
 	}
@@ -245,7 +262,7 @@ func InitializeModule(modConfig *Config) (*Instance, error) {
 	modInstances[modName] = modInst
 
 	lf["name"] = modName
-	log.WithFields(lf).Info("initialized module instance")
+	ctx.WithFields(lf).Info("initialized module instance")
 
 	return modInst, nil
 }
@@ -264,12 +281,12 @@ func RegisterModule(name string, initFunc Init) {
 }
 
 // StartDefaultModules starts the default modules.
-func StartDefaultModules() error {
+func StartDefaultModules(ctx apitypes.Context, config gofig.Config) error {
 	modInstancesRwl.RLock()
 	defer modInstancesRwl.RUnlock()
 
 	for name := range modInstances {
-		startErr := StartModule(name)
+		startErr := StartModule(ctx, config, name)
 		if startErr != nil {
 			return startErr
 		}
@@ -295,7 +312,7 @@ func GetModuleInstance(name string) (*Instance, error) {
 }
 
 // StartModule starts the module with the provided instance name.
-func StartModule(name string) error {
+func StartModule(ctx apitypes.Context, config gofig.Config, name string) error {
 
 	modInstancesRwl.RLock()
 	defer modInstancesRwl.RUnlock()
@@ -318,30 +335,6 @@ func StartModule(name string) error {
 
 	go func() {
 
-		/*defer func() {
-			r := recover()
-			m := "error starting module"
-
-			errMsg := fmt.Sprintf(
-				"Error starting module type=%s, instance=%s at %s",
-				mod.TypeName, mod.Name, mod.Config.Address)
-
-			if r == nil {
-				startError <- goof.New(errMsg)
-				return
-			}
-
-			switch x := r.(type) {
-			case string:
-				lf["inner"] = x
-				startError <- goof.WithFields(lf, m)
-			case error:
-				startError <- goof.WithFieldsE(lf, m, x)
-			default:
-				startError <- goof.WithFields(lf, m)
-			}
-		}()*/
-
 		sErr := mod.Inst.Start()
 		if sErr != nil {
 			startError <- sErr
@@ -351,14 +344,14 @@ func StartModule(name string) error {
 	}()
 
 	go func() {
-		time.Sleep(startTimeout())
+		time.Sleep(startTimeout(config))
 		timeout <- true
 	}()
 
 	select {
 	case <-started:
 		mod.IsStarted = true
-		log.WithFields(lf).Info("started module")
+		ctx.WithFields(lf).Info("started module")
 	case <-timeout:
 		return goof.New("timed out while monitoring module start")
 	case sErr := <-startError:
@@ -368,29 +361,30 @@ func StartModule(name string) error {
 	return nil
 }
 
-func getConfiguredModules(c gofig.Config) ([]*Config, error) {
+func getConfiguredModules(
+	ctx apitypes.Context, c gofig.Config) ([]*Config, error) {
 
 	mods := c.Get("rexray.modules")
 	modMap, ok := mods.(map[string]interface{})
 	if !ok {
 		return nil, goof.New("invalid format rexray.modules")
 	}
-	log.WithField("count", len(modMap)).Debug("got modules map")
+	ctx.WithField("count", len(modMap)).Debug("got modules map")
 
 	modConfigs := []*Config{}
 
 	for name := range modMap {
 		name = strings.ToLower(name)
 
-		log.WithField("name", name).Debug("processing module config")
+		ctx.WithField("name", name).Debug("processing module config")
 
 		scope := fmt.Sprintf("rexray.modules.%s", name)
-		log.WithField("scope", scope).Debug("getting scoped config for module")
+		ctx.WithField("scope", scope).Debug("getting scoped config for module")
 		sc := c.Scope(scope)
 
 		disabled := sc.GetBool("disabled")
 		if disabled {
-			log.WithField("name", name).Debug("ignoring disabled module config")
+			ctx.WithField("name", name).Debug("ignoring disabled module config")
 			continue
 		}
 
@@ -402,7 +396,7 @@ func getConfiguredModules(c gofig.Config) ([]*Config, error) {
 			Config:      sc,
 		}
 
-		log.WithFields(log.Fields{
+		ctx.WithFields(log.Fields{
 			"name": mc.Name,
 			"type": mc.Type,
 			"desc": mc.Description,
@@ -415,9 +409,9 @@ func getConfiguredModules(c gofig.Config) ([]*Config, error) {
 	return modConfigs, nil
 }
 
-func startTimeout() time.Duration {
-	c := gofig.New()
-	dur, err := time.ParseDuration(c.GetString("rexray.module.startTimeout"))
+func startTimeout(config gofig.Config) time.Duration {
+	dur, err := time.ParseDuration(
+		config.GetString("rexray.module.startTimeout"))
 	if err != nil {
 		return time.Duration(10) * time.Second
 	}

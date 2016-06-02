@@ -12,6 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 
+	"github.com/emccode/libstorage/api/context"
 	rrdaemon "github.com/emccode/rexray/daemon"
 	"github.com/emccode/rexray/util"
 )
@@ -29,7 +30,7 @@ func (c *CLI) start() {
 
 	checkOpPerms("started")
 
-	log.WithField("os.Args", os.Args).Debug("invoking service start")
+	c.ctx.WithField("os.Args", os.Args).Debug("invoking service start")
 
 	pidFile := util.PidFilePath()
 
@@ -58,10 +59,10 @@ func (c *CLI) start() {
 	}
 
 	if c.fg || c.client != "" {
-		log.Debug("starting in foreground")
+		c.ctx.Debug("starting in foreground")
 		c.startDaemon()
 	} else {
-		log.Debug("starting in background")
+		c.ctx.Debug("starting in background")
 		c.tryToStartDaemon()
 	}
 }
@@ -110,6 +111,14 @@ func (c *CLI) startDaemon() {
 	}
 	log.SetOutput(out)
 
+	c.ctx = c.ctx.WithValue(context.LoggerKey,
+		&log.Logger{
+			Formatter: log.StandardLogger().Formatter,
+			Out:       out,
+			Hooks:     log.StandardLogger().Hooks,
+			Level:     log.StandardLogger().Level,
+		})
+
 	fmt.Fprintf(out, "%s\n", rexRayLogoASCII)
 	util.PrintVersion(out)
 	fmt.Fprintln(out)
@@ -125,7 +134,7 @@ func (c *CLI) startDaemon() {
 
 		var dialErr error
 
-		log.Printf("dialing %s", c.client)
+		c.ctx.WithField("addr", c.client).Debug("dialing rex-ray client")
 		conn, dialErr = net.Dial("unix", c.client)
 		if dialErr != nil {
 			panic(dialErr)
@@ -148,9 +157,8 @@ func (c *CLI) startDaemon() {
 		}
 	}()
 
-	log.Printf("created pid file, pid=%d", os.Getpid())
+	c.ctx.WithField("pid", os.Getpid()).Info("created pid file")
 
-	init := make(chan error)
 	sigc := make(chan os.Signal, 1)
 	stop := make(chan os.Signal)
 
@@ -161,34 +169,28 @@ func (c *CLI) startDaemon() {
 		syscall.SIGTERM,
 		syscall.SIGQUIT)
 
-	go func() {
-		rrdaemon.Start(c.host(), init, stop)
-	}()
-
-	var initErrors []error
-
-	for initErr := range init {
-		initErrors = append(initErrors, initErr)
-		log.Println(initErr)
-	}
-
-	if conn != nil {
-		if len(initErrors) == 0 {
-			conn.Write(success)
-		} else {
+	errs, err := rrdaemon.Start(c.ctx, c.config, c.host(), stop)
+	if err != nil {
+		c.ctx.WithError(err).Error("error starting rex-ray")
+		if conn != nil {
 			conn.Write(failure)
+			conn.Close()
 		}
-
-		conn.Close()
-	}
-
-	if len(initErrors) > 0 {
 		return
 	}
 
+	if conn != nil {
+		conn.Write(success)
+		conn.Close()
+	}
+
 	sigv := <-sigc
-	log.Printf("received shutdown signal %v", sigv)
+	c.ctx.WithField("signal", sigv).Info("received shutdown signal")
 	stop <- sigv
+
+	// wait until the daemon stops
+	for range errs {
+	}
 }
 
 func (c *CLI) tryToStartDaemon() {
@@ -198,7 +200,7 @@ func (c *CLI) tryToStartDaemon() {
 
 	signal := make(chan byte)
 	client := fmt.Sprintf("%s/%s.sock", os.TempDir(), gotil.RandomString(32))
-	log.WithField("client", client).Debug("trying to start service")
+	c.ctx.WithField("client", client).Debug("trying to start service")
 
 	l, lErr := net.Listen("unix", client)
 	failOnError(lErr)
@@ -212,12 +214,12 @@ func (c *CLI) tryToStartDaemon() {
 		defer conn.Close()
 		defer os.Remove(client)
 
-		log.Debug("accepted connection")
+		c.ctx.Debug("accepted connection")
 
 		buff := make([]byte, 1)
 		conn.Read(buff)
 
-		log.Debug("received data")
+		c.ctx.Debug("received data")
 
 		signal <- buff[0]
 	}()

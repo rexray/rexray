@@ -5,55 +5,45 @@ package daemon
 import (
 	"os"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
+	apitypes "github.com/emccode/libstorage/api/types"
+
 	"github.com/emccode/rexray/daemon/module"
+	"github.com/emccode/rexray/util"
 )
 
 // Start starts the daemon.
-func Start(host string, init chan error, stop <-chan os.Signal) {
+func Start(
+	ctx apitypes.Context,
+	config gofig.Config,
+	host string,
+	stop <-chan os.Signal) (<-chan error, error) {
 
-	isErr := false
+	var (
+		err           error
+		errs          = make(chan error)
+		serverErrChan <-chan error
+	)
 
-	initModErr := module.InitializeDefaultModules()
-
-	if initModErr != nil {
-		init <- initModErr
-		isErr = true
-		log.Error("default module(s) failed to initialize")
-
-	} else {
-
-		startModErr := module.StartDefaultModules()
-		if startModErr != nil {
-			init <- startModErr
-			isErr = true
-			log.Error("default module(s) failed to start")
-		}
-
+	if serverErrChan, err = module.InitializeDefaultModules(
+		ctx, config); err != nil {
+		ctx.WithError(err).Error("default module(s) failed to initialize")
+		return nil, err
 	}
 
-	log.Info("service sent registered modules start signals")
-
-	// if there is a channel receiving initialization errors go ahead and
-	// close it so that callers reading this channel will know that the
-	// initialization of the daemon is complete
-	if init != nil {
-		close(init)
+	if err = module.StartDefaultModules(ctx, config); err != nil {
+		ctx.WithError(err).Error("default module(s) failed to start")
+		return nil, err
 	}
 
-	// if there were initialization errors go ahead and return instead of
-	// waiting for a stop signal
-	if isErr {
-		log.Error("service initialized failed")
-		return
-	}
+	ctx.Info("service successfully initialized, waiting on stop signal")
 
-	log.Info("service successfully initialized, waiting on stop signal")
+	go func() {
+		sig := <-stop
+		ctx.WithField("signal", sig).Info("service received stop signal")
+		util.WaitUntilLibStorageStopped(ctx, serverErrChan)
+		close(errs)
+	}()
 
-	// if a channel to receive a stop signal is provided then block until
-	// a stop signal is received
-	if stop != nil {
-		<-stop
-		log.Info("Service received stop signal")
-	}
+	return errs, nil
 }

@@ -5,11 +5,15 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 	apiversion "github.com/emccode/libstorage/api"
+	apiserver "github.com/emccode/libstorage/api/server"
+	apitypes "github.com/emccode/libstorage/api/types"
 
 	"github.com/emccode/rexray/core/version"
 )
@@ -244,4 +248,64 @@ func PrintVersion(out io.Writer) {
 
 	timestamp := apiversion.Version.BuildTimestamp.Format(time.RFC1123)
 	fmt.Fprintf(out, "Formed: %s\n", timestamp)
+}
+
+// WaitUntilLibStorageStopped blocks until libStorage is stopped.
+func WaitUntilLibStorageStopped(ctx apitypes.Context, errs <-chan error) {
+	ctx.Debug("waiting until libStorage is stopped")
+
+	// if there is no err channel then do not wait until libStorage is stopped
+	// as the absence of the err channel means libStorage was not started in
+	// embedded mode
+	if errs == nil {
+		ctx.Debug("done waiting on err chan; err chan is nil")
+		return
+	}
+
+	// in a goroutine, range over the apiserver.Close channel until it's closed
+	for range apiserver.Close() {
+	}
+	ctx.Debug("done sending close signals to libStorage")
+
+	// block until the err channel is closed
+	for range errs {
+	}
+	ctx.Debug("done waiting on err chan")
+}
+
+var localHostRX = regexp.MustCompile(
+	`(?i)^(localhost|(?:127\.0\.0\.1))(?::(\d+))?$`)
+
+// IsLocalServerActive returns a flag indicating whether or not a local
+// libStorage is already running.
+func IsLocalServerActive(
+	ctx apitypes.Context, config gofig.Config) (host string, running bool) {
+
+	host = config.GetString(apitypes.ConfigHost)
+	if host == "" {
+		return "", false
+	}
+
+	proto, addr, err := gotil.ParseAddress(host)
+	if err != nil {
+		return "", false
+	}
+
+	switch proto {
+	case "unix":
+		ctx.WithField("sock", addr).Debug("is local unix server active")
+		return host, gotil.FileExists(addr)
+	case "tcp":
+		m := localHostRX.FindStringSubmatch(addr)
+		if len(m) < 3 {
+			return "", false
+		}
+		port, err := strconv.Atoi(m[2])
+		if err != nil {
+			return "", false
+		}
+		ctx.WithField("port", port).Debug("is local tcp server active")
+		return host, gotil.IsTCPPortAvailable(port)
+	}
+	return "", false
 }

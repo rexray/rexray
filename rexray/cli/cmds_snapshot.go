@@ -15,8 +15,9 @@ func (c *CLI) initSnapshotCmdsAndFlags() {
 func (c *CLI) initSnapshotCmds() {
 
 	c.snapshotCmd = &cobra.Command{
-		Use:   "snapshot",
-		Short: "The snapshot manager",
+		Use:              "snapshot",
+		Short:            "The snapshot manager",
+		PersistentPreRun: c.preRunActivateLibStorage,
 		Run: func(cmd *cobra.Command, args []string) {
 			if isHelpFlags(cmd) {
 				cmd.Usage()

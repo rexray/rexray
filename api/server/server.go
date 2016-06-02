@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	gocontext "golang.org/x/net/context"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
@@ -53,7 +55,18 @@ type server struct {
 	stdErr io.WriteCloser
 }
 
-func newServer(config gofig.Config) (*server, error) {
+func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
+
+	adminTokenUUID, err := types.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+	adminToken := adminTokenUUID.String()
+	serverName := randomServerName()
+
+	ctx := context.New(goCtx)
+	ctx = ctx.WithValue(context.ServerKey, serverName)
+	ctx = ctx.WithValue(context.AdminTokenKey, adminToken)
 
 	if config == nil {
 		var err error
@@ -61,28 +74,23 @@ func newServer(config gofig.Config) (*server, error) {
 			return nil, err
 		}
 	}
-
-	adminTokenUUID, err := types.NewUUID()
-	if err != nil {
-		return nil, err
-	}
-
-	serverName := randomServerName()
 	config = config.Scope(types.ConfigServer)
 
 	s := &server{
+		ctx:          ctx,
 		name:         serverName,
-		adminToken:   adminTokenUUID.String(),
+		adminToken:   adminToken,
 		config:       config,
 		closeSignal:  make(chan int),
 		closedSignal: make(chan int),
 		closeOnce:    &sync.Once{},
 	}
 
-	s.PrintServerStartupHeader(os.Stdout)
-
-	s.ctx = context.Background().WithValue(context.ServerKey, serverName)
-	s.ctx = s.ctx.WithValue(context.AdminTokenKey, s.adminToken)
+	if logger, ok := s.ctx.Value(context.LoggerKey).(*log.Logger); ok {
+		s.PrintServerStartupHeader(logger.Out)
+	} else {
+		s.PrintServerStartupHeader(os.Stdout)
+	}
 
 	if lvl, err := log.ParseLevel(
 		config.GetString(types.ConfigLogLevel)); err == nil {
@@ -135,8 +143,11 @@ func newServer(config gofig.Config) (*server, error) {
 // returns a channel on which errors are received. Reading this channel is
 // also the prescribed manner for clients wishing to block until the server is
 // shutdown as the error channel will be closed when the server is stopped.
-func Serve(config gofig.Config) (types.Server, <-chan error, error) {
-	s, err := newServer(config)
+func Serve(
+	goCtx gocontext.Context,
+	config gofig.Config) (types.Server, <-chan error, error) {
+
+	s, err := newServer(goCtx, config)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -179,7 +190,11 @@ func Serve(config gofig.Config) (types.Server, <-chan error, error) {
 
 	s.ctx.Info("server started")
 
-	s.PrintServerStartupFooter(os.Stdout)
+	if logger, ok := s.ctx.Value(context.LoggerKey).(*log.Logger); ok {
+		s.PrintServerStartupFooter(logger.Out)
+	} else {
+		s.PrintServerStartupFooter(os.Stdout)
+	}
 
 	return s, errs, nil
 }

@@ -68,7 +68,7 @@ func serve(
 		os.Setenv("LIBSTORAGE_HOST", szHost)
 	}
 
-	_, errs, err := server.Serve(config)
+	_, errs, err := server.Serve(nil, config)
 	if err != nil {
 		return C.CString(err.Error())
 	}

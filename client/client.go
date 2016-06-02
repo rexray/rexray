@@ -4,6 +4,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
+	gocontext "golang.org/x/net/context"
+
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
@@ -25,7 +27,7 @@ type client struct {
 }
 
 // New returns a new libStorage client.
-func New(config gofig.Config) (types.Client, error) {
+func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 
 	if config == nil {
 		var err error
@@ -42,7 +44,7 @@ func New(config gofig.Config) (types.Client, error) {
 		err error
 	)
 
-	c = &client{ctx: context.Background(), config: config}
+	c = &client{ctx: context.New(goCtx), config: config}
 	c.ctx = c.ctx.WithValue(context.ClientKey, c)
 
 	logFields := log.Fields{}

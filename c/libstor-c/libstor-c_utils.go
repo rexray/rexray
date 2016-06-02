@@ -91,7 +91,7 @@ func newWithConfig(configPath string) (types.Client, error) {
 	if err := config.ReadConfigFile(configPath); err != nil {
 		return nil, err
 	}
-	return client.New(config)
+	return client.New(nil, config)
 }
 
 func getClient(clientID C.h) (types.Client, error) {

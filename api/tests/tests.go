@@ -213,7 +213,7 @@ func (th *testHarness) run(
 			wg.Add(1)
 			go func(x int, config gofig.Config) {
 				defer wg.Done()
-				server, errs, err := apiserver.Serve(config)
+				server, errs, err := apiserver.Serve(nil, config)
 				if err != nil {
 					th.closeServers(t)
 					t.Fatal(err)
@@ -228,7 +228,7 @@ func (th *testHarness) run(
 
 				th.servers = append(th.servers, server)
 
-				c, err := client.New(config)
+				c, err := client.New(nil, config)
 				assert.NoError(t, err)
 				assert.NotNil(t, c)
 				if err != nil || c == nil {
@@ -259,7 +259,7 @@ func (th *testHarness) run(
 				go func(test APITestFunc, x int, config gofig.Config) {
 
 					defer wg.Done()
-					server, errs, err := apiserver.Serve(config)
+					server, errs, err := apiserver.Serve(nil, config)
 					if err != nil {
 						th.closeServers(t)
 						t.Fatal(err)
@@ -274,7 +274,7 @@ func (th *testHarness) run(
 
 					th.servers = append(th.servers, server)
 
-					c, err := client.New(config)
+					c, err := client.New(nil, config)
 					if err != nil {
 						t.Fatal(err)
 					}

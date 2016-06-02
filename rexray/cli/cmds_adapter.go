@@ -14,8 +14,9 @@ func (c *CLI) initAdapterCmdsAndFlags() {
 
 func (c *CLI) initAdapterCmds() {
 	c.adapterCmd = &cobra.Command{
-		Use:   "adapter",
-		Short: "The adapter manager",
+		Use:              "adapter",
+		Short:            "The adapter manager",
+		PersistentPreRun: c.preRunActivateLibStorage,
 		Run: func(cmd *cobra.Command, args []string) {
 			if isHelpFlags(cmd) {
 				cmd.Usage()

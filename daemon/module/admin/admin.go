@@ -13,6 +13,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
+	"github.com/emccode/libstorage/api/context"
+	apitypes "github.com/emccode/libstorage/api/types"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
@@ -24,9 +26,11 @@ const (
 )
 
 type mod struct {
-	name string
-	addr string
-	desc string
+	name   string
+	addr   string
+	desc   string
+	ctx    apitypes.Context
+	config gofig.Config
 }
 
 type jsonError struct {
@@ -38,15 +42,17 @@ func init() {
 	module.RegisterModule(modName, newModule)
 }
 
-func newModule(c *module.Config) (module.Module, error) {
+func newModule(ctx apitypes.Context, c *module.Config) (module.Module, error) {
 	return &mod{
-		name: c.Name,
-		desc: c.Description,
-		addr: c.Address,
+		name:   c.Name,
+		desc:   c.Description,
+		addr:   c.Address,
+		ctx:    ctx,
+		config: c.Config,
 	}, nil
 }
 
-func loadAsset(path, defaultValue string) string {
+func (m *mod) loadAsset(path, defaultValue string) string {
 
 	devPath := fmt.Sprintf(
 		"%s/src/github.com/emccode/rexray/daemon/module/admin/html/%s",
@@ -75,37 +81,37 @@ func loadAsset(path, defaultValue string) string {
 	return defaultValue
 }
 
-func writeContentLength(w http.ResponseWriter, content string) {
+func (m *mod) writeContentLength(w http.ResponseWriter, content string) {
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(content)))
 }
 
-func indexHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) indexHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	fmt.Fprint(w, loadAsset("index.html", htmlIndex))
+	fmt.Fprint(w, m.loadAsset("index.html", htmlIndex))
 }
 
-func scriptsHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) scriptsHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
-	a := loadAsset("scripts/jquery-1.11.3.min.js", scriptJQuery)
-	writeContentLength(w, a)
+	a := m.loadAsset("scripts/jquery-1.11.3.min.js", scriptJQuery)
+	m.writeContentLength(w, a)
 	fmt.Fprint(w, a)
 }
 
-func stylesHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) stylesHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
-	a := loadAsset("styles/main.css", styleMain)
-	writeContentLength(w, a)
+	a := m.loadAsset("styles/main.css", styleMain)
+	m.writeContentLength(w, a)
 	fmt.Fprint(w, a)
 }
 
-func imagesHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) imagesHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "image/svg+xml; charset=UTF-8")
-	a := loadAsset("images/rexray-banner-logo.svg", imageRexRayBannerLogo)
-	writeContentLength(w, a)
+	a := m.loadAsset("images/rexray-banner-logo.svg", imageRexRayBannerLogo)
+	m.writeContentLength(w, a)
 	fmt.Fprint(w, a)
 }
 
-func moduleTypeHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) moduleTypeHandler(w http.ResponseWriter, req *http.Request) {
 	var mods []*module.Type
 	for m := range module.Types() {
 		mods = append(mods, m)
@@ -125,7 +131,7 @@ func moduleTypeHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func moduleInstGetHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) moduleInstGetHandler(w http.ResponseWriter, req *http.Request) {
 	var mods []*module.Instance
 	for m := range module.Instances() {
 		mods = append(mods, m)
@@ -145,7 +151,7 @@ func moduleInstGetHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 	name := req.FormValue("name")
 	typeName := req.FormValue("typeName")
 	address := req.FormValue("address")
@@ -182,7 +188,7 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	modInst, initErr := module.InitializeModule(modConfig)
+	modInst, initErr := module.InitializeModule(context.Background(), modConfig)
 	if initErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("Error initializing module ERR: %v\n", initErr)
@@ -202,7 +208,7 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if startBool {
-		startErr := module.StartModule(modInst.Name)
+		startErr := module.StartModule(m.ctx, m.config, modInst.Name)
 		if startErr != nil {
 			w.Write(getJSONError("Error starting module", startErr))
 			log.Printf("Error starting module ERR: %v\n", startErr)
@@ -222,18 +228,18 @@ func moduleInstPostHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func moduleInstHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) moduleInstHandler(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
-		moduleInstGetHandler(w, req)
+		m.moduleInstGetHandler(w, req)
 	case "POST":
-		moduleInstPostHandler(w, req)
+		m.moduleInstPostHandler(w, req)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
-func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
+func (m *mod) moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -264,7 +270,7 @@ func moduleInstStartHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	startErr := module.StartModule(name)
+	startErr := module.StartModule(m.ctx, m.config, name)
 
 	if startErr != nil {
 		w.Write(getJSONError("Error starting moudle", startErr))
@@ -302,21 +308,21 @@ func (m *mod) Start() error {
 	r := mux.NewRouter()
 
 	r.Handle("/r/module/instances",
-		handlers.LoggingHandler(stdOut, http.HandlerFunc(moduleInstHandler)))
+		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.moduleInstHandler)))
 	r.Handle("/r/module/instances/{name}/start",
-		handlers.LoggingHandler(stdOut, http.HandlerFunc(moduleInstStartHandler)))
+		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.moduleInstStartHandler)))
 	r.Handle("/r/module/types",
-		handlers.LoggingHandler(stdOut, http.HandlerFunc(moduleTypeHandler)))
+		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.moduleTypeHandler)))
 
 	r.Handle("/images/rexray-banner-logo.svg",
-		handlers.LoggingHandler(stdOut, http.HandlerFunc(imagesHandler)))
+		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.imagesHandler)))
 	r.Handle("/scripts/jquery-1.11.3.min.js",
-		handlers.LoggingHandler(stdOut, http.HandlerFunc(scriptsHandler)))
+		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.scriptsHandler)))
 	r.Handle("/styles/main.css",
-		handlers.LoggingHandler(stdOut, http.HandlerFunc(stylesHandler)))
+		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.stylesHandler)))
 
 	r.Handle("/",
-		handlers.LoggingHandler(stdOut, http.HandlerFunc(indexHandler)))
+		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.indexHandler)))
 
 	_, addr, parseAddrErr := gotil.ParseAddress(m.Address())
 	if parseAddrErr != nil {

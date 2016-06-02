@@ -1,5 +1,5 @@
-hash: 50269d22a3dfe92a2ff238ced28120d628b87ab77dc16f6274963226c4fc4e4d
-updated: 2016-05-27T05:03:06.427592333-05:00
+hash: 834ae4500ea813ff51a645ecad006a34c87aad56190ee19c357c93316a8f132c
+updated: 2016-06-02T00:11:06.462539812-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 021bbefbfe234a3b72dc9137847483f5b997cbd0
@@ -41,12 +41,12 @@ imports:
   subpackages:
   - types/v1
 - name: github.com/emccode/libstorage
-  version: dc81db934a68963844df99ea2b20cfe0d85bc610
+  version: ad4810db3d11ae6e3adac24c53bf526fc733e1c7
   subpackages:
   - imports/local
   - imports/remote
-  - api/server
   - api/types
+  - api/server
   - client
   - api/context
   - api/utils
@@ -109,7 +109,7 @@ imports:
 - name: github.com/mitchellh/mapstructure
   version: d2dd0262208475919e1a362f675cfc0e7c10e905
 - name: github.com/russross/blackfriday
-  version: 2004188462c3946efefbdcd91aa83e49b4175bfb
+  version: 1d6b8e9301e720b08a8938b8c25c018285885438
 - name: github.com/shurcooL/sanitized_anchor_name
   version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
 - name: github.com/Sirupsen/logrus
@@ -130,13 +130,13 @@ imports:
   repo: https://github.com/akutz/viper.git
   vcs: git
 - name: golang.org/x/net
-  version: 30db96677b74e24b967e23f911eb3364fc61a011
+  version: c4c3ea71919de159c9e246d7be66deb7f0a39a58
   repo: https://github.com/golang/net
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03
+  version: 076b546753157f758b316e59bcb51e6807c04057
   subpackages:
   - unix
 - name: google.golang.org/api

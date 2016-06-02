@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -16,11 +15,11 @@ import (
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v1"
 
-	"github.com/emccode/libstorage"
 	"github.com/emccode/libstorage/api/context"
 	apiserver "github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiutils "github.com/emccode/libstorage/api/utils"
+	apiclient "github.com/emccode/libstorage/client"
 
 	"github.com/emccode/rexray/rexray/cli/term"
 	"github.com/emccode/rexray/util"
@@ -38,11 +37,13 @@ type subCommandPanic struct{}
 type CLI struct {
 	l      *log.Logger
 	r      apitypes.Client
-	rs     io.Closer
+	rs     apitypes.Server
+	rsErrs <-chan error
 	c      *cobra.Command
 	config gofig.Config
 	ctx    apitypes.Context
 
+	activateLibStorage       bool
 	serviceCmd               *cobra.Command
 	moduleCmd                *cobra.Command
 	versionCmd               *cobra.Command
@@ -180,6 +181,7 @@ func NewWithArgs(a ...string) *CLI {
 
 	c := &CLI{
 		l:      log.New(),
+		ctx:    context.Background(),
 		config: gofig.New(),
 	}
 
@@ -221,11 +223,15 @@ func ExecuteWithArgs(a ...string) {
 
 // Execute executes the CLI.
 func (c *CLI) Execute() {
+
+	defer func() {
+		if c.activateLibStorage {
+			util.WaitUntilLibStorageStopped(c.ctx, c.rsErrs)
+		}
+	}()
+
 	defer func() {
 		r := recover()
-		if c.rs != nil {
-			c.rs.Close()
-		}
 		switch r := r.(type) {
 		case nil:
 			return
@@ -239,10 +245,8 @@ func (c *CLI) Execute() {
 			os.Exit(1)
 		}
 	}()
+
 	c.execute()
-	if c.rs != nil {
-		c.rs.Close()
-	}
 }
 
 func (c *CLI) execute() {
@@ -290,22 +294,20 @@ func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 }
 
 func (c *CLI) updateLogLevel() {
-	switch c.logLevel() {
-	case "panic":
-		log.SetLevel(log.PanicLevel)
-	case "fatal":
-		log.SetLevel(log.FatalLevel)
-	case "error":
-		log.SetLevel(log.ErrorLevel)
-	case "warn":
-		log.SetLevel(log.WarnLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "debug":
-		log.SetLevel(log.DebugLevel)
+	lvl, err := log.ParseLevel(strings.ToLower(c.logLevel()))
+	if err != nil {
+		lvl = log.WarnLevel
 	}
+	log.SetLevel(lvl)
+	lvlStr := lvl.String()
+	c.config.Set(apitypes.ConfigLogLevel, lvlStr)
+	context.SetLogLevel(c.ctx, lvl)
+	log.WithField("logLevel", lvlStr).Debug("updated log level")
+}
 
-	log.WithField("logLevel", c.logLevel()).Debug("updated log level")
+func (c *CLI) preRunActivateLibStorage(cmd *cobra.Command, args []string) {
+	c.activateLibStorage = true
+	c.preRun(cmd, args)
 }
 
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
@@ -353,8 +355,12 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		panic(&printedErrorPanic{})
 	}
 
-	if c.isInitDriverManagersCmd(cmd) {
-		c.ctx = context.Background()
+	c.ctx.WithField("val", os.Args).Debug("os.args")
+
+	if c.activateLibStorage {
+
+		c.ctx.WithField("cmd", cmd.Name()).Debug("is init driver managers cmd")
+
 		// if c.service != "" && !c.config.IsSet(apitypes.ConfigService) {
 		// 	c.ctx = c.ctx.WithServiceName(c.service)
 		// }
@@ -363,11 +369,46 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		}
 
 		apiserver.DisableStartupInfo = true
-		r, rs, _, err := libstorage.New(c.config.Scope("rexray"))
+
+		var (
+			err    error
+			config = c.config.Scope("rexray")
+		)
+
+		if config.GetBool(apitypes.ConfigEmbedded) {
+
+			host, isRunning := util.IsLocalServerActive(c.ctx, config)
+
+			if isRunning {
+				c.ctx = c.ctx.WithValue(context.HostKey, host)
+				c.ctx.WithField("host", host).Debug(
+					"not starting embeddded server; " +
+						"local server already running")
+			} else {
+				c.ctx.Debug("starting embedded libStorage server")
+
+				apiserver.CloseOnAbort()
+
+				if c.rs, c.rsErrs, err = apiserver.Serve(config); err == nil {
+					go func() {
+						err := <-c.rsErrs
+						if err != nil {
+							log.Error(err)
+						}
+					}()
+					if host == "" {
+						config.Set(apitypes.ConfigHost, c.rs.Addrs()[0])
+					}
+				}
+
+			}
+		}
+
 		if err == nil {
-			c.r = r
-			c.rs = rs
-		} else {
+			c.r, err = apiclient.New(config)
+		}
+
+		if err != nil {
 			if term.IsTerminal() {
 				printColorizedError(err)
 			} else {
@@ -451,31 +492,6 @@ func printNonColorizedError(err error) {
 		stderr,
 		"  - The REX-ray website at https://github.com/emccode/rexray\n")
 	fmt.Fprintf(stderr, "  - The online help below\n")
-}
-
-func (c *CLI) isInitDriverManagersCmd(cmd *cobra.Command) bool {
-	return cmd.Parent() != nil &&
-		cmd != c.versionCmd &&
-		cmd != c.envCmd &&
-		c.isServiceCmd(cmd) &&
-		c.isModuleCmd(cmd)
-}
-
-func (c *CLI) isServiceCmd(cmd *cobra.Command) bool {
-	return cmd != c.serviceCmd &&
-		cmd != c.serviceInitSysCmd &&
-		cmd != c.installCmd &&
-		cmd != c.uninstallCmd &&
-		cmd != c.serviceStatusCmd &&
-		cmd != c.serviceStopCmd &&
-		!(cmd == c.serviceStartCmd && (c.client != "" || c.fg || c.force))
-}
-
-func (c *CLI) isModuleCmd(cmd *cobra.Command) bool {
-	return cmd != c.moduleCmd &&
-		cmd != c.moduleTypesCmd &&
-		cmd != c.moduleInstancesCmd &&
-		cmd != c.moduleInstancesListCmd
 }
 
 func (c *CLI) logLevel() string {

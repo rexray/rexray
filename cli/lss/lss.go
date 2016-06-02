@@ -89,7 +89,7 @@ func Run() {
 			os.Exit(0)
 		}
 
-		s, errs, err := server.Serve(config)
+		s, errs, err := server.Serve(nil, config)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 			os.Exit(1)
@@ -165,7 +165,7 @@ func Run() {
 
 	server.CloseOnAbort()
 
-	_, errs, err := server.Serve(config)
+	_, errs, err := server.Serve(nil, config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)

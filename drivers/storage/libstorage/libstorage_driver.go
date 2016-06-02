@@ -41,7 +41,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 	addr := config.GetString(types.ConfigHost)
 	d.ctx = ctx.WithValue(context.HostKey, addr)
-	ctx.Debug("got configured host address")
+	d.ctx.Debug("got configured host address")
 
 	proto, lAddr, err := gotil.ParseAddress(addr)
 	if err != nil {

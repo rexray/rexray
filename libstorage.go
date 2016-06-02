@@ -35,6 +35,7 @@ package libstorage
 
 import (
 	"github.com/akutz/gofig"
+	"golang.org/x/net/context"
 
 	"github.com/emccode/libstorage/api/server"
 	"github.com/emccode/libstorage/api/types"
@@ -48,9 +49,10 @@ import (
 // a config instance with the correct properties to specify service
 // information for a libStorage server.
 func New(
+	ctx context.Context,
 	config gofig.Config) (types.Client, types.Server, <-chan error, error) {
 
-	s, errs, err := server.Serve(config)
+	s, errs, err := server.Serve(ctx, config)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -59,7 +61,7 @@ func New(
 		config.Set(types.ConfigHost, s.Addrs()[0])
 	}
 
-	c, err := client.New(config)
+	c, err := client.New(ctx, config)
 	if err != nil {
 		return nil, nil, nil, err
 	}

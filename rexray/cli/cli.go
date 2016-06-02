@@ -389,7 +389,8 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 				apiserver.CloseOnAbort()
 
-				if c.rs, c.rsErrs, err = apiserver.Serve(config); err == nil {
+				if c.rs, c.rsErrs, err = apiserver.Serve(
+					c.ctx, config); err == nil {
 					go func() {
 						err := <-c.rsErrs
 						if err != nil {
@@ -405,7 +406,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		}
 
 		if err == nil {
-			c.r, err = apiclient.New(config)
+			c.r, err = apiclient.New(c.ctx, config)
 		}
 
 		if err != nil {

@@ -7,6 +7,9 @@ all:
 ################################################################################
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
+ASTERIK := *
+LPAREN := (
+RPAREN := )
 COMMA := ,
 5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
 
@@ -314,12 +317,16 @@ V_SHA_LONG := $(shell git show HEAD -s --format=%H)
 
 # the branch name, possibly from travis-ci
 ifeq ($(origin TRAVIS_BRANCH), undefined)
-	TRAVIS_BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
+	TRAVIS_BRANCH := $(shell git branch | grep '*')
 else
-	ifeq ($(strip $(TRAVIS_BRANCH)),)
-		TRAVIS_BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
-	endif
+ifeq (,$(strip $(TRAVIS_BRANCH)))
+	TRAVIS_BRANCH := $(shell git branch | grep '*')
 endif
+endif
+TRAVIS_BRANCH := $(subst $(ASTERIK) ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached at ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(RPAREN),,$(TRAVIS_BRANCH))
+
 ifeq ($(origin TRAVIS_TAG), undefined)
 	TRAVIS_TAG := $(TRAVIS_BRANCH)
 else
@@ -395,7 +402,7 @@ PRINTF_VERSION_CMD += %s\nFormed: %s\n" "$(V_SEMVER)" "$(V_OS_ARCH)"
 PRINTF_VERSION_CMD += "$(V_BRANCH)" "$(V_SHA_LONG)" "$(V_BUILD_DATE)"
 API_GENERATED_SRC := ./api/api_generated.go
 $(API_GENERATED_SRC):
-	$(PRINTF_VERSION_CMD) && echo generating $@
+	echo generating $@
 	@echo "$$API_GENERATED_CONTENT" > $@
 
 $(API_GENERATED_SRC)-clean:

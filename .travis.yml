@@ -14,6 +14,7 @@ install:
   - go get github.com/onsi/ginkgo
   - go get golang.org/x/tools/cmd/cover
 script:
+  - make version
   - make -j deps
   - make -j build
   - make -j cover

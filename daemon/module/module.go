@@ -182,7 +182,7 @@ func InitializeDefaultModules(
 				"not starting embeddded server; " +
 					"local server already running")
 		} else {
-			if server, errs, err = apiserver.Serve(config); err != nil {
+			if server, errs, err = apiserver.Serve(ctx, config); err != nil {
 				return nil, err
 			}
 			go func() {
@@ -206,7 +206,7 @@ func InitializeDefaultModules(
 
 	for _, mc := range modConfigs {
 
-		lsc, err := apiclient.New(mc.Config)
+		lsc, err := apiclient.New(ctx, mc.Config)
 		if err != nil {
 			panic(err)
 		}

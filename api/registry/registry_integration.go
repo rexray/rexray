@@ -130,6 +130,13 @@ func (d *idm) Mount(
 	if err != nil {
 		return "", nil, err
 	}
+
+	// if the volume has attachments assign the new mount point to the
+	// MountPoint field of the first attachment element
+	if len(vol.Attachments) > 0 {
+		vol.Attachments[0].MountPoint = mp
+	}
+
 	d.incCount(volumeName)
 	return mp, vol, err
 }

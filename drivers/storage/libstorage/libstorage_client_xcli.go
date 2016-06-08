@@ -127,8 +127,8 @@ func (c *client) LocalDevices(
 		return nil, err
 	}
 
-	ld := &types.LocalDevices{}
-	if err := ld.UnmarshalText(out); err != nil {
+	ld, err := unmarshalLocalDevices(ctx, out)
+	if err != nil {
 		return nil, err
 	}
 
@@ -172,13 +172,33 @@ func (c *client) WaitForDevice(
 
 	matched := exitCode == 0
 
-	ld := &types.LocalDevices{}
-	if err := ld.UnmarshalText(out); err != nil {
+	ld, err := unmarshalLocalDevices(ctx, out)
+	if err != nil {
 		return false, nil, err
 	}
 
 	ctx.Debug("xli waitfordevice success")
 	return matched, ld, nil
+}
+
+func unmarshalLocalDevices(
+	ctx types.Context, out []byte) (*types.LocalDevices, error) {
+
+	ld := &types.LocalDevices{}
+	if err := ld.UnmarshalText(out); err != nil {
+		return nil, err
+	}
+
+	// remove any local devices that has no mapped volume information
+	for k, v := range ld.DeviceMap {
+		if len(v) == 0 {
+			ctx.WithField("deviceID", k).Warn(
+				"removing local device w/ invalid volume id")
+			delete(ld.DeviceMap, k)
+		}
+	}
+
+	return ld, nil
 }
 
 func (c *client) runExecutor(

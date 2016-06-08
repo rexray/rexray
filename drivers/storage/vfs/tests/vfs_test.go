@@ -680,7 +680,9 @@ func TestLocalDevices(t *testing.T) {
 		if len(p) > 1 {
 			v = p[1]
 		}
-		dfcMap[k] = v
+		if len(v) > 0 {
+			dfcMap[k] = v
+		}
 	}
 
 	apitests.RunGroup(

@@ -152,11 +152,13 @@ func (m *mod) Start() error {
 	} else {
 		specPath = addr
 		startFunc = func() error {
+			readTimeout := m.config.GetInt("http.readtimeout")
+			writeTimeout := m.config.GetInt("http.writetimeout")
 			s := &http.Server{
 				Addr:           addr,
 				Handler:        mux,
-				ReadTimeout:    10 * time.Second,
-				WriteTimeout:   10 * time.Second,
+				ReadTimeout:    time.Duration(readTimeout) * time.Second,
+				WriteTimeout:   time.Duration(writeTimeout) * time.Second,
 				MaxHeaderBytes: 1 << 20,
 			}
 			return s.ListenAndServe()

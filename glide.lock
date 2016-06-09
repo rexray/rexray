@@ -1,8 +1,8 @@
-hash: 834ae4500ea813ff51a645ecad006a34c87aad56190ee19c357c93316a8f132c
-updated: 2016-06-02T05:57:20.839155182-05:00
+hash: fb4f31e96a869457cd4e401f45f76438e6d88a21fc577862c410cd6d56066eb3
+updated: 2016-06-08T22:13:36.120602305-05:00
 imports:
 - name: github.com/akutz/gofig
-  version: 021bbefbfe234a3b72dc9137847483f5b997cbd0
+  version: 6485951b06f312fe01ad7ba39978513b902dbd50
 - name: github.com/akutz/golf
   version: e26bdd995cb746e431d42ea303ebe7622389d29f
   subpackages:
@@ -41,7 +41,7 @@ imports:
   subpackages:
   - types/v1
 - name: github.com/emccode/libstorage
-  version: 22292c9c129d8bd26f64593a611ad520e912005f
+  version: 8582a82a897d325c974e52a0e4bf7ac6ae05435c
   subpackages:
   - imports/local
   - imports/remote
@@ -90,7 +90,7 @@ imports:
 - name: github.com/gorilla/handlers
   version: 66e6c6f01d8da976ee113437745ca029c2b585a6
 - name: github.com/gorilla/mux
-  version: bd09be08ed4377796d312df0a45314e11b8f5dc1
+  version: 9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jteeuwen/go-bindata
@@ -130,7 +130,7 @@ imports:
   repo: https://github.com/akutz/viper.git
   vcs: git
 - name: golang.org/x/net
-  version: c4c3ea71919de159c9e246d7be66deb7f0a39a58
+  version: 313cf39d4ac368181bce6960ac9be9e7cee67e68
   repo: https://github.com/golang/net
   subpackages:
   - context

@@ -330,12 +330,6 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 			util.LibFilePath("volumes"))
 	}
 
-	if !c.config.IsSet(apitypes.ConfigIgVolOpsPathCache) {
-		c.config.Set(
-			apitypes.ConfigIgVolOpsPathCache,
-			false)
-	}
-
 	c.config = c.config.Scope("rexray.modules.default-docker")
 
 	if isHelpFlag(cmd) {

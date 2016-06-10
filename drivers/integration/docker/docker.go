@@ -56,23 +56,16 @@ func newDriver() types.IntegrationDriver {
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 
-	// TODO - replace the description data removed from this location.
-	//
-	//        8879d4ce41bdb6617413df9e18172b131ce155cc was the last commit
-	//        that contained the info.
-	//
-	//        this info was removed due to its being mishandled with regards
-	//        to its approach being orthagonal to what was recommended by the
-	//        project lead in addition to the verbosity of the information.
-	//
-	//        additionally, the choice to log the information so far removed
-	//        from its application is misguided as configuration data is
-	//        dynamic and may be invalid or incorrect from what would be shown
-	//        at this location compared to when it is used
-	//
-	//        the excised data will be reintroduced later in a more considered
-	//        manner that's consistent with the project's overall architecture
-	//        and design
+	ctx.WithFields(log.Fields{
+		types.ConfigIgVolOpsMountRootPath:       d.volumeRootPath(),
+		types.ConfigIgVolOpsCreateDefaultType:   d.volumeType(),
+		types.ConfigIgVolOpsCreateDefaultIOPS:   d.iops(),
+		types.ConfigIgVolOpsCreateDefaultSize:   d.size(),
+		types.ConfigIgVolOpsCreateDefaultAZ:     d.availabilityZone(),
+		types.ConfigIgVolOpsCreateDefaultFsType: d.fsType(),
+		types.ConfigIgVolOpsMountPath:           d.mountDirPath(),
+		types.ConfigIgVolOpsCreateImplicit:      d.volumeCreateImplicit(),
+	}).Info("docker integration driver successfully initialized")
 
 	return nil
 }

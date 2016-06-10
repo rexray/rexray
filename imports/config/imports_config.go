@@ -34,12 +34,12 @@ func init() {
 		defaultVal interface{},
 		description string,
 		keyVal types.ConfigKey,
-		args ...string) {
+		args ...interface{}) {
 
 		if args == nil {
-			args = []string{string(keyVal)}
+			args = []interface{}{keyVal}
 		} else {
-			args = append([]string{string(keyVal)}, args...)
+			args = append([]interface{}{keyVal}, args...)
 		}
 
 		r.Key(keyType, "", defaultVal, description, args...)

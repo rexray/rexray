@@ -1,8 +1,8 @@
-hash: 0b1c2794d82975d611e966e8102fd95d1bee1ff1b81e2d592f26026e41c2d65e
-updated: 2016-06-08T17:21:16.808220531-05:00
+hash: a373a5ff1909ca796eb4f3b1f484b214c212d184143014c377823003b846b5fb
+updated: 2016-06-10T13:02:27.492360638-05:00
 imports:
 - name: github.com/akutz/gofig
-  version: 6485951b06f312fe01ad7ba39978513b902dbd50
+  version: 697c16916338166671910eeaccc50f21e3c10726
 - name: github.com/akutz/golf
   version: e26bdd995cb746e431d42ea303ebe7622389d29f
 - name: github.com/akutz/goof
@@ -71,22 +71,20 @@ imports:
 - name: github.com/spf13/pflag
   version: b084184666e02084b8ccb9b704bf0d79c466eb1d
   repo: https://github.com/spf13/pflag
-  vcs: git
 - name: github.com/spf13/viper
   version: 317ec73d0d7507658ee3be15866b445d6d921848
   repo: https://github.com/akutz/viper.git
-  vcs: git
 - name: github.com/stretchr/testify
   version: 8d64eb7173c7753d6419fd4a9caf057398611364
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: 313cf39d4ac368181bce6960ac9be9e7cee67e68
+  version: 3f122ce3dbbe488b7e6a8bdb26f41edec852a40b
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: 076b546753157f758b316e59bcb51e6807c04057
+  version: b44883b474ffefa37335017174e397412b633a4f
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1
@@ -94,5 +92,4 @@ imports:
 - name: gopkg.in/yaml.v2
   version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
   repo: https://github.com/akutz/yaml.git
-  vcs: git
 devImports: []

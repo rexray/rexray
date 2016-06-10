@@ -1,7 +1,6 @@
 *.a
 *.d
 *.out
-*.lock
 libstorage.paw
 .site/
 site/

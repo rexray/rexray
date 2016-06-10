@@ -9,9 +9,13 @@ import:
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
   - package: github.com/akutz/gofig
+    version: v0.1.4
   - package: github.com/akutz/gotil
+    version: v0.1.0
   - package: github.com/akutz/goof
+    version: v0.1.0
   - package: github.com/akutz/golf
+    version: v0.1.1
   - package: github.com/cesanta/validate-json
 
 ################################################################################

@@ -3,6 +3,11 @@ package types
 // ConfigKey is a configuration key.
 type ConfigKey string
 
+// String returns the string-representation of the ConfigKey.
+func (k ConfigKey) String() string {
+	return string(k)
+}
+
 const (
 	// ConfigRoot is a config key.
 	ConfigRoot = "libstorage"

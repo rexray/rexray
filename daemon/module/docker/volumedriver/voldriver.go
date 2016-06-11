@@ -215,7 +215,7 @@ func (m *mod) buildMux() *http.ServeMux {
 	mux.HandleFunc("/Plugin.Activate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		fmt.Fprintln(w, `{"Implements": ["VolumeDriver"]}`)
-		m.ctx.Debug("/VolumeDriver.Create")
+		m.ctx.Debug("/Plugin.Activate")
 	})
 
 	mux.HandleFunc("/VolumeDriver.Create", func(w http.ResponseWriter, r *http.Request) {
@@ -345,7 +345,7 @@ func (m *mod) buildMux() *http.ServeMux {
 		var pr pluginRequest
 		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
-			m.ctx.WithError(err).Error("/VolumeDriver.Path: error decoding json")
+			m.ctx.WithError(err).Error("/VolumeDriver.Get: error decoding json")
 			return
 		}
 
@@ -386,6 +386,20 @@ func (m *mod) buildMux() *http.ServeMux {
 		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
 		json.NewEncoder(w).Encode(
 			map[string][]apitypes.VolumeMapping{"Volumes": volMappings})
+	})
+
+	mux.HandleFunc("/VolumeDriver.Capabilities", func(w http.ResponseWriter, r *http.Request) {
+		var pr pluginRequest
+		if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
+			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
+			m.ctx.WithError(err).Error("/VolumeDriver.Capabilities: error decoding json")
+			return
+		}
+
+		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Capabilities")
+
+		w.Header().Set("Content-Type", "application/vnd.docker.plugins.v1.2+json")
+		fmt.Fprintln(w, `{"Capabilities": { "Scope": "global" }}`)
 	})
 
 	return mux

@@ -1,8 +1,8 @@
-hash: fb4f31e96a869457cd4e401f45f76438e6d88a21fc577862c410cd6d56066eb3
-updated: 2016-06-08T22:13:36.120602305-05:00
+hash: 3211ab6604b6d63f27c1a18c2292af8c82da3bd8eab7fe6f6a2ef3081f22f2e0
+updated: 2016-06-10T22:15:17.470730691-05:00
 imports:
 - name: github.com/akutz/gofig
-  version: 6485951b06f312fe01ad7ba39978513b902dbd50
+  version: 697c16916338166671910eeaccc50f21e3c10726
 - name: github.com/akutz/golf
   version: e26bdd995cb746e431d42ea303ebe7622389d29f
   subpackages:
@@ -41,7 +41,7 @@ imports:
   subpackages:
   - types/v1
 - name: github.com/emccode/libstorage
-  version: 8582a82a897d325c974e52a0e4bf7ac6ae05435c
+  version: dd2d78843bf7bd21a396c92036e4078b244b5de5
   subpackages:
   - imports/local
   - imports/remote
@@ -128,15 +128,14 @@ imports:
 - name: github.com/spf13/viper
   version: 317ec73d0d7507658ee3be15866b445d6d921848
   repo: https://github.com/akutz/viper.git
-  vcs: git
 - name: golang.org/x/net
-  version: 313cf39d4ac368181bce6960ac9be9e7cee67e68
+  version: 3f122ce3dbbe488b7e6a8bdb26f41edec852a40b
   repo: https://github.com/golang/net
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: 076b546753157f758b316e59bcb51e6807c04057
+  version: 7f918dd405547ecb864d14a8ecbbfe205b5f930f
   subpackages:
   - unix
 - name: google.golang.org/api

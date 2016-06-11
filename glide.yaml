@@ -1,21 +1,32 @@
 package: github.com/emccode/rexray
 import:
-  - package: github.com/emccode/libstorage
-    version: v0.1.1-rc2
+
+################################################################################
+##                           Framework Dependencies                           ##
+################################################################################
+
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
+
+  - package: github.com/emccode/libstorage
+    version: v0.1.1
+
+  - package: github.com/akutz/gofig
+    version: v0.1.4
+  - package: github.com/akutz/gotil
+    version: v0.1.0
   - package: github.com/akutz/goof
+    version: v0.1.0
+  - package: github.com/akutz/golf
+    version: v0.1.1
+
   - package: github.com/spf13/pflag
     ref:     b084184666e02084b8ccb9b704bf0d79c466eb1d
     repo:    https://github.com/spf13/pflag
   - package: github.com/spf13/cobra
     ref:     363816bb13ce1710460c2345017fd35593cbf5ed
     repo:    https://github.com/akutz/cobra
-  - package: github.com/akutz/golf
-    ref:     v0.1.1
-  - package: github.com/akutz/gofig
-  - package: github.com/akutz/gotil
   - package: github.com/go-yaml/yaml
     ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
     repo:    https://github.com/akutz/yaml.git

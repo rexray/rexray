@@ -4,6 +4,9 @@ Release early, release often
 
 ---
 
+## Version 0.1.2 (2016/06/13)
+This release updates the default VirtualBox endpoint to `http://10.0.2.2:18083`.
+
 ## Version 0.1.1 (2016/06/10)
 This is the initial GA release of libStorage.
 
@@ -48,7 +51,7 @@ Using libStorage can be broken down into several, distinct steps:
 [Steph Carlson](https://github.com/stephcarlson) | Steph keeps the convention train chugging along...
 [Amanda Katona](https://github.com/amandakatona) | And Amanda is the one keeping the locomotive from going off the rails
 [Drew Smith](https://github.com/mux23) | Drew is always ready to lend a hand, no matter the problem
-[Chris Duchesne](https://github.com/cduchesne) | His short time with the time is in complete opposition to the value he has added to this project
+[Chris Duchesne](https://github.com/cduchesne) | His short time with the team is in complete opposition to the value he has added to this project
 [David vonThenen](https://github.com/dvonthenen) | David has been a go-to guy for debugging the most difficult of issues
 [Steve Wong](https://github.com/cantbewong) | Steve stays on top of the things and keeps use cases in sync with industry needs
 [Travis Rhoden](https://github.com/codenrhoden) | Another keen mind, Travis is also a great font of technical know-how

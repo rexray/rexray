@@ -305,7 +305,7 @@ func IsLocalServerActive(
 			return "", false
 		}
 		ctx.WithField("port", port).Debug("is local tcp server active")
-		return host, gotil.IsTCPPortAvailable(port)
+		return host, !gotil.IsTCPPortAvailable(port)
 	}
 	return "", false
 }

@@ -4,6 +4,12 @@ Release early, release often
 
 ---
 
+## Version 0.1.3 (2016/06/14)
+This is a minor update to support the release of REX-Ray 0.4.0.
+
+### Enhancements
+* Marshal to YAML Enhancements ([#203](https://github.com/emccode/libstorage/issues/203))
+
 ## Version 0.1.2 (2016/06/13)
 This release updates the default VirtualBox endpoint to `http://10.0.2.2:18083`.
 

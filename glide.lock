@@ -1,5 +1,5 @@
-hash: a373a5ff1909ca796eb4f3b1f484b214c212d184143014c377823003b846b5fb
-updated: 2016-06-10T13:02:27.492360638-05:00
+hash: 1be91a8105c46e6885db9d305fa22f7d5460a21f5c9815e308ed9cd61695c7d3
+updated: 2016-06-14T13:00:38.335910394-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -38,6 +38,9 @@ imports:
   repo: https://github.com/emccode/goscaleio
   subpackages:
   - types/v1
+- name: github.com/go-yaml/yaml
+  version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
+  repo: https://github.com/akutz/yaml.git
 - name: github.com/gorilla/context
   version: aed02d124ae4a0e94fea4541c8effd05bf0c8296
 - name: github.com/gorilla/mux
@@ -84,11 +87,14 @@ imports:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: b44883b474ffefa37335017174e397412b633a4f
+  version: 5a8c7f28c1853e998847117cf1f3fe96ce88a59f
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1
   version: 30411dbcefb7a1da7e84f75530ad3abe4011b4f8
+- name: gopkg.in/yaml.v1
+  version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
+  repo: https://github.com/akutz/yaml.git
 - name: gopkg.in/yaml.v2
   version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
   repo: https://github.com/akutz/yaml.git

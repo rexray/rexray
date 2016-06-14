@@ -1,7 +1,10 @@
 package types
 
 import (
+	"fmt"
 	"testing"
+
+	"gopkg.in/yaml.v1"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -49,4 +52,12 @@ func TestLocalDevicesMarshalJSON(t *testing.T) {
 	assert.NoError(t, ld2.UnmarshalJSON(buf))
 
 	assert.EqualValues(t, ld1, ld2)
+}
+
+func TestLocalDevicesMarshalToYAML(t *testing.T) {
+	out, err := yaml.Marshal(newLocalDevicesObj())
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(string(out))
 }

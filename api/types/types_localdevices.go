@@ -22,7 +22,7 @@ type LocalDevices struct {
 	Driver string `json:"driver"`
 
 	// DeviceMap is voluem to device mappings.
-	DeviceMap map[string]string `json:"deviceMap"`
+	DeviceMap map[string]string `json:"deviceMap,omitempty" yaml:"deviceMap,omitempty"`
 }
 
 // String returns the string representation of a LocalDevices object.
@@ -93,7 +93,6 @@ func (l *LocalDevices) UnmarshalText(value []byte) error {
 
 // MarshalJSON marshals the InstanceID to JSON.
 func (l *LocalDevices) MarshalJSON() ([]byte, error) {
-
 	return json.Marshal(&struct {
 		Driver    string            `json:"driver"`
 		DeviceMap map[string]string `json:"deviceMap"`
@@ -116,6 +115,15 @@ func (l *LocalDevices) UnmarshalJSON(data []byte) error {
 	l.DeviceMap = ldm.DeviceMap
 
 	return nil
+}
+
+// MarshalYAML returns the object to marshal to the YAML representation of the
+// LocalDevices.
+func (l *LocalDevices) MarshalYAML() (interface{}, error) {
+	return &struct {
+		Driver    string            `json:"driver" yaml:"driver"`
+		DeviceMap map[string]string `json:"deviceMap,omitempty" yaml:"deviceMap,omitempty"`
+	}{l.Driver, l.DeviceMap}, nil
 }
 
 // byString  implements sort.Interface for []string.

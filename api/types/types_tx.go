@@ -16,7 +16,7 @@ type TxTimestamp time.Time
 type Transaction struct {
 
 	// ID is the transaction's ID.
-	ID *UUID `json:"id"`
+	ID *UUID `json:"id" yaml:"id"`
 
 	// Created is the UTC timestampe at which the transaction was created.
 	Created TxTimestamp `json:"created"`

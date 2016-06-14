@@ -50,3 +50,12 @@ import:
 ################################################################################
 
   - package: github.com/stretchr/testify
+  - package: github.com/go-yaml/yaml
+    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
+    repo:    https://github.com/akutz/yaml.git
+  - package: gopkg.in/yaml.v1
+    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
+    repo:    https://github.com/akutz/yaml.git
+  - package: gopkg.in/yaml.v2
+    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
+    repo:    https://github.com/akutz/yaml.git

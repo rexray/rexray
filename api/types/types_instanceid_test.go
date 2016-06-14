@@ -2,7 +2,10 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
+
+	"gopkg.in/yaml.v1"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -133,4 +136,23 @@ func TestInstanceIDUnmarshalText(t *testing.T) {
 	iid := &InstanceID{}
 	err := iid.UnmarshalText([]byte("scaleio="))
 	assert.NoError(t, err)
+}
+
+func TestInstanceIDMarshalToYAML(t *testing.T) {
+
+	iid := &InstanceID{
+		ID:     "hi",
+		Driver: "vfs",
+	}
+	iid.MarshalMetadata(map[string]interface{}{
+		"key1": "val1",
+		"key2": 2,
+	})
+
+	out, err := yaml.Marshal(iid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(out))
 }

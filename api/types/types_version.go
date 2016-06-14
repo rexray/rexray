@@ -57,3 +57,22 @@ func (v *VersionInfo) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(ver)
 }
+
+// MarshalYAML returns the object to marshal to the YAML representation of the
+// version.
+func (v *VersionInfo) MarshalYAML() (interface{}, error) {
+
+	return &struct {
+		SemVer         string `yaml:"semver"`
+		ShaLong        string `yaml:"shaLong"`
+		BuildTimestamp int64  `yaml:"buildTimestamp"`
+		Branch         string `yaml:"branch"`
+		Arch           string `yaml:"arch"`
+	}{
+		SemVer:         v.SemVer,
+		ShaLong:        v.ShaLong,
+		BuildTimestamp: v.BuildTimestamp.Unix(),
+		Branch:         v.Branch,
+		Arch:           v.Arch,
+	}, nil
+}

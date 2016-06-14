@@ -17,7 +17,7 @@ type InstanceIDMap map[string]*InstanceID
 type InstanceID struct {
 
 	// ID is the simple part of the InstanceID.
-	ID string `json:"id"`
+	ID string `json:"id" yaml:"id"`
 
 	// Driver is the name of the StorageExecutor that created the InstanceID
 	// as well as the name of the StorageDriver for which the InstanceID is
@@ -144,13 +144,11 @@ func (i *InstanceID) UnmarshalText(value []byte) error {
 
 // MarshalJSON marshals the InstanceID to JSON.
 func (i *InstanceID) MarshalJSON() ([]byte, error) {
-
 	return json.Marshal(&struct {
 		ID       string          `json:"id"`
 		Driver   string          `json:"driver"`
 		Metadata json.RawMessage `json:"metadata,omitempty"`
 	}{i.ID, i.Driver, i.metadata})
-
 }
 
 // UnmarshalJSON marshals the InstanceID to JSON.
@@ -171,4 +169,22 @@ func (i *InstanceID) UnmarshalJSON(data []byte) error {
 	i.metadata = iid.Metadata
 
 	return nil
+}
+
+// MarshalYAML returns the object to marshal to the YAML representation of the
+// InstanceID.
+func (i *InstanceID) MarshalYAML() (interface{}, error) {
+
+	var metadata map[string]interface{}
+	if len(i.metadata) > 0 {
+		if err := json.Unmarshal(i.metadata, &metadata); err != nil {
+			return nil, err
+		}
+	}
+
+	return &struct {
+		ID       string                 `yaml:"id"`
+		Driver   string                 `yaml:"driver"`
+		Metadata map[string]interface{} `yaml:"metadata,omitempty"`
+	}{i.ID, i.Driver, metadata}, nil
 }

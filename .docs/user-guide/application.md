@@ -51,7 +51,7 @@ $ docker run -d -e POSTGRES_PASSWORD=mysecretpassword --volume-driver=rexray \
     -v data:/var/lib/postgresql/data postgres
 ```
 
-## Popular Applications
+## Examples
 External persistent storage can be applied to any number of applications
 including but not limited the following examples.
 
@@ -69,6 +69,10 @@ including but not limited the following examples.
         $ docker run -d --volume-driver=rexray -v mongodb:/data/db mongo
 
  * [MySQL](https://hub.docker.com/_/mysql/)
+ 
+         $ docker volume create --driver=rexray --name=mysqldemovolume --opt=size=<sizeInGB>
+        $ docker run -d --volume-driver=rexray -v mysqldemovolume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw mysql:5.7.12
+ 
  * [Redis](https://hub.docker.com/_/redis/)
 
         $ docker volume create --driver=rexray --name=redis --opt=size=<sizeInGB>

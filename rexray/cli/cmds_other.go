@@ -64,8 +64,8 @@ func (c *CLI) initOtherFlags() {
 		"The path to a custom REX-Ray configuration file")
 	c.c.PersistentFlags().BoolP(
 		"verbose", "v", false, "Print verbose help information")
-	c.c.PersistentFlags().StringVarP(&c.service, "service", "s", "",
-		"The name of the libStorage service")
+	//c.c.PersistentFlags().StringVarP(&c.service, "service", "s", "",
+	//	"The name of the libStorage service")
 
 	// add the flag sets
 	for _, fs := range c.config.FlagSets() {

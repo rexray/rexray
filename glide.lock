@@ -1,5 +1,5 @@
-hash: 3211ab6604b6d63f27c1a18c2292af8c82da3bd8eab7fe6f6a2ef3081f22f2e0
-updated: 2016-06-10T22:15:17.470730691-05:00
+hash: 9b18e8ed63ea7ccc4d9b9635a5aea51c923917917eae600bd313e7b46999af60
+updated: 2016-06-15T16:23:34.017023872-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -41,7 +41,7 @@ imports:
   subpackages:
   - types/v1
 - name: github.com/emccode/libstorage
-  version: dd2d78843bf7bd21a396c92036e4078b244b5de5
+  version: 182a626937677a081b89651598ee2eac839308e7
   subpackages:
   - imports/local
   - imports/remote
@@ -135,7 +135,7 @@ imports:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: 7f918dd405547ecb864d14a8ecbbfe205b5f930f
+  version: 62bee037599929a6e9146f29d10dd5208c43507d
   subpackages:
   - unix
 - name: google.golang.org/api

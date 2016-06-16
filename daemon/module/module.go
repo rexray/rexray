@@ -98,7 +98,7 @@ rexray:
         default-admin:
             type:     admin
             desc:     The default admin module.
-            host:     tcp://127.0.0.1:7979
+            host:     unix:///var/run/rexray/server.sock
             disabled: false
         default-docker:
             type:     docker

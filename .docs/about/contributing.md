@@ -32,7 +32,7 @@ have encountered is fixed in the git master. It is **strongly** recommended
 that you do this within a [virtualenv].
 
 ```bash
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s unstable
+curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- unstable
 ```
 
 ## Installing for Development
@@ -41,7 +41,7 @@ First you'll need to fork and clone the repository. Once you have a local
 copy, run the following command.
 
 ```bash
-make install
+make deps && make
 ```
 
 This will install REX-Ray into your `GOPATH` and you'll be able to make changes
@@ -53,7 +53,7 @@ repository.
 To run the tests, run the following commands:
 
 ```bash
-make install test
+make test
 ```
 
 The `make install` isn't strictly necessary, but it ensures that the tests are

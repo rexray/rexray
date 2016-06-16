@@ -64,12 +64,14 @@ func globalRegistration() *gofig.Registration {
 	r := gofig.NewRegistration("Global")
 	r.Yaml(`
 rexray:
-    host: tcp://:7979
     logLevel: warn
 `)
-	r.Key(gofig.String, "h", "tcp://:7979",
-		"The REX-Ray host", "rexray.host",
+	r.Key(gofig.String, "h", "",
+		"The libStorage host.", "rexray.host",
 		"host")
+	r.Key(gofig.String, "s", "",
+		"The libStorage service.", "rexray.service",
+		"service")
 	r.Key(gofig.String, "l", "warn",
 		"The log level (error, warn, info, debug)", "rexray.logLevel",
 		"logLevel")

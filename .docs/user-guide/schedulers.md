@@ -5,108 +5,11 @@ Scheduling storage one resource at a time...
 ---
 
 ## Overview
-This page reviews the scheduling systems supported by `REX-Ray`.
+This page reviews the scheduling systems supported by REX-Ray.
 
 ## Docker
-`REX-Ray` has a `Docker Volume Driver` which is compatible with 1.7+.
-
-It is suggested that you are running `Docker 1.10.2+` with `REX-Ray` especially
-if you are sharing volumes between containers, or you want interactive
-volume commands through `docker volume`.
-
-### Example Configuration
-Below is an example `config.yml` that can be used.  The `volume.mount.preempt`
-is an optional parameter here which enables any host to take control of a
-volume irrespective of whether other hosts are using the volume.  If this is
-set to `false` then plugins should ensure `safety` first by locking the
-volume from to the current owner host. We also specify `docker.size` which will
-create all new volumes at the specified size in GB.
-
-```yaml
-rexray:
-  storageDrivers:
-  - virtualbox
-  volume:
-    mount:
-      preempt: true
-docker:
-  size: 1
-virtualbox:
-  endpoint: http://yourlaptop:18083
-  volumePath: /Users/youruser/VirtualBox Volumes
-  controllerName: SATA
-```
-
-#### Extra Global Parameters
-These are all valid parameters that can be configured for the service.
-
-parameter|description
-------|-----------
-docker.size|Size in GB
-docker.iops|IOPS
-docker.volumeType|Type of Volume or Storage Pool
-docker.fsType|Type of filesystem for new volumes (ext4/xfs)
-docker.availabilityZone|Extensible parameter per storage driver
-linux.volume.rootPath|The path within the volume to private mount (/data)
-rexray.volume.mount.preempt|Forcefully take control of volumes when requested
-rexray.volume.create.disable|Disable the ability for a volume to be created
-rexray.volume.remove.disable|Disable the ability for a volume to be removed
-
-Note: With Docker 1.9.1 or below a `rexray.volume.remove.disable` is suggested
-since Docker will remove external volumes when containers that are using volumes
-are forcefully removed.
-
-### Starting Volume Driver
-
-REX-Ray must be running as a service to serve requests from Docker. This can be
-done by running `rexray start`.  Make sure you restart REX-Ray if you make
-configuration changes.
-
-    $ sudo rexray start
-    Starting REX-Ray...SUCESS!
-
-      The REX-Ray daemon is now running at PID 18141. To
-      shutdown the daemon execute the following command:
-
-        sudo rexray stop
-
-Following this you can now leverage volumes with Docker.
-
-### Creating and Using Volumes
-There are two ways to interact with volumes. You can use the `docker run`
-command in combination with `--volume-driver` for new volumes, or
-specify `-v volumeName` by itself for existing volumes. The `--volumes-from`
-will also work when sharing existing volumes with a new container.
-
-The `docker volume` sub-command
-enables complete management to create, remove, and list existing volumes. All
-volumes are returned from the underlying storage platform.
-
-  1. Run containers with volumes (1.7+)
-
-        docker run -ti --volume-driver=rexray -v test:/test busybox
-
-  2. Create volume with options (1.8+)
-
-        docker volume create --driver=rexray --opt=size=5 --name=test
-
-### Extra Volume Create Options
-option|description
-------|-----------
-size|Size in GB
-IOPS|IOPS
-volumeType|Type of Volume or Storage Pool
-volumeName|Create from an existing volume name
-volumeID|Creat from an existing volume ID
-snapshotName|Create from an existing snapshot name
-snapshotID|Create from an existing snapshot ID
-
-### Caveats
-If you restart the REX-Ray instance while volumes *are shared between
-Docker containers* then problems may arise when stopping one of the containers
-sharing the volume.  It is suggested that you avoid stopping these containers
-at this point until all containers sharing the volumes can be stopped.  This
-will enable the unmount process to proceed cleanly.
+The [Docker documentation](http://libstorage.readthedocs.io/en/stable/user-guide/schedulers/#docker)
+can now be found in the libStorage project.
 
 ## Mesos
 In Mesos the frameworks are responsible for receiving requests from
@@ -120,16 +23,16 @@ Once frameworks decide to accept resource offers from Mesos, tasks are launched
 to support workloads.  These tasks eventually make it down to Mesos agents
 to spin up containers.  
 
-`REX-Ray` provides the ability for any agent receiving a task to request
+REX-Ray provides the ability for any agent receiving a task to request
 storage be orchestrated for that task.  
 
-There are two primary methods that `REX-Ray` functions with Mesos.  It is up to
+There are two primary methods that REX-Ray functions with Mesos.  It is up to
 the framework to determine which is most appropriate.  Mesos (0.26) has two
 containerizer options for tasks, `Docker` and `Mesos`.
 
 ### Docker Containerizer with Marathon
 If the framework uses the Docker containerizer, it is required that both
-`Docker` and `REX-Ray` are configured ahead of time and working.  It is best to
+`Docker` and REX-Ray are configured ahead of time and working.  It is best to
 refer to the [Docker](#docker) page for more
 information.  Once this is configured across all appropriate agents, the
 following is an example of using Marathon to start an application with external
@@ -203,18 +106,17 @@ for the scheduler to remove volumes. With Mesos + Docker 1.9.1 this setting
 is suggested.
 
 ```yaml
-rexray:
-  storageDrivers:
-  - virtualbox
-  volume:
-    mount:
-      preempt: true
-    unmount:
-      ignoreusedcount: true
-    remove:
-      disable: true
+libstorage:
+  service: virtualbox
+  integration:
+    volume:
+      operations:
+        mount:
+          preempt: true
+        unmount:
+          ignoreusedcount: true
+        remove:
+          disable: true
 virtualbox:
-  endpoint: http://yourlaptop:18083
-  volumePath: /Users/youruser/VirtualBox Volumes
-  controllerName: SATA
+  volumePath: $HOME/VirtualBox/Volumes
 ```

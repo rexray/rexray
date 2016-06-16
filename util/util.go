@@ -148,6 +148,12 @@ func LibFilePath(fileName string) string {
 	return fmt.Sprintf("%s/%s", LibDirPath(), fileName)
 }
 
+// RunFilePath returns the path to a file inside the REX-Ray run directory
+// with the provided file name.
+func RunFilePath(fileName string) string {
+	return fmt.Sprintf("%s/%s", RunDirPath(), fileName)
+}
+
 // BinDirPath returns the path to the REX-Ray bin directory.
 func BinDirPath() string {
 	if binDirPath == "" {

@@ -8,7 +8,7 @@ Persistence for applications in containers.
 
 This tutorial will serve as a generic guide for taking Docker images found on
 [Docker Hub](http://hub.docker.com) and utilizing persistent external storage
-via `REX-Ray`. This should provide guidance for certain applications, but also
+via REX-Ray. This should provide guidance for certain applications, but also
 generically so you can add persistence properly to other applications.
 
 ## Instructions
@@ -32,7 +32,7 @@ visible when the author of the `Dockerfile` includes a ```VOLUME``` statement to
 define where stateful information should be held.
 
 Open the `Dockerfile` and do a search for ```VOLUME``` and take note of the
-volumes that will be created for this image. Then we can use `REX-Ray` or
+volumes that will be created for this image. Then we can use REX-Ray or
 `Docker` to create the external persistent volume for this image. In the
 PostgreSQL 9.3 example, there is a single volume in the Dockerfile:
 

@@ -3,11 +3,11 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 )
 
@@ -31,14 +31,9 @@ func (c *CLI) initModuleCmds() {
 		Short: "List the available module types and their IDs",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := gotil.ParseAddress(c.host())
-			if addrErr != nil {
-				panic(addrErr)
-			}
+			client := newHTTPClient()
+			const u = "http://s/r/module/types"
 
-			u := fmt.Sprintf("http://%s/r/module/types", addr)
-
-			client := &http.Client{}
 			resp, respErr := client.Get(u)
 			if respErr != nil {
 				panic(respErr)
@@ -70,14 +65,9 @@ func (c *CLI) initModuleCmds() {
 		Short:   "List the running module instances",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := gotil.ParseAddress(c.host())
-			if addrErr != nil {
-				panic(addrErr)
-			}
+			client := newHTTPClient()
+			const u = "http://s/r/module/instances"
 
-			u := fmt.Sprintf("http://%s/r/module/instances", addr)
-
-			client := &http.Client{}
 			resp, respErr := client.Get(u)
 			if respErr != nil {
 				panic(respErr)
@@ -100,10 +90,8 @@ func (c *CLI) initModuleCmds() {
 		Short:   "Create a new module instance",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := gotil.ParseAddress(c.host())
-			if addrErr != nil {
-				panic(addrErr)
-			}
+			client := newHTTPClient()
+			const u = "http://s/r/module/instances"
 
 			if c.moduleTypeName == "" || c.moduleInstanceAddress == "" {
 				cmd.Usage()
@@ -112,7 +100,6 @@ func (c *CLI) initModuleCmds() {
 
 			modInstStartStr := fmt.Sprintf("%v", c.moduleInstanceStart)
 
-			u := fmt.Sprintf("http://%s/r/module/instances", addr)
 			cfgJSON, cfgJSONErr := c.config.ToJSON()
 
 			if cfgJSONErr != nil {
@@ -127,7 +114,6 @@ func (c *CLI) initModuleCmds() {
 				"start":    modInstStartStr,
 				"config":   cfgJSON}).Debug("post create module instance")
 
-			client := &http.Client{}
 			resp, respErr := client.PostForm(u,
 				url.Values{
 					"name":     {c.moduleInstanceName},
@@ -156,20 +142,15 @@ func (c *CLI) initModuleCmds() {
 		Short: "Starts a module instance",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			_, addr, addrErr := gotil.ParseAddress(c.host())
-			if addrErr != nil {
-				panic(addrErr)
-			}
-
 			if c.moduleInstanceName == "" {
 				cmd.Usage()
 				return
 			}
 
+			client := newHTTPClient()
 			u := fmt.Sprintf(
-				"http://%s/r/module/instances/%s/start", addr, c.moduleInstanceName)
+				"http://s/r/module/instances/%s/start", c.moduleInstanceName)
 
-			client := &http.Client{}
 			resp, respErr := client.Get(u)
 			if respErr != nil {
 				panic(respErr)
@@ -209,4 +190,14 @@ func (c *CLI) initModuleFlags() {
 
 	c.moduleInstancesStartCmd.Flags().StringVarP(&c.moduleInstanceName, "name",
 		"n", "", "The name of the module instance to start")
+}
+
+func newHTTPClient() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			Dial: func(string, string) (net.Conn, error) {
+				return net.Dial("unix", serverSockFile)
+			},
+		},
+	}
 }

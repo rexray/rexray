@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	golog "log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -324,13 +325,17 @@ func (m *mod) Start() error {
 	r.Handle("/",
 		handlers.LoggingHandler(stdOut, http.HandlerFunc(m.indexHandler)))
 
-	_, addr, parseAddrErr := gotil.ParseAddress(m.Address())
-	if parseAddrErr != nil {
-		return parseAddrErr
+	proto, laddr, err := gotil.ParseAddress(m.Address())
+	if err != nil {
+		return err
+	}
+
+	l, err := net.Listen(proto, laddr)
+	if err != nil {
+		return err
 	}
 
 	s := &http.Server{
-		Addr:           addr,
 		Handler:        r,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -341,10 +346,8 @@ func (m *mod) Start() error {
 	go func() {
 		defer stdOut.Close()
 		defer stdErr.Close()
-
-		sErr := s.ListenAndServe()
-		if sErr != nil {
-			panic(sErr)
+		if err := s.Serve(l); err != nil {
+			panic(err)
 		}
 	}()
 

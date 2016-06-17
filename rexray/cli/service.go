@@ -172,6 +172,7 @@ func (c *CLI) startDaemon() {
 		syscall.SIGTERM,
 		syscall.SIGQUIT)
 
+	os.Remove(serverSockFile)
 	host := fmt.Sprintf("unix://%s", serverSockFile)
 	errs, err := rrdaemon.Start(c.ctx, c.config, host, stop)
 	if err != nil {

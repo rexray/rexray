@@ -322,13 +322,6 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	c.updateLogLevel()
 
-	if !c.config.IsSet(
-		apitypes.ConfigIgVolOpsMountPath) {
-		c.config.Set(
-			apitypes.ConfigIgVolOpsMountPath,
-			util.LibFilePath("volumes"))
-	}
-
 	if v := c.rrHost(); v != "" {
 		c.config.Set(apitypes.ConfigHost, v)
 	}
@@ -367,52 +360,13 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 		apiserver.DisableStartupInfo = true
 
-		var (
-			err    error
-			config = c.config.Scope("rexray")
-		)
+		var err error
 
-		if !config.IsSet(apitypes.ConfigHost) ||
-			config.GetBool(apitypes.ConfigEmbedded) {
-
-			host, isRunning := util.IsLocalServerActive(c.ctx, config)
-
-			if isRunning {
-				c.ctx = c.ctx.WithValue(context.HostKey, host)
-				c.ctx.WithField("host", host).Debug(
-					"not starting embeddded server; " +
-						"local server already running")
-			} else {
-
-				// if no host was specified then see if a set of default
-				// services need to be initialized
-				if v := c.rrHost(); v == "" {
-					err = initDefaultLibStorageServices(c.ctx, c.config)
-				}
-
-				if err == nil {
-					c.ctx.Debug("starting embedded libStorage server")
-
-					apiserver.CloseOnAbort()
-
-					if c.rs, c.rsErrs, err = apiserver.Serve(
-						c.ctx, config); err == nil {
-						go func() {
-							err := <-c.rsErrs
-							if err != nil {
-								log.Error(err)
-							}
-						}()
-						if host == "" {
-							config.Set(apitypes.ConfigHost, c.rs.Addrs()[0])
-						}
-					}
-				}
-			}
-		}
+		// activate libStorage if necessary
+		c.ctx, c.config, _, err = util.ActivateLibStorage(c.ctx, c.config)
 
 		if err == nil {
-			c.r, err = apiclient.New(c.ctx, config)
+			c.r, err = apiclient.New(c.ctx, c.config)
 		}
 
 		if err != nil {

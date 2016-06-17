@@ -12,6 +12,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 	apiversion "github.com/emccode/libstorage/api"
+	"github.com/emccode/libstorage/api/context"
 	apiserver "github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
 
@@ -314,4 +315,69 @@ func IsLocalServerActive(
 		return host, !gotil.IsTCPPortAvailable(port)
 	}
 	return "", false
+}
+
+// ActivateLibStorage activates a libStorage server if conditions are met and
+// returns a possibly mutated context.
+func ActivateLibStorage(
+	ctx apitypes.Context,
+	config gofig.Config) (apitypes.Context, gofig.Config, <-chan error, error) {
+
+	config = config.Scope("rexray")
+
+	if !config.IsSet(apitypes.ConfigIgVolOpsMountPath) {
+		config.Set(apitypes.ConfigIgVolOpsMountPath, LibFilePath("volumes"))
+	}
+
+	var (
+		host      string
+		err       error
+		isRunning bool
+		errs      <-chan error
+		server    apitypes.Server
+	)
+
+	if host = config.GetString(apitypes.ConfigHost); host != "" {
+		if !config.GetBool(apitypes.ConfigEmbedded) {
+			ctx.WithField(
+				"host", host,
+			).Debug("not starting embeddded server; embedded mode disabled")
+			return ctx, config, nil, nil
+		}
+	}
+
+	if host, isRunning = IsLocalServerActive(ctx, config); isRunning {
+		ctx = ctx.WithValue(context.HostKey, host)
+		ctx.WithField("host", host).Debug(
+			"not starting embeddded server; already running")
+		return ctx, config, nil, nil
+	}
+
+	// if no host was specified then see if a set of default services need to
+	// be initialized
+	if host == "" {
+		if err = initDefaultLibStorageServices(ctx, config); err != nil {
+			return ctx, config, nil, err
+		}
+	}
+
+	ctx.Debug("starting embedded libStorage server")
+
+	apiserver.CloseOnAbort()
+
+	if server, errs, err = apiserver.Serve(ctx, config); err != nil {
+		return ctx, config, nil, err
+	}
+
+	go func() {
+		if err := <-errs; err != nil {
+			ctx.Error(err)
+		}
+	}()
+
+	if host == "" {
+		config.Set(apitypes.ConfigHost, server.Addrs()[0])
+	}
+
+	return ctx, config, errs, nil
 }

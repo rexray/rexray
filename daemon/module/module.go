@@ -9,8 +9,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-	"github.com/emccode/libstorage/api/context"
-	apiserver "github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
 	apiclient "github.com/emccode/libstorage/client"
 
@@ -157,46 +155,15 @@ func InitializeDefaultModules(
 	modTypesRwl.RLock()
 	defer modTypesRwl.RUnlock()
 
-	config = config.Scope("rexray")
+	var (
+		err  error
+		mod  *Instance
+		errs <-chan error
+	)
 
-	if !config.IsSet(apitypes.ConfigIgVolOpsMountPath) {
-		config.Set(
-			apitypes.ConfigIgVolOpsMountPath, util.LibFilePath("volumes"))
-	}
-
-	var serverErrChan <-chan error
-
-	if config.GetBool(apitypes.ConfigEmbedded) {
-
-		var (
-			err    error
-			server apitypes.Server
-			errs   <-chan error
-		)
-
-		host, isRunning := util.IsLocalServerActive(ctx, config)
-
-		if isRunning {
-			ctx = ctx.WithValue(context.HostKey, host)
-			ctx.WithField("host", host).Debug(
-				"not starting embeddded server; " +
-					"local server already running")
-		} else {
-			if server, errs, err = apiserver.Serve(ctx, config); err != nil {
-				return nil, err
-			}
-			go func() {
-				if err = <-errs; err != nil {
-					ctx.Error(err)
-				}
-			}()
-			if host == "" {
-				config.Set(apitypes.ConfigHost, server.Addrs()[0])
-			}
-
-			serverErrChan = errs
-		}
-
+	ctx, config, errs, err = util.ActivateLibStorage(ctx, config)
+	if err != nil {
+		return nil, err
 	}
 
 	modConfigs, err := getConfiguredModules(ctx, config)
@@ -204,25 +171,26 @@ func InitializeDefaultModules(
 		return nil, err
 	}
 
+	ctx.WithField("len(modConfigs)", len(modConfigs)).Debug(
+		"got configured modules")
+
 	for _, mc := range modConfigs {
 
-		lsc, err := apiclient.New(ctx, mc.Config)
-		if err != nil {
+		ctx.WithField("name", mc.Name).Debug(
+			"creating libStorage client for module instance")
+
+		if mc.Client, err = apiclient.New(ctx, mc.Config); err != nil {
 			panic(err)
 		}
-		mc.Client = lsc
-		mod, err := InitializeModule(ctx, mc)
-		if err != nil {
+
+		if mod, err = InitializeModule(ctx, mc); err != nil {
 			return nil, err
 		}
-		func() {
-			modInstancesRwl.Lock()
-			defer modInstancesRwl.Unlock()
-			modInstances[mod.Name] = mod
-		}()
+
+		modInstances[mod.Name] = mod
 	}
 
-	return serverErrChan, nil
+	return errs, nil
 }
 
 // InitializeModule initializes a module.
@@ -231,6 +199,8 @@ func InitializeModule(
 
 	modInstancesRwl.Lock()
 	defer modInstancesRwl.Unlock()
+
+	ctx.WithField("name", modConfig.Name).Debug("initializing module instance")
 
 	typeName := strings.ToLower(modConfig.Type)
 
@@ -377,13 +347,9 @@ func getConfiguredModules(
 		name = strings.ToLower(name)
 
 		ctx.WithField("name", name).Debug("processing module config")
+		sc := c.Scope(fmt.Sprintf("rexray.modules.%s", name))
 
-		scope := fmt.Sprintf("rexray.modules.%s", name)
-		ctx.WithField("scope", scope).Debug("getting scoped config for module")
-		sc := c.Scope(scope)
-
-		disabled := sc.GetBool("disabled")
-		if disabled {
+		if disabled := sc.GetBool("disabled"); disabled {
 			ctx.WithField("name", name).Debug("ignoring disabled module config")
 			continue
 		}

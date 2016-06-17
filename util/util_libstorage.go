@@ -1,4 +1,4 @@
-package cli
+package util
 
 import (
 	"bytes"
@@ -26,16 +26,20 @@ func initDefaultLibStorageServices(
 	ctx apitypes.Context, config gofig.Config) error {
 
 	if config.IsSet(apitypes.ConfigServices) {
+		ctx.Debug(
+			"libStorage auto service mode disabled; services defined")
 		return nil
 	}
 
 	serviceName := config.GetString(apitypes.ConfigService)
 	if serviceName == "" {
+		ctx.Debug(
+			"libStorage auto service mode disabled; service name empty")
 		return nil
 	}
 
 	ctx.WithField("driver", serviceName).Info(
-		"initializing default libStorage services")
+		"libStorage auto service mode enabled")
 
 	buf := &bytes.Buffer{}
 	fmt.Fprintf(buf, defaultServiceConfigFormat, serviceName)

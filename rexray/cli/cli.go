@@ -329,8 +329,6 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		c.config.Set(apitypes.ConfigService, v)
 	}
 
-	c.config = c.config.Scope("rexray.modules.default-docker")
-
 	if isHelpFlag(cmd) {
 		cmd.Help()
 		panic(&helpFlagPanic{})

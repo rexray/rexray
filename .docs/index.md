@@ -82,10 +82,7 @@ Mesos             | [Volume Driver Isolator module](./user-guide/schedulers.md#m
 Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers.md#mesos)
 
 ## Getting Started
-This section will help you get REX-Ray up and running quickly. For more advanced
-configurations including
-[core properties](./user-guide/config.md#configuration-properties) and additional
-storage providers use the `User Guide` menu in the tool-bar.
+This section will help you get REX-Ray up and running quickly.
 
 ### Installing REX-Ray
 The following command will download the most recent, stable build of REX-Ray
@@ -96,14 +93,20 @@ registered as either a SystemD or SystemV service depending upon the OS.
 $ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
 ```
 
+Refer to the [`User Guide#Installation`](./user-guide/installation/#installation) for manual builds and more.
+
+
 ### Configuring REX-Ray
-Create a configuration file on the host at `/etc/rexray/config.yml`. Here is a
-simple example for using Oracle VirtualBox EC2:
+REX-Ray requires a configuration file for storing credentials to access the storage provider. Refer to the [libStorage#Storage Providers](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/) for sample configurations of all supported storage platforms. Additionally, look at [core properties](./user-guide/config.md#configuration-properties) & [logging](./user-guide/config.md#logging-configuration) for advanced configurations. 
+
+Create a configuration file on the host at `/etc/rexray/config.yml`. Here is a simple example for using Oracle VirtualBox:
 
 ```yaml
 libstorage:
   service: virtualbox
 ```
+
+Refer to [libStorage#VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox) for complete VirtualBox set up.
 
 From here, REX-Ray can now be used as a command line tool. View the commands
 available:
@@ -138,7 +141,7 @@ properly. For instance, Docker communicates to the REX-Ray Volume Driver via
 a UNIX socket file.
 
 ```bash
-$ rexray start
+$ rexray service start
 ```
 
 ### REX-Ray with Docker

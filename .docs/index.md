@@ -82,7 +82,7 @@ Mesos             | [Volume Driver Isolator module](./user-guide/schedulers.md#m
 Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers.md#mesos)
 
 ## Getting Started
-This section will help you get REX-Ray up and running quickly.
+This section will help in getting REX-Ray up and running quickly.
 
 ### Installing REX-Ray
 The following command will download the most recent, stable build of REX-Ray
@@ -97,16 +97,26 @@ Refer to the [`User Guide#Installation`](./user-guide/installation/#installation
 
 
 ### Configuring REX-Ray
-REX-Ray requires a configuration file for storing credentials to access the storage provider. Refer to the [libStorage#Storage Providers](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/) for sample configurations of all supported storage platforms. Additionally, look at [core properties](./user-guide/config.md#configuration-properties) & [logging](./user-guide/config.md#logging-configuration) for advanced configurations. 
+REX-Ray requires a configuration file for storing details used to communicate
+with storage providers. This can include authentication credentials and
+driver-specific configuration options. Refer to the
+[libStorage Storage Providers documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/)
+for sample configurations of all supported storage platforms. Additionally, look
+at [core properties](./user-guide/config.md#configuration-properties) &
+[logging](./user-guide/config.md#logging-configuration) for advanced
+configurations.
 
-Create a configuration file on the host at `/etc/rexray/config.yml`. Here is a simple example for using Oracle VirtualBox:
+Create a configuration file on the host at `/etc/rexray/config.yml`. Here is a
+simple example for using Oracle VirtualBox:
 
 ```yaml
 libstorage:
   service: virtualbox
 ```
 
-Refer to [libStorage#VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox) for complete VirtualBox set up.
+Refer to the
+[VirtualBox documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox)
+for additional VirtualBox configuration options.
 
 From here, REX-Ray can now be used as a command line tool. View the commands
 available:
@@ -174,7 +184,7 @@ $ docker run -tid --volume-driver=rexray -v hellopersistence:/mystore \
 $ docker exec temp01 ls /mystore
 ```
 
-Congratulations, you have used REX-Ray to provide persistence for stateless
+Congratulations, REX-Ray has been used to provide persistence for stateless
 containers!
 
 Examples using MongoDB, Postgres, and more with persistent storage can be found
@@ -196,7 +206,7 @@ For an example of the full output from the above command, please refer to this
 [Gist](https://gist.github.com/akutz/df2afe2dc43f75b67b8977f398095ed7).
 
 ### GitHub and Slack
-And if you need a little extra help, please don't hesitate to use
+If a little extra help is needed, please don't hesitate to use
 [GitHub issues](https://github.com/emccode/rexray/issues) or join the active
 conversation on the
 [EMC {code} Community Slack Team](http://community.emccode.com/) in

@@ -93,7 +93,9 @@ registered as either a SystemD or SystemV service depending upon the OS.
 $ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
 ```
 
-Refer to the [`User Guide#Installation`](./user-guide/installation/#installation) for manual builds and more.
+Refer to the User Guide's
+[installation topic](./user-guide/installation/#installation) for instructions
+on building REX-Ray from source, installing specific versions, and more.
 
 
 ### Configuring REX-Ray

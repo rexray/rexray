@@ -1,9 +1,16 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+require 'fileutils'
+require 'shellwords'
 
-# please set the volume_path variable to a valid directory
-# for storing virtualbox volumes on the local, host system
-$volume_path = "/Users/akutz/VirtualBox/Volumes"
+# ensure that the authentication module for the VirtualBox web server has
+# been disabled and that the web server is online
+if ARGV[0] == "up"
+  unless `ps alx | grep [v]boxwebsrv` != ""
+    printf "starting virtualbox web server\n"
+    print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv --background`
+  end
+end
 
 # node info
 $node0_name = "node0"
@@ -25,7 +32,10 @@ $gopath = "/opt/go"
 # the script to provision golang
 $provision_golang = <<SCRIPT
 echo installing go#{$gover}.#{$goos}-#{$goarch}
-wget -q #{$gourl} && tar -C /usr/local -xzf #{$gotgz} && mkdir -p #{$gopath}
+wget -q #{$gourl.shellescape}
+tar -C /usr/local -xzf #{$gotgz.shellescape}
+mkdir -p #{$gopath.shellescape}
+rm -f #{$gotgz.shellescape}
 SCRIPT
 
 # the script to provision docker
@@ -54,10 +64,10 @@ $go_bindata_ref = "feature/md5checksum"
 
 # the script to build go-bindata
 $build_go_bindata = <<SCRIPT
-mkdir -p #{$go_bindata_dir}
-cd #{$go_bindata_dir}
-git clone #{$go_bindata_url} .
-git checkout #{$go_bindata_ref}
+mkdir -p #{$go_bindata_dir.shellescape}
+cd #{$go_bindata_dir.shellescape}
+git clone #{$go_bindata_url.shellescape} .
+git checkout #{$go_bindata_ref.shellescape}
 go get ./...
 go install ./...
 SCRIPT
@@ -66,25 +76,30 @@ SCRIPT
 $rexray_dir = "#{$gopath}/src/github.com/emccode/rexray"
 $rexray_url = "https://github.com/akutz/rexray"
 $rexray_ref = "release/0.4.0-rc4"
-$rexray_bin = "#{$gopath}/bin/rexray"
+$rexray_bin = "/usr/bin/rexray"
 $rexray_cfg = "/etc/rexray/config.yml"
 
 # the script to build rex-ray
 $build_rexray = <<SCRIPT
-mkdir -p #{$rexray_dir}
-cd #{$rexray_dir}
-git clone #{$rexray_url} .
-git checkout #{$rexray_ref}
+mkdir -p #{$rexray_dir.shellescape}
+cd #{$rexray_dir.shellescape}
+git clone #{$rexray_url.shellescape} .
+git checkout #{$rexray_ref.shellescape}
 make deps
 make
 SCRIPT
+
+# volume_path is a valid directory path on the local, host system for storing
+# virtualbox volumes. ensure it exists as well
+$volume_path = "#{File.dirname(__FILE__)}/.vagrant/volumes"
+FileUtils::mkdir_p $volume_path
 
 # the script to write node0's rex-ray config file. the 'virtualbox.volumePath'
 # property should be replaced with a valid directory path on the virtualbox
 # host system
 $write_rexray_config_node0 = <<SCRIPT
-mkdir -p $(dirname #{$rexray_cfg})
-cat << EOF > #{$rexray_cfg}
+mkdir -p #{File.dirname($rexray_cfg).shellescape}
+cat << EOF > #{$rexray_cfg.shellescape}
 rexray:
   logLevel: warn
 libstorage:
@@ -99,7 +114,7 @@ libstorage:
       virtualbox:
         driver: virtualbox
 virtualbox:
-  volumePath: #{$volume_path}
+  volumePath: #{$volume_path.shellescape}
 EOF
 SCRIPT
 
@@ -107,8 +122,8 @@ SCRIPT
 # property should be replaced with a valid directory path on the virtualbox
 # host system
 $write_rexray_config_node1 = <<SCRIPT
-mkdir -p $(dirname #{$rexray_cfg})
-cat << EOF > #{$rexray_cfg}
+mkdir -p #{File.dirname($rexray_cfg).shellescape}
+cat << EOF > #{$rexray_cfg.shellescape}
 rexray:
   logLevel: warn
 libstorage:
@@ -119,8 +134,8 @@ SCRIPT
 
 # init the environment variables used when building go source
 $build_env_vars = Hash[
-    "GOPATH" => $gopath,
-    "PATH" => "#{$gopath}/bin:/usr/local/go/bin:#{ENV['PATH']}"
+    "GOPATH" => $gopath.shellescape,
+    "PATH" => "#{$gopath.shellescape}/bin:/usr/local/go/bin:#{ENV['PATH']}"
 ]
 
 # node_dir returns the directory for a given node
@@ -209,6 +224,13 @@ Vagrant.configure("2") do |config|
         s.inline = $build_rexray
       end
 
+      # copy rex-ray to /usr/bin
+      node.vm.provision "shell" do |s|
+        s.name   = "copy rex-ray"
+        s.inline = "cp #{$gopath.shellescape}/bin/rexray " +
+                   "#{$rexray_bin.shellescape}"
+      end
+
       # write rex-ray config file
       node.vm.provision "shell" do |s|
         s.name       = "config rex-ray"
@@ -218,7 +240,7 @@ Vagrant.configure("2") do |config|
       # install rex-ray
       node.vm.provision "shell" do |s|
         s.name   = "rex-ray install"
-        s.inline = "#{$rexray_bin} install"
+        s.inline = "rexray install"
       end
 
       # start rex-ray as a service
@@ -233,7 +255,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", run: "always" do |s|
       s.name       = "rex-ray volume map"
       s.privileged = false
-      s.inline     = "#{$rexray_bin} volume map"
+      s.inline     = "rexray volume map"
     end
 
   end # configure node0
@@ -264,16 +286,18 @@ Vagrant.configure("2") do |config|
       # being prompted for a password
       node.vm.provision              "file",
                         source:      "#{node_dir($node0_name)}" +
-                                     "/virtualbox/private_key",
-                        destination: "$HOME/.ssh/#{$node0_name}.key"
+                                     "/virtualbox/private_key".shellescape,
+                        destination: '"$HOME"/.ssh' +
+                                     "/#{$node0_name.shellescape}.key"
 
       # scp rex-ray from node0 to node1
       node.vm.provision "shell" do |s|
         s.name =   "scp rexray"
-        s.inline = "mkdir -p $(dirname #{$rexray_bin}); " +
-                   "scp -q -i /home/vagrant/.ssh/#{$node0_name}.key " +
+        s.inline = "scp -q -i " +
+                   "/home/vagrant/.ssh/#{$node0_name}.key".shellescape + " " +
                    "-o StrictHostKeyChecking=no " +
-                   "vagrant@#{$node0_ip}:#{$rexray_bin} #{$rexray_bin}"
+                   "vagrant@#{$node0_ip}:#{$rexray_bin.shellescape} " +
+                   "#{$rexray_bin.shellescape}"
       end
 
       # write rex-ray config file
@@ -285,7 +309,7 @@ Vagrant.configure("2") do |config|
       # install rex-ray
       node.vm.provision "shell" do |s|
         s.name   = "rex-ray install"
-        s.inline = "#{$rexray_bin} install"
+        s.inline = "rexray install"
       end
 
       # start rex-ray as a service
@@ -300,7 +324,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", run: "always" do |s|
       s.name       = "rex-ray volume map"
       s.privileged = false
-      s.inline     = "#{$rexray_bin} volume map"
+      s.inline     = "rexray volume map"
     end
 
   end # configure node1

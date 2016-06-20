@@ -170,30 +170,9 @@ The below example does have a few requirements:
 
  * VirtualBox 5.0+
  * Vagrant 1.8+
-
-!!! note "note"
-
-    The next step could potentially open up the system on which the command
-    is executed to security vulnerabilities. Please do not disable
-    authentication for the VirtualBox web server if this example is being
-    executed on an open network or without some type of firewall in place.
+ * Ruby 2.0+
 
 #### Start REX-Ray Vagrant Environment
-On the host OS please ensure the VirtualBox web server is configured to not
-require authentication:
-
-```sh
-$ VBoxManage setproperty websrvauthlibrary null
-```
-
-Next, ensure that the VirtualBox web server is running. The following command
-will only start the web server if it is not already detected in the process
-list:
-
-```sh
-$ if [ ! "$(ps alx | grep [v]boxwebsrv)" ]; then vboxwebsrv --background; fi
-```
-
 Before bringing the Vagrant environment online, please ensure it is
 accomplished in a clean directory:
 
@@ -208,13 +187,17 @@ Inside the newly created, temporary directory, download the REX-Ray
 $ curl -fsSLO https://raw.githubusercontent.com/emccode/rexray/master/Vagrantfile
 ```
 
+Now it is time to bring the REX-Ray environment online:
+
 !!! note "note"
 
-    Please do not forget to open the Vagrantfile in a text editor and change
-    the first property, `$volume_path`, to a directory path on the local,
-    host system that is a valid path for storing VirtualBox volumes.
-
-Now it is time to bring the REX-Ray environment online:
+    The next step could potentially open up the system on which the command
+    is executed to security vulnerabilities. The Vagrantfile brings the
+    VirtualBox web service online if it is not already running. However,
+    in the name of simplicity the Vagrantfile also disables the web server's
+    authentication module. Please do not disable authentication for the
+    VirtualBox web server if this example is being executed on an open network
+    or without some type of firewall in place.
 
 ```sh
 $ vagrant up

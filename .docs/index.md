@@ -9,7 +9,7 @@ functionality across common storage, virtualization and cloud platforms. For
 example, here's how to list the volumes for a VirtualBox VM running Linux with
 REX-Ray:
 
-```bash
+```sh
 $ rexray volume --service virtualbox
 - attachments:
   - instanceID:
@@ -25,9 +25,11 @@ $ rexray volume --service virtualbox
 ```
 
 ## Overview
-REX-Ray is an abstraction layer between storage endpoints and container
-platforms. The administration and orchestration of various storage platforms
-can all be performed using the same set of commands.
+REX-Ray is a storage orchestration tool that provides a set of common commands
+for managing multiple storage platforms. Built on top of the
+[libStorage](http://libstorage.readthedocs.io/en/stable) framework, REX-Ray
+connects enables persistent storage for container runtimes such as Docker and
+Mesos.
 
 !!! note "note"
 
@@ -36,8 +38,9 @@ can all be performed using the same set of commands.
     reintroduced incrementally, beginning with 0.4.1. If an absent driver
     prevents the use of REX-Ray, please continue to use 0.3.3 until such time
     the storage platform is introduced in REX-Ray 0.4.x. Instructions on how
-    to install REX-Ray 0.3.3 may be found
-    [here](./user-guide/installation.md#rex-ray-033).
+    to [install](./user-guide/installation.md#rex-ray-033) and
+    [configure](http://rexray.readthedocs.io/en/v0.3.3) REX-Ray 0.3.3 are both
+    available.
 
 ### Storage Provider Support
 The following storage providers and platforms are supported by REX-Ray.
@@ -89,7 +92,7 @@ The following command will download the most recent, stable build of REX-Ray
 and install it to `/usr/bin/rexray` on Linux systems. REX-Ray will be
 registered as either a SystemD or SystemV service depending upon the OS.
 
-```bash
+```sh
 $ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
 ```
 
@@ -101,8 +104,8 @@ on building REX-Ray from source, installing specific versions, and more.
 ### Configuring REX-Ray
 REX-Ray requires a configuration file for storing details used to communicate
 with storage providers. This can include authentication credentials and
-driver-specific configuration options. Refer to the
-[libStorage Storage Providers documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/)
+driver-specific configuration options. Refer to the libStorage Storage Providers
+[documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/)
 for sample configurations of all supported storage platforms. Additionally, look
 at [core properties](./user-guide/config.md#configuration-properties) &
 [logging](./user-guide/config.md#logging-configuration) for advanced
@@ -123,13 +126,13 @@ for additional VirtualBox configuration options.
 From here, REX-Ray can now be used as a command line tool. View the commands
 available:
 
-```bash
+```sh
 $ rexray --help
 ```
 
 To verify the configuration file, use REX-Ray to list the volumes:
 
-```bash
+```sh
 $ rexray volume
 - attachments:
   - instanceID:
@@ -152,45 +155,181 @@ Container platforms rely on REX-Ray to be running as a service to function
 properly. For instance, Docker communicates to the REX-Ray Volume Driver via
 a UNIX socket file.
 
-```bash
+```sh
 $ rexray service start
 ```
 
-### REX-Ray with Docker
-Docker 1.10+ is recommended to use REX-Ray as a
-[Docker Volume Driver Plugin](https://docs.docker.com/extend/plugins_volume/).
+### Hello REX-Ray
+In the grand tradition of technical documentation, the first true end-to-end
+example of REX-Ray is called `Hello REX-Ray`. It showcases a two-node
+deployment with the first node configured as a REX-Ray/libStorage server and
+the second node as merely a client. Both nodes have Docker (1.11+) installed
+and configured to leverage REX-Ray for persistent storage.
 
-The following example uses two Amazon EC2 Virtual Machines, `EC2a` and `EC2b`,
-that reside within the same Availability Zone.
+The below example does have a few requirements:
 
-From `EC2a`, create a new volume called `hellopersistence`. After the new
-volume is created, mount the volume to the host and container using
-the `--volume-driver` and `-v` flag in the `docker run` command. Create a new
-file called `myfile` using `docker exec` that will be persisted throughout the
-example. Lastly, stop and remove the container so it no longer exists:
+ * VirtualBox 5.0+
+ * Vagrant 1.8+
 
-```bash
-$ docker volume create --driver rexray --opt size=10 --name hellopersistence
-$ docker run -tid --volume-driver=rexray -v hellopersistence:/mystore \
-  --name temp01 busybox
-$ docker exec temp01 touch /mystore/myfile
-$ docker exec temp01 ls /mystore
-$ docker rm -f temp01
+!!! note "note"
+
+    The next step could potentially open up the system on which the command
+    is executed to security vulnerabilities. Please do not disable
+    authentication for the VirtualBox web server if this example is being
+    executed on an open network or without some type of firewall in place.
+
+#### Start REX-Ray Vagrant Environment
+On the host OS please ensure the VirtualBox web server is configured to not
+require authentication:
+
+```sh
+$ VBoxManage setproperty websrvauthlibrary null
 ```
 
-From `EC2b`, create a new container that mounts the pre-existing volume and
-verify `myfile` that was originally created from host `EC2a` has persisted.
-```bash
-$ docker run -tid --volume-driver=rexray -v hellopersistence:/mystore \
-  --name temp01 busybox
-$ docker exec temp01 ls /mystore
+Next, ensure that the VirtualBox web server is running. The following command
+will only start the web server if it is not already detected in the process
+list:
+
+```sh
+$ if [ ! "$(ps alx | grep [v]boxwebsrv)" ]; then vboxwebsrv --background; fi
 ```
 
-Congratulations, REX-Ray has been used to provide persistence for stateless
-containers!
+Before bringing the Vagrant environment online, please ensure it is
+accomplished in a clean directory:
 
-Examples using MongoDB, Postgres, and more with persistent storage can be found
-at [Application Examples](./user-guide/application.md).
+```sh
+$ cd $(mktemp -d)
+```
+
+Inside the newly created, temporary directory, download the REX-Ray
+[Vagrantfile](https://github.com/emccode/rexray/blob/master/Vagrantfile):
+
+```sh
+$ curl -fsSLO https://raw.githubusercontent.com/emccode/rexray/master/Vagrantfile
+```
+
+!!! note "note"
+
+    Please do not forget to open the Vagrantfile in a text editor and change
+    the first property, `$volume_path`, to a directory path on the local,
+    host system that is a valid path for storing VirtualBox volumes.
+
+Now it is time to bring the REX-Ray environment online:
+
+```sh
+$ vagrant up
+```
+
+The above command should result in output similar to
+[this Gist](https://gist.github.com/akutz/13fc3b2237ea2c295a25c2e367e6bd8f).
+
+Once the command has been completed successfully there will be two VMs online
+named `node0` and `node1`. Both nodes are running Docker and REX-Ray with
+`node0` configured to act as a libStorage server.
+
+Now that the environment is online it is time to showcase Docker leveraging
+REX-Ray to create persistent storage as well as illustrating REX-Ray'a
+distributed deployment capabilities.
+
+#### Node 0
+First, SSH into `node0`
+
+```sh
+$ vagrant ssh node0
+```
+
+From `node0` use Docker with REX-Ray to create a new volume named
+`hellopersistence`:
+
+```sh
+vagrant@node0:~$ docker volume create --driver rexray --opt size=1 \
+                 --name hellopersistence
+```
+
+After the volume is created, mount it to the host and container using the
+`--volume-driver` and `-v` flag in the `docker run` command:
+
+```sh
+vagrant@node0:~$ docker run -tid --volume-driver=rexray \
+                 -v hellopersistence:/mystore \
+                 --name temp01 busybox
+```
+
+Create a new file named `myfile` on the file system backed by the persistent
+volume using `docker exec`:
+
+```sh
+vagrant@node0:~$ docker exec temp01 touch /mystore/myfile
+```
+
+Verify the file was successfully created by listing the contents of the
+persistent volume:
+
+```sh
+vagrant@node0:~$ docker exec temp01 ls /mystore
+```
+
+Remove the container that was used to write the data to the persistent volume:
+
+```sh
+vagrant@node0:~$ docker rm -f temp01
+```
+
+Finally, exit the SSH session to `node0`:
+
+```sh
+vagrant@node0:~$ exit
+```
+
+#### Node 1
+It's time to connect to `node1` and use the volume `hellopersistence` that was
+created in the previous section from `node0`.
+
+!!! note "note"
+
+    While `node1` runs both the Docker and REX-Ray services like `node1`, the
+    REX-Ray service on `node0` in no way understands or is configured for the
+    VirtualBox storage driver. All interactions with the VirtualBox web service
+    occurs via `node0`'s libStorage server with which `node1` communicates.
+
+Use the vagrant command to SSH into `node1`:
+
+```sh
+$ vagrant ssh node1
+```
+
+Next, create a new container that mounts the existing volume,
+`hellopersistence`:
+
+```sh
+vagrant@node1:~$ docker run -tid --volume-driver=rexray \
+                 -v hellopersistence:/mystore \
+                 --name temp01 busybox
+```
+
+The next command validates the file `myfile` created from `node0` in the
+previous section has persisted inside the volume across machines:
+
+```sh
+vagrant@node1:~$ docker exec temp01 ls /mystore
+```
+
+Finally, exit the SSH session to `node1`:
+
+```sh
+vagrant@node1:~$ exit
+```
+
+#### Cleaning Up
+Be sure to kill the VirtualBox web server with a quick `killall vboxwebsrv` and
+to tear down the Vagrant environment with `vagrant destroy`. Omitting these
+commands will leave the web service and REX-Ray Vagrant nodes online and
+consume additional system resources.
+
+#### Congratulations
+REX-Ray has been used to provide persistence for stateless containers! Examples
+using MongoDB, Postgres, and more with persistent storage can be found at
+[Application Examples](./user-guide/application.md).
 
 ## Getting Help
 Having issues? No worries, let's figure it out together.

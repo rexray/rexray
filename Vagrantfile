@@ -1,6 +1,10 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# please set the volume_path variable to a valid directory
+# for storing virtualbox volumes on the local, host system
+$volume_path = "/Users/akutz/VirtualBox/Volumes"
+
 # node info
 $node0_name = "node0"
 $node0_ip   = "192.168.56.10"
@@ -95,7 +99,7 @@ libstorage:
       virtualbox:
         driver: virtualbox
 virtualbox:
-  volumePath: /Users/akutz/VirtualBox/Volumes
+  volumePath: #{$volume_path}
 EOF
 SCRIPT
 
@@ -110,8 +114,6 @@ rexray:
 libstorage:
   host:    tcp://#{$node0_ip}:7979
   service: virtualbox
-virtualbox:
-  volumePath: /Users/akutz/VirtualBox/Volumes
 EOF
 SCRIPT
 

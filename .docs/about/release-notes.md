@@ -6,19 +6,29 @@
 
 To upgrade REX-Ray to the latest version, use `curl install`:
 
-    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
 
-You can determine your currently installed version using `rexray version`:
+Use `rexray version` to determine the currently installed version of REX-Ray:
 
     $ rexray version
-    Binary: /usr/local/bin/rexray
-    SemVer: 0.2.1
+    REX-Ray
+    -------
+    Binary: /Users/akutz/Projects/go/bin/rexray
+    SemVer: 0.4.0
     OsArch: Linux-x86_64
-    Branch: master
-    Commit: 36ccc425faeab49d792eda4851e3d72a85744874
-    Formed: Tue, 27 Oct 2015 12:54:19 CDT
+    Branch: v0.4.0
+    Commit: c83f0237e60792cfe89c4255d7149b5670965539
+    Formed: Mon, 20 Jun 2016 20:56:48 CDT
 
-## Version 0.4.0 (TBA)
+    libStorage
+    ----------
+    SemVer: 0.1.3
+    OsArch: Linux-x86_64
+    Branch: v0.1.3
+    Commit: 182a626937677a081b89651598ee2eac839308e7
+    Formed: Wed, 15 Jun 2016 16:27:36 CDT
+
+## Version 0.4.0 (2016/06/20)
 REX-Ray 0.4.0 introduces centralized configuration and control along with
 a new client/server architecture -- features made possible by
 [libStorage](https://github.com/emccode/libstorage). Users are no longer
@@ -50,6 +60,30 @@ beginning with 0.4.1.
 * Fixed issue with install script ([#409](https://github.com/emccode/rexray/issues/409))
 * Fixed volume ls filter ([#400](https://github.com/emccode/rexray/issues/400))
 * Fixed panic during access attempt of offline REX-Ray daemon ([#148](https://github.com/emccode/rexray/issues/148))
+
+### Thank You
+Yes, the author is so lazy as to blatantly
+[copy](http://libstorage.readthedocs.io/en/stable/about/release-notes/#version-011-20160610)
+this section. So sue me :)
+
+  Name | Blame  
+-------|------
+[Clint Kitson](https://github.com/clintonskitson) | His vision come to fruition. That's __his__ vision, thus please assign __all__ bugs to Clint :)
+[Vladimir Vivien](https://github.com/vladimirvivien) | A nascent player, Vlad had to hit the ground running and has been a key contributor
+[Kenny Coleman](https://github.com/kacole2) | While some come close, none are comparable to Kenny's handlebar
+[Jonas Rosland](https://github.com/jonasrosland) | Always good for a sanity check and keeping things on the straight and narrow
+[Steph Carlson](https://github.com/stephcarlson) | Steph keeps the convention train chugging along...
+[Amanda Katona](https://github.com/amandakatona) | And Amanda is the one keeping the locomotive from going off the rails
+[Drew Smith](https://github.com/mux23) | Drew is always ready to lend a hand, no matter the problem
+[Chris Duchesne](https://github.com/cduchesne) | His short time with the team is in complete opposition to the value he has added to this project
+[David vonThenen](https://github.com/dvonthenen) | David has been a go-to guy for debugging the most difficult of issues
+[Steve Wong](https://github.com/cantbewong) | Steve stays on top of the things and keeps use cases in sync with industry needs
+[Travis Rhoden](https://github.com/codenrhoden) | Another keen mind, Travis is also a great font of technical know-how
+[Peter Blum](https://github.com/oskoss) | Absent Peter, the EMC World demo would not have been ready
+[Megan Hyland](https://github.com/meganmurawski) | And absent Megan, Peter's work would only have taken things halfway there
+[Eugene Chupriyanov](https://github.com/echupriyanov) | For helping with the EC2 planning
+[Matt Farina](https://github.com/mattfarina) | Without Glide, it all comes crashing down
+Josh Bernstein | The shadowy figure behind the curtain...
 
 ## Version 0.3.3 (2016/04/21)
 

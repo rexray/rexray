@@ -224,6 +224,7 @@ _deps:
 			cd $(BASEDIR); \
 			$(GLIDE) up --resolve-current $(MAKE_LOG_FD); \
 			$(PRINT_STATUS); \
+			git checkout -- glide.lock; \
 		printf "  ...go get..."; \
 			go get -d $(GOFLAGS) $(NV); \
 			$(PRINT_STATUS); \

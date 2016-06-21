@@ -75,8 +75,8 @@ func (c *CLI) initServiceCmds() {
 func (c *CLI) initServiceFlags() {
 	c.serviceStartCmd.Flags().BoolVarP(&c.fg, "foreground", "f", false,
 		"Starts the service in the foreground")
-	c.serviceStartCmd.Flags().StringVarP(&c.client, "client", "", "",
-		"Socket the daemon uses to communicate to the client")
 	c.serviceStartCmd.Flags().BoolVarP(&c.force, "force", "", false,
 		"Forces the service to start, ignoring errors")
+	c.serviceStartCmd.Flags().BoolVarP(&c.fork, "fork", "", false,
+		"Indicates that the server is being forked.")
 }

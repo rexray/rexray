@@ -84,10 +84,9 @@ type CLI struct {
 	volumeUnmountCmd         *cobra.Command
 	volumePathCmd            *cobra.Command
 
-	service                 string
 	outputFormat            string
-	client                  string
 	fg                      bool
+	fork                    bool
 	force                   bool
 	cfgFile                 string
 	snapshotID              string
@@ -323,14 +322,12 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	c.updateLogLevel()
 
-	if !c.config.IsSet(
-		apitypes.ConfigIgVolOpsMountPath) {
-		c.config.Set(
-			apitypes.ConfigIgVolOpsMountPath,
-			util.LibFilePath("volumes"))
+	if v := c.rrHost(); v != "" {
+		c.config.Set(apitypes.ConfigHost, v)
 	}
-
-	c.config = c.config.Scope("rexray.modules.default-docker")
+	if v := c.rrService(); v != "" {
+		c.config.Set(apitypes.ConfigService, v)
+	}
 
 	if isHelpFlag(cmd) {
 		cmd.Help()
@@ -353,54 +350,21 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	if c.activateLibStorage {
 
-		c.ctx.WithField("cmd", cmd.Name()).Debug("is init driver managers cmd")
+		c.ctx.WithField("cmd", cmd.Name()).Debug("activating libStorage")
 
-		// if c.service != "" && !c.config.IsSet(apitypes.ConfigService) {
-		// 	c.ctx = c.ctx.WithServiceName(c.service)
-		// }
 		if c.runAsync {
 			c.ctx = c.ctx.WithValue("async", true)
 		}
 
 		apiserver.DisableStartupInfo = true
 
-		var (
-			err    error
-			config = c.config.Scope("rexray")
-		)
+		var err error
 
-		if config.GetBool(apitypes.ConfigEmbedded) {
-
-			host, isRunning := util.IsLocalServerActive(c.ctx, config)
-
-			if isRunning {
-				c.ctx = c.ctx.WithValue(context.HostKey, host)
-				c.ctx.WithField("host", host).Debug(
-					"not starting embeddded server; " +
-						"local server already running")
-			} else {
-				c.ctx.Debug("starting embedded libStorage server")
-
-				apiserver.CloseOnAbort()
-
-				if c.rs, c.rsErrs, err = apiserver.Serve(
-					c.ctx, config); err == nil {
-					go func() {
-						err := <-c.rsErrs
-						if err != nil {
-							log.Error(err)
-						}
-					}()
-					if host == "" {
-						config.Set(apitypes.ConfigHost, c.rs.Addrs()[0])
-					}
-				}
-
-			}
-		}
+		// activate libStorage if necessary
+		c.ctx, c.config, _, err = util.ActivateLibStorage(c.ctx, c.config)
 
 		if err == nil {
-			c.r, err = apiclient.New(c.ctx, config)
+			c.r, err = apiclient.New(c.ctx, c.config)
 		}
 
 		if err != nil {
@@ -489,12 +453,16 @@ func printNonColorizedError(err error) {
 	fmt.Fprintf(stderr, "  - The online help below\n")
 }
 
-func (c *CLI) logLevel() string {
-	return c.config.GetString("rexray.logLevel")
+func (c *CLI) rrHost() string {
+	return c.config.GetString("rexray.host")
 }
 
-func (c *CLI) host() string {
-	return c.config.GetString("rexray.host")
+func (c *CLI) rrService() string {
+	return c.config.GetString("rexray.service")
+}
+
+func (c *CLI) logLevel() string {
+	return c.config.GetString("rexray.logLevel")
 }
 
 func store() apitypes.Store {

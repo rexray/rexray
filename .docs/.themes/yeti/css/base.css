@@ -3,6 +3,22 @@ div.injected {
     display: none !important;
 }
 
+div.admonition.note {
+    background-color: rgba(254, 241, 134, 0.5);
+    padding: 10px 20px 10px 20px;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+div.admonition.note .admonition-title {
+    color: black;
+    text-transform: uppercase;
+    font-weight: bolder;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, .15);
+}
+
 li.divider {
     background-color: rgba(255, 255, 255, 0.1) !important;
 }
@@ -160,4 +176,8 @@ div.source-links {
     .bs-sidebar.affix {
         width: 263px;
     }
+}
+
+ul ul, ol ul, ul ol, ol ol {
+    margin-bottom: 10px;
 }

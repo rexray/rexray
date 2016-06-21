@@ -20,6 +20,9 @@ import (
 var (
 	useSystemDForSCMCmds = gotil.FileExists(util.UnitFilePath) &&
 		getInitSystemType() == SystemD
+
+	serverSockFile = util.RunFilePath("server.sock")
+	clientSockFile = util.RunFilePath("client.sock")
 )
 
 func (c *CLI) start() {
@@ -58,7 +61,7 @@ func (c *CLI) start() {
 		}
 	}
 
-	if c.fg || c.client != "" {
+	if c.fg || c.fork {
 		c.ctx.Debug("starting in foreground")
 		c.startDaemon()
 	} else {
@@ -134,8 +137,8 @@ func (c *CLI) startDaemon() {
 
 		var dialErr error
 
-		c.ctx.WithField("addr", c.client).Debug("dialing rex-ray client")
-		conn, dialErr = net.Dial("unix", c.client)
+		c.ctx.WithField("addr", clientSockFile).Debug("dialing rex-ray client")
+		conn, dialErr = net.Dial("unix", clientSockFile)
 		if dialErr != nil {
 			panic(dialErr)
 		}
@@ -169,7 +172,9 @@ func (c *CLI) startDaemon() {
 		syscall.SIGTERM,
 		syscall.SIGQUIT)
 
-	errs, err := rrdaemon.Start(c.ctx, c.config, c.host(), stop)
+	os.Remove(serverSockFile)
+	host := fmt.Sprintf("unix://%s", serverSockFile)
+	errs, err := rrdaemon.Start(c.ctx, c.config, host, stop)
 	if err != nil {
 		c.ctx.WithError(err).Error("error starting rex-ray")
 		if conn != nil {
@@ -188,6 +193,8 @@ func (c *CLI) startDaemon() {
 	c.ctx.WithField("signal", sigv).Info("received shutdown signal")
 	stop <- sigv
 
+	os.Remove(serverSockFile)
+
 	// wait until the daemon stops
 	for range errs {
 	}
@@ -199,10 +206,10 @@ func (c *CLI) tryToStartDaemon() {
 	fmt.Print("Starting REX-Ray...")
 
 	signal := make(chan byte)
-	client := fmt.Sprintf("%s/%s.sock", os.TempDir(), gotil.RandomString(32))
-	c.ctx.WithField("client", client).Debug("trying to start service")
+	os.Remove(clientSockFile)
+	c.ctx.WithField("client", clientSockFile).Debug("trying to start service")
 
-	l, lErr := net.Listen("unix", client)
+	l, lErr := net.Listen("unix", clientSockFile)
 	failOnError(lErr)
 
 	go func() {
@@ -212,7 +219,7 @@ func (c *CLI) tryToStartDaemon() {
 			panic(acceptErr)
 		}
 		defer conn.Close()
-		defer os.Remove(client)
+		defer os.Remove(clientSockFile)
 
 		c.ctx.Debug("accepted connection")
 
@@ -225,13 +232,9 @@ func (c *CLI) tryToStartDaemon() {
 	}()
 
 	cmdArgs := []string{
-		"start",
-		fmt.Sprintf("--client=%s", client),
+		"start", "--fork",
 		fmt.Sprintf("--logLevel=%v", c.logLevel())}
 
-	if c.host() != "" {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--host=%s", c.host()))
-	}
 	if c.cfgFile != "" {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--config=%s", c.cfgFile))
 	}

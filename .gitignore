@@ -1,3 +1,4 @@
+.vagrant/
 glide.lock
 .site/
 site/

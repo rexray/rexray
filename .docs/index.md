@@ -5,7 +5,7 @@ Openly serious about storage
 ---
 `REX-Ray` delivers persistent storage access for container runtimes, such as
 Docker and Mesos, and provides an easy interface for enabling advanced storage
-functionality across common storage, virtualization and cloud platforms. For
+functionality age, virtualization and cloud platforms. For
 example, here's how to list storage for a guest hosted on Amazon Web Services
 (AWS) with `REX-Ray`:
 

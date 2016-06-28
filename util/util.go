@@ -16,7 +16,7 @@ import (
 	apiserver "github.com/emccode/libstorage/api/server"
 	apitypes "github.com/emccode/libstorage/api/types"
 
-	"github.com/emccode/rexray/core/version"
+	"github.com/emccode/rexray/core"
 )
 
 const (
@@ -240,11 +240,12 @@ func PrintVersion(out io.Writer) {
 	fmt.Fprintln(out, "REX-Ray")
 	fmt.Fprintln(out, "-------")
 	fmt.Fprintf(out, "Binary: %s\n", thisExeAbsPath)
-	fmt.Fprintf(out, "SemVer: %s\n", version.SemVer)
-	fmt.Fprintf(out, "OsArch: %s\n", version.Arch)
-	fmt.Fprintf(out, "Branch: %s\n", version.Branch)
-	fmt.Fprintf(out, "Commit: %s\n", version.ShaLong)
-	fmt.Fprintf(out, "Formed: %s\n\n", version.EpochToRfc1123())
+	fmt.Fprintf(out, "SemVer: %s\n", core.Version.SemVer)
+	fmt.Fprintf(out, "OsArch: %s\n", core.Version.Arch)
+	fmt.Fprintf(out, "Branch: %s\n", core.Version.Branch)
+	fmt.Fprintf(out, "Commit: %s\n", core.Version.ShaLong)
+	fmt.Fprintf(out, "Formed: %s\n\n",
+		core.Version.BuildTimestamp.Format(time.RFC1123))
 
 	fmt.Fprintln(out, "libStorage")
 	fmt.Fprintln(out, "----------")

@@ -1,3 +1,13 @@
+*.a
+*.d
+*.out
+*.tar.gz
+*.tgz
+*.rpm
+*.deb
+bintray-*.json
+.site/
+site/
 .vagrant/
 .site/
 site/
@@ -5,6 +15,7 @@ site/
 .build/*-filtered.json
 vendor/
 .project
+core/core_generated.go
 
 # Created by https://www.gitignore.io
 

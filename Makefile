@@ -1,60 +1,298 @@
-# configure make
-export MAKEFLAGS := $(MAKEFLAGS) --no-print-directory -k -j1
+all:
+	$(MAKE) deps
+	$(MAKE) build
 
-# MAKE_LOG_LEVEL can be 0=quiet, 1=error, 2=verbose
-MAKE_LOG_LEVEL ?= 0
-ifeq ($(MAKE_LOG_LEVEL),0)
-	MAKE_LOG_FD := \&> /dev/null
-else
-ifeq ($(MAKE_LOG_LEVEL),1)
-	MAKE_LOG_FD := 1> /dev/null
-else
-	MAKE_LOG_FD :=
+################################################################################
+##                                 CONSTANTS                                  ##
+################################################################################
+
+# the name of the program being compiled. this word is in place of file names,
+# directory paths, etc. changing the value of PROG is no guarantee everything
+# continues to function.
+PROG := rexray
+
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+ASTERIK := *
+LPAREN := (
+RPAREN := )
+COMMA := ,
+5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
+
+
+# a list of the go 1.6 stdlib pacakges as grepped from https://golang.org/pkg/
+GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
+			 compress/bzip2 compress/flate compress/gzip compress/lzw \
+			 compress/zlib container container/heap container/list \
+			 container/ring crypto crypto/aes crypto/cipher crypto/des \
+			 crypto/dsa crypto/ecdsa crypto/elliptic crypto/hmac crypto/md5 \
+			 crypto/rand crypto/rc4 crypto/rsa crypto/sha1 crypto/sha256 \
+			 crypto/sha512 crypto/subtle crypto/tls crypto/x509 \
+			 crypto/x509/pkix database database/sql database/sql/driver debug \
+			 debug/dwarf debug/elf debug/gosym debug/macho debug/pe \
+			 debug/plan9obj encoding encoding/ascii85 encoding/asn1 \
+			 encoding/base32 encoding/base64 encoding/binary encoding/csv \
+			 encoding/gob encoding/hex encoding/json encoding/pem encoding/xml \
+			 errors expvar flag fmt go go/ast go/build go/constant go/doc \
+			 go/format go/importer go/parser go/printer go/scanner go/token \
+			 go/types hash hash/adler32 hash/crc32 hash/crc64 hash/fnv html \
+			 html/template image image/color image/color/palette image/draw \
+			 image/gif image/jpeg image/png index index/suffixarray io \
+			 io/ioutil log log/syslog math math/big math/cmplx math/rand mime \
+			 mime/multipart mime/quotedprintable net net/http net/http/cgi \
+			 net/http/cookiejar net/http/fcgi net/http/httptest \
+			 net/http/httputil net/http/pprof net/mail net/rpc net/rpc/jsonrpc \
+			 net/smtp net/textproto net/url os os/exec os/signal os/user path \
+			 path/filepath reflect regexp regexp/syntax runtime runtime/cgo \
+			 runtime/debug runtime/msan runtime/pprof runtime/race \
+			 runtime/trace sort strconv strings sync sync/atomic syscall \
+			 testing testing/iotest testing/quick text text/scanner \
+			 text/tabwriter text/template text/template/parse time unicode \
+			 unicode/utf16 unicode/utf8 unsafe
+
+
+################################################################################
+##                               PROJECT INFO                                 ##
+################################################################################
+
+GO_LIST_BUILD_INFO_CMD := go list -f '{{with $$ip:=.}}{{with $$ctx:=context}}{{printf "%s %s %s %s %s 0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ctx.GOOS $$ctx.GOARCH (join $$ctx.BuildTags ",")}}{{end}}{{end}}'
+BUILD_INFO := $(shell $(GO_LIST_BUILD_INFO_CMD))
+ROOT_IMPORT_PATH := $(word 1,$(BUILD_INFO))
+ROOT_IMPORT_NAME := $(word 2,$(BUILD_INFO))
+ROOT_DIR := $(word 3,$(BUILD_INFO))
+GOOS ?= $(word 4,$(BUILD_INFO))
+GOARCH ?= $(word 5,$(BUILD_INFO))
+BUILD_TAGS := $(word 6,$(BUILD_INFO))
+BUILD_TAGS := $(subst $(COMMA), ,$(BUILD_TAGS))
+BUILD_TAGS := $(wordlist 2,$(words $(BUILD_TAGS)),$(BUILD_TAGS))
+VENDORED := 0
+ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
+VENDORED := 1
+endif
+
+################################################################################
+##                               OS/ARCH INFO                                 ##
+################################################################################
+ifeq ($(GOOS),windows)
+	OS ?= Windows_NT
+endif
+ifeq ($(GOOS),linux)
+	OS ?= Linux
+endif
+ifeq ($(GOOS),darwin)
+	OS ?= Darwin
+endif
+ifeq ($(GOARCH),386)
+	ARCH ?= i386
+endif
+ifeq ($(GOARCH),amd64)
+	ARCH ?= x86_64
+endif
+
+export OS
+export ARCH
+
+
+################################################################################
+##                                MAKE FLAGS                                  ##
+################################################################################
+ifeq (,$(MAKEFLAGS))
+MAKEFLAGS := --no-print-directory
+export $(MAKEFLAGS)
+endif
+
+
+################################################################################
+##                              PROJECT DETAIL                                ##
+################################################################################
+
+GO_LIST_IMPORT_PATHS_INFO_CMD := go list -f '{{with $$ip:=.}}{{if $$ip.ImportPath | le "$(ROOT_IMPORT_PATH)"}}{{if $$ip.ImportPath | gt "$(ROOT_IMPORT_PATH)/vendor" }}{{printf "%s;%s;%s;%s;%v;0,%s,%s,%s,%s;0,%s;0,%s;0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ip.Target $$ip.Stale (join $$ip.GoFiles ",") (join $$ip.CgoFiles ",") (join $$ip.CFiles ",") (join $$ip.HFiles ",") (join $$ip.TestGoFiles ",") (join $$ip.Imports ",") (join $$ip.TestImports ",")}};{{end}}{{end}}{{end}}' ./...
+IMPORT_PATH_INFO := $(shell $(GO_LIST_IMPORT_PATHS_INFO_CMD))
+
+# this runtime ruleset acts as a pre-processor, processing the import path
+# information completely before creating the build targets for the project
+define IMPORT_PATH_PREPROCS_DEF
+
+IMPORT_PATH_INFO_$1 := $$(subst ;, ,$2)
+
+DIR_$1 := $1
+IMPORT_PATH_$1 := $$(word 1,$$(IMPORT_PATH_INFO_$1))
+NAME_$1 := $$(word 2,$$(IMPORT_PATH_INFO_$1))
+TARGET_$1 := $$(word 4,$$(IMPORT_PATH_INFO_$1))
+STALE_$1 := $$(word 5,$$(IMPORT_PATH_INFO_$1))
+
+ifeq (1,$$(DEBUG))
+$$(info name=$$(NAME_$1), target=$$(TARGET_$1), stale=$$(STALE_$1), dir=$$(DIR_$1))
+endif
+
+SRCS_$1 := $$(subst $$(COMMA), ,$$(word 6,$$(IMPORT_PATH_INFO_$1)))
+SRCS_$1 := $$(wordlist 2,$$(words $$(SRCS_$1)),$$(SRCS_$1))
+SRCS_$1 := $$(addprefix $$(DIR_$1)/,$$(SRCS_$1))
+SRCS += $$(SRCS_$1)
+
+ifneq (,$$(strip $$(SRCS_$1)))
+PKG_A_$1 := $$(TARGET_$1)
+PKG_D_$1 := $$(DIR_$1)/$$(NAME_$1).d
+
+ALL_PKGS += $$(PKG_A_$1)
+
+DEPS_$1 := $$(subst $$(COMMA), ,$$(word 8,$$(IMPORT_PATH_INFO_$1)))
+DEPS_$1 := $$(wordlist 2,$$(words $$(DEPS_$1)),$$(DEPS_$1))
+DEPS_$1 := $$(filter-out $$(GO_STDLIB),$$(DEPS_$1))
+
+INT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)/vendor/%,$$(DEPS_$1))
+INT_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)%,$$(INT_DEPS_$1))
+
+EXT_VENDORED_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)/vendor/%,$$(DEPS_$1))
+EXT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)%,$$(DEPS_$1))
+EXT_DEPS_$1 += $$(EXT_VENDORED_DEPS_$1)
+EXT_DEPS += $$(EXT_DEPS_$1)
+EXT_DEPS_SRCS_$1 := $$(addprefix $$(GOPATH)/src/,$$(addsuffix /*.go,$$(EXT_DEPS_$1)))
+EXT_DEPS_SRCS_$1 := $$(subst $$(GOPATH)/src/$$(ROOT_IMPORT_PATH)/vendor/,./vendor/,$$(EXT_DEPS_SRCS_$1))
+ifneq (,$$(filter $$(GOPATH)/src/C/%,$$(EXT_DEPS_SRCS_$1)))
+EXT_DEPS_SRCS_$1 := $$(filter-out $$(GOPATH)/src/C/%,$$(EXT_DEPS_SRCS_$1))
+ifeq (main,$$(NAME_$1))
+C_$1 := 1
+endif
+endif
+EXT_DEPS_SRCS += $$(EXT_DEPS_SRCS_$1)
+
+DEPS_ARKS_$1 := $$(addprefix $$(GOPATH)/pkg/$$(GOOS)_$$(GOARCH)/,$$(addsuffix .a,$$(INT_DEPS_$1)))
+endif
+
+TEST_SRCS_$1 := $$(subst $$(COMMA), ,$$(word 7,$$(IMPORT_PATH_INFO_$1)))
+TEST_SRCS_$1 := $$(wordlist 2,$$(words $$(TEST_SRCS_$1)),$$(TEST_SRCS_$1))
+TEST_SRCS_$1 := $$(addprefix $$(DIR_$1)/,$$(TEST_SRCS_$1))
+TEST_SRCS += $$(TEST_SRCS_$1)
+
+ifneq (,$$(strip $$(TEST_SRCS_$1)))
+PKG_TA_$1 := $$(DIR_$1)/$$(NAME_$1).test
+PKG_TD_$1 := $$(DIR_$1)/$$(NAME_$1).test.d
+PKG_TC_$1 := $$(DIR_$1)/$$(NAME_$1).test.out
+
+ALL_TESTS += $$(PKG_TA_$1)
+
+-include $1/coverage.mk
+TEST_COVERPKG_$1 ?= $$(IMPORT_PATH_$1)
+
+TEST_DEPS_$1 := $$(subst $$(COMMA), ,$$(word 9,$$(IMPORT_PATH_INFO_$1)))
+TEST_DEPS_$1 := $$(wordlist 2,$$(words $$(TEST_DEPS_$1)),$$(TEST_DEPS_$1))
+TEST_DEPS_$1 := $$(filter-out $$(GO_STDLIB),$$(TEST_DEPS_$1))
+
+TEST_INT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)/vendor/%,$$(TEST_DEPS_$1))
+TEST_INT_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)%,$$(TEST_INT_DEPS_$1))
+
+TEST_EXT_VENDORED_DEPS_$1 := $$(filter $$(ROOT_IMPORT_PATH)/vendor/%,$$(TEST_DEPS_$1))
+TEST_EXT_DEPS_$1 := $$(filter-out $$(ROOT_IMPORT_PATH)%,$$(TEST_DEPS_$1))
+TEST_EXT_DEPS_$1 := $$(filter-out $$(GOPATH)/src/C/%,$$(TEST_EXT_DEPS_$1))
+TEST_EXT_DEPS_$1 += $$(TEST_EXT_VENDORED_DEPS_$1)
+TEST_EXT_DEPS += $$(TEST_EXT_DEPS_$1)
+TEST_EXT_DEPS_SRCS_$1 := $$(addprefix $$(GOPATH)/src/,$$(addsuffix /*.go,$$(TEST_EXT_DEPS_$1)))
+TEST_EXT_DEPS_SRCS_$1 := $$(subst $$(GOPATH)/src/$$(ROOT_IMPORT_PATH)/vendor/,./vendor/,$$(TEST_EXT_DEPS_SRCS_$1))
+ifneq (,$$(filter $$(GOPATH)/src/C/%,$$(TEST_EXT_DEPS_SRCS_$1)))
+TEST_EXT_DEPS_SRCS_$1 := $$(filter-out $$(GOPATH)/src/C/%,$$(TEST_EXT_DEPS_SRCS_$1))
+ifeq (main,$$(NAME_$1))
+TEST_C_$1 := 1
 endif
 endif
 
-# store the current working directory
-CWD := $(shell pwd)
+TEST_EXT_DEPS_SRCS += $$(TEST_EXT_DEPS_SRCS_$1)
 
-# enable go 1.5 vendoring
-export GO15VENDOREXPERIMENT := 1
-
-# set the go os and architecture types as well the sed command to use based on
-# the os and architecture types
-ifeq ($(OS),Windows_NT)
-	GOOS ?= windows
-	ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-		export GOARCH ?= amd64
-	endif
-	ifeq ($(PROCESSOR_ARCHITECTURE),x86)
-		export GOARCH ?= 386
-	endif
-else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S),Linux)
-		export GOOS ?= linux
-	endif
-	ifeq ($(UNAME_S),Darwin)
-		export GOOS ?= darwin
-		export GOARCH ?= amd64
-	endif
-	ifeq ($(origin GOARCH), undefined)
-		UNAME_M := $(shell uname -m)
-		ifeq ($(UNAME_M),x86_64)
-			export GOARCH = amd64
-		endif
-		ifneq ($(filter %86,$(UNAME_M)),)
-			export GOARCH = 386
-		endif
-	endif
+TEST_DEPS_ARKS_$1 := $$(addprefix $$(GOPATH)/pkg/$$(GOOS)_$$(GOARCH)/,$$(addsuffix .a,$$(TEST_INT_DEPS_$1)))
 endif
 
-# init the build platforms
-BUILD_PLATFORMS ?= Linux-x86_64
+ALL_SRCS_$1 += $$(SRCS_$1) $$(TEST_SRCS_$1)
+ALL_SRCS += $$(ALL_SRCS_$1)
 
-# init the internal go os and architecture variable values used for naming files
-_GOOS ?= $(GOOS)
-_GOARCH ?= $(GOARCH)
+endef
+$(foreach i,\
+	$(IMPORT_PATH_INFO),\
+	$(eval $(call IMPORT_PATH_PREPROCS_DEF,$(subst $(ROOT_DIR),.,$(word 3,$(subst ;, ,$(i)))),$(i))))
+
+################################################################################
+##                                  INFO                                      ##
+################################################################################
+info:
+	$(info Project Import Path.........$(ROOT_IMPORT_PATH))
+	$(info Project Name................$(ROOT_IMPORT_NAME))
+	$(info OS / Arch...................$(GOOS)_$(GOARCH))
+	$(info Vendored....................$(VENDORED))
+ifneq (,$(strip $(SRCS)))
+	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(TEST_SRCS)))
+	$(info Test Sources................$(patsubst ./%,%,$(firstword $(TEST_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_SRCS)),$(TEST_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(EXT_DEPS_SRCS)))
+	$(info Dependency Sources..........$(patsubst ./%,%,$(firstword $(EXT_DEPS_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(EXT_DEPS_SRCS)),$(EXT_DEPS_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(TEST_EXT_DEPS_SRCS)))
+	$(info Test Dependency Sources.....$(patsubst ./%,%,$(firstword $(TEST_EXT_DEPS_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_EXT_DEPS_SRCS)),$(TEST_EXT_DEPS_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+
+################################################################################
+##                               DEPENDENCIES                                 ##
+################################################################################
+GLIDE := $(GOPATH)/bin/glide
+GO_BINDATA := $(GOPATH)/bin/go-bindata
+
+GOGET_LOCK := goget.lock
+GLIDE_LOCK := glide.lock
+GLIDE_YAML := glide.yaml
+GLIDE_LOCK_D := glide.lock.d
+
+EXT_DEPS := $(sort $(EXT_DEPS))
+EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS))
+TEST_EXT_DEPS := $(sort $(TEST_EXT_DEPS))
+TEST_EXT_DEPS_SRCS := $(sort $(TEST_EXT_DEPS_SRCS))
+ALL_EXT_DEPS := $(sort $(EXT_DEPS) $(TEST_EXT_DEPS))
+ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
+
+ifneq (1,$(VENDORED))
+$(GLIDE):
+	go get github.com/Masterminds/glide
+
+GO_DEPS += $(GLIDE_LOCK_D)
+$(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
+
+$(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
+	$(GLIDE) install && touch $@
+
+$(GLIDE_LOCK): $(GLIDE_YAML)
+	touch $@
+
+$(GLIDE_LOCK)-clean:
+	rm -f $(GLIDE_LOCK)
+GO_PHONY += $(GLIDE_LOCK)-clean
+GO_CLOBBER += $(GLIDE_LOCK)-clean
+endif
+
+GO_BINDATA_IMPORT_PATH := vendor/github.com/jteeuwen/go-bindata/go-bindata
+ifneq (1,$(VENDORED))
+GO_BINDATA_IMPORT_PATH := $(ROOT_IMPORT_PATH)/$(GO_BINDATA_IMPORT_PATH)
+else
+GO_BINDATA_IMPORT_PATH := $(firstword $(subst /vendor/, ,$(ROOT_IMPORT_PATH)))/$(GO_BINDATA_IMPORT_PATH)
+endif
+
+ifneq (1,$(VENDORED))
+$(GO_BINDATA): $(GLIDE_LOCK_D)
+endif
+$(GO_BINDATA):
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
+	@touch $@
+GO_DEPS += $(GO_BINDATA)
+
+################################################################################
+##                                  VERSION                                   ##
+################################################################################
 
 # parse a semver
 SEMVER_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z].+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
@@ -73,22 +311,8 @@ V_BUILD := $(call PARSE_GIT_DESCRIBE,$$5)
 V_SHA_SHORT := $(call PARSE_GIT_DESCRIBE,$$6)
 V_DIRTY := $(call PARSE_GIT_DESCRIBE,$$7)
 
-# the version's binary os and architecture type
-ifeq ($(_GOOS),windows)
-	V_OS := Windows_NT
-endif
-ifeq ($(_GOOS),linux)
-	V_OS := Linux
-endif
-ifeq ($(_GOOS),darwin)
-	V_OS := Darwin
-endif
-ifeq ($(_GOARCH),386)
-	V_ARCH := i386
-endif
-ifeq ($(_GOARCH),amd64)
-	V_ARCH := x86_64
-endif
+V_OS := $(OS)
+V_ARCH := $(ARCH)
 V_OS_ARCH := $(V_OS)-$(V_ARCH)
 
 # the long commit hash
@@ -96,12 +320,16 @@ V_SHA_LONG := $(shell git show HEAD -s --format=%H)
 
 # the branch name, possibly from travis-ci
 ifeq ($(origin TRAVIS_BRANCH), undefined)
-	TRAVIS_BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
+	TRAVIS_BRANCH := $(shell git branch | grep '*')
 else
-	ifeq ($(strip $(TRAVIS_BRANCH)),)
-		TRAVIS_BRANCH := $(shell git branch | grep '*' | awk '{print $$2}')
-	endif
+ifeq (,$(strip $(TRAVIS_BRANCH)))
+	TRAVIS_BRANCH := $(shell git branch | grep '*')
 endif
+endif
+TRAVIS_BRANCH := $(subst $(ASTERIK) ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached at ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(RPAREN),,$(TRAVIS_BRANCH))
+
 ifeq ($(origin TRAVIS_TAG), undefined)
 	TRAVIS_TAG := $(TRAVIS_BRANCH)
 else
@@ -154,350 +382,365 @@ endif
 # the rpm version cannot have any dashes
 V_RPM_SEMVER := $(subst -,+,$(V_SEMVER))
 
-GOFLAGS := $(GOFLAGS)
-GLIDE := $(GOPATH)/bin/glide
-NV := $$($(GLIDE) novendor)
-BASEPKG := github.com/emccode/rexray
-BASEDIR := $(GOPATH)/src/$(BASEPKG)
-BASEDIR_NAME := $(shell basename $(BASEDIR))
-BASEDIR_PARENTDIR := $(shell dirname $(BASEDIR))
-BASEDIR_TEMPMVLOC := $(BASEDIR_PARENTDIR)/.$(BASEDIR_NAME)-$(shell date +%s)
-VERSIONPKG := $(BASEPKG)/core/version
-LDF_SEMVER := -X $(VERSIONPKG).SemVer=$(V_SEMVER)
-LDF_BRANCH := -X $(VERSIONPKG).Branch=$(V_BRANCH)
-LDF_EPOCH := -X $(VERSIONPKG).Epoch=$(V_EPOCH)
-LDF_SHA_LONG := -X $(VERSIONPKG).ShaLong=$(V_SHA_LONG)
-LDF_ARCH = -X $(VERSIONPKG).Arch=$(V_OS_ARCH)
-LDFLAGS = -ldflags "$(LDF_SEMVER) $(LDF_BRANCH) $(LDF_EPOCH) $(LDF_SHA_LONG) $(LDF_ARCH)"
-EMCCODE := $(GOPATH)/src/github.com/emccode
-PRINT_STATUS = export EC=$$?; cd $(CWD); if [ "$$EC" -eq "0" ]; then printf "SUCCESS!\n"; else exit $$EC; fi
-STAT_FILE_SIZE = stat --format '%s' $$FILE 2> /dev/null || stat -f '%z' $$FILE 2> /dev/null
+define CORE_GENERATED_CONTENT
+package core
 
-CLEAN_LINUX_386 := env GOOS=linux GOARCH=386 go clean -i $(NV)
-CLEAN_LINUX_X86_64 := env GOOS=linux GOARCH=amd64 go clean -i $(NV)
-CLEAN_DARWIN_X86_64 := env GOOS=darwin GOARCH=amd64 go clean -i $(NV)
-CLEAN := $(CLEAN_LINUX_386) && $(CLEAN_LINUX_X86_64) && $(CLEAN_DARWIN_X86_64)
+import (
+	"fmt"
+	"runtime"
+	"time"
 
-CLEAN_ALL_LINUX_386 := env GOOS=linux GOARCH=386 go clean -i -r $(NV)
-CLEAN_ALL_LINUX_X86_64 := env GOOS=linux GOARCH=amd64 go clean -i -r $(NV)
-CLEAN_ALL_DARWIN_X86_64 := env GOOS=darwin GOARCH=amd64 go clean -i -r $(NV)
-CLEAN_ALL := $(CLEAN_ALL_LINUX_386) && $(CLEAN_ALL_LINUX_X86_64) && $(CLEAN_ALL_DARWIN_X86_64)
+	apitypes "github.com/emccode/libstorage/api/types"
+)
 
-BUILDS := .build
-DEPLOY := $(BUILDS)/deploy
-BINDIR := $(BUILDS)/bin
-MYTEMP := $(BUILDS)/tmp
-RPMDIR := $(BUILDS)/rpm
+func init() {
+	Version = &apitypes.VersionInfo{}
+	Version.Arch = fmt.Sprintf("%s-%s", os(runtime.GOOS), arch(runtime.GOARCH))
+	Version.Branch = "$(V_BRANCH)"
+	Version.BuildTimestamp = time.Unix($(V_EPOCH), 0)
+	Version.SemVer = "$(V_SEMVER)"
+	Version.ShaLong = "$(V_SHA_LONG)"
+}
+endef
+export CORE_GENERATED_CONTENT
 
-all: install
+PRINTF_VERSION_CMD += @printf "SemVer: %s\nBinary: %s\nBranch: %s\nCommit:
+PRINTF_VERSION_CMD += %s\nFormed: %s\n" "$(V_SEMVER)" "$(V_OS_ARCH)"
+PRINTF_VERSION_CMD += "$(V_BRANCH)" "$(V_SHA_LONG)" "$(V_BUILD_DATE)"
+CORE_GENERATED_SRC := ./core/core_generated.go
+$(CORE_GENERATED_SRC):
+	echo generating $@
+	@echo "$$CORE_GENERATED_CONTENT" > $@
 
-VEND_LIBSTR := vendor/github.com/emccode/libstorage
-API_GEN_GO := $(VEND_LIBSTR)/api/api_generated.go
-EXEC_GEN_GO := $(VEND_LIBSTR)/api/server/executors/executors_generated.go
-$(API_GEN_GO) $(EXEC_GEN_GO):
-	cd $(VEND_LIBSTR) && $(MAKE) $(subst $(VEND_LIBSTR)/,,$@) && cd -
-build-libstorage-generated: $(API_GEN_GO) $(EXEC_GEN_GO)
+$(CORE_GENERATED_SRC)-clean:
+	rm -f $(CORE_GENERATED_SRC)
+GO_CLEAN += $(CORE_GENERATED_SRC)-clean
+GO_PHONY += $(CORE_GENERATED_SRC)-clean
 
-_pre-make:
-	@if [ "$(CWD)" != "$(BASEDIR)" ]; then \
-		if [ -e "$(BASEDIR)" ]; then \
-			mv $(BASEDIR) $(BASEDIR_TEMPMVLOC); \
-		fi; \
-		mkdir -p "$(BASEDIR_PARENTDIR)"; \
-		ln -s "$(CWD)" "$(BASEDIR)"; \
-	fi
-
-_post-make:
-	@if [ -e "$(BASEDIR_TEMPMVLOC)" -a -L $(BASEDIR) ]; then \
-		rm -f $(BASEDIR); \
-		mv $(BASEDIR_TEMPMVLOC) $(BASEDIR); \
-	fi
-
-deps: _pre-make _deps _post-make
-_deps:
-	@if [ -z "$$OFFLINE" ]; then \
-		echo "target: deps"; \
-		printf "  ...installing glide..."; \
-		go get github.com/Masterminds/glide; \
-			$(PRINT_STATUS); \
-		printf "  ...glide up..."; \
-			cd $(BASEDIR); \
-			$(GLIDE) up --resolve-current $(MAKE_LOG_FD); \
-			$(PRINT_STATUS); \
-			git checkout -- glide.lock; \
-		printf "  ...go get..."; \
-			go get -d $(GOFLAGS) $(NV); \
-			$(PRINT_STATUS); \
-		$(MAKE) build-libstorage-generated; \
-	fi
-
-build: _pre-make _build _post-make
-_build: _fmt build_
-build_:
-	@echo "target: build"
-	@printf "  ...building rexray $(V_OS_ARCH)..."; \
-		cd $(BASEDIR); \
-		FILE=$(BINDIR)/$(V_OS_ARCH)/rexray; \
-		env GOOS=$(_GOOS) GOARCH=$(_GOARCH) go clean -i $(VERSIONPKG); \
-		env GOOS=$(_GOOS) GOARCH=$(_GOARCH) go build -o $$FILE $(GOFLAGS) $(LDFLAGS) ./rexray; \
-		$(PRINT_STATUS); \
-		if [ "$$EC" -eq "0" ]; then \
-			mkdir -p $(DEPLOY)/$(V_OS_ARCH); \
-			mkdir -p $(DEPLOY)/latest; \
-			cd $(BINDIR)/$(V_OS_ARCH); \
-			TARBALL=rexray-$(V_OS_ARCH)-$(V_SEMVER).tar.gz; \
-			LATEST=rexray-$(V_OS_ARCH).tar.gz; \
-			tar -czf $$TARBALL rexray; \
-			cp -f $$TARBALL $(CWD)/$(DEPLOY)/latest/$$LATEST; \
-			mv -f $$TARBALL $(CWD)/$(DEPLOY)/$(V_OS_ARCH); \
-			cd - > /dev/null ; \
-			BYTES=$$($(STAT_FILE_SIZE)); \
-			SIZE=$$(($$BYTES / 1024 / 1024)); \
-			printf "\nThe REX-Ray binary is $${SIZE}MB and located at:\n\n"; \
-			printf "  $$FILE\n\n"; \
-		fi
-
-build-all: _pre-make version-noarch _fmt build-all_ _post-make
-build-all_: build-linux-386_ build-linux-amd64_ build-darwin-amd64_
-
-deploy-prep:
-	@echo "target: deploy-prep"
-	@printf "  ...preparing deployment..."; \
-		sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-			-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
-			-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
-			.build/bintray-stupid.json > .build/bintray-stupid-filtered.json; \
-		sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-			-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
-			-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
-			.build/bintray-staged.json > .build/bintray-staged-filtered.json; \
-		sed -e 's/$${SEMVER}/$(V_SEMVER)/g' \
-			-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
-			-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
-			.build/bintray-stable.json > .build/bintray-stable-filtered.json;\
-		printf "SUCCESS!\n"
-
-build-linux-386: _pre-make _build-linux-386 _post-make
-_build-linux-386: _fmt build-linux-386_
-build-linux-386_:
-	@if [ "" != "$(findstring Linux-i386,$(BUILD_PLATFORMS))" ]; then \
-		env _GOOS=linux _GOARCH=386 make build_; \
-	fi
-rebuild-linux-386: _pre-make _clean _build-linux-386 _post-make
-rebuild-all-linux-386: _pre-make _clean-all _build-linux-386 _post-make
-
-build-linux-amd64: _pre-make _build-linux-amd64 _post-make
-_build-linux-amd64: _fmt build-linux-amd64_
-build-linux-amd64_:
-	@if [ "" != "$(findstring Linux-x86_64,$(BUILD_PLATFORMS))" ]; then \
-		env _GOOS=linux _GOARCH=amd64 make build_; \
-	fi
-rebuild-linux-amd64: _pre-make _clean _build-linux-amd64 _post-make
-rebuild-all-linux-amd64: _pre-make _clean-all _build-linux-amd64 _post-make
-
-build-darwin-amd64: _pre-make _build-darwin-amd64 _post-make
-_build-darwin-amd64: _fmt build-darwin-amd64_
-build-darwin-amd64_:
-	@if [ "" != "$(findstring Darwin-x86_64,$(BUILD_PLATFORMS))" ]; then \
-		env _GOOS=darwin _GOARCH=amd64 make build_; \
-	fi
-rebuild-darwin-amd64: _pre-make _clean _build-darwin-amd64 _post-make
-rebuild-all-darwin-amd64: _pre-make _clean-all _build-darwin-amd64 _post-make
-
-install: _pre-make version-noarch _install _post-make
-_install: _fmt
-	@echo "target: install"
-	@printf "  ...installing rexray $(V_OS_ARCH)..."; \
-		cd $(BASEDIR); \
-		go clean -i $(VERSIONPKG); \
-		go install $(GOFLAGS) $(LDFLAGS) ./rexray/; \
-		$(PRINT_STATUS); \
-		if [ "$$EC" -eq "0" ]; then \
-			FILE=$(GOPATH)/bin/rexray; \
-			BYTES=$$($(STAT_FILE_SIZE)); \
-			SIZE=$$(($$BYTES / 1024 / 1024)); \
-			printf "\nThe REX-Ray binary is $${SIZE}MB and located at:\n\n"; \
-			printf "  $$FILE\n\n"; \
-		fi
-
-fmt: _pre-make _fmt _post-make
-
-_fmt:
-	@echo "target: fmt"
-	@printf "  ...formatting rexray..."; \
-		cd $(BASEDIR); \
-		go fmt $(NV); \
-		$(PRINT_STATUS)
-
-fix: _pre-make _fix _post-make
-
-_fix:
-	@echo "target: fix"
-	@printf "  ...fixing rexray..."; \
-		cd $(BASEDIR); \
-		go fmt $(NV); \
-		$(PRINT_STATUS)
-
-bench: _pre-make _bench _post-make
-
-_bench: _install
-	@echo "target: bench"
-	@printf "  ...benchmarking rexray..."; \
-		cd $(BASEDIR); \
-		go test -run=NONE -bench=. $(GOFLAGS) $(NV); \
-		$(PRINT_STATUS)
+CORE_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/core.a
+$(CORE_A): $(CORE_GENERATED_SRC)
 
 version:
-	@echo SemVer: $(V_SEMVER)
-	@echo RpmVer: $(V_RPM_SEMVER)
-	@echo Binary: $(V_OS_ARCH)
-	@echo Branch: $(V_BRANCH)
-	@echo Commit: $(V_SHA_LONG)
-	@echo Formed: $(V_BUILD_DATE)
+	$(PRINTF_VERSION_CMD)
 
-version-noarch:
-	@echo SemVer: $(V_SEMVER)
-	@echo RpmVer: $(V_RPM_SEMVER)
-	@echo Branch: $(V_BRANCH)
-	@echo Commit: $(V_SHA_LONG)
-	@echo Formed: $(V_BUILD_DATE)
-	@echo
+GO_PHONY += version
 
-rpm:
-	@echo "target: rpm"
-	@printf "  ...building rpm $(V_ARCH)..."; \
-		mkdir -p $(DEPLOY)/latest; \
-		rm -fr $(RPMDIR); \
-		mkdir -p $(RPMDIR)/BUILD \
-				 $(RPMDIR)/RPMS \
-				 $(RPMDIR)/SRPMS \
-				 $(RPMDIR)/SPECS \
-				 $(RPMDIR)/SOURCES \
-				 $(RPMDIR)/tmp; \
-		cp $(BUILDS)/rexray.spec $(RPMDIR)/SPECS/rexray.spec; \
-		cd $(RPMDIR); \
-		setarch $(V_ARCH) rpmbuild -ba --quiet \
-			-D "rpmbuild $(CWD)/$(RPMDIR)" \
+
+################################################################################
+##                               PROJECT BUILD                                ##
+################################################################################
+
+define IMPORT_PATH_BUILD_DEF
+
+ifneq (,$$(strip $$(SRCS_$1)))
+ifneq (1,$$(C_$1))
+
+DEPS_SRCS_$1 := $$(foreach d,$$(INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
+
+$$(PKG_D_$1): $$(filter-out %_generated.go,$$(SRCS_$1))
+	$$(file >$$@,$$(PKG_A_$1) $$(PKG_D_$1): $$(filter-out %_generated.go,$$(DEPS_SRCS_$1)))
+
+-include $$(PKG_D_$1)
+
+$$(PKG_D_$1)-clean:
+	rm -f $$(PKG_D_$1)
+GO_CLEAN += $$(PKG_D_$1)-clean
+
+$$(PKG_A_$1): $$(EXT_DEPS_SRCS_$1) $$(SRCS_$1) | $$(DEPS_ARKS_$1)
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $1
+
+ifeq (true,$$(STALE_$1))
+GO_PHONY += $$(PKG_A_$1)
+endif
+
+$$(PKG_A_$1)-clean:
+	go clean -i -x $1 && rm -f $$(PKG_A_$1)
+
+GO_BUILD += $$(PKG_A_$1)
+GO_CLEAN += $$(PKG_A_$1)-clean
+
+endif
+endif
+
+################################################################################
+##                               PROJECT TESTS                                ##
+################################################################################
+ifneq (,$$(strip $$(TEST_SRCS_$1)))
+ifneq (1,$$(TEST_C_$1))
+
+TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
+
+$$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_SRCS_$1))
+	$$(file >$$@,$$(PKG_TA_$1) $$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_DEPS_SRCS_$1)))
+
+$$(PKG_TD_$1)-clean:
+	rm -f $$(PKG_TD_$1)
+GO_CLEAN += $$(PKG_TD_$1)-clean
+
+-include $$(PKG_TD_$1)
+
+ifneq (,$$(strip $$(PKG_A_$1)))
+$$(PKG_TA_$1): $$(PKG_A_$1)
+ifeq (true,$$(STALE_$1))
+GO_PHONY += $$(PKG_TA_$1)
+endif
+endif
+ifneq (,$$(strip $$(SRCS_$1)))
+$$(PKG_TA_$1): $$(SRCS_$1)
+endif
+
+$$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
+	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
+$$(PKG_TA_$1)-clean:
+	rm -f $$(PKG_TA_$1)
+GO_PHONY += $$(PKG_TA_$1)-clean
+GO_CLEAN += $$(PKG_TA_$1)-clean
+
+$$(PKG_TC_$1): $$(PKG_TA_$1)
+	$$(PKG_TA_$1) -test.coverprofile $$@ $$(GO_TEST_FLAGS)
+TEST_PROFILES += $$(PKG_TC_$1)
+
+$$(PKG_TC_$1)-clean:
+	rm -f $$(PKG_TC_$1)
+GO_PHONY += $$(PKG_TC_$1)-clean
+
+GO_TEST += $$(PKG_TC_$1)
+GO_BUILD_TESTS += $$(PKG_TA_$1)
+GO_CLEAN += $$(PKG_TC_$1)-clean
+
+endif
+endif
+
+endef
+$(foreach i,\
+	$(IMPORT_PATH_INFO),\
+	$(eval $(call IMPORT_PATH_BUILD_DEF,$(subst $(ROOT_DIR),.,$(word 3,$(subst ;, ,$(i)))),$(i))))
+
+
+################################################################################
+##                                  COVERAGE                                  ##
+################################################################################
+COVERAGE := coverage.out
+GO_COVERAGE := $(COVERAGE)
+$(COVERAGE): $(TEST_PROFILES)
+	printf "mode: set\n" > $@
+	$(foreach f,$?,grep -v "mode: set" $(f) >> $@ &&) true
+
+$(COVERAGE)-clean:
+	rm -f $(COVERAGE)
+GO_CLEAN += $(COVERAGE)-clean
+GO_PHONY += $(COVERAGE)-clean
+
+codecov: $(COVERAGE)
+ifneq (1,$(CODECOV_OFFLINE))
+	curl -sSL https://codecov.io/bash | bash -s -- -f $?
+else
+	@echo codecov offline
+endif
+
+
+################################################################################
+##                                LIBSTORAGE                                  ##
+################################################################################
+
+LIBSTORAGE_DIR := vendor/github.com/emccode/libstorage
+LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
+LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
+$(LIBSTORAGE_API) $(LIBSTORAGE_LSX):
+	cd $(LIBSTORAGE_DIR) && $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && cd -
+build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
+
+
+################################################################################
+##                                   CLI                                      ##
+################################################################################
+CLI := $(shell go list -f '{{.Target}}' ./$(PROG))
+CLI_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./$(PROG))
+CLI_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./$(PROG))
+CLI_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./$(PROG))
+
+build-cli-linux: $(CLI_LINUX)
+build-cli-darwin: $(CLI_DARWIN)
+build-cli-windows: $(CLI_WINDOWS)
+
+define CLI_RULES
+ifneq ($2,$$(GOOS))
+$1:
+	env GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
+$1-clean:
+	rm -f $1
+GO_PHONY += $1-clean
+GO_CLEAN += $1-clean
+endif
+
+CLI_BINS += $1
+endef
+
+$(eval $(call CLI_RULES,$(CLI_LINUX),linux))
+$(eval $(call CLI_RULES,$(CLI_DARWIN),darwin))
+
+build-cli: $(CLI_BINS)
+
+
+################################################################################
+##                                TGZ                                         ##
+################################################################################
+
+define TGZ_RULES
+TGZ_$1 := $(PROG)-$1-$$(ARCH)-$$(V_SEMVER).tar.gz
+
+$$(TGZ_$1): $2
+	tar -czf $$@ -C $$(dir $$?) $(PROG)
+
+$$(TGZ_$1)-clean:
+	rm -f $$(TGZ_$1)
+GO_PHONY += $$(TGZ_$1)-clean
+GO_CLEAN += $$(TGZ_$1)-clean
+
+TGZ += $$(TGZ_$1)
+endef
+
+$(eval $(call TGZ_RULES,Linux,$(CLI_LINUX)))
+$(eval $(call TGZ_RULES,Darwin,$(CLI_DARWIN)))
+
+build-tgz: $(TGZ)
+
+
+################################################################################
+##                                RPM                                         ##
+################################################################################
+RPMDIR := .rpm
+RPM := $(PROG)-$(V_RPM_SEMVER)-1.$(V_ARCH).rpm
+
+$(RPM)-clean:
+	rm -f $(RPM)
+GO_PHONY += $(RPM)-clean
+GO_CLEAN += $(RPM)-clean
+
+$(RPM): $(CLI_LINUX)
+	rm -fr $(RPMDIR)
+	mkdir -p $(RPMDIR)/BUILD \
+			 $(RPMDIR)/RPMS \
+			 $(RPMDIR)/SRPMS \
+			 $(RPMDIR)/SPECS \
+			 $(RPMDIR)/SOURCES \
+			 $(RPMDIR)/tmp
+	cp rpm.spec $(RPMDIR)/SPECS/$(PROG).spec
+	cd $(RPMDIR) && \
+		setarch $(V_ARCH) rpmbuild -ba \
+			-D "rpmbuild $(abspath $(RPMDIR))" \
 			-D "v_semver $(V_RPM_SEMVER)" \
 			-D "v_arch $(V_ARCH)" \
-			-D "rexray $(CWD)/$(BINDIR)/$(V_OS_ARCH)/rexray" \
-			SPECS/rexray.spec; \
-		$(PRINT_STATUS); \
-		if [ "$$EC" -eq "0" ]; then \
-			FILE=$$(readlink -f $$(find $(RPMDIR)/RPMS -name *.rpm)); \
-			DEPLOY_FILE=$(DEPLOY)/$(V_OS_ARCH)/$$(basename $$FILE); \
-			mkdir -p $(DEPLOY)/$(V_OS_ARCH); \
-			rm -f $(DEPLOY)/$(V_OS_ARCH)/*.rpm; \
-			mv -f $$FILE $$DEPLOY_FILE; \
-			FILE=$$DEPLOY_FILE; \
-			cp -f $$FILE $(DEPLOY)/latest/rexray-latest-$(V_ARCH).rpm; \
-			BYTES=$$($(STAT_FILE_SIZE)); \
-			SIZE=$$(($$BYTES / 1024 / 1024)); \
-			printf "\nThe REX-Ray RPM is $${SIZE}MB and located at:\n\n"; \
-			printf "  $$FILE\n\n"; \
-		fi
+			-D "$(PROG) $?" \
+			SPECS/$(PROG).spec
+	mv $(RPMDIR)/RPMS/$(V_ARCH)/$(RPM) $@
 
-rpm-linux-386:
-	@if [ "" != "$(findstring Linux-i386,$(BUILD_PLATFORMS))" ]; then \
-		env _GOOS=linux _GOARCH=386 make rpm; \
-	fi
+build-rpm: $(RPM)
 
-rpm-linux-amd64:
-	@if [ "" != "$(findstring Linux-x86_64,$(BUILD_PLATFORMS))" ]; then \
-		env _GOOS=linux _GOARCH=amd64 make rpm; \
-	fi
 
-rpm-all: rpm-linux-386 rpm-linux-amd64
+################################################################################
+##                                ALIEN                                       ##
+################################################################################
+ALIEN_HOME := $(HOME)/.opt/alien/8.86
+ALIEN_PKG := alien_8.86_all.deb
+ALIEN_URL := http://archive.ubuntu.com/ubuntu/pool/main/a/alien/$(ALIEN_PKG)
+ALIEN := $(ALIEN_HOME)/usr/bin/alien
 
-deb:
-	@echo "target: deb"
-	@printf "  ...building deb $(V_ARCH)..."; \
-		cd $(DEPLOY)/$(V_OS_ARCH); \
-		rm -f *.deb; \
-		fakeroot alien -k -c --bump=0 *.rpm > /dev/null; \
-		$(PRINT_STATUS); \
-		if [ "$$EC" -eq "0" ]; then \
-			FILE=$$(readlink -f $$(find $(DEPLOY)/$(V_OS_ARCH) -name *.deb)); \
-			DEPLOY_FILE=$(DEPLOY)/$(V_OS_ARCH)/$$(basename $$FILE); \
-			FILE=$$DEPLOY_FILE; \
-			cp -f $$FILE $(DEPLOY)/latest/rexray-latest-$(V_ARCH).deb; \
-			BYTES=$$($(STAT_FILE_SIZE)); \
-			SIZE=$$(($$BYTES / 1024 / 1024)); \
-			printf "\nThe REX-Ray DEB is $${SIZE}MB and located at:\n\n"; \
-			printf "  $$FILE\n\n"; \
-		fi
+$(ALIEN):
+	wget $(ALIEN_URL)
+	mkdir -p $(ALIEN_HOME)
+	dpkg -X $(ALIEN_PKG) $(ALIEN_HOME)
+	rm -f $(ALIEN_PKG)
+	touch $@
 
-deb-linux-amd64:
-	@if [ "" != "$(findstring Linux-x86_64,$(BUILD_PLATFORMS))" ]; then \
-		env _GOOS=linux _GOARCH=amd64 make deb; \
-	fi
+PATH := $(ALIEN_HOME)/usr/bin:$(PATH)
+PERL5LIB := $(ALIEN_HOME)/usr/share/perl5:$(PERL5LIB)
 
-deb-all: deb-linux-amd64
+export PATH
+export PERL5LIB
 
-test: _install
-	@echo "target: test"
-	@printf "  ...testing rexray ..."; \
-		cd $(BASEDIR); \
-		$(BUILDS)/test.sh; \
-		$(PRINT_STATUS)
 
-clean: _pre-make _clean clean-etc _post-make
+################################################################################
+##                                DEB                                         ##
+################################################################################
+DEB := $(PROG)_$(V_RPM_SEMVER)-1_$(GOARCH).deb
 
-_clean-go:
-	@echo "target: clean"
-	@printf "  ...go clean -i..."; \
-		cd $(BASEDIR); \
-		$(CLEAN); \
-		$(PRINT_STATUS)
+$(DEB)-clean:
+	rm -f $(DEB)
+GO_PHONY += $(DEB)-clean
+GO_CLEAN += $(DEB)-clean
 
-_clean-go-all:
-	@echo "target: clean-all"
-	@printf "  ...go clean -i -r..."; \
-		cd $(BASEDIR); \
-		$(CLEAN_ALL); \
-		$(PRINT_STATUS)
+$(DEB): $(RPM) | $(ALIEN)
+	fakeroot $(ALIEN) -k -c --bump=0 $?
 
-_clean-etc:
-	@printf "  ...rm -fr vendor..."; \
-		cd $(BASEDIR); \
-		rm -fr vendor; \
-		$(PRINT_STATUS)
-	@printf "  ...rm -fr $(BINDIR)..."; \
-		cd $(BASEDIR); \
-		rm -fr $(BINDIR); \
-		$(PRINT_STATUS)
-	@printf "  ...rm -fr $(DEPLOY)..."; \
-		cd $(BASEDIR); \
-		rm -fr $(DEPLOY); \
-		$(PRINT_STATUS)
-	@printf "  ...rm -fr $(RPMDIR)..."; \
-		cd $(BASEDIR); \
-		rm -fr $(RPMDIR); \
-		$(PRINT_STATUS)
-	@printf "  ...rm -fr $(MYTEMP)..."; \
-		cd $(BASEDIR); \
-		rm -fr $(MYTEMP); \
-		$(PRINT_STATUS)
+build-deb: $(DEB)
 
-_clean: _clean-go _clean-etc
 
-_clean-all: _clean-go-all _clean-etc
+################################################################################
+##                                BINTRAY                                     ##
+################################################################################
+BINTRAY_SUBJ ?= emccode
+BINTRAY_JSON := bintray.json
+BINTRAY_UNSTABLE := bintray-unstable.json
+BINTRAY_STAGED := bintray-staged.json
+BINTRAY_STABLE := bintray-stable.json
 
-clean-all: _pre-make _clean-all _post-make
+$(BINTRAY_UNSTABLE) $(BINTRAY_STAGED) $(BINTRAY_STABLE): $(BINTRAY_JSON)
+	sed -e 's/$${SUBJ}/$(BINTRAY_SUBJ)/g' \
+		-e 's/$${PROG}/$(PROG)/g' \
+		-e 's/$${REPO}/$(subst bintray-,,$(subst .json,,$@))/g' \
+		-e 's/$${SEMVER}/$(V_SEMVER)/g' \
+		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \
+		-e 's/$${RELDTE}/$(V_RELEASE_DATE)/g' \
+		$? > $@
 
-rebuild: _pre-make _clean _build _post-make
-rebuild-all: _pre-make _clean-all _build _post-make
+bintray: $(BINTRAY_UNSTABLE) $(BINTRAY_STAGED) $(BINTRAY_STABLE)
+bintray-clean:
+	rm -f bintray-*.json
+GO_PHONY += bintray-clean
+GO_CLEAN += bintray-clean
 
-reinstall: _pre-make _clean _install _post-make
-reinstall-all: _pre-make _clean-all _build _post-make
 
-retest: _pre-make _clean test _post-make
-retest-all: _pre-make _clean-all test _post-make
+################################################################################
+##                                TARGETS                                     ##
+################################################################################
+deps: $(GO_DEPS)
 
-.PHONY: all install build build_ build-all deps fmt fix clean version \
-				rpm rpm-all deb deb-all test clean clean-all rebuild reinstall \
-				retest clean-etc
+build-tests: $(GO_BUILD_TESTS)
 
-.NOTPARALLEL: all test clean clean-all deps _deps fmt _fmt fix \
-							pre-make _pre-make post-make _post-make build build-all_ \
-							install rpm rebuild reinstall retest clean-etc
+build-$(PROG): $(GO_BUILD)
+
+build-generated:
+	$(MAKE) $(CORE_GENERATED_SRC)
+
+build:
+	$(MAKE) build-libstorage
+	$(MAKE) build-generated
+	$(MAKE) build-$(PROG)
+
+cli: build-cli
+
+tgz: build-tgz
+
+rpm: build-rpm
+
+deb: build-deb
+
+pkg: build
+	$(MAKE) tgz rpm deb
+
+pkg-clean:
+	rm -f $(PROG)*.tar.gz && rm -f *.rpm && rm -f *.deb
+
+test: $(GO_TEST)
+
+test-debug:
+	env REXRAY_DEBUG=true $(MAKE) test
+
+cover: codecov
+
+clean: $(GO_CLEAN) pkg-clean
+
+clobber: clean $(GO_CLOBBER)
+
+.PHONY: info clean clobber $(GO_PHONY)

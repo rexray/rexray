@@ -11,20 +11,24 @@ addons:
     - rpm
 
 before_script:
-  - source .build/dependencies.sh
+  - make deps
 
 script:
-  - make deps build-all test rpm-all deb-all deploy-prep
+  - make build-libstorage
+  - env GOOS=linux  GOARCH=amd64 make build
+  - env GOOS=darwin GOARCH=amd64 make build
+  - make cover
 
-notifications:
-  - slack: $SLACK_BUILDS
-
-before_deploy:
-  - .build/bintray-decapitate.sh
+after_success:
+  - make tgz
+  - make rpm
+  - make deb
+  - make bintray
+  - ls -al
 
 deploy:
   - provider: bintray
-    file: .build/bintray-stupid-filtered.json
+    file: bintray-unstable.json
     user: $BINTRAY_USER
     key: $BINTRAY_KEY
     skip_cleanup: true
@@ -33,7 +37,7 @@ deploy:
       condition: $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'emccode/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
   - provider: bintray
-    file: .build/bintray-staged-filtered.json
+    file: bintray-staged.json
     user: $BINTRAY_USER
     key: $BINTRAY_KEY
     skip_cleanup: true
@@ -42,7 +46,7 @@ deploy:
       condition: $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'emccode/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: bintray
-    file: .build/bintray-stable-filtered.json
+    file: bintray-stable.json
     user: $BINTRAY_USER
     key: $BINTRAY_KEY
     skip_cleanup: true

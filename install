@@ -1,17 +1,21 @@
 #!/bin/sh
 
+# the name of the program/product this curl-bash script lists/installs using
+# Bintray as the online repository
+PROG=rexray
+
 ##
 # this curl-install script supports the installation of the latest
-# version of REX-Ray for CentOS, Ubuntu, CoreOS, and Darwin using
+# version of $PROG for CentOS, Ubuntu, CoreOS, and Darwin using
 # RPMs, DEBs, and tarballs.
 #
-# to install the latest version of REX-Ray simply execute:
+# to install the latest version of $PROG simply execute:
 #
 #  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
 #
 # however, this script will also allow users to install specific
-# versions of REX-Ray and even supports the discovery of those versions.
-# for example, to list the available REX-Ray packages use the "list"
+# versions of $PROG and even supports the discovery of those versions.
+# for example, to list the available $PROG packages use the "list"
 # command like so:
 #
 #  curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list
@@ -40,17 +44,14 @@
 # command "list" as the first argument after the "-s" flag.
 ##
 
-PROD=REX-Ray
-REPO=rexray
-BIN_NAME=rexray
+REPO=$PROG
+BIN_NAME=$PROG
 
 BINTRAY_URL=https://dl.bintray.com/emccode
 URL=$BINTRAY_URL/$REPO
 
 SCRIPT_URL=$URL/install
 SCRIPT_CMD="curl -sSL $SCRIPT_URL | sh -s"
-
-CMD=$1
 
 sudo() {
     if [ "$(id -u)" -eq "0" ]; then $@; else $SUDO $@; fi
@@ -68,8 +69,8 @@ list() {
     else
         URL="$URL/$PKG"
         for v in $(curl -sSL $URL | \
-                   grep '<a' | grep -v 'latest' | \
-                   perl -pe 's/^.*?<a.+?>([^<]+?)\/?<\/a>.*$/$1/gm'); do
+                    grep 'onclick' | grep -v 'latest' | \
+                    cut -d '>' -f3 | cut -d'/' -f1); do
             echo "$SCRIPT_CMD -- $PKG $v"
         done
     fi
@@ -77,9 +78,16 @@ list() {
 
 install() {
 
-    URL=$URL/$PKG/$VERSION
-    OS=$(uname -s)
     ARCH=$(uname -m)
+
+    if [ "$ARCH" != "x86_64" ]; then
+        echo "$PROG is 64-bit only and not supported on $ARCH platforms"
+        exit 1
+    fi
+
+    OS=$(uname -s)
+    URL=$URL/$PKG/$VERSION
+    LURL=https://api.bintray.com/content/emccode/$REPO/$PKG/\$latest
     SUDO=$(which sudo)
     BIN_DIR=/usr/bin
     BIN_FILE=$BIN_DIR/$BIN_NAME
@@ -87,29 +95,45 @@ install() {
 
     # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
     if [ -e "/etc/redhat-release" -o -e "/etc/redhat-version" ]; then
-    if [ "$VERSION" = "latest" ]; then
-        FILE_NAME=$BIN_NAME-latest-$ARCH.rpm
-    else
-        FILE_NAME=$BIN_NAME-$BIN_NAME-$VERSION-$ARCH.rpm
-    fi
 
-        #echo "installing rpm"
-        sudo rpm -ih --quiet $URL/$FILE_NAME > /dev/null
+        if [ "$VERSION" = "latest" ]; then
+            FILE_NAME=$BIN_NAME-latest-1.$ARCH.rpm
+            URL=$LURL/$BIN_NAME-\$latest-1.$ARCH.rpm\?bt_package=$PKG
+        else
+            FILE_NAME=$BIN_NAME-$VERSION-1.$ARCH.rpm
+            URL=$URL/$FILE_NAME
+        fi
+
+        curl -o $FILE_NAME -sSL $URL
+        if [ "$?" -ne "0" ]; then exit $?; fi
+
+        sudo rpm -ih --quiet $FILE_NAME > /dev/null
+        if [ "$?" -ne "0" ]; then ec=$?; rm -f $FILE_NAME; exit $ec; fi
+
+        rm -f $FILE_NAME
 
     elif [ "$ARCH" = "x86_64" -a -z "$IS_COREOS" ] && \
          [ -e "/etc/debian-release" -o \
            -e "/etc/debian-version" -o \
            -e "/etc/lsb-release" ]; then
 
+        ARCH=amd64
+
         if [ "$VERSION" = "latest" ]; then
-            FILE_NAME=$BIN_NAME-latest-$ARCH.deb
+            FILE_NAME=${BIN_NAME}_latest-1_$ARCH.deb
+            URL=$LURL/${BIN_NAME}_\$latest-1_$ARCH.deb\?bt_package=$PKG
         else
-            FILE_NAME=$BIN_NAME-$VERSION-$ARCH.deb
+            FILE_NAME=${BIN_NAME}_${VERSION}-1_${ARCH}.deb
+            URL=$URL/$FILE_NAME
         fi
-        #echo "installing deb"
-        curl -sSLO $URL/$FILE_NAME && \
-            sudo dpkg -i $FILE_NAME && \
-            rm -f $FILE_NAME
+
+        curl -o $FILE_NAME -sSL $URL
+        if [ "$?" -ne "0" ]; then exit $?; fi
+
+        sudo dpkg -i $FILE_NAME
+        if [ "$?" -ne "0" ]; then ec=$?; rm -f $FILE_NAME; exit $ec; fi
+
+        rm -f $FILE_NAME
 
     else
         if [ -n "$IS_COREOS" ]; then
@@ -122,31 +146,47 @@ install() {
 
         if [ -z "$FILE_NAME" ]; then
             if [ "$VERSION" = "latest" ]; then
-                FILE_NAME=$BIN_NAME-$OS-$ARCH.tar.gz
+                FILE_NAME=$BIN_NAME-$OS-$ARCH-latest.tar.gz
+                URL=$LURL/$BIN_NAME-$OS-$ARCH-\$latest.tar.gz\?bt_package=$PKG
             else
                 FILE_NAME=$BIN_NAME-$OS-$ARCH-$VERSION.tar.gz
+                URL=$URL/$FILE_NAME
             fi
         fi
 
-        FILE_URL=$URL/$FILE_NAME
+        sudo mkdir -p $BIN_DIR
+        if [ "$?" -ne "0" ]; then exit $?; fi
 
-        sudo mkdir -p $BIN_DIR && \
-          curl -sSLO $FILE_URL && \
-          sudo tar xzf $FILE_NAME -C $BIN_DIR && \
-          rm -f $FILE_NAME && \
-          sudo chmod 0755 $BIN_FILE && \
-          sudo chown 0 $BIN_FILE && \
-          sudo chgrp 0 $BIN_FILE && \
-          sudo $BIN_FILE install
+        curl -o $FILE_NAME -sSL $URL
+        if [ "$?" -ne "0" ]; then exit $?; fi
+
+        sudo tar xzf $FILE_NAME -C $BIN_DIR
+        if [ "$?" -ne "0" ]; then ec=$?; rm -f $FILE_NAME; exit $ec; fi
+
+        rm -f $FILE_NAME
+
+        if [ ! -e "$BIN_FILE" ]; then
+            echo "$BIN_FILE does not exist!"
+            exit 1
+        fi
+
+        sudo chmod 0755 $BIN_FILE && \
+            sudo chown 0 $BIN_FILE && \
+            sudo chgrp 0 $BIN_FILE
+        if [ "$?" -ne "0" ]; then exit $?; fi
+
+        sudo $BIN_FILE install
+        if [ "$?" -ne "0" ]; then exit $?; fi
     fi
 
     echo
-    echo "$PROD has been installed to $BIN_FILE"
+    echo "$PROG has been installed to $BIN_FILE"
     echo
     $BIN_FILE version
     echo
 }
 
+CMD=$1
 if [ "$CMD" = "list" ] || [ "$CMD" = "install" ]; then
     shift
 fi

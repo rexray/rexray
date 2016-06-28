@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/akutz/gotil"
+	apitypes "github.com/emccode/libstorage/api/types"
 
-	"github.com/emccode/rexray/core/version"
+	"github.com/emccode/rexray/core"
 )
 
 var r10 string
@@ -214,13 +215,14 @@ func TestPrintVersion(t *testing.T) {
 	// trouble than it's worth right now to fix
 	t.SkipNow()
 
-	version.Arch = "Linux-x86_64"
-	version.Branch = "master"
-	version.ShaLong = gotil.RandomString(32)
-	version.Epoch = fmt.Sprintf("%d", time.Now().Unix())
-	version.SemVer = "1.0.0"
+	core.Version = &apitypes.VersionInfo{}
+	core.Version.Arch = "Linux-x86_64"
+	core.Version.Branch = "master"
+	core.Version.ShaLong = gotil.RandomString(32)
+	core.Version.BuildTimestamp = time.Now()
+	core.Version.SemVer = "1.0.0"
 	_, _, thisAbsPath := gotil.GetThisPathParts()
-	epochStr := version.EpochToRfc1123()
+	epochStr := core.Version.BuildTimestamp.Format(time.RFC1123)
 
 	t.Logf("thisAbsPath=%s", thisAbsPath)
 	t.Logf("epochStr=%s", epochStr)
@@ -233,10 +235,10 @@ func TestPrintVersion(t *testing.T) {
 	vs := b.String()
 
 	evs := `Binary: ` + thisAbsPath + `
-SemVer: ` + version.SemVer + `
-OsArch: ` + version.Arch + `
-Branch: ` + version.Branch + `
-Commit: ` + version.ShaLong + `
+SemVer: ` + core.Version.SemVer + `
+OsArch: ` + core.Version.Arch + `
+Branch: ` + core.Version.Branch + `
+Commit: ` + core.Version.ShaLong + `
 Formed: ` + epochStr + `
 `
 

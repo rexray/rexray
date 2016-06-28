@@ -174,27 +174,15 @@ func (d *driver) getVolumeAttachments(ctx types.Context) (
 		return nil, err
 	}
 
-	// should be using this, but instanceID is coming back either blank or
-	// with metadata today
-	// iid := ctx.InstanceID()
-
-	ii, err := d.InstanceInspect(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	iid := ii.InstanceID
-
-	ld, err := d.LocalDevices(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
+	iid, iidOK := context.InstanceID(ctx)
+	ld, ldOK := context.LocalDevices(ctx)
 
 	var atts []*types.VolumeAttachment
 	for _, export := range exports {
 		var dev string
 		var status string
 		for _, c := range export.Clients {
-			if c == iid.ID {
+			if iidOK && ldOK && c == iid.ID {
 				dev = d.nfsMountPath(export.ExportPath)
 				if _, ok := ld.DeviceMap[dev]; ok {
 					status = "Exported and Mounted"

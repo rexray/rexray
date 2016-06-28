@@ -96,10 +96,6 @@ func (c *CLI) initVolumeCmds() {
 		Aliases: []string{"new"},
 		Run: func(cmd *cobra.Command, args []string) {
 
-			if c.size == 0 && c.snapshotID == "" && c.volumeID == "" {
-				log.Fatalf("missing --size")
-			}
-
 			opts := &apitypes.VolumeCreateOpts{
 				AvailabilityZone: &c.availabilityZone,
 				Size:             &c.size,
@@ -119,7 +115,7 @@ func (c *CLI) initVolumeCmds() {
 			} else if c.snapshotID != "" && c.volumeName != "" {
 				volume, err = c.r.Storage().VolumeCreateFromSnapshot(
 					c.ctx, c.snapshotID, c.volumeName, opts)
-			} else if c.volumeName != "" {
+			} else {
 				volume, err = c.r.Storage().VolumeCreate(
 					c.ctx, c.volumeName, opts)
 			}

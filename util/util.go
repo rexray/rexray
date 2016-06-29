@@ -326,6 +326,19 @@ func ActivateLibStorage(
 
 	config = config.Scope("rexray")
 
+	// set the `libstorage.service` property to the value of
+	// `rexray.storageDrivers` if the former is not defined and the
+	// latter is
+	if !config.IsSet(apitypes.ConfigService) &&
+		config.IsSet("rexray.storageDrivers") {
+
+		if sd := config.GetStringSlice("rexray.storageDrivers"); len(sd) > 0 {
+			config.Set(apitypes.ConfigService, sd[0])
+		} else if sd := config.GetString("rexray.storageDrivers"); sd != "" {
+			config.Set(apitypes.ConfigService, sd)
+		}
+	}
+
 	if !config.IsSet(apitypes.ConfigIgVolOpsMountPath) {
 		config.Set(apitypes.ConfigIgVolOpsMountPath, LibFilePath("volumes"))
 	}

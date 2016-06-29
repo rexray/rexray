@@ -52,6 +52,14 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 
 
 ################################################################################
+##                                SYSTEM INFO                                 ##
+################################################################################
+
+GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
+GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
+
+
+################################################################################
 ##                               PROJECT INFO                                 ##
 ################################################################################
 
@@ -702,6 +710,32 @@ GO_CLEAN += bintray-clean
 
 
 ################################################################################
+##                                PROG Markers                                ##
+################################################################################
+PROG_$(GOOS)_$(GOARCH) := $(PROG)-$(GOOS)_$(GOARCH).d
+
+ifeq ($(GOOS)_$(GOARCH),$(GOHOSTOS)_$(GOHOSTARCH))
+PROG_BIN := $(GOPATH)/bin/$(PROG)
+else
+PROG_BIN := $(GOPATH)/bin/$(GOOS)_$(GOARCH)/$(PROG)
+endif
+
+PROG_BIN_SIZE = stat --format '%s' $(PROG_BIN) 2> /dev/null || \
+				stat -f '%z' $(PROG_BIN) 2> /dev/null
+
+$(PROG_$(GOOS)_$(GOARCH)): $(PROG_BIN)
+	@bytes=$$($(PROG_BIN_SIZE)) && mb=$$(($$bytes / 1024 / 1024)) && \
+		printf "\nThe $(PROG) binary is $${mb}MB and located at: \n\n" && \
+		printf "  $?\n\n"
+stat-prog: $(PROG_$(GOOS)_$(GOARCH))
+
+$(PROG_$(GOOS)_$(GOARCH))-clean:
+	rm -f $(PROG_$(GOOS)_$(GOARCH))
+GO_PHONY += $(PROG_$(GOOS)_$(GOARCH))-clean
+GO_CLEAN += $(PROG_$(GOOS)_$(GOARCH))-clean
+
+
+################################################################################
 ##                                TARGETS                                     ##
 ################################################################################
 deps: $(GO_DEPS)
@@ -717,6 +751,7 @@ build:
 	$(MAKE) build-libstorage
 	$(MAKE) build-generated
 	$(MAKE) build-$(PROG)
+	$(MAKE) stat-prog
 
 cli: build-cli
 

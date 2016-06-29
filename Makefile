@@ -78,6 +78,7 @@ ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
 VENDORED := 1
 endif
 
+
 ################################################################################
 ##                               OS/ARCH INFO                                 ##
 ################################################################################
@@ -217,6 +218,7 @@ $(foreach i,\
 	$(IMPORT_PATH_INFO),\
 	$(eval $(call IMPORT_PATH_PREPROCS_DEF,$(subst $(ROOT_DIR),.,$(word 3,$(subst ;, ,$(i)))),$(i))))
 
+
 ################################################################################
 ##                                  INFO                                      ##
 ################################################################################
@@ -245,6 +247,7 @@ ifneq (,$(strip $(TEST_EXT_DEPS_SRCS)))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_EXT_DEPS_SRCS)),$(TEST_EXT_DEPS_SRCS))),\
 		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
 endif
+
 
 ################################################################################
 ##                               DEPENDENCIES                                 ##
@@ -297,6 +300,38 @@ $(GO_BINDATA):
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
+
+
+################################################################################
+##                               GOMETALINTER                                 ##
+################################################################################
+
+GOMETALINTER := $(GOPATH)/bin/gometalinter
+$(GOMETALINTER):
+	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install --update
+
+GOMETALINTER_ARGS := --vendor \
+					 --fast \
+					 --tests \
+					 --cyclo-over=16 \
+					 --deadline=15s \
+					 --enable=gofmt \
+					 --enable=goimports \
+					 --enable=misspell \
+					 --enable=lll \
+					 --disable=gotype \
+					 --severity=gofmt:error \
+					 --severity=goimports:error
+
+gometalinter-warn: | $(GOMETALINTER) $(GLIDE)
+	-$(GOMETALINTER) $(GOMETALINTER_ARGS) $(shell $(GLIDE) nv)
+
+gometalinter-error: | $(GOMETALINTER) $(GLIDE)
+	$(GOMETALINTER) $(GOMETALINTER_ARGS) --errors $(shell $(GLIDE) nv)
+
+gometalinter: gometalinter-warn gometalinter-error
+
 
 ################################################################################
 ##                                  VERSION                                   ##
@@ -470,6 +505,7 @@ GO_CLEAN += $$(PKG_A_$1)-clean
 endif
 endif
 
+
 ################################################################################
 ##                               PROJECT TESTS                                ##
 ################################################################################
@@ -556,6 +592,7 @@ LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
 LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
 $(LIBSTORAGE_API) $(LIBSTORAGE_LSX):
 	cd $(LIBSTORAGE_DIR) && $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && cd -
+$(LIBSTORAGE_LSX): | $(GO_BINDATA)
 build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
 
 
@@ -748,6 +785,7 @@ build-generated:
 	$(MAKE) $(CORE_GENERATED_SRC)
 
 build:
+	$(MAKE) gometalinter
 	$(MAKE) build-libstorage
 	$(MAKE) build-generated
 	$(MAKE) build-$(PROG)

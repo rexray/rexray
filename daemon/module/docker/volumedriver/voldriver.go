@@ -3,7 +3,6 @@ package volumedriver
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -82,14 +81,6 @@ func cleanName(s string) string {
 	return s
 }
 
-const driverName = "docker"
-
-var (
-	errMissingHost      = goof.New("Missing host parameter")
-	errBadHostSpecified = goof.New("Bad host specified, ie. unix:///run/docker/plugins/rexray.sock or tcp://127.0.0.1:8080")
-	errBadProtocol      = goof.New("Bad protocol specified with host, ie. unix:// or tcp://")
-)
-
 type pluginRequest struct {
 	Name string            `json:"Name,omitempty"`
 	Opts map[string]string `json:"Opts,omitempty"`
@@ -123,7 +114,6 @@ func (m *mod) Start() error {
 		return err
 	}
 
-	var specPath string
 	var startFunc func() error
 
 	mux := m.buildMux()
@@ -138,7 +128,6 @@ func (m *mod) Start() error {
 
 		_ = os.RemoveAll(sockFile)
 
-		specPath = m.Address()
 		startFunc = func() error {
 			l, lErr := net.Listen("unix", sockFile)
 			if lErr != nil {
@@ -150,7 +139,6 @@ func (m *mod) Start() error {
 			return http.Serve(l, mux)
 		}
 	} else {
-		specPath = addr
 		startFunc = func() error {
 			s := &http.Server{
 				Addr:           addr,
@@ -169,24 +157,6 @@ func (m *mod) Start() error {
 			panic(sErr)
 		}
 	}()
-
-	spec := m.config.GetString("spec")
-	if spec == "" {
-		if m.name == "default-docker" {
-			spec = "/etc/docker/plugins/rexray.spec"
-		} else {
-			fname := cleanName(m.name)
-			spec = fmt.Sprintf("/etc/docker/plugins/%s.spec", fname)
-		}
-	}
-
-	m.ctx.WithField("path", spec).Debug("docker voldriver spec file")
-
-	if !gotil.FileExists(spec) {
-		if err := ioutil.WriteFile(spec, []byte(specPath), 0644); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }

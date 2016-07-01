@@ -12,6 +12,42 @@ The majority of the documentation for the Docker integration driver has been
 [relocated](http://libstorage.readthedocs.io/en/stable/user-guide/schedulers/#docker)
 to the libStorage project.
 
+### External Access
+By default, REX-Ray's embedded Docker Volume Plug-in endpoint handles
+requests from the local Docker service via a UNIX socket. Doing so
+restricts the endpoint to the localhost, increasing network security by removing
+a possible attack vector. If an externally accessible Docker Volume Plug-in
+endpoint is required, it's still possible to create one by overriding the
+address for the `default-docker` module in REX-Ray's configuration file:
+
+```yaml
+rexray:
+  modules:
+    default-docker:
+      host: tcp://:7981
+```
+
+The above example illustrates how to override the `default-docker` module's
+endpoint address. The value `tcp://:7981` instructs the Docker Volume Plug-in
+to listen on port 7981 for all configured interfaces.
+
+Using a TCP endpoint has a side-effect however -- the local Docker instance
+will not know about the Volume Plug-in endpoint as there is no longer a UNIX
+socket file in the directory the Docker service continually scans.
+
+On the local system, and in fact on all systems where the Docker service needs
+to know about this externally accessible Volume Plug-in endpoint, a spec file
+must be created at `/etc/docker/plugins/rexray.spec`. Inside this file simply
+include a single line with the network address of the endpoint. For example:
+
+```bash
+tcp://192.168.56.20:7981
+```
+
+With a spec file located at `/etc/docker/plugins/rexray.spec` that contains
+the above contents, Docker instances will query the Volume Plug-in endpoint at
+`tcp://192.168.56.20:7981` when volume requests are received.
+
 ### Volume Management
 The `volume` sub-command for Docker 1.12+ should look similar to the following:
 

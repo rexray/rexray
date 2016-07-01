@@ -312,7 +312,7 @@ consume additional system resources.
 #### Congratulations
 REX-Ray has been used to provide persistence for stateless containers! Examples
 using MongoDB, Postgres, and more with persistent storage can be found at
-[Application Examples](./user-guide/application.md).
+[Application Examples](./user-guide/applications.md).
 
 ## Getting Help
 Having issues? No worries, let's figure it out together.

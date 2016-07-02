@@ -121,6 +121,9 @@ The ScaleIO driver registers a storage driver named `scaleio` with the
    must reside on a host that has the SDC client installed. The command
    `/opt/emc/scaleio/sdc/bin/drv_cfg --query_guid` should be executable and
    should return the local SDC GUID.
+ - The [official](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+   Oracle Java Runtime Environment (JRE) is required. During testing, use of the
+   Open Java Development Kit (JDK) resulted in unexpected errors.
 
 ### Configuration
 The following is an example with all possible fields configured.  For a running
@@ -204,6 +207,8 @@ the gateway with `service scaleio-gateway restart`.
 This can be done with a curl login. You should receive an authentication
 token in return.
 `curl --insecure --user admin:XScaleio123 https://gw_ip:443/api/login`
+- Please review the gateway log at
+`/opt/emc/scaleio/gateway/logs/catalina.out` for errors.
 
 ### Examples
 Below is a full `config.yml` file that works with ScaleIO.

@@ -93,11 +93,6 @@ func initConfig() {
 	cfg.Yaml(`
 rexray:
     modules:
-        default-admin:
-            type:     admin
-            desc:     The default admin module.
-            host:     unix:///var/run/rexray/server.sock
-            disabled: false
         default-docker:
             type:     docker
             desc:     The default docker module.

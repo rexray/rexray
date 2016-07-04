@@ -1,5 +1,3 @@
-// +build
-
 package daemon
 
 import (

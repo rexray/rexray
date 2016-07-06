@@ -110,4 +110,8 @@ const (
 
 	// ConfigDeviceScanType is a config key.
 	ConfigDeviceScanType = ConfigRoot + ".device.scanType"
+
+	// ConfigSchemaResponseValidationEnabled is a config key.
+	ConfigSchemaResponseValidationEnabled = ConfigRoot +
+		".schema.responseValidationEnabled"
 )

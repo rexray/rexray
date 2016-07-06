@@ -16,12 +16,13 @@ import (
 
 type task struct {
 	types.Task
-	ctx          types.Context
-	runFunc      types.TaskRunFunc
-	storRunFunc  types.StorageTaskRunFunc
-	storService  types.StorageService
-	resultSchema []byte
-	done         chan int
+	ctx                           types.Context
+	runFunc                       types.TaskRunFunc
+	storRunFunc                   types.StorageTaskRunFunc
+	storService                   types.StorageService
+	resultSchema                  []byte
+	resultSchemaValidationEnabled bool
+	done                          chan int
 }
 
 func newTask(ctx types.Context, schema []byte) *task {
@@ -83,30 +84,50 @@ func execTask(t *task) {
 		return
 	}
 
-	if t.Result != nil && t.resultSchema != nil {
-		var buf []byte
-		if buf, t.Error = json.Marshal(t.Result); t.Error != nil {
-			return
-		}
+	if t.Result == nil {
+		t.ctx.Debug("skipping response schema validation; result == nil")
+		return
+	}
 
-		t.Error = schema.Validate(t.ctx, t.resultSchema, buf)
-		if t.Error != nil {
-			return
-		}
+	if t.resultSchema == nil {
+		t.ctx.Debug("skipping response schema validation; schema == nil")
+		return
+	}
+
+	if !t.resultSchemaValidationEnabled {
+		t.ctx.Debug("skipping response schema validation; disabled")
+		return
+	}
+
+	var buf []byte
+	if buf, t.Error = json.Marshal(t.Result); t.Error != nil {
+		return
+	}
+
+	t.Error = schema.Validate(t.ctx, t.resultSchema, buf)
+	if t.Error != nil {
+		return
 	}
 }
 
 type globalTaskService struct {
 	sync.RWMutex
-	name   string
-	config gofig.Config
-	tasks  map[int]*task
+	name                          string
+	config                        gofig.Config
+	tasks                         map[int]*task
+	resultSchemaValidationEnabled bool
 }
 
 // Init initializes the service.
-func (s *globalTaskService) Init(config gofig.Config) error {
+func (s *globalTaskService) Init(ctx types.Context, config gofig.Config) error {
 	s.tasks = map[int]*task{}
 	s.config = config
+
+	s.resultSchemaValidationEnabled = config.GetBool(
+		types.ConfigSchemaResponseValidationEnabled)
+	ctx.WithField("enabled", s.resultSchemaValidationEnabled).Debug(
+		"configured result schema validation")
+
 	return nil
 }
 
@@ -149,6 +170,7 @@ func (s *globalTaskService) taskTrack(ctx types.Context) *task {
 			ID:        taskID,
 			QueueTime: now,
 		},
+		resultSchemaValidationEnabled: s.resultSchemaValidationEnabled,
 		ctx: ctx.WithValue(context.TaskKey, fmt.Sprintf("%d", taskID)),
 	}
 

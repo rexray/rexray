@@ -52,7 +52,7 @@ func Init(ctx types.Context, config gofig.Config) error {
 func (sc *serviceContainer) Init(ctx types.Context, config gofig.Config) error {
 	sc.config = config
 
-	if err := sc.taskService.Init(config); err != nil {
+	if err := sc.taskService.Init(ctx, config); err != nil {
 		return err
 	}
 

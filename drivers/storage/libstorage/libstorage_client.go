@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
@@ -113,8 +114,11 @@ func (c *client) updateExecutor(ctx types.Context) error {
 	}()
 
 	if !types.LSX.Exists() {
+		ctx.Debug("executor does not exist, download executor")
 		return c.downloadExecutor(ctx)
 	}
+
+	ctx.Debug("executor exists, getting local checksum")
 
 	checksum, err := c.getExecutorChecksum(ctx)
 	if err != nil {
@@ -122,6 +126,10 @@ func (c *client) updateExecutor(ctx types.Context) error {
 	}
 
 	if lsxi.MD5Checksum != checksum {
+		ctx.WithFields(log.Fields{
+			"remoteChecksum": lsxi.MD5Checksum,
+			"localChecksum":  checksum,
+		}).Debug("executor checksums do not match, download executor")
 		return c.downloadExecutor(ctx)
 	}
 
@@ -158,7 +166,9 @@ func (c *client) getExecutorChecksum(ctx types.Context) (string, error) {
 		}
 	}
 
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	sum := fmt.Sprintf("%x", h.Sum(nil))
+	ctx.WithField("localChecksum", sum).Debug("got local executor checksum")
+	return sum, nil
 }
 
 func (c *client) downloadExecutor(ctx types.Context) error {
@@ -181,7 +191,8 @@ func (c *client) downloadExecutor(ctx types.Context) error {
 	defer f.Close()
 
 	rdr, err := c.APIClient.ExecutorGet(ctx, types.LSX.Name())
-	if _, err := io.Copy(f, rdr); err != nil {
+	n, err := io.Copy(f, rdr)
+	if err != nil {
 		return err
 	}
 
@@ -189,5 +200,6 @@ func (c *client) downloadExecutor(ctx types.Context) error {
 		return err
 	}
 
+	ctx.WithField("bytes", n).Debug("downloaded executor")
 	return nil
 }

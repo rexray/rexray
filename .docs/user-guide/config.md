@@ -9,6 +9,16 @@ This page reviews how to configure REX-Ray to suit any environment, beginning
 with the most common use cases, exploring recommended guidelines, and
 finally, delving into the details of more advanced settings.
 
+## Quick Configuration
+Utilize the
+[REX-Ray Configuration Generator](http://rexrayconfig.codedellemc.com/)
+to dynamically create a configuration file. The final configuration will be
+generated based upon the inputs for the supported storage platform.
+
+After installing REX-Ray, create a configuration file on the host at
+`/etc/rexray/config.yml` and copy the contents from the [REX-Ray Configuration Generator](http://rexrayconfig.codedellemc.com/) into the file.
+
+Start REX-Ray as a Service with `$ rexray start`
 
 ## Basic Configuration
 This section outlines the two most common configuration scenarios encountered

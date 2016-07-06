@@ -16,7 +16,7 @@ const (
 func (ctx *lsc) ctxFields() map[string]interface{} {
 
 	fields := map[string]interface{}{
-		"time": time.Now().UTC().Unix(),
+		"time": time.Now().UTC().UnixNano() / int64(time.Millisecond),
 	}
 
 	for key := Key(keyLoggable - 1); key > keyEOF; key-- {

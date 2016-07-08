@@ -2,6 +2,7 @@ all:
 	$(MAKE) deps
 	$(MAKE) build
 
+
 ################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
@@ -46,6 +47,22 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 
 
 ################################################################################
+##                                SYSTEM INFO                                 ##
+################################################################################
+
+GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
+GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
+GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
+
+
+################################################################################
+##                                  PATH                                      ##
+################################################################################
+PATH := $(GOPATH)/bin:$(PATH)
+export $(PATH)
+
+
+################################################################################
 ##                               PROJECT INFO                                 ##
 ################################################################################
 
@@ -63,6 +80,7 @@ VENDORED := 0
 ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
 VENDORED := 1
 endif
+
 
 ################################################################################
 ##                               OS/ARCH INFO                                 ##
@@ -85,12 +103,6 @@ endif
 
 export OS
 export ARCH
-
-ifeq ($(OS),Linux)
-NUMPROCS := $(shell grep -c ^processor /proc/cpuinfo)
-else ifeq ($(OS),Darwin)
-NUMPROCS := $(shell sysctl hw.logicalcpu | awk '{print $$2}')
-endif # $(OS)
 
 
 ################################################################################
@@ -209,6 +221,7 @@ $(foreach i,\
 	$(IMPORT_PATH_INFO),\
 	$(eval $(call IMPORT_PATH_PREPROCS_DEF,$(subst $(ROOT_DIR),.,$(word 3,$(subst ;, ,$(i)))),$(i))))
 
+
 ################################################################################
 ##                                  INFO                                      ##
 ################################################################################
@@ -217,6 +230,9 @@ info:
 	$(info Project Name................$(ROOT_IMPORT_NAME))
 	$(info OS / Arch...................$(GOOS)_$(GOARCH))
 	$(info Vendored....................$(VENDORED))
+	$(info GOPATH......................$(GOPATH))
+	$(info GOHOSTOS....................$(GOHOSTOS))
+	$(info GOHOSTARCH..................$(GOHOSTARCH))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
@@ -238,12 +254,14 @@ ifneq (,$(strip $(TEST_EXT_DEPS_SRCS)))
 		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
 endif
 
+
 ################################################################################
 ##                               DEPENDENCIES                                 ##
 ################################################################################
 GO_BINDATA := $(GOPATH)/bin/go-bindata
 go-bindata: $(GO_BINDATA)
 
+GLIDE := $(GOPATH)/bin/glide
 GOGET_LOCK := goget.lock
 GLIDE_LOCK := glide.lock
 GLIDE_YAML := glide.yaml
@@ -257,11 +275,16 @@ ALL_EXT_DEPS := $(sort $(EXT_DEPS) $(TEST_EXT_DEPS))
 ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
 ifneq (1,$(VENDORED))
+$(GLIDE):
+	go get -u github.com/Masterminds/glide
+glide: $(GLIDE)
+GO_DEPS += $(GLIDE)
+
 GO_DEPS += $(GLIDE_LOCK_D)
 $(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
 
-$(GLIDE_LOCK_D): $(GLIDE_LOCK)
-	glide up && touch $@
+$(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
+	$(GLIDE) install && touch $@
 
 $(GLIDE_LOCK): $(GLIDE_YAML)
 	touch $@
@@ -286,6 +309,50 @@ $(GO_BINDATA):
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
+
+
+################################################################################
+##                               GOMETALINTER                                 ##
+################################################################################
+GOMETALINTER := $(GOPATH)/bin/gometalinter
+
+$(GOMETALINTER): | $(GOMETALINTER_TOOLS)
+	go get -u github.com/alecthomas/gometalinter
+gometalinter: $(GOMETALINTER)
+GO_DEPS += $(GOMETALINTER)
+
+GOMETALINTER_TOOLS_D := .gometalinter.tools.d
+$(GOMETALINTER_TOOLS_D): $(GOMETALINTER)
+	$(GOMETALINTER) --install --update && touch $@
+GO_DEPS += $(GOMETALINTER_TOOLS_D)
+
+GOMETALINTER_ARGS := --vendor \
+					 --fast \
+					 --tests \
+					 --cyclo-over=16 \
+					 --deadline=30s \
+					 --enable=gofmt \
+					 --enable=goimports \
+					 --enable=misspell \
+					 --enable=lll \
+					 --disable=gotype \
+					 --severity=gofmt:error \
+					 --severity=goimports:error \
+					 --exclude=_generated.go \
+					 --linter='gofmt:gofmt -l ./*.go:^(?P<path>[^\n]+)$''
+
+gometalinter-warn: | $(GOMETALINTER_TOOLS_D) $(GLIDE)
+	-$(GOMETALINTER) $(GOMETALINTER_ARGS) $(shell $(GLIDE) nv)
+
+gometalinter-error: | $(GOMETALINTER_TOOLS_D) $(GLIDE)
+	$(GOMETALINTER) $(GOMETALINTER_ARGS) --errors $(shell $(GLIDE) nv)
+
+gometalinter-all:
+ifeq (1,$(GOMETALINTER_WARN_ENABLED))
+	$(MAKE) gometalinter-warn
+endif
+	$(MAKE) gometalinter-error
+
 
 ################################################################################
 ##                                  VERSION                                   ##
@@ -418,6 +485,7 @@ version:
 
 GO_PHONY += version
 
+
 ################################################################################
 ##                               PROJECT BUILD                                ##
 ################################################################################
@@ -453,6 +521,7 @@ GO_CLEAN += $$(PKG_A_$1)-clean
 
 endif
 endif
+
 
 ################################################################################
 ##                               PROJECT TESTS                                ##
@@ -508,6 +577,7 @@ $(foreach i,\
 	$(IMPORT_PATH_INFO),\
 	$(eval $(call IMPORT_PATH_BUILD_DEF,$(subst $(ROOT_DIR),.,$(word 3,$(subst ;, ,$(i)))),$(i))))
 
+
 ################################################################################
 ##                                  SCHEMA                                    ##
 ################################################################################
@@ -523,6 +593,7 @@ $(LIBSTORAGE_SCHEMA_GENERATED): $(LIBSTORAGE_JSON)
 		printf "\tJSONSchema = \`" >>$@; \
 		sed -e 's/^//' $< >>$@; \
 		printf "\`\n)\n" >>$@;
+
 
 ################################################################################
 ##                                 EXECUTORS                                  ##
@@ -569,6 +640,7 @@ GO_PHONY += $(EXECUTORS_GENERATED)-clean
 GO_CLEAN += $(EXECUTORS_GENERATED)-clean
 
 $(API_SERVER_EXECUTORS_A): $(EXECUTORS_GENERATED)
+
 
 ################################################################################
 ##                                    C                                       ##

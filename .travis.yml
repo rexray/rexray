@@ -5,21 +5,26 @@ language: go
 go:
   - 1.6
 
-addons:
-  apt:
-    packages:
-    - rpm
-
-before_script:
+before_install:
+  - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
+  - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
+  - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
+  - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
+  - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
+  - go get github.com/onsi/gomega
+  - go get github.com/onsi/ginkgo
+  - go get golang.org/x/tools/cmd/cover
   - make deps
 
 script:
-  - make build-libstorage
-  - env GOOS=linux  GOARCH=amd64 make build
-  - env GOOS=darwin GOARCH=amd64 make build
-  - make cover
+  - make gometalinter-all
+  - make -j build-libstorage
+  - env GOOS=linux  GOARCH=amd64 make -j build
+  - env GOOS=darwin GOARCH=amd64 make -j build
+  - make -j test
 
 after_success:
+  - make -j cover
   - make tgz
   - make rpm
   - make deb
@@ -57,4 +62,9 @@ deploy:
 cache:
   apt: true
   directories:
-    - $HOME/.opt
+  - $HOME/.opt
+
+addons:
+  apt:
+    packages:
+    - rpm

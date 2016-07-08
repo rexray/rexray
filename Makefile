@@ -2,6 +2,7 @@ all:
 	$(MAKE) deps
 	$(MAKE) build
 
+
 ################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
@@ -55,8 +56,16 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 ##                                SYSTEM INFO                                 ##
 ################################################################################
 
+GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
+
+
+################################################################################
+##                                  PATH                                      ##
+################################################################################
+PATH := $(GOPATH)/bin:$(PATH)
+export $(PATH)
 
 
 ################################################################################
@@ -227,6 +236,9 @@ info:
 	$(info Project Name................$(ROOT_IMPORT_NAME))
 	$(info OS / Arch...................$(GOOS)_$(GOARCH))
 	$(info Vendored....................$(VENDORED))
+	$(info GOPATH......................$(GOPATH))
+	$(info GOHOSTOS....................$(GOHOSTOS))
+	$(info GOHOSTARCH..................$(GOHOSTARCH))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
@@ -252,9 +264,10 @@ endif
 ################################################################################
 ##                               DEPENDENCIES                                 ##
 ################################################################################
-GLIDE := $(GOPATH)/bin/glide
 GO_BINDATA := $(GOPATH)/bin/go-bindata
+go-bindata: $(GO_BINDATA)
 
+GLIDE := $(GOPATH)/bin/glide
 GOGET_LOCK := goget.lock
 GLIDE_LOCK := glide.lock
 GLIDE_YAML := glide.yaml
@@ -269,7 +282,9 @@ ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
 ifneq (1,$(VENDORED))
 $(GLIDE):
-	go get github.com/Masterminds/glide
+	go get -u github.com/Masterminds/glide
+glide: $(GLIDE)
+GO_DEPS += $(GLIDE)
 
 GO_DEPS += $(GLIDE_LOCK_D)
 $(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
@@ -305,32 +320,44 @@ GO_DEPS += $(GO_BINDATA)
 ################################################################################
 ##                               GOMETALINTER                                 ##
 ################################################################################
-
 GOMETALINTER := $(GOPATH)/bin/gometalinter
-$(GOMETALINTER):
+
+$(GOMETALINTER): | $(GOMETALINTER_TOOLS)
 	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install --update
+gometalinter: $(GOMETALINTER)
+GO_DEPS += $(GOMETALINTER)
+
+GOMETALINTER_TOOLS_D := .gometalinter.tools.d
+$(GOMETALINTER_TOOLS_D): $(GOMETALINTER)
+	$(GOMETALINTER) --install --update && touch $@
+GO_DEPS += $(GOMETALINTER_TOOLS_D)
 
 GOMETALINTER_ARGS := --vendor \
 					 --fast \
 					 --tests \
 					 --cyclo-over=16 \
-					 --deadline=15s \
+					 --deadline=30s \
 					 --enable=gofmt \
 					 --enable=goimports \
 					 --enable=misspell \
 					 --enable=lll \
 					 --disable=gotype \
 					 --severity=gofmt:error \
-					 --severity=goimports:error
+					 --severity=goimports:error \
+					 --exclude=_generated.go \
+					 --linter='gofmt:gofmt -l ./*.go:^(?P<path>[^\n]+)$''
 
-gometalinter-warn: | $(GOMETALINTER) $(GLIDE)
+gometalinter-warn: | $(GOMETALINTER_TOOLS_D) $(GLIDE)
 	-$(GOMETALINTER) $(GOMETALINTER_ARGS) $(shell $(GLIDE) nv)
 
-gometalinter-error: | $(GOMETALINTER) $(GLIDE)
+gometalinter-error: | $(GOMETALINTER_TOOLS_D) $(GLIDE)
 	$(GOMETALINTER) $(GOMETALINTER_ARGS) --errors $(shell $(GLIDE) nv)
 
-gometalinter: gometalinter-warn gometalinter-error
+gometalinter-all:
+ifeq (1,$(GOMETALINTER_WARN_ENABLED))
+	$(MAKE) gometalinter-warn
+endif
+	$(MAKE) gometalinter-error
 
 
 ################################################################################
@@ -785,7 +812,6 @@ build-generated:
 	$(MAKE) $(CORE_GENERATED_SRC)
 
 build:
-	$(MAKE) gometalinter
 	$(MAKE) build-libstorage
 	$(MAKE) build-generated
 	$(MAKE) build-$(PROG)

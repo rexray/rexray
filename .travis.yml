@@ -1,7 +1,10 @@
+go_import_path: github.com/emccode/libstorage
+
 language: go
+
 go:
   - 1.6
-go_import_path: github.com/emccode/libstorage
+
 before_install:
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
   - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
@@ -12,21 +15,15 @@ before_install:
   - go get github.com/onsi/ginkgo
   - go get golang.org/x/tools/cmd/cover
   - make deps
-before_script:
-  - rm -f $GOPATH/bin/libstor-c
-  - rm -f $GOPATH/bin/libstor-s
-  - rm -f $GOPATH/bin/lsx-linux
-  - rm -f $GOPATH/bin/darwin_amd64/lsx-darwin
+
 script:
   - make gometalinter-all
   - make -j build
   - make -j test
+
 after_success:
   - make -j cover
-cache:
-  directories:
-  - vendor
-  - $GOPATH/bin
+
 addons:
   apt:
     sources:

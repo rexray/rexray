@@ -1,5 +1,5 @@
-hash: 9b18e8ed63ea7ccc4d9b9635a5aea51c923917917eae600bd313e7b46999af60
-updated: 2016-06-20T22:25:55.503765359-05:00
+hash: 8ad2df94be3b6ffc22147991c1d4251870a07c3db64142c5b3cc9dd98ea8472e
+updated: 2016-07-08T13:56:42.046731869-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -20,7 +20,7 @@ imports:
 - name: github.com/asaskevich/govalidator
   version: df81827fdd59d8b4fb93d8910b286ab7a3919520
 - name: github.com/BurntSushi/toml
-  version: f0aeabca5a127c4078abb8c8d64298b147264b55
+  version: ffaa107fbd880f6d18cd6fec9b511668dcad8639
 - name: github.com/cesanta/ucl
   version: 97c016fce90e6af1b14558563ac46852167e6a76
 - name: github.com/cesanta/validate-json
@@ -36,19 +36,19 @@ imports:
   subpackages:
   - api/v1
 - name: github.com/emccode/goscaleio
-  version: 53ea76f52205380ab52b9c1f4ad89321c286bb95
+  version: 9d95003c0069b1949a0fb46832870799caa5c360
   repo: https://github.com/emccode/goscaleio
   subpackages:
   - types/v1
 - name: github.com/emccode/libstorage
-  version: 182a626937677a081b89651598ee2eac839308e7
+  version: 0e68e6eb4277fe7674c303808776880190f0ed34
   subpackages:
   - imports/local
   - imports/remote
   - api/types
   - client
-  - api/context
   - api/utils
+  - api/context
   - api/server
   - api
   - drivers/integration/docker
@@ -87,8 +87,6 @@ imports:
   repo: https://github.com/akutz/yaml.git
 - name: github.com/gorilla/context
   version: aed02d124ae4a0e94fea4541c8effd05bf0c8296
-- name: github.com/gorilla/handlers
-  version: 66e6c6f01d8da976ee113437745ca029c2b585a6
 - name: github.com/gorilla/mux
   version: 9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e
 - name: github.com/inconshreveable/mousetrap
@@ -101,11 +99,11 @@ imports:
   repo: https://github.com/kardianos/osext.git
   vcs: git
 - name: github.com/kr/pretty
-  version: add1dbc86daf0f983cd4a48ceb39deb95c729b67
+  version: 7497514e37543f8a9dfdb86a97c2e8d175a0f8a0
 - name: github.com/kr/text
   version: 7cafcd837844e784b526369c9bce262804aebc60
 - name: github.com/magiconair/properties
-  version: c265cfa48dda6474e208715ca93e987829f572f8
+  version: e2f061ecfdaca9f35b2e2c12346ffc526f138137
 - name: github.com/mitchellh/mapstructure
   version: d2dd0262208475919e1a362f675cfc0e7c10e905
 - name: github.com/russross/blackfriday
@@ -129,13 +127,13 @@ imports:
   version: 317ec73d0d7507658ee3be15866b445d6d921848
   repo: https://github.com/akutz/viper.git
 - name: golang.org/x/net
-  version: 7c71ca708c71bcbd0e6c856b01468ee07fe24557
+  version: f841c39de738b1d0df95b5a7187744f0e03d8112
   repo: https://github.com/golang/net
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: 62bee037599929a6e9146f29d10dd5208c43507d
+  version: a408501be4d17ee978c04a618e7a1b22af058c0e
   subpackages:
   - unix
 - name: google.golang.org/api
@@ -144,7 +142,7 @@ imports:
   subpackages:
   - compute/v1
 - name: gopkg.in/fsnotify.v1
-  version: 30411dbcefb7a1da7e84f75530ad3abe4011b4f8
+  version: a8a77c9133d2d6fd8334f3260d06f60e8d80a5fb
 - name: gopkg.in/yaml.v1
   version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
   repo: https://github.com/akutz/yaml.git

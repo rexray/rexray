@@ -8,19 +8,25 @@ before_install:
   - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
   - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
   - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
-install:
-  - go get github.com/Masterminds/glide
   - go get github.com/onsi/gomega
   - go get github.com/onsi/ginkgo
   - go get golang.org/x/tools/cmd/cover
+  - make deps
+before_script:
+  - rm -f $GOPATH/bin/libstor-c
+  - rm -f $GOPATH/bin/libstor-s
+  - rm -f $GOPATH/bin/lsx-linux
+  - rm -f $GOPATH/bin/darwin_amd64/lsx-darwin
 script:
-  - make version
-  - make -j deps
+  - make gometalinter-all
   - make -j build
+  - make -j test
+after_success:
   - make -j cover
 cache:
   directories:
   - vendor
+  - $GOPATH/bin
 addons:
   apt:
     sources:

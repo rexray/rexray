@@ -28,13 +28,24 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
-## Version 0.4.1 (TBA)
-TBA
+## Version 0.4.1 (2016/07/08)
+Although a minor release, 0.4.1 provides some meaningful and useful enhancements
+and fixes, further strengthening the foundation of the REX-Ray platform.
+
+### Enhancements
+* Improved build process ([#474](https://github.com/emccode/rexray/issues/474), [#492](https://github.com/emccode/rexray/issues/492))
+* [libStorage](http://libstorage.readthedocs.io) 0.1.4 ([#493](https://github.com/emccode/rexray/issues/493))
+* Removed Docker spec file ([#486](https://github.com/emccode/rexray/issues/486))
+* Improved REX-Ray 0.3.3 Config Backwards Compatibility ([#481](https://github.com/emccode/rexray/issues/481))
+* Improved install script ([#439](https://github.com/emccode/rexray/issues/439), [#495](https://github.com/emccode/rexray/issues/495))
+
+### Bug Fixes
+* Fixed input validation bug when creating volume sans name ([#478](https://github.com/emccode/rexray/issues/478))
 
 ## Version 0.4.0 (2016/06/20)
 REX-Ray 0.4.0 introduces centralized configuration and control along with
 a new client/server architecture -- features made possible by
-[libStorage](https://github.com/emccode/libstorage). Users are no longer
+[libStorage](http://libstorage.readthedocs.io). Users are no longer
 required to configure storage drivers or store privileged information on all
 systems running the REX-Ray client. The new client delegates storage-platform
 related operations to a remote, libStorage-compatible server such as REX-Ray

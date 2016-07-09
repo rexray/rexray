@@ -85,9 +85,13 @@ install() {
         exit 1
     fi
 
+    if [ "$VERSION" = "latest" ]; then
+        VURL=https://api.bintray.com/packages/emccode/$REPO/$PKG/versions/_latest
+        VERSION=$(curl -sSL $VURL | cut -d '"' -f4)
+    fi
+
     OS=$(uname -s)
     URL=$URL/$PKG/$VERSION
-    LURL=https://api.bintray.com/content/emccode/$REPO/$PKG/\$latest
     SUDO=$(which sudo)
     BIN_DIR=/usr/bin
     BIN_FILE=$BIN_DIR/$BIN_NAME
@@ -96,13 +100,9 @@ install() {
     # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
     if [ -e "/etc/redhat-release" -o -e "/etc/redhat-version" ]; then
 
-        if [ "$VERSION" = "latest" ]; then
-            FILE_NAME=$BIN_NAME-latest-1.$ARCH.rpm
-            URL=$LURL/$BIN_NAME-\$latest-1.$ARCH.rpm\?bt_package=$PKG
-        else
-            FILE_NAME=$BIN_NAME-$VERSION-1.$ARCH.rpm
-            URL=$URL/$FILE_NAME
-        fi
+        FVERSION=$(echo $VERSION | tr '-' '+')
+        FILE_NAME=$BIN_NAME-$FVERSION-1.$ARCH.rpm
+        URL=$URL/$FILE_NAME
 
         curl -o $FILE_NAME -sSL $URL
         if [ "$?" -ne "0" ]; then exit $?; fi
@@ -119,13 +119,9 @@ install() {
 
         ARCH=amd64
 
-        if [ "$VERSION" = "latest" ]; then
-            FILE_NAME=${BIN_NAME}_latest-1_$ARCH.deb
-            URL=$LURL/${BIN_NAME}_\$latest-1_$ARCH.deb\?bt_package=$PKG
-        else
-            FILE_NAME=${BIN_NAME}_${VERSION}-1_${ARCH}.deb
-            URL=$URL/$FILE_NAME
-        fi
+        FVERSION=$(echo $VERSION | tr '-' '+')
+        FILE_NAME=${BIN_NAME}_${FVERSION}-1_${ARCH}.deb
+        URL=$URL/$FILE_NAME
 
         curl -o $FILE_NAME -sSL $URL
         if [ "$?" -ne "0" ]; then exit $?; fi
@@ -145,13 +141,8 @@ install() {
         fi
 
         if [ -z "$FILE_NAME" ]; then
-            if [ "$VERSION" = "latest" ]; then
-                FILE_NAME=$BIN_NAME-$OS-$ARCH-latest.tar.gz
-                URL=$LURL/$BIN_NAME-$OS-$ARCH-\$latest.tar.gz\?bt_package=$PKG
-            else
-                FILE_NAME=$BIN_NAME-$OS-$ARCH-$VERSION.tar.gz
-                URL=$URL/$FILE_NAME
-            fi
+            FILE_NAME=$BIN_NAME-$OS-$ARCH-$VERSION.tar.gz
+            URL=$URL/$FILE_NAME
         fi
 
         sudo mkdir -p $BIN_DIR

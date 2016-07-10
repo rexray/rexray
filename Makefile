@@ -314,6 +314,7 @@ GO_DEPS += $(GO_BINDATA)
 ################################################################################
 ##                               GOMETALINTER                                 ##
 ################################################################################
+ifneq (1,$(GOMETALINTER_DISABLED))
 GOMETALINTER := $(GOPATH)/bin/gometalinter
 
 $(GOMETALINTER): | $(GOMETALINTER_TOOLS)
@@ -352,7 +353,10 @@ ifeq (1,$(GOMETALINTER_WARN_ENABLED))
 	$(MAKE) gometalinter-warn
 endif
 	$(MAKE) gometalinter-error
-
+else
+gometalinter-all:
+	@echo gometalinter disabled
+endif
 
 ################################################################################
 ##                                  VERSION                                   ##

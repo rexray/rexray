@@ -14,19 +14,43 @@ import (
 
 type lsc struct {
 	context.Context
-	req   *http.Request
-	right context.Context
+	key             interface{}
+	val             interface{}
+	req             *http.Request
+	right           context.Context
+	logger          *log.Logger
+	loggerInherited bool
 }
 
 func newContext(
-	ctx context.Context,
+	parent context.Context,
+	key interface{},
+	val interface{},
 	req *http.Request,
 	right context.Context) *lsc {
 
+	if parent == nil {
+		parent = context.Background()
+	}
+
+	// figure out who the parent logger instance is. if there is none,
+	// reference the log.StandardLogger as the parent.
+	var logger *log.Logger
+	if ctx, ok := parent.(*lsc); ok {
+		logger = ctx.logger
+	}
+	if logger == nil {
+		logger = log.StandardLogger()
+	}
+
 	return &lsc{
-		Context: ctx,
-		req:     req,
-		right:   right,
+		Context:         parent,
+		key:             key,
+		val:             val,
+		req:             req,
+		right:           right,
+		logger:          logger,
+		loggerInherited: true,
 	}
 }
 
@@ -40,26 +64,7 @@ func (ctx *lsc) rightSide() context.Context {
 
 // New returns a new context with the provided parent.
 func New(parent context.Context) types.Context {
-
-	if parent == nil {
-		parent = context.Background()
-	}
-
-	var ctx types.Context = newContext(parent, nil, nil)
-
-	_, ok := ctx.Value(LoggerKey).(*log.Logger)
-	if !ok {
-		ctx = ctx.WithValue(LoggerKey,
-			&log.Logger{
-				Formatter: log.StandardLogger().Formatter,
-				Out:       log.StandardLogger().Out,
-				Hooks:     log.StandardLogger().Hooks,
-				Level:     log.StandardLogger().Level,
-			},
-		)
-	}
-
-	return ctx
+	return newContext(parent, nil, nil, nil, nil)
 }
 
 // Background returns a new context with logging capabilities.
@@ -74,7 +79,7 @@ func WithRequestRoute(
 	req *http.Request,
 	route types.Route) types.Context {
 
-	return newContext(parent, req, nil).WithValue(RouteKey, route)
+	return newContext(parent, RouteKey, route, req, nil)
 }
 
 // WithStorageService returns a new context with the StorageService as the
@@ -86,22 +91,20 @@ func WithStorageService(
 	driverName := strings.ToLower(service.Driver().Name())
 
 	// set the service's InstanceID if present
-	iidm, ok := parent.Value(AllInstanceIDsKey).(types.InstanceIDMap)
-	if ok {
+	if iidm, ok := parent.Value(AllInstanceIDsKey).(types.InstanceIDMap); ok {
 		if iid, ok := iidm[driverName]; ok {
-			parent = WithValue(parent, InstanceIDKey, iid)
+			parent = newContext(parent, InstanceIDKey, iid, nil, nil)
 		}
 	}
 
 	// set the service's LocalDevices if present
-	ldm, ok := parent.Value(AllLocalDevicesKey).(types.LocalDevicesMap)
-	if ok {
+	if ldm, ok := parent.Value(AllLocalDevicesKey).(types.LocalDevicesMap); ok {
 		if ld, ok := ldm[driverName]; ok {
-			parent = WithValue(parent, LocalDevicesKey, ld)
+			parent = newContext(parent, LocalDevicesKey, ld, nil, nil)
 		}
 	}
 
-	return WithValue(parent, ServiceKey, service)
+	return newContext(parent, ServiceKey, service, nil, nil)
 }
 
 // WithValue returns a copy of parent in which the value associated with
@@ -110,7 +113,7 @@ func WithValue(ctx context.Context, key, val interface{}) types.Context {
 	if customKeyID, ok := isCustomKey(key); ok {
 		key = customKeyID
 	}
-	return newContext(context.WithValue(ctx, key, val), nil, nil)
+	return newContext(ctx, key, val, nil, nil)
 }
 
 func (ctx *lsc) WithValue(key, val interface{}) types.Context {
@@ -125,6 +128,10 @@ func Value(ctx context.Context, key interface{}) interface{} {
 }
 
 func (ctx *lsc) Value(key interface{}) interface{} {
+
+	if key == LoggerKey {
+		return ctx.logger
+	}
 
 	if customKeyID, ok := isCustomKey(key); ok {
 		key = customKeyID
@@ -142,6 +149,10 @@ func (ctx *lsc) Value(key interface{}) interface{} {
 		}
 	}
 
+	if ctx.key == key {
+		return ctx.val
+	}
+
 	if val := ctx.Context.Value(key); val != nil {
 		return val
 	}
@@ -150,7 +161,7 @@ func (ctx *lsc) Value(key interface{}) interface{} {
 		return ctx.right.Value(key)
 	}
 
-	return ctx.Context.Value(key)
+	return nil
 }
 
 type hasName interface {
@@ -195,7 +206,7 @@ func Join(left types.Context, right context.Context) types.Context {
 		return left
 	}
 
-	return newContext(left, nil, right)
+	return newContext(left, nil, nil, nil, right)
 }
 func (ctx *lsc) Join(right context.Context) types.Context {
 	return Join(ctx, right)
@@ -203,22 +214,29 @@ func (ctx *lsc) Join(right context.Context) types.Context {
 
 // SetLogLevel sets the context's log level.
 func SetLogLevel(ctx context.Context, lvl log.Level) {
-
-	logger, ok := ctx.Value(LoggerKey).(*log.Logger)
-	if !ok {
-		return
+	if logCtx, ok := ctx.(*lsc); ok {
+		if lvl == logCtx.logger.Level {
+			return
+		}
+		if logCtx.loggerInherited {
+			parentLogger := logCtx.logger
+			logCtx.logger = &log.Logger{
+				Formatter: parentLogger.Formatter,
+				Out:       parentLogger.Out,
+				Hooks:     parentLogger.Hooks,
+				Level:     lvl,
+			}
+			logCtx.loggerInherited = false
+		}
 	}
-	logger.Level = lvl
 }
 
 // GetLogLevel gets the context's log level.
 func GetLogLevel(ctx context.Context) (log.Level, bool) {
-
-	logger, ok := ctx.Value(LoggerKey).(*log.Logger)
-	if !ok {
-		return 0, false
+	if logCtx, ok := ctx.(*lsc); ok {
+		return logCtx.logger.Level, true
 	}
-	return logger.Level, true
+	return 0, false
 }
 
 // InstanceID returns the context's InstanceID.  This value is valid on both
@@ -258,7 +276,7 @@ func MustTransaction(ctx context.Context) *types.Transaction {
 // new one.
 func RequireTX(ctx context.Context) types.Context {
 	if _, ok := Transaction(ctx); ok {
-		return newContext(ctx, nil, nil)
+		return newContext(ctx, nil, nil, nil, nil)
 	}
 
 	tx, err := types.NewTransaction()
@@ -266,7 +284,7 @@ func RequireTX(ctx context.Context) types.Context {
 		panic(err)
 	}
 
-	return WithValue(ctx, TransactionKey, tx)
+	return newContext(ctx, TransactionKey, tx, nil, nil)
 }
 
 // Client returns the context's Client. This value is only valid for

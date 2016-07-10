@@ -40,7 +40,7 @@ const (
 // Context is a libStorage context.
 type Context interface {
 	context.Context
-	log.FieldLogger
+	FieldLogger
 
 	// WithValue returns a copy of parent in which the value associated with
 	// key is val.

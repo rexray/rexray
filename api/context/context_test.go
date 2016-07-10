@@ -4,10 +4,12 @@ import (
 	"os"
 	"testing"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
+	log.SetLevel(log.ErrorLevel)
 	RegisterCustomKey(testLogKeyHello, CustomLoggerKey|CustomHeaderKey)
 	os.Exit(m.Run())
 }

@@ -2,6 +2,7 @@ package context
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -81,24 +82,14 @@ func (ctx *lsc) addkeyFieldOffsetFieldsToEntry(entry *log.Entry) {
 	}
 }
 
-func (ctx *lsc) logger() log.FieldLogger {
-	return ctx.Value(LoggerKey).(log.FieldLogger)
+func (ctx *lsc) WithField(key string, value interface{}) types.LogEntry {
+	return &entry{Entry: ctx.logger.WithField(key, value), ctx: ctx}
 }
-
-func (ctx *lsc) WithField(key string, value interface{}) *log.Entry {
-	entry := ctx.logger().WithField(key, value)
-	ctx.addkeyFieldOffsetFieldsToEntry(entry)
-	return entry
+func (ctx *lsc) WithFields(fields log.Fields) types.LogEntry {
+	return &entry{Entry: ctx.logger.WithFields(fields), ctx: ctx}
 }
-func (ctx *lsc) WithFields(fields log.Fields) *log.Entry {
-	entry := ctx.logger().WithFields(fields)
-	ctx.addkeyFieldOffsetFieldsToEntry(entry)
-	return entry
-}
-func (ctx *lsc) WithError(err error) *log.Entry {
-	entry := ctx.logger().WithError(err)
-	ctx.addkeyFieldOffsetFieldsToEntry(entry)
-	return entry
+func (ctx *lsc) WithError(err error) types.LogEntry {
+	return &entry{Entry: ctx.logger.WithError(err), ctx: ctx}
 }
 
 func (ctx *lsc) Debugf(format string, args ...interface{}) {
@@ -134,65 +125,240 @@ func (ctx *lsc) Panicf(format string, args ...interface{}) {
 }
 
 func (ctx *lsc) Debug(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Debug(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Debug(args...)
 }
 
 func (ctx *lsc) Info(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Info(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Info(args...)
 }
 
 func (ctx *lsc) Print(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Print(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Print(args...)
 }
 
 func (ctx *lsc) Warn(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Warn(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Warn(args...)
 }
 
 func (ctx *lsc) Warning(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Warning(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Warning(args...)
 }
 
 func (ctx *lsc) Error(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Error(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Error(args...)
 }
 
 func (ctx *lsc) Fatal(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Fatal(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Fatal(args...)
 }
 
 func (ctx *lsc) Panic(args ...interface{}) {
-	ctx.logger().WithFields(ctx.ctxFields()).Panic(args...)
+	ctx.logger.WithFields(ctx.ctxFields()).Panic(args...)
 }
 
 func (ctx *lsc) Debugln(args ...interface{}) {
-	ctx.logger().Debug(args...)
+	ctx.logger.Debug(args...)
 }
 
 func (ctx *lsc) Infoln(args ...interface{}) {
-	ctx.logger().Info(args...)
+	ctx.logger.Info(args...)
 }
 
 func (ctx *lsc) Println(args ...interface{}) {
-	ctx.logger().Print(args...)
+	ctx.logger.Print(args...)
 }
 
 func (ctx *lsc) Warnln(args ...interface{}) {
-	ctx.logger().Warn(args...)
+	ctx.logger.Warn(args...)
 }
 
 func (ctx *lsc) Warningln(args ...interface{}) {
-	ctx.logger().Warning(args...)
+	ctx.logger.Warning(args...)
 }
 
 func (ctx *lsc) Errorln(args ...interface{}) {
-	ctx.logger().Error(args...)
+	ctx.logger.Error(args...)
 }
 
 func (ctx *lsc) Fatalln(args ...interface{}) {
-	ctx.logger().Fatal(args...)
+	ctx.logger.Fatal(args...)
 }
 
 func (ctx *lsc) Panicln(args ...interface{}) {
-	ctx.logger().Panic(args...)
+	ctx.logger.Panic(args...)
+}
+
+type entry struct {
+	*log.Entry
+	ctx *lsc
+}
+
+func (e *entry) Debug(args ...interface{}) {
+	if e.Logger.Level >= log.DebugLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Debug(args...)
+	}
+}
+
+func (e *entry) Print(args ...interface{}) {
+	e.Info(args...)
+}
+
+func (e *entry) Info(args ...interface{}) {
+	if e.Logger.Level >= log.InfoLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Info(args...)
+	}
+}
+
+func (e *entry) Warn(args ...interface{}) {
+	if e.Logger.Level >= log.WarnLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Warn(args...)
+	}
+}
+
+func (e *entry) Warning(args ...interface{}) {
+	e.Warn(args...)
+}
+
+func (e *entry) Error(args ...interface{}) {
+	if e.Logger.Level >= log.ErrorLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Error(args...)
+	}
+}
+
+func (e *entry) Fatal(args ...interface{}) {
+	if e.Logger.Level >= log.FatalLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Fatal(args...)
+	}
+	os.Exit(1)
+}
+
+func (e *entry) Panic(args ...interface{}) {
+	if e.Logger.Level >= log.PanicLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Panic(args...)
+	}
+	panic(fmt.Sprint(args...))
+}
+
+// Entry Printf family functions
+
+func (e *entry) Debugf(format string, args ...interface{}) {
+	if e.Logger.Level >= log.DebugLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Debugf(format, args...)
+	}
+}
+
+func (e *entry) Infof(format string, args ...interface{}) {
+	if e.Logger.Level >= log.InfoLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Infof(format, args...)
+	}
+}
+
+func (e *entry) Printf(format string, args ...interface{}) {
+	e.Infof(format, args...)
+}
+
+func (e *entry) Warnf(format string, args ...interface{}) {
+	if e.Logger.Level >= log.WarnLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Warnf(format, args...)
+	}
+}
+
+func (e *entry) Warningf(format string, args ...interface{}) {
+	e.Warnf(format, args...)
+}
+
+func (e *entry) Errorf(format string, args ...interface{}) {
+	if e.Logger.Level >= log.ErrorLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Errorf(format, args...)
+	}
+}
+
+func (e *entry) Fatalf(format string, args ...interface{}) {
+	if e.Logger.Level >= log.FatalLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Fatalf(format, args...)
+	}
+	os.Exit(1)
+}
+
+func (e *entry) Panicf(format string, args ...interface{}) {
+	if e.Logger.Level >= log.PanicLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Panicf(format, args...)
+	}
+}
+
+// Entry Println family functions
+
+func (e *entry) Debugln(args ...interface{}) {
+	if e.Logger.Level >= log.DebugLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Debugln(args...)
+	}
+}
+
+func (e *entry) Infoln(args ...interface{}) {
+	if e.Logger.Level >= log.InfoLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Infoln(args...)
+	}
+}
+
+func (e *entry) Println(args ...interface{}) {
+	e.Infoln(args...)
+}
+
+func (e *entry) Warnln(args ...interface{}) {
+	if e.Logger.Level >= log.WarnLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Warnln(args...)
+	}
+}
+
+func (e *entry) Warningln(args ...interface{}) {
+	e.Warnln(args...)
+}
+
+func (e *entry) Errorln(args ...interface{}) {
+	if e.Logger.Level >= log.ErrorLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Errorln(args...)
+	}
+}
+
+func (e *entry) Fatalln(args ...interface{}) {
+	if e.Logger.Level >= log.FatalLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Fatalln(args...)
+	}
+	os.Exit(1)
+}
+
+func (e *entry) Panicln(args ...interface{}) {
+	if e.Logger.Level >= log.PanicLevel {
+		e.ctx.addkeyFieldOffsetFieldsToEntry(e.Entry)
+		e.Entry.Panicln(args...)
+	}
+}
+
+func (e *entry) WithField(key string, value interface{}) types.LogEntry {
+	return &entry{Entry: e.Entry.WithField(key, value), ctx: e.ctx}
+}
+
+func (e *entry) WithFields(fields log.Fields) types.LogEntry {
+	return &entry{Entry: e.Entry.WithFields(fields), ctx: e.ctx}
+}
+
+func (e *entry) WithError(err error) types.LogEntry {
+	return &entry{Entry: e.Entry.WithError(err), ctx: e.ctx}
 }

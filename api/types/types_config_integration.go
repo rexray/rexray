@@ -34,6 +34,12 @@ const (
 	// ConfigIgVolOpsPathCache is a config key.
 	ConfigIgVolOpsPathCache = ConfigIgVolOpsPath + ".cache"
 
+	// ConfigIgVolOpsPathCacheEnabled is a config key.
+	ConfigIgVolOpsPathCacheEnabled = ConfigIgVolOpsPathCache + ".enabled"
+
+	// ConfigIgVolOpsPathCacheAsync is a config key.
+	ConfigIgVolOpsPathCacheAsync = ConfigIgVolOpsPathCache + ".async"
+
 	// ConfigIgVolOpsCreate is a config key.
 	ConfigIgVolOpsCreate = ConfigIgVolOps + ".create"
 

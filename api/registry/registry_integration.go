@@ -34,18 +34,15 @@ func (d *idm) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
-	d.config = config
 	d.ctx = ctx
+	d.config = config
 	d.used = map[string]int{}
 
-	if d.pathCache() {
-		store := apiutils.NewStore()
-		store.Set("attachments", true)
-		_, _ = d.List(context.Background(), store)
-	}
+	d.initPathCache(ctx)
 
 	ctx.WithFields(log.Fields{
-		types.ConfigIgVolOpsPathCache:         d.pathCache(),
+		types.ConfigIgVolOpsPathCacheEnabled:  d.pathCacheEnabled(),
+		types.ConfigIgVolOpsPathCacheAsync:    d.pathCacheAsync(),
 		types.ConfigIgVolOpsUnmountIgnoreUsed: d.ignoreUsedCount(),
 		types.ConfigIgVolOpsMountPreempt:      d.preempt(),
 		types.ConfigIgVolOpsCreateDisable:     d.disableCreate(),
@@ -53,6 +50,37 @@ func (d *idm) Init(ctx types.Context, config gofig.Config) error {
 	}).Info("libStorage integration driver successfully initialized")
 
 	return nil
+}
+
+var initPathCacheMap = map[string]interface{}{"attachments": true}
+
+func (d *idm) initPathCache(ctx types.Context) {
+	if !d.pathCacheEnabled() {
+		ctx.Info("path cache initializion disabled")
+		return
+	}
+
+	if _, ok := context.ServiceName(ctx); !ok {
+		ctx.Info("path cache initializion disabled; no service name in ctx")
+		return
+	}
+
+	f := func(async bool) {
+		ctx.WithField("async", async).Info("initializing the path cache")
+		_, err := d.List(ctx, apiutils.NewStoreWithData(initPathCacheMap))
+		if err != nil {
+			ctx.WithField("async", async).WithError(err).Error(
+				"error initializing the path cache")
+		} else {
+			ctx.WithField("async", async).Debug("initialized the path cache")
+		}
+	}
+
+	if d.pathCacheAsync() {
+		go f(true)
+	} else {
+		f(false)
+	}
 }
 
 func (d *idm) List(
@@ -75,7 +103,7 @@ func (d *idm) List(
 		}
 	}
 
-	if !d.pathCache() {
+	if !d.pathCacheEnabled() {
 		return volMapsWithNames, nil
 	}
 
@@ -166,7 +194,7 @@ func (d *idm) Path(
 		"opts":       opts}
 	ctx.WithFields(fields).Debug("getting path to volume")
 
-	if !d.pathCache() {
+	if !d.pathCacheEnabled() {
 		return d.IntegrationDriver.Path(
 			ctx.Join(d.ctx), volumeID, volumeName, opts)
 	}
@@ -313,6 +341,10 @@ func (d *idm) ignoreUsedCount() bool {
 	return d.config.GetBool(types.ConfigIgVolOpsUnmountIgnoreUsed)
 }
 
-func (d *idm) pathCache() bool {
-	return d.config.GetBool(types.ConfigIgVolOpsPathCache)
+func (d *idm) pathCacheEnabled() bool {
+	return d.config.GetBool(types.ConfigIgVolOpsPathCacheEnabled)
+}
+
+func (d *idm) pathCacheAsync() bool {
+	return d.config.GetBool(types.ConfigIgVolOpsPathCacheAsync)
 }

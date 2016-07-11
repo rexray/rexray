@@ -54,7 +54,7 @@ func BackCompat(config gofig.Config) {
 		{ConfigIgVolOpsCreateDisable, ConfigOldIntegrationVolCreateDisable},
 		{ConfigIgVolOpsRemoveDisable, ConfigOldIntegrationVolRemoveDisable},
 		{ConfigIgVolOpsUnmountIgnoreUsed, ConfigOldIntegrationVolUnmountIgnoreUsed},
-		{ConfigIgVolOpsPathCache, ConfigOldIntegrationVolPathCache},
+		{ConfigIgVolOpsPathCacheEnabled, ConfigOldIntegrationVolPathCache},
 		{ConfigIgVolOpsCreateDefaultFsType, ConfigOldDockerFsType},
 		{ConfigIgVolOpsCreateDefaultType, ConfigOldDockerVolumeType},
 		{ConfigIgVolOpsCreateDefaultIOPS, ConfigOldDockerIOPS},

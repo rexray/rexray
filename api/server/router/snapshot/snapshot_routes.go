@@ -72,6 +72,7 @@ func (r *router) snapshots(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		services.TaskExecute(ctx, run, schema.ServiceSnapshotMapSchema),
@@ -105,6 +106,7 @@ func (r *router) snapshotsForService(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.SnapshotMapSchema),
@@ -131,6 +133,7 @@ func (r *router) snapshotInspect(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.SnapshotSchema),
@@ -157,6 +160,7 @@ func (r *router) snapshotRemove(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, nil),
@@ -206,6 +210,7 @@ func (r *router) volumeCreate(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeSchema),
@@ -234,6 +239,7 @@ func (r *router) snapshotCopy(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.SnapshotSchema),

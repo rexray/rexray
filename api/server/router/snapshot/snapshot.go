@@ -15,6 +15,7 @@ func init() {
 }
 
 type router struct {
+	config gofig.Config
 	routes []types.Route
 }
 
@@ -23,6 +24,7 @@ func (r *router) Name() string {
 }
 
 func (r *router) Init(config gofig.Config) {
+	r.config = config
 	r.initRoutes()
 }
 

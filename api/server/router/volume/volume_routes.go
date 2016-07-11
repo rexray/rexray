@@ -77,6 +77,7 @@ func (r *router) volumes(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		services.TaskExecute(ctx, run, schema.ServiceVolumeMapSchema),
@@ -113,6 +114,7 @@ func (r *router) volumesForService(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeMapSchema),
@@ -278,6 +280,7 @@ func (r *router) volumeInspect(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeSchema),
@@ -326,6 +329,7 @@ func (r *router) volumeCreate(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeSchema),
@@ -369,6 +373,7 @@ func (r *router) volumeCopy(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeSchema),
@@ -396,6 +401,7 @@ func (r *router) volumeSnapshot(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.SnapshotSchema),
@@ -448,6 +454,7 @@ func (r *router) volumeAttach(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeAttachResponseSchema),
@@ -496,6 +503,7 @@ func (r *router) volumeDetach(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, nil),
@@ -593,6 +601,7 @@ func (r *router) volumeDetachAll(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		services.TaskExecute(ctx, run, schema.ServiceVolumeMapSchema),
@@ -657,6 +666,7 @@ func (r *router) volumeDetachAllForService(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, schema.VolumeMapSchema),
@@ -683,6 +693,7 @@ func (r *router) volumeRemove(
 
 	return httputils.WriteTask(
 		ctx,
+		r.config,
 		w,
 		store,
 		service.TaskExecute(ctx, run, nil),

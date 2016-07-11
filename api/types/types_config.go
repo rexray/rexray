@@ -114,4 +114,13 @@ const (
 	// ConfigSchemaResponseValidationEnabled is a config key.
 	ConfigSchemaResponseValidationEnabled = ConfigRoot +
 		".schema.responseValidationEnabled"
+
+	// ConfigServerTasks is a config key.
+	ConfigServerTasks = ConfigServer + ".tasks"
+
+	// ConfigServerTasksExeTimeout is a config key.
+	ConfigServerTasksExeTimeout = ConfigServerTasks + ".exeTimeout"
+
+	// ConfigServerTasksLogTimeout is a config key.
+	ConfigServerTasksLogTimeout = ConfigServerTasks + ".logTimeout"
 )

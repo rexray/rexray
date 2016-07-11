@@ -512,6 +512,52 @@ as well:
 `info`     | Log errors, warnings, and workflow messages
 `debug`    | Log everything
 
+### Tasks Configuration
+All operations received by the libStorage API are immediately enqueued into a
+Task Service in order to divorce the business objective from the scope of the
+HTTP request that delivered it. If a task completes before the HTTP request
+times out, the result of the task is written to the HTTP response and sent to
+the client. However, if the operation is long-lived and continues to execute
+after the original HTTP request has timed out, the goroutine running the
+operation will finish regardless.
+
+In the case of such a timeout event, the client receives an HTTP status 408 -
+Request Timeout. The HTTP response body also includes the task ID which can
+be used to monitor the state of the remote call. The following resource URI can
+be used to retrieve information about a task:
+
+```
+GET /tasks/${taskID}
+```
+
+For systems that experience heavy loads the task system can also be a source of
+potential resource issues. Because tasks are kept indefinitely at this point in
+time, too many tasks over a long period of time can result in a massive memory
+consumption, with reports of up to 50GB and more.
+
+That's why the configuration property `libstorage.server.tasks.logTimeout` is
+available to adjust how long a task is logged before it is removed from memory.
+The default value is `0` -- that is, do not log the task in memory at all.
+
+While this is in contradiction to the task retrieval example above --
+obviously a task cannot be retrieved if it is not retained -- testing and
+benchmarks have shown it is too dangerous to enable task retention by default.
+Instead tasks are removed immediately upon completion.
+
+The follow configuration example illustrates a libStorage server that keeps
+tasks logged for 10 minutes before purging them from memory:
+
+```yaml
+libstorage:
+  server:
+    tasks:
+      logTimeout: 10m
+```
+
+The `libstorage.server.tasks.logTimeout` property can be set to any value that
+is parseable by the Golang
+[time.ParseDuration](https://golang.org/pkg/time/#ParseDuration) function. For
+example, `1000ms`, `10s`, `5m`, and `1h` are all valid values.
 
 ### Driver Configuration
 There are three types of drivers:

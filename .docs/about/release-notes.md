@@ -28,6 +28,16 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.4.2 (TBA)
+This minor update represents a *major* performance boost for REX-Ray.
+Operations that use to take up to minutes now take seconds or less. The memory
+footprint has been reduced from the magnitude of phenomenal cosmic powers to
+the size of an itty bitty living space!
+
+### Enhancements
+* libStorage 0.1.5 ([#TBA](https://github.com/emccode/rexray/issues/TBA))
+* Improved volume path caching ([#500](https://github.com/emccode/rexray/issues/500))
+
 ## Version 0.4.1 (2016/07/08)
 Although a minor release, 0.4.1 provides some meaningful and useful enhancements
 and fixes, further strengthening the foundation of the REX-Ray platform.

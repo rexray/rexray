@@ -59,10 +59,6 @@ func newModule(ctx apitypes.Context, c *module.Config) (module.Module, error) {
 	c.Address = host
 	config := c.Config
 
-	if !config.GetBool("rexray.volume.path.disableCache") {
-		config.Set("rexray.volume.path.cache", true)
-	}
-
 	return &mod{
 		ctx:    ctx,
 		config: config,

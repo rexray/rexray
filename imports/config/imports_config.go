@@ -78,6 +78,8 @@ func init() {
 	rk(gofig.String, "30s", "", types.ConfigDeviceAttachTimeout)
 	rk(gofig.Int, 0, "", types.ConfigDeviceScanType)
 	rk(gofig.Bool, false, "", types.ConfigEmbedded)
+	rk(gofig.String, "1m", "", types.ConfigServerTasksExeTimeout)
+	rk(gofig.String, "0s", "", types.ConfigServerTasksLogTimeout)
 
 	gofig.Register(r)
 }

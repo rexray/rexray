@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/akutz/gofig"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
 )
@@ -48,6 +49,7 @@ func WriteResponse(w http.ResponseWriter, rec *httptest.ResponseRecorder) {
 // WriteTask writes a task to a ResponseWriter.
 func WriteTask(
 	ctx types.Context,
+	config gofig.Config,
 	w http.ResponseWriter,
 	store types.Store,
 	task *types.Task,
@@ -58,7 +60,12 @@ func WriteTask(
 		return nil
 	}
 
-	timeout := time.NewTimer(time.Second * 60)
+	exeTimeoutDur, err := time.ParseDuration(
+		config.GetString(types.ConfigServerTasksExeTimeout))
+	if err != nil {
+		exeTimeoutDur = time.Duration(time.Second * 60)
+	}
+	exeTimeout := time.NewTimer(exeTimeoutDur)
 
 	select {
 	case <-services.TaskWaitC(ctx, task.ID):
@@ -66,7 +73,7 @@ func WriteTask(
 			return task.Error
 		}
 		WriteJSON(w, okStatus, task.Result)
-	case <-timeout.C:
+	case <-exeTimeout.C:
 		WriteJSON(w, http.StatusRequestTimeout, task)
 	}
 

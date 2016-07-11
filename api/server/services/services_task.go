@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
@@ -223,10 +224,44 @@ func (s *globalTaskService) TaskWaitC(taskID int) <-chan int {
 			return
 		}
 
+		// remove the task from the queue after a configured about of time
+		defer s.taskRemoveAfter(t)
+
+		// signal that the task is complete
 		<-t.done
 	}()
 
 	return c
+}
+
+// taskRemoveAfter tells the task service to remove the task after the duration
+// specified by `libstorage.server.tasks.logTimeout`.
+func (s *globalTaskService) taskRemoveAfter(t *task) {
+	go func() {
+		logTimeoutDur, err := time.ParseDuration(
+			s.config.GetString(types.ConfigServerTasksLogTimeout))
+		if err != nil {
+			logTimeoutDur = time.Duration(time.Second * 60)
+		}
+
+		// wait to remove the task
+		time.Sleep(logTimeoutDur)
+
+		// sync access to the task map for querying its size before and after
+		// executing the delete operation on it
+		s.Lock()
+		defer s.Unlock()
+
+		t.ctx.WithFields(log.Fields{
+			"removedAfter": logTimeoutDur,
+			"tasksLen":     len(s.tasks),
+		}).Debug("removing task")
+
+		// delete the task
+		delete(s.tasks, t.ID)
+
+		t.ctx.WithField("tasksLen", len(s.tasks)).Debug("removed task")
+	}()
 }
 
 // TaskWaitAll blocks until all the specified task are complete.

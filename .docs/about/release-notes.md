@@ -11,10 +11,11 @@ that were taking minutes now take seconds or less. Memory consumption that
 could exceed 50GB is now kept neat and tidy.
 
 ### Bug Fixes
-* Task service memory fix ([#225](https://github.com/emccode/libstorage/issues/218))
-* Context logger optimizations ([#224](https://github.com/emccode/libstorage/issues/213))
+* Task service memory fix ([#225](https://github.com/emccode/libstorage/issues/225))
+* Context logger optimizations ([#224](https://github.com/emccode/libstorage/issues/224))
 
 ### Enhancements
+* Improved volume path caching ([#227](https://github.com/emccode/libstorage/issues/227)) 
 * Make Gometalinter optional ([#223](https://github.com/emccode/libstorage/issues/223))
 
 

@@ -723,13 +723,13 @@ accompanying container runtime (if this setting is false) to ensure they are
 synchronized.  
 
 #### Volume Path Cache
-In order to minimize the impact to return `Path` requests, a caching
-capability has been introduced by default. A `List` request will cause the
-returned volumes and paths to be evaluated and those with active mounts are
-recorded. Subsequent `Path` requests for volumes that have no recorded mounts
-will not result in active path lookups. Once the mount counter is initialized or
-a `List` operation occurs where a mount is recorded, the volume will be looked
-up for future `Path` operations. By default the setting is `true`.
+In order to optimize `Path` requests, the paths of actively mounted volumes
+returned as the result of a `List` request are cached. Subsequent `Path`
+requests for unmounted volumes will not dirty the cache. Only once a volume
+has been mounted will the cache be marked dirty and the volume's path retrieved
+and cached once more.
+
+The following configuration example illustrates the two path cache properties:
 
 ```yaml
 libstorage:
@@ -737,8 +737,16 @@ libstorage:
     volume:
       operations:
         path:
-          cache: false
+          cache:
+            enabled: true
+            async:   true
 ```
+
+Volume path caching is enabled and asynchronous by default, so it's possible to
+entirely omit the above configuration excerpt from a production deployment, and
+the system will still use asynchronous caching. Setting the `async` property to
+`false` simply means that the initial population of the cache will be handled
+synchronously, slowing down the program's startup time.
 
 #### Volume Root Path
 When volumes are mounted there can be an additional path that is specified to
@@ -746,7 +754,8 @@ be created and passed as the valid mount point.  This is required for certain
 applications that do not want to place data from the root of a mount point.
 
 The default is the `/data` path.  If a value is set by
-`linux.integration.volume.operations.mount.rootPath`, then the default will be overwritten.
+`linux.integration.volume.operations.mount.rootPath`, then the default will be
+overwritten.
 
 ```yaml
 libstorage:

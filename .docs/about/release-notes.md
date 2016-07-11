@@ -4,11 +4,25 @@ Release early, release often
 
 ---
 
+## Version 0.1.5 (TBA)
+This release comes hot on the heels of the last, but some dynamite bug fixes
+have improved the performance of the server by leaps and bounds. Operations
+that were taking minutes now take seconds or less. Memory consumption that
+could exceed 50GB is now kept neat and tidy.
+
+### Bug Fixes
+* Task service memory fix ([#225](https://github.com/emccode/libstorage/issues/218))
+* Context logger optimizations ([#224](https://github.com/emccode/libstorage/issues/213))
+
+### Enhancements
+* Make Gometalinter optional ([#223](https://github.com/emccode/libstorage/issues/223))
+
+
 ## Version 0.1.4 (2016/07/08)
 This update provides a major performance improvement as well as a few other,
 minor bug fixes and enhancements.
 
-### Bugfixes
+### Bug Fixes
 * Performance degradation bug ([#218](https://github.com/emccode/libstorage/issues/218))
 * Close bug in ScaleIO driver ([#213](https://github.com/emccode/libstorage/issues/213))
 * Panic when checking attached instances with Isilon driver ([#211](https://github.com/emccode/libstorage/issues/211))

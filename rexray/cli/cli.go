@@ -322,6 +322,9 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	c.updateLogLevel()
 
+	// disable path caching for the CLI
+	c.config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, false)
+
 	if v := c.rrHost(); v != "" {
 		c.config.Set(apitypes.ConfigHost, v)
 	}

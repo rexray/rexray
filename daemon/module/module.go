@@ -156,6 +156,9 @@ func InitializeDefaultModules(
 		errs <-chan error
 	)
 
+	// enable path caching for the modules
+	config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, true)
+
 	ctx, config, errs, err = util.ActivateLibStorage(ctx, config)
 	if err != nil {
 		return nil, err

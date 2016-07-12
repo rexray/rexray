@@ -4,7 +4,7 @@ Release early, release often
 
 ---
 
-## Version 0.1.5 (TBA)
+## Version 0.1.5 (2016/07/12)
 This release comes hot on the heels of the last, but some dynamite bug fixes
 have improved the performance of the server by leaps and bounds. Operations
 that were taking minutes now take seconds or less. Memory consumption that
@@ -15,7 +15,7 @@ could exceed 50GB is now kept neat and tidy.
 * Context logger optimizations ([#224](https://github.com/emccode/libstorage/issues/224))
 
 ### Enhancements
-* Improved volume path caching ([#227](https://github.com/emccode/libstorage/issues/227)) 
+* Improved volume path caching ([#227](https://github.com/emccode/libstorage/issues/227))
 * Make Gometalinter optional ([#223](https://github.com/emccode/libstorage/issues/223))
 
 

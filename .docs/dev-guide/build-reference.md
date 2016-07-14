@@ -18,6 +18,8 @@ Operating System | Linux, OS X
 [X-Code Command Line Tools (OS X only)](https://developer.apple.com/library/ios/technotes/tn2339/_index.html) | >= OS X 10.9
 Linux Kernel Headers (Linux only) | >=Linux Kernel 3.13
 [GNU C Compiler](https://gcc.gnu.org/) (Linux only) | >= 4.8
+[Perl](https://www.perl.org/)  | >= 5.0
+[Git](https://git-scm.com/) | >= 1.7
 
 OS X ships with a very old version of GNU Make, and a package manager like
 [Homebrew](http://brew.sh/) can be used to install the required version.

@@ -53,6 +53,10 @@ URL=$BINTRAY_URL/$REPO
 SCRIPT_URL=$URL/install
 SCRIPT_CMD="curl -sSL $SCRIPT_URL | sh -s"
 
+if [ "$INSECURE" = "1" ]; then
+    INSECURE=-k
+fi
+
 sudo() {
     if [ "$(id -u)" -eq "0" ]; then $@; else $SUDO $@; fi
 }
@@ -68,7 +72,7 @@ list() {
         echo "$SCRIPT_CMD -- list stable"
     else
         URL="$URL/$PKG"
-        for v in $(curl -sSL $URL | \
+        for v in $(curl $INSECURE -sSL $URL | \
                     grep 'onclick' | grep -v 'latest' | \
                     cut -d '>' -f3 | cut -d'/' -f1); do
             echo "$SCRIPT_CMD -- $PKG $v"
@@ -87,7 +91,7 @@ install() {
 
     if [ "$VERSION" = "latest" ]; then
         VURL=https://api.bintray.com/packages/emccode/$REPO/$PKG/versions/_latest
-        VERSION=$(curl -sSL $VURL | cut -d '"' -f4)
+        VERSION=$(curl $INSECURE -sSL $VURL | cut -d '"' -f4)
     fi
 
     OS=$(uname -s)
@@ -104,7 +108,7 @@ install() {
         FILE_NAME=$BIN_NAME-$FVERSION-1.$ARCH.rpm
         URL=$URL/$FILE_NAME
 
-        curl -o $FILE_NAME -sSL $URL
+        curl $INSECURE -o $FILE_NAME -sSL $URL
         if [ "$?" -ne "0" ]; then exit $?; fi
 
         sudo rpm -ih --quiet $FILE_NAME > /dev/null
@@ -123,7 +127,7 @@ install() {
         FILE_NAME=${BIN_NAME}_${FVERSION}-1_${ARCH}.deb
         URL=$URL/$FILE_NAME
 
-        curl -o $FILE_NAME -sSL $URL
+        curl $INSECURE -o $FILE_NAME -sSL $URL
         if [ "$?" -ne "0" ]; then exit $?; fi
 
         sudo dpkg -i $FILE_NAME
@@ -148,7 +152,7 @@ install() {
         sudo mkdir -p $BIN_DIR
         if [ "$?" -ne "0" ]; then exit $?; fi
 
-        curl -o $FILE_NAME -sSL $URL
+        curl $INSECURE -o $FILE_NAME -sSL $URL
         if [ "$?" -ne "0" ]; then exit $?; fi
 
         sudo tar xzf $FILE_NAME -C $BIN_DIR

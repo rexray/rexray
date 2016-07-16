@@ -1,6 +1,12 @@
 package core
 
 import (
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
+	"github.com/emccode/libstorage/api/context"
 	apitypes "github.com/emccode/libstorage/api/types"
 )
 
@@ -9,9 +15,9 @@ var (
 	Version *apitypes.VersionInfo
 )
 
-type os string
+type osString string
 
-func (o os) String() string {
+func (o osString) String() string {
 	switch o {
 	case "linux":
 		return "Linux"
@@ -24,9 +30,9 @@ func (o os) String() string {
 	}
 }
 
-type arch string
+type archString string
 
-func (a arch) String() string {
+func (a archString) String() string {
 	switch a {
 	case "386":
 		return "i386"
@@ -34,5 +40,84 @@ func (a arch) String() string {
 		return "x86_64"
 	default:
 		return string(a)
+	}
+}
+
+// SignalHandlerFunc is a function that can be registered with
+// `core.RegisterSignalHandler` to receive a callback when the process receives
+// a signal.
+type SignalHandlerFunc func(ctx apitypes.Context, s os.Signal)
+
+var (
+	sigHandlers    []SignalHandlerFunc
+	sigHandlersRWL = &sync.RWMutex{}
+)
+
+// RegisterSignalHandler registers a SignalHandlerFunc.
+func RegisterSignalHandler(f SignalHandlerFunc) {
+	sigHandlersRWL.Lock()
+	defer sigHandlersRWL.Unlock()
+	sigHandlers = append(sigHandlers, f)
+}
+
+type signalContextKeyType int
+
+const signalContextKey signalContextKeyType = 0
+
+func (k signalContextKeyType) String() string {
+	return "signal"
+}
+
+// TrapSignals tells the process to trap incoming process signals.
+func TrapSignals(ctx apitypes.Context) {
+
+	context.RegisterCustomKey(signalContextKey, context.CustomLoggerKey)
+
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc)
+
+	go func() {
+		for s := range sigc {
+
+			ctx := ctx.WithValue(signalContextKey, s.String())
+			if ok, graceful := IsExitSignal(s); ok && !graceful {
+				ctx.Error("received signal; aborting")
+				os.Exit(1)
+			}
+
+			func() {
+				sigHandlersRWL.RLock()
+				defer sigHandlersRWL.RUnlock()
+
+				// execute the signal handlers in reverse order. the first
+				// one registered should be executed last as it was registered
+				// the earliest
+				for i := len(sigHandlers) - 1; i >= 0; i-- {
+					sigHandlers[i](ctx, s)
+				}
+			}()
+
+			if ok, graceful := IsExitSignal(s); ok && graceful {
+				ctx.Error("received signal; shutting down")
+				os.Exit(0)
+			}
+		}
+	}()
+}
+
+// IsExitSignal returns a flag indicating whether a signal is SIGKILL, SIGHUP,
+// SIGINT, SIGTERM, or SIGQUIT. The second return value is whether it is a
+// graceful exit. This flag is true for SIGHUP, SIGINT, and SIGQUIT.
+func IsExitSignal(s os.Signal) (bool, bool) {
+	switch s {
+	case syscall.SIGKILL,
+		syscall.SIGTERM:
+		return true, false
+	case syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGQUIT:
+		return true, true
+	default:
+		return false, false
 	}
 }

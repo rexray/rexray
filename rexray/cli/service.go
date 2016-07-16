@@ -6,13 +6,14 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"os/signal"
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/context"
+	apitypes "github.com/emccode/libstorage/api/types"
+	"github.com/emccode/rexray/core"
 	rrdaemon "github.com/emccode/rexray/daemon"
 	"github.com/emccode/rexray/util"
 )
@@ -162,15 +163,7 @@ func (c *CLI) startDaemon() {
 
 	c.ctx.WithField("pid", os.Getpid()).Info("created pid file")
 
-	sigc := make(chan os.Signal, 1)
 	stop := make(chan os.Signal)
-
-	signal.Notify(sigc,
-		syscall.SIGKILL,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
 
 	os.Remove(serverSockFile)
 	host := fmt.Sprintf("unix://%s", serverSockFile)
@@ -189,15 +182,33 @@ func (c *CLI) startDaemon() {
 		conn.Close()
 	}
 
-	sigv := <-sigc
-	c.ctx.WithField("signal", sigv).Info("received shutdown signal")
-	stop <- sigv
+	wait := make(chan os.Signal)
+	core.RegisterSignalHandler(func(ctx apitypes.Context, s os.Signal) {
 
-	os.Remove(serverSockFile)
+		if ok, _ := core.IsExitSignal(s); !ok {
+			return
+		}
 
-	// wait until the daemon stops
-	for range errs {
-	}
+		ctx = ctx.Join(c.ctx)
+
+		ctx.Info("signal received; shutting down services")
+
+		stop <- s
+		close(stop)
+
+		os.Remove(serverSockFile)
+
+		// wait until the daemon stops
+		for range errs {
+		}
+
+		ctx.Info("service shutdown complete")
+
+		wait <- s
+		close(wait)
+	})
+
+	<-wait
 }
 
 func (c *CLI) tryToStartDaemon() {

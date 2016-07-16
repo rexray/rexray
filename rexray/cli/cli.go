@@ -164,12 +164,12 @@ func validateConfig(path string) {
 }
 
 // New returns a new CLI using the current process's arguments.
-func New() *CLI {
-	return NewWithArgs(os.Args[1:]...)
+func New(ctx apitypes.Context) *CLI {
+	return NewWithArgs(ctx, os.Args[1:]...)
 }
 
 // NewWithArgs returns a new CLI using the specified arguments.
-func NewWithArgs(a ...string) *CLI {
+func NewWithArgs(ctx apitypes.Context, a ...string) *CLI {
 
 	validateConfig(util.EtcFilePath("config.yml"))
 	validateConfig(fmt.Sprintf("%s/.rexray/config.yml", gotil.HomeDir()))
@@ -180,7 +180,7 @@ func NewWithArgs(a ...string) *CLI {
 
 	c := &CLI{
 		l:      log.New(),
-		ctx:    context.Background(),
+		ctx:    ctx,
 		config: gofig.New(),
 	}
 
@@ -211,13 +211,13 @@ func NewWithArgs(a ...string) *CLI {
 }
 
 // Execute executes the CLI using the current process's arguments.
-func Execute() {
-	New().Execute()
+func Execute(ctx apitypes.Context) {
+	New(ctx).Execute()
 }
 
 // ExecuteWithArgs executes the CLI using the specified arguments.
-func ExecuteWithArgs(a ...string) {
-	NewWithArgs(a...).Execute()
+func ExecuteWithArgs(ctx apitypes.Context, a ...string) {
+	NewWithArgs(ctx, a...).Execute()
 }
 
 // Execute executes the CLI.
@@ -293,15 +293,15 @@ func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 }
 
 func (c *CLI) updateLogLevel() {
-	lvl, err := log.ParseLevel(strings.ToLower(c.logLevel()))
+	lvl, err := log.ParseLevel(c.logLevel())
 	if err != nil {
-		lvl = log.WarnLevel
+		return
 	}
+	c.ctx.WithField("level", lvl).Debug("updating log level")
 	log.SetLevel(lvl)
-	lvlStr := lvl.String()
-	c.config.Set(apitypes.ConfigLogLevel, lvlStr)
+	c.config.Set(apitypes.ConfigLogLevel, lvl.String())
 	context.SetLogLevel(c.ctx, lvl)
-	log.WithField("logLevel", lvlStr).Debug("updated log level")
+	log.WithField("logLevel", lvl).Info("updated log level")
 }
 
 func (c *CLI) preRunActivateLibStorage(cmd *cobra.Command, args []string) {

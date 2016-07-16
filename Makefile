@@ -470,7 +470,8 @@ import (
 
 func init() {
 	Version = &apitypes.VersionInfo{}
-	Version.Arch = fmt.Sprintf("%s-%s", os(runtime.GOOS), arch(runtime.GOARCH))
+	Version.Arch = fmt.Sprintf(
+		"%s-%s", osString(runtime.GOOS), archString(runtime.GOARCH))
 	Version.Branch = "$(V_BRANCH)"
 	Version.BuildTimestamp = time.Unix($(V_EPOCH), 0)
 	Version.SemVer = "$(V_SEMVER)"

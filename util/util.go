@@ -377,8 +377,6 @@ func ActivateLibStorage(
 
 	ctx.Debug("starting embedded libStorage server")
 
-	apiserver.CloseOnAbort()
-
 	if server, errs, err = apiserver.Serve(ctx, config); err != nil {
 		return ctx, config, nil, err
 	}

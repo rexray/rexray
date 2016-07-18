@@ -1,6 +1,10 @@
 all:
+ifneq (1,$(BUILD_WITH_DOCKER))
 	$(MAKE) deps
 	$(MAKE) build
+else
+	$(MAKE) build-with-docker
+endif
 
 
 ################################################################################
@@ -689,9 +693,10 @@ build-tgz: $(TGZ)
 ################################################################################
 RPMDIR := .rpm
 RPM := $(PROG)-$(V_RPM_SEMVER)-1.$(V_ARCH).rpm
+RPMBUILD := rpmbuild
 
 $(RPM)-clean:
-	rm -f $(RPM)
+	rm -f $(RPM) && rm -fr $(RPMDIR)
 GO_PHONY += $(RPM)-clean
 GO_CLEAN += $(RPM)-clean
 
@@ -705,7 +710,7 @@ $(RPM): $(CLI_LINUX)
 			 $(RPMDIR)/tmp
 	cp rpm.spec $(RPMDIR)/SPECS/$(PROG).spec
 	cd $(RPMDIR) && \
-		setarch $(V_ARCH) rpmbuild -ba \
+		setarch $(V_ARCH) $(RPMBUILD) -ba \
 			-D "rpmbuild $(abspath $(RPMDIR))" \
 			-D "v_semver $(V_RPM_SEMVER)" \
 			-D "v_arch $(V_ARCH)" \
@@ -795,14 +800,72 @@ PROG_BIN_SIZE = stat --format '%s' $(PROG_BIN) 2> /dev/null || \
 
 $(PROG_$(GOOS)_$(GOARCH)): $(PROG_BIN)
 	@bytes=$$($(PROG_BIN_SIZE)) && mb=$$(($$bytes / 1024 / 1024)) && \
-		printf "\nThe $(PROG) binary is $${mb}MB and located at: \n\n" && \
-		printf "  $?\n\n"
+	printf "\nThe $(PROG) binary is $${mb}MB and located at: \n\n"
+ifneq (1,$(DOCKER_MARKER))
+	@printf "  $?\n\n"
+else
+# within the Dockerfile, correct the location of the resulting binary to be
+# to its location on the local machine
+	@printf "  $(subst $(GOPATH), $(LOCAL_GOPATH), $(PROG_BIN))\n\n"
+endif
+
 stat-prog: $(PROG_$(GOOS)_$(GOARCH))
 
 $(PROG_$(GOOS)_$(GOARCH))-clean:
 	rm -f $(PROG_$(GOOS)_$(GOARCH))
 GO_PHONY += $(PROG_$(GOOS)_$(GOARCH))-clean
 GO_CLEAN += $(PROG_$(GOOS)_$(GOARCH))-clean
+
+
+################################################################################
+##                                DOCKER                                      ##
+################################################################################
+# sufficient for make tgz, make rpm, make deb, and make pkg-clean
+DOCKER_ROOT_MOUNT :=-v $(ROOT_DIR):/go/src/github.com/emccode/rexray/ \
+	-w=/go/src/github.com/emccode/rexray/
+
+DOCKER_BIN_PKG := -v $(GOPATH)/bin/:/go/bin/ \
+	-v $(GOPATH)/pkg/:/go/pkg/
+
+# sufficient for make clean and make
+DOCKER_FULL_MOUNT := $(DOCKER_ROOT_MOUNT) $(DOCKER_BIN_PKG)
+
+DOCKER_BASH := docker-make-rexray /bin/bash -c
+
+DOCKER_BUILD_RUN := docker build -t docker-make-rexray . \
+	&& docker run -e LOCAL_GOPATH=$(GOPATH)
+
+# create and run in Docker container, with the resulting binary file in
+# $(GOPATH)/bin/ on the local machine
+build-with-docker:
+	$(DOCKER_BUILD_RUN) $(DOCKER_FULL_MOUNT) $(DOCKER_BASH) "make deps && make build"
+
+# create and run in Docker container, with the resulting tgz file in $(ROOT_DIR)
+tgz-with-docker:
+	$(DOCKER_BUILD_RUN) $(DOCKER_ROOT_MOUNT) $(DOCKER_BASH) "make deps && make build-tgz"
+
+# create and run in Docker container, with the resulting rpm file in $(ROOT_DIR)
+rpm-with-docker:
+	$(DOCKER_BUILD_RUN) $(DOCKER_ROOT_MOUNT) $(DOCKER_BASH) "make deps && make RPMBUILD='fakeroot rpmbuild' build-rpm"
+
+# create and run in Docker container, with the resulting rpm and deb files in $(ROOT_DIR)
+deb-with-docker:
+	$(DOCKER_BUILD_RUN) $(DOCKER_ROOT_MOUNT) $(DOCKER_BASH) "make deps && make RPMBUILD='fakeroot rpmbuild' build-rpm && make build-deb"
+
+# create and run in Docker container, with the resulting binary file in
+# $(GOPATH)/bin/ on the local machine, and the tgz, rpm, and deb files in $(ROOT_DIR)
+pkg-with-docker:
+	$(DOCKER_BUILD_RUN) $(DOCKER_FULL_MOUNT) $(DOCKER_BASH) "make && make build-tgz && make RPMBUILD='fakeroot rpmbuild' build-rpm && make build-deb"
+
+# after doing make with a Docker container,
+# use make clean within a Docker container to ensure same file permissions
+pkg-clean-with-docker:
+	$(DOCKER_BUILD_RUN) $(DOCKER_ROOT_MOUNT) $(DOCKER_BASH) "rm -f $(PROG)*.tar.gz && rm -f *.rpm && rm -f *.deb"
+
+# after doing make with a Docker container,
+# use make clean within a Docker container to ensure same file permissions
+clean-with-docker:
+	$(DOCKER_BUILD_RUN) $(DOCKER_FULL_MOUNT) $(DOCKER_BASH) "make clean"
 
 
 ################################################################################
@@ -825,17 +888,41 @@ build:
 
 cli: build-cli
 
-tgz: build-tgz
+tgz:
+ifneq (1,$(BUILD_WITH_DOCKER))
+	$(MAKE) build-tgz
+else
+	$(MAKE) tgz-with-docker
+endif
 
-rpm: build-rpm
+rpm:
+ifneq (1,$(BUILD_WITH_DOCKER))
+	$(MAKE) build-rpm
+else
+	$(MAKE) rpm-with-docker
+endif
 
-deb: build-deb
+deb:
+ifneq (1,$(BUILD_WITH_DOCKER))
+	$(MAKE) build-deb
+else
+	$(MAKE) deb-with-docker
+endif
 
-pkg: build
+pkg:
+ifneq (1,$(BUILD_WITH_DOCKER))
+	$(MAKE) build
 	$(MAKE) tgz rpm deb
+else
+	$(MAKE) pkg-with-docker
+endif
 
 pkg-clean:
+ifneq (1,$(BUILD_WITH_DOCKER))
 	rm -f $(PROG)*.tar.gz && rm -f *.rpm && rm -f *.deb
+else
+	$(MAKE) pkg-clean-with-docker
+endif
 
 test: $(GO_TEST)
 
@@ -844,7 +931,12 @@ test-debug:
 
 cover: codecov
 
-clean: $(GO_CLEAN) pkg-clean
+clean:
+ifneq (1,$(BUILD_WITH_DOCKER))
+	$(MAKE) $(GO_CLEAN) pkg-clean
+else
+	$(MAKE) clean-with-docker
+endif
 
 clobber: clean $(GO_CLOBBER)
 

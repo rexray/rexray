@@ -6,7 +6,7 @@ How to build REX-Ray
 
 ## Build Requirements
 This project has very few build requirements, but there are still one or two
-items of which to be aware. Also, please note that this are the requirements to
+items of which to be aware. Also, please note that these are the requirements to
 *build* REX-Ray, not run it.
 
 Requirement | Version

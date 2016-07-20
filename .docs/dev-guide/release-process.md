@@ -46,7 +46,7 @@ pull request being merged if `master` has changed since the pull request was
 opened.
 
 ## Prepare Release Notes
-Update the release notes at `.docs/about/release-notes.md`. This file is
+Update the release notes at `.docs/about/release-notes.md`. This file is the
 project's authoritative changelog and should reflect new features, fixes, and
 any significant changes.
 
@@ -112,7 +112,7 @@ type:
 Release Type | Tag Format | Example
 --------|---------|---------
 `staged`  | vMAJOR.MINOR.PATCH-rc[0-9] | v0.3.1-rc1
-`stable`  | vMAJOR.MINOR-PATCH | v0.3.1
+`stable`  | vMAJOR.MINOR.PATCH | v0.3.1
 
 ### Tag Methods
 There are two ways to tag a release:

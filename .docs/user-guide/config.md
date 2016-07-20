@@ -6,7 +6,7 @@ Tweak this, turn that, peek behind the curtain...
 
 ## Overview
 This page reviews how to configure REX-Ray to suit any environment, beginning
-with the the most common use cases, exploring recommended guidelines, and
+with the most common use cases, exploring recommended guidelines, and
 finally, delving into the details of more advanced settings.
 
 
@@ -69,7 +69,7 @@ volume creation, see [Hello REX-Ray](.././index.md#hello-rex-ray).
 #### Embedded Server Mode
 When operating as a stand-alone CLI, REX-Ray actually loads an embedded
 libStorage server for the duration of the CLI process and is accessible by
-only the the process that hosts it. This is known as _Embedded Server Mode_.
+only the process that hosts it. This is known as _Embedded Server Mode_.
 
 While commonly used when executing one-off commands with REX-Ray as a
 stand-alone CLI tool, Embedded Server Mode can be utilized when configuring
@@ -166,7 +166,7 @@ Volume Plug-in are available on the [Schedulers](./schedulers.md) page.
 
 #### libStorage Server and Client
 In addition to [Embedded Server Mode](#embedded-server-mode), REX-Ray can also
-expose the libStorage API statically. This enables REX-Ray to server and a
+expose the libStorage API statically. This enables REX-Ray to serve a
 libStorage server and perform only a storage abstraction role.
 
 If the desire is to establish a centralized REX-Ray server that is called

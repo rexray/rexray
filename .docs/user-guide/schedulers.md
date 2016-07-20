@@ -209,9 +209,9 @@ volumes:
 
 ### Mesos Containerizer with Marathon
 Mesos 0.23+ includes modules that enable extensibility for different
-portions the architecture. The [dvdcli](https://github.com/emccode/dvdcli) and
+portions of the architecture. The [dvdcli](https://github.com/emccode/dvdcli) and
 [mesos-module-dvdi](https://github.com/emccode/mesos-module-dvdi) projects are
-required for to enable external volume support with the native containerizer.
+required to enable external volume support with the native containerizer.
 
 The next example is similar to the one above, except in this instance the
 native containerizer is preferred and volume requests are handled by the

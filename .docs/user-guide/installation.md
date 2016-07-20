@@ -128,7 +128,7 @@ configuration management and orchestration tools.
 
 ### Ansible
 With Ansible, installing the latest REX-Ray binaries can be accomplished by
-including the `codenrhoden.rexray` role from Ansible Galaxy.  The role accepts
+including the `emccode.rexray` role from Ansible Galaxy.  The role accepts
 all the necessary variables to properly fill out your `config.yml` file.
 
 Install the role from Galaxy:

@@ -91,7 +91,7 @@
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/application/">Applications</a>
+                            <a href="../../user-guide/applications/">Applications</a>
                         </li>
                     
                     </ul>
@@ -127,7 +127,7 @@
                     
                     
                         <li >
-                            <a href="../../user-guide/application/">Applications</a>
+                            <a href="../../user-guide/applications/">Applications</a>
                         </li>
                     
                     
@@ -321,13 +321,13 @@ REX-Ray you can do so with the following command. This can be useful if you
 want to provide feedback for a new feature or want to confirm if a bug you
 have encountered is fixed in the git master. It is <strong>strongly</strong> recommended
 that you do this within a [virtualenv].</p>
-<pre><code class="bash">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s unstable
+<pre><code class="bash">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- unstable
 </code></pre>
 
 <h2 id="installing-for-development">Installing for Development</h2>
 <p>First you'll need to fork and clone the repository. Once you have a local
 copy, run the following command.</p>
-<pre><code class="bash">make install
+<pre><code class="bash">make deps &amp;&amp; make
 </code></pre>
 
 <p>This will install REX-Ray into your <code>GOPATH</code> and you'll be able to make changes
@@ -335,7 +335,7 @@ locally, test them, and commit ideas and fixes back to your fork of the
 repository.</p>
 <h2 id="running-the-tests">Running the tests</h2>
 <p>To run the tests, run the following commands:</p>
-<pre><code class="bash">make install test
+<pre><code class="bash">make test
 </code></pre>
 
 <p>The <code>make install</code> isn't strictly necessary, but it ensures that the tests are

@@ -91,7 +91,7 @@
                         </li>
                     
                         <li >
-                            <a href="../application/">Applications</a>
+                            <a href="../applications/">Applications</a>
                         </li>
                     
                     </ul>
@@ -127,7 +127,7 @@
                     
                     
                         <li >
-                            <a href="../application/">Applications</a>
+                            <a href="../applications/">Applications</a>
                         </li>
                     
                     
@@ -282,6 +282,12 @@
                 </li>
                 
                 <li><a href="#install-a-pre-built-binary">Install a pre-built binary</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#rex-ray-033">REX-Ray 0.3.3</a></li>
+                    
+                </ul>
                 -->
                 </li>
                 
@@ -330,15 +336,14 @@
 <p>Getting the bits, bit by bit</p>
 <hr />
 <h2 id="overview">Overview</h2>
-<p>There are several different methods available for installing <code>REX-Ray</code>. It
+<p>There are several different methods available for installing REX-Ray. It
 is written in Go, so there are typically no dependencies that must be installed
 alongside its single binary file. The manual methods can be extremely simple
 through tools like <code>curl</code>. You also have the opportunity to perform install
-steps individually. Following the manual installs, <a href="../../user-guide/config/">configuration</a>
+steps individually. Following the manual installs, <a href="../config/">configuration</a>
 must take place.</p>
-<p>We also provide some great automation examples using tools like <code>Ansible</code> and
-<code>Puppet</code>. These approaches will perform the whole process including configuring
-the REX-Ray for you.</p>
+<p>Great examples of automation tools, such as <code>Ansible</code> and <code>Puppet</code>, are also
+provided. These approaches automate the entire configuration process.</p>
 <h2 id="manual-installs">Manual Installs</h2>
 <p>Manual installations are in contrast to batch, automated installations.</p>
 <p>Make sure that before installing REX-Ray that you have uninstalled any previous
@@ -349,17 +354,28 @@ REX-Ray integrate with Container Engines such as Docker. This requires that
 you run <code>rexray start</code> or relevant service start command like
 <code>systemctl start rexray</code>.</p>
 <h3 id="install-via-curl">Install via curl</h3>
-<p>The following command will download the most recent, stable build of <code>REX-Ray</code>
+<p>The following command will download the most recent, stable build of REX-Ray
 and install it to <code>/usr/bin/rexray</code> or <code>/opt/bin/rexray</code>. On Linux systems
-<code>REX-Ray</code> will also be registered as either a SystemD or SystemV service.</p>
+REX-Ray will also be registered as either a SystemD or SystemV service.</p>
 <p>There is an optional flag to choose which version to install. Notice how we
 specify <code>stable</code>, see the additional version names below that are also valid.</p>
-<pre><code class="shell">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable
+<pre><code class="shell">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable
 </code></pre>
 
 <h3 id="install-a-pre-built-binary">Install a pre-built binary</h3>
 <p>There are a handful of necessary manual steps to properly install REX-Ray
 from pre-built binaries.</p>
+<h4 id="rex-ray-033">REX-Ray 0.3.3</h4>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>The initial REX-Ray 0.4.x release omits support for several,
+previously verified storage platforms. These providers will be
+reintroduced incrementally, beginning with 0.4.1. If an absent driver
+prevents the use of REX-Ray, please continue to use 0.3.3 until such time
+the storage platform is introduced in REX-Ray 0.4.x. The following command
+can be used to explicitly install REX-Ray 0.3.3:</p>
+<p><code>curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.3.3</code></p>
+</div>
 <ol>
 <li>
 <p>Download the proper binary. There are also pre-built binaries available for
@@ -395,28 +411,43 @@ should be where REX-Ray is moved, but this path is not required.</p>
 with SystemD or SystemV for proper initialization.</li>
 </ol>
 <h3 id="build-and-install-from-source">Build and install from source</h3>
-<p><code>REX-Ray</code> is also fairly simple to build from source, especially if you have
-<code>Docker</code> installed:</p>
-<pre><code class="shell">SRC=$(mktemp -d 2&gt; /dev/null || mktemp -d -t rexray 2&gt; /dev/null) &amp;&amp; cd $SRC &amp;&amp; docker run --rm -it -e GO15VENDOREXPERIMENT=1 -v $SRC:/usr/src/rexray -w /usr/src/rexray golang:1.5.1 bash -c &quot;git clone https://github.com/emccode/rexray.git -b master . &amp;&amp; make build-all”
-</code></pre>
-
-<p>If you'd prefer to not use <code>Docker</code> to build <code>REX-Ray</code> then all you need is Go 1.5:</p>
-<pre><code class="shell"># clone the rexray repo
-git clone https://github.com/emccode/rexray.git
+<p>It is also easy to build REX-Ray from source.</p>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>REX-Ray requires at least Go 1.6.0. The REX-Ray developers use Go 1.6.2,
+and that is what REX-Ray's Travis-CI build uses as well. The build
+reference for REX-Ray is available in the
+<a href="../../dev-guide/build-reference/">Developer's Guide</a>.</p>
+</div>
+<pre><code class="sh"># go get the rexray repo using the -d flag to enable &quot;download only&quot; mode
+go get -d github.com/emccode/rexray
 
 # change directories into the freshly-cloned repo
-cd rexray
+cd $GOPATH/src/github.com/emccode/rexray
 
-# build rexray
-make build-all
+# get and build REX-Ray's dependencies and then build and install REX-Ray
+make deps &amp;&amp; make
 </code></pre>
 
-<p>After either of the above methods for building <code>REX-Ray</code> there should be a <code>.bin</code> directory in the current directory, and inside <code>.bin</code> will be binaries for Linux-i386, Linux-x86-64,
-and Darwin-x86-64.</p>
-<pre><code class="shell">[0]akutz@poppy:tmp.SJxsykQwp7$ ls .bin/*/rexray
--rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Darwin-x86_64/rexray*
--rwxr-xr-x. 1 root 12M Sep 17 10:36 .bin/Linux-i386/rexray*
--rwxr-xr-x. 1 root 14M Sep 17 10:36 .bin/Linux-x86_64/rexray*
+<p>Once REX-Ray is built and installed it will be available at
+<code>$GOPATH/bin/rexray</code>:</p>
+<pre><code class="sh">$ $GOPATH/bin/rexray version
+REX-Ray
+-------
+Binary: /home/akutz/go/bin/rexray
+SemVer: 0.4.0-rc4+10+dirty
+OsArch: Linux-x86_64
+Branch: release/0.4.0-rc4
+Commit: 063a0794ac19af439c3ab5a01f2e6f5a4f4f85ae
+Formed: Tue, 14 Jun 2016 14:23:15 CDT
+
+libStorage
+----------
+SemVer: 0.1.3
+OsArch: Linux-x86_64
+Branch: v0.1.3
+Commit: 182a626937677a081b89651598ee2eac839308e7
+Formed: Tue, 14 Jun 2016 14:21:25 CDT
 </code></pre>
 
 <h2 id="automated-installs">Automated Installs</h2>
@@ -431,7 +462,7 @@ configuration management and orchestration tools.</p>
 including the <code>codenrhoden.rexray</code> role from Ansible Galaxy.  The role accepts
 all the necessary variables to properly fill out your <code>config.yml</code> file.</p>
 <p>Install the role from Galaxy:</p>
-<pre><code class="shell">ansible-galaxy install emccode.rexray
+<pre><code class="sh">$ ansible-galaxy install emccode.rexray
 </code></pre>
 
 <p>Example playbook for installing REX-Ray on GCE Docker hosts:</p>
@@ -444,7 +475,7 @@ all the necessary variables to properly fill out your <code>config.yml</code> fi
 </code></pre>
 
 <p>Run the playbook:</p>
-<pre><code class="shell">ansible-playbook -i &lt;inventory&gt; playbook.yml
+<pre><code class="sh">$ ansible-playbook -i &lt;inventory&gt; playbook.yml
 </code></pre>
 
 <h3 id="aws-cloudformation">AWS CloudFormation</h3>
@@ -499,7 +530,7 @@ drivers.</p>
 <li>
 <p>SSH into the Docker machine and install REX-Ray.</p>
 <pre><code>$ docker-machine ssh testing1 \
-"curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -"
+"curl -sSL https://dl.bintray.com/emccode/rexray/install | sh"
 </code></pre>
 </li>
 <li>
@@ -516,22 +547,19 @@ drivers.</p>
 local path VirtualBox uses to store its virtual media disk files.</p>
 <pre><code>$ docker-machine ssh testing1 \
     "sudo tee -a /etc/rexray/config.yml &lt;&lt; EOF
-    rexray:
-      storageDrivers:
-      - virtualbox
-      volume:
-        mount:
-          preempt: false
+    libstorage:
+      integration:
+        volume:
+          operations:
+            mount:
+              preempt: false
     virtualbox:
-      endpoint: http://10.0.2.2:18083
-      tls: false
-      volumePath: /Users/YourUser/VirtualBox Volumes
-      controllerName: SATA
+      volumePath: $HOME/VirtualBox/Volumes
     "
 </code></pre>
 </li>
 <li>
-<p>Finally, start the <code>REX-Ray</code> service inside the Docker machine.</p>
+<p>Finally, start the REX-Ray service inside the Docker machine.</p>
 <pre><code>$ docker-machine ssh testing1 "sudo rexray start"
 </code></pre>
 </li>
@@ -560,7 +588,7 @@ local path VirtualBox uses to store its virtual media disk files.</p>
 </code></pre>
 
 <h3 id="vagrant">Vagrant</h3>
-<p>Using Vagrant is a great option to deploy pre-configured <code>REX-Ray</code> nodes,
+<p>Using Vagrant is a great option to deploy pre-configured REX-Ray nodes,
 including Docker, using the VirtualBox driver. All volume requests are handled
 using VirtualBox's Virtual Media.</p>
 <p>A Vagrant environment and instructions using it are provided

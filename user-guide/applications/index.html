@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/user-guide/application/">
+        <link rel="canonical" href="https://github.com/emccode/rexray/user-guide/applications/">
         <link rel="shortcut icon" href="../../favicon.png">
         
 
@@ -292,32 +292,32 @@
 <h2 id="getting-started">Getting Started</h2>
 <p>This tutorial will serve as a generic guide for taking Docker images found on
 <a href="http://hub.docker.com">Docker Hub</a> and utilizing persistent external storage
-via <code>REX-Ray</code>.  This should provide guidance for certain applications, but also
+via REX-Ray. This should provide guidance for certain applications, but also
 generically so you can add persistence properly to other applications.</p>
 <h2 id="instructions">Instructions</h2>
 <p>The following are a set of instructions for investigating an existing container
 image to determine how to properly apply persistence.</p>
 <p>The first step is to determine which application you are looking to deploy, then
-proceed to its <a href="http://hub.docker.com">Docker Hub</a> page.  In this example, we
-will be using <a href="https://hub.docker.com/_/postgres/">PostgreSQL on Docker Hub</a>.  </p>
+proceed to its <a href="http://hub.docker.com">Docker Hub</a> page. In this example, we
+will be using <a href="https://hub.docker.com/_/postgres/">PostgreSQL on Docker Hub</a>.</p>
 <p>Most application vendors will post their Dockerfile on the main page for that
 given image. Many of them will also make them available by version minimally via
 a download or via Github. Continuing with our PostgreSQL example, we will use
 the <a href="https://github.com/docker-library/postgres/blob/ed23320582f4ec5b0e5e35c99d98966dacbc6ed8/9.3/Dockerfile">Dockerfile for version 9.3</a>
 since it happens to be the default version provided with Ubuntu 14.04.</p>
 <p>Properly written Dockerfiles will include the proper information that separates
-persistent information from the container image and deployed container.  This is
+persistent information from the container image and deployed container. This is
 visible when the author of the <code>Dockerfile</code> includes a <code>VOLUME</code> statement to
 define where stateful information should be held.</p>
 <p>Open the <code>Dockerfile</code> and do a search for <code>VOLUME</code> and take note of the
-volumes that will be created for this image. Then we can use <code>REX-Ray</code> or
+volumes that will be created for this image. Then we can use REX-Ray or
 <code>Docker</code> to create the external persistent volume for this image. In the
 PostgreSQL 9.3 example, there is a single volume in the Dockerfile:</p>
 <pre><code>VOLUME /var/lib/postgresql/data
 </code></pre>
 
 <p>The single path or paths listed refer to the volumes that should be attached
-when running the container.  Following this you can create a volume and attach
+when running the container. Following this you can create a volume and attach
 it to a container with the <code>-v</code> flag.</p>
 <ul>
 <li><a href="https://hub.docker.com/_/postgres/">PostgreSQL</a>  </li>

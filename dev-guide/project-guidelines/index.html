@@ -91,7 +91,7 @@
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/application/">Applications</a>
+                            <a href="../../user-guide/applications/">Applications</a>
                         </li>
                     
                     </ul>
@@ -127,7 +127,7 @@
                     
                     
                         <li >
-                            <a href="../../user-guide/application/">Applications</a>
+                            <a href="../../user-guide/applications/">Applications</a>
                         </li>
                     
                     
@@ -235,7 +235,7 @@
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li >
-                    <a rel="next" href="../../user-guide/application/">
+                    <a rel="next" href="../../user-guide/applications/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
@@ -269,6 +269,22 @@
     
         <li class="main active"><a href="#project-guidelines">Project Guidelines</a></li>
         
+            <li><a href="#documentation">Documentation</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#source-code">Source Code</a><!--
+                -->
+                </li>
+                
+                <li><a href="#markdown">Markdown</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
+        
             <li><a href="#style-syntax">Style &amp; Syntax</a>
             
             </li>
@@ -295,6 +311,33 @@
 <hr />
 <p>People contributing code to this project must adhere to the following rules.
 These standards are in place to keep code clean, consistent, and stable.</p>
+<h2 id="documentation">Documentation</h2>
+<p>There are two types of documentation: source and markdown.</p>
+<h3 id="source-code">Source Code</h3>
+<p>All source code should be documented in accordance with the
+<a href="http://blog.golang.org/godoc-documenting-go-code">Go's documentation rules</a>.</p>
+<h3 id="markdown">Markdown</h3>
+<p>When creating or modifying the project's <code>README.md</code> file or any of the
+documentation in the <code>.docs</code> directory, please keep the following rules in
+mind:</p>
+<ol>
+<li>All links to internal resources should be relative.</li>
+<li>All links to markdown files should include the file extension.</li>
+</ol>
+<p>For example, the below link points to the anchor <code>basic-configuration</code> on the
+<code>Configuration</code> page:</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="../../user-guide/config#basic-configuration">/user-guide/config#basic-configuration</a></p>
+<p>However, when the above link is followed when viewing this page directly from
+the Github repository instead of the generated site documentation, the link
+will return a 404.</p>
+<p>While it's recommended that users view the generated site documentation instead
+of the source Markdown directly, we can still fix it so that the above link
+will work regardless. To fix the link, simply make it relative and add the
+Markdown file extension:</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="../../user-guide/config/#basic-configuration">../user-guide/config.md#basic-configuration</a></p>
+<p>Now the link will work regardless from where it's viewed.</p>
 <h2 id="style-syntax">Style &amp; Syntax</h2>
 <p>All source files should be processed by the following tools prior to being
 committed. Any errors or warnings produced by the tools should be corrected

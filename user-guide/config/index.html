@@ -91,7 +91,7 @@
                         </li>
                     
                         <li >
-                            <a href="../application/">Applications</a>
+                            <a href="../applications/">Applications</a>
                         </li>
                     
                     </ul>
@@ -127,7 +127,7 @@
                     
                     
                         <li >
-                            <a href="../application/">Applications</a>
+                            <a href="../applications/">Applications</a>
                         </li>
                     
                     
@@ -277,17 +277,31 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#example-sans-modules">Example sans Modules</a><!--
-                -->
-                </li>
-                
-                <li><a href="#example-with-modules">Example with Modules</a><!--
+                <li><a href="#stand-alone-cli-mode">Stand-alone CLI Mode</a><!--
                 
                 <ul class="nav nav-stacked">
                     
-                    <li><a href="#defining-modules">Defining Modules</a></li>
+                    <li><a href="#embedded-server-mode">Embedded Server Mode</a></li>
                     
-                    <li><a href="#modules-and-inherited-properties">Modules and Inherited Properties</a></li>
+                    <li><a href="#auto-service-mode">Auto Service Mode</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                <li><a href="#service-mode">Service Mode</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#docker-volume-plug-in">Docker Volume Plug-in</a></li>
+                    
+                    <li><a href="#libstorage-server-and-client">libStorage Server and Client</a></li>
+                    
+                    <li><a href="#libstorage-server">libStorage Server</a></li>
+                    
+                    <li><a href="#libstorage-client">libStorage Client</a></li>
+                    
+                    <li><a href="#example-sans-modules">Example sans Modules</a></li>
                     
                 </ul>
                 -->
@@ -309,6 +323,34 @@
             
                 <ul class="nav nav-stacked">
                 
+                <li><a href="#example-with-modules">Example with Modules</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#defining-modules">Defining Modules</a></li>
+                    
+                    <li><a href="#modules-and-inherited-properties">Modules and Inherited Properties</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                <li><a href="#defining-service-endpoints">Defining Service Endpoints</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#defining-a-libstorage-server">Defining a libStorage Server</a></li>
+                    
+                    <li><a href="#defining-a-libstorage-client">Defining a libStorage Client</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                <li><a href="#libstorage-configuration">libStorage Configuration</a><!--
+                -->
+                </li>
+                
                 <li><a href="#data-directories">Data Directories</a><!--
                 -->
                 </li>
@@ -322,68 +364,10 @@
                 </li>
                 
                 <li><a href="#configuration-properties">Configuration Properties</a><!--
-                
-                <ul class="nav nav-stacked">
-                    
-                    <li><a href="#string-arrays">String Arrays</a></li>
-                    
-                </ul>
                 -->
                 </li>
                 
                 <li><a href="#logging-configuration">Logging Configuration</a><!--
-                -->
-                </li>
-                
-                <li><a href="#driver-configuration">Driver Configuration</a><!--
-                
-                <ul class="nav nav-stacked">
-                    
-                    <li><a href="#os-drivers">OS Drivers</a></li>
-                    
-                    <li><a href="#storage-drivers">Storage Drivers</a></li>
-                    
-                    <li><a href="#volume-drivers">Volume Drivers</a></li>
-                    
-                </ul>
-                -->
-                </li>
-                
-                <li><a href="#module-configuration">Module Configuration</a><!--
-                
-                <ul class="nav nav-stacked">
-                    
-                    <li><a href="#default-modules">Default Modules</a></li>
-                    
-                    <li><a href="#additional-modules">Additional Modules</a></li>
-                    
-                    <li><a href="#inferred-properties">Inferred Properties</a></li>
-                    
-                    <li><a href="#overriding-defaults">Overriding Defaults</a></li>
-                    
-                    <li><a href="#overriding-inherited-properties">Overriding Inherited Properties</a></li>
-                    
-                    <li><a href="#disabling-modules">Disabling Modules</a></li>
-                    
-                </ul>
-                -->
-                </li>
-                
-                <li><a href="#volume-configuration">Volume Configuration</a><!--
-                
-                <ul class="nav nav-stacked">
-                    
-                    <li><a href="#preemption">Preemption</a></li>
-                    
-                    <li><a href="#ignore-used-count">Ignore Used Count</a></li>
-                    
-                    <li><a href="#volume-path-disable-cache-032">Volume Path Disable Cache (0.3.2)</a></li>
-                    
-                    <li><a href="#volume-root-path-031">Volume Root Path (0.3.1)</a></li>
-                    
-                    <li><a href="#volume-filemode-031">Volume FileMode (0.3.1)</a></li>
-                    
-                </ul>
                 -->
                 </li>
                 
@@ -400,100 +384,386 @@
 <p>Tweak this, turn that, peek behind the curtain...</p>
 <hr />
 <h2 id="overview">Overview</h2>
-<p>This page reviews how to configure <code>REX-Ray</code> to suit any environment, beginning
+<p>This page reviews how to configure REX-Ray to suit any environment, beginning
 with the the most common use cases, exploring recommended guidelines, and
 finally, delving into the details of more advanced settings.</p>
 <h2 id="basic-configuration">Basic Configuration</h2>
-<p>This section outlines the most common configuration scenarios encountered by
-<code>REX-Ray</code>'s users.</p>
-<p>A typical configuration occurs by creating the file <code>/etc/rexray/config.yml</code>.
-This is the global settings file for <code>REX-Ray</code>, and is used whether the
-program is used as a command line interface (CLI) application or started as a
-background service. Please see the <a href="../../user-guide/config#advanced-configuration">advanced section</a>
-for more information and options regarding configuration.</p>
-<h3 id="example-sans-modules">Example sans Modules</h3>
-<p>The following example is a YAML configuration for the VirtualBox driver.</p>
-<pre><code>rexray:
-  logLevel: warn
-  storageDrivers:
-  - virtualbox
-docker:
-  size: 1
+<p>This section outlines the two most common configuration scenarios encountered
+by REX-Ray's users:</p>
+<ol>
+<li>REX-Ray as a stand-alone CLI tool</li>
+<li>REX-Ray as a service</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>Please remember to replace the placeholders in the following examples
+with values valid for the systems on which the examples are executed.</p>
+<p>The example below specifies the <code>volumePath</code> property as
+<code>$HOME/VirtualBox/Volumes</code>. While the text <code>$HOME</code> will be replaced with
+the actual value for that environment variable at runtime, the path may
+still be invalid. The <code>volumePath</code> property should reflect a path on the
+system on which the VirtualBox server is running, and that is not always
+the same system on which the <code>libStorage</code> server is running.</p>
+<p>So please, make sure to update the <code>volumePath</code> property for the VirtualBox
+driver to a path valid on the system on which the VirtualBox server is
+running.</p>
+<p>The same goes for VirtualBox property <code>endpoint</code> as the VirtualBox
+web service is not always available at <code>10.0.2.2:18083</code>.</p>
+</div>
+<h3 id="stand-alone-cli-mode">Stand-alone CLI Mode</h3>
+<p>It is possible to use REX-Ray directly from the command line without any
+configuration files. The following example uses REX-Ray to list the storage
+volumes available to a Linux VM hosted by VirtualBox:</p>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>The examples below assume that the VirtualBox web server is running on the
+host OS with authentication disabled and accessible to the guest OS. For
+more information please refer to the VirtualBox storage driver
+<a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox">documentation</a>.</p>
+</div>
+<pre><code class="sh">$ rexray volume --service virtualbox
+- attachments:
+  - instanceID:
+      id: e71578b0-1bfb-4fa5-bcd5-4ae982fd4a9b
+      driver: virtualbox
+    status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
+    volumeID: 1b819454-a280-4cff-aff5-141f4e8fd154
+  name: libStorage.vmdk
+  size: 64
+  status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
+  id: 1b819454-a280-4cff-aff5-141f4e8fd154
+  type: &quot;&quot;
+</code></pre>
+
+<p>In addition to listing volumes, the REX-Ray CLI can be used to create and
+remove them as well as manage volume snapshots. For an end-to-end example of
+volume creation, see <a href="../..#hello-rex-ray">Hello REX-Ray</a>.</p>
+<h4 id="embedded-server-mode">Embedded Server Mode</h4>
+<p>When operating as a stand-alone CLI, REX-Ray actually loads an embedded
+libStorage server for the duration of the CLI process and is accessible by
+only the the process that hosts it. This is known as <em>Embedded Server Mode</em>.</p>
+<p>While commonly used when executing one-off commands with REX-Ray as a
+stand-alone CLI tool, Embedded Server Mode can be utilized when configuring
+REX-Ray to advertise a static libStorage server as well. The following
+qualifications must be met for Embedded Server Mode to be activated:</p>
+<ul>
+<li>
+<p>The property <code>libstorage.host</code> must not be defined via configuration file,
+   environment variable, or CLI flag</p>
+</li>
+<li>
+<p>If the <code>libstorage.host</code> property <em>is</em> defined then the property
+   <code>libstorage.embedded</code> can be set to <code>true</code> to explicitly activate
+   Embedded Server Mode.</p>
+</li>
+<li>
+<p>If the <code>libstorage.host</code> property is set and <code>libtorage.embedded</code> is
+   set to true, Embedded Server Mode will still only activate if the address
+   specified by <code>libstorage.host</code> (whether a UNIX socket or TCP port) is
+   not currently in use.</p>
+</li>
+</ul>
+<h4 id="auto-service-mode">Auto Service Mode</h4>
+<p>The Stand-alone CLI Mode <a href="#stand-alone-cli-mode">example</a> also uses the
+<code>--service</code> flag. This flag's argument sets the <code>libstorage.service</code> property,
+which has a special meaning inside of REX-Ray -- it serves to enabled
+<em>Auto Service Mode</em>.</p>
+<p>Services represent unique libStorage endpoints that are available to libStorage
+clients. Each service is associated with a storage driver. Thus
+Auto Service Mode minimizes configuration for simple environments.</p>
+<p>The value of the <code>libstorage.service</code> property is used to create a default
+service configured with a storage driver. This special mode is only activated
+if all of the following conditions are met:</p>
+<ul>
+<li>The <code>libstorage.service</code> property is set via:<ul>
+<li>The CLI flags <code>-s|--service</code> or <code>--libstorageService</code></li>
+<li>The environment variable <code>LIBSTORAGE_SERVICE</code></li>
+<li>The configuration file property <code>libstorage.service</code></li>
+</ul>
+</li>
+<li>The <code>libstorage.host</code> property is <em>not</em> set. This property can be set via:<ul>
+<li>The CLI flags <code>-h|--host</code> or <code>--libstorageHost</code></li>
+<li>The environment variable <code>LIBSTORAGE_HOST</code></li>
+<li>The configuration file property <code>libstorage.host</code></li>
+</ul>
+</li>
+<li>The configuration property <code>libstorage.server.services</code> must <em>not</em> be set.
+    This property is only configurable via a configuration file.</li>
+</ul>
+<p>Because the above example met the auto service mode conditions, REX-Ray
+created a service named <code>virtualbox</code> configured to use the <code>virtualbox</code> driver.
+This service runs on the libStorage server embedded inside of REX-Ray and is
+accessible only by the executing CLI process for the duration of said process.
+When used in this manner, the service name must also be a valid driver name.</p>
+<h3 id="service-mode">Service Mode</h3>
+<p>REX-Ray can also run as a persistent service that advertises both
+<a href="https://docs.docker.com/engine/extend/plugins_volume/">Docker Volume Plug-in</a>
+and <a href="http://libstorage.readthedocs.io/en/stable/">libStorage</a> endpoints.</p>
+<h4 id="docker-volume-plug-in">Docker Volume Plug-in</h4>
+<p>This section refers to the only operational mode that REX-Ray supported in
+versions 0.3.3 and prior. A UNIX socket is created by REX-Ray that serves as a
+Docker Volume Plugin compliant API endpoint. Docker is able to leverage this
+endpoint to deliver on-demand, persistent storage to containers.</p>
+<p>The following is a simple example of a configuration file that should be
+located at <code>/etc/rexray/config.yml</code>. This file can be used to configure the
+same options that were specified in the previous CLI example. Please see the
+<a href="./#advanced-configuration">advanced section</a> for a complete list of
+configuration options.</p>
+<pre><code class="yaml">libstorage:
+  service: virtualbox
 virtualbox:
-  endpoint:       http://10.0.2.2:18083
-  tls:            false
-  volumePath:     $HOME/Repos/vagrant/rexray/Volumes
-  controllerName: SATA
+  volumePath: $HOME/VirtualBox/Volumes
+</code></pre>
+
+<p>Once the configuration file is in place, <code>rexray service start</code> can be used to
+start the service. Sometimes it is also useful to add <code>-l debug</code> to enable
+more verbose logging. Additionally, it's also occasionally beneficial to
+start the service in the foreground with the <code>-f</code> flag.</p>
+<pre><code class="sh">$ rexray start
+
+Starting REX-Ray...SUCCESS!
+
+  The REX-Ray daemon is now running at PID 15724. To
+  shutdown the daemon execute the following command:
+
+    sudo /usr/bin/rexray stop
+</code></pre>
+
+<p>At this point requests can now be made to the default Docker Volume Plugin
+and Volume Driver advertised by the UNIX socket <code>rexray</code> at
+<code>/run/docker/plugins/rexray.sock</code>. More details on configuring the Docker
+Volume Plug-in are available on the <a href="../schedulers/">Schedulers</a> page.</p>
+<h4 id="libstorage-server-and-client">libStorage Server and Client</h4>
+<p>In addition to <a href="#embedded-server-mode">Embedded Server Mode</a>, REX-Ray can also
+expose the libStorage API statically. This enables REX-Ray to server and a
+libStorage server and perform only a storage abstraction role.</p>
+<p>If the desire is to establish a centralized REX-Ray server that is called
+on from remote REX-Ray instances then the following example will be useful.
+The first configuration is for running REX-Ray purely as a libStorage server.
+The second defines how one would would use one or more REX-Ray instances in a
+libStorage client role.</p>
+<p>The following examples require multiple systems in order to fulfill these
+different roles. The <a href="../..#hello-rex-ray">Hello REX-Ray</a> section on
+the front page has an end-to-end illustration of this use case that leverages
+Vagrant to provide and configure the necessary systems.</p>
+<h4 id="libstorage-server">libStorage Server</h4>
+<p>The example below illustrates the necessary settings for configuring REX-Ray
+as a libStorage server:</p>
+<pre><code class="yaml">rexray:
+  modules:
+    default-docker:
+      disabled: true
+libstorage:
+  host: tcp://127.0.0.1:7979
+  embedded: true
+  client:
+    type: controller
+  server:
+    endpoints:
+      public:
+        address: tcp://:7979
+    services:
+      virtualbox:
+        driver: virtualbox
+virtualbox:
+  volumePath: $HOME/VirtualBox/Volumes
+</code></pre>
+
+<p>In the above sample, the default Docker module is disabled. This means that
+while the REX-Ray service would be running, it would not be available to
+Docker on that host.</p>
+<p>The <code>libstorage</code> section defines the settings that configure the libStorage
+server:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>libstorage.host</code></td>
+<td>Instructs local clients which libStorage endpoint to access</td>
+</tr>
+<tr>
+<td><code>libstorage.embedded</code></td>
+<td>Indicates the libStorage server should be started even though the <code>libstorage.host</code> property is defined</td>
+</tr>
+<tr>
+<td><code>libstorage.client.type</code></td>
+<td>When set to <code>controller</code> this property indicates local clients perform no integration activities</td>
+</tr>
+<tr>
+<td><code>libstorage.server.endpoints</code></td>
+<td>The available libStorage server HTTP endpoints</td>
+</tr>
+<tr>
+<td><code>libstorage.server.services</code></td>
+<td>The configured libStorage services</td>
+</tr>
+</tbody>
+</table>
+<p>Start the REX-Ray service with <code>rexray service start</code>.</p>
+<h4 id="libstorage-client">libStorage Client</h4>
+<p>On a separate OS instance running REX-Ray, the follow command can be used to
+list the instance's available VirtualBox storage volumes:</p>
+<pre><code class="sh">$ rexray volume -h tcp://REXRAY_SERVER:7979 -s virtualbox
+</code></pre>
+
+<p>An alternative to the above CLI flags is to add them as persistent settings
+to the <code>/etc/rexray/config.yml</code> configuration file on this instance:</p>
+<pre><code class="yaml">libstorage:
+  host:    tcp://REXRAY_SERVER:7979
+  service: virtualbox
+</code></pre>
+
+<p>Now the above command can be simplified further:</p>
+<pre><code class="sh">$ rexray volume
+</code></pre>
+
+<p>Once more, the REX-Ray service can be started with <code>rexray service start</code> and
+the REX-Ray Docker Volume Plug-in endpoint will utilize the remote libStorage
+server as its method for communicating with VirtualBox.</p>
+<p>Again, a complete end-to-end Vagrant environment for the above example is
+available at <a href="../..#hello-rex-ray">Hello REX-Ray</a>.</p>
+<h4 id="example-sans-modules">Example sans Modules</h4>
+<p>Lets review the major sections of the configuration file:</p>
+<pre><code class="yaml">rexray:
+  logLevel: warn
+libstorage:
+  service: virtualbox
+  integration:
+    volume:
+      operations:
+        create:
+          default:
+            size: 1
+virtualbox:
+  volumePath: $HOME/VirtualBox/Volumes
 </code></pre>
 
 <p>Settings occur in three primary areas:</p>
 <ol>
 <li><code>rexray</code></li>
-<li><code>docker</code></li>
+<li><code>libstorage</code></li>
 <li><code>virtualbox</code></li>
 </ol>
-<p>The <code>rexray</code> section contains all properties specific to <code>REX-Ray</code>. The
-YAML property path <code>rexray.storageDrivers</code> lists the names of the storage
-drivers loaded by <code>REX-Ray</code>. In this case, only the <code>virtualbox</code> storage
-driver is loaded. All of the <code>rexray</code> properties are
+<p>The <code>rexray</code> section contains all properties specific to REX-Ray. The
+YAML property path <code>rexray.logLevel</code> defines the log level for REX-Ray and its
+child components. All of the <code>rexray</code> properties are
 <a href="#configuration-properties">documented</a> below.</p>
-<p>The <code>docker</code> section defines properties specific to Docker. The property
-<code>docker.size</code> defines in gigabytes the default size for a new Docker volume.
-The complete list of properties for the <code>docker</code> section are described on the
-<a href="../../user-guide/schedulers#docker">Schedulers page</a>.</p>
-<p>Finally, the <code>virtualbox</code> section configures the VirtualBox driver loaded by
-<code>REX-Ray</code>, as indicated via the <code>rexray.storageDrivers</code> property). The
-Storage Drivers page has information about the configuration details of
-<a href="../../user-guide/storage-providers">each driver</a>, including
-<a href="../../user-guide/storage-providers#virtualbox">VirtualBox</a>.</p>
+<p>Next, the <code>libstorage</code> section defines the service with which REX-Ray will
+communicate via the property <code>libstorage.service</code>. This property also enables
+the <a href="#auto-service-mode">Auto Service Mode</a> discussed above since this
+configuration example does not define a host or services section. For all
+information related to libStorage and its properties, please refer to the
+<a href="http://libstorage.readthedocs.io/">libStorage documentation</a>.</p>
+<p>Finally, the <code>virtualbox</code> section configures the VirtualBox driver selected
+or loaded by REX-Ray, as indicated via the <code>libstorage.service</code> property. The
+libStorage Storage Drivers page has information about the configuration details
+of <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers">each driver</a>,
+including <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox">VirtualBox</a>.</p>
+<h3 id="logging">Logging</h3>
+<p>The <code>-l|--logLevel</code> option or <code>rexray.logLevel</code> configuration key can be set
+to any of the following values to increase or decrease the verbosity of the
+information logged to the console or the REX-Ray log file (defaults to
+<code>/var/log/rexray/rexray.log</code>).</p>
+<ul>
+<li>panic</li>
+<li>fatal</li>
+<li>error</li>
+<li>warn</li>
+<li>info</li>
+<li>debug</li>
+</ul>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<p>The command <code>rexray env</code> can be used to print out the runtime interpretation
+of the environment, including configured properties, in order to help diagnose
+configuration issues.</p>
+<pre><code>$ rexray env | grep DEFAULT | sort -r
+REXRAY_MODULES_DEFAULT-DOCKER_TYPE=docker
+REXRAY_MODULES_DEFAULT-DOCKER_SPEC=/etc/docker/plugins/rexray.spec
+REXRAY_MODULES_DEFAULT-DOCKER_LIBSTORAGE_SERVICE=vfs
+REXRAY_MODULES_DEFAULT-DOCKER_HOST=unix:///run/docker/plugins/rexray.sock
+REXRAY_MODULES_DEFAULT-DOCKER_DISABLED=false
+REXRAY_MODULES_DEFAULT-DOCKER_DESC=The default docker module.
+REXRAY_MODULES_DEFAULT-ADMIN_TYPE=admin
+REXRAY_MODULES_DEFAULT-ADMIN_HOST=unix:///var/run/rexray/server.sock
+REXRAY_MODULES_DEFAULT-ADMIN_DISABLED=false
+REXRAY_MODULES_DEFAULT-ADMIN_DESC=The default admin module.
+LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_CREATE_DEFAULT_TYPE=
+LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_CREATE_DEFAULT_SIZE=16
+LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_CREATE_DEFAULT_IOPS=
+LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_CREATE_DEFAULT_FSTYPE=ext4
+LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_CREATE_DEFAULT_AVAILABILITYZONE=
+</code></pre>
+
+<h2 id="advanced-configuration">Advanced Configuration</h2>
+<p>The following sections detail every last aspect of how REX-Ray works and can
+be configured.</p>
 <h3 id="example-with-modules">Example with Modules</h3>
-<p>Modules enable a single <code>REX-Ray</code> instance to present multiple personalities or
+<p>Modules enable a single REX-Ray instance to present multiple personalities or
 volume endpoints, serving hosts that require access to multiple storage
 platforms.</p>
 <h4 id="defining-modules">Defining Modules</h4>
 <p>The following example demonstrates a basic configuration that presents two
-modules using the VirtualBox driver.</p>
-<pre><code>rexray:
+modules using the VirtualBox driver: <code>default-docker</code> and <code>vb2-module</code>.</p>
+<pre><code class="yaml">rexray:
   logLevel: warn
-  storageDrivers:
-  - virtualbox
   modules:
     default-docker:
       type: docker
-      desc: &quot;The default docker module.&quot;
-      host: &quot;unix:///run/docker/plugins/vb1.sock&quot;
-      docker:
-        size: 1
+      desc: The default docker module.
+      host: unix:///run/docker/plugins/vb1.sock
+      libstorage:
+        service: virtualbox
+        integration:
+          volume:
+            operations:
+              create:
+                default:
+                  size: 1
       virtualbox:
-        endpoint:      http://10.0.2.2:18083
-        tls:           false
-        volumePath:    &quot;$HOME/Repos/vagrant/rexray/Volumes&quot;
-        controllerName: SATA
+        volumePath: $HOME/VirtualBox/Volumes
     vb2-module:
       type: docker
-      desc: &quot;The second docker module.&quot;
-      host: &quot;unix:///run/docker/plugins/vb2.sock&quot;
-      docker:
-        size: 1
+      desc: The second docker module.
+      host: unix:///run/docker/plugins/vb2.sock
+      libstorage:
+        service: virtualbox
+        integration:
+          volume:
+            operations:
+              create:
+                default:
+                  size: 1
       virtualbox:
-        endpoint:      http://10.0.2.2:18083
-        tls:           false
-        volumePath:    &quot;$HOME/Repos/vagrant/rexray/Volumes&quot;
-        controllerName: SATA
+        volumePath: $HOME/VirtualBox/Volumes
+libstorage:
+  service: virtualbox
 </code></pre>
 
-<p>Like the previous example that did not use modules, this example begins by
-defining the root section <code>rexray</code>. Unlike the previous example, the <code>docker</code>
-and  <code>virtualbox</code> sections are no longer at the root. Instead the section
-<code>rexray.modules</code> is defined. The <code>modules</code> key in the <code>rexray</code> section is
-where all modules are configured. Each key that is a child of <code>modules</code>
-represents the name of a module.</p>
+<p>Whereas the previous example did not use modules and the example above does,
+they both begin by defining the root section <code>rexray</code>. Unlike the previous
+example, however, the majority of the <code>libstorage</code> section and all of the
+<code>virtualbox</code> section are no longer at the root. Instead the section
+<code>rexray.modules</code> is defined. The <code>modules</code> key in the <code>rexray</code> section is where
+all modules are configured. Each key that is a child of <code>modules</code> represents the
+name of a module.</p>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>Please note that while most of the <code>libstorage</code> section has been relocated
+as a child of each module, the <code>libstorage.service</code> property is still
+defined at the root to activate <a href="#auto-service-mode">Auto Service Mode</a> as
+a quick-start method of property configuring the embedded libStorage server.</p>
+</div>
 <p>The above example defines two modules:</p>
 <ol>
 <li>
 <p><code>default-module</code></p>
 <p>This is a special module, and it's always defined, even if not explicitly
-listed. In the previous example without modules, the <code>docker</code> and
+listed. In the previous example without modules, the <code>libstorage</code> and
 <code>virtualbox</code> sections at the root actually informed the configuration of
 the implicit <code>default-docker</code> module. In this example the explicit
 declaration of the <code>default-docker</code> module enables several of its
@@ -509,36 +779,38 @@ by the module's <code>host</code> key.</p>
 </li>
 </ol>
 <p>Notice that both modules share many of the same properties and values. In fact,
-when defining both modules, the top-level <code>docker</code> and <code>virtualbox</code> sections
+when defining both modules, the top-level <code>libstorage</code> and <code>virtualbox</code> sections
 were simply copied into each module as sub-sections. This is perfectly valid
-as any configuration path that begins from the root of the <code>REX-Ray</code>
+as any configuration path that begins from the root of the REX-Ray
 configuration file can be duplicated beginning as a child of a module
 definition. This allows global settings to be overridden just for a specific
 modules.</p>
 <p>As noted, each module shares identical values with the exception of the module's
 name and host. The host is the address used by Docker to communicate with
-<code>REX-Ray</code>. The base name of the socket file specified in the address can be
+REX-Ray. The base name of the socket file specified in the address can be
 used with <code>docker --volume-driver=</code>. With the current example the value of the
 <code>--volume-driver</code> parameter would be either <code>vb1</code> of <code>vb2</code>.</p>
 <h4 id="modules-and-inherited-properties">Modules and Inherited Properties</h4>
 <p>There is also another way to write the previous example while reducing the
 number of repeated, identical properties shared by two modules.</p>
-<pre><code>rexray:
+<pre><code class="yaml">rexray:
   logLevel: warn
-  storageDrivers:
-  - virtualbox
   modules:
     default-docker:
-      host: &quot;unix:///run/docker/plugins/vb1.sock&quot;
-      docker:
-        size: 1
+      host: unix:///run/docker/plugins/vb1.sock
+      libstorage:
+        integration:
+          volume:
+            operations:
+              create:
+                default:
+                  size: 1
     vb2:
       type: docker
+libstorage:
+  service: virtualbox
 virtualbox:
-  endpoint:      http://10.0.2.2:18083
-  tls:           false
-  volumePath:    &quot;$HOME/Repos/vagrant/rexray/Volumes&quot;
-  controllerName: SATA
+  volumePath: $HOME/VirtualBox/Volumes
 </code></pre>
 
 <p>The above example may look strikingly different than the previous one, but it's
@@ -554,47 +826,157 @@ removed and now only a single, global <code>virtualbox</code> section is present
 root. When accessing properties, a module will first attempt to access a
 property defined in the context of the module, but if that fails the property
 lookup will resolve against globally defined keys as well.</p>
-<p>Finally, please also note that the <code>docker</code> section has <strong>not</strong> been promoted
-back to a global property set, and is in fact still located in the context of
-the <code>default-docker</code> module. This means that create volume requests sent to the
-<code>default-docker</code> module will result in 1GB volumes by default whereas create
-volume requests handled by the <code>vb2</code> module will result in 16GB volumes (since
-16GB is the default value for the <code>docker.size</code> property).</p>
-<h3 id="logging">Logging</h3>
-<p>The <code>-l|--logLevel</code> option or <code>rexray.logLevel</code> configuration key can be set
-to any of the following values to increase or decrease the verbosity of the
-information logged to the console or the <code>REX-Ray</code> log file (defaults to
-<code>/var/log/rexray/rexray.log</code>).</p>
-<ul>
-<li>panic</li>
-<li>fatal</li>
-<li>error</li>
-<li>warn</li>
-<li>info</li>
-<li>debug</li>
-</ul>
-<h3 id="troubleshooting">Troubleshooting</h3>
-<p>The command <code>rexray env</code> can be used to print out the runtime interpretation
-of the environment, including configured properties, in order to help diagnose
-configuration issues.</p>
-<pre><code>$ rexray env | grep DEFAULT-DOCKER
-REXRAY_MODULES_DEFAULT-DOCKER_TYPE=docker
-REXRAY_MODULES_DEFAULT-DOCKER_DISABLED=false
-REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_CONTROLLERNAME=SATA
-REXRAY_MODULES_DEFAULT-DOCKER_DESC=The default docker module.
-REXRAY_MODULES_DEFAULT-DOCKER_HOST=unix:///run/docker/plugins/vb1.sock
-REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_ENDPOINT=http://10.0.2.2:18083
-REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_VOLUMEPATH=$HOME/Repos/vagrant/rexray/Volumes
-REXRAY_MODULES_DEFAULT-DOCKER_DOCKER_SIZE=1
-REXRAY_MODULES_DEFAULT-DOCKER_SPEC=/etc/docker/plugins/rexray.spec
-REXRAY_MODULES_DEFAULT-DOCKER_VIRTUALBOX_TLS=false
+<p>Finally, the <code>libstorage</code> section has been completely removed from the <code>vb2</code>
+module whereas it still remains in the <code>default-docker</code> section. Volume
+creation requests without an explicit size value sent to the <code>default-docker</code>
+module will result in 1GB volumes whereas the same request sent to the <code>vb2</code>
+module will result in 16GB volumes (since 16GB is the default value for the
+<code>libstorage.integration.volume.operations.create.default.size</code> property).</p>
+<h3 id="defining-service-endpoints">Defining Service Endpoints</h3>
+<p>Multiple libStorage services can be defined in order to leverage several
+different combinations of storage provider drivers and their respective
+configurations. The following section illustrates how to define two separate
+services, one using the ScaleIO driver and one using VirtualBox:</p>
+<pre><code class="yaml">rexray:
+  modules:
+    default-docker:
+      host:     unix:///run/docker/plugins/virtualbox.sock
+      spec:     /etc/docker/plugins/virtualbox.spec
+      libstorage:
+        service: virtualbox
+    scaleio-docker:
+      type:     docker
+      host:     unix:///run/docker/plugins/scaleio.sock
+      spec:     /etc/docker/plugins/scaleio.spec
+      libstorage:
+        service: scaleio
+libstorage:
+  server:
+    services:
+      scaleio:
+        driver: scaleio
+      virtualbox:
+        driver: virtualbox
+scaleio:
+  endpoint:             https://SCALEIO_GATEWAY/api
+  insecure:             true
+  userName:             SCALEIO_USER
+  password:             SCALEIO_PASS
+  systemName:           SCALEIO_SYSTEM_NAME
+  protectionDomainName: SCALEIO_DOMAIN_NAME
+  storagePoolName:      SCALEIO_STORAG_NAME
+virtualbox:
+  volumePath: $HOME/VirtualBox/Volumes
 </code></pre>
 
-<h2 id="advanced-configuration">Advanced Configuration</h2>
-<p>The following sections detail every last aspect of how <code>REX-Ray</code> works and can
-be configured.</p>
+<p>Once the services have been defined, it is then up to the modules to specify
+which service to use. Notice how the <code>default-docker</code> module specifies
+the <code>virtualbox</code> service as its <code>libstorage.service</code>. Any requests to the
+Docker Volume Plug-in endpoint <code>/run/docker/plugins/virtualbox.sock</code> will
+utilize the libStorage service <code>virtualbox</code> on the backend.</p>
+<h4 id="defining-a-libstorage-server">Defining a libStorage Server</h4>
+<p>The following example is very similar to the previous one, but in this instance
+there is a centralized REX-Ray server which services requests from many
+REX-Ray clients.</p>
+<pre><code class="yaml">rexray:
+  modules:
+    default-docker:
+      disabled: true
+libstorage:
+  host:     tcp://127.0.0.1:7979
+  embedded: true
+  client:
+    type: controller
+  server:
+    endpoints:
+      public:
+        address: tcp://:7979
+    services:
+      scaleio:
+        driver: scaleio
+      virtualbox:
+        driver: virtualbox
+scaleio:
+  endpoint:             https://SCALEIO_GATEWAY/api
+  insecure:             true
+  userName:             SCALEIO_USER
+  password:             SCALEIO_PASS
+  systemName:           SCALEIO_SYSTEM_NAME
+  protectionDomainName: SCALEIO_DOMAIN_NAME
+  storagePoolName:      SCALEIO_STORAG_NAME
+virtualbox:
+  volumePath: $HOME/VirtualBox/Volumes
+</code></pre>
+
+<p>One of the larger differences between the above example and the previous one is
+the removal of the module definitions. Docker does not communicate with the
+central REX-Ray server directly; instead Docker interacts with the REX-Ray
+services running on the clients via their Docker Volume Endpoints. The client
+REX-Ray instances then send all storage-related requests to the central REX-Ray
+server.</p>
+<p>Additionally, the above sample configuration introduces a few new properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>libstorage.host</code></td>
+<td>Instructs local clients which libStorage endpoint to access</td>
+</tr>
+<tr>
+<td><code>libstorage.embedded</code></td>
+<td>Indicates the libStorage server should be started even though the <code>libstorage.host</code> property is defined</td>
+</tr>
+<tr>
+<td><code>libstorage.client.type</code></td>
+<td>When set to <code>controller</code> this property indicates local clients perform no integration activities</td>
+</tr>
+<tr>
+<td><code>libstorage.server.endpoints</code></td>
+<td>The available libStorage server HTTP endpoints</td>
+</tr>
+</tbody>
+</table>
+<h4 id="defining-a-libstorage-client">Defining a libStorage Client</h4>
+<p>The client configuration is still rather simple. As mentioned in the previous
+section, the <code>rexray.modules</code> configuration occurs here. This enables the Docker
+engines running on remote instances to communicate with local REX-Ray exposed
+Docker Volume endpoints that then handle the storage-related requests via the
+centralized REX-Ray server.</p>
+<pre><code class="yaml">rexray:
+  modules:
+    default-docker:
+      host:     unix:///run/docker/plugins/virtualbox.sock
+      spec:     /etc/docker/plugins/virtualbox.spec
+      libstorage:
+        service: virtualbox
+    scaleio-docker:
+      type:     docker
+      host:     unix:///run/docker/plugins/scaleio.sock
+      spec:     /etc/docker/plugins/scaleio.spec
+      libstorage:
+        service: scaleio
+libstorage:
+  host: tcp://REXRAY_SERVER:7979
+</code></pre>
+
+<h3 id="libstorage-configuration">libStorage Configuration</h3>
+<p>REX-Ray embeds both the libStorage client as well as the libStorage server. For
+information on configuring the following, please refer to the
+<a href="http://libstorage.readthedocs.io/en/stable">libStorage documentation</a>:</p>
+<ul>
+<li><a href="http://libstorage.readthedocs.io/en/stable/user-guide/config/#volume-configuration">Volume options</a>
+   such as preemption, disabling operations, etc.</li>
+<li>Fine-tuning <a href="http://libstorage.readthedocs.io/en/stable/user-guide/config/#logging-configuration">logging</a></li>
+<li><a href="http://libstorage.readthedocs.io/en/stable/user-guide/config/#driver-configuration">Configuring</a>
+   OS, integration, and storage drivers</li>
+</ul>
 <h3 id="data-directories">Data Directories</h3>
-<p>The first time <code>REX-Ray</code> is executed it will create several directories if
+<p>The first time REX-Ray is executed it will create several directories if
 they do not already exist:</p>
 <ul>
 <li><code>/etc/rexray</code></li>
@@ -605,9 +987,9 @@ they do not already exist:</p>
 <p>The above directories will contain configuration files, logs, PID files, and
 mounted volumes. However, the location of these directories can also be
 influenced with the environment variable <code>REXRAY_HOME</code>.</p>
-<p><code>REXRAY_HOME</code> can be used to define a custom home directory for <code>REX-Ray</code>.
-This directory is irrespective of the actual <code>REX-Ray</code> binary. Instead, the
-directory specified in <code>REXRAY_HOME</code> is the root directory where the <code>REX-Ray</code>
+<p><code>REXRAY_HOME</code> can be used to define a custom home directory for REX-Ray.
+This directory is irrespective of the actual REX-Ray binary. Instead, the
+directory specified in <code>REXRAY_HOME</code> is the root directory where the REX-Ray
 binary expects all of the program's data directories to be located.</p>
 <p>For example, the following command sets a custom value for <code>REXRAY_HOME</code> and
 then gets a volume list:</p>
@@ -627,7 +1009,7 @@ a file located inside of <code>/etc/rexray</code>, but it should be noted that i
 <code>REXRAY_HOME</code> is set the location of the global configuration file can be
 changed.</p>
 <h3 id="configuration-methods">Configuration Methods</h3>
-<p>There are three ways to configure <code>REX-Ray</code>:</p>
+<p>There are three ways to configure REX-Ray:</p>
 <ul>
 <li>Command line options</li>
 <li>Environment variables</li>
@@ -638,14 +1020,14 @@ options set in multiple locations that may override one another. Values set
 via CLI flags have the highest order of precedence, followed by values set by
 environment variables, followed, finally, by values set in configuration files.</p>
 <h3 id="configuration-files">Configuration Files</h3>
-<p>There are two <code>REX-Ray</code> configuration files - global and user:</p>
+<p>There are two REX-Ray configuration files - global and user:</p>
 <ul>
 <li><code>/etc/rexray/config.yml</code></li>
 <li><code>$HOME/.rexray/config.yml</code></li>
 </ul>
 <p>Please note that while the user configuration file is located inside the user's
-home directory, this is the directory of the user that starts <code>REX-Ray</code>. And
-if <code>REX-Ray</code> is being started as a service, then <code>sudo</code> is likely being used,
+home directory, this is the directory of the user that starts REX-Ray. And
+if REX-Ray is being started as a service, then <code>sudo</code> is likely being used,
 which means that <code>$HOME/.rexray/config.yml</code> won't point to <em>your</em> home
 directory, but rather <code>/root/.rexray/config.yml</code>.</p>
 <p>The next section has an example configuration with the default configuration.</p>
@@ -655,26 +1037,22 @@ three ways to configure REX-Ray: config files, environment variables, and the
 command line. However, this section will illuminate the relationship between the
 names of the configuration file properties, environment variables, and CLI
 flags.</p>
-<p>These are the global configuration properties with their default values as
-represented in a a YAML configuration file:</p>
+<p>Here is a sample REX-Ray configuration:</p>
 <pre><code class="yaml">rexray:
-    logLevel: warn
-    osDrivers:
-    - linux
-    storageDrivers:
-    volumeDrivers:
-    - docker
+  logLevel: warn
+libstorage:
+  service: virtualbox
+virtualbox:
+  volumePath: $HOME/VirtualBox/Volumes
 </code></pre>
 
-<p>The property <code>rexray.logLevel</code> is a string and the properties
-<code>rexray.osDrivers</code>, <code>rexray.storageDrivers</code>, and <code>rexray.volumeDrivers</code> are all
-arrays of strings. These values can also be set via environment variables or the
-command line, but to do so requires knowing the names of the environment
-variables or CLI flags to use. Luckily those are very easy to figure out just
-by knowing the property names.</p>
-<p>All properties that might appear in the <code>REX-Ray</code> configuration file
-fall under some type of heading. For example, take the default configuration
-above.</p>
+<p>The properties <code>rexray.logLevel</code>, <code>libstorage.service</code>, and
+<code>virtualbox.volumePath</code> are strings. These values can also be set via
+environment variables or command line interface (CLI) flags, but to do so
+requires knowing the names of the environment variables or CLI flags to use.
+Luckily those are very easy to figure out just by knowing the property names.</p>
+<p>All properties that might appear in the REX-Ray configuration file
+fall under some type of heading. For example, take the configuration above:</p>
 <p>The rule for environment variables is as follows:</p>
 <ul>
 <li>Each nested level becomes a part of the environment variable name followed
@@ -707,76 +1085,19 @@ above.</p>
 <td><code>--logLevel</code></td>
 </tr>
 <tr>
-<td><code>rexray.osDrivers</code></td>
-<td><code>REXRAY_OSDRIVERS</code></td>
-<td><code>--osDrivers</code></td>
+<td><code>libstorage.service</code></td>
+<td><code>LIBSTORAGE_SERVICE</code></td>
+<td><code>--libstorageService</code></td>
 </tr>
 <tr>
-<td><code>rexray.storageDrivers</code></td>
-<td><code>REXRAY_STORAGEDRIVERS</code></td>
-<td><code>--storageDrivers</code></td>
-</tr>
-<tr>
-<td><code>rexray.volumeDrivers</code></td>
-<td><code>REXRAY_VOLUMEDRIVERS</code></td>
-<td><code>--volumeDrivers</code></td>
+<td><code>virtualbox.volumePath</code></td>
+<td><code>VIRTUALBOX_VOLUMEPATH</code></td>
+<td><code>--virtualboxVolumePath</code></td>
 </tr>
 </tbody>
 </table>
-<p>Another example is a possible configuration of the Amazon Web Services (AWS)
-Elastic Compute Cloud (EC2) storage driver:</p>
-<pre><code class="yaml">aws:
-    accessKey: MyAccessKey
-    secretKey: MySecretKey
-    region:    USNW
-</code></pre>
-
-<table>
-<thead>
-<tr>
-<th>Property Name</th>
-<th>Environment Variable</th>
-<th>CLI Flag</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>aws.accessKey</code></td>
-<td><code>AWS_ACCESSKEY</code></td>
-<td><code>--awsAccessKey</code></td>
-</tr>
-<tr>
-<td><code>aws.secretKey</code></td>
-<td><code>AWS_SECRETKEY</code></td>
-<td><code>--awsSecretKey</code></td>
-</tr>
-<tr>
-<td><code>aws.region</code></td>
-<td><code>AWS_REGION</code></td>
-<td><code>--awsRegion</code></td>
-</tr>
-</tbody>
-</table>
-<h4 id="string-arrays">String Arrays</h4>
-<p>Please note that properties that are represented as arrays in a configuration
-file, such as the <code>rexray.osDrivers</code>, <code>rexray.storageDrivers</code>, and
-<code>rexray.volumeDrivers</code> above, are not arrays, but multi-valued strings where a
-space acts as a delimiter. This is because the Viper project
-<a href="https://github.com/spf13/viper/issues/112">does not bind</a> Go StringSlices
-(string arrays) correctly to <a href="https://github.com/spf13/pflag">PFlags</a>.</p>
-<p>For example, this is how one would specify the storage drivers <code>ec2</code> and
-<code>xtremio</code> in a configuration file:</p>
-<pre><code class="yaml">rexray:
-    storageDrivers:
-    - ec2
-    - xtremio
-</code></pre>
-
-<p>However, to specify the same values in an environment variable,
-<code>REXRAY_STORAGEDRIVERS="ec2 xtremio"</code>, and as a CLI flag,
-<code>--storageDrivers="ec2 xtremio"</code>.</p>
 <h3 id="logging-configuration">Logging Configuration</h3>
-<p>The <code>REX-Ray</code> log level determines the level of verbosity emitted by the
+<p>The REX-Ray log level determines the level of verbosity emitted by the
 internal logger. The default level is <code>warn</code>, but there are three other levels
 as well:</p>
 <table>
@@ -809,438 +1130,11 @@ as well:</p>
 are functionally the same, both printing a list of volumes using the <code>debug</code>
 log level:</p>
 <p><em>Use the <code>debug</code> log level - Example 1</em></p>
-<pre><code class="bash">rexray volume get -l debug
+<pre><code class="bash">rexray volume -l debug
 </code></pre>
 
 <p><em>Use the <code>debug</code> log level - Example 2</em></p>
-<pre><code class="bash">env REXRAY_LOGLEVEL=debug rexray volume get
-</code></pre>
-
-<h3 id="driver-configuration">Driver Configuration</h3>
-<p>There are three types of drivers:</p>
-<ol>
-<li>OS Drivers</li>
-<li>Storage Drivers</li>
-<li>Volume Drivers</li>
-</ol>
-<h4 id="os-drivers">OS Drivers</h4>
-<p>Operating system (OS) drivers enable <code>REX-Ray</code> to manage storage on
-the underlying OS. Currently the following OS drivers are supported:</p>
-<table>
-<thead>
-<tr>
-<th>Driver</th>
-<th>Driver Name</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Linux</td>
-<td>linux</td>
-</tr>
-</tbody>
-</table>
-<p>The OS driver <code>linux</code> is automatically activated when <code>REX-Ray</code> is running on
-the Linux OS.</p>
-<h4 id="storage-drivers">Storage Drivers</h4>
-<p>Storage drivers enable <code>REX-Ray</code> to communicate with direct-attached or remote
-storage systems. Currently the following storage drivers are supported:</p>
-<table>
-<thead>
-<tr>
-<th>Driver</th>
-<th>Driver Name</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="../../user-guide/storage-providers#amazon-ec2">Amazon EC2</a></td>
-<td>ec2</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#google-compute-engine">Google Compute Engine</a></td>
-<td>gce</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#isilon">Isilon</a></td>
-<td>isilon</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#openstack">OpenStack</a></td>
-<td>openstack</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#rackspace">Rackspace</a></td>
-<td>rackspace</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#scaleio">ScaleIO</a></td>
-<td>scaleio</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#virtualbox">VirtualBox</a></td>
-<td>virtualbox</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#vmax">VMAX</a></td>
-<td>vmax</td>
-</tr>
-<tr>
-<td><a href="../../user-guide/storage-providers#xtremio">XtremIO</a></td>
-<td>xtremio</td>
-</tr>
-</tbody>
-</table>
-<p>The <code>rexray.storageDrivers</code> property can be used to activate storage drivers..</p>
-<h4 id="volume-drivers">Volume Drivers</h4>
-<p>Volume drivers enable <code>REX-Ray</code> to manage volumes for consumers of the storage,
-such as <code>Docker</code> or <code>Mesos</code>. Currently the following volume drivers are
-supported:</p>
-<table>
-<thead>
-<tr>
-<th>Driver</th>
-<th>Driver Name</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Docker</td>
-<td>docker</td>
-</tr>
-</tbody>
-</table>
-<p>The volume driver <code>docker</code> is automatically activated.</p>
-<h3 id="module-configuration">Module Configuration</h3>
-<p>This section reviews exposing multiple, differently configured endpoints by
-using modules.</p>
-<h4 id="default-modules">Default Modules</h4>
-<p>If not explicitly specified in a configuration source, <code>REX-Ray</code> always
-considers the following, default modules:</p>
-<pre><code class="yaml">rexray:
-    modules:
-        default-admin:
-            type:     admin
-            desc:     The default admin module.
-            host:     tcp://127.0.0.1:7979
-            disabled: false
-        default-docker:
-            type:     docker
-            desc:     The default docker module.
-            host:     unix:///run/docker/plugins/rexray.sock
-            spec:     /etc/docker/plugins/rexray.spec
-            disabled: false
-</code></pre>
-
-<p>The first module, <code>default-admin</code>, is used by the CLI to communicate with the
-REX-Ray service API. For security reasons the <code>default-admin</code> module is bound
-to the loopback IP address by default.</p>
-<p>The second default module, <code>default-docker</code>, exposes <code>REX-Ray</code> as a Docker
-Volume Plug-in via the specified sock and spec files.</p>
-<h4 id="additional-modules">Additional Modules</h4>
-<p>It's also possible to create additional modules via the configuration file:</p>
-<pre><code class="yaml">rexray:
-    storageDrivers:
-    - isilon
-    modules:
-        isilon2:
-            type: docker
-            desc: A second docker module.
-            host: unix:///run/docker/plugins/isilon2.sock
-            spec: /etc/docker/plugins/isilon2.spec
-isilon:
-    endpoint:   https://172.17.177.230:8080
-    insecure:   true
-    username:   root
-    password:   P@ssword1!
-    volumePath: /rexray/default
-    nfsHost:    172.17.177.230
-    quotas:     true
-    dataSubnet: 172.17.177.0/24
-</code></pre>
-
-<p>The above example defines three modules:</p>
-<ol>
-<li><code>default-admin</code></li>
-<li><code>default-docker</code></li>
-<li><code>isilon2</code></li>
-</ol>
-<p>The first two, default modules are not included in the configuration file as
-they are implicit. The only reason to define them explicitly is to override
-their properties, a feature discussed in the next section.</p>
-<p>Ignoring the <code>default-admin</code> module, the <code>default-docker</code> and <code>isilon2</code> modules
-are both Docker modules as indicated by a module's <code>type</code> property. Just like
-the <code>default-docker</code> module, the custom module <code>isilon2</code> is configured to use
-the default isilon settings from the root key, <code>isilon</code>. Therefore the modules
-<code>default-docker</code> and <code>isilon2</code> are configured exactly the same except for they
-are exposed via different sock and spec files.</p>
-<h4 id="inferred-properties">Inferred Properties</h4>
-<p>The following example is nearly identical to the previous one except this
-example is missing the <code>host</code>, <code>spec</code>, <code>desc</code>, and <code>disabled</code> properties for
-the <code>isilon2</code> module:</p>
-<pre><code class="yaml">rexray:
-    storageDrivers:
-    - isilon
-    modules:
-        isilon2:
-            type: docker
-            desc: A second docker module.
-isilon:
-    endpoint:   https://172.17.177.230:8080
-    insecure:   true
-    username:   root
-    password:   P@ssword1!
-    volumePath: /rexray/default
-    nfsHost:    172.17.177.230
-    quotas:     true
-    dataSubnet: 172.17.177.0/24
-</code></pre>
-
-<p>A module is not required to provide a description (<code>desc</code>), and <code>disabled</code> will
-always default to <code>false</code> unless explicitly specified as <code>true</code>. Docker modules
-(<code>type: docker</code>) will also infer the values of the <code>host</code> and <code>spec</code>
-properties if they are not explicitly provided. Because the name of the
-module above is <code>isilon2</code> and the <code>host</code> and <code>spec</code> properties are not defined,
-those values will be automatically set to
-<code>unix:///run/docker/plugins/isilon2.sock</code> and <code>/etc/docker/plugins/isilon2.spec</code>
-respectively.</p>
-<h4 id="overriding-defaults">Overriding Defaults</h4>
-<p>It is also possible to override a default module's configuration. What if it's
-determined the <code>default-admin</code> module should be accessible externally and the
-<code>default-docker</code> module should use a different sock file? Simply override those
-keys and only those keys:</p>
-<pre><code class="yaml">rexray:
-    storageDrivers:
-    - isilon
-    modules:
-        default-admin:
-            host: tcp://:7979
-        default-docker:
-            host: unix:///run/docker/plugins/isilon1.sock
-isilon:
-    endpoint:   https://172.17.177.230:8080
-    insecure:   true
-    username:   root
-    password:   P@ssword1!
-    volumePath: /rexray/default
-    nfsHost:    172.17.177.230
-    quotas:     true
-    dataSubnet: 172.17.177.0/24
-</code></pre>
-
-<h4 id="overriding-inherited-properties">Overriding Inherited Properties</h4>
-<p>In all of the module configuration examples so far there has been a root key
-named <code>isilon</code> that provides the settings for the storage driver used by the
-modules. Thanks to scoped configuration support and inherited properties, it's
-also quite simple to provide adjustments to a default configuration at the
-module level. For example, imagine the <code>isilon2</code> module should load a driver
-that points to a different <code>volumePath</code>?</p>
-<pre><code class="yaml">rexray:
-    storageDrivers:
-    - isilon
-    modules:
-        isilon2:
-            type:       docker
-            isilon:
-                volumePath: /rexray/isilon2
-isilon:
-    endpoint:   https://172.17.177.230:8080
-    insecure:   true
-    username:   root
-    password:   P@ssword1!
-    volumePath: /rexray/default
-    nfsHost:    172.17.177.230
-    quotas:     true
-    dataSubnet: 172.17.177.0/24
-</code></pre>
-
-<p>The above example will load two Docker modules, the <code>default-docker</code> module and
-the <code>isilon2</code> module. The <code>default-docker</code> module's <code>isilon.volumePath</code> will be
-set to <code>/rexray/default</code> whereas the <code>isilon2</code> module's <code>isilon.volumePath</code> is
-overridden and set to <code>/rexray/isilon2</code>.</p>
-<p>Any key path structure can be duplicated under the module's name, and the value
-at the terminus of that path will be used in place of any inherited value.
-Another example is overriding the type of storage driver used by the <code>isilon2</code>
-module. There may be a case where the <code>isilon2</code> module needs to use an
-enhanced version of the <code>isilon</code> storage driver but still use the same
-configuration:</p>
-<pre><code class="yaml">rexray:
-    storageDrivers:
-    - isilon
-    modules:
-        isilon2:
-            type:       docker
-            rexray:
-                storageDrivers:
-                - isilonEnhanced
-isilon:
-    endpoint:   https://172.17.177.230:8080
-    insecure:   true
-    username:   root
-    password:   P@ssword1!
-    volumePath: /rexray/default
-    nfsHost:    172.17.177.230
-    quotas:     true
-    dataSubnet: 172.17.177.0/24
-</code></pre>
-
-<p>The above example recreates the key path structure <code>rexray.storageDrivers</code>
-beneath the key path structure <code>rexray.modules.isilon2</code>. Whenever any query is
-made for <code>rexray.storageDrivers</code> inside the <code>isilon2</code> module, the value
-<code>[]string{"isilonEnhanced"}</code> is returned instead of <code>[]string{"isilon"}</code>.</p>
-<h4 id="disabling-modules">Disabling Modules</h4>
-<p>Both default and custom modules can be disabled by setting the key <code>disabled</code> to
-true inside a module definition:</p>
-<pre><code class="yaml">rexray:
-    storageDrivers:
-    - isilon
-    modules:
-        default-docker:
-            disabled: true
-        isilon2:
-            type:     docker
-        isilon3:
-            type:     docker
-            disabled: true
-isilon:
-    endpoint:   https://172.17.177.230:8080
-    insecure:   true
-    username:   root
-    password:   P@ssword1!
-    volumePath: /rexray/default
-    nfsHost:    172.17.177.230
-    quotas:     true
-    dataSubnet: 172.17.177.0/24
-</code></pre>
-
-<p>The above example disables the <code>default-docker</code> and <code>isilon3</code> modules such that
-<code>isilon2</code> is the only Docker module loaded.</p>
-<h3 id="volume-configuration">Volume Configuration</h3>
-<p>This section describes various global configuration options related to
-operations such as mounting and unmounting volumes.</p>
-<h4 id="preemption">Preemption</h4>
-<p>There is a capability to preemptively detach any existing attachments to other
-instances before attempting a mount.  This will enable use cases for
-availability where another instance must be able to take control of a volume
-without the current owner instance being involved.  The operation is considered
-equivalent to a power off of the existing instance for the device.</p>
-<p>Example configuration file follows:</p>
-<pre><code class="yaml">rexray:
-  storageDrivers:
-  - openstack
-  volume:
-    mount:
-      preempt: true
-openStack:
-  authUrl: https://authUrl:35357/v2.0/
-  username: username
-  password: password
-  tenantName: tenantName
-  regionName: regionName
-</code></pre>
-
-<table>
-<thead>
-<tr>
-<th>Driver</th>
-<th>Supported</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>EC2</td>
-<td>Yes, no Ubuntu support</td>
-</tr>
-<tr>
-<td>Isilon</td>
-<td>Not yet</td>
-</tr>
-<tr>
-<td>OpenStack</td>
-<td>With Cinder v2</td>
-</tr>
-<tr>
-<td>ScaleIO</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>Rackspace</td>
-<td>No</td>
-</tr>
-<tr>
-<td>VirtualBox</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>VMAX</td>
-<td>Not yet</td>
-</tr>
-<tr>
-<td>XtremIO</td>
-<td>Yes</td>
-</tr>
-</tbody>
-</table>
-<h4 id="ignore-used-count">Ignore Used Count</h4>
-<p>By default accounting takes place during operations that are performed
-on <code>Mount</code>, <code>Unmount</code>, and other operations.  This only has impact when running
-as a service through the HTTP/JSON interface since the counts are persisted
-in memory.  The purpose of respecting the <code>Used Count</code> is to ensure that a
-volume is not unmounted until the unmount requests have equaled the mount
-requests.  </p>
-<p>In the <code>Docker</code> use case if there are multiple containers sharing a volume
-on the same host, the the volume will not be unmounted until the last container
-is stopped.  </p>
-<p>The following setting should only be used if you wish to <em>disable</em> this
-functionality.  This would make sense if the accounting is being done from
-higher layers and all unmount operations should proceed without control.</p>
-<pre><code class="yaml">rexray:
-  volume:
-    unmount:
-      ignoreUsedCount: true
-</code></pre>
-
-<p>Currently a reset of the service will cause the counts to be reset.  This
-will cause issues if <em>multiple containers</em> are sharing a volume.  If you are
-sharing volumes, it is recommended that you reset the service along with the
-accompanying container runtime (if this setting is false) to ensure they are
-synchronized.  </p>
-<h4 id="volume-path-disable-cache-032">Volume Path Disable Cache (0.3.2)</h4>
-<p>In order to minimize the impact to return <code>Path</code> requests, a caching
-capability has been introduced by default. A <code>List</code> request will cause the
-returned volumes and paths to be evaluated and those with active mounts are
-recorded. Subsequent <code>Path</code> requests for volumes that have no recorded mounts
-will not result in active path lookups. Once the mount counter is initialized or
-a <code>List</code> operation occurs where a mount is recorded, the volume will be looked
-up for future <code>Path</code> operations.</p>
-<pre><code class="yaml">rexray:
-  volume:
-    path:
-      disableCache: true
-</code></pre>
-
-<h4 id="volume-root-path-031">Volume Root Path (0.3.1)</h4>
-<p>When volumes are mounted there can be an additional path that is specified to
-be created and passed as the valid mount point.  This is required for certain
-applications that do not want to place data from the root of a mount point.<br />
-The default is the <code>/data</code> path.  If a value is set by <code>linux.volume.rootPath</code>,
-then the default will be overwritten.</p>
-<p>If upgrading to 0.3.1 then you can either set this to an empty value, or move
-the internal directory in your existing volumes to <code>/data</code>.</p>
-<pre><code class="yaml">rexray:
-linux:
-  volume:
-    rootPath: /data
-</code></pre>
-
-<h4 id="volume-filemode-031">Volume FileMode (0.3.1)</h4>
-<p>The permissions of the <code>linux.volume.rootPath</code> can be set to default values.  At
-each mount, the permissions will be written based on this value.  The default
-is to include the <code>0700</code> mode.</p>
-<pre><code class="yaml">rexray:
-linux:
-  volume:
-    fileMode: 0700
+<pre><code class="bash">env REXRAY_LOGLEVEL=debug rexray volume
 </code></pre></div>
         </div>
 

@@ -8,6 +8,7 @@ type NewRequestObjFunc func() interface{}
 type VolumeCreateRequest struct {
 	Name             string                 `json:"name"`
 	AvailabilityZone *string                `json:"availabilityZone,omitempty"`
+	Encrypted        *bool                  `json:"encrypted,omitempty"`
 	IOPS             *int64                 `json:"iops,omitempty"`
 	Size             *int64                 `json:"size,omitempty"`
 	Type             *string                `json:"type,omitempty"`

@@ -307,6 +307,7 @@ func (r *router) volumeCreate(
 				IOPS:             store.GetInt64Ptr("iops"),
 				Size:             store.GetInt64Ptr("size"),
 				Type:             store.GetStringPtr("type"),
+				Encrypted:        store.GetBoolPtr("encrypted"),
 				Opts:             store,
 			})
 

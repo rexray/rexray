@@ -304,3 +304,98 @@ libstorage:
 - Snapshot and create volume from volume functionality is not available yet
   with this driver.
 - The driver supports VirtualBox 5.0.10+
+
+## AWS EFS
+The AWS EFS driver registers a storage driver named `efs` with the
+`libStorage` driver manager and is used to connect and manage AWS Elastic File
+Systems.
+
+### Requirements
+
+* AWS account
+* VPC - EFS can be accessed within VPC
+* AWS Credentials
+
+### Configuration
+The following is an example with all possible fields configured.  For a running
+example see the `Examples` section.
+
+```yaml
+efs:
+  accessKey:      XXXXXXXXXX
+  secretKey:      XXXXXXXXXX
+  securityGroups: sg-XXXXXXX,sg-XXXXXX0,sg-XXXXXX1
+  region:         us-east-1
+  tag:            test
+```
+
+#### Configuration Notes
+- The `accessKey` and `secretKey` configuration parameters are optional and should
+be used when explicit AWS credentials configuration needs to be provided. EFS driver
+uses official golang AWS SDK library and supports all other ways of providing
+access credentials, like environment variables or instance profile IAM permissions.
+- `region` represents AWS region where should be EFS provisioned. See official AWS
+documentation for list of supported regions.
+- `securityGroups` list of security groups attached to `MountPoint` instances.
+If no security groups are provided the default VPC security group is used.
+- `tag` is used to partition multiple services within single AWS account and is
+used as prefix for EFS names in format `[tagprefix]/volumeName`.
+
+For information on the equivalent environment variable and CLI flag names
+please see the section on how non top-level configuration properties are
+[transformed](./config.md#configuration-properties).
+
+### Runtime Behavior
+
+AWS EFS storage driver creates one EFS FileSystem per volume and provides root
+of the filesystem as NFS mount point. Volumes aren't attached to instances
+directly but rather exposed to each subnet by creating `MountPoint` in each VPC
+subnet. When detaching volume from instance no action is taken as there isn't
+good way to figure out if there are other instances in same subnet using
+`MountPoint` that is being detached. There is no charge for `MountPoint`
+so they are removed only once whole volume is deleted.
+
+By default all EFS instances are provisioned as `generalPurpose` performance mode.
+`maxIO` EFS type can be provisioned by providing `maxIO` flag as `volumetype`.
+
+Its possible to mount same volume to multiple container on a single EC2 instance
+as well as use single volume across multiple EC2 instances at the same time.
+
+**NOTE**: Each EFS FileSystem can be accessed only from single VPC at the time.
+
+### Activating the Driver
+To activate the AWS EFS driver please follow the instructions for
+[activating storage drivers](./config.md#storage-drivers),
+using `efs` as the driver name.
+
+### Troubleshooting
+- Make sure that AWS credentials (user or role) has following AWS permissions on
+  `libStorage` server instance that will be making calls to AWS API:
+  - `elasticfilesystem:CreateFileSystem`
+  - `elasticfilesystem:CreateMountTarget`
+  - `ec2:DescribeSubnets`
+  - `ec2:DescribeNetworkInterfaces`
+  - `ec2:CreateNetworkInterface`
+  - `elasticfilesystem:CreateTags`
+  - `elasticfilesystem:DeleteFileSystem`
+  - `elasticfilesystem:DeleteMountTarget`
+  - `ec2:DeleteNetworkInterface`
+  - `elasticfilesystem:DescribeFileSystems`
+  - `elasticfilesystem:DescribeMountTargets`
+
+### Examples
+Below is a working `config.yml` file that works with AWS EFS.
+
+```yaml
+libstorage:
+  server:
+    services:
+      efs:
+        driver: efs
+        efs:
+          accessKey:      XXXXXXXXXX
+          secretKey:      XXXXXXXXXX
+          securityGroups: sg-XXXXXXX,sg-XXXXXX0,sg-XXXXXX1
+          region:         us-east-1
+          tag:            test
+```

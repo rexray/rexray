@@ -327,6 +327,8 @@ Description=rexray
 Before=docker.service
 
 [Service]
+Restart=always
+RestartSec=5
 EnvironmentFile={{.EnvFile}}
 ExecStart={{.RexrayBin}} start -f
 ExecReload=/bin/kill -HUP $MAINPID

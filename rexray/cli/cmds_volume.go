@@ -58,7 +58,6 @@ func (c *CLI) initVolumeCmds() {
 		Short:   "Get one or more volumes",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			vols, err := c.r.Storage().Volumes(
 				c.ctx, &apitypes.VolumesOpts{Attachments: false})
 			if err != nil {

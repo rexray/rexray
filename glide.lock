@@ -17,6 +17,8 @@ imports:
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
   version: df81827fdd59d8b4fb93d8910b286ab7a3919520
+- name: github.com/aws/aws-sdk-go
+  version: caee6e866bf437a6bef0777a3bf141cdd3aa022d
 - name: github.com/BurntSushi/toml
   version: f0aeabca5a127c4078abb8c8d64298b147264b55
 - name: github.com/cesanta/ucl

@@ -125,6 +125,14 @@ func (d *driver) Volumes(
 
 	var volumesSD []*types.Volume
 	for _, fileSystem := range fileSystems {
+		// Make sure that name is popullated
+		if fileSystem.Name == nil {
+			ctx.WithFields(log.Fields{
+				"filesystemid": *fileSystem.FileSystemId,
+			}).Warn("missing EFS filesystem name")
+			continue
+		}
+
 		// Only volumes with partition prefix
 		if !strings.HasPrefix(*fileSystem.Name, d.tag()+tagDelimiter) {
 			continue
@@ -178,8 +186,18 @@ func (d *driver) VolumeInspect(
 			return nil, nil
 		}
 
+		// Name is optional via tag so make sure it exists
+		var fileSystemName string
+		if fileSystem.Name != nil {
+			fileSystemName = *fileSystem.Name
+		} else {
+			ctx.WithFields(log.Fields{
+				"filesystemid": *fileSystem.FileSystemId,
+			}).Warn("missing EFS filesystem name")
+		}
+
 		volume := &types.Volume{
-			Name:        d.getPrintableName(*fileSystem.Name),
+			Name:        d.getPrintableName(fileSystemName),
 			ID:          *fileSystem.FileSystemId,
 			Size:        *fileSystem.SizeInBytes.Value,
 			Attachments: nil,

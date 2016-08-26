@@ -3,7 +3,7 @@ go_import_path: github.com/emccode/libstorage
 language: go
 
 go:
-  - 1.6
+  - 1.7
 
 before_install:
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'

@@ -63,7 +63,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 	var err error
 
-	if d.client, err = isi.NewClientWithArgs(
+	if d.client, err = isi.NewClientWithArgs(ctx,
 		d.endpoint(),
 		d.insecure(),
 		d.userName(),
@@ -169,7 +169,8 @@ func (d *driver) NextDeviceInfo(
 
 func (d *driver) getVolumeAttachments(ctx types.Context) (
 	[]*types.VolumeAttachment, error) {
-	exports, err := d.client.GetVolumeExports()
+
+	exports, err := d.getVolumeExports(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -248,29 +249,31 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 		return nil, goof.New("volume name already exists")
 	}
 
-	_, err = d.client.CreateVolume(volumeName)
+	_, err = d.client.CreateVolume(ctx, volumeName)
 	if err != nil {
-		return nil, goof.WithFieldE("volumeName", volumeName, "Error creating volume", err)
+		return nil, goof.WithFieldE(
+			"volumeName", volumeName, "Error creating volume", err)
 	}
 
 	// Set or update the quota for volume
 	if d.quotas() {
-		quota, err := d.client.GetQuota(volumeName)
+		quota, err := d.client.GetQuota(ctx, volumeName)
 		if quota == nil {
 			// PAPI uses bytes for it's size units, but REX-Ray uses gigs
-			err = d.client.SetQuotaSize(volumeName, *opts.Size*bytesPerGb)
+			err = d.client.SetQuotaSize(ctx, volumeName, *opts.Size*bytesPerGb)
 			if err != nil {
-				// TODO: not sure how to handle this situation.  Delete created volume
-				// and return an error?  Ignore and continue?
+				// TODO: not sure how to handle this situation. Delete created
+				// volume and return an error?  Ignore and continue?
 				return nil, goof.WithFieldE("volumeName", volumeName,
 					"Error creating volume", err)
 			}
 		} else {
 			// PAPI uses bytes for it's size units, but REX-Ray uses gigs
-			err = d.client.UpdateQuotaSize(volumeName, *opts.Size*bytesPerGb)
+			err = d.client.UpdateQuotaSize(
+				ctx, volumeName, *opts.Size*bytesPerGb)
 			if err != nil {
-				// TODO: not sure how to handle this situation.  Delete created volume
-				// and return an error?  Ignore and continue?
+				// TODO: not sure how to handle this situation. Delete created
+				// volume and return an error?  Ignore and continue?
 				return nil, goof.WithFieldE("volumeName", volumeName,
 					"Error creating volume", err)
 			}
@@ -288,13 +291,13 @@ func (d *driver) VolumeRemove(
 	opts types.Store) error {
 
 	if d.quotas() {
-		err := d.client.ClearQuota(volumeID)
+		err := d.client.ClearQuota(ctx, volumeID)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := d.client.DeleteVolume(volumeID)
+	err := d.client.DeleteVolume(ctx, volumeID)
 	if err != nil {
 		return err
 	}
@@ -324,11 +327,13 @@ func (d *driver) VolumeAttach(
 	if vol == nil {
 		return nil, "", goof.New("no volumes returned")
 	}
-	if err := d.client.ExportVolume(volumeID); err != nil {
+
+	exportID, err := d.client.ExportVolume(ctx, volumeID)
+	if err != nil {
 		return nil, "", goof.WithError("problem exporting volume", err)
 	}
 	// see if anyone is attached already
-	clients, err := d.client.GetExportClients(volumeID)
+	clients, err := d.client.GetExportRootClientsByID(ctx, exportID)
 	if err != nil {
 		return nil, "", goof.WithError("problem getting export client", err)
 	}
@@ -352,7 +357,25 @@ func (d *driver) VolumeAttach(
 	}
 
 	log.WithField("clients", clients).Info("setting exports")
-	err = d.client.SetExportClients(volumeID, clients)
+	err = d.client.SetExportClientsByID(ctx, exportID, clients...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	log.Info("disabling root squash for export")
+	err = d.client.DisableRootMappingByID(ctx, exportID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	log.Info("disabling failure mapping for export")
+	err = d.client.DisableFailureMappingByID(ctx, exportID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	log.Info("mapping non-root user to root")
+	err = d.client.EnableNonRootMappingByID(ctx, exportID, "root")
 	if err != nil {
 		return nil, "", err
 	}
@@ -392,7 +415,12 @@ func (d *driver) VolumeDetach(
 		return nil, err
 	}
 
-	clients, err := d.client.GetExportClients(volumeID)
+	export, err := d.client.GetExportByName(ctx, volumeID)
+	if err != nil {
+		return nil, goof.WithError("problem getting export", err)
+	}
+
+	clients, err := d.client.GetExportRootClientsByID(ctx, export.ID)
 	if err != nil {
 		return nil, goof.WithError("problem getting export client", err)
 	}
@@ -406,12 +434,12 @@ func (d *driver) VolumeDetach(
 
 	if len(newClients) > 0 {
 		log.WithField("clients", clients).Info("setting exports")
-		err = d.client.SetExportClients(volumeID, newClients)
+		err = d.client.SetExportRootClientsByID(ctx, export.ID, newClients...)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		if err := d.client.UnexportVolume(volumeID); err != nil {
+		if err := d.client.UnexportByID(ctx, export.ID); err != nil {
 			return nil, goof.WithError("problem unexporting volume", err)
 		}
 	}
@@ -484,8 +512,9 @@ func (d *driver) getVolume(ctx types.Context, volumeID, volumeName string,
 	attachments bool) ([]*types.Volume, error) {
 	var volumes []isi.Volume
 	if volumeID != "" || volumeName != "" {
-		volume, err := d.client.GetVolume(volumeID, volumeName)
-		if err != nil && !strings.Contains(err.Error(), "Unable to open object") {
+		volume, err := d.client.GetVolume(ctx, volumeID, volumeName)
+		if err != nil &&
+			!strings.Contains(err.Error(), "Unable to open object") {
 			return nil, err
 		}
 		if volume != nil {
@@ -493,7 +522,7 @@ func (d *driver) getVolume(ctx types.Context, volumeID, volumeName string,
 		}
 	} else {
 		var err error
-		volumes, err = d.client.GetVolumes()
+		volumes, err = d.client.GetVolumes(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -522,7 +551,7 @@ func (d *driver) getVolume(ctx types.Context, volumeID, volumeName string,
 
 	var volumesSD []*types.Volume
 	for _, volume := range volumes {
-		volSize, err := d.getSize(volume.Name, volume.Name)
+		volSize, err := d.getSize(ctx, volume.Name, volume.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -540,7 +569,9 @@ func (d *driver) getVolume(ctx types.Context, volumeID, volumeName string,
 	return volumesSD, nil
 }
 
-func (d *driver) getSize(volumeID, volumeName string) (int64, error) {
+func (d *driver) getSize(
+	ctx types.Context, volumeID, volumeName string) (int64, error) {
+
 	if d.quotas() == false {
 		return 0, nil
 	}
@@ -552,7 +583,7 @@ func (d *driver) getSize(volumeID, volumeName string) (int64, error) {
 		return 0, goof.New("volume name or ID not set")
 	}
 
-	quota, err := d.client.GetQuota(volumeName)
+	quota, err := d.client.GetQuota(ctx, volumeName)
 	if err != nil {
 		return 0, nil
 	}
@@ -563,6 +594,48 @@ func (d *driver) getSize(volumeID, volumeName string) (int64, error) {
 
 	return 0, nil
 
+}
+
+type isiVolExport struct {
+	Volume     isi.Volume
+	ExportPath string
+	Clients    []string
+}
+
+func (d *driver) getVolumeExports(ctx types.Context) ([]*isiVolExport, error) {
+
+	exports, err := d.client.GetExports(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	exportPaths := make(map[string]bool)
+	exportClients := make(map[string]([]string))
+	for _, export := range exports {
+		for _, path := range *export.Paths {
+			exportPaths[path] = true
+			exportClients[path] = *export.Clients
+		}
+	}
+
+	volumes, err := d.client.GetVolumes(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var volExports []*isiVolExport
+	for _, volume := range volumes {
+		vpath := d.client.API.VolumePath(volume.Name)
+		if _, ok := exportPaths[vpath]; ok {
+			volExports = append(volExports, &isiVolExport{
+				Volume:     volume,
+				ExportPath: vpath,
+				Clients:    exportClients[vpath],
+			})
+		}
+	}
+
+	return volExports, nil
 }
 
 func (d *driver) endpoint() string {

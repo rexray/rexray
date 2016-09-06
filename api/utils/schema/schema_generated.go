@@ -115,7 +115,7 @@ const (
 
 
         "instance": {
-            "title": "Instnace",
+            "title": "Instance",
             "description": "Instance is additional information about a host, generated using the InstanceID.",
             "type": "object",
             "properties": {

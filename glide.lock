@@ -1,5 +1,5 @@
-hash: 68337a00cb5fe5fd3fdaee7d820c6209aa419b968f44a0f01f1289fb0e9a56b3
-updated: 2016-08-29T12:35:50.506320525-05:00
+hash: fb40ae92ad2192a37bdf4b2ed0424d6302188136b5ce54e8c2b9b35350bf08b5
+updated: 2016-09-06T11:39:02.005034824-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -54,11 +54,11 @@ imports:
   subpackages:
   - spew
 - name: github.com/emccode/goisilon
-  version: 5c002f97df58b0d81b8f43f241cae71361b8fb3b
+  version: 653c13de5e1e0294ca0c7eead83e396fe308b497
   subpackages:
-  - api/v2
   - api
   - api/v1
+  - api/v2
   - api/json
 - name: github.com/emccode/goscaleio
   version: 9d95003c0069b1949a0fb46832870799caa5c360
@@ -75,7 +75,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 0b13a922203ebdbfd236c818efcd5ed46097d690
+  version: 0a192a193177452756c362c20087ddafcf6829c4
 - name: github.com/jmespath/go-jmespath
   version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
 - name: github.com/jteeuwen/go-bindata
@@ -115,7 +115,7 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: 6250b412798208e6c90b03b7c4f226de5aa299e2
+  version: 1358eff22f0dd0c54fc521042cc607f6ff4b531a
   subpackages:
   - context
   - context/ctxhttp

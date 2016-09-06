@@ -34,7 +34,7 @@ import:
 
 ### Isilon
   - package: github.com/emccode/goisilon
-    version: v1.2.0
+    version: v1.4.0
 
 ### EFS
   - package: github.com/aws/aws-sdk-go

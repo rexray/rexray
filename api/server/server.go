@@ -15,6 +15,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
+	"github.com/emccode/gournal"
+	glogrus "github.com/emccode/gournal/logrus"
+
 	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/server/services"
 	"github.com/emccode/libstorage/api/types"
@@ -67,6 +70,42 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 	ctx := context.New(goCtx)
 	ctx = ctx.WithValue(context.ServerKey, serverName)
 	ctx = ctx.WithValue(context.AdminTokenKey, adminToken)
+
+	if lvl, ok := context.GetLogLevel(ctx); ok {
+		switch lvl {
+		case log.DebugLevel:
+			ctx = context.WithValue(
+				ctx, gournal.LevelKey(),
+				gournal.DebugLevel)
+		case log.InfoLevel:
+			ctx = context.WithValue(
+				ctx, gournal.LevelKey(),
+				gournal.InfoLevel)
+		case log.WarnLevel:
+			ctx = context.WithValue(
+				ctx, gournal.LevelKey(),
+				gournal.WarnLevel)
+		case log.ErrorLevel:
+			ctx = context.WithValue(
+				ctx, gournal.LevelKey(),
+				gournal.ErrorLevel)
+		case log.FatalLevel:
+			ctx = context.WithValue(
+				ctx, gournal.LevelKey(),
+				gournal.FatalLevel)
+		case log.PanicLevel:
+			ctx = context.WithValue(
+				ctx, gournal.LevelKey(),
+				gournal.PanicLevel)
+		}
+	}
+
+	if logger, ok := ctx.Value(context.LoggerKey).(*log.Logger); ok {
+		ctx = context.WithValue(
+			ctx, gournal.AppenderKey(),
+			glogrus.NewWithOptions(
+				logger.Out, logger.Level, logger.Formatter))
+	}
 
 	if config == nil {
 		var err error

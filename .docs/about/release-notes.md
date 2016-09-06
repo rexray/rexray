@@ -28,6 +28,27 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.5.0 (TBA)
+Beginning with this release, REX-Ray's versions will increment the MINOR
+component with the introduction of a new storage driver via libStorage in
+concert with the [guidelines](http://semver.org) set forth by semantic
+versioning.
+
+### New Features
+* Amazon Elastic File System (EFS) Support ([#525](https://github.com/emccode/rexray/issues/525))
+
+### Enhancements
+* Support for Go 1.7 ([#541](https://github.com/emccode/rexray/issues/541))
+* Enhanced Isilon Support ([#520](https://github.com/emccode/rexray/issues/520), [#521](https://github.com/emccode/rexray/issues/521))
+
+### Thank You
+  Name | Blame  
+-------|------
+[Chris Duchesne](https://github.com/cduchesne) | Chris not only took on the role of project manager for libStorage and REX-Ray, he still provides ongoing test plan execution and release validation. Thank you Chris!
+[Kenny Cole](https://github.com/kacole2) | Kenny's tireless effort to support users and triage submitted issues is such a cornerstone to libStorage and REX-Ray that I'm not sure what this project would do without him!
+[Martin Hrabovcin](https://github.com/mhrabovcin) | Martin, along with Kasisnu, definitely win the "Community Members of the Month" award! Their hard work and dedication resulted in the introduction of the Amazon EFS storage driver. Thank you Martin & Kasisnu!
+[Kasisnu Singh](https://github.com/kasisnu) | Have I mentioned we have the best community around? Seriously, thank you again Kasisnu! Your work, along with Martin's, is a milestone in the growth of libStorage and REX-Ray.
+
 ## Version 0.4.2 (2016/07/12)
 This minor update represents a *major* performance boost for REX-Ray.
 Operations that use to take up to minutes now take seconds or less. The memory

@@ -291,16 +291,25 @@ func (d *driver) VolumeRemove(
 	opts types.Store) error {
 
 	if d.quotas() {
-		err := d.client.ClearQuota(ctx, volumeID)
-		if err != nil {
+		ctx.WithField("volume", volumeID).Debug("clearing volume quotas")
+		if err := d.client.ClearQuota(ctx, volumeID); err != nil {
 			return err
 		}
 	}
 
-	err := d.client.DeleteVolume(ctx, volumeID)
-	if err != nil {
+	ctx.WithFields(log.Fields{
+		"volume": volumeID,
+		"owner":  d.client.API.User(),
+	}).Debug("setting volume owner to current user")
+	if err := d.client.SetVolumeOwnerToCurrentUser(ctx, volumeID); err != nil {
 		return err
 	}
+
+	ctx.WithField("volume", volumeID).Debug("force deleting volume")
+	if err := d.client.ForceDeleteVolume(ctx, volumeID); err != nil {
+		return err
+	}
+
 	return nil
 }
 

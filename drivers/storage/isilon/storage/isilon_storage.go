@@ -342,7 +342,7 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.WithError("problem exporting volume", err)
 	}
 	// see if anyone is attached already
-	clients, err := d.client.GetExportRootClientsByID(ctx, exportID)
+	clients, err := d.client.GetExportClientsByID(ctx, exportID)
 	if err != nil {
 		return nil, "", goof.WithError("problem getting export client", err)
 	}
@@ -429,7 +429,7 @@ func (d *driver) VolumeDetach(
 		return nil, goof.WithError("problem getting export", err)
 	}
 
-	clients, err := d.client.GetExportRootClientsByID(ctx, export.ID)
+	clients, err := d.client.GetExportClientsByID(ctx, export.ID)
 	if err != nil {
 		return nil, goof.WithError("problem getting export client", err)
 	}
@@ -443,7 +443,7 @@ func (d *driver) VolumeDetach(
 
 	if len(newClients) > 0 {
 		log.WithField("clients", clients).Info("setting exports")
-		err = d.client.SetExportRootClientsByID(ctx, export.ID, newClients...)
+		err = d.client.SetExportClientsByID(ctx, export.ID, newClients...)
 		if err != nil {
 			return nil, err
 		}

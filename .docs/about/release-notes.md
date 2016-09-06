@@ -4,6 +4,29 @@ Release early, release often
 
 ---
 
+## Version 0.2.0 (TBA)
+Beginning with this release, libStorage's versions will increment the MINOR
+component with the introduction of a new storage driver in concert with the
+[guidelines](http://semver.org) set forth by semantic versioning.
+
+### New Features
+* Amazon Elastic File System (EFS) Support ([#231](https://github.com/emccode/libstorage/issues/231))
+
+### Enhancements
+* Support for Go 1.7 ([#251](https://github.com/emccode/libstorage/issues/251))
+
+### Bug Fixes
+* Isilon Export Permissions ([#252](https://github.com/emccode/libstorage/issues/252), [#257](https://github.com/emccode/libstorage/issues/257))
+* Isilon Volume Removal ([#253](https://github.com/emccode/libstorage/issues/253))
+
+### Thank You
+  Name | Blame  
+-------|------
+[Chris Duchesne](https://github.com/cduchesne) | Chris not only took on the role of project manager for libStorage and REX-Ray, he still provides ongoing test plan execution and release validation. Thank you Chris!
+[Kenny Cole](https://github.com/kacole2) | Kenny's tireless effort to support users and triage submitted issues is such a cornerstone to libStorage that I'm not sure what this project would do without him!
+[Martin Hrabovcin](https://github.com/mhrabovcin) | Martin, along with Kasisnu, definitely win the "Community Members of the Month" award! Their hard work and dedication resulted in the introduction of the Amazon EFS storage driver. Thank you Martin & Kasisnu!
+[Kasisnu Singh](https://github.com/kasisnu) | Have I mentioned we have the best community around? Seriously, thank you again Kasisnu! Your work, along with Martin's, is a milestone in the growth of libStorage.
+
 ## Version 0.1.5 (2016/07/12)
 This release comes hot on the heels of the last, but some dynamite bug fixes
 have improved the performance of the server by leaps and bounds. Operations

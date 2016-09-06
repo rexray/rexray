@@ -16,6 +16,8 @@ import:
     version: v0.1.0
   - package: github.com/akutz/golf
     version: v0.1.1
+  - package: github.com/emccode/gournal
+    version: v0.2.0
   - package: github.com/cesanta/validate-json
 
 ################################################################################

@@ -1,5 +1,5 @@
-hash: fb40ae92ad2192a37bdf4b2ed0424d6302188136b5ce54e8c2b9b35350bf08b5
-updated: 2016-09-06T11:39:02.005034824-05:00
+hash: 161e2da934aca78e92bcb2f7f233a3b6d4cd88aa4014c14913ca5e20b24d7862
+updated: 2016-09-06T11:56:49.66487346-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -66,7 +66,9 @@ imports:
   subpackages:
   - types/v1
 - name: github.com/emccode/gournal
-  version: 8c5eb0ef035fa7a898a6017870e029f00578896f
+  version: 3bd901de15097583a5b1f4b377421cfc647c3664
+  subpackages:
+  - logrus
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml

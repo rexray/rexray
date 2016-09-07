@@ -4,7 +4,7 @@ Release early, release often
 
 ---
 
-## Version 0.2.0 (TBA)
+## Version 0.2.0 (2016/09/07)
 Beginning with this release, libStorage's versions will increment the MINOR
 component with the introduction of a new storage driver in concert with the
 [guidelines](http://semver.org) set forth by semantic versioning.

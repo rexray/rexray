@@ -273,11 +273,31 @@
             
             </li>
         
+            <li><a href="#version-050-20160907">Version 0.5.0 (2016/09/07)</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#new-features">New Features</a><!--
+                -->
+                </li>
+                
+                <li><a href="#enhancements">Enhancements</a><!--
+                -->
+                </li>
+                
+                <li><a href="#thank-you">Thank You</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
+        
             <li><a href="#version-042-20160712">Version 0.4.2 (2016/07/12)</a>
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#enhancements">Enhancements</a><!--
+                <li><a href="#enhancements_1">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -289,7 +309,7 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#enhancements_1">Enhancements</a><!--
+                <li><a href="#enhancements_2">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -305,30 +325,6 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#new-features">New Features</a><!--
-                -->
-                </li>
-                
-                <li><a href="#enhancements_2">Enhancements</a><!--
-                -->
-                </li>
-                
-                <li><a href="#bug-fixes_1">Bug Fixes</a><!--
-                -->
-                </li>
-                
-                <li><a href="#thank-you">Thank You</a><!--
-                -->
-                </li>
-                
-                </ul>
-            
-            </li>
-        
-            <li><a href="#version-033-20160421">Version 0.3.3 (2016/04/21)</a>
-            
-                <ul class="nav nav-stacked">
-                
                 <li><a href="#new-features_1">New Features</a><!--
                 -->
                 </li>
@@ -337,7 +333,7 @@
                 -->
                 </li>
                 
-                <li><a href="#bug-fixes_2">Bug Fixes</a><!--
+                <li><a href="#bug-fixes_1">Bug Fixes</a><!--
                 -->
                 </li>
                 
@@ -349,7 +345,7 @@
             
             </li>
         
-            <li><a href="#version-032-2016-03-04">Version 0.3.2 (2016-03-04)</a>
+            <li><a href="#version-033-20160421">Version 0.3.3 (2016/04/21)</a>
             
                 <ul class="nav nav-stacked">
                 
@@ -361,11 +357,7 @@
                 -->
                 </li>
                 
-                <li><a href="#bug-fixes_3">Bug Fixes</a><!--
-                -->
-                </li>
-                
-                <li><a href="#updates">Updates</a><!--
+                <li><a href="#bug-fixes_2">Bug Fixes</a><!--
                 -->
                 </li>
                 
@@ -377,7 +369,7 @@
             
             </li>
         
-            <li><a href="#version-031-2015-12-30">Version 0.3.1 (2015-12-30)</a>
+            <li><a href="#version-032-2016-03-04">Version 0.3.2 (2016-03-04)</a>
             
                 <ul class="nav nav-stacked">
                 
@@ -386,6 +378,34 @@
                 </li>
                 
                 <li><a href="#enhancements_5">Enhancements</a><!--
+                -->
+                </li>
+                
+                <li><a href="#bug-fixes_3">Bug Fixes</a><!--
+                -->
+                </li>
+                
+                <li><a href="#updates">Updates</a><!--
+                -->
+                </li>
+                
+                <li><a href="#thank-you_3">Thank You</a><!--
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
+        
+            <li><a href="#version-031-2015-12-30">Version 0.3.1 (2015-12-30)</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#new-features_4">New Features</a><!--
+                -->
+                </li>
+                
+                <li><a href="#enhancements_6">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -405,11 +425,11 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#new-features_4">New Features</a><!--
+                <li><a href="#new-features_5">New Features</a><!--
                 -->
                 </li>
                 
-                <li><a href="#enhancements_6">Enhancements</a><!--
+                <li><a href="#enhancements_7">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -437,11 +457,11 @@
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#new-features_5">New Features</a><!--
+                <li><a href="#new-features_6">New Features</a><!--
                 -->
                 </li>
                 
-                <li><a href="#enhancements_7">Enhancements</a><!--
+                <li><a href="#enhancements_8">Enhancements</a><!--
                 -->
                 </li>
                 
@@ -511,12 +531,53 @@ Branch: v0.1.3
 Commit: 182a626937677a081b89651598ee2eac839308e7
 Formed: Wed, 15 Jun 2016 16:27:36 CDT
 </code></pre>
+<h2 id="version-050-20160907">Version 0.5.0 (2016/09/07)</h2>
+<p>Beginning with this release, REX-Ray's versions will increment the MINOR
+component with the introduction of a new storage driver via libStorage in
+concert with the <a href="http://semver.org">guidelines</a> set forth by semantic
+versioning.</p>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li>Amazon Elastic File System (EFS) Support (<a href="https://github.com/emccode/rexray/issues/525">#525</a>)</li>
+</ul>
+<h3 id="enhancements">Enhancements</h3>
+<ul>
+<li>Support for Go 1.7 (<a href="https://github.com/emccode/rexray/issues/541">#541</a>)</li>
+<li>Enhanced Isilon Support (<a href="https://github.com/emccode/rexray/issues/520">#520</a>, <a href="https://github.com/emccode/rexray/issues/521">#521</a>)</li>
+</ul>
+<h3 id="thank-you">Thank You</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Blame</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/cduchesne">Chris Duchesne</a></td>
+<td>Chris not only took on the role of project manager for libStorage and REX-Ray, he still provides ongoing test plan execution and release validation. Thank you Chris!</td>
+</tr>
+<tr>
+<td><a href="https://github.com/kacole2">Kenny Cole</a></td>
+<td>Kenny's tireless effort to support users and triage submitted issues is such a cornerstone to libStorage and REX-Ray that I'm not sure what this project would do without him!</td>
+</tr>
+<tr>
+<td><a href="https://github.com/mhrabovcin">Martin Hrabovcin</a></td>
+<td>Martin, along with Kasisnu, definitely win the "Community Members of the Month" award! Their hard work and dedication resulted in the introduction of the Amazon EFS storage driver. Thank you Martin &amp; Kasisnu!</td>
+</tr>
+<tr>
+<td><a href="https://github.com/kasisnu">Kasisnu Singh</a></td>
+<td>Have I mentioned we have the best community around? Seriously, thank you again Kasisnu! Your work, along with Martin's, is a milestone in the growth of libStorage and REX-Ray.</td>
+</tr>
+</tbody>
+</table>
 <h2 id="version-042-20160712">Version 0.4.2 (2016/07/12)</h2>
 <p>This minor update represents a <em>major</em> performance boost for REX-Ray.
 Operations that use to take up to minutes now take seconds or less. The memory
 footprint has been reduced from the magnitude of phenomenal cosmic powers to
 the size of an itty bitty living space!</p>
-<h3 id="enhancements">Enhancements</h3>
+<h3 id="enhancements_1">Enhancements</h3>
 <ul>
 <li>libStorage 0.1.5 (<a href="https://github.com/emccode/rexray/issues/TBA">#TBA</a>)</li>
 <li>Improved volume path caching (<a href="https://github.com/emccode/rexray/issues/500">#500</a>)</li>
@@ -524,7 +585,7 @@ the size of an itty bitty living space!</p>
 <h2 id="version-041-20160708">Version 0.4.1 (2016/07/08)</h2>
 <p>Although a minor release, 0.4.1 provides some meaningful and useful enhancements
 and fixes, further strengthening the foundation of the REX-Ray platform.</p>
-<h3 id="enhancements_1">Enhancements</h3>
+<h3 id="enhancements_2">Enhancements</h3>
 <ul>
 <li>Improved build process (<a href="https://github.com/emccode/rexray/issues/474">#474</a>, <a href="https://github.com/emccode/rexray/issues/492">#492</a>)</li>
 <li><a href="http://libstorage.readthedocs.io">libStorage</a> 0.1.4 (<a href="https://github.com/emccode/rexray/issues/493">#493</a>)</li>
@@ -553,13 +614,13 @@ the following storage platforms:</p>
 <p>Support for the full compliment of drivers present in earlier versions of
 REX-Ray will be reintroduced over the course of several, incremental updates,
 beginning with 0.4.1.</p>
-<h3 id="new-features">New Features</h3>
+<h3 id="new-features_1">New Features</h3>
 <ul>
 <li>Distributed architecture (<a href="https://github.com/emccode/rexray/issues/399">#399</a>, <a href="https://github.com/emccode/rexray/issues/401">#401</a>, <a href="https://github.com/emccode/rexray/issues/411">#411</a>, <a href="https://github.com/emccode/rexray/issues/417">#417</a>, <a href="https://github.com/emccode/rexray/issues/418">#418</a>, <a href="https://github.com/emccode/rexray/issues/419">#419</a>, <a href="https://github.com/emccode/rexray/issues/420">#420</a>, <a href="https://github.com/emccode/rexray/issues/423">#423</a>)</li>
 <li>Volume locking mechanism (<a href="https://github.com/emccode/rexray/issues/171">#171</a>)</li>
 <li>Volume creation with initial data (<a href="https://github.com/emccode/rexray/issues/169">#169</a>)</li>
 </ul>
-<h3 id="enhancements_2">Enhancements</h3>
+<h3 id="enhancements_3">Enhancements</h3>
 <ul>
 <li>Improved storage driver logging (<a href="https://github.com/emccode/rexray/issues/396">#396</a>)</li>
 <li>Docker mount path (<a href="https://github.com/emccode/rexray/issues/403">#403</a>)</li>
@@ -570,7 +631,7 @@ beginning with 0.4.1.</p>
 <li>Fixed volume ls filter (<a href="https://github.com/emccode/rexray/issues/400">#400</a>)</li>
 <li>Fixed panic during access attempt of offline REX-Ray daemon (<a href="https://github.com/emccode/rexray/issues/148">#148</a>)</li>
 </ul>
-<h3 id="thank-you">Thank You</h3>
+<h3 id="thank-you_1">Thank You</h3>
 <p>Yes, the author is so lazy as to blatantly
 <a href="http://libstorage.readthedocs.io/en/stable/about/release-notes/#version-011-20160610">copy</a>
 this section. So sue me :)</p>
@@ -649,12 +710,12 @@ this section. So sue me :)</p>
 </tbody>
 </table>
 <h2 id="version-033-20160421">Version 0.3.3 (2016/04/21)</h2>
-<h3 id="new-features_1">New Features</h3>
+<h3 id="new-features_2">New Features</h3>
 <ul>
 <li>ScaleIO v2 support (<a href="https://github.com/emccode/rexray/issues/355">#355</a>)</li>
 <li>EC2 Tags added to Volumes &amp; Snapshots (<a href="https://github.com/emccode/rexray/issues/314">#314</a>)</li>
 </ul>
-<h3 id="enhancements_3">Enhancements</h3>
+<h3 id="enhancements_4">Enhancements</h3>
 <ul>
 <li>Use of official Amazon EC2 SDK (<a href="https://github.com/emccode/rexray/issues/359">#359</a>)</li>
 <li>Added a disable feature for create/remove volume (<a href="https://github.com/emccode/rexray/issues/366">#366</a>)</li>
@@ -667,7 +728,7 @@ this section. So sue me :)</p>
 <li>Fixes module start timeout error (<a href="https://github.com/emccode/rexray/issues/376">#376</a>)</li>
 <li>Fixes ScaleIO authentication loop bug (<a href="https://github.com/emccode/rexray/issues/375">#375</a>)</li>
 </ul>
-<h3 id="thank-you_1">Thank You</h3>
+<h3 id="thank-you_2">Thank You</h3>
 <ul>
 <li><a href="https://github.com/philippfranke">Philipp Franke</a></li>
 <li><a href="https://github.com/echupriyanov">Eugene Chupriyanov</a></li>
@@ -675,7 +736,7 @@ this section. So sue me :)</p>
 <li><a href="https://github.com/meganmurawski">Megan Hyland</a></li>
 </ul>
 <h2 id="version-032-2016-03-04">Version 0.3.2 (2016-03-04)</h2>
-<h3 id="new-features_2">New Features</h3>
+<h3 id="new-features_3">New Features</h3>
 <ul>
 <li>Support for Docker 1.10 and Volume Plugin Interface 1.2 (<a href="https://github.com/emccode/rexray/issues/273">#273</a>)</li>
 <li>Stale PID File Prevents Service Start (<a href="https://github.com/emccode/rexray/issues/258">#258</a>)</li>
@@ -685,7 +746,7 @@ this section. So sue me :)</p>
 <li>boot2Docker Support (<a href="https://github.com/emccode/rexray/issues/263">#263</a>)</li>
 <li>ScaleIO Dynamic Storage Pool Support (<a href="https://github.com/emccode/rexray/issues/267">#267</a>)</li>
 </ul>
-<h3 id="enhancements_4">Enhancements</h3>
+<h3 id="enhancements_5">Enhancements</h3>
 <ul>
 <li>Improved installation documentation (<a href="https://github.com/emccode/rexray/issues/331">#331</a>)</li>
 <li>ScaleIO volume name limitation (<a href="https://github.com/emccode/rexray/issues/304">#304</a>)</li>
@@ -708,19 +769,19 @@ this section. So sue me :)</p>
 <ul>
 <li><del>Go 1.6 (<a href="https://github.com/emccode/rexray/pull/308">#308</a>)</del></li>
 </ul>
-<h3 id="thank-you_2">Thank You</h3>
+<h3 id="thank-you_3">Thank You</h3>
 <ul>
 <li>Dan Forrest</li>
 <li>Kapil Jain</li>
 <li>Alex Kamalov</li>
 </ul>
 <h2 id="version-031-2015-12-30">Version 0.3.1 (2015-12-30)</h2>
-<h3 id="new-features_3">New Features</h3>
+<h3 id="new-features_4">New Features</h3>
 <ul>
 <li>Support for VirtualBox (<a href="https://github.com/emccode/rexray/issues/209">#209</a>)</li>
 <li>Added Developer's Guide (<a href="https://github.com/emccode/rexray/issues/226">#226</a>)</li>
 </ul>
-<h3 id="enhancements_5">Enhancements</h3>
+<h3 id="enhancements_6">Enhancements</h3>
 <ul>
 <li>Mount/Unmount Accounting (<a href="https://github.com/emccode/rexray/issues/212">#212</a>)</li>
 <li>Support for Sub-Path Volume Mounts / Permissions (<a href="https://github.com/emccode/rexray/issues/215">#215</a>)</li>
@@ -732,14 +793,14 @@ complete list click <a href="https://github.com/emccode/rexray/pulls?q=is%3Apr+i
 <p>Click <a href="https://dl.bintray.com/emccode/rexray/stable/0.3.1/">here</a> for the 0.3.1
 binaries.</p>
 <h2 id="version-030-2015-12-08">Version 0.3.0 (2015-12-08)</h2>
-<h3 id="new-features_4">New Features</h3>
+<h3 id="new-features_5">New Features</h3>
 <ul>
 <li>Pre-Emption support (<a href="https://github.com/emccode/rexray/issues/190">#190</a>)</li>
 <li>Support for VMAX (<a href="https://github.com/emccode/rexray/issues/197">#197</a>)</li>
 <li>Support for Isilon (<a href="https://github.com/emccode/rexray/issues/198">#198</a>)</li>
 <li>Support for Google Compute Engine (GCE) (<a href="https://github.com/emccode/rexray/issues/194">#194</a>)</li>
 </ul>
-<h3 id="enhancements_6">Enhancements</h3>
+<h3 id="enhancements_7">Enhancements</h3>
 <ul>
 <li>Added driver example configurations (<a href="https://github.com/emccode/rexray/issues/201">#201</a>)</li>
 <li>New configuration file format (<a href="https://github.com/emccode/rexray/issues/188">#188</a>)</li>
@@ -763,12 +824,12 @@ binaries.</p>
 <h2 id="version-021-2015-10-27">Version 0.2.1 (2015-10-27)</h2>
 <p>REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,
 and continued foundation changes for future features.</p>
-<h3 id="new-features_5">New Features</h3>
+<h3 id="new-features_6">New Features</h3>
 <ul>
 <li>Support for OpenStack (<a href="https://github.com/emccode/rexray/issues/111">#111</a>)</li>
 <li>Create volume from volume using existing settings (<a href="https://github.com/emccode/rexray/issues/129">#129</a>)</li>
 </ul>
-<h3 id="enhancements_7">Enhancements</h3>
+<h3 id="enhancements_8">Enhancements</h3>
 <ul>
 <li>A+ <a href="http://goreportcard.com/report/emccode/rexray">GoReport Card</a></li>
 <li>A+ <a href="https://coveralls.io/github/emccode/rexray?branch=master">Code Coverage</a></li>

@@ -374,7 +374,7 @@ REX-Ray:</p>
 <p>REX-Ray is a storage orchestration tool that provides a set of common commands
 for managing multiple storage platforms. Built on top of the
 <a href="http://libstorage.readthedocs.io/en/stable">libStorage</a> framework, REX-Ray
-connects enables persistent storage for container runtimes such as Docker and
+enables persistent storage for container runtimes such as Docker and
 Mesos.</p>
 <div class="admonition note">
 <p class="admonition-title">note</p>
@@ -618,7 +618,7 @@ or without some type of firewall in place.</p>
 named <code>node0</code> and <code>node1</code>. Both nodes are running Docker and REX-Ray with
 <code>node0</code> configured to act as a libStorage server.</p>
 <p>Now that the environment is online it is time to showcase Docker leveraging
-REX-Ray to create persistent storage as well as illustrating REX-Ray'a
+REX-Ray to create persistent storage as well as illustrating REX-Ray's
 distributed deployment capabilities.</p>
 <h4 id="node-0">Node 0</h4>
 <p>First, SSH into <code>node0</code></p>
@@ -661,8 +661,8 @@ persistent volume:</p>
 created in the previous section from <code>node0</code>.</p>
 <div class="admonition note">
 <p class="admonition-title">note</p>
-<p>While <code>node1</code> runs both the Docker and REX-Ray services like <code>node1</code>, the
-REX-Ray service on <code>node0</code> in no way understands or is configured for the
+<p>While <code>node1</code> runs both the Docker and REX-Ray services like <code>node0</code>, the
+REX-Ray service on <code>node1</code> in no way understands or is configured for the
 VirtualBox storage driver. All interactions with the VirtualBox web service
 occurs via <code>node0</code>'s libStorage server with which <code>node1</code> communicates.</p>
 </div>

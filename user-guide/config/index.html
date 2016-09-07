@@ -385,7 +385,7 @@
 <hr />
 <h2 id="overview">Overview</h2>
 <p>This page reviews how to configure REX-Ray to suit any environment, beginning
-with the the most common use cases, exploring recommended guidelines, and
+with the most common use cases, exploring recommended guidelines, and
 finally, delving into the details of more advanced settings.</p>
 <h2 id="basic-configuration">Basic Configuration</h2>
 <p>This section outlines the two most common configuration scenarios encountered
@@ -441,7 +441,7 @@ volume creation, see <a href="../..#hello-rex-ray">Hello REX-Ray</a>.</p>
 <h4 id="embedded-server-mode">Embedded Server Mode</h4>
 <p>When operating as a stand-alone CLI, REX-Ray actually loads an embedded
 libStorage server for the duration of the CLI process and is accessible by
-only the the process that hosts it. This is known as <em>Embedded Server Mode</em>.</p>
+only the process that hosts it. This is known as <em>Embedded Server Mode</em>.</p>
 <p>While commonly used when executing one-off commands with REX-Ray as a
 stand-alone CLI tool, Embedded Server Mode can be utilized when configuring
 REX-Ray to advertise a static libStorage server as well. The following
@@ -535,7 +535,7 @@ and Volume Driver advertised by the UNIX socket <code>rexray</code> at
 Volume Plug-in are available on the <a href="../schedulers/">Schedulers</a> page.</p>
 <h4 id="libstorage-server-and-client">libStorage Server and Client</h4>
 <p>In addition to <a href="#embedded-server-mode">Embedded Server Mode</a>, REX-Ray can also
-expose the libStorage API statically. This enables REX-Ray to server and a
+expose the libStorage API statically. This enables REX-Ray to serve a
 libStorage server and perform only a storage abstraction role.</p>
 <p>If the desire is to establish a centralized REX-Ray server that is called
 on from remote REX-Ray instances then the following example will be useful.

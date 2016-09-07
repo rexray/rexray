@@ -28,7 +28,7 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
-## Version 0.5.0 (TBA)
+## Version 0.5.0 (2016/09/07)
 Beginning with this release, REX-Ray's versions will increment the MINOR
 component with the introduction of a new storage driver via libStorage in
 concert with the [guidelines](http://semver.org) set forth by semantic

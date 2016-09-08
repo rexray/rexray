@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"crypto/md5"
+	"fmt"
 	"strings"
 	"time"
 
@@ -226,8 +228,11 @@ func (d *driver) VolumeCreate(
 	name string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
+	// Token is limited to 64 ASCII characters so just create MD5 hash from full
+	// tag/name identifier
+	creationToken := fmt.Sprintf("%x", md5.Sum([]byte(d.getFullVolumeName(name))))
 	request := &awsefs.CreateFileSystemInput{
-		CreationToken:   aws.String(name),
+		CreationToken:   aws.String(creationToken),
 		PerformanceMode: aws.String(awsefs.PerformanceModeGeneralPurpose),
 	}
 	if opts.Type != nil && strings.ToLower(*opts.Type) == "maxio" {

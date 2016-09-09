@@ -1,9 +1,20 @@
 go_import_path: github.com/emccode/libstorage
 
 language: go
-
 go:
-  - 1.7
+  - 1.6.3
+  - 1.7.1
+  - tip
+
+os:
+  - linux
+  - osx
+
+matrix:
+  allow_failures:
+    - go: tip
+    - os: osx
+  fast_finish: true
 
 before_install:
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
@@ -11,9 +22,7 @@ before_install:
   - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
   - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
   - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
-  - go get github.com/onsi/gomega
-  - go get github.com/onsi/ginkgo
-  - go get golang.org/x/tools/cmd/cover
+  - make info
   - make deps
 
 script:

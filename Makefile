@@ -53,13 +53,38 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
+ifneq (,$(TRAVIS_GO_VERSION))
+GOVERSION := $(TRAVIS_GO_VERSION)
+else
+GOVERSION := $(shell go version | awk '{print $$3}' | cut -c3-)
+endif
+
+ifeq (1.7.1,$(TRAVIS_GO_VERSION))
+ifeq (linux,$(TRAVIS_OS_NAME))
+COVERAGE_ENABLED := 1
+endif
+endif
+
+# explicitly enable vendoring for Go 1.5.x versions.
+GO15VENDOREXPERIMENT := 1
+
+ifneq (,$(strip $(findstring 1.3.,$(TRAVIS_GO_VERSION))))
+PRE_GO15 := 1
+endif
+
+ifneq (,$(strip $(findstring 1.4.,$(TRAVIS_GO_VERSION))))
+PRE_GO15 := 1
+endif
+
+ifneq (1,$(PRE_GO15))
+export GO15VENDOREXPERIMENT
+endif
 
 
 ################################################################################
 ##                                  PATH                                      ##
 ################################################################################
-PATH := $(GOPATH)/bin:$(PATH)
-export $(PATH)
+export PATH := $(GOPATH)/bin:$(PATH)
 
 
 ################################################################################
@@ -233,6 +258,7 @@ info:
 	$(info GOPATH......................$(GOPATH))
 	$(info GOHOSTOS....................$(GOHOSTOS))
 	$(info GOHOSTARCH..................$(GOHOSTARCH))
+	$(info GOVERSION...................$(GOVERSION))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
@@ -258,11 +284,7 @@ endif
 ################################################################################
 ##                               DEPENDENCIES                                 ##
 ################################################################################
-GO_BINDATA := $(GOPATH)/bin/go-bindata
-go-bindata: $(GO_BINDATA)
-
 GLIDE := $(GOPATH)/bin/glide
-GOGET_LOCK := goget.lock
 GLIDE_LOCK := glide.lock
 GLIDE_YAML := glide.yaml
 GLIDE_LOCK_D := glide.lock.d
@@ -275,6 +297,7 @@ ALL_EXT_DEPS := $(sort $(EXT_DEPS) $(TEST_EXT_DEPS))
 ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
 ifneq (1,$(VENDORED))
+
 $(GLIDE):
 	go get -u github.com/Masterminds/glide
 glide: $(GLIDE)
@@ -283,17 +306,39 @@ GO_DEPS += $(GLIDE)
 GO_DEPS += $(GLIDE_LOCK_D)
 $(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
 
+ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
+$(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
+	touch $@
+
+$(GLIDE_LOCK): $(GLIDE_YAML)
+	$(GLIDE) up
+
+else #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
+
 $(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
 	$(GLIDE) install && touch $@
 
 $(GLIDE_LOCK): $(GLIDE_YAML)
 	touch $@
 
+endif #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
+
+$(GLIDE_YAML):
+	$(GLIDE) init
+
 $(GLIDE_LOCK)-clean:
 	rm -f $(GLIDE_LOCK)
 GO_PHONY += $(GLIDE_LOCK)-clean
 GO_CLOBBER += $(GLIDE_LOCK)-clean
-endif
+
+endif #ifneq (1,$(VENDORED))
+
+
+################################################################################
+##                                GOBINDATA                                   ##
+################################################################################
+GO_BINDATA := $(GOPATH)/bin/go-bindata
+go-bindata: $(GO_BINDATA)
 
 GO_BINDATA_IMPORT_PATH := vendor/github.com/jteeuwen/go-bindata/go-bindata
 ifneq (1,$(VENDORED))
@@ -314,6 +359,10 @@ GO_DEPS += $(GO_BINDATA)
 ################################################################################
 ##                               GOMETALINTER                                 ##
 ################################################################################
+ifeq (1,$(PRE_GO15))
+GOMETALINTER_DISABLED := 1
+endif
+
 ifneq (1,$(GOMETALINTER_DISABLED))
 GOMETALINTER := $(GOPATH)/bin/gometalinter
 
@@ -357,6 +406,7 @@ else
 gometalinter-all:
 	@echo gometalinter disabled
 endif
+
 
 ################################################################################
 ##                                  VERSION                                   ##
@@ -766,10 +816,24 @@ GO_PHONY += $(COVERAGE)-clean
 
 cover: $(COVERAGE)
 ifneq (1,$(CODECOV_OFFLINE))
+ifeq (1,$(COVERAGE_ENABLED))
 	curl -sSL https://codecov.io/bash | bash -s -- -f $?
+else
+	@echo codecov enabled only for linux+go1.6.3
+endif
 else
 	@echo codecov offline
 endif
+
+.coverage.tools.d:
+ifeq (1,$(COVERAGE_ENABLED))
+	go get github.com/onsi/gomega \
+           github.com/onsi/ginkgo \
+           golang.org/x/tools/cmd/cover && touch $@
+else
+	go get golang.org/x/tools/cmd/cover && touch $@
+endif
+GO_DEPS += .coverage.tools.d
 
 cover-debug:
 	env LIBSTORAGE_DEBUG=true $(MAKE) cover
@@ -798,7 +862,11 @@ build:
 	$(MAKE) libstor-c libstor-s
 	$(MAKE) build-lss
 
-test: $(GO_TEST)
+parallel-test: $(filter-out ./drivers/storage/vfs/%,$(GO_TEST))
+vfs-test: $(filter ./drivers/storage/vfs/%,$(GO_TEST))
+test:
+	$(MAKE) vfs-test
+	$(MAKE) -j parallel-test
 
 test-debug:
 	env LIBSTORAGE_DEBUG=true $(MAKE) test
@@ -807,18 +875,5 @@ clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)
 
-run: $(GOPATH)/bin/libstorage-mock-server
-	env LIBSTORAGE_RUN_HOST='tcp://127.0.0.1:7979' $?
-
-run-debug:
-	env LIBSTORAGE_DEBUG=true $(MAKE) run
-
-run-tls:
-	env LIBSTORAGE_RUN_TLS='true' $(MAKE) run
-
-run-tls-debug:
-	env LIBSTORAGE_RUN_TLS='true' $(MAKE) run-debug
-
 .PHONY: info clean clobber \
-		run run-debug run-tls run-tls-debug \
 		$(GO_PHONY)

@@ -380,12 +380,20 @@ func TestVolumeSnapshot(t *testing.T) {
 		assert.Equal(t, snapshotName, snap.Name)
 		assert.Equal(t, volumeID, snap.VolumeID)
 
-		snapshots, err := client.API().SnapshotsByService(nil, vfs.Name)
-		assert.NoError(t, err)
-		if err != nil {
-			t.FailNow()
+		snapCountEqual := false
+		for x := 0; x < 10; x++ {
+			time.Sleep(time.Duration(1) * time.Second)
+			snapshots, err := client.API().SnapshotsByService(nil, vfs.Name)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if len(snapshots) != 10 {
+				continue
+			}
+			snapCountEqual = assert.EqualValues(t, 10, len(snapshots))
+			break
 		}
-		assert.EqualValues(t, 10, len(snapshots))
+		assert.True(t, snapCountEqual)
 	}
 	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
 }

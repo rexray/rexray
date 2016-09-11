@@ -22,6 +22,7 @@ before_install:
   - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
   - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
   - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
+  - make version
   - make info
   - make deps
 

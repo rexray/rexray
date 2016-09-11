@@ -1,5 +1,5 @@
 hash: 161e2da934aca78e92bcb2f7f233a3b6d4cd88aa4014c14913ca5e20b24d7862
-updated: 2016-09-06T11:56:49.66487346-05:00
+updated: 2016-09-10T14:57:55.660284521-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -23,24 +23,24 @@ imports:
   subpackages:
   - aws
   - aws/awserr
-  - aws/credentials
-  - aws/credentials/ec2rolecreds
-  - aws/ec2metadata
-  - aws/session
-  - service/efs
+  - aws/awsutil
   - aws/client
   - aws/client/metadata
-  - aws/request
   - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
   - aws/defaults
-  - private/endpoints
-  - aws/awsutil
+  - aws/ec2metadata
+  - aws/request
+  - aws/session
   - aws/signer/v4
+  - private/endpoints
   - private/protocol
-  - private/protocol/restjson
-  - private/protocol/rest
-  - private/protocol/jsonrpc
   - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/rest
+  - private/protocol/restjson
+  - service/efs
 - name: github.com/BurntSushi/toml
   version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/cesanta/ucl
@@ -50,16 +50,16 @@ imports:
   subpackages:
   - schema
 - name: github.com/davecgh/go-spew
-  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/emccode/goisilon
   version: 653c13de5e1e0294ca0c7eead83e396fe308b497
   subpackages:
   - api
+  - api/json
   - api/v1
   - api/v2
-  - api/json
 - name: github.com/emccode/goscaleio
   version: 9d95003c0069b1949a0fb46832870799caa5c360
   repo: https://github.com/emccode/goscaleio
@@ -92,11 +92,11 @@ imports:
 - name: github.com/kr/text
   version: 7cafcd837844e784b526369c9bce262804aebc60
 - name: github.com/magiconair/properties
-  version: 61b492c03cf472e0c6419be5899b8e0dc28b1b88
+  version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/mitchellh/mapstructure
   version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
 - name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
 - name: github.com/Sirupsen/logrus
@@ -117,12 +117,12 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: 1358eff22f0dd0c54fc521042cc607f6ff4b531a
+  version: cfe3c2a7525b50c3d707256e371c90938cfef98a
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  version: 30de6d19a3bd89a5f38ae4028e23aaa5582648af
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1
@@ -133,4 +133,4 @@ imports:
 - name: gopkg.in/yaml.v2
   version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
   repo: https://github.com/akutz/yaml.git
-devImports: []
+testImports: []

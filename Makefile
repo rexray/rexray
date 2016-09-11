@@ -412,12 +412,28 @@ endif
 ##                                  VERSION                                   ##
 ################################################################################
 
+# figure out the git dirs
+GIT_WORK:=.
+GIT_ROOT:=.git
+ifeq (1,$(VENDORED))
+ifneq (,$(wildcard $(HOME)/.glide))
+ROOT_IMPORT_PATH_DASH:=$(subst /,-,$(ROOT_IMPORT_PATH))
+VGIT_WORK:=$(shell find $(HOME)/.glide -name "*$(ROOT_IMPORT_PATH_DASH)" -type d)
+ifneq (,$(wildcard $(VGIT_WORK)))
+GIT_WORK:=$(VGIT_WORK)
+ifneq (,$(wildcard $(VGIT_WORK)/.git))
+GIT_ROOT:=$(VGIT_WORK)/.git
+endif
+endif
+endif
+endif
+
 # parse a semver
 SEMVER_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z].+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
 PARSE_SEMVER = $(shell echo $(1) | perl -pe 's/$(SEMVER_PATT)/$(2)/gim')
 
 # describe the git information and create a parsing function for it
-GIT_DESCRIBE := $(shell git describe --long --dirty)
+GIT_DESCRIBE := $(shell git --git-dir="$(GIT_ROOT)" --work-tree="$(GIT_WORK)" describe --long --dirty)
 PARSE_GIT_DESCRIBE = $(call PARSE_SEMVER,$(GIT_DESCRIBE),$(1))
 
 # parse the version components from the git information
@@ -434,14 +450,14 @@ V_ARCH := $(ARCH)
 V_OS_ARCH := $(V_OS)-$(V_ARCH)
 
 # the long commit hash
-V_SHA_LONG := $(shell git show HEAD -s --format=%H)
+V_SHA_LONG := $(shell git --git-dir="$(GIT_ROOT)" --work-tree="$(GIT_WORK)" show HEAD -s --format=%H)
 
 # the branch name, possibly from travis-ci
 ifeq ($(origin TRAVIS_BRANCH), undefined)
-	TRAVIS_BRANCH := $(shell git branch | grep '*')
+	TRAVIS_BRANCH := $(shell git --git-dir="$(GIT_ROOT)" --work-tree="$(GIT_WORK)" branch | grep '*')
 else
 ifeq (,$(strip $(TRAVIS_BRANCH)))
-	TRAVIS_BRANCH := $(shell git branch | grep '*')
+	TRAVIS_BRANCH := $(shell git --git-dir="$(GIT_ROOT)" --work-tree="$(GIT_WORK)" branch | grep '*')
 endif
 endif
 TRAVIS_BRANCH := $(subst $(ASTERIK) ,,$(TRAVIS_BRANCH))

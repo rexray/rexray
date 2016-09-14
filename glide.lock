@@ -1,5 +1,5 @@
-hash: 997eecf1d4fd1d201afb78c6ef7fa0a5c48c1280227f1052491ed4b377b50bf2
-updated: 2016-09-13T16:27:41.308574543-05:00
+hash: 2dd37d71fed568fd0d9f95c4129ef26873720050fbb9787daa18bd1c4d2191db
+updated: 2016-09-14T13:59:19.68304615-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -72,7 +72,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/emccode/libstorage
-  version: c23090e58041510950fc6d59adb52ef3763d8a99
+  version: 2f7210c90252a4e1c9fb011ba29158cb0facb516
   subpackages:
   - api
   - api/client
@@ -164,7 +164,7 @@ imports:
   version: 317ec73d0d7507658ee3be15866b445d6d921848
   repo: https://github.com/akutz/viper.git
 - name: golang.org/x/net
-  version: 749a502dd1eaf3e5bfd4f8956748c502357c0bbe
+  version: de35ec43e7a9aabd6a9c54d2898220ea7e44de7d
   repo: https://github.com/golang/net
   subpackages:
   - context

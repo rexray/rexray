@@ -28,6 +28,16 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.5.1 (2016/09/14)
+This is a minor release, but includes a few important patches.
+
+### Enhancements
+* libStorage 0.2.1 ([#docs](http://libstorage.readthedocs.io/en/v0.2.1))
+* ScaleIO 2.0.0.2 Support ([#555](https://github.com/emccode/rexray/issues/555))
+
+### Bug Fixes
+* EFS Volume / Tag Creation Bug ([#261](https://github.com/emccode/libstorage/issues/261))
+
 ## Version 0.5.0 (2016/09/07)
 Beginning with this release, REX-Ray's versions will increment the MINOR
 component with the introduction of a new storage driver via libStorage in

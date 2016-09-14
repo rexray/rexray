@@ -4,6 +4,19 @@ Release early, release often
 
 ---
 
+## Version 0.2.1 (2016/09/14)
+This is a minor release that includes a fix for the EFS storage driver as well
+as improvements to the build process. For example, Travis-CI now builds
+libStorage against multiple versions of Golang and both Linux and Darwin.
+
+### Bug Fixes
+* EFS Volume / Tag Creation Bug ([#261](https://github.com/emccode/libstorage/issues/261))
+* Next Device Fix ([#268](https://github.com/emccode/libstorage/issues/268))
+
+### Enhancements
+* Build Matrix Support ([#263](https://github.com/emccode/libstorage/issues/263))
+* Glide 12 Support ([#265](https://github.com/emccode/libstorage/issues/265))
+
 ## Version 0.2.0 (2016/09/07)
 Beginning with this release, libStorage's versions will increment the MINOR
 component with the introduction of a new storage driver in concert with the

@@ -94,6 +94,7 @@ export PATH := $(GOPATH)/bin:$(PATH)
 GO_LIST_BUILD_INFO_CMD := go list -f '{{with $$ip:=.}}{{with $$ctx:=context}}{{printf "%s %s %s %s %s 0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ctx.GOOS $$ctx.GOARCH (join $$ctx.BuildTags ",")}}{{end}}{{end}}'
 BUILD_INFO := $(shell $(GO_LIST_BUILD_INFO_CMD))
 ROOT_IMPORT_PATH := $(word 1,$(BUILD_INFO))
+ROOT_IMPORT_PATH_NV := $(ROOT_IMPORT_PATH)
 ROOT_IMPORT_NAME := $(word 2,$(BUILD_INFO))
 ROOT_DIR := $(word 3,$(BUILD_INFO))
 GOOS ?= $(word 4,$(BUILD_INFO))
@@ -104,6 +105,7 @@ BUILD_TAGS := $(wordlist 2,$(words $(BUILD_TAGS)),$(BUILD_TAGS))
 VENDORED := 0
 ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
 VENDORED := 1
+ROOT_IMPORT_PATH_NV := $(shell echo $(ROOT_IMPORT_PATH) | sed 's/.*vendor\///g')
 endif
 
 
@@ -252,6 +254,9 @@ $(foreach i,\
 ################################################################################
 info:
 	$(info Project Import Path.........$(ROOT_IMPORT_PATH))
+ifeq (1,$(VENDORED))
+	$(info No Vendor Import Path.......$(ROOT_IMPORT_PATH_NV))
+endif
 	$(info Project Name................$(ROOT_IMPORT_NAME))
 	$(info OS / Arch...................$(GOOS)_$(GOARCH))
 	$(info Vendored....................$(VENDORED))
@@ -417,7 +422,7 @@ GIT_WORK:=.
 GIT_ROOT:=.git
 ifeq (1,$(VENDORED))
 ifneq (,$(wildcard $(HOME)/.glide))
-ROOT_IMPORT_PATH_DASH:=$(subst /,-,$(ROOT_IMPORT_PATH))
+ROOT_IMPORT_PATH_DASH:=$(subst /,-,$(ROOT_IMPORT_PATH_NV))
 VGIT_WORK:=$(shell find $(HOME)/.glide -name "*$(ROOT_IMPORT_PATH_DASH)" -type d)
 ifneq (,$(wildcard $(VGIT_WORK)))
 GIT_WORK:=$(VGIT_WORK)

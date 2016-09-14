@@ -39,7 +39,7 @@ func (d *driver) Name() string {
 func (d *driver) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
-	return "", nil
+	return "", types.ErrNotImplemented
 }
 
 // LocalDevices returns a map of the system's local devices.

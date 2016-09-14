@@ -459,7 +459,7 @@ func TestVolumeAttach(t *testing.T) {
 		if reply == nil {
 			t.FailNow()
 		}
-		assert.Equal(t, "1234", attTokn)
+		assert.Equal(t, "/dev/xvdc", attTokn)
 		assert.Equal(t, "vfs-002", reply.ID)
 		assert.Equal(t, "/dev/xvdc", reply.Attachments[0].DeviceName)
 

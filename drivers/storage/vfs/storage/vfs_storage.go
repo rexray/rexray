@@ -338,7 +338,7 @@ func (d *driver) VolumeAttach(
 
 	vol.Attachments = []*types.VolumeAttachment{att}
 
-	return vol, "1234", nil
+	return vol, nextDevice, nil
 }
 
 func (d *driver) VolumeDetach(

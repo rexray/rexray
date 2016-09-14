@@ -81,7 +81,7 @@ func Run() {
 	} else if cmd == "nextdevice" {
 		op = "next device"
 		opResult, opErr := d.NextDevice(ctx, store)
-		if opErr != nil {
+		if opErr != nil && opErr != apitypes.ErrNotImplemented {
 			err = opErr
 		} else {
 			result = opResult

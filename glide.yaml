@@ -43,6 +43,10 @@ import:
     version: v1.2.2
     repo:    https://github.com/aws/aws-sdk-go
 
+### Rackspace
+  - package: github.com/rackspace/gophercloud
+    ref:     42196eaf5b93739d335921404bb7c5f2205fceb3
+    repo:    https://github.com/clintonskitson/gophercloud.git
 
 ################################################################################
 ##                             Build System Tools                             ##

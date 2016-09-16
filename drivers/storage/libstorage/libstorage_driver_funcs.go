@@ -116,6 +116,7 @@ func (d *driver) VolumeCreate(
 	req := &types.VolumeCreateRequest{
 		Name:             name,
 		AvailabilityZone: opts.AvailabilityZone,
+		Encrypted:        opts.Encrypted,
 		IOPS:             opts.IOPS,
 		Size:             opts.Size,
 		Type:             opts.Type,

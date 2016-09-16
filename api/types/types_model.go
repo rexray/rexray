@@ -102,6 +102,9 @@ type Snapshot struct {
 	// The name of the snapshot.
 	Name string `json:"name,omitempty" yaml:",omitempty"`
 
+	// A flag indicating whether or not the snapshot is encrypted.
+	Encrypted bool `json:"encrypted,omitempty" yaml:"encrypted,omitempty"`
+
 	// The snapshot's ID.
 	ID string `json:"id" yaml:"id"`
 
@@ -128,6 +131,9 @@ type Volume struct {
 
 	// The availability zone for which the volume is available.
 	AvailabilityZone string `json:"availabilityZone,omitempty" yaml:"availabilityZone,omitempty"`
+
+	// A flag indicating whether or not the volume is encrypted.
+	Encrypted bool `json:"encrypted,omitempty" yaml:"encrypted,omitempty"`
 
 	// The volume IOPs.
 	IOPS int64 `json:"iops,omitempty" yaml:"iops,omitempty"`

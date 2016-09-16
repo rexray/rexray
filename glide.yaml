@@ -38,7 +38,7 @@ import:
   - package: github.com/emccode/goisilon
     version: v1.4.0
 
-### EFS
+### EFS and EBS
   - package: github.com/aws/aws-sdk-go
     version: v1.2.2
     repo:    https://github.com/aws/aws-sdk-go

@@ -266,3 +266,85 @@ tag? Well, the `VERSION` file in fact has two purposes:
      semantic version injected into the produced binary to be created using
      the *targeted* version of the next release and not just the value of the
      last, tagged commit.
+
+## Build with Docker
+It may be beneficial to build REX-Ray's `Makefile` targets within a Docker container if there are issues with conflicting dependencies during the build process. REX-Ray's `Makefile` is configured to optionally allow specific targets to be built within a Docker container. The following targets are supported: `make`, `make tgz`, `make rpm`, `make deb`, `make clean`, and `make pkg-clean`.
+
+To build these targets with Docker, make sure [`GOPATH`](https://golang.org/doc/code.html#GOPATH) is set properly, and `BUILD_WITH_DOCKER` is set to `1`:
+
+```sh
+export BUILD_WITH_DOCKER=1
+```
+
+Building any of the supported `Makefile` targets will build a Docker image based on the `Dockerfile` in REX-Ray's root directory, and run the respective commands within a Docker container based on this Docker image.
+
+The resulting artifacts will be placed in the same locations as if they were built without Docker.
+
+### Build Directly with Dockerfile
+It is not required to build the Docker image and directly run a Docker container before building a target with Docker, as the `Makefile` will automatically do so. However, it is possible to do so, and the produced Docker container will run the following by default:
+
+```sh
+make clean \
+&& make deps \
+&& env GOOS=linux GOARCH=amd64 make build \
+&& env GOOS=darwin GOARCH=amd64 make build \
+&& make tgz \
+&& make RPMBUILD='fakeroot rpmbuild' rpm \
+&& make deb
+```
+
+To begin, assuming:
+- Your GitHub username is `ghjanedoe`
+- Your REX-Ray fork is checked out in `$HOME/go/src/github.com/ghjanedoe/rexray/`
+
+First, make sure the `Dockerfile` is in `$HOME/go/src/github.com/ghjanedoe/rexray/`, and [`GOPATH`](https://golang.org/doc/code.html#GOPATH) is set to `$HOME/go`.
+
+Then build a Docker image, for instance called `docker-make-rexray` using REX-Ray's `Dockerfile` by:
+```sh
+docker build -t docker-make-rexray .
+```
+
+To run a Docker container using the image `docker-make-rexray`:
+
+```sh
+docker run -e LOCAL_GOPATH=$GOPATH \
+-v $HOME/go/src/github.com/ghjanedoe/rexray/:/go/src/github.com/emccode/rexray/ \
+-v $HOME/go/pkg/:/go/pkg/ \
+-v $HOME/go/bin/:/go/bin/ \
+-w=/go/src/github.com/emccode/rexray/ docker-make-rexray
+```
+
+Note that `RPMBUILD='fakeroot rpmbuild'` must be specified when building RPMs within the Docker container. This is automatically handled in the Dockerfile's default `CMD` and within the `Makefile` when running `make rpm` after setting `BUILD_WITH_DOCKER=1`. However, when directly running the Docker container without the `Makefile` and overriding the default `CMD` with `docker run`, use `make RPMBUILD='fakeroot rpmbuild' rpm` instead of `make rpm`. For example:
+
+```sh
+docker run -e LOCAL_GOPATH=$GOPATH \
+-v $HOME/go/src/github.com/ghjanedoe/rexray/:/go/src/github.com/emccode/rexray/ \
+-w=/go/src/github.com/emccode/rexray/ docker-make-rexray /bin/bash -c "make RPMBUILD='fakeroot rpm' rpm"
+```
+
+The produced artifacts will be located as follows:
+- The rexray binaries are created on your local machine in `$HOME/go/bin/rexray` and in `$HOME/go/bin/darwin_amd64/rexray`.
+- `*.tar.gz` is created on your local machine in `$HOME/go/src/github.com/emccode/rexray/`.
+- `*.rpm` is created on your local machine in `$HOME/go/src/github.com/emccode/rexray/`.
+- `*.deb` is created on your local machine in` $HOME/go/src/github.com/emccode/rexray/`.
+
+### Resuming Builds without Docker
+To build without using Docker after having built with Docker, make sure to reset `BUILD_WITH_DOCKER` to not be equal to `1`; for instance:
+
+```sh
+export BUILD_WITH_DOCKER=0
+```
+
+Note that files created by Docker containers are owned by `root`; thus, file permission errors may occur if dependencies and builds were initially created within Docker, and subsequent builds are made without Docker. If so, then it may be necessary to change the ownership on files within the `GOPATH` to be your non-root user.
+
+First, verify that `$USER` corresponds with your current user:
+
+```sh
+echo $USER
+```
+
+Then, use the following command to change ownership on files within the `GOPATH` to `$USER`:
+
+```sh
+sudo find $GOPATH -group root -print0 -exec chown -hR $USER:$USER {} +
+```

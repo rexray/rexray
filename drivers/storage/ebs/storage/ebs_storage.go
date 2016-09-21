@@ -537,15 +537,23 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.New("no volume found")
 	}
 	// Check if volume is already attached
-	if len(volumes[0].Attachments) > 0 && !opts.Force {
-		return nil, "", goof.New("volume already attached to a host")
-	}
-	// Detach already attached volume if forced
-	if opts.Force {
-		if _, err := d.VolumeDetach(ctx, volumeID, nil); err != nil {
+	if len(volumes[0].Attachments) > 0 {
+		// Detach already attached volume if forced
+		if !opts.Force {
+			return nil, "", goof.New("volume already attached to a host")
+		}
+		_, err := d.VolumeDetach(
+			ctx,
+			volumeID,
+			&types.VolumeDetachOpts{
+				Force: opts.Force,
+				Opts:  opts.Opts,
+			})
+		if err != nil {
 			return nil, "", goof.WithError("Error detaching volume", err)
 		}
 	}
+
 	// Retrieve next device name
 	nextDeviceName := ""
 	if opts.NextDevice != nil {

@@ -7,13 +7,14 @@ import (
 	"os"
 	"strings"
 
+	"gopkg.in/yaml.v1"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	glog "github.com/akutz/golf/logrus"
 	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"gopkg.in/yaml.v1"
 
 	"github.com/emccode/libstorage/api/context"
 	apiserver "github.com/emccode/libstorage/api/server"
@@ -21,7 +22,7 @@ import (
 	apiutils "github.com/emccode/libstorage/api/utils"
 	apiclient "github.com/emccode/libstorage/client"
 
-	"github.com/emccode/rexray/rexray/cli/term"
+	"github.com/emccode/rexray/cli/cli/term"
 	"github.com/emccode/rexray/util"
 )
 

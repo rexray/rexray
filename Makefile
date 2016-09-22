@@ -1,16 +1,64 @@
+SHELL := /bin/bash
+
 all:
 	$(MAKE) deps
 	$(MAKE) build
-
-
-################################################################################
-##                                 CONSTANTS                                  ##
-################################################################################
 
 # the name of the program being compiled. this word is in place of file names,
 # directory paths, etc. changing the value of PROG is no guarantee everything
 # continues to function.
 PROG := rexray
+
+
+################################################################################
+##                                  DOCKER                                    ##
+################################################################################
+DPKG := github.com/emccode/rexray
+DIMG := golang:1.7.1
+DGOOS := $(shell uname -s | tr A-Z a-z)
+DGOARCH := amd64
+DNAME := build-rexray
+DPATH := /go/src/$(DPKG)
+DSRCS := $(shell git ls-files)
+DPROG := /go/bin/$(PROG)
+ifneq (linux,$(DGOOS))
+DPROG := /go/bin/$(DGOOS)_$(DGOARCH)/$(PROG)
+endif
+ifeq (darwin,$(DGOOS))
+DTARC := -
+endif
+
+docker-build:
+	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
+		docker exec $(DNAME) mkdir -p $(DPATH) && \
+		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
+		mkdir -p .build
+	docker exec -t $(DNAME) env make -C $(DPATH) deps && \
+		docker exec -t $(DNAME) \
+			env GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+			make -C $(DPATH) -j build
+	@docker cp $(DNAME):$(DPROG) $(PROG)
+	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
+		stat -f '%z' $(PROG) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
+		printf "\nThe $(PROG) binary is $${mb}MB and located at: \n\n" && \
+		printf "  ./$(PROG)\n\n"
+
+docker-test:
+	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
+		docker exec $(DNAME) mkdir -p $(DPATH) && \
+		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
+		mkdir -p .build
+	docker exec -t $(DNAME) make -C $(DPATH) test
+
+docker-clean:
+	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
+
+
+ifneq (,$(shell which go))
+
+################################################################################
+##                                 CONSTANTS                                  ##
+################################################################################
 
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
@@ -19,7 +67,6 @@ LPAREN := (
 RPAREN := )
 COMMA := ,
 5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
-
 
 # a list of the go 1.6 stdlib pacakges as grepped from https://golang.org/pkg/
 GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
@@ -632,10 +679,10 @@ build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
 ################################################################################
 ##                                   CLI                                      ##
 ################################################################################
-CLI := $(shell go list -f '{{.Target}}' ./$(PROG))
-CLI_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./$(PROG))
-CLI_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./$(PROG))
-CLI_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./$(PROG))
+CLI := $(shell go list -f '{{.Target}}' ./cli/$(PROG))
+CLI_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/$(PROG))
+CLI_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/$(PROG))
+CLI_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/$(PROG))
 
 build-cli-linux: $(CLI_LINUX)
 build-cli-darwin: $(CLI_DARWIN)
@@ -821,7 +868,9 @@ build:
 	$(MAKE) build-libstorage
 	$(MAKE) build-generated
 	$(MAKE) build-$(PROG)
+ifneq (1,$(DOCKER))
 	$(MAKE) stat-prog
+endif
 
 cli: build-cli
 
@@ -849,3 +898,5 @@ clean: $(GO_CLEAN) pkg-clean
 clobber: clean $(GO_CLOBBER)
 
 .PHONY: info clean clobber $(GO_PHONY)
+
+endif

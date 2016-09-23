@@ -49,13 +49,13 @@ Provider              | Storage Platform(s)
 ----------------------|--------------------
 EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
 [Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox) | Virtual Media
+Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs)
 
 Support for the following storage providers will be reintroduced in upcoming
 releases:
 
 Provider              | Storage Platform(s)
 ----------------------|--------------------
-[Amazon EC2](./user-guide/storage-providers.md#coming-soon) | EBS
 [Google Compute Engine](./user-guide/storage-providers.md#coming-soon) | Disk
 [Open Stack](./user-guide/storage-providers.md#coming-soon) | Cinder
 [Rackspace](./user-guide/storage-providers.md#coming-soon) | Cinder

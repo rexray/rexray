@@ -27,8 +27,10 @@ endif
 ifeq (darwin,$(DGOOS))
 DTARC := -
 endif
+DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG)
 
 docker-build:
+	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
 	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
 		docker exec $(DNAME) mkdir -p $(DPATH) && \
 		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
@@ -54,7 +56,7 @@ docker-clean:
 	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 
 
-ifneq (,$(shell which go))
+ifneq (,$(shell which go 2> /dev/null)) # if go exists
 
 ################################################################################
 ##                                 CONSTANTS                                  ##
@@ -899,4 +901,4 @@ clobber: clean $(GO_CLOBBER)
 
 .PHONY: info clean clobber $(GO_PHONY)
 
-endif
+endif # ifneq (,$(shell which go 2> /dev/null))

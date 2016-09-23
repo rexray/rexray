@@ -65,17 +65,24 @@ REX-Ray can be ran as an interactive CLI to perform volume management
 capabilities.
 
 ```bash
-$ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESSKEY=access_key
-$ export AWS_SECRETKEY=secret_key
+$ export REXRAY_SERVICE=ebs
+$ export EBS_ACCESSKEY=access_key
+$ export EBS_SECRETKEY=secret_key
 $ rexray volume get
 
-- providername: ec2
-  instanceid: i-695bb6ab
-  volumeid: vol-dedbadc3
-  devicename: /dev/sda1
-  region: us-west-1
-  status: attached
+- attachments:
+  - instanceID:
+      id: i-620efed6
+      driver: ebs
+    status: attached
+    volumeID: vol-6ac6c7d6
+  availabilityZone: us-west-1b
+  iops: 100
+  name: ""
+  size: 8
+  status: in-use
+  id: vol-6ac6c7d6
+  type: gp2
 ```
 
 ## Runtime - Service (Docker)
@@ -83,9 +90,9 @@ Additionally, it can be ran as a service to support `Docker`, `Mesos`, and other
  platforms that can communicate through `HTTP/JSON`.
 
 ```bash
-$ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESSKEY=access_key
-$ export AWS_SECRETKEY=secret_key
+$ export REXRAY_SERVICE=ebs
+$ export EBS_ACCESSKEY=access_key
+$ export EBS_SECRETKEY=secret_key
 $ rexray service start
 Starting REX-Ray...SUCCESS!
 
@@ -96,5 +103,4 @@ Starting REX-Ray...SUCCESS!
 
 $ docker run -ti --volume-driver=rexray -v test:/test busybox
 $ df /test
-
 ```

@@ -305,6 +305,109 @@ libstorage:
   with this driver.
 - The driver supports VirtualBox 5.0.10+
 
+## AWS EBS
+The AWS EBS driver registers a storage driver named `ebs` with the
+`libStorage` driver manager and is used to connect and manage AWS Elastic Block
+Storage volumes for EC2 instances.
+
+!!! note
+    For backwards compatibility, the driver also registers a storage driver
+    named `ec2`. The use of `ec2` in config files is deprecated but functional.
+
+!!! note
+    The EBS driver does not yet support snapshots or tags, as previously supported
+    in Rex-Ray v0.3.3.
+
+The EBS driver is made possible by the
+[official Amazon Go AWS SDK](https://github.com/aws/aws-sdk-go.git).
+
+### Requirements
+
+* AWS account
+* VPC - EBS can be accessed within VPC
+* AWS Credentials
+
+### Configuration
+The following is an example with all possible fields configured.  For a running
+example see the `Examples` section.
+
+```yaml
+ebs:
+  accessKey:      XXXXXXXXXX
+  secretKey:      XXXXXXXXXX
+  region:         us-east-1
+```
+
+#### Configuration Notes
+- The `accessKey` and `secretKey` configuration parameters are optional and should
+be used when explicit AWS credentials configuration needs to be provided. EBS driver
+uses official golang AWS SDK library and supports all other ways of providing
+access credentials, like environment variables or instance profile IAM permissions.
+- `region` represents AWS region where EBS volumes should be provisioned.
+See official AWS documentation for list of supported regions.
+<!-- - `tag` is used to partition multiple services within single AWS account and is
+used as prefix for EBS names in format `[tagprefix]/volumeName`. -->
+
+For information on the equivalent environment variable and CLI flag names
+please see the section on how non top-level configuration properties are
+[transformed](./config.md#configuration-properties).
+
+<!--### Volume tagging (optional)
+By default, EBS driver has access to all volumes and snapshots defined in your
+AWS account. Volume tagging gives you the ability to only include management of
+volumes that have a specific `ec2 tag`. There is an optional `tag` key in
+`ebs` configuration section to limit the access to and tagging that happens
+for any new volumes or snapshots created. The objects will have a `ec2 tag`
+called `libstroageSet` with a value defined by the configurable `tag`.
+
+For example, if you had a set of hosts you can configure `libstorage` to tag them
+with `prod`, `testing` or `development` each with its own set of volumes and
+snapshots.
+
+Volumes and snapshots that are accessed directly from `volumeID` can still be
+controlled regardless of the `tag`. -->
+
+### Activating the Driver
+To activate the AWS EBS driver please follow the instructions for
+[activating storage drivers](./config.md#storage-drivers),
+using `ebs` as the driver name.
+
+### Troubleshooting
+- Make sure that AWS credentials (user or role) has following AWS permissions on
+  `libStorage` server instance that will be making calls to AWS API:
+    - `ec2:AttachVolume`,
+    - `ec2:CreateVolume`,
+    - `ec2:CreateSnapshot`,
+    - `ec2:CreateTags`,
+    - `ec2:DeleteVolume`,
+    - `ec2:DeleteSnapshot`,
+    - `ec2:DescribeAvailabilityZones`,
+    - `ec2:DescribeInstances`,
+    - `ec2:DescribeVolumes`,
+    - `ec2:DescribeVolumeAttribute`,
+    - `ec2:DescribeVolumeStatus`,
+    - `ec2:DescribeSnapshots`,
+    - `ec2:CopySnapshot`,
+    - `ec2:DescribeSnapshotAttribute`,
+    - `ec2:DetachVolume`,
+    - `ec2:ModifySnapshotAttribute`,
+    - `ec2:ModifyVolumeAttribute`,
+    - `ec2:DescribeTags`
+
+### Examples
+Below is a working `config.yml` file that works with AWS EBS.
+
+```yaml
+libstorage:
+  server:
+    services:
+      ebs:
+        driver: ebs
+        ebs:
+          accessKey:      XXXXXXXXXX
+          secretKey:      XXXXXXXXXX
+          region:         us-east-1
+```
 ## AWS EFS
 The AWS EFS driver registers a storage driver named `efs` with the
 `libStorage` driver manager and is used to connect and manage AWS Elastic File
@@ -334,7 +437,7 @@ efs:
 be used when explicit AWS credentials configuration needs to be provided. EFS driver
 uses official golang AWS SDK library and supports all other ways of providing
 access credentials, like environment variables or instance profile IAM permissions.
-- `region` represents AWS region where should be EFS provisioned. See official AWS
+- `region` represents AWS region where EFS should be provisioned. See official AWS
 documentation for list of supported regions.
 - `securityGroups` list of security groups attached to `MountPoint` instances.
 If no security groups are provided the default VPC security group is used.
@@ -371,17 +474,17 @@ using `efs` as the driver name.
 ### Troubleshooting
 - Make sure that AWS credentials (user or role) has following AWS permissions on
   `libStorage` server instance that will be making calls to AWS API:
-  - `elasticfilesystem:CreateFileSystem`
-  - `elasticfilesystem:CreateMountTarget`
-  - `ec2:DescribeSubnets`
-  - `ec2:DescribeNetworkInterfaces`
-  - `ec2:CreateNetworkInterface`
-  - `elasticfilesystem:CreateTags`
-  - `elasticfilesystem:DeleteFileSystem`
-  - `elasticfilesystem:DeleteMountTarget`
-  - `ec2:DeleteNetworkInterface`
-  - `elasticfilesystem:DescribeFileSystems`
-  - `elasticfilesystem:DescribeMountTargets`
+    - `elasticfilesystem:CreateFileSystem`
+    - `elasticfilesystem:CreateMountTarget`
+    - `ec2:DescribeSubnets`
+    - `ec2:DescribeNetworkInterfaces`
+    - `ec2:CreateNetworkInterface`
+    - `elasticfilesystem:CreateTags`
+    - `elasticfilesystem:DeleteFileSystem`
+    - `elasticfilesystem:DeleteMountTarget`
+    - `ec2:DeleteNetworkInterface`
+    - `elasticfilesystem:DescribeFileSystems`
+    - `elasticfilesystem:DescribeMountTargets`
 
 ### Examples
 Below is a working `config.yml` file that works with AWS EFS.

@@ -586,6 +586,8 @@ remote storage systems. Currently the following storage drivers are supported:
 [Isilon](./storage-providers.md#isilon) | isilon
 [ScaleIO](./storage-providers.md#scaleio) | scaleio
 [VirtualBox](./storage-providers.md#virtualbox) | virtualbox
+[EBS](./storage-providers.md#ebs) | ebs, ec2
+[EFS](./storage-providers.md#efs) | efs
 ..more coming|
 
 The `libstorage.server.libstorage.storage.driver` property can be used to
@@ -690,6 +692,8 @@ Driver|Supported
 Isilon|Not yet
 ScaleIO|Yes
 VirtualBox|Yes
+EBS|Yes
+EFS|No
 
 #### Ignore Used Count
 By default accounting takes place during operations that are performed

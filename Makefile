@@ -4,6 +4,84 @@ all:
 
 
 ################################################################################
+##                                  DOCKER                                    ##
+################################################################################
+DPKG := github.com/emccode/libstorage
+DIMG := golang:1.7.1
+DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
+ifeq (undefined,$(origin DGOOS))
+DGOOS := $(DGOHOSTOS)
+endif
+DGOARCH := amd64
+DPRFX := build-libstorage
+DNAME := $(DPRFX)
+ifeq (1,$(DBUILD_ONCE))
+DNAME := $(DNAME)-$(shell date +%s)
+endif
+DPATH := /go/src/$(DPKG)
+DSRCS := $(shell git ls-files)
+DPROG1_NAME := lss-$(DGOOS)
+DPROG1_PATH := /go/bin/$(DPROG1_NAME)
+DPROG2_NAME := lsx-$(DGOOS)
+DPROG2_PATH := /go/bin/$(DPROG2_NAME)
+ifneq (linux,$(DGOOS))
+DPROG1_PATH := /go/bin/$(DGOOS)_$(DGOARCH)/$(DPROG1_NAME)
+DPROG2_PATH := /go/bin/$(DGOOS)_$(DGOARCH)/$(DPROG2_NAME)
+endif
+ifeq (darwin,$(DGOHOSTOS))
+DTARC := -
+endif
+DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG) &> /dev/null
+DTO_CLOBBER := docker ps -a --format '{{.Names}}' | grep $(DPRFX)
+
+docker-build:
+	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
+	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
+		docker exec $(DNAME) mkdir -p $(DPATH) && \
+		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
+		mkdir -p .build
+	docker exec -t $(DNAME) env make -C $(DPATH) deps && \
+		docker exec -t $(DNAME) \
+			env GOOS=$(DGOOS) GOARCH=$(DGOARCH) make -C $(DPATH) -j build
+	@docker cp $(DNAME):$(DPROG1_PATH) $(DPROG1_NAME)
+	@docker cp $(DNAME):$(DPROG2_PATH) $(DPROG2_NAME)
+	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
+		stat -f '%z' $(DPROG1_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
+		printf "\nThe $(DPROG1_NAME) binary is $${mb}MB and located at: \n\n" && \
+		printf "  ./$(DPROG1_NAME)\n\n"
+	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
+		stat -f '%z' $(DPROG2_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
+		printf "\nThe $(DPROG2_NAME) binary is $${mb}MB and located at: \n\n" && \
+		printf "  ./$(DPROG2_NAME)\n\n"
+ifeq (1,$(DBUILD_ONCE))
+	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
+endif
+
+docker-test:
+	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
+		docker exec $(DNAME) mkdir -p $(DPATH) && \
+		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
+		mkdir -p .build
+	docker exec -t $(DNAME) env make -C $(DPATH) deps && \
+		docker exec -t $(DNAME) env TRAVIS=true \
+			LIBSTORAGE_DISABLE_STARTUP_INFO=true make -C $(DPATH) test
+
+docker-clean:
+	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
+
+docker-clobber:
+	CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
+		docker stop $$CNAMES && docker rm $$CNAMES; \
+	fi
+
+docker-list:
+	-$(DTO_CLOBBER)
+
+
+ifneq (,$(shell which go 2> /dev/null)) # if go exists
+
+
+################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
 EMPTY :=
@@ -880,7 +958,9 @@ build-generated:
 build:
 	$(MAKE) build-generated
 	$(MAKE) build-libstorage
+ifeq ($(GOOS),$(GOHOSTOS))
 	$(MAKE) libstor-c libstor-s
+endif
 	$(MAKE) build-lss
 
 parallel-test: $(filter-out ./drivers/storage/vfs/%,$(GO_TEST))
@@ -896,5 +976,6 @@ clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)
 
-.PHONY: info clean clobber \
-		$(GO_PHONY)
+.PHONY: info clean clobber $(GO_PHONY)
+
+endif # ifneq (,$(shell which go 2> /dev/null))

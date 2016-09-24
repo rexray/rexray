@@ -15,19 +15,27 @@ PROG := rexray
 ################################################################################
 DPKG := github.com/emccode/rexray
 DIMG := golang:1.7.1
-DGOOS := $(shell uname -s | tr A-Z a-z)
+DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
+ifeq (undefined,$(origin DGOOS))
+DGOOS := $(DGOHOSTOS)
+endif
 DGOARCH := amd64
-DNAME := build-rexray
+DPRFX := build-rexray
+DNAME := $(DPRFX)
+ifeq (1,$(DBUILD_ONCE))
+DNAME := $(DNAME)-$(shell date +%s)
+endif
 DPATH := /go/src/$(DPKG)
 DSRCS := $(shell git ls-files)
 DPROG := /go/bin/$(PROG)
 ifneq (linux,$(DGOOS))
 DPROG := /go/bin/$(DGOOS)_$(DGOARCH)/$(PROG)
 endif
-ifeq (darwin,$(DGOOS))
+ifeq (darwin,$(DGOHOSTOS))
 DTARC := -
 endif
-DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG)
+DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG) &> /dev/null
+DTO_CLOBBER := docker ps -a --format '{{.Names}}' | grep $(DPRFX)
 
 docker-build:
 	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
@@ -44,6 +52,9 @@ docker-build:
 		stat -f '%z' $(PROG) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
 		printf "\nThe $(PROG) binary is $${mb}MB and located at: \n\n" && \
 		printf "  ./$(PROG)\n\n"
+ifeq (1,$(DBUILD_ONCE))
+	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
+endif
 
 docker-test:
 	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
@@ -55,6 +66,13 @@ docker-test:
 docker-clean:
 	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 
+docker-clobber:
+	CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
+		docker stop $$CNAMES && docker rm $$CNAMES; \
+	fi
+
+docker-list:
+	-$(DTO_CLOBBER)
 
 ifneq (,$(shell which go 2> /dev/null)) # if go exists
 

@@ -21,7 +21,6 @@ import (
 	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 
 	"github.com/emccode/libstorage/api/context"
-	ebsConfig "github.com/emccode/libstorage/api/drivers/storage/ebs"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/ebs"
@@ -78,7 +77,7 @@ func (d *driver) Name() string {
 // Init initializes the driver.
 func (d *driver) Init(context types.Context, config gofig.Config) error {
 	// Ensure backwards compatibility with ebs and ec2 in config
-	ebsConfig.BackCompat(config)
+	ebs.BackCompat(config)
 
 	d.config = config
 

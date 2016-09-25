@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -63,7 +62,7 @@ type instanceIdentityDocument struct {
 func init() {
 	registry.RegisterStorageDriver(ebs.Name, newDriver)
 	// Backwards compatibility for ec2 driver
-	registry.RegisterStorageDriver("ec2", newDriver)
+	registry.RegisterStorageDriver(ebs.OldName, newDriver)
 }
 
 func newDriver() types.StorageDriver {
@@ -131,7 +130,12 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 
 	d.awsCreds = credentials.NewChainCredentials(
 		[]credentials.Provider{
-			&credentials.StaticProvider{Value: credentials.Value{AccessKeyID: d.accessKey(), SecretAccessKey: d.secretKey()}},
+			&credentials.StaticProvider{
+				Value: credentials.Value{
+					AccessKeyID:     d.accessKey(),
+					SecretAccessKey: d.secretKey(),
+				},
+			},
 			&credentials.EnvProvider{},
 			&credentials.SharedCredentialsProvider{},
 			&ec2rolecreds.EC2RoleProvider{
@@ -139,7 +143,9 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 			},
 		})
 
-	awsConfig := aws.NewConfig().WithCredentials(d.awsCreds).WithRegion(region).WithEndpoint(endpoint).WithMaxRetries(maxRetries)
+	awsConfig := aws.NewConfig().WithCredentials(
+		d.awsCreds).WithRegion(region).WithEndpoint(
+		endpoint).WithMaxRetries(maxRetries)
 
 	// Start new EC2 client with config info
 	d.ec2Instance = awsec2.New(mySession, awsConfig)
@@ -178,7 +184,7 @@ func (d *driver) InstanceInspect(
 	var awsInstanceID string
 	if err := iid.UnmarshalMetadata(&awsInstanceID); err != nil {
 		return nil, goof.WithError(
-			"Error unmarshalling instance id metadata", err)
+			"error unmarshalling instance id metadata", err)
 	}
 	instanceID := &types.InstanceID{ID: awsInstanceID, Driver: d.Name()}
 
@@ -192,15 +198,15 @@ func (d *driver) Volumes(
 	// Get all volumes via EC2 API
 	ec2vols, err := d.getVolume(ctx, "", "")
 	if err != nil {
-		return nil, goof.WithError("Error getting volume", err)
+		return nil, goof.WithError("error getting volume", err)
 	}
 	if len(ec2vols) == 0 {
-		return nil, goof.New("no volumes returned")
+		return nil, errNoVolReturned
 	}
 	// Convert retrieved volumes to libStorage types.Volume
 	vols, convErr := d.toTypesVolume(ctx, ec2vols, opts.Attachments)
 	if convErr != nil {
-		return nil, goof.WithError("Error converting to types.Volume", convErr)
+		return nil, goof.WithError("error converting to types.Volume", convErr)
 	}
 	return vols, nil
 }
@@ -213,14 +219,14 @@ func (d *driver) VolumeInspect(
 	// Get volume corresponding to volume ID via EC2 API
 	ec2vols, err := d.getVolume(ctx, volumeID, "")
 	if err != nil {
-		return nil, goof.WithError("Error getting volume", err)
+		return nil, goof.WithError("error getting volume", err)
 	}
 	if len(ec2vols) == 0 {
-		return nil, goof.New("no volumes returned")
+		return nil, errNoVolReturned
 	}
 	vols, convErr := d.toTypesVolume(ctx, ec2vols, opts.Attachments)
 	if convErr != nil {
-		return nil, goof.WithError("Error converting to types.Volume", convErr)
+		return nil, goof.WithError("error converting to types.Volume", convErr)
 	}
 
 	// Because getVolume returns an array
@@ -243,11 +249,12 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	// Check if volume with same name exists
 	ec2vols, err := d.getVolume(ctx, "", volumeName)
 	if err != nil {
-		return nil, goof.WithFieldsE(fields, "Error getting volume", err)
+		return nil, goof.WithFieldsE(fields, "error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(ctx, ec2vols, false)
 	if convErr != nil {
-		return nil, goof.WithFieldsE(fields, "Error converting to types.Volume", convErr)
+		return nil, goof.WithFieldsE(
+			fields, "error converting to types.Volume", convErr)
 	}
 
 	if len(volumes) > 0 {
@@ -276,7 +283,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	// Pass libStorage types.Volume to helper function which calls EC2 API
 	vol, err := d.createVolume(ctx, volumeName, "", volume)
 	if err != nil {
-		return nil, goof.WithFieldsE(fields, "Error creating volume", err)
+		return nil, goof.WithFieldsE(fields, "error creating volume", err)
 	}
 	// Return the volume created
 	return d.VolumeInspect(ctx, *vol.VolumeId, &types.VolumeInspectOpts{
@@ -514,6 +521,11 @@ func (d *driver) VolumeRemove(
 	return nil
 }
 
+var (
+	errMissingNextDevice  = goof.New("missing next device")
+	errVolAlreadyAttached = goof.New("volume already attached to a host")
+)
+
 // VolumeAttach attaches a volume and provides a token clients can use
 // to validate that device has appeared locally.
 func (d *driver) VolumeAttach(
@@ -523,12 +535,12 @@ func (d *driver) VolumeAttach(
 	// review volume with attachments to any host
 	ec2vols, err := d.getVolume(ctx, volumeID, "")
 	if err != nil {
-		return nil, "", goof.WithError("Error getting volume", err)
+		return nil, "", goof.WithError("error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(ctx, ec2vols, true)
 	if convErr != nil {
 		return nil, "", goof.WithError(
-			"Error converting to types.Volume", convErr)
+			"error converting to types.Volume", convErr)
 	}
 
 	// Check if there a volume to attach
@@ -539,7 +551,7 @@ func (d *driver) VolumeAttach(
 	if len(volumes[0].Attachments) > 0 {
 		// Detach already attached volume if forced
 		if !opts.Force {
-			return nil, "", goof.New("volume already attached to a host")
+			return nil, "", errVolAlreadyAttached
 		}
 		_, err := d.VolumeDetach(
 			ctx,
@@ -549,18 +561,16 @@ func (d *driver) VolumeAttach(
 				Opts:  opts.Opts,
 			})
 		if err != nil {
-			return nil, "", goof.WithError("Error detaching volume", err)
+			return nil, "", goof.WithError("error detaching volume", err)
 		}
 	}
 
-	// Retrieve next device name
-	nextDeviceName := ""
-	if opts.NextDevice != nil {
-		nextDeviceName = *opts.NextDevice
+	if opts.NextDevice == nil {
+		return nil, "", errMissingNextDevice
 	}
 
 	// Attach volume via helper function which uses EC2 API call
-	err = d.attachVolume(ctx, volumeID, volumes[0].Name, nextDeviceName)
+	err = d.attachVolume(ctx, volumeID, volumes[0].Name, *opts.NextDevice)
 	if err != nil {
 		return nil, "", goof.WithFieldsE(
 			log.Fields{
@@ -588,8 +598,10 @@ func (d *driver) VolumeAttach(
 
 	// Token is the attachment's device name, which will be matched
 	// to the executor's device ID
-	return attachedVol, nextDeviceName, nil
+	return attachedVol, *opts.NextDevice, nil
 }
+
+var errVolAlreadyDetached = goof.New("volume already detached")
 
 // VolumeDetach detaches a volume.
 func (d *driver) VolumeDetach(
@@ -599,21 +611,21 @@ func (d *driver) VolumeDetach(
 	// review volume with attachments to any host
 	ec2vols, err := d.getVolume(ctx, volumeID, "")
 	if err != nil {
-		return nil, goof.WithError("Error getting volume", err)
+		return nil, goof.WithError("error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(ctx, ec2vols, true)
 	if convErr != nil {
-		return nil, goof.WithError("Error converting to types.Volume", convErr)
+		return nil, goof.WithError("error converting to types.Volume", convErr)
 	}
 
 	// no volumes to detach
 	if len(volumes) == 0 {
-		return nil, goof.New("no volume returned")
+		return nil, errNoVolReturned
 	}
 
 	// volume has no attachments
 	if len(volumes[0].Attachments) == 0 {
-		return nil, goof.New("volume already detached")
+		return nil, errVolAlreadyDetached
 	}
 
 	dvInput := &awsec2.DetachVolumeInput{
@@ -848,6 +860,8 @@ func (d *driver) getVolume(
 	return resp.Volumes, nil
 }
 
+var errGetLocDevs = goof.New("error getting local devices from context")
+
 // Converts EC2 API volumes to libStorage types.Volume
 func (d *driver) toTypesVolume(
 	ctx types.Context,
@@ -856,7 +870,7 @@ func (d *driver) toTypesVolume(
 	// Get local devices map from context
 	ld, ldOK := context.LocalDevices(ctx)
 	if !ldOK {
-		return nil, goof.New("Error getting local devices from context")
+		return nil, errGetLocDevs
 	}
 
 	var volumesSD []*types.Volume
@@ -867,15 +881,19 @@ func (d *driver) toTypesVolume(
 			deviceName := ""
 			if attachments {
 				// Compensate for kernel volume mapping i.e. change "/dev/sda" to "/dev/xvda"
-				deviceName = strings.Replace(*attachment.Device, "sd", d.nextDeviceInfo.Prefix, 1)
+				deviceName = strings.Replace(
+					*attachment.Device, "sd", d.nextDeviceInfo.Prefix, 1)
 				// Keep device name if it is found in local devices
 				if _, ok := ld.DeviceMap[deviceName]; !ok {
 					deviceName = ""
 				}
 			}
 			attachmentSD := &types.VolumeAttachment{
-				VolumeID:   *attachment.VolumeId,
-				InstanceID: &types.InstanceID{ID: *attachment.InstanceId, Driver: d.Name()},
+				VolumeID: *attachment.VolumeId,
+				InstanceID: &types.InstanceID{
+					ID:     *attachment.InstanceId,
+					Driver: d.Name(),
+				},
 				DeviceName: deviceName,
 				Status:     *attachment.State,
 			}
@@ -973,20 +991,25 @@ func (d *driver) toTypesSnapshot(
 }
 */
 
+var (
+	errNoVolReturned       = goof.New("no volume returned")
+	errTooManyVolsReturned = goof.New("too many volumes returned")
+)
+
 // Used in VolumeAttach
 func (d *driver) attachVolume(
 	ctx types.Context, volumeID, volumeName, deviceName string) error {
 	// sanity check # of volumes to attach
 	vol, err := d.getVolume(ctx, volumeID, volumeName)
 	if err != nil {
-		return goof.WithError("Error getting volume", err)
+		return goof.WithError("error getting volume", err)
 	}
 
 	if len(vol) == 0 {
-		return goof.New("no volume returned")
+		return errNoVolReturned
 	}
 	if len(vol) > 1 {
-		return goof.New("too many volumes returned")
+		return errTooManyVolsReturned
 	}
 
 	// Attach volume via EC2 API call
@@ -1001,38 +1024,38 @@ func (d *driver) attachVolume(
 	return nil
 }
 
+const (
+	iidProto = "tcp"
+	iidIP    = "169.254.169.254:80"
+	iidURL   = "http://169.254.169.254/latest/dynamic/instance-identity/document"
+)
+
+var iidTimeout = 50 * time.Millisecond
+
 // Retrieve instance identity document to get metadata for initialization
 func getInstanceIdentityDocument() (*instanceIdentityDocument, error) {
 	// Check connection
-	conn, err := net.DialTimeout("tcp", "169.254.169.254:80", 50*time.Millisecond)
+	conn, err := net.DialTimeout(iidProto, iidIP, iidTimeout)
 	if err != nil {
-		return &instanceIdentityDocument{}, fmt.Errorf("Error: %v\n", err)
+		return nil, err
 	}
 	defer conn.Close()
 
 	// Retrieve instance identity document
-	url := "http://169.254.169.254/latest/dynamic/instance-identity/document"
-	resp, err := http.Get(url)
+	resp, err := http.Get(iidURL)
 	if err != nil {
-		return &instanceIdentityDocument{}, fmt.Errorf("Error: %v\n", err)
+		return nil, err
 	}
 
 	defer resp.Body.Close()
+	dec := json.NewDecoder(resp.Body)
 
-	// Read contents
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return &instanceIdentityDocument{}, fmt.Errorf("Error: %v\n", err)
+	var iid instanceIdentityDocument
+	if err := dec.Decode(&iid); err != nil {
+		return nil, err
 	}
 
-	// Parse into instanceIdentityDocument
-	var document instanceIdentityDocument
-	err = json.Unmarshal(data, &document)
-	if err != nil {
-		return &instanceIdentityDocument{}, fmt.Errorf("Error: %v\n", err)
-	}
-
-	return &document, nil
+	return &iid, nil
 }
 
 // Used in VolumeCreate
@@ -1068,20 +1091,20 @@ func (d *driver) createVolume(ctx types.Context, volumeName, snapshotID string,
 
 	if resp, err = d.ec2Instance.CreateVolume(options); err != nil {
 		return &awsec2.Volume{}, goof.WithError(
-			"Error creating volume", err)
+			"error creating volume", err)
 	}
 
 	// Add tags to created volume
 	if err = d.createTags(*resp.VolumeId, volumeName); err != nil {
 		return &awsec2.Volume{}, goof.WithError(
-			"Error creating tags", err)
+			"error creating tags", err)
 	}
 
 	// Wait for volume status to change
 	if err = d.waitVolumeComplete(
 		ctx, *resp.VolumeId, waitVolumeCreate); err != nil {
 		return &awsec2.Volume{}, goof.WithError(
-			"Error waiting for volume creation", err)
+			"error waiting for volume creation", err)
 	}
 
 	return resp, nil
@@ -1134,17 +1157,19 @@ func (d *driver) createTags(id, name string) (err error) {
 	*/
 	_, err = d.ec2Instance.CreateTags(ctInput)
 	if err != nil {
-		return goof.WithError("Error creating tags", err)
+		return goof.WithError("error creating tags", err)
 	}
 	return nil
 }
+
+var errMissingVolID = goof.New("missing volume ID")
 
 // Wait for volume action to complete (creation, attachment, detachment)
 func (d *driver) waitVolumeComplete(
 	ctx types.Context, volumeID, action string) error {
 	// no volume id inputted
 	if volumeID == "" {
-		return goof.New("Missing volume ID")
+		return errMissingVolID
 	}
 
 UpdateLoop:
@@ -1152,7 +1177,7 @@ UpdateLoop:
 		// update volume
 		volumes, err := d.getVolume(ctx, volumeID, "")
 		if err != nil {
-			return goof.WithError("Error getting volume", err)
+			return goof.WithError("error getting volume", err)
 		}
 
 		// check retrieved volume
@@ -1251,47 +1276,52 @@ func (d *driver) getFullName(name string) string {
 
 // Retrieve config arguments
 func (d *driver) accessKey() string {
-	if accessKey := d.config.GetString("ebs.accessKey"); accessKey != "" {
+	if accessKey := d.config.GetString(
+		ebs.ConfigEBSAccessKey); accessKey != "" {
 		return accessKey
 	}
-	return d.config.GetString("ec2.accessKey")
+	return d.config.GetString(ebs.ConfigOldEBSAccessKey)
 }
 
 func (d *driver) secretKey() string {
-	if secretKey := d.config.GetString("ebs.secretKey"); secretKey != "" {
+	if secretKey := d.config.GetString(
+		ebs.ConfigEBSSecretKey); secretKey != "" {
 		return secretKey
 	}
-	return d.config.GetString("ec2.secretKey")
+	return d.config.GetString(ebs.ConfigOldEBSSecretKey)
 }
 
 func (d *driver) region() string {
-	if region := d.config.GetString("ebs.region"); region != "" {
+	if region := d.config.GetString(ebs.ConfigEBSRegion); region != "" {
 		return region
 	}
-	return d.config.GetString("ec2.region")
+	return d.config.GetString(ebs.ConfigOldEBSRegion)
 }
 
 func (d *driver) endpoint() string {
-	if endpoint := d.config.GetString("ebs.endpoint"); endpoint != "" {
+	if endpoint := d.config.GetString(ebs.ConfigEBSEndpoint); endpoint != "" {
 		return endpoint
 	}
-	return d.config.GetString("ec2.endpoint")
+	return d.config.GetString(ebs.ConfigOldEBSEndpoint)
 }
 
 func (d *driver) maxRetries() int {
 	// if maxRetries in config is non-numeric or a negative number,
 	// set it to the default number of max retries.
-	if maxRetriesString := d.config.GetString("ebs.maxRetries"); maxRetriesString != "" {
+	if maxRetriesString := d.config.GetString(
+		ebs.ConfigEBSMaxRetries); maxRetriesString != "" {
 		if maxRetriesString == "0" {
 			return 0
-		} else if maxRetries := d.config.GetInt("ebs.maxRetries"); maxRetries > 0 {
+		} else if maxRetries := d.config.GetInt(
+			ebs.ConfigEBSMaxRetries); maxRetries > 0 {
 			return maxRetries
 		}
 	} else if maxRetriesString := d.config.GetString(
-		"ec2.maxRetries"); maxRetriesString != "" {
+		ebs.ConfigOldEBSMaxRetries); maxRetriesString != "" {
 		if maxRetriesString == "0" {
 			return 0
-		} else if maxRetries := d.config.GetInt("ec2.maxRetries"); maxRetries > 0 {
+		} else if maxRetries := d.config.GetInt(
+			ebs.ConfigOldEBSMaxRetries); maxRetries > 0 {
 			return maxRetries
 		}
 	}
@@ -1299,10 +1329,10 @@ func (d *driver) maxRetries() int {
 }
 
 func (d *driver) tag() string {
-	if tag := d.config.GetString("ebs.tag"); tag != "" {
+	if tag := d.config.GetString(ebs.ConfigEBSTag); tag != "" {
 		return tag
 	}
-	return d.config.GetString("ec2.tag")
+	return d.config.GetString(ebs.ConfigOldEBSTag)
 }
 
 // TODO rexrayTag

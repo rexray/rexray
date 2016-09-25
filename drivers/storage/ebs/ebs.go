@@ -8,6 +8,9 @@ const (
 	// Name is the provider's name.
 	Name = "ebs"
 
+	// OldName is the provider's old name.
+	OldName = "ec2"
+
 	// TagDelimiter separates tags from volume or snapshot names
 	TagDelimiter = "/"
 

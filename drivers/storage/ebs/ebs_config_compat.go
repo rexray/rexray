@@ -1,7 +1,9 @@
-package types
+package ebs
 
-import "github.com/akutz/gofig"
-import log "github.com/Sirupsen/logrus"
+import (
+	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gofig"
+)
 
 const (
 	//ConfigEBS is a config key.

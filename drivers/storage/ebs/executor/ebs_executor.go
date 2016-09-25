@@ -10,7 +10,6 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
-	ebsConfig "github.com/emccode/libstorage/api/drivers/storage/ebs"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/ebs"
@@ -34,7 +33,7 @@ func newDriver() types.StorageExecutor {
 
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	// Ensure backwards compatibility with ebs and ec2 in config
-	ebsConfig.BackCompat(config)
+	ebs.BackCompat(config)
 
 	d.config = config
 	// EBS suggests to use /dev/sd[f-p] for Linux EC2 instances.

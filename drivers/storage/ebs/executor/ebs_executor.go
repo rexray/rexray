@@ -2,6 +2,7 @@ package executor
 
 import (
 	"bufio"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -24,7 +25,7 @@ type driver struct {
 func init() {
 	registry.RegisterStorageExecutor(ebs.Name, newDriver)
 	// Backwards compatibility for ec2 executor
-	registry.RegisterStorageExecutor("ec2", newDriver)
+	registry.RegisterStorageExecutor(ebs.OldName, newDriver)
 }
 
 func newDriver() types.StorageExecutor {
@@ -57,12 +58,16 @@ func InstanceID() (*types.InstanceID, error) {
 	return newDriver().InstanceID(nil, nil)
 }
 
+const (
+	iidURL = "http://169.254.169.254/latest/meta-data/instance-id/"
+)
+
 // InstanceID returns the instance ID from the current instance from metadata
 func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 	// Retrieve instance ID from metadata
-	res, err := http.Get("http://169.254.169.254/latest/meta-data/instance-id/")
+	res, err := http.Get(iidURL)
 	if err != nil {
 		return nil, goof.WithError("ec2 instance id lookup failed", err)
 	}
@@ -79,6 +84,8 @@ func (d *driver) InstanceID(
 
 	return iid, nil
 }
+
+var errNoAvaiDevice = goof.New("No available device")
 
 // NextDevice returns the next available device.
 func (d *driver) NextDevice(
@@ -132,7 +139,7 @@ func (d *driver) NextDevice(
 			return nextDeviceName, nil
 		}
 	}
-	return "", goof.New("No available device")
+	return "", errNoAvaiDevice
 }
 
 // Retrieve device paths currently attached and/or mounted
@@ -145,7 +152,7 @@ func (d *driver) LocalDevices(
 	contentBytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, goof.WithError(
-			"Error reading /proc/partitions", err)
+			"error reading /proc/partitions", err)
 	}
 
 	content := string(contentBytes)
@@ -171,10 +178,12 @@ func (d *driver) LocalDevices(
 
 }
 
+const bdmURL = "http://169.254.169.254/latest/meta-data/block-device-mapping/"
+
 // Find ephemeral devices from metadata
 func (d *driver) getEphemeralDevices() (deviceNames []string, err error) {
 	// Get list of all block devices
-	res, err := http.Get("http://169.254.169.254/latest/meta-data/block-device-mapping/")
+	res, err := http.Get(bdmURL)
 	if err != nil {
 		return nil, goof.WithError("ec2 block device mapping lookup failed", err)
 	}
@@ -195,7 +204,7 @@ func (d *driver) getEphemeralDevices() (deviceNames []string, err error) {
 		input = scanner.Text()
 		if re.MatchString(input) {
 			// Find device name for ephemeral device
-			res, err := http.Get("http://169.254.169.254/latest/meta-data/block-device-mapping/" + input)
+			res, err := http.Get(fmt.Sprintf("%s%s", bdmURL, input))
 			if err != nil {
 				return nil, goof.WithError("ec2 block device mapping lookup failed", err)
 			}

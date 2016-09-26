@@ -1,5 +1,5 @@
 hash: 424a486e4a16c05581e186461d986ab02e0964478df01f879a57b26cc2b35cea
-updated: 2016-09-13T14:47:32.738032789-07:00
+updated: 2016-09-26T13:27:48.63187342-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -23,24 +23,29 @@ imports:
   subpackages:
   - aws
   - aws/awserr
-  - aws/credentials
-  - aws/credentials/ec2rolecreds
-  - aws/ec2metadata
-  - aws/session
-  - service/efs
+  - aws/awsutil
   - aws/client
   - aws/client/metadata
-  - aws/request
   - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
   - aws/defaults
-  - private/endpoints
-  - aws/awsutil
+  - aws/ec2metadata
+  - aws/request
+  - aws/session
   - aws/signer/v4
+  - private/endpoints
   - private/protocol
-  - private/protocol/restjson
-  - private/protocol/rest
-  - private/protocol/jsonrpc
+  - private/protocol/ec2query
   - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/restjson
+  - private/protocol/xml/xmlutil
+  - private/waiter
+  - service/ec2
+  - service/efs
 - name: github.com/BurntSushi/toml
   version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/cesanta/ucl
@@ -57,9 +62,9 @@ imports:
   version: 653c13de5e1e0294ca0c7eead83e396fe308b497
   subpackages:
   - api
+  - api/json
   - api/v1
   - api/v2
-  - api/json
 - name: github.com/emccode/goscaleio
   version: 9d95003c0069b1949a0fb46832870799caa5c360
   repo: https://github.com/emccode/goscaleio
@@ -69,64 +74,6 @@ imports:
   version: 3bd901de15097583a5b1f4b377421cfc647c3664
   subpackages:
   - logrus
-- name: github.com/emccode/libstorage
-  version: 3b926eb1e2cdb7d23517d3243d4f38b6ad0e6be1
-  subpackages:
-  - api/server
-  - api/types
-  - client
-  - api/context
-  - api/utils
-  - api
-  - api/registry
-  - api/server/handlers
-  - api/server/services
-  - api/utils/config
-  - imports/remote
-  - imports/routers
-  - api/server/httputils
-  - api/utils/schema
-  - api/server/executors
-  - api/server/router/volume
-  - api/utils/filters
-  - imports/config
-  - cli/lss
-  - imports/executors
-  - cli/lsx
-  - imports/local
-  - drivers/storage/efs
-  - drivers/storage/isilon
-  - api/client
-  - drivers/storage/mock/executor
-  - drivers/storage/rackspace
-  - drivers/storage/scaleio
-  - drivers/storage/vbox
-  - drivers/storage/vfs
-  - drivers/storage/efs/executor
-  - drivers/storage/isilon/executor
-  - drivers/storage/rackspace/executor
-  - drivers/storage/scaleio/executor
-  - drivers/storage/vbox/executor
-  - drivers/storage/vfs/executor
-  - drivers/integration/docker
-  - drivers/os/darwin
-  - drivers/os/linux
-  - drivers/storage/libstorage
-  - drivers/storage/vfs/client
-  - drivers/storage/efs/storage
-  - drivers/storage/isilon/storage
-  - drivers/storage/rackspace/storage
-  - drivers/storage/scaleio/storage
-  - drivers/storage/vbox/storage
-  - drivers/storage/vfs/storage
-  - api/server/router/executor
-  - api/server/router/help
-  - api/server/router/root
-  - api/server/router/service
-  - api/server/router/snapshot
-  - api/server/router/tasks
-  - api/tests
-  - drivers/storage/mock
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml
@@ -165,13 +112,13 @@ imports:
   - openstack/blockstorage/v1/snapshots
   - openstack/blockstorage/v1/volumes
   - openstack/compute/v2/extensions/volumeattach
+  - openstack/identity/v2/tenants
   - openstack/identity/v2/tokens
   - openstack/identity/v3/tokens
   - openstack/utils
   - pagination
   - testhelper
   - testhelper/client
-  - openstack/identity/v2/tenants
 - name: github.com/Sirupsen/logrus
   version: 5f376aa629ac60c3215cc368e674bd996093a01a
   repo: https://github.com/akutz/logrus
@@ -190,7 +137,7 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: 749a502dd1eaf3e5bfd4f8956748c502357c0bbe
+  version: cfe3c2a7525b50c3d707256e371c90938cfef98a
   subpackages:
   - context
   - context/ctxhttp

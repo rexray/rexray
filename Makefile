@@ -13,6 +13,8 @@ PROG := rexray
 ################################################################################
 ##                                  DOCKER                                    ##
 ################################################################################
+ifneq (,$(shell which docker 2> /dev/null)) # if docker exists
+
 DPKG := github.com/emccode/rexray
 DIMG := golang:1.7.1
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
@@ -27,6 +29,11 @@ DNAME := $(DNAME)-$(shell date +%s)
 endif
 DPATH := /go/src/$(DPKG)
 DSRCS := $(shell git ls-files)
+ifneq (,$(DGLIDE_YAML))
+DSRCS := $(filter-out glide.yaml,$(DSRCS))
+DSRCS := $(filter-out glide.lock,$(DSRCS))
+DSRCS := $(filter-out glide.lock.d,$(DSRCS))
+endif
 DPROG := /go/bin/$(PROG)
 ifneq (linux,$(DGOOS))
 DPROG := /go/bin/$(DGOOS)_$(DGOARCH)/$(PROG)
@@ -36,17 +43,43 @@ DTARC := -
 endif
 DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG) &> /dev/null
 DTO_CLOBBER := docker ps -a --format '{{.Names}}' | grep $(DPRFX)
+DNETRC := $(HOME)/.netrc
+
+# DLOCAL_IMPORTS specifics a list of imported packages to copy into the
+# container build's vendor directory instead of what is specified in the
+# glide.lock file. If this variable is set and the GOPATH variable is not
+# then the target will fail.
+ifeq (undefined,$(DLOCAL_IMPORTS))
+DLOCAL_IMPORTS :=
+endif
+ifneq (,$(DLOCAL_IMPORTS))
+ifneq (,$(GOPATH))
+DLOCAL_IMPORTS_FILES := $(foreach I,$(DLOCAL_IMPORTS),$(addprefix $I/,$(shell git --git-dir=$(GOPATH)/src/$(I)/.git --work-tree=$(GOPATH)/src/$(I) ls-files)))
+DLOCAL_IMPORTS_FILES += $(foreach I,$(DLOCAL_IMPORTS),$I/.git)
+endif
+endif
 
 docker-build:
 	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
 	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
 		docker exec $(DNAME) mkdir -p $(DPATH) && \
-		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
-		mkdir -p .build
-	docker exec -t $(DNAME) env make -C $(DPATH) deps && \
-		docker exec -t $(DNAME) \
-			env GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
-			make -C $(DPATH) -j build
+		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH)
+ifneq (,$(DGLIDE_YAML))
+	@docker cp $(DGLIDE_YAML) $(DNAME):$(DPATH)/glide.yaml
+endif
+ifneq (,$(wildcard $(DNETRC)))
+	@docker cp $(DNETRC) $(DNAME):/root
+endif
+	docker exec -t $(DNAME) env make -C $(DPATH) deps
+ifneq (,$(DLOCAL_IMPORTS))
+ifeq (,$(GOPATH))
+	@echo GOPATH must be set when using DLOCAL_IMPORTS && false
+else
+	@docker exec -t $(DNAME) rm -fr $(addprefix $(DPATH)/vendor/,$(DLOCAL_IMPORTS))
+	@tar -C $(GOPATH)/src -c $(DTARC) $(DLOCAL_IMPORTS_FILES) | docker cp - $(DNAME):$(DPATH)/vendor
+endif
+endif
+	docker exec -t $(DNAME) env GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 make -C $(DPATH) -j build
 	@docker cp $(DNAME):$(DPROG) $(PROG)
 	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
 		stat -f '%z' $(PROG) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
@@ -74,11 +107,13 @@ docker-clobber:
 docker-list:
 	-$(DTO_CLOBBER)
 
-ifneq (,$(shell which go 2> /dev/null)) # if go exists
+endif # ifneq (,$(shell which docker 2> /dev/null))
+
 
 ################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
+ifneq (,$(shell which go 2> /dev/null)) # if go exists
 
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
@@ -335,6 +370,9 @@ GO_BINDATA := $(GOPATH)/bin/go-bindata
 go-bindata: $(GO_BINDATA)
 
 GLIDE := $(GOPATH)/bin/glide
+GLIDE_VER := 0.11.1
+GLIDE_TGZ := glide-v$(GLIDE_VER)-$(GOHOSTOS)-$(GOHOSTARCH).tar.gz
+GLIDE_URL := https://github.com/Masterminds/glide/releases/download/v$(GLIDE_VER)/$(GLIDE_TGZ)
 GOGET_LOCK := goget.lock
 GLIDE_LOCK := glide.lock
 GLIDE_YAML := glide.yaml
@@ -349,18 +387,36 @@ ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
 ifneq (1,$(VENDORED))
 $(GLIDE):
-	go get -u github.com/Masterminds/glide
+	@curl -SLO $(GLIDE_URL) && \
+		tar xzf $(GLIDE_TGZ) && \
+		rm -f $(GLIDE_TGZ) && \
+		mv $(GOHOSTOS)-$(GOHOSTARCH)/glide $(GOPATH)/bin && \
+		rm -fr $(GOHOSTOS)-$(GOHOSTARCH)
 glide: $(GLIDE)
 GO_DEPS += $(GLIDE)
 
 GO_DEPS += $(GLIDE_LOCK_D)
 $(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
 
+ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
+$(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
+	touch $@
+
+$(GLIDE_LOCK): $(GLIDE_YAML)
+	$(GLIDE) up
+
+else #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
+
 $(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
 	$(GLIDE) install && touch $@
 
 $(GLIDE_LOCK): $(GLIDE_YAML)
-	touch $@
+	$(GLIDE) up && touch $@ && touch $(GLIDE_LOCK_D)
+
+endif #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
+
+$(GLIDE_YAML):
+	$(GLIDE) init
 
 $(GLIDE_LOCK)-clean:
 	rm -f $(GLIDE_LOCK)

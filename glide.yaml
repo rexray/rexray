@@ -26,7 +26,7 @@ import:
 
 ### ScaleIO
   - package: github.com/emccode/goscaleio
-    ref:     9d95003c0069b1949a0fb46832870799caa5c360
+    ref:     support/tls-sio-gw-2.0.0.2
     repo:    https://github.com/emccode/goscaleio
 
 ### VirtualBox

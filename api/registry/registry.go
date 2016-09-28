@@ -133,7 +133,11 @@ func NewStorageDriver(name string) (types.StorageDriver, error) {
 		return nil, goof.WithField("driver", name, "invalid driver name")
 	}
 
-	return NewStorageDriverManager(ctor()), nil
+	sd := ctor()
+	if d, ok := sd.(types.StorageDriverWithLogin); ok {
+		return NewStorageDriverManagerWithLogin(d), nil
+	}
+	return NewStorageDriverManager(sd), nil
 }
 
 // NewOSDriver returns a new instance of the driver specified by the

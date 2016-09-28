@@ -155,3 +155,13 @@ type StorageDriver interface {
 		snapshotID string,
 		opts Store) error
 }
+
+// StorageDriverWithLogin is a StorageDriver with a Login function.
+type StorageDriverWithLogin interface {
+	StorageDriver
+
+	// Login creates a new connection to the storage platform for the provided
+	// context.
+	Login(
+		ctx Context) (interface{}, error)
+}

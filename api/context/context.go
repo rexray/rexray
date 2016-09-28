@@ -29,6 +29,12 @@ func newContext(
 	req *http.Request,
 	right context.Context) *lsc {
 
+	if parent != nil && key == nil && val == nil && req == nil && right == nil {
+		if ctx, ok := parent.(*lsc); ok {
+			return ctx
+		}
+	}
+
 	if parent == nil {
 		parent = context.Background()
 	}
@@ -88,7 +94,12 @@ func WithRequestRoute(
 func WithStorageService(
 	parent context.Context, service types.StorageService) types.Context {
 
-	driverName := strings.ToLower(service.Driver().Name())
+	var (
+		driver     = service.Driver()
+		driverName = strings.ToLower(driver.Name())
+	)
+
+	parent = newContext(parent, DriverKey, driver, nil, nil)
 
 	// set the service's InstanceID if present
 	if iidm, ok := parent.Value(AllInstanceIDsKey).(types.InstanceIDMap); ok {
@@ -105,6 +116,31 @@ func WithStorageService(
 	}
 
 	return newContext(parent, ServiceKey, service, nil, nil)
+}
+
+// WithStorageSession returns a context that is logged into the storage
+// platform.
+func WithStorageSession(parent context.Context) (types.Context, error) {
+
+	pctx := New(parent)
+
+	d, ok := MustDriver(parent).(types.StorageDriverWithLogin)
+	if !ok {
+		pctx.Debug("driver is not StorageDriverWithLogin")
+		return pctx, nil
+	}
+
+	sess, err := d.Login(pctx)
+	if err != nil {
+		pctx.WithError(err).Error("error logging into storage driver")
+		return nil, err
+	}
+	if sess == nil {
+		pctx.Warn("session is nil")
+		return pctx, nil
+	}
+
+	return newContext(pctx, SessionKey, sess, nil, nil), nil
 }
 
 // WithValue returns a copy of parent in which the value associated with
@@ -239,7 +275,24 @@ func GetLogLevel(ctx context.Context) (log.Level, bool) {
 	return 0, false
 }
 
-// InstanceID returns the context's InstanceID.  This value is valid on both
+// Session returns the context's session object. This value is valid only
+// on the server.
+func Session(ctx context.Context) (interface{}, bool) {
+	v := ctx.Value(SessionKey)
+	return v, v != nil
+}
+
+// MustSession returns the context's session object and panics if a session
+// does not exist.
+func MustSession(ctx context.Context) interface{} {
+	v := ctx.Value(SessionKey)
+	if v == nil {
+		panic("missing session")
+	}
+	return v
+}
+
+// InstanceID returns the context's InstanceID. This value is valid on both
 // the client and the server.
 func InstanceID(ctx context.Context) (*types.InstanceID, bool) {
 	v, ok := ctx.Value(InstanceIDKey).(*types.InstanceID)
@@ -252,7 +305,7 @@ func MustInstanceID(ctx context.Context) *types.InstanceID {
 	return ctx.Value(InstanceIDKey).(*types.InstanceID)
 }
 
-// LocalDevices returns the context's local devices map.  This value is valid
+// LocalDevices returns the context's local devices map. This value is valid
 // on both the client and the server.
 func LocalDevices(ctx context.Context) (*types.LocalDevices, bool) {
 	v, ok := ctx.Value(LocalDevicesKey).(*types.LocalDevices)
@@ -368,4 +421,11 @@ func Driver(ctx context.Context) (types.StorageDriver, bool) {
 	}
 
 	return nil, false
+}
+
+// MustDriver returns the context's storage driver or panics if no driver
+// exists.
+func MustDriver(ctx context.Context) types.StorageDriver {
+	v, _ := Driver(ctx)
+	return v.(types.StorageDriver)
 }

@@ -1,11 +1,14 @@
 package registry
 
-import (
-	"github.com/emccode/libstorage/api/types"
-)
+import "github.com/emccode/libstorage/api/types"
 
 type sdm struct {
 	types.StorageDriver
+	types.Context
+}
+
+type sdmWithLogin struct {
+	types.StorageDriverWithLogin
 	types.Context
 }
 
@@ -13,6 +16,12 @@ type sdm struct {
 func NewStorageDriverManager(
 	d types.StorageDriver) types.StorageDriver {
 	return &sdm{StorageDriver: d}
+}
+
+// NewStorageDriverManagerWithLogin returns a new storage driver manager.
+func NewStorageDriverManagerWithLogin(
+	d types.StorageDriverWithLogin) types.StorageDriverWithLogin {
+	return &sdmWithLogin{StorageDriverWithLogin: d}
 }
 
 func (d *sdm) API() types.APIClient {
@@ -161,4 +170,10 @@ func (d *sdm) SnapshotRemove(
 	opts types.Store) error {
 
 	return d.StorageDriver.SnapshotRemove(ctx.Join(d.Context), snapshotID, opts)
+}
+
+func (d *sdmWithLogin) Login(
+	ctx types.Context) (interface{}, error) {
+
+	return d.StorageDriverWithLogin.Login(ctx.Join(d.Context))
 }

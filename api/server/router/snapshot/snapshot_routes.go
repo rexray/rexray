@@ -32,6 +32,10 @@ func (r *router) snapshots(
 			svc types.StorageService) (interface{}, error) {
 
 			ctx = context.WithStorageService(ctx, svc)
+			var err error
+			if ctx, err = context.WithStorageSession(ctx); err != nil {
+				return nil, err
+			}
 
 			objs, err := svc.Driver().Snapshots(ctx, store)
 			if err != nil {

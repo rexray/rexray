@@ -91,6 +91,7 @@ ifeq (1,$(DBUILD_ONCE))
 	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 endif
 
+docker-test: DGOOS=linux
 docker-test: docker-init
 	docker exec -t $(DNAME) make -C $(DPATH) test
 

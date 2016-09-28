@@ -65,6 +65,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}",
 			r.volumesForService,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(nil, schema.VolumeMapSchema, nil),
 		),
 
@@ -74,6 +75,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeInspect,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(nil, schema.VolumeSchema, nil),
 		),
 
@@ -85,6 +87,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}",
 			r.volumeDetachAllForService,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeMapSchema,
@@ -98,6 +101,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}",
 			r.volumeCreate,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.VolumeCreateRequestSchema,
 				schema.VolumeSchema,
@@ -111,6 +115,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeCopy,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.VolumeCopyRequestSchema,
 				schema.VolumeSchema,
@@ -124,6 +129,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeSnapshot,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.VolumeSnapshotRequestSchema,
 				schema.SnapshotSchema,
@@ -137,6 +143,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeAttach,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.VolumeAttachRequestSchema,
 				schema.VolumeSchema,
@@ -162,6 +169,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeDetach,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeSchema,
@@ -175,6 +183,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeRemove,
 			handlers.NewServiceValidator(),
+			handlers.NewStorageSessionHandler(),
 		),
 	}
 }

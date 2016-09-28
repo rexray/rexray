@@ -1,5 +1,5 @@
 hash: 9bf64d1ef1d1dc736991d9e54e5e77dbfdfd5dcb44ce79433c82232c20bf7e87
-updated: 2016-09-27T18:38:40.712760622-05:00
+updated: 2016-09-28T14:15:52.550869408-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726

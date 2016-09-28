@@ -33,6 +33,9 @@ const (
 	// AdminTokenKey is the key for the server's admin token.
 	AdminTokenKey
 
+	// SessionKey is the key for the storage driver's session.
+	SessionKey
+
 	// keyLoggable is the minimum value from which the succeeding keys should
 	// be checked when logging.
 	keyLoggable

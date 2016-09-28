@@ -70,6 +70,19 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	return nil
 }
 
+type session struct {
+	id string
+}
+
+func (d *driver) Login(ctx types.Context) (interface{}, error) {
+	sess := &session{}
+	if iid, ok := context.InstanceID(ctx); ok {
+		sess.id = iid.String()
+	}
+	ctx.Debugf("vfs login=%s", sess.id)
+	return sess, nil
+}
+
 func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
 	return types.Object, nil
 }
@@ -84,6 +97,13 @@ func (d *driver) NextDeviceInfo(
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
+
+	var err error
+	if ctx, err = context.WithStorageSession(ctx); err != nil {
+		return nil, err
+	}
+
+	context.MustSession(ctx)
 
 	iid := context.MustInstanceID(ctx)
 	if iid.ID != "" {
@@ -107,6 +127,8 @@ func (d *driver) InstanceInspect(
 func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
+
+	context.MustSession(ctx)
 
 	iid, iidOK := context.InstanceID(ctx)
 	if iidOK {
@@ -137,6 +159,9 @@ func (d *driver) VolumeInspect(
 	ctx types.Context,
 	volumeID string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
+
+	context.MustSession(ctx)
+
 	v, err := d.getVolumeByID(volumeID)
 	if err != nil {
 		return nil, err
@@ -148,6 +173,8 @@ func (d *driver) VolumeCreate(
 	ctx types.Context,
 	name string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
+
+	context.MustSession(ctx)
 
 	v := &types.Volume{
 		ID:     d.newVolumeID(),
@@ -184,6 +211,8 @@ func (d *driver) VolumeCreateFromSnapshot(
 	ctx types.Context,
 	snapshotID, volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
+
+	context.MustSession(ctx)
 
 	snap, err := d.getSnapshotByID(snapshotID)
 	if err != nil {
@@ -235,6 +264,8 @@ func (d *driver) VolumeCopy(
 	volumeID, volumeName string,
 	opts types.Store) (*types.Volume, error) {
 
+	context.MustSession(ctx)
+
 	ogVol, err := d.getVolumeByID(volumeID)
 	if err != nil {
 		return nil, err
@@ -267,6 +298,8 @@ func (d *driver) VolumeSnapshot(
 	ctx types.Context,
 	volumeID, snapshotName string,
 	opts types.Store) (*types.Snapshot, error) {
+
+	context.MustSession(ctx)
 
 	v, err := d.getVolumeByID(volumeID)
 	if err != nil {
@@ -301,6 +334,8 @@ func (d *driver) VolumeRemove(
 	volumeID string,
 	opts types.Store) error {
 
+	context.MustSession(ctx)
+
 	volJSONPath := d.getVolPath(volumeID)
 	if !gotil.FileExists(volJSONPath) {
 		return utils.NewNotFoundError(volumeID)
@@ -313,6 +348,8 @@ func (d *driver) VolumeAttach(
 	ctx types.Context,
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
+
+	context.MustSession(ctx)
 
 	vol, err := d.getVolumeByID(volumeID)
 	if err != nil {
@@ -346,6 +383,8 @@ func (d *driver) VolumeDetach(
 	volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
+	context.MustSession(ctx)
+
 	vol, err := d.getVolumeByID(volumeID)
 	if err != nil {
 		return nil, err
@@ -376,6 +415,8 @@ func (d *driver) Snapshots(
 	ctx types.Context,
 	opts types.Store) ([]*types.Snapshot, error) {
 
+	context.MustSession(ctx)
+
 	snapJSONPaths, err := d.getSnapJSONs()
 	if err != nil {
 		return nil, err
@@ -399,6 +440,8 @@ func (d *driver) SnapshotInspect(
 	snapshotID string,
 	opts types.Store) (*types.Snapshot, error) {
 
+	context.MustSession(ctx)
+
 	snap, err := d.getSnapshotByID(snapshotID)
 	if err != nil {
 		return nil, err
@@ -410,6 +453,8 @@ func (d *driver) SnapshotCopy(
 	ctx types.Context,
 	snapshotID, snapshotName, destinationID string,
 	opts types.Store) (*types.Snapshot, error) {
+
+	context.MustSession(ctx)
 
 	ogSnap, err := d.getSnapshotByID(snapshotID)
 	if err != nil {
@@ -443,6 +488,8 @@ func (d *driver) SnapshotRemove(
 	ctx types.Context,
 	snapshotID string,
 	opts types.Store) error {
+
+	context.MustSession(ctx)
 
 	snapJSONPath := d.getSnapPath(snapshotID)
 	if !gotil.FileExists(snapJSONPath) {

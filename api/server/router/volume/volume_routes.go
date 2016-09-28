@@ -47,6 +47,12 @@ func (r *router) volumes(
 			svc types.StorageService) (interface{}, error) {
 
 			ctx = context.WithStorageService(ctx, svc)
+
+			var err error
+			if ctx, err = context.WithStorageSession(ctx); err != nil {
+				return nil, err
+			}
+
 			return getFilteredVolumes(ctx, req, store, svc, opts, filter)
 		}
 
@@ -532,8 +538,14 @@ func (r *router) volumeDetachAll(
 			svc types.StorageService) (interface{}, error) {
 
 			ctx = context.WithStorageService(ctx, svc)
+
 			if _, ok := context.InstanceID(ctx); !ok {
 				return nil, utils.NewMissingInstanceIDError(service.Name())
+			}
+
+			var err error
+			if ctx, err = context.WithStorageSession(ctx); err != nil {
+				return nil, err
 			}
 
 			driver := svc.Driver()

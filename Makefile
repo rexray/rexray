@@ -59,7 +59,7 @@ DLOCAL_IMPORTS_FILES += $(foreach I,$(DLOCAL_IMPORTS),$I/.git)
 endif
 endif
 
-docker-build:
+docker-init:
 	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
 	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
 		docker exec $(DNAME) mkdir -p $(DPATH) && \
@@ -80,6 +80,8 @@ else
 endif
 endif
 	docker exec -t $(DNAME) env GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 make -C $(DPATH) -j build
+
+docker-build: docker-init
 	@docker cp $(DNAME):$(DPROG) $(PROG)
 	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
 		stat -f '%z' $(PROG) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
@@ -89,11 +91,7 @@ ifeq (1,$(DBUILD_ONCE))
 	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 endif
 
-docker-test:
-	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
-		docker exec $(DNAME) mkdir -p $(DPATH) && \
-		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
-		mkdir -p .build
+docker-test: docker-init
 	docker exec -t $(DNAME) make -C $(DPATH) test
 
 docker-clean:

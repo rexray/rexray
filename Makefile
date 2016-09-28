@@ -1,8 +1,13 @@
 SHELL := /bin/bash
 
 all:
+# if docker is running, then let's use docker to build it
+ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
+	$(MAKE) docker-build
+else
 	$(MAKE) deps
 	$(MAKE) build
+endif
 
 # the name of the program being compiled. this word is in place of file names,
 # directory paths, etc. changing the value of PROG is no guarantee everything
@@ -13,7 +18,7 @@ PROG := rexray
 ################################################################################
 ##                                  DOCKER                                    ##
 ################################################################################
-ifneq (,$(shell which docker 2> /dev/null)) # if docker exists
+ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 DPKG := github.com/emccode/rexray
 DIMG := golang:1.7.1
@@ -96,17 +101,17 @@ docker-test: docker-init
 	docker exec -t $(DNAME) make -C $(DPATH) test
 
 docker-clean:
-	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
+	-docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 
 docker-clobber:
-	CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
+	-CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
 		docker stop $$CNAMES && docker rm $$CNAMES; \
 	fi
 
 docker-list:
 	-$(DTO_CLOBBER)
 
-endif # ifneq (,$(shell which docker 2> /dev/null))
+endif # ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 
 ################################################################################

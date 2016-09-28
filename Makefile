@@ -1,11 +1,19 @@
+SHELL := /bin/bash
+
 all:
+# if docker is running, then let's use docker to build it
+ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
+	$(MAKE) docker-build
+else
 	$(MAKE) deps
 	$(MAKE) build
-
+endif
 
 ################################################################################
 ##                                  DOCKER                                    ##
 ################################################################################
+ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
+
 DPKG := github.com/emccode/libstorage
 DIMG := golang:1.7.1
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
@@ -20,6 +28,11 @@ DNAME := $(DNAME)-$(shell date +%s)
 endif
 DPATH := /go/src/$(DPKG)
 DSRCS := $(shell git ls-files)
+ifneq (,$(DGLIDE_YAML))
+DSRCS := $(filter-out glide.yaml,$(DSRCS))
+DSRCS := $(filter-out glide.lock,$(DSRCS))
+DSRCS := $(filter-out glide.lock.d,$(DSRCS))
+endif
 DPROG1_NAME := lss-$(DGOOS)
 DPROG1_PATH := /go/bin/$(DPROG1_NAME)
 DPROG2_NAME := lsx-$(DGOOS)
@@ -33,16 +46,45 @@ DTARC := -
 endif
 DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG) &> /dev/null
 DTO_CLOBBER := docker ps -a --format '{{.Names}}' | grep $(DPRFX)
+DNETRC := $(HOME)/.netrc
 
-docker-build:
+# DLOCAL_IMPORTS specifics a list of imported packages to copy into the
+# container build's vendor directory instead of what is specified in the
+# glide.lock file. If this variable is set and the GOPATH variable is not
+# then the target will fail.
+ifeq (undefined,$(DLOCAL_IMPORTS))
+DLOCAL_IMPORTS :=
+endif
+ifneq (,$(DLOCAL_IMPORTS))
+ifneq (,$(GOPATH))
+DLOCAL_IMPORTS_FILES := $(foreach I,$(DLOCAL_IMPORTS),$(addprefix $I/,$(shell git --git-dir=$(GOPATH)/src/$(I)/.git --work-tree=$(GOPATH)/src/$(I) ls-files)))
+DLOCAL_IMPORTS_FILES += $(foreach I,$(DLOCAL_IMPORTS),$I/.git)
+endif
+endif
+
+docker-init:
 	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
 	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
 		docker exec $(DNAME) mkdir -p $(DPATH) && \
-		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
-		mkdir -p .build
-	docker exec -t $(DNAME) env make -C $(DPATH) deps && \
-		docker exec -t $(DNAME) \
-			env GOOS=$(DGOOS) GOARCH=$(DGOARCH) make -C $(DPATH) -j build
+		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH)
+ifneq (,$(DGLIDE_YAML))
+	@docker cp $(DGLIDE_YAML) $(DNAME):$(DPATH)/glide.yaml
+endif
+ifneq (,$(wildcard $(DNETRC)))
+	@docker cp $(DNETRC) $(DNAME):/root
+endif
+	docker exec -t $(DNAME) env make -C $(DPATH) deps
+ifneq (,$(DLOCAL_IMPORTS))
+ifeq (,$(GOPATH))
+	@echo GOPATH must be set when using DLOCAL_IMPORTS && false
+else
+	@docker exec -t $(DNAME) rm -fr $(addprefix $(DPATH)/vendor/,$(DLOCAL_IMPORTS))
+	@tar -C $(GOPATH)/src -c $(DTARC) $(DLOCAL_IMPORTS_FILES) | docker cp - $(DNAME):$(DPATH)/vendor
+endif
+endif
+	docker exec -t $(DNAME) env GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 make -C $(DPATH) -j build
+
+docker-build: docker-init
 	@docker cp $(DNAME):$(DPROG1_PATH) $(DPROG1_NAME)
 	@docker cp $(DNAME):$(DPROG2_PATH) $(DPROG2_NAME)
 	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
@@ -57,33 +99,30 @@ ifeq (1,$(DBUILD_ONCE))
 	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 endif
 
-docker-test:
-	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
-		docker exec $(DNAME) mkdir -p $(DPATH) && \
-		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH) && \
-		mkdir -p .build
-	docker exec -t $(DNAME) env make -C $(DPATH) deps && \
-		docker exec -t $(DNAME) env TRAVIS=true \
-			LIBSTORAGE_DISABLE_STARTUP_INFO=true make -C $(DPATH) test
+docker-test: DGOOS=linux
+docker-test: DTEST_ENV_VARS=TRAVIS=true LIBSTORAGE_DISABLE_STARTUP_INFO=true
+docker-test: docker-init
+	docker exec -t $(DNAME) env $(DTEST_ENV_VARS) make -C $(DPATH) test
 
 docker-clean:
-	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
+	-docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 
 docker-clobber:
-	CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
+	-CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
 		docker stop $$CNAMES && docker rm $$CNAMES; \
 	fi
 
 docker-list:
 	-$(DTO_CLOBBER)
 
-
-ifneq (,$(shell which go 2> /dev/null)) # if go exists
+endif # ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 
 ################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
+ifneq (,$(shell which go 2> /dev/null)) # if go exists
+
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 ASTERIK := *
@@ -368,6 +407,9 @@ endif
 ##                               DEPENDENCIES                                 ##
 ################################################################################
 GLIDE := $(GOPATH)/bin/glide
+GLIDE_VER := 0.11.1
+GLIDE_TGZ := glide-v$(GLIDE_VER)-$(GOHOSTOS)-$(GOHOSTARCH).tar.gz
+GLIDE_URL := https://github.com/Masterminds/glide/releases/download/v$(GLIDE_VER)/$(GLIDE_TGZ)
 GLIDE_LOCK := glide.lock
 GLIDE_YAML := glide.yaml
 GLIDE_LOCK_D := glide.lock.d
@@ -382,7 +424,12 @@ ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 ifneq (1,$(VENDORED))
 
 $(GLIDE):
-	go get -u github.com/Masterminds/glide
+	@curl -SLO $(GLIDE_URL) && \
+		tar xzf $(GLIDE_TGZ) && \
+		rm -f $(GLIDE_TGZ) && \
+		mkdir -p $(GOPATH)/bin && \
+		mv $(GOHOSTOS)-$(GOHOSTARCH)/glide $(GOPATH)/bin && \
+		rm -fr $(GOHOSTOS)-$(GOHOSTARCH)
 glide: $(GLIDE)
 GO_DEPS += $(GLIDE)
 
@@ -402,7 +449,7 @@ $(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
 	$(GLIDE) install && touch $@
 
 $(GLIDE_LOCK): $(GLIDE_YAML)
-	touch $@
+	$(GLIDE) up && touch $@ && touch $(GLIDE_LOCK_D)
 
 endif #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
 

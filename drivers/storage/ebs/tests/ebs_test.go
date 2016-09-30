@@ -17,7 +17,7 @@ import (
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/libstorage/drivers/storage/ebs"
-	ec2x "github.com/emccode/libstorage/drivers/storage/ebs/executor"
+	ebsUtils "github.com/emccode/libstorage/drivers/storage/ebs/utils"
 )
 
 // Put contents of sample config.yml here
@@ -102,7 +102,7 @@ func TestInstanceID(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Get Instance ID metadata from executor
-	iid, err := ec2x.InstanceID()
+	iid, err := ebsUtils.InstanceID(ctx)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Fatal(err)
@@ -146,7 +146,7 @@ func TestInstanceIDEC2(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Get Instance ID metadata from executor
-	iid, err := ec2x.InstanceID()
+	iid, err := ebsUtils.InstanceID(ctx)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Fatal(err)

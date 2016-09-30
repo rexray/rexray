@@ -21,6 +21,7 @@ import (
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/ebs"
+	ebsUtils "github.com/emccode/libstorage/drivers/storage/ebs/utils"
 )
 
 const (
@@ -39,17 +40,6 @@ type driver struct {
 	endpoint   *string
 	maxRetries *int
 }
-
-var (
-	nextDeviceInfo = &types.NextDeviceInfo{
-		Prefix: "xvd",
-		// EBS suggests to use /dev/sd[f-p] for Linux EC2 instances.
-		// Also on Linux EC2 instances, although the device path may show up
-		// as /dev/sd* on the EC2 side, it will appear locally as /dev/xvd*
-		Pattern: "[f-p]",
-		Ignore:  false,
-	}
-)
 
 func init() {
 	registry.RegisterStorageDriver(ebs.Name, newDriver)
@@ -185,7 +175,7 @@ func (d *driver) mustAvailabilityZone(ctx types.Context) *string {
 // device workflow.
 func (d *driver) NextDeviceInfo(
 	ctx types.Context) (*types.NextDeviceInfo, error) {
-	return nextDeviceInfo, nil
+	return ebsUtils.NextDeviceInfo, nil
 }
 
 // Type returns the type of storage the driver provides.
@@ -903,7 +893,7 @@ func (d *driver) toTypesVolume(
 				// Compensate for kernel volume mapping i.e. change "/dev/sda"
 				// to "/dev/xvda"
 				deviceName = strings.Replace(
-					*attachment.Device, "sd", nextDeviceInfo.Prefix, 1)
+					*attachment.Device, "sd", ebsUtils.NextDeviceInfo.Prefix, 1)
 				// Keep device name if it is found in local devices
 				if _, ok := ld.DeviceMap[deviceName]; !ok {
 					deviceName = ""

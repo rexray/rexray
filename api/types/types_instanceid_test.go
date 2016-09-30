@@ -12,8 +12,8 @@ import (
 
 const (
 	metadataBase64       = "eyJIZWxsbyI6ImhpIiwiVGhlcmUiOiJoZXJlIiwiVmFsdWUiOjMsIkRhdGEiOnsiZjEiOjAsImYyIjoiMSJ9fQ=="
-	expectedI1String     = "vfs=1234," + metadataBase64
-	expectedI1NoIDString = "vfs=," + metadataBase64
+	expectedI1String     = "vfs=1234,," + metadataBase64
+	expectedI1NoIDString = "vfs=,," + metadataBase64
 )
 
 func newMetadataCtor(
@@ -53,10 +53,21 @@ func TestInstanceIDMarshalText(t *testing.T) {
 	i3 := &InstanceID{}
 	assert.NoError(t, i3.UnmarshalText([]byte(expectedI1String)))
 	assert.EqualValues(t, i1, i3)
+
+	i4 := &InstanceID{
+		ID:     "1234",
+		Driver: "vfs",
+		Fields: map[string]string{"region": "west"},
+	}
+	assert.Equal(t, "vfs=1234,region=west", i4.String())
 }
 
 func TestInstanceIDMarshalJSON(t *testing.T) {
-	i1 := &InstanceID{ID: "1234", Driver: "vfs"}
+	i1 := &InstanceID{
+		ID:     "1234",
+		Driver: "vfs",
+		Fields: map[string]string{"region": "west"},
+	}
 	i1.MarshalMetadata(newMetadata())
 
 	buf, err := i1.MarshalJSON()

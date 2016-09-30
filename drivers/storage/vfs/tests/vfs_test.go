@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -715,7 +716,11 @@ func instanceID() (*types.InstanceID, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.InstanceID{ID: hostName, Driver: vfs.Name}, nil
+	iid := &types.InstanceID{ID: hostName, Driver: vfs.Name}
+	if ok, _ := strconv.ParseBool(os.Getenv("VFS_INSTANCEID_USE_FIELDS")); ok {
+		iid.Fields = map[string]string{"region": "east"}
+	}
+	return iid, nil
 }
 
 func assertVolDir(

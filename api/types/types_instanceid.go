@@ -5,6 +5,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"regexp"
 
 	"github.com/akutz/goof"
@@ -24,6 +25,9 @@ type InstanceID struct {
 	// valid.
 	Driver string `json:"driver"`
 
+	// Fields is additional, driver specific data about the Instance ID.
+	Fields map[string]string `json:"fields"`
+
 	metadata json.RawMessage
 }
 
@@ -41,6 +45,12 @@ var (
 	// is nil.
 	ErrIIDMetadataNilDest = goof.New("cannot unmarshal into nil receiver")
 )
+
+// HasMetadata returns a flag indicating whether or not the instance ID has any
+// associated metadata.
+func (i *InstanceID) HasMetadata() bool {
+	return len(i.metadata) > 0
+}
 
 // String returns the string representation of an InstanceID object.
 func (i *InstanceID) String() string {
@@ -95,6 +105,20 @@ func (i *InstanceID) MarshalText() ([]byte, error) {
 	t := &bytes.Buffer{}
 	fmt.Fprintf(t, "%s=%s", i.Driver, i.ID)
 
+	if len(i.Fields) == 0 && len(i.metadata) == 0 {
+		return t.Bytes(), nil
+	}
+
+	t.WriteByte(',')
+
+	if len(i.Fields) > 0 {
+		vals := url.Values{}
+		for k, v := range i.Fields {
+			vals.Add(k, v)
+		}
+		t.WriteString(vals.Encode())
+	}
+
 	if len(i.metadata) == 0 {
 		return t.Bytes(), nil
 	}
@@ -112,7 +136,7 @@ func (i *InstanceID) MarshalText() ([]byte, error) {
 }
 
 var iidRX = regexp.MustCompile(
-	`(?i)^([^=]+)=([^,]*)(?:,(.+))?$`)
+	`(?i)^([^=]+)=([^,]*)(?:,(.*?))?(?:,(.+))?$`)
 
 // UnmarshalText unmarshals the data into a an InstanceID provided the data
 // adheres to the format described in the MarshalText function.
@@ -129,7 +153,18 @@ func (i *InstanceID) UnmarshalText(value []byte) error {
 	i.ID = string(m[2])
 
 	if lm > 3 && len(m[3]) > 0 {
-		enc := m[3]
+		qs, err := url.ParseQuery(string(m[3]))
+		if err != nil {
+			return err
+		}
+		i.Fields = map[string]string{}
+		for k := range qs {
+			i.Fields[k] = qs.Get(k)
+		}
+	}
+
+	if lm > 4 && len(m[4]) > 0 {
+		enc := m[4]
 		dec := b64.NewDecoder(b64.StdEncoding, bytes.NewReader(enc))
 		i.metadata = make([]byte, b64.StdEncoding.DecodedLen(len(enc)))
 		n, err := dec.Read(i.metadata)
@@ -145,19 +180,21 @@ func (i *InstanceID) UnmarshalText(value []byte) error {
 // MarshalJSON marshals the InstanceID to JSON.
 func (i *InstanceID) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID       string          `json:"id"`
-		Driver   string          `json:"driver"`
-		Metadata json.RawMessage `json:"metadata,omitempty"`
-	}{i.ID, i.Driver, i.metadata})
+		ID       string            `json:"id"`
+		Driver   string            `json:"driver"`
+		Fields   map[string]string `json:"fields,omitempty"`
+		Metadata json.RawMessage   `json:"metadata,omitempty"`
+	}{i.ID, i.Driver, i.Fields, i.metadata})
 }
 
 // UnmarshalJSON marshals the InstanceID to JSON.
 func (i *InstanceID) UnmarshalJSON(data []byte) error {
 
 	iid := &struct {
-		ID       string          `json:"id"`
-		Driver   string          `json:"driver"`
-		Metadata json.RawMessage `json:"metadata,omitempty"`
+		ID       string            `json:"id"`
+		Driver   string            `json:"driver"`
+		Fields   map[string]string `json:"fields,omitempty"`
+		Metadata json.RawMessage   `json:"metadata,omitempty"`
 	}{}
 
 	if err := json.Unmarshal(data, iid); err != nil {
@@ -166,6 +203,7 @@ func (i *InstanceID) UnmarshalJSON(data []byte) error {
 
 	i.ID = iid.ID
 	i.Driver = iid.Driver
+	i.Fields = iid.Fields
 	i.metadata = iid.Metadata
 
 	return nil
@@ -185,6 +223,7 @@ func (i *InstanceID) MarshalYAML() (interface{}, error) {
 	return &struct {
 		ID       string                 `yaml:"id"`
 		Driver   string                 `yaml:"driver"`
+		Fields   map[string]string      `yaml:"fields,omitempty"`
 		Metadata map[string]interface{} `yaml:"metadata,omitempty"`
-	}{i.ID, i.Driver, metadata}, nil
+	}{i.ID, i.Driver, i.Fields, metadata}, nil
 }

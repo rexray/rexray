@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -65,17 +66,21 @@ func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 
+	iid := &types.InstanceID{Driver: vfs.Name}
 	hostName, err := utils.HostName()
 	if err != nil {
 		return nil, err
 	}
 
-	iid := &types.InstanceID{Driver: vfs.Name}
+	if ok, _ := strconv.ParseBool(os.Getenv("VFS_INSTANCEID_USE_FIELDS")); ok {
+		iid.ID = hostName
+		iid.Fields = map[string]string{"region": "east"}
+		return iid, nil
+	}
 
 	if err := iid.MarshalMetadata(hostName); err != nil {
 		return nil, err
 	}
-
 	return iid, nil
 }
 

@@ -53,16 +53,20 @@ func (c *client) InstanceID(
 
 	ctx = ctx.WithValue(context.InstanceIDKey, iid)
 
-	ctx.Debug("sending instanceID in API.InstanceInspect call")
-	instance, err := c.InstanceInspect(ctx, serviceName)
-	if err != nil {
-		return nil, err
+	if iid.HasMetadata() {
+		ctx.Debug("sending instanceID in API.InstanceInspect call")
+		instance, err := c.InstanceInspect(ctx, serviceName)
+		if err != nil {
+			return nil, err
+		}
+		ctx.Debug("received instanceID from API.InstanceInspect call")
+		iid.ID = instance.InstanceID.ID
+		iid.Fields = instance.InstanceID.Fields
+		iid.DeleteMetadata()
 	}
 
-	iid.ID = instance.InstanceID.ID
-	iid.DeleteMetadata()
 	c.instanceIDCache.Set(serviceName, iid)
-	ctx.Debug("received instanceID from API.InstanceInspect call")
+	ctx.Debug("cached instanceID")
 
 	ctx.Debug("xli instanceID success")
 	return iid, nil

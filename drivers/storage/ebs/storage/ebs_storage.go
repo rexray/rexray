@@ -1,11 +1,9 @@
 package storage
 
 import (
-	"encoding/json"
 	"fmt"
-	"net"
-	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -35,70 +33,13 @@ const (
 )
 
 type driver struct {
-	config           gofig.Config
-	nextDeviceInfo   *types.NextDeviceInfo
-	instanceDocument *instanceIdentityDocument
-	ec2Instance      *awsec2.EC2
-	awsCreds         *credentials.Credentials
+	name     string
+	config   gofig.Config
+	awsCreds *credentials.Credentials
 }
 
-type instanceIdentityDocument struct {
-	InstanceID         string      `json:"instanceId"`
-	BillingProducts    interface{} `json:"billingProducts"`
-	AccountID          string      `json:"accountId"`
-	ImageID            string      `json:"imageId"`
-	InstanceType       string      `json:"instanceType"`
-	KernelID           string      `json:"kernelId"`
-	RamdiskID          string      `json:"ramdiskId"`
-	PendingTime        string      `json:"pendingTime"`
-	Architecture       string      `json:"architecture"`
-	Region             string      `json:"region"`
-	Version            string      `json:"version"`
-	AvailabilityZone   string      `json:"availabilityZone"`
-	DevpayproductCodes interface{} `json:"devpayProductCodes"`
-	PrivateIP          string      `json:"privateIp"`
-}
-
-func init() {
-	registry.RegisterStorageDriver(ebs.Name, newDriver)
-	// Backwards compatibility for ec2 driver
-	registry.RegisterStorageDriver(ebs.OldName, newDriver)
-}
-
-func newDriver() types.StorageDriver {
-	return &driver{}
-}
-
-func (d *driver) Name() string {
-	return ebs.Name
-}
-
-// Init initializes the driver.
-func (d *driver) Init(context types.Context, config gofig.Config) error {
-	// Ensure backwards compatibility with ebs and ec2 in config
-	ebs.BackCompat(config)
-
-	d.config = config
-
-	// Initialize with config content for logging
-	fields := map[string]interface{}{
-		"moduleName": d.Name(),
-		"accessKey":  d.accessKey(),
-		"region":     d.region(),
-		"endpoint":   d.endpoint(),
-		"tag":        d.tag(),
-	}
-
-	log.WithFields(fields).Debug("starting provider driver")
-
-	// Mask password
-	if d.secretKey() == "" {
-		fields["secretKey"] = ""
-	} else {
-		fields["secretKey"] = "******"
-	}
-
-	d.nextDeviceInfo = &types.NextDeviceInfo{
+var (
+	nextDeviceInfo = &types.NextDeviceInfo{
 		Prefix: "xvd",
 		// EBS suggests to use /dev/sd[f-p] for Linux EC2 instances.
 		// Also on Linux EC2 instances, although the device path may show up
@@ -106,60 +47,123 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 		Pattern: "[f-p]",
 		Ignore:  false,
 	}
+)
 
-	// Prepare input for starting new EC2 client with a session
-	var err error
-	d.instanceDocument, err = getInstanceIdentityDocument()
-	if err != nil {
-		return goof.WithFieldsE(fields, "error getting instance id doc", err)
-	}
+func init() {
+	registry.RegisterStorageDriver(ebs.Name, newDriver)
+	// Backwards compatibility for ec2 driver
+	registry.RegisterStorageDriver(ebs.OldName, newOldDriver)
+}
 
-	region := d.region()
-	if region == "" {
-		region = d.instanceDocument.Region
-	}
+func newDriver() types.StorageDriver {
+	return &driver{name: ebs.Name}
+}
 
-	endpoint := d.endpoint()
-	if endpoint == "" && region != "" {
-		endpoint = fmt.Sprintf("ec2.%s.amazonaws.com", region)
-	}
+func newOldDriver() types.StorageDriver {
+	return &driver{name: ebs.OldName}
+}
 
-	maxRetries := d.maxRetries()
+func (d *driver) Name() string {
+	return d.name
+}
 
-	mySession := session.New()
-
-	d.awsCreds = credentials.NewChainCredentials(
-		[]credentials.Provider{
-			&credentials.StaticProvider{
-				Value: credentials.Value{
-					AccessKeyID:     d.accessKey(),
-					SecretAccessKey: d.secretKey(),
-				},
-			},
-			&credentials.EnvProvider{},
-			&credentials.SharedCredentialsProvider{},
-			&ec2rolecreds.EC2RoleProvider{
-				Client: ec2metadata.New(mySession),
-			},
-		})
-
-	awsConfig := aws.NewConfig().WithCredentials(
-		d.awsCreds).WithRegion(region).WithEndpoint(
-		endpoint).WithMaxRetries(maxRetries)
-
-	// Start new EC2 client with config info
-	d.ec2Instance = awsec2.New(mySession, awsConfig)
-
-	log.WithFields(fields).Info("storage driver initialized")
-
+// Init initializes the driver.
+func (d *driver) Init(context types.Context, config gofig.Config) error {
+	// Ensure backwards compatibility with ebs and ec2 in config
+	ebs.BackCompat(config)
+	d.config = config
+	log.Info("storage driver initialized")
 	return nil
+}
+
+var (
+	sessions    = map[string]interface{}{}
+	sessionsRWL = &sync.RWMutex{}
+)
+
+func (d *driver) Login(ctx types.Context) (interface{}, error) {
+
+	fields := map[string]interface{}{
+		"accessKey": d.accessKey(),
+		"tag":       d.tag(),
+	}
+
+	log.WithFields(fields).Debug("beginning ebs login attempt")
+
+	if d.secretKey() == "" {
+		fields["secretKey"] = ""
+	} else {
+		fields["secretKey"] = "******"
+	}
+
+	var (
+		region     string
+		endpoint   string
+		iid        *types.InstanceID
+		sess       = session.New()
+		maxRetries = d.maxRetries()
+	)
+
+	iid, _ = context.InstanceID(ctx)
+
+	if iid != nil {
+		region = iid.Fields[ebs.InstanceIDFieldRegion]
+	} else {
+		region = d.region()
+	}
+
+	if region != "" {
+		endpoint = fmt.Sprintf("ec2.%s.amazonaws.com", region)
+	} else {
+		endpoint = d.endpoint()
+	}
+
+	fields["region"] = region
+	fields["endpoint"] = endpoint
+
+	log.WithFields(fields).Debug("ebs service connetion attempt")
+
+	svc := awsec2.New(
+		sess,
+		&aws.Config{
+			Region:     &region,
+			Endpoint:   &endpoint,
+			MaxRetries: &maxRetries,
+			Credentials: credentials.NewChainCredentials(
+				[]credentials.Provider{
+					&credentials.StaticProvider{
+						Value: credentials.Value{
+							AccessKeyID:     d.accessKey(),
+							SecretAccessKey: d.secretKey(),
+						},
+					},
+					&credentials.EnvProvider{},
+					&credentials.SharedCredentialsProvider{},
+					&ec2rolecreds.EC2RoleProvider{
+						Client: ec2metadata.New(sess),
+					},
+				},
+			),
+		},
+	)
+
+	log.WithFields(fields).Info("ebs service connetion created")
+	return svc, nil
+}
+
+func mustSession(ctx types.Context) *awsec2.EC2 {
+	return context.MustSession(ctx).(*awsec2.EC2)
+}
+
+func mustInstanceIDID(ctx types.Context) *string {
+	return &context.MustInstanceID(ctx).ID
 }
 
 // NextDeviceInfo returns the information about the driver's next available
 // device workflow.
 func (d *driver) NextDeviceInfo(
 	ctx types.Context) (*types.NextDeviceInfo, error) {
-	return d.nextDeviceInfo, nil
+	return nextDeviceInfo, nil
 }
 
 // Type returns the type of storage the driver provides.
@@ -513,7 +517,7 @@ func (d *driver) VolumeRemove(
 	dvInput := &awsec2.DeleteVolumeInput{
 		VolumeId: &volumeID,
 	}
-	_, err := d.ec2Instance.DeleteVolume(dvInput)
+	_, err := mustSession(ctx).DeleteVolume(dvInput)
 	if err != nil {
 		return goof.WithFieldsE(fields, "error deleting volume", err)
 	}
@@ -634,7 +638,7 @@ func (d *driver) VolumeDetach(
 	}
 
 	// Detach volume using EC2 API call
-	if _, err = d.ec2Instance.DetachVolume(dvInput); err != nil {
+	if _, err = mustSession(ctx).DetachVolume(dvInput); err != nil {
 		return nil, goof.WithFieldsE(
 			log.Fields{
 				"provider": d.Name(),
@@ -820,8 +824,18 @@ func (d *driver) SnapshotRemove(
 func (d *driver) getVolume(
 	ctx types.Context,
 	volumeID, volumeName string) ([]*awsec2.Volume, error) {
-	// Prepare filters
-	filters := []*awsec2.Filter{}
+
+	iid := context.MustInstanceID(ctx)
+	avaiZone := iid.Fields[ebs.InstanceIDFieldAvailabilityZone]
+
+	// prepare filters
+	filters := []*awsec2.Filter{
+		&awsec2.Filter{
+			Name:   aws.String("availability-zone"),
+			Values: []*string{&avaiZone},
+		},
+	}
+
 	if volumeName != "" {
 		filters = append(filters, &awsec2.Filter{
 			Name: aws.String("tag:Name"), Values: []*string{&volumeName}})
@@ -852,7 +866,7 @@ func (d *driver) getVolume(
 	}
 
 	// Retrieve filtered volumes through EC2 API call
-	resp, err := d.ec2Instance.DescribeVolumes(dvInput)
+	resp, err := mustSession(ctx).DescribeVolumes(dvInput)
 	if err != nil {
 		return []*awsec2.Volume{}, err
 	}
@@ -882,7 +896,7 @@ func (d *driver) toTypesVolume(
 			if attachments {
 				// Compensate for kernel volume mapping i.e. change "/dev/sda" to "/dev/xvda"
 				deviceName = strings.Replace(
-					*attachment.Device, "sd", d.nextDeviceInfo.Prefix, 1)
+					*attachment.Device, "sd", nextDeviceInfo.Prefix, 1)
 				// Keep device name if it is found in local devices
 				if _, ok := ld.DeviceMap[deviceName]; !ok {
 					deviceName = ""
@@ -998,7 +1012,9 @@ var (
 
 // Used in VolumeAttach
 func (d *driver) attachVolume(
-	ctx types.Context, volumeID, volumeName, deviceName string) error {
+	ctx types.Context,
+	volumeID, volumeName, deviceName string) error {
+
 	// sanity check # of volumes to attach
 	vol, err := d.getVolume(ctx, volumeID, volumeName)
 	if err != nil {
@@ -1015,47 +1031,14 @@ func (d *driver) attachVolume(
 	// Attach volume via EC2 API call
 	avInput := &awsec2.AttachVolumeInput{
 		Device:     &deviceName,
-		InstanceId: &d.instanceDocument.InstanceID,
+		InstanceId: mustInstanceIDID(ctx),
 		VolumeId:   &volumeID,
 	}
-	if _, err := d.ec2Instance.AttachVolume(avInput); err != nil {
+
+	if _, err := mustSession(ctx).AttachVolume(avInput); err != nil {
 		return err
 	}
 	return nil
-}
-
-const (
-	iidProto = "tcp"
-	iidIP    = "169.254.169.254:80"
-	iidURL   = "http://169.254.169.254/latest/dynamic/instance-identity/document"
-)
-
-var iidTimeout = 50 * time.Millisecond
-
-// Retrieve instance identity document to get metadata for initialization
-func getInstanceIdentityDocument() (*instanceIdentityDocument, error) {
-	// Check connection
-	conn, err := net.DialTimeout(iidProto, iidIP, iidTimeout)
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-
-	// Retrieve instance identity document
-	resp, err := http.Get(iidURL)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	dec := json.NewDecoder(resp.Body)
-
-	var iid instanceIdentityDocument
-	if err := dec.Decode(&iid); err != nil {
-		return nil, err
-	}
-
-	return &iid, nil
 }
 
 // Used in VolumeCreate
@@ -1066,7 +1049,7 @@ func (d *driver) createVolume(ctx types.Context, volumeName, snapshotID string,
 		server awsec2.Instance
 	)
 	// Create volume using EC2 API call
-	if server, err = d.getInstance(); err != nil {
+	if server, err = d.getInstance(ctx); err != nil {
 		return &awsec2.Volume{}, goof.WithError(
 			"error creating volume with EC2 API call", err)
 	}
@@ -1089,13 +1072,13 @@ func (d *driver) createVolume(ctx types.Context, volumeName, snapshotID string,
 	}
 	var resp *awsec2.Volume
 
-	if resp, err = d.ec2Instance.CreateVolume(options); err != nil {
+	if resp, err = mustSession(ctx).CreateVolume(options); err != nil {
 		return &awsec2.Volume{}, goof.WithError(
 			"error creating volume", err)
 	}
 
 	// Add tags to created volume
-	if err = d.createTags(*resp.VolumeId, volumeName); err != nil {
+	if err = d.createTags(ctx, *resp.VolumeId, volumeName); err != nil {
 		return &awsec2.Volume{}, goof.WithError(
 			"error creating tags", err)
 	}
@@ -1119,7 +1102,7 @@ func (d *driver) createVolumeEnsureAvailabilityZone(
 }
 
 // Fill in tags for volume or snapshot
-func (d *driver) createTags(id, name string) (err error) {
+func (d *driver) createTags(ctx types.Context, id, name string) (err error) {
 	var (
 		ctInput   *awsec2.CreateTagsInput
 		inputName string
@@ -1155,7 +1138,7 @@ func (d *driver) createTags(id, name string) (err error) {
 				})
 		}
 	*/
-	_, err = d.ec2Instance.CreateTags(ctInput)
+	_, err = mustSession(ctx).CreateTags(ctInput)
 	if err != nil {
 		return goof.WithError("error creating tags", err)
 	}
@@ -1248,16 +1231,15 @@ func (d *driver) getName(tags []*awsec2.Tag) string {
 }
 
 // Retrieve current instance using EC2 API call
-func (d *driver) getInstance() (awsec2.Instance, error) {
+func (d *driver) getInstance(ctx types.Context) (awsec2.Instance, error) {
 	diInput := &awsec2.DescribeInstancesInput{
-		InstanceIds: []*string{&d.instanceDocument.InstanceID},
+		InstanceIds: []*string{mustInstanceIDID(ctx)},
 	}
-	resp, err := d.ec2Instance.DescribeInstances(diInput)
+	resp, err := mustSession(ctx).DescribeInstances(diInput)
 	if err != nil {
 		return awsec2.Instance{}, goof.WithError(
 			"error retrieving instance with EC2 API call", err)
 	}
-
 	return *resp.Reservations[0].Instances[0], nil
 }
 

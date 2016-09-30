@@ -33,9 +33,11 @@ const (
 )
 
 type driver struct {
-	name     string
-	config   gofig.Config
-	awsCreds *credentials.Credentials
+	name       string
+	config     gofig.Config
+	region     *string
+	endpoint   *string
+	maxRetries *int
 }
 
 var (
@@ -72,6 +74,14 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	// Ensure backwards compatibility with ebs and ec2 in config
 	ebs.BackCompat(config)
 	d.config = config
+	if v := d.getRegion(); v != "" {
+		d.region = &v
+	}
+	if v := d.getEndpoint(); v != "" {
+		d.endpoint = &v
+	}
+	maxRetries := d.getMaxRetries()
+	d.maxRetries = &maxRetries
 	log.Info("storage driver initialized")
 	return nil
 }
@@ -97,38 +107,30 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	}
 
 	var (
-		region     string
-		endpoint   string
-		iid        *types.InstanceID
-		sess       = session.New()
-		maxRetries = d.maxRetries()
+		region   *string
+		endpoint *string
+		sess     = session.New()
 	)
 
-	iid, _ = context.InstanceID(ctx)
-
-	if iid != nil {
-		region = iid.Fields[ebs.InstanceIDFieldRegion]
+	if region = d.mustRegion(ctx); region != nil {
+		fields["region"] = *region
+		szEndpint := fmt.Sprintf("ec2.%s.amazonaws.com", *region)
+		endpoint = &szEndpint
 	} else {
-		region = d.region()
+		endpoint = d.endpoint
 	}
-
-	if region != "" {
-		endpoint = fmt.Sprintf("ec2.%s.amazonaws.com", region)
-	} else {
-		endpoint = d.endpoint()
+	if endpoint != nil {
+		fields["endpoint"] = endpoint
 	}
-
-	fields["region"] = region
-	fields["endpoint"] = endpoint
 
 	log.WithFields(fields).Debug("ebs service connetion attempt")
 
 	svc := awsec2.New(
 		sess,
 		&aws.Config{
-			Region:     &region,
-			Endpoint:   &endpoint,
-			MaxRetries: &maxRetries,
+			Region:     region,
+			Endpoint:   endpoint,
+			MaxRetries: d.maxRetries,
 			Credentials: credentials.NewChainCredentials(
 				[]credentials.Provider{
 					&credentials.StaticProvider{
@@ -159,6 +161,26 @@ func mustInstanceIDID(ctx types.Context) *string {
 	return &context.MustInstanceID(ctx).ID
 }
 
+func (d *driver) mustRegion(ctx types.Context) *string {
+	if iid, ok := context.InstanceID(ctx); ok {
+		if v, ok := iid.Fields[ebs.InstanceIDFieldRegion]; ok && v != "" {
+			return &v
+		}
+	}
+	return d.region
+}
+
+func (d *driver) mustAvailabilityZone(ctx types.Context) *string {
+	if iid, ok := context.InstanceID(ctx); ok {
+		if v, ok := iid.Fields[ebs.InstanceIDFieldAvailabilityZone]; ok {
+			if v != "" {
+				return &v
+			}
+		}
+	}
+	return nil
+}
+
 // NextDeviceInfo returns the information about the driver's next available
 // device workflow.
 func (d *driver) NextDeviceInfo(
@@ -176,23 +198,8 @@ func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
 func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
-	// get instance ID
-	iid := context.MustInstanceID(ctx)
 
-	// If no instance ID, return blank instance
-	if iid.ID != "" {
-		return &types.Instance{InstanceID: iid}, nil
-	}
-
-	// Decode metadata from instance ID
-	var awsInstanceID string
-	if err := iid.UnmarshalMetadata(&awsInstanceID); err != nil {
-		return nil, goof.WithError(
-			"error unmarshalling instance id metadata", err)
-	}
-	instanceID := &types.InstanceID{ID: awsInstanceID, Driver: d.Name()}
-
-	return &types.Instance{InstanceID: instanceID}, nil
+	return nil, types.ErrNotImplemented
 }
 
 // Volumes returns all volumes or a filtered list of volumes.
@@ -825,15 +832,14 @@ func (d *driver) getVolume(
 	ctx types.Context,
 	volumeID, volumeName string) ([]*awsec2.Volume, error) {
 
-	iid := context.MustInstanceID(ctx)
-	avaiZone := iid.Fields[ebs.InstanceIDFieldAvailabilityZone]
-
 	// prepare filters
-	filters := []*awsec2.Filter{
-		&awsec2.Filter{
+	filters := []*awsec2.Filter{}
+
+	if avaiZone := d.mustAvailabilityZone(ctx); avaiZone != nil {
+		filters = append(filters, &awsec2.Filter{
 			Name:   aws.String("availability-zone"),
-			Values: []*string{&avaiZone},
-		},
+			Values: []*string{avaiZone},
+		})
 	}
 
 	if volumeName != "" {
@@ -894,7 +900,8 @@ func (d *driver) toTypesVolume(
 		for _, attachment := range volume.Attachments {
 			deviceName := ""
 			if attachments {
-				// Compensate for kernel volume mapping i.e. change "/dev/sda" to "/dev/xvda"
+				// Compensate for kernel volume mapping i.e. change "/dev/sda"
+				// to "/dev/xvda"
 				deviceName = strings.Replace(
 					*attachment.Device, "sd", nextDeviceInfo.Prefix, 1)
 				// Keep device name if it is found in local devices
@@ -1155,8 +1162,12 @@ func (d *driver) waitVolumeComplete(
 		return errMissingVolID
 	}
 
-UpdateLoop:
-	for {
+	var (
+		loop     = true
+		attached = awsec2.VolumeAttachmentStateAttached
+	)
+
+	for loop {
 		// update volume
 		volumes, err := d.getVolume(ctx, volumeID, "")
 		if err != nil {
@@ -1167,19 +1178,22 @@ UpdateLoop:
 		switch action {
 		case waitVolumeCreate:
 			if *volumes[0].State == awsec2.VolumeStateAvailable {
-				break UpdateLoop
+				loop = false
 			}
 		case waitVolumeDetach:
 			if len(volumes[0].Attachments) == 0 {
-				break UpdateLoop
+				loop = false
 			}
 		case waitVolumeAttach:
 			if len(volumes[0].Attachments) == 1 &&
-				*volumes[0].Attachments[0].State == awsec2.VolumeAttachmentStateAttached {
-				break UpdateLoop
+				*volumes[0].Attachments[0].State == attached {
+				loop = false
 			}
 		}
-		time.Sleep(1 * time.Second)
+
+		if loop {
+			time.Sleep(1 * time.Second)
+		}
 	}
 
 	return nil
@@ -1273,41 +1287,25 @@ func (d *driver) secretKey() string {
 	return d.config.GetString(ebs.ConfigOldEBSSecretKey)
 }
 
-func (d *driver) region() string {
+func (d *driver) getRegion() string {
 	if region := d.config.GetString(ebs.ConfigEBSRegion); region != "" {
 		return region
 	}
 	return d.config.GetString(ebs.ConfigOldEBSRegion)
 }
 
-func (d *driver) endpoint() string {
+func (d *driver) getEndpoint() string {
 	if endpoint := d.config.GetString(ebs.ConfigEBSEndpoint); endpoint != "" {
 		return endpoint
 	}
 	return d.config.GetString(ebs.ConfigOldEBSEndpoint)
 }
 
-func (d *driver) maxRetries() int {
-	// if maxRetries in config is non-numeric or a negative number,
-	// set it to the default number of max retries.
-	if maxRetriesString := d.config.GetString(
-		ebs.ConfigEBSMaxRetries); maxRetriesString != "" {
-		if maxRetriesString == "0" {
-			return 0
-		} else if maxRetries := d.config.GetInt(
-			ebs.ConfigEBSMaxRetries); maxRetries > 0 {
-			return maxRetries
-		}
-	} else if maxRetriesString := d.config.GetString(
-		ebs.ConfigOldEBSMaxRetries); maxRetriesString != "" {
-		if maxRetriesString == "0" {
-			return 0
-		} else if maxRetries := d.config.GetInt(
-			ebs.ConfigOldEBSMaxRetries); maxRetries > 0 {
-			return maxRetries
-		}
+func (d *driver) getMaxRetries() int {
+	if d.config.IsSet(ebs.ConfigEBSMaxRetries) {
+		return d.config.GetInt(ebs.ConfigEBSMaxRetries)
 	}
-	return ebs.DefaultMaxRetries
+	return d.config.GetInt(ebs.ConfigOldEBSMaxRetries)
 }
 
 func (d *driver) tag() string {

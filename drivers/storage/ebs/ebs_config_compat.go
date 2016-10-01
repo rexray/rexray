@@ -10,22 +10,22 @@ const (
 	ConfigEBS = "ebs"
 
 	//ConfigEBSAccessKey is a config key.
-	ConfigEBSAccessKey = ConfigEBS + ".accessKey"
+	ConfigEBSAccessKey = ConfigEBS + "." + AccessKey
 
 	//ConfigEBSSecretKey is a config key.
-	ConfigEBSSecretKey = ConfigEBS + ".secretKey"
+	ConfigEBSSecretKey = ConfigEBS + "." + SecretKey
 
 	//ConfigEBSRegion is a config key.
-	ConfigEBSRegion = ConfigEBS + ".region"
+	ConfigEBSRegion = ConfigEBS + "." + Region
 
 	//ConfigEBSEndpoint is a config key.
-	ConfigEBSEndpoint = ConfigEBS + ".endpoint"
+	ConfigEBSEndpoint = ConfigEBS + "." + Endpoint
 
 	//ConfigEBSMaxRetries is a config key.
-	ConfigEBSMaxRetries = ConfigEBS + ".maxRetries"
+	ConfigEBSMaxRetries = ConfigEBS + "." + MaxRetries
 
 	//ConfigEBSTag is a config key.
-	ConfigEBSTag = ConfigEBS + ".tag"
+	ConfigEBSTag = ConfigEBS + "." + Tag
 
 	//ConfigEBSRexrayTag is a config key.
 	ConfigEBSRexrayTag = ConfigEBS + ".rexrayTag"
@@ -34,22 +34,22 @@ const (
 	ConfigOldEBS = "ec2"
 
 	//ConfigOldEBSAccessKey is a config key.
-	ConfigOldEBSAccessKey = ConfigOldEBS + ".accessKey"
+	ConfigOldEBSAccessKey = ConfigOldEBS + "." + AccessKey
 
 	//ConfigOldEBSSecretKey is a config key.
-	ConfigOldEBSSecretKey = ConfigOldEBS + ".secretKey"
+	ConfigOldEBSSecretKey = ConfigOldEBS + "." + SecretKey
 
 	//ConfigOldEBSRegion is a config key.
-	ConfigOldEBSRegion = ConfigOldEBS + ".region"
+	ConfigOldEBSRegion = ConfigOldEBS + "." + Region
 
 	//ConfigOldEBSEndpoint is a config key.
-	ConfigOldEBSEndpoint = ConfigOldEBS + ".endpoint"
+	ConfigOldEBSEndpoint = ConfigOldEBS + "." + Endpoint
 
 	//ConfigOldEBSMaxRetries is a config key.
-	ConfigOldEBSMaxRetries = ConfigOldEBS + ".maxRetries"
+	ConfigOldEBSMaxRetries = ConfigOldEBS + "." + MaxRetries
 
 	//ConfigOldEBSTag is a config key.
-	ConfigOldEBSTag = ConfigOldEBS + ".tag"
+	ConfigOldEBSTag = ConfigOldEBS + "." + Tag
 
 	//ConfigOldEBSRexrayTag is a config key.
 	ConfigOldEBSRexrayTag = ConfigOldEBS + ".rexrayTag"

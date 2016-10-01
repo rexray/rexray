@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"crypto/md5"
 	"fmt"
+	"hash"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +41,7 @@ type driver struct {
 	region     *string
 	endpoint   *string
 	maxRetries *int
+	accessKey  string
 }
 
 func init() {
@@ -64,6 +67,7 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	// Ensure backwards compatibility with ebs and ec2 in config
 	ebs.BackCompat(config)
 	d.config = config
+	d.accessKey = d.getAccessKey()
 	if v := d.getRegion(); v != "" {
 		d.region = &v
 	}
@@ -76,44 +80,73 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	return nil
 }
 
+const cacheKeyC = "cacheKey"
+
 var (
-	sessions    = map[string]interface{}{}
-	sessionsRWL = &sync.RWMutex{}
+	sessions  = map[string]*awsec2.EC2{}
+	sessionsL = &sync.Mutex{}
 )
 
+func writeHkey(h hash.Hash, ps *string) {
+	if ps == nil {
+		return
+	}
+	h.Write([]byte(*ps))
+}
+
 func (d *driver) Login(ctx types.Context) (interface{}, error) {
-
-	fields := map[string]interface{}{
-		"accessKey": d.accessKey(),
-		"tag":       d.tag(),
-	}
-
-	log.WithFields(fields).Debug("beginning ebs login attempt")
-
-	if d.secretKey() == "" {
-		fields["secretKey"] = ""
-	} else {
-		fields["secretKey"] = "******"
-	}
+	sessionsL.Lock()
+	defer sessionsL.Unlock()
 
 	var (
-		region   *string
 		endpoint *string
-		sess     = session.New()
+		ckey     string
+		hkey     = md5.New()
+		akey     = d.accessKey
+		region   = d.mustRegion(ctx)
 	)
 
-	if region = d.mustRegion(ctx); region != nil {
-		fields["region"] = *region
+	if region != nil {
 		szEndpint := fmt.Sprintf("ec2.%s.amazonaws.com", *region)
 		endpoint = &szEndpint
 	} else {
 		endpoint = d.endpoint
 	}
+
+	writeHkey(hkey, region)
+	writeHkey(hkey, endpoint)
+	writeHkey(hkey, &akey)
+	ckey = fmt.Sprintf("%x", hkey.Sum(nil))
+
+	// if the session is cached then return it
+	if svc, ok := sessions[ckey]; ok {
+		log.WithField(cacheKeyC, ckey).Debug("using cached ebs service")
+		return svc, nil
+	}
+
+	var (
+		skey   = d.secretKey()
+		fields = map[string]interface{}{
+			ebs.AccessKey: akey,
+			ebs.Tag:       d.tag(),
+			cacheKeyC:     ckey,
+		}
+	)
+
+	if skey == "" {
+		fields[ebs.SecretKey] = ""
+	} else {
+		fields[ebs.SecretKey] = "******"
+	}
+	if region != nil {
+		fields[ebs.Region] = *region
+	}
 	if endpoint != nil {
-		fields["endpoint"] = endpoint
+		fields[ebs.Endpoint] = *endpoint
 	}
 
 	log.WithFields(fields).Debug("ebs service connetion attempt")
+	sess := session.New()
 
 	svc := awsec2.New(
 		sess,
@@ -125,8 +158,8 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 				[]credentials.Provider{
 					&credentials.StaticProvider{
 						Value: credentials.Value{
-							AccessKeyID:     d.accessKey(),
-							SecretAccessKey: d.secretKey(),
+							AccessKeyID:     akey,
+							SecretAccessKey: skey,
 						},
 					},
 					&credentials.EnvProvider{},
@@ -139,7 +172,9 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		},
 	)
 
-	log.WithFields(fields).Info("ebs service connetion created")
+	sessions[ckey] = svc
+	log.WithFields(fields).Info("ebs service connetion created & cached")
+
 	return svc, nil
 }
 
@@ -1261,7 +1296,7 @@ func (d *driver) getFullName(name string) string {
 }
 
 // Retrieve config arguments
-func (d *driver) accessKey() string {
+func (d *driver) getAccessKey() string {
 	if accessKey := d.config.GetString(
 		ebs.ConfigEBSAccessKey); accessKey != "" {
 		return accessKey

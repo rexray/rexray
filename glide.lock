@@ -1,5 +1,5 @@
-hash: 2dd37d71fed568fd0d9f95c4129ef26873720050fbb9787daa18bd1c4d2191db
-updated: 2016-09-14T13:59:19.68304615-05:00
+hash: a65331413c562b1a856358694fd754a502bd3562df581aff5289813b4a67a7e9
+updated: 2016-10-06T14:17:55.496195988-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -25,24 +25,24 @@ imports:
   subpackages:
   - aws
   - aws/awserr
-  - aws/awsutil
-  - aws/client
-  - aws/client/metadata
-  - aws/corehandlers
   - aws/credentials
   - aws/credentials/ec2rolecreds
-  - aws/defaults
   - aws/ec2metadata
-  - aws/request
   - aws/session
-  - aws/signer/v4
-  - private/endpoints
-  - private/protocol
-  - private/protocol/json/jsonutil
-  - private/protocol/jsonrpc
-  - private/protocol/rest
-  - private/protocol/restjson
   - service/efs
+  - aws/client
+  - aws/client/metadata
+  - aws/request
+  - aws/corehandlers
+  - aws/defaults
+  - private/endpoints
+  - aws/awsutil
+  - aws/signer/v4
+  - private/protocol
+  - private/protocol/restjson
+  - private/protocol/rest
+  - private/protocol/jsonrpc
+  - private/protocol/json/jsonutil
 - name: github.com/BurntSushi/toml
   version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/cesanta/ucl
@@ -59,29 +59,54 @@ imports:
   version: 653c13de5e1e0294ca0c7eead83e396fe308b497
   subpackages:
   - api
-  - api/json
   - api/v1
   - api/v2
+  - api/json
 - name: github.com/emccode/goscaleio
   version: c44530c3896b770bb2a93f46f50e1b7ac7a01e57
   subpackages:
-  - tls
   - types/v1
+  - tls
 - name: github.com/emccode/gournal
   version: 3bd901de15097583a5b1f4b377421cfc647c3664
   subpackages:
   - logrus
 - name: github.com/emccode/libstorage
   version: 2f7210c90252a4e1c9fb011ba29158cb0facb516
+  repo: https://github.com/emccode/libstorage
   subpackages:
-  - api
-  - api/client
+  - imports/local
+  - imports/remote
   - api/context
-  - api/registry
   - api/server
-  - api/server/executors
+  - api/types
+  - api/utils
+  - client
+  - api
+  - drivers/integration/docker
+  - drivers/os/darwin
+  - drivers/os/linux
+  - drivers/storage/libstorage
+  - drivers/storage/vfs/client
+  - imports/config
+  - drivers/storage/efs/storage
+  - drivers/storage/isilon/storage
+  - drivers/storage/scaleio/storage
+  - drivers/storage/vbox/storage
+  - drivers/storage/vfs/storage
+  - api/registry
   - api/server/handlers
+  - api/server/services
+  - api/utils/config
+  - imports/routers
+  - api/client
+  - drivers/storage/vfs
+  - drivers/storage/efs
+  - drivers/storage/isilon
+  - drivers/storage/scaleio
+  - drivers/storage/vbox
   - api/server/httputils
+  - api/utils/schema
   - api/server/router/executor
   - api/server/router/help
   - api/server/router/root
@@ -89,32 +114,8 @@ imports:
   - api/server/router/snapshot
   - api/server/router/tasks
   - api/server/router/volume
-  - api/server/services
-  - api/types
-  - api/utils
-  - api/utils/config
+  - api/server/executors
   - api/utils/filters
-  - api/utils/schema
-  - client
-  - drivers/integration/docker
-  - drivers/os/darwin
-  - drivers/os/linux
-  - drivers/storage/efs
-  - drivers/storage/efs/storage
-  - drivers/storage/isilon
-  - drivers/storage/isilon/storage
-  - drivers/storage/libstorage
-  - drivers/storage/scaleio
-  - drivers/storage/scaleio/storage
-  - drivers/storage/vbox
-  - drivers/storage/vbox/storage
-  - drivers/storage/vfs
-  - drivers/storage/vfs/client
-  - drivers/storage/vfs/storage
-  - imports/config
-  - imports/local
-  - imports/remote
-  - imports/routers
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml

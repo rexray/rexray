@@ -394,6 +394,7 @@ $(GLIDE):
 	@curl -SLO $(GLIDE_URL) && \
 		tar xzf $(GLIDE_TGZ) && \
 		rm -f $(GLIDE_TGZ) && \
+		mkdir -p $(GOPATH)/bin && \
 		mv $(GOHOSTOS)-$(GOHOSTARCH)/glide $(GOPATH)/bin && \
 		rm -fr $(GOHOSTOS)-$(GOHOSTARCH)
 glide: $(GLIDE)

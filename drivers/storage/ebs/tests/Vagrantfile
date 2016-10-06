@@ -1,0 +1,543 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+require 'fileutils'
+require 'shellwords'
+require 'fog'
+
+# general config
+$autostart_clients = true # set to false to prevent clients from auto-starting
+
+# aws config
+$aws_ami  = "ami-de347abe" # Amazon Linux x64 PV EBS
+$aws_akey = ENV['AWS_AKEY']
+$aws_skey = ENV['AWS_SKEY']
+$aws_kpnm = ENV['AWS_KPNM']
+$aws_regn = ENV['AWS_REGN'] ? ENV['AWS_REGN'] : "us-west-1"
+
+# ssh config
+$ssh_user    = "ec2-user"
+$ssh_pkey    = ENV['AWS_SSHK'] # path to SSH private key for AWS
+
+# node info
+$node0_name =       "libstorage-ebs-test-server"
+$node0_itype =      "m4.large"
+
+$node1_name =       "libstorage-ebs-test-client0"
+$node1_itype =      "t2.micro"
+
+$node2_name =       "libstorage-ebs-test-client1"
+$node2_itype =      "t2.micro"
+
+# Golang information
+$goos   = "linux"
+$goarch = "amd64"
+$gover  = "1.7.1"
+$gotgz  = "go#{$gover}.#{$goos}-#{$goarch}.tar.gz"
+$gourl  = "https://storage.googleapis.com/golang/#{$gotgz}"
+$gopath = "/opt/go"
+
+# project info
+$srcs = "#{$gopath}/src/github.com/emccode/libstorage"
+
+# the script to ensure the copied working source is a git repo
+$validate_copied_sources = <<SCRIPT
+git config --global user.name #{$ssh_user}
+git config --global user.email #{$ssh_user}@localhost
+cd #{$srcs}
+git init
+git add -A
+git commit -m v0.0.1
+git tag -a -m v0.0.1 v0.0.1
+SCRIPT
+
+# the script to provision golang
+$provision_golang = <<SCRIPT
+echo installing go#{$gover}.#{$goos}-#{$goarch}
+curl -SLO #{$gourl.shellescape}
+tar -C /usr/local -xzf #{$gotgz.shellescape}
+mkdir -p #{$gopath.shellescape}
+rm -f #{$gotgz.shellescape}
+SCRIPT
+
+# the script to provision an update to the system
+$provision_update_system = <<SCRIPT
+yum update -y
+SCRIPT
+
+# the script to install build tools
+$provision_build_tools = <<SCRIPT
+yum group install -y "Development Tools"
+yum install -y glibc-static glibc-devel.i686
+SCRIPT
+
+# the script to provision docker
+$provision_docker = <<SCRIPT
+yum install -y docker
+service docker start
+usermod -aG docker #{$ssh_user}
+SCRIPT
+
+# the script to validate the docker install
+$validate_docker = <<SCRIPT
+sudo su - #{$ssh_user} -c 'docker info'
+sudo su - #{$ssh_user} -c 'docker run --rm hello-world'
+SCRIPT
+
+# go-bindata info
+$go_bindata_dir = "#{$gopath}/src/github.com/jteeuwen/go-bindata"
+$go_bindata_url = "https://github.com/akutz/go-bindata"
+$go_bindata_ref = "feature/md5checksum"
+
+# the script to build go-bindata
+$build_go_bindata = <<SCRIPT
+mkdir -p #{$go_bindata_dir.shellescape}
+cd #{$go_bindata_dir.shellescape}
+git clone #{$go_bindata_url.shellescape} .
+git checkout #{$go_bindata_ref.shellescape}
+go get ./...
+go install ./...
+SCRIPT
+
+# rex-ray repo and branch information
+$rexray_dir = "#{$gopath}/src/github.com/emccode/rexray"
+$rexray_url = "https://github.com/emccode/rexray"
+$rexray_ref = "master"
+$rexray_bin = "/usr/bin/rexray"
+$rexray_cfg = "/etc/rexray/config.yml"
+
+# the script to build rex-ray
+$build_rexray = <<SCRIPT
+mkdir -p #{$rexray_dir.shellescape}
+cd #{$rexray_dir.shellescape}
+git clone #{$rexray_url.shellescape} .
+git checkout #{$rexray_ref.shellescape}
+sed -e 's/.*# libstorage-version/    ref:     master/g' -i "" glide.yaml
+sed -e $'s|.*# libstorage-repo|    repo:    file://#{$srcs}\\\n    vcs:     git|g' -i "" glide.yaml
+rm glide.lock
+make deps
+make -j build-libstorage
+make build
+SCRIPT
+
+# the script to copy the rex-ray binary from the server node to a client node.
+# this script is executed from a client node.
+$copy_rexray = <<SCRIPT
+scp -q -i /home/#{$ssh_user}/.ssh/#{$node0_name}.key \
+    -o StrictHostKeyChecking=no \
+    #{$ssh_user}@#{$node0_name}:#{$rexray_bin.shellescape} \
+    #{$rexray_bin.shellescape}
+SCRIPT
+
+# the script to write rex-ray config file for the server node.
+$write_rexray_server_config = <<SCRIPT
+mkdir -p #{File.dirname($rexray_cfg).shellescape}
+cat << EOF > #{$rexray_cfg.shellescape}
+rexray:
+  logLevel: debug
+libstorage:
+  host:     tcp://127.0.0.1:7979
+  embedded: true
+  service:  ebs
+  server:
+    endpoints:
+      public:
+        address: tcp://:7979
+    services:
+      ebs:
+        driver: ebs
+ebs:
+  accessKey: #{$aws_akey}
+  secretKey: #{$aws_skey}
+EOF
+SCRIPT
+
+# the script to write rex-ray config file for the client node(s).
+$write_rexray_client_config = <<SCRIPT
+mkdir -p #{File.dirname($rexray_cfg).shellescape}
+cat << EOF > #{$rexray_cfg.shellescape}
+rexray:
+  logLevel: debug
+libstorage:
+  host:    tcp://#{$node0_name}:7979
+  service: ebs
+EOF
+SCRIPT
+
+# init the environment variables used when building go source
+$build_env_vars = Hash[
+    "GOPATH" => $gopath.shellescape,
+    "PATH" => "#{$gopath.shellescape}/bin:/usr/local/go/bin:#{ENV['PATH']}"
+]
+
+# node_dir returns the directory for a given node
+def node_dir(name)
+    return "#{File.dirname(__FILE__)}/.vagrant/machines/#{name}"
+end
+
+# is_first_up returns a flag indicating whether or not this is the first time
+# 'vagrant up' has been called on a specific node
+def is_first_up(name)
+  return Dir.glob("#{node_dir(name)}/aws/id").empty?
+end
+
+# init_aws initializes the aws config
+def init_aws(aws, name, instance_type)
+  aws.ami =                       $aws_ami
+  aws.access_key_id =             $aws_akey
+  aws.secret_access_key =         $aws_skey
+  aws.keypair_name =              $aws_kpnm
+  aws.region =                    $aws_regn
+  aws.instance_type =             instance_type
+  aws.terminate_on_shutdown =     true
+  aws.unregister_elb_from_az =    true
+  aws.tags =                      {"Name" => name}
+end
+
+# init_node initializes the node information
+def init_node(node, name)
+  node.vm.hostname = name
+end
+
+# machine_id gets the aws machine id from a node name
+def machine_id(name)
+  id_file="#{File.dirname(__FILE__)}/.vagrant/machines/#{name}/aws/id"
+  return File.exists?(id_file) ? File.read(id_file) : nil
+end
+
+# aws cnxn to use to get machines' private ips for hostname resolution
+$aws_cnxn =   Fog::Compute.new(
+    :provider => :aws,
+    :region => $aws_regn,
+    :aws_access_key_id => $aws_akey,
+    :aws_secret_access_key => $aws_skey)
+
+Vagrant.configure("2") do |config|
+  config.vm.box =               "dummy"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.ssh.username =         $ssh_user
+  config.ssh.private_key_path = $ssh_pkey
+
+  # don't modify the host, only guests
+  config.hostmanager.enabled =           true
+  config.hostmanager.manage_host =       false
+  config.hostmanager.manage_guest =      true
+  config.hostmanager.include_offline =   true
+  config.hostmanager.ignore_private_ip = false
+  config.hostmanager.ip_resolver = proc do |vm, resolving_vm|
+    if mid = machine_id(vm.name)
+      $aws_cnxn.servers.get(mid).private_ip_address
+    end
+  end
+
+  # configure node0
+  config.vm.define $node0_name do |node|
+
+    # initialize the node information
+    init_node node, $node0_name
+
+    # initialize the aws config
+    node.vm.provider :aws do |aws|
+      init_aws aws, $node0_name, $node0_itype
+    end
+
+    # only proceed if this is the first time 'vagrant up' has been called
+    # on this node
+    if is_first_up $node0_name
+
+      # update system
+      node.vm.provision "shell" do |s|
+        s.name =   "update-system"
+        s.inline = $provision_update_system
+      end
+
+      # install build tools
+      node.vm.provision "shell" do |s|
+        s.name =   "build-tools"
+        s.inline = $provision_build_tools
+      end
+
+      # copy the working copy of libstorage to the appropriate location in the
+      # node's gopath
+      node.vm.synced_folder "../../../..", "#{$srcs}",
+        type: "rsync",
+        rsync__auto: false,
+        rsync__exclude: [
+            "/.git/",
+            "/vendor/",
+            "/glide.lock",
+            "/lss-darwin", "/lss-linux",
+            "/lsx-darwin", "/lsx-linux",
+            "/api/api_generated.go",
+            "/api/server/executors/bin/",
+            "/api/server/executors/executors_generated.go"]
+
+      # validate the copied sources
+      node.vm.provision "shell" do |s|
+        s.name =       "validate-copied-sources"
+        s.inline =     $validate_copied_sources
+      end
+
+      # provision docker - don't use docker provisioner - see
+      # https://github.com/mitchellh/vagrant/issues/7161
+      node.vm.provision "shell" do |s|
+        s.name =   "provision-docker"
+        s.inline = $provision_docker
+      end
+
+      # validate the docker installation
+      node.vm.provision "shell" do |s|
+        s.name =       "validate-docker"
+        s.privileged = false
+        s.inline =     $validate_docker
+      end
+
+      # provision golang
+      node.vm.provision "shell" do |s|
+        s.name   = "golang"
+        s.inline = $provision_golang
+      end
+
+       # build go-bindata
+       node.vm.provision "shell" do |s|
+         s.name   = "go-bindata"
+         s.env    = $build_env_vars
+         s.inline = $build_go_bindata
+       end
+
+      # build rex-ray
+      node.vm.provision "shell" do |s|
+        s.name   =     "build rex-ray"
+        s.env    =     $build_env_vars
+        s.inline =     $build_rexray
+      end
+
+      # copy rex-ray to /usr/bin
+      node.vm.provision "shell" do |s|
+        s.name   = "copy rex-ray"
+        s.inline = "cp #{$gopath.shellescape}/bin/rexray " +
+                   "#{$rexray_bin.shellescape}"
+      end
+
+      # write rex-ray config file
+      node.vm.provision "shell" do |s|
+        s.name       = "config rex-ray"
+        s.inline     = $write_rexray_server_config
+      end
+
+      # install rex-ray
+      node.vm.provision "shell" do |s|
+        s.name   = "rex-ray install"
+        s.inline = "rexray install"
+      end
+
+      # start rex-ray as a service
+      node.vm.provision "shell" do |s|
+        s.name   = "start rex-ray"
+        s.inline = "/etc/init.d/rexray start"
+      end
+
+      # list volume mapping with rex-ray to verify configuration
+      node.vm.provision "shell" do |s|
+        s.name       = "rex-ray volume map"
+        s.privileged = false
+        s.inline     = "rexray volume map"
+      end
+
+      # copy the test plan
+      node.vm.provision              "file",
+                        source:      "server-tests.sh",
+                        destination: "$HOME/server-tests.sh"
+
+    end # if is_first_up node.vm.hostname
+
+    # execute test plan
+    node.vm.provision "shell", run: "always" do |s|
+      s.name       = "test-execution-plan"
+      s.privileged = false
+      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/server-tests.sh'"
+    end
+
+  end # configure node0
+
+  # configure node1
+  config.vm.define $node1_name, autostart: $autostart_clients do |node|
+
+    # initialize the node information
+    init_node node, $node1_name
+
+    # initialize the aws config
+    node.vm.provider :aws do |aws|
+      init_aws aws, $node1_name, $node1_itype
+    end
+
+    #node.vm.provision :hostmanager
+
+    # only proceed if this is the first time 'vagrant up' has been called
+    # on this node
+    if is_first_up $node1_name
+
+      # update system
+      node.vm.provision "shell" do |s|
+        s.name =   "update-system"
+        s.inline = $provision_update_system
+      end
+
+      # provision docker - don't use docker provisioner - see
+      # https://github.com/mitchellh/vagrant/issues/7161
+      node.vm.provision "shell" do |s|
+        s.name =   "provision-docker"
+        s.inline = $provision_docker
+      end
+
+      # validate the docker installation
+      node.vm.provision "shell" do |s|
+        s.name =       "validate-docker"
+        s.privileged = false
+        s.inline =     $validate_docker
+      end
+
+      # copy node0's private ssh key to node1 so node1 can ssh to node0 without
+      # being prompted for a password
+      node.vm.provision              "file",
+                        source:      "#{$ssh_pkey}".shellescape,
+                        destination: '"$HOME"/.ssh' +
+                                     "/#{$node0_name.shellescape}.key"
+
+      # scp rex-ray from node0 to node1
+      node.vm.provision "shell" do |s|
+        s.name =   "scp rexray"
+        s.inline = $copy_rexray
+      end
+
+      # write rex-ray config file
+      node.vm.provision "shell" do |s|
+        s.name       = "config rex-ray"
+        s.inline     = $write_rexray_client_config
+      end
+
+      # install rex-ray
+      node.vm.provision "shell" do |s|
+        s.name   = "rex-ray install"
+        s.inline = "rexray install"
+      end
+
+      # start rex-ray as a service
+      node.vm.provision "shell" do |s|
+        s.name   = "start rex-ray"
+        s.inline = "/etc/init.d/rexray start"
+      end
+
+      # list volume mapping with rex-ray to verify configuration
+      node.vm.provision "shell" do |s|
+        s.name       = "rex-ray volume map"
+        s.privileged = false
+        s.inline     = "rexray volume map"
+      end
+
+      # copy the test plan
+      node.vm.provision              "file",
+                        source:      "client0-tests.sh",
+                        destination: "$HOME/client0-tests.sh"
+
+    end # if is_first_up node.vm.hostname
+
+    # execute test plan
+    node.vm.provision "shell", run: "always" do |s|
+      s.name       = "test-execution-plan"
+      s.privileged = false
+      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/client0-tests.sh'"
+    end
+
+  end # configure node1
+
+  # configure node2
+  config.vm.define $node2_name, autostart: $autostart_clients do |node|
+
+    # initialize the node information
+    init_node node, $node2_name
+
+    # initialize the aws config
+    node.vm.provider :aws do |aws|
+      init_aws aws, $node2_name, $node2_itype
+    end
+
+    # only proceed if this is the first time 'vagrant up' has been called
+    # on this node
+    if is_first_up $node2_name
+
+      # update system
+      node.vm.provision "shell" do |s|
+        s.name =   "update-system"
+        s.inline = $provision_update_system
+      end
+
+      # provision docker - don't use docker provisioner - see
+      # https://github.com/mitchellh/vagrant/issues/7161
+      node.vm.provision "shell" do |s|
+        s.name =   "provision-docker"
+        s.inline = $provision_docker
+      end
+
+      # validate the docker installation
+      node.vm.provision "shell" do |s|
+        s.name =       "validate-docker"
+        s.privileged = false
+        s.inline =     $validate_docker
+      end
+
+      # copy node0's private ssh key to node2 so node2 can ssh to node0 without
+      # being prompted for a password
+      node.vm.provision              "file",
+                        source:      "#{$ssh_pkey}".shellescape,
+                        destination: '"$HOME"/.ssh' +
+                                     "/#{$node0_name.shellescape}.key"
+
+      # scp rex-ray from node0 to node2
+      node.vm.provision "shell" do |s|
+        s.name =   "scp rexray"
+        s.inline = $copy_rexray
+      end
+
+      # write rex-ray config file
+      node.vm.provision "shell" do |s|
+        s.name       = "config rex-ray"
+        s.inline     = $write_rexray_client_config
+      end
+
+      # install rex-ray
+      node.vm.provision "shell" do |s|
+        s.name   = "rex-ray install"
+        s.inline = "rexray install"
+      end
+
+      # start rex-ray as a service
+      node.vm.provision "shell" do |s|
+        s.name   = "start rex-ray"
+        s.inline = "/etc/init.d/rexray start"
+      end
+
+      # list volume mapping with rex-ray to verify configuration
+      node.vm.provision "shell" do |s|
+        s.name       = "rex-ray volume map"
+        s.privileged = false
+        s.inline     = "rexray volume map"
+      end
+
+      # copy the test plan
+      node.vm.provision              "file",
+                        source:      "client1-tests.sh",
+                        destination: "$HOME/client1-tests.sh"
+
+    end # if is_first_up node.vm.hostname
+
+    # execute test plan
+    node.vm.provision "shell", run: "always" do |s|
+      s.name       = "test-execution-plan"
+      s.privileged = false
+      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/client1-tests.sh'"
+    end
+
+  end # configure node2
+
+end

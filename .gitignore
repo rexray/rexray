@@ -1,5 +1,5 @@
-lsx-*
-lss-*
+/lsx-*
+/lss-*
 *.a
 *.d
 *.out
@@ -19,6 +19,7 @@ cli/semaphores/signal
 cli/semaphores/unlink
 api/api_generated.go
 api/server/executors/executors_generated.go
+drivers/storage/ebs/tests/.vagrant
 
 # Created by https://www.gitignore.io
 

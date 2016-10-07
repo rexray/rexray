@@ -726,11 +726,15 @@ Internal server error
 
             { "$ref": "https://raw.githubusercontent.com/emccode/libstorage/master/libstorage.json#/definitions/internalServerError" }
 
-## Get with Attachments [GET /volumes?{attachments}]
+## Get with Attachments [GET /volumes/{service}?{attachments}]
 Gets a list of Volume resources and their attached resources for a single
 service.
 
 + Parameters
+
+    + service: `ec2-00` (string, required)
+
+        The service name
 
     + attachments (required)
 

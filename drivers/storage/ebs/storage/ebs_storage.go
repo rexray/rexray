@@ -224,7 +224,13 @@ func (d *driver) InstanceInspect(
 	ctx types.Context,
 	opts types.Store) (*types.Instance, error) {
 
-	return nil, types.ErrNotImplemented
+	iid := context.MustInstanceID(ctx)
+	return &types.Instance{
+		Name:         iid.ID,
+		Region:       iid.Fields[ebs.InstanceIDFieldRegion],
+		InstanceID:   iid,
+		ProviderName: iid.Driver,
+	}, nil
 }
 
 // Volumes returns all volumes or a filtered list of volumes.

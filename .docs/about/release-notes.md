@@ -4,6 +4,17 @@ Release early, release often
 
 ---
 
+## Version 0.3.0 (TBA)
+This release introduces the Elastic Block Storage (EBS) driver, formerly known
+as the EC2 driver in REX-Ray <=0.3.x.
+
+### Enhancements
+* Amazon Elastic Block Storage (EBS) Support ([#248](https://github.com/emccode/libstorage/issues/248), [#279](https://github.com/emccode/libstorage/issues/279))
+* Build with Docker ([#274](https://github.com/emccode/libstorage/issues/274), [#281](https://github.com/emccode/libstorage/issues/281))
+
+### Bug Fixes
+* Volume Removal Instance ID Fix ([#292](https://github.com/emccode/libstorage/issues/292))
+
 ## Version 0.2.1 (2016/09/14)
 This is a minor release that includes a fix for the EFS storage driver as well
 as improvements to the build process. For example, Travis-CI now builds

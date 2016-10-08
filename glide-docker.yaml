@@ -10,7 +10,8 @@ import:
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/emccode/libstorage
-    ref:     master
+    ref:     master # libstorage-version
+    repo:    https://github.com/emccode/libstorage # libstorage-repo
 
   - package: github.com/akutz/gofig
     version: v0.1.4

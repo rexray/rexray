@@ -1,5 +1,5 @@
-hash: a65331413c562b1a856358694fd754a502bd3562df581aff5289813b4a67a7e9
-updated: 2016-10-06T14:17:55.496195988-05:00
+hash: 74be64e2131694880ea154eb70d834b95edef9f7ee3ba2e49f1e0733d2395433
+updated: 2016-10-08T13:21:45.233842008-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -18,31 +18,36 @@ imports:
   - vboxwebsrv
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
-  version: 593d64559f7600f29581a3ee42177f5dbded27a9
+  version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
 - name: github.com/aws/aws-sdk-go
   version: caee6e866bf437a6bef0777a3bf141cdd3aa022d
   repo: https://github.com/aws/aws-sdk-go
   subpackages:
   - aws
   - aws/awserr
-  - aws/credentials
-  - aws/credentials/ec2rolecreds
-  - aws/ec2metadata
-  - aws/session
-  - service/efs
+  - aws/awsutil
   - aws/client
   - aws/client/metadata
-  - aws/request
   - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
   - aws/defaults
-  - private/endpoints
-  - aws/awsutil
+  - aws/ec2metadata
+  - aws/request
+  - aws/session
   - aws/signer/v4
+  - private/endpoints
   - private/protocol
-  - private/protocol/restjson
-  - private/protocol/rest
-  - private/protocol/jsonrpc
+  - private/protocol/ec2query
   - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/restjson
+  - private/protocol/xml/xmlutil
+  - private/waiter
+  - service/ec2
+  - service/efs
 - name: github.com/BurntSushi/toml
   version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/cesanta/ucl
@@ -59,54 +64,30 @@ imports:
   version: 653c13de5e1e0294ca0c7eead83e396fe308b497
   subpackages:
   - api
+  - api/json
   - api/v1
   - api/v2
-  - api/json
 - name: github.com/emccode/goscaleio
   version: c44530c3896b770bb2a93f46f50e1b7ac7a01e57
   subpackages:
-  - types/v1
   - tls
+  - types/v1
 - name: github.com/emccode/gournal
   version: 3bd901de15097583a5b1f4b377421cfc647c3664
   subpackages:
   - logrus
 - name: github.com/emccode/libstorage
-  version: 2f7210c90252a4e1c9fb011ba29158cb0facb516
+  version: 947e771ec1ea1ef3553b6ab51f909fb0074b79f8
   repo: https://github.com/emccode/libstorage
   subpackages:
-  - imports/local
-  - imports/remote
-  - api/context
-  - api/server
-  - api/types
-  - api/utils
-  - client
   - api
-  - drivers/integration/docker
-  - drivers/os/darwin
-  - drivers/os/linux
-  - drivers/storage/libstorage
-  - drivers/storage/vfs/client
-  - imports/config
-  - drivers/storage/efs/storage
-  - drivers/storage/isilon/storage
-  - drivers/storage/scaleio/storage
-  - drivers/storage/vbox/storage
-  - drivers/storage/vfs/storage
-  - api/registry
-  - api/server/handlers
-  - api/server/services
-  - api/utils/config
-  - imports/routers
   - api/client
-  - drivers/storage/vfs
-  - drivers/storage/efs
-  - drivers/storage/isilon
-  - drivers/storage/scaleio
-  - drivers/storage/vbox
+  - api/context
+  - api/registry
+  - api/server
+  - api/server/executors
+  - api/server/handlers
   - api/server/httputils
-  - api/utils/schema
   - api/server/router/executor
   - api/server/router/help
   - api/server/router/root
@@ -114,8 +95,35 @@ imports:
   - api/server/router/snapshot
   - api/server/router/tasks
   - api/server/router/volume
-  - api/server/executors
+  - api/server/services
+  - api/types
+  - api/utils
+  - api/utils/config
   - api/utils/filters
+  - api/utils/schema
+  - client
+  - drivers/integration/docker
+  - drivers/os/darwin
+  - drivers/os/linux
+  - drivers/storage/ebs
+  - drivers/storage/ebs/storage
+  - drivers/storage/ebs/utils
+  - drivers/storage/efs
+  - drivers/storage/efs/storage
+  - drivers/storage/isilon
+  - drivers/storage/isilon/storage
+  - drivers/storage/libstorage
+  - drivers/storage/scaleio
+  - drivers/storage/scaleio/storage
+  - drivers/storage/vbox
+  - drivers/storage/vbox/storage
+  - drivers/storage/vfs
+  - drivers/storage/vfs/client
+  - drivers/storage/vfs/storage
+  - imports/config
+  - imports/local
+  - imports/remote
+  - imports/routers
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml
@@ -124,7 +132,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 0a192a193177452756c362c20087ddafcf6829c4
+  version: 757bef944d0f21880861c2dd9c871ca543023cba
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmespath/go-jmespath
@@ -143,16 +151,16 @@ imports:
 - name: github.com/magiconair/properties
   version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/mitchellh/mapstructure
-  version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
+  version: a6ef2f080c66d0a2e94e97cf74f80f772855da63
 - name: github.com/russross/blackfriday
-  version: 35eb537633d9950afc8ae7bdf0edb6134584e9fc
+  version: 5f33e7b7878355cd2b7e6b8eefc48a5472c69f70
 - name: github.com/shurcooL/sanitized_anchor_name
-  version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
+  version: 1dba4b3954bc059efc3991ec364f9f9a35f597d2
 - name: github.com/Sirupsen/logrus
   version: 5f376aa629ac60c3215cc368e674bd996093a01a
   repo: https://github.com/akutz/logrus
 - name: github.com/spf13/cast
-  version: e31f36ffc91a2ba9ddb72a4b6a607ff9b3d3cb63
+  version: 2580bc98dc0e62908119e4737030cc2fdfc45e4c
 - name: github.com/spf13/cobra
   version: 363816bb13ce1710460c2345017fd35593cbf5ed
   repo: https://github.com/akutz/cobra
@@ -165,13 +173,13 @@ imports:
   version: 317ec73d0d7507658ee3be15866b445d6d921848
   repo: https://github.com/akutz/viper.git
 - name: golang.org/x/net
-  version: de35ec43e7a9aabd6a9c54d2898220ea7e44de7d
+  version: f4b625ec9b21d620bb5ce57f2dfc3e08ca97fce6
   repo: https://github.com/golang/net
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: 30de6d19a3bd89a5f38ae4028e23aaa5582648af
+  version: 8d1157a435470616f975ff9bb013bea8d0962067
   subpackages:
   - unix
 - name: google.golang.org/api
@@ -180,7 +188,7 @@ imports:
   subpackages:
   - compute/v1
 - name: gopkg.in/fsnotify.v1
-  version: a8a77c9133d2d6fd8334f3260d06f60e8d80a5fb
+  version: 944cff21b3baf3ced9a880365682152ba577d348
 - name: gopkg.in/yaml.v1
   version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
   repo: https://github.com/akutz/yaml.git

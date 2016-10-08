@@ -28,6 +28,18 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.6.0 (TBA)
+This release reintroduces the Elastic Block Storage (EBS) driver, formerly known
+as the EC2 driver. All vestigial EC2 configuration properties are still
+supported.
+
+### Enhancements
+* libStorage 0.3.0 ([#docs](http://libstorage.readthedocs.io/en/v0.3.0-rc2))
+* Amazon Elastic Block Storage (EBS) Support ([#522](https://github.com/emccode/rexray/issues/522))
+
+### Bug Fixes
+* Handle phantom mounts for EBS (formerly EC2) ([#410](https://github.com/emccode/rexray/issues/410))
+
 ## Version 0.5.1 (2016/09/14)
 This is a minor release, but includes a few important patches.
 

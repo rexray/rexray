@@ -82,7 +82,9 @@ Environment Variable | Description | Required | Default
 `AWS_AKEY`           | The AWS access key ID. | ✓ |
 `AWS_SKEY`           | The AWS secret key. | ✓ |
 `AWS_KPNM`           | The name of the AWS key pair for instances. | ✓ |
+`AWS_AMI`            | The AMI to use. Defaults to Amazon Linux PV x64 ([AMIs by region](https://aws.amazon.com/amazon-linux-ami/)) | | ami-de347abe
 `AWS_REGN`           | The AWS region. | | us-west-1
+`AWS_ZONE`           | The AWS availability zone. | | a
 `AWS_SSHK`           | Local SSH key used to access AWS instances. | ✓ |
 
 ### Test Plan Nodes

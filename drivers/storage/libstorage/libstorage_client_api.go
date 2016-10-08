@@ -3,7 +3,6 @@ package libstorage
 import (
 	"io"
 
-	"github.com/emccode/libstorage/api/context"
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/api/utils"
@@ -151,7 +150,7 @@ func (c *client) VolumeCreateFromSnapshot(
 	service, snapshotID string,
 	request *types.VolumeCreateRequest) (*types.Volume, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
@@ -183,7 +182,7 @@ func (c *client) VolumeCopy(
 	service, volumeID string,
 	request *types.VolumeCopyRequest) (*types.Volume, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
@@ -213,7 +212,7 @@ func (c *client) VolumeRemove(
 	ctx types.Context,
 	service, volumeID string) error {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 
 	lsd, _ := registry.NewClientDriver(service)
 	if lsd != nil {
@@ -326,21 +325,21 @@ func (c *client) VolumeSnapshot(
 	volumeID string,
 	request *types.VolumeSnapshotRequest) (*types.Snapshot, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	return c.APIClient.VolumeSnapshot(ctx, service, volumeID, request)
 }
 
 func (c *client) Snapshots(
 	ctx types.Context) (types.ServiceSnapshotMap, error) {
 
-	ctx = c.requireCtx(ctx)
+	ctx = c.withAllInstanceIDs(c.requireCtx(ctx))
 	return c.APIClient.Snapshots(ctx)
 }
 
 func (c *client) SnapshotsByService(
 	ctx types.Context, service string) (types.SnapshotMap, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	return c.APIClient.SnapshotsByService(ctx, service)
 }
 
@@ -348,7 +347,7 @@ func (c *client) SnapshotInspect(
 	ctx types.Context,
 	service, snapshotID string) (*types.Snapshot, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	return c.APIClient.SnapshotInspect(ctx, service, snapshotID)
 }
 
@@ -356,7 +355,7 @@ func (c *client) SnapshotRemove(
 	ctx types.Context,
 	service, snapshotID string) error {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	return c.APIClient.SnapshotRemove(ctx, service, snapshotID)
 }
 
@@ -365,7 +364,7 @@ func (c *client) SnapshotCopy(
 	service, snapshotID string,
 	request *types.SnapshotCopyRequest) (*types.Snapshot, error) {
 
-	ctx = c.requireCtx(ctx).WithValue(context.ServiceKey, service)
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	return c.APIClient.SnapshotCopy(ctx, service, snapshotID, request)
 }
 

@@ -8,25 +8,29 @@ require 'fog'
 $autostart_clients = true # set to false to prevent clients from auto-starting
 
 # aws config
-$aws_ami  = "ami-de347abe" # Amazon Linux x64 PV EBS
 $aws_akey = ENV['AWS_AKEY']
 $aws_skey = ENV['AWS_SKEY']
 $aws_kpnm = ENV['AWS_KPNM']
-$aws_regn = ENV['AWS_REGN'] ? ENV['AWS_REGN'] : "us-west-1"
+$aws_ami  = ENV['AWS_AMI']  ? ENV['AWS_AMI'] : "ami-ef2af28f"
+$aws_regn = ENV['AWS_REGN'] ? ENV['AWS_REGN'] : "us-west-2"
+$aws_zone = ENV['AWS_ZONE'] ? ENV['AWS_ZONE'] : "a"
 
 # ssh config
-$ssh_user    = "ec2-user"
+$ssh_user    = "centos"
 $ssh_pkey    = ENV['AWS_SSHK'] # path to SSH private key for AWS
 
 # node info
 $node0_name =       "libstorage-ebs-test-server"
 $node0_itype =      "m4.large"
+$node0_texps =      "server-tests.sh"
 
 $node1_name =       "libstorage-ebs-test-client0"
-$node1_itype =      "t2.micro"
+$node1_itype =      "m4.large"
+$node1_texps =      "client0-tests.sh"
 
 $node2_name =       "libstorage-ebs-test-client1"
 $node2_itype =      "t2.micro"
+$node2_texps =      "client1-tests.sh"
 
 # Golang information
 $goos   = "linux"
@@ -70,11 +74,15 @@ yum group install -y "Development Tools"
 yum install -y glibc-static glibc-devel.i686
 SCRIPT
 
+# the script to install git on the clients
+$provision_git = <<SCRIPT
+yum install -y git
+SCRIPT
+
 # the script to provision docker
 $provision_docker = <<SCRIPT
-yum install -y docker
-service docker start
-usermod -aG docker #{$ssh_user}
+systemctl enable docker
+systemctl start docker
 SCRIPT
 
 # the script to validate the docker install
@@ -111,8 +119,8 @@ mkdir -p #{$rexray_dir.shellescape}
 cd #{$rexray_dir.shellescape}
 git clone #{$rexray_url.shellescape} .
 git checkout #{$rexray_ref.shellescape}
-sed -e 's/.*# libstorage-version/    ref:     master/g' -i "" glide.yaml
-sed -e $'s|.*# libstorage-repo|    repo:    file://#{$srcs}\\\n    vcs:     git|g' -i "" glide.yaml
+sed -e 's/.*# libstorage-version/    ref:     master/g' -i glide.yaml
+sed -e $'s|.*# libstorage-repo|    repo:    file://#{$srcs}\\\n    vcs:     git|g' -i glide.yaml
 rm glide.lock
 make deps
 make -j build-libstorage
@@ -166,7 +174,7 @@ SCRIPT
 # init the environment variables used when building go source
 $build_env_vars = Hash[
     "GOPATH" => $gopath.shellescape,
-    "PATH" => "#{$gopath.shellescape}/bin:/usr/local/go/bin:#{ENV['PATH']}"
+    "PATH" => "#{$gopath.shellescape}/bin:/usr/local/go/bin:$PATH"
 ]
 
 # node_dir returns the directory for a given node
@@ -187,6 +195,7 @@ def init_aws(aws, name, instance_type)
   aws.secret_access_key =         $aws_skey
   aws.keypair_name =              $aws_kpnm
   aws.region =                    $aws_regn
+  aws.availability_zone =         "#{$aws_regn}#{$aws_zone}"
   aws.instance_type =             instance_type
   aws.terminate_on_shutdown =     true
   aws.unregister_elb_from_az =    true
@@ -252,10 +261,10 @@ Vagrant.configure("2") do |config|
       end
 
       # install build tools
-      node.vm.provision "shell" do |s|
-        s.name =   "build-tools"
-        s.inline = $provision_build_tools
-      end
+      #node.vm.provision "shell" do |s|
+      #  s.name =   "build-tools"
+      #  s.inline = $provision_build_tools
+      #end
 
       # copy the working copy of libstorage to the appropriate location in the
       # node's gopath
@@ -334,7 +343,7 @@ Vagrant.configure("2") do |config|
       # start rex-ray as a service
       node.vm.provision "shell" do |s|
         s.name   = "start rex-ray"
-        s.inline = "/etc/init.d/rexray start"
+        s.inline = "systemctl start rexray"
       end
 
       # list volume mapping with rex-ray to verify configuration
@@ -346,8 +355,8 @@ Vagrant.configure("2") do |config|
 
       # copy the test plan
       node.vm.provision              "file",
-                        source:      "server-tests.sh",
-                        destination: "$HOME/server-tests.sh"
+                        source:      "#{$node0_texps}",
+                        destination: "$HOME/#{$node0_texps}"
 
     end # if is_first_up node.vm.hostname
 
@@ -355,7 +364,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", run: "always" do |s|
       s.name       = "test-execution-plan"
       s.privileged = false
-      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/server-tests.sh'"
+      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/#{$node0_texps}'"
     end
 
   end # configure node0
@@ -397,6 +406,12 @@ Vagrant.configure("2") do |config|
         s.inline =     $validate_docker
       end
 
+      # provision git
+      #node.vm.provision "shell" do |s|
+      #   s.name =   "provision-git"
+      #   s.inline = $provision_git
+      #end
+
       # copy node0's private ssh key to node1 so node1 can ssh to node0 without
       # being prompted for a password
       node.vm.provision              "file",
@@ -425,7 +440,7 @@ Vagrant.configure("2") do |config|
       # start rex-ray as a service
       node.vm.provision "shell" do |s|
         s.name   = "start rex-ray"
-        s.inline = "/etc/init.d/rexray start"
+        s.inline = "systemctl start rexray"
       end
 
       # list volume mapping with rex-ray to verify configuration
@@ -437,8 +452,8 @@ Vagrant.configure("2") do |config|
 
       # copy the test plan
       node.vm.provision              "file",
-                        source:      "client0-tests.sh",
-                        destination: "$HOME/client0-tests.sh"
+                        source:      "#{$node1_texps}",
+                        destination: "$HOME/#{$node1_texps}"
 
     end # if is_first_up node.vm.hostname
 
@@ -446,7 +461,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", run: "always" do |s|
       s.name       = "test-execution-plan"
       s.privileged = false
-      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/client0-tests.sh'"
+      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/#{$node1_texps}'"
     end
 
   end # configure node1
@@ -486,6 +501,12 @@ Vagrant.configure("2") do |config|
         s.inline =     $validate_docker
       end
 
+      # provision git
+      #node.vm.provision "shell" do |s|
+      #   s.name =   "provision-git"
+      #   s.inline = $provision_git
+      #end
+
       # copy node0's private ssh key to node2 so node2 can ssh to node0 without
       # being prompted for a password
       node.vm.provision              "file",
@@ -514,7 +535,7 @@ Vagrant.configure("2") do |config|
       # start rex-ray as a service
       node.vm.provision "shell" do |s|
         s.name   = "start rex-ray"
-        s.inline = "/etc/init.d/rexray start"
+        s.inline = "systemctl start rexray"
       end
 
       # list volume mapping with rex-ray to verify configuration
@@ -526,8 +547,8 @@ Vagrant.configure("2") do |config|
 
       # copy the test plan
       node.vm.provision              "file",
-                        source:      "client1-tests.sh",
-                        destination: "$HOME/client1-tests.sh"
+                        source:      "#{$node2_texps}",
+                        destination: "$HOME/#{$node2_texps}"
 
     end # if is_first_up node.vm.hostname
 
@@ -535,7 +556,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", run: "always" do |s|
       s.name       = "test-execution-plan"
       s.privileged = false
-      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/client1-tests.sh'"
+      s.inline     = "sudo su - #{$ssh_user} -c 'bash /home/#{$ssh_user}/#{$node2_texps}'"
     end
 
   end # configure node2

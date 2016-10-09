@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -35,20 +34,8 @@ func (c *CLI) initVolumeCmds() {
 		Use:   "map",
 		Short: "Print the volume mapping(s)",
 		Run: func(cmd *cobra.Command, args []string) {
-
-			allBlockDevices, err := c.r.Storage().Volumes(
-				c.ctx, &apitypes.VolumesOpts{Attachments: true})
-			if err != nil {
-				log.Fatalf("Error: %s", err)
-			}
-
-			if len(allBlockDevices) > 0 {
-				out, err := c.marshalOutput(&allBlockDevices)
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Println(out)
-			}
+			c.mustMarshalOutput(c.r.Storage().Volumes(
+				c.ctx, &apitypes.VolumesOpts{Attachments: true}))
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeMapCmd)
@@ -58,33 +45,26 @@ func (c *CLI) initVolumeCmds() {
 		Short:   "Get one or more volumes",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			vols, err := c.r.Storage().Volumes(
 				c.ctx, &apitypes.VolumesOpts{Attachments: false})
 			if err != nil {
 				log.Fatal(err)
 			}
-			if c.volumeID != "" || c.volumeName != "" {
-				for _, v := range vols {
-					if (c.volumeID != "" && strings.EqualFold(v.ID, c.volumeID)) ||
-						(c.volumeName != "" && strings.EqualFold(v.Name, c.volumeName)) {
-						out, err := c.marshalOutput(v)
-						if err != nil {
-							log.Fatal(err)
-						}
-						fmt.Println(out)
+			var (
+				vid = c.volumeID
+				vnm = c.volumeName
+			)
+			if vid != "" || vnm != "" {
+				oldVols := vols
+				vols = []*apitypes.Volume{}
+				for _, v := range oldVols {
+					if (vid != "" && strings.EqualFold(v.ID, vid)) ||
+						(vnm != "" && strings.EqualFold(v.Name, vnm)) {
+						vols = append(vols, v)
 					}
 				}
-				return
 			}
-
-			if len(vols) > 0 {
-				out, err := c.marshalOutput(vols)
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Println(out)
-			}
+			c.marshalOutput(vols)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeGetCmd)
@@ -103,32 +83,16 @@ func (c *CLI) initVolumeCmds() {
 				Opts:             store(),
 			}
 
-			var (
-				err    error
-				volume *apitypes.Volume
-			)
-
 			if c.volumeID != "" && c.volumeName != "" {
-				volume, err = c.r.Storage().VolumeCopy(
-					c.ctx, c.volumeID, c.volumeName, opts.Opts)
+				c.mustMarshalOutput(c.r.Storage().VolumeCopy(
+					c.ctx, c.volumeID, c.volumeName, opts.Opts))
 			} else if c.snapshotID != "" && c.volumeName != "" {
-				volume, err = c.r.Storage().VolumeCreateFromSnapshot(
-					c.ctx, c.snapshotID, c.volumeName, opts)
+				c.mustMarshalOutput(c.r.Storage().VolumeCreateFromSnapshot(
+					c.ctx, c.snapshotID, c.volumeName, opts))
 			} else {
-				volume, err = c.r.Storage().VolumeCreate(
-					c.ctx, c.volumeName, opts)
+				c.mustMarshalOutput(c.r.Storage().VolumeCreate(
+					c.ctx, c.volumeName, opts))
 			}
-			// TODO Get All Volumes
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			out, err := c.marshalOutput(&volume)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(out)
-
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeCreateCmd)
@@ -156,28 +120,15 @@ func (c *CLI) initVolumeCmds() {
 		Use:   "attach",
 		Short: "Attach a volume",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.volumeID == "" {
 				log.Fatalf("missing --volumeid")
 			}
-
-			vol, _, err := c.r.Storage().VolumeAttach(
+			c.mustMarshalOutput3(c.r.Storage().VolumeAttach(
 				c.ctx, c.volumeID,
 				&apitypes.VolumeAttachOpts{
 					Force: c.force,
 					Opts:  store(),
-				})
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			out, err := c.marshalOutput(vol)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(out)
-
+				}))
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeAttachCmd)
@@ -186,20 +137,16 @@ func (c *CLI) initVolumeCmds() {
 		Use:   "detach",
 		Short: "Detach a volume",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.volumeID == "" {
 				log.Fatalf("missing --volumeid")
 			}
-
-			_, err := c.r.Storage().VolumeDetach(
+			if _, err := c.r.Storage().VolumeDetach(
 				c.ctx, c.volumeID, &apitypes.VolumeDetachOpts{
 					Force: c.force,
 					Opts:  store(),
-				})
-			if err != nil {
+				}); err != nil {
 				log.Fatal(err)
 			}
-
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeDetachCmd)
@@ -211,23 +158,12 @@ func (c *CLI) initVolumeCmds() {
 			if c.volumeName == "" && c.volumeID == "" {
 				log.Fatal("Missing --volumename or --volumeid")
 			}
-
-			mountPath, _, err := c.r.Integration().Mount(
+			c.mustMarshalOutput3(c.r.Integration().Mount(
 				c.ctx, c.volumeID, c.volumeName,
 				&apitypes.VolumeMountOpts{
 					NewFSType:   c.fsType,
 					OverwriteFS: c.overwriteFs,
-				})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			out, err := c.marshalOutput(&mountPath)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(out)
-
+				}))
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeMountCmd)
@@ -236,11 +172,9 @@ func (c *CLI) initVolumeCmds() {
 		Use:   "unmount",
 		Short: "Unmount a volume",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.volumeName == "" && c.volumeID == "" {
 				log.Fatal("Missing --volumename or --volumeid")
 			}
-
 			err := c.r.Integration().Unmount(
 				c.ctx, c.volumeID, c.volumeName, store())
 			if err != nil {
@@ -254,24 +188,11 @@ func (c *CLI) initVolumeCmds() {
 		Use:   "path",
 		Short: "Print the volume path",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.volumeName == "" && c.volumeID == "" {
 				log.Fatal("Missing --volumename or --volumeid")
 			}
-
-			mountPath, err := c.r.Integration().Path(
-				c.ctx, c.volumeID, c.volumeName, store())
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			if mountPath != "" {
-				out, err := c.marshalOutput(&mountPath)
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Println(out)
-			}
+			c.mustMarshalOutput(c.r.Integration().Path(
+				c.ctx, c.volumeID, c.volumeName, store()))
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumePathCmd)

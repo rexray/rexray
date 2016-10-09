@@ -1,13 +1,9 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
-
-	"gopkg.in/yaml.v1"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
@@ -266,31 +262,9 @@ func (c *CLI) execute() {
 	c.c.Execute()
 }
 
-func (c *CLI) marshalOutput(v interface{}) (string, error) {
-	var err error
-	var buf []byte
-	if strings.ToUpper(c.outputFormat) == "JSON" {
-		buf, err = marshalJSONOutput(v)
-	} else {
-		buf, err = marshalYamlOutput(v)
-	}
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
-func marshalYamlOutput(v interface{}) ([]byte, error) {
-	return yaml.Marshal(v)
-}
-
-func marshalJSONOutput(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
-}
-
 func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 	fs.StringVarP(
-		&c.outputFormat, "format", "f", "yml", "The output format (yml, json)")
+		&c.outputFormat, "format", "f", "tmpl", "The output format (yaml, json, tmpl)")
 }
 
 func (c *CLI) updateLogLevel() {

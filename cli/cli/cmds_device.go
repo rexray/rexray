@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	log "github.com/Sirupsen/logrus"
 	apitypes "github.com/emccode/libstorage/api/types"
 	"github.com/spf13/cobra"
@@ -32,18 +30,8 @@ func (c *CLI) initDeviceCmds() {
 		Short:   "Get a device's mount(s)",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-
-			mounts, err := c.r.OS().Mounts(
-				c.ctx, c.deviceName, c.mountPoint, store())
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			out, err := c.marshalOutput(&mounts)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(out)
+			c.mustMarshalOutput(c.r.OS().Mounts(
+				c.ctx, c.deviceName, c.mountPoint, store()))
 		},
 	}
 
@@ -51,22 +39,17 @@ func (c *CLI) initDeviceCmds() {
 		Use:   "mount",
 		Short: "Mount a device",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.deviceName == "" || c.mountPoint == "" {
 				log.Fatal("Missing --devicename and --mountpoint")
 			}
-
-			// mountOptions = fmt.Sprintf("val,%s", mountOptions)
-			err := c.r.OS().Mount(
+			if err := c.r.OS().Mount(
 				c.ctx, c.deviceName, c.mountPoint,
 				&apitypes.DeviceMountOpts{
 					MountOptions: c.mountOptions,
 					MountLabel:   c.mountLabel,
-				})
-			if err != nil {
+				}); err != nil {
 				log.Fatal(err)
 			}
-
 		},
 	}
 
@@ -74,16 +57,13 @@ func (c *CLI) initDeviceCmds() {
 		Use:   "unmount",
 		Short: "Unmount a device",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.mountPoint == "" {
 				log.Fatal("Missing --mountpoint")
 			}
-
-			err := c.r.OS().Unmount(c.ctx, c.mountPoint, store())
-			if err != nil {
+			if err := c.r.OS().Unmount(
+				c.ctx, c.mountPoint, store()); err != nil {
 				log.Fatal(err)
 			}
-
 		},
 	}
 
@@ -91,22 +71,18 @@ func (c *CLI) initDeviceCmds() {
 		Use:   "format",
 		Short: "Format a device",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.deviceName == "" {
 				log.Fatal("Missing --devicename")
 			}
-
 			if c.fsType == "" {
 				c.fsType = "ext4"
 			}
-
-			err := c.r.OS().Format(
+			if err := c.r.OS().Format(
 				c.ctx, c.deviceName,
 				&apitypes.DeviceFormatOpts{
 					NewFSType:   c.fsType,
 					OverwriteFS: c.overwriteFs,
-				})
-			if err != nil {
+				}); err != nil {
 				log.Fatal(err)
 			}
 		},

@@ -18,6 +18,7 @@ pages:
     - Storage Providers: user-guide/storage-providers.md
     - Schedulers: user-guide/schedulers.md
     - Applications: user-guide/applications.md
+    - Demo: user-guide/demo.md
 - Developers Guide:
     - Project Guidelines: dev-guide/project-guidelines.md
     - Build Reference: dev-guide/build-reference.md

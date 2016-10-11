@@ -2,154 +2,149 @@ package cli
 
 import (
 	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 	"text/tabwriter"
-	"text/template"
+	gtemplate "text/template"
 
 	log "github.com/Sirupsen/logrus"
-	yaml "gopkg.in/yaml.v2"
 
 	apitypes "github.com/emccode/libstorage/api/types"
+	apiutils "github.com/emccode/libstorage/api/utils"
+	"github.com/emccode/rexray/cli/cli/template"
 )
 
-const (
-	volFormat  = "{{.ID}}\t{{.Name}}\t{{.Status}}\t{{.Size}}\n"
-	volsFormat = "ID\tName\tStatus\tSize\n" +
-		`{{range sort . "Name"}}` + volFormat + `{{end}}`
-
-	snpFormat  = "{{.ID}}\t{{.Name}}\t{{.Status}}\t{{.VolumeID}}\t{{.VolumeSize}}\n"
-	snpsFormat = "ID\tName\tStatus\tVolumeID\tVolumeSize\n" +
-		`{{range sort . "Name"}}` + snpFormat + `{{end}}`
-
-	instFormat  = "{{.InstanceID.ID}}\t{{.Name}}\t{{.ProviderName}}\t{{.Region}}\n"
-	instsFormat = "ID\tName\tProvider\tRegion\n" +
-		`{{range sort . "Name"}}` + instFormat + `{{end}}`
-
-	siFormat = "Name\tDriver\n" +
-		"{{.Name}}\t{{.Driver.Name}}\n"
-	sisFormat = `{{range sort . "Name"}}` + siFormat + `{{end}}`
-
-	mntFormat = "ID\tRoot\tSource\tMountPont\n" +
-		"{{.ID}}\t{{.Root}}\t{{.Source}}\t{{.MountPoint}}\n"
-	mntsFormat = `{{range sort . "Source"}}` + mntFormat + `{{end}}`
-)
-
-var (
-	errUnsupportedType = errors.New("unsupported type")
-
-	volTempl  = newTemplate("vol", volFormat)
-	volsTempl = newTemplate("vol", volsFormat)
-
-	snpTempl  = newTemplate("snp", snpFormat)
-	snpsTempl = newTemplate("snps", snpsFormat)
-
-	instTempl  = newTemplate("inst", instFormat)
-	instsTempl = newTemplate("insts", instsFormat)
-
-	siTempl  = newTemplate("si", siFormat)
-	sisTempl = newTemplate("sis", sisFormat)
-
-	mntTempl  = newTemplate("mnt", mntFormat)
-	mntsTempl = newTemplate("mnts", mntsFormat)
-)
-
-func newTemplate(name, format string) *template.Template {
-	return template.Must(template.New(name).Funcs(funcMap).Parse(format))
+type templateObject struct {
+	C *CLI
+	L apitypes.Client
+	D interface{}
 }
 
-func fmtOutput(w io.Writer, f string, o interface{}) error {
+func (c *CLI) fmtOutput(w io.Writer, o interface{}) error {
 
 	var (
-		tw  *tabwriter.Writer
-		twf func() error
+		templName    string
+		tabWriter    *tabwriter.Writer
+		newTabWriter func()
+		format       = c.outputFormat
+		tplFormat    = c.outputTemplate
+		tplTabs      = c.outputTemplateTabs
+		tplBuf       = buildDefaultTemplate()
+		funcMap      = gtemplate.FuncMap{
+			"volumeStatus": c.volumeStatus,
+		}
 	)
 
-	defer func() {
-		if twf != nil {
-			twf()
+	if tplTabs {
+		newTabWriter = func() {
+			tabWriter = tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+			w = tabWriter
 		}
-	}()
-
-	newTabWriter := func() {
-		tw = tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-		twf = tw.Flush
-		w = tw
+		defer func() {
+			if tabWriter != nil {
+				tabWriter.Flush()
+			}
+		}()
 	}
 
 	switch {
-	case strings.EqualFold(f, "json"):
-		enc := json.NewEncoder(w)
-		return enc.Encode(o)
-	case strings.EqualFold(f, "yaml"):
-		buf, err := yaml.Marshal(o)
-		if err != nil {
-			return err
+	case strings.EqualFold(format, "json"):
+		templName = templateNamePrintJSON
+	case strings.EqualFold(format, "jsonp"):
+		templName = templateNamePrintPrettyJSON
+	case strings.EqualFold(format, "tmpl") && tplFormat == "":
+		if tplTabs {
+			newTabWriter()
 		}
-		if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
-			return err
-		}
-	case strings.EqualFold(f, "tmpl"):
-		newTabWriter()
 		switch to := o.(type) {
-		case string:
-			fmt.Fprint(w, o)
 		case *apitypes.Volume:
-			return fmtOutput(w, f, []*apitypes.Volume{to})
+			return c.fmtOutput(w, []*apitypes.Volume{to})
 		case []*apitypes.Volume:
-			if len(to) == 0 {
-				return nil
-			}
-			return volsTempl.Execute(w, o)
+			templName = templateNamePrintVolumeFields
 		case *apitypes.Snapshot:
-			return fmtOutput(w, f, []*apitypes.Snapshot{to})
+			return c.fmtOutput(w, []*apitypes.Snapshot{to})
 		case []*apitypes.Snapshot:
-			if len(to) == 0 {
-				return nil
-			}
-			return snpsTempl.Execute(w, o)
+			templName = templateNamePrintSnapshotFields
 		case map[string]*apitypes.ServiceInfo:
-			if len(to) == 0 {
-				return nil
-			}
-			return sisTempl.Execute(w, o)
+			templName = templateNamePrintServiceFields
 		case map[string]*apitypes.Instance:
-			if len(to) == 0 {
-				return nil
-			}
-			return instsTempl.Execute(w, o)
+			templName = templateNamePrintInstanceFields
 		case []*apitypes.MountInfo:
-			if len(to) == 0 {
-				return nil
-			}
-			return mntsTempl.Execute(w, o)
+			templName = templateNamePrintMountFields
 		default:
-			panic(errUnsupportedType)
+			templName = templateNamePrintObject
 		}
 	default:
-		newTabWriter()
-		f = fmt.Sprintf(`"%s"`, strings.Replace(f, `"`, `\"`, -1))
-		uf, err := strconv.Unquote(f)
+		if tplTabs {
+			newTabWriter()
+		}
+		if tplFormat != "" {
+			format = tplFormat
+		}
+		format = fmt.Sprintf(`"%s"`, strings.Replace(format, `"`, `\"`, -1))
+		uf, err := strconv.Unquote(format)
 		if err != nil {
 			return err
 		}
-		t, err := template.New("temp").Funcs(funcMap).Parse(uf)
-		if err != nil {
-			return err
-		}
-		return t.Execute(w, o)
+		format = uf
+		templName = templateNamePrintCustom
 	}
 
-	return nil
+	if templName == templateNamePrintJSON ||
+		templName == templateNamePrintPrettyJSON {
+
+		templ := template.MustTemplate("json", tplBuf.String(), funcMap)
+		return templ.ExecuteTemplate(w, templName, o)
+	}
+
+	if templName == templateNamePrintCustom {
+		fmt.Fprintf(tplBuf, "{{define \"printCustom\"}}%s{{end}}", format)
+	}
+
+	if tplFormat == "" {
+		tplMetadata, hasMetadata := defaultTemplates[templName]
+		if hasMetadata {
+			if fields := tplMetadata.fields; len(fields) > 0 {
+				for i, f := range fields {
+					fmt.Fprint(tplBuf, strings.SplitN(f, "=", 2)[0])
+					if i < len(fields)-1 {
+						fmt.Fprintf(tplBuf, "\t")
+					}
+				}
+				fmt.Fprintf(tplBuf, "\n")
+			}
+		}
+		fmt.Fprintf(tplBuf, "{{range ")
+		if hasMetadata {
+			if tplMetadata.sortBy == "" {
+				fmt.Fprint(tplBuf, ".D")
+			} else {
+				fmt.Fprintf(tplBuf, "sort .D \"%s\"", tplMetadata.sortBy)
+			}
+		} else {
+			fmt.Fprint(tplBuf, ".D")
+		}
+		fmt.Fprintf(tplBuf, " }}{{template \"%s\" .}}\n{{end}}", templName)
+	} else {
+		fmt.Fprintf(tplBuf, `{{template "%s" .}}`, templName)
+	}
+
+	format = tplBuf.String()
+	c.ctx.WithField("template", format).Debug("built output template")
+
+	templ, err := template.NewTemplate("tmpl", format, funcMap)
+	if err != nil {
+		return err
+	}
+
+	return templ.Execute(w, &templateObject{c, c.r, o})
 }
 
 func (c *CLI) marshalOutput(v interface{}) {
-	if err := fmtOutput(os.Stdout, c.outputFormat, v); err != nil {
+	if err := c.fmtOutput(os.Stdout, v); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -166,4 +161,130 @@ func (c *CLI) mustMarshalOutput3(v interface{}, noop interface{}, err error) {
 		log.Fatal(err)
 	}
 	c.marshalOutput(v)
+}
+
+const (
+	volumeStatusAttached    = "attached"
+	volumeStatusAvailable   = "available"
+	volumeStatusUnavailable = "unavailable"
+	volumeStatusUnknown     = "unknown"
+	volumeStatusError       = "error"
+)
+
+var voluemStatusStore = apiutils.NewStore()
+
+func (c *CLI) volumeStatus(vol *apitypes.Volume) string {
+	if len(vol.Attachments) == 0 {
+		return volumeStatusAvailable
+	}
+	if c.r == nil || c.r.Executor() == nil {
+		return volumeStatusUnknown
+	}
+	iid, err := c.r.Executor().InstanceID(c.ctx, voluemStatusStore)
+	if err != nil {
+		return volumeStatusError
+	}
+	for _, a := range vol.Attachments {
+		if a.InstanceID.ID == iid.ID {
+			return volumeStatusAttached
+		}
+	}
+	return volumeStatusUnavailable
+}
+
+const (
+	templateNamePrintCustom         = "printCustom"
+	templateNamePrintObject         = "printObject"
+	templateNamePrintJSON           = "printJSON"
+	templateNamePrintPrettyJSON     = "printPrettyJSON"
+	templateNamePrintVolumeFields   = "printVolumeFields"
+	templateNamePrintSnapshotFields = "printSnapshotFields"
+	templateNamePrintInstanceFields = "printInstanceFields"
+	templateNamePrintServiceFields  = "printServiceFields"
+	templateNamePrintMountFields    = "printMountFields"
+)
+
+type templateMetadata struct {
+	format string
+	fields []string
+	sortBy string
+}
+
+var defaultTemplates = map[string]*templateMetadata{
+	templateNamePrintObject: &templateMetadata{
+		format: `{{printf "%v" .}}`,
+	},
+	templateNamePrintJSON: &templateMetadata{
+		format: "{{. | json}}",
+	},
+	templateNamePrintPrettyJSON: &templateMetadata{
+		format: "{{. | jsonp}}",
+	},
+	templateNamePrintVolumeFields: &templateMetadata{
+		fields: []string{
+			"ID",
+			"Name",
+			"Status={{. | volumeStatus}}",
+			"Size",
+		},
+		sortBy: "Name",
+	},
+	templateNamePrintSnapshotFields: &templateMetadata{
+		fields: []string{
+			"ID",
+			"Name",
+			"Status",
+			"VolumeID",
+		},
+		sortBy: "Name",
+	},
+	templateNamePrintInstanceFields: &templateMetadata{
+		fields: []string{
+			"ID={{.InstanceID.ID}}",
+			"Name",
+			"Provider={{.ProviderName}}",
+			"Region",
+		},
+		sortBy: "Name",
+	},
+	templateNamePrintServiceFields: &templateMetadata{
+		fields: []string{
+			"Name",
+			"Driver={{.Driver.Name}}",
+		},
+		sortBy: "Name",
+	},
+	templateNamePrintMountFields: &templateMetadata{
+		fields: []string{
+			"ID",
+			"Root",
+			"Source",
+			"MountPoint",
+		},
+		sortBy: "Source",
+	},
+}
+
+func buildDefaultTemplate() *bytes.Buffer {
+	buf := &bytes.Buffer{}
+	for tplName, tplMetadata := range defaultTemplates {
+		fmt.Fprintf(buf, `{{define "%s"}}`, tplName)
+		if tplMetadata.format != "" {
+			fmt.Fprintf(buf, "%s{{end}}", tplMetadata.format)
+			continue
+		}
+		for i, field := range tplMetadata.fields {
+			fieldParts := strings.SplitN(field, "=", 2)
+			if len(fieldParts) == 1 {
+				fmt.Fprintf(buf, "{{.%s}}", fieldParts[0])
+			} else {
+				fmt.Fprintf(buf, fieldParts[1])
+			}
+			if i < len(tplMetadata.fields)-1 {
+				fmt.Fprintf(buf, "\t")
+			}
+		}
+		fmt.Fprintf(buf, "{{end}}")
+	}
+	return buf
 }

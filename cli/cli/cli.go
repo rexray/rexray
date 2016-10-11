@@ -82,6 +82,8 @@ type CLI struct {
 	volumePathCmd            *cobra.Command
 
 	outputFormat            string
+	outputTemplate          string
+	outputTemplateTabs      bool
 	fg                      bool
 	fork                    bool
 	force                   bool
@@ -264,7 +266,14 @@ func (c *CLI) execute() {
 
 func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 	fs.StringVarP(
-		&c.outputFormat, "format", "f", "tmpl", "The output format (yaml, json, tmpl)")
+		&c.outputFormat, "format", "f", "tmpl",
+		"The output format (tmpl, json, jsonp)")
+	fs.StringVarP(
+		&c.outputTemplate, "template", "", "",
+		"The Go template to use when --format is set to 'tmpl'")
+	fs.BoolVarP(
+		&c.outputTemplateTabs, "templateTabs", "", true,
+		"Set to true to use a Go tab writer with the output template")
 }
 
 func (c *CLI) updateLogLevel() {

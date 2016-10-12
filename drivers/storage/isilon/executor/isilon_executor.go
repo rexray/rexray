@@ -10,6 +10,7 @@ import (
 
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
@@ -41,6 +42,11 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 func (d *driver) Name() string {
 	return isilon.Name
+}
+
+func (d *driver) Supported(ctx types.Context, opts types.Store) (bool, error) {
+	// make sure NFS mounts can be done
+	return gotil.FileExistsInPath("mount.nfs"), nil
 }
 
 // InstanceID returns the local instance ID for the test

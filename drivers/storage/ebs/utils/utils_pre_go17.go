@@ -11,5 +11,12 @@ import (
 )
 
 func doRequest(ctx types.Context, req *http.Request) (*http.Response, error) {
-	return ctxhttp.Do(ctx, http.DefaultClient, req)
+	return doRequestWithClient(ctx, http.DefaultClient, req)
+}
+
+func doRequestWithClient(
+	ctx types.Context,
+	client *http.Client,
+	req *http.Request) (*http.Response, error) {
+	return ctxhttp.Do(ctx, client, req)
 }

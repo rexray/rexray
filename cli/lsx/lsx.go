@@ -23,7 +23,7 @@ import (
 
 var (
 	cmdRx = regexp.MustCompile(
-		`(?i)^instanceid|nextdevice|localdevices|wait$`)
+		`(?i)^supported|instanceid|nextdevice|localdevices|wait$`)
 )
 
 // Run runs the executor CLI.
@@ -60,7 +60,6 @@ func Run() {
 	if cmd == "" {
 		printUsageAndExit()
 	}
-	cmd = strings.ToLower(cmd)
 	store := utils.NewStore()
 
 	var (
@@ -69,7 +68,19 @@ func Run() {
 		exitCode int
 	)
 
-	if cmd == "instanceid" {
+	if strings.EqualFold(cmd, apitypes.LSXCmdSupported) {
+		op = "supported"
+		if dws, ok := d.(apitypes.StorageExecutorWithSupported); ok {
+			opResult, opErr := dws.Supported(ctx, store)
+			if opErr != nil {
+				err = opErr
+			} else {
+				result = opResult
+			}
+		} else {
+			err = apitypes.ErrNotImplemented
+		}
+	} else if strings.EqualFold(cmd, apitypes.LSXCmdInstanceID) {
 		op = "instance ID"
 		opResult, opErr := d.InstanceID(ctx, store)
 		if opErr != nil {
@@ -78,7 +89,7 @@ func Run() {
 			opResult.Driver = driverName
 			result = opResult
 		}
-	} else if cmd == "nextdevice" {
+	} else if strings.EqualFold(cmd, apitypes.LSXCmdNextDevice) {
 		op = "next device"
 		opResult, opErr := d.NextDevice(ctx, store)
 		if opErr != nil && opErr != apitypes.ErrNotImplemented {
@@ -86,7 +97,7 @@ func Run() {
 		} else {
 			result = opResult
 		}
-	} else if cmd == "localdevices" {
+	} else if strings.EqualFold(cmd, apitypes.LSXCmdLocalDevices) {
 		if len(args) < 4 {
 			printUsageAndExit()
 		}
@@ -101,7 +112,7 @@ func Run() {
 		} else {
 			result = opResult
 		}
-	} else if cmd == "wait" {
+	} else if strings.EqualFold(cmd, apitypes.LSXCmdWaitForDevice) {
 		if len(args) < 5 {
 			printUsageAndExit()
 		}
@@ -141,7 +152,7 @@ func Run() {
 		for {
 			select {
 			case <-timeoutC:
-				exitCode = 255
+				exitCode = apitypes.LSXExitCodeTimedOut
 				break TimeoutLoop
 			case <-tick:
 				if found, opResult, opErr = ldl(); found || opErr != nil {
@@ -159,12 +170,21 @@ func Run() {
 	}
 
 	if err != nil {
+		// if the function is not implemented then exit with
+		// apitypes.LSXExitCodeNotImplemented to let callers
+		// know that the function is unsupported on this system
+		exitCode = 1
+		if strings.EqualFold(err.Error(), apitypes.ErrNotImplemented.Error()) {
+			exitCode = apitypes.LSXExitCodeNotImplemented
+		}
 		fmt.Fprintf(os.Stderr,
 			"error: error getting %s: %v\n", op, err)
-		os.Exit(1)
+		os.Exit(exitCode)
 	}
 
 	switch tr := result.(type) {
+	case bool:
+		fmt.Fprintf(os.Stdout, "%v", result)
 	case string:
 		fmt.Fprintln(os.Stdout, result)
 	case encoding.TextMarshaler:
@@ -224,9 +244,9 @@ func printUsage() {
 	lpad1 := buf.Len()
 	fmt.Fprintf(w, "%s <executor> ", os.Args[0])
 	lpad2 := buf.Len()
-	fmt.Fprintf(w, "instanceID\n")
+	fmt.Fprintf(w, "supported\n")
+	printUsageLeftPadded(w, lpad2, "instanceID\n")
 	printUsageLeftPadded(w, lpad2, "nextDevice\n")
-
 	printUsageLeftPadded(w, lpad2, "localDevices <scanType>\n")
 	printUsageLeftPadded(w, lpad2, "wait <scanType> <attachToken> <timeout>\n")
 	fmt.Fprintln(w)

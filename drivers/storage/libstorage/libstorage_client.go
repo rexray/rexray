@@ -3,6 +3,7 @@ package libstorage
 import (
 	"crypto/md5"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -21,10 +22,13 @@ type client struct {
 	ctx             types.Context
 	config          gofig.Config
 	clientType      types.ClientType
-	serviceCache    *lss
 	lsxCache        *lss
+	serviceCache    *lss
+	supportedCache  types.Store
 	instanceIDCache types.Store
 }
+
+var errExecutorNotSupported = errors.New("executor not supported")
 
 func (c *client) isController() bool {
 	return c.clientType == types.ControllerClient
@@ -61,9 +65,24 @@ func (c *client) dial(ctx types.Context) error {
 
 	for service, _ := range svcInfos {
 		ctx := c.ctx.WithValue(context.ServiceKey, service)
+		ctx.Info("initializing supported cache")
+		supported, err := c.Supported(ctx, store)
+		if err != nil {
+			return goof.WithError("error initializing supported cache", err)
+		}
+
+		if !supported {
+			ctx.Warn("executor not supported")
+			continue
+		}
+
 		ctx.Info("initializing instance ID cache")
 		if _, err := c.InstanceID(ctx, store); err != nil {
-			return err
+			if err == types.ErrNotImplemented {
+				ctx.WithError(err).Warn("cannot get instance ID")
+				continue
+			}
+			return goof.WithError("error initializing instance ID cache", err)
 		}
 	}
 

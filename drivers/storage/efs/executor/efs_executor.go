@@ -15,6 +15,7 @@ import (
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/efs"
+	efsUtils "github.com/emccode/libstorage/drivers/storage/efs/utils"
 )
 
 // driver is the storage executor for the efs storage driver.
@@ -45,6 +46,16 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 func (d *driver) Name() string {
 	return efs.Name
+}
+
+// Supported returns a flag indicating whether or not the platform
+// implementing the executor is valid for the host on which the executor
+// resides.
+func (d *driver) Supported(
+	ctx types.Context,
+	opts types.Store) (bool, error) {
+
+	return efsUtils.IsEC2Instance(ctx)
 }
 
 // InstanceID returns the local instance ID for the test

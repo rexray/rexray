@@ -3,6 +3,7 @@ package executor
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -14,6 +15,10 @@ import (
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/scaleio"
+)
+
+const (
+	sioBinPath = "/opt/emc/scaleio/sdc/bin/drv_cfg"
 )
 
 // driver is the storage executor for the VFS storage driver.
@@ -33,6 +38,19 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 
 func (d *driver) Name() string {
 	return scaleio.Name
+}
+
+// Supported returns a flag indicating whether or not the platform
+// implementing the executor is valid for the host on which the executor
+// resides.
+func (d *driver) Supported(
+	ctx types.Context,
+	opts types.Store) (bool, error) {
+
+	if _, err := os.Stat(sioBinPath); os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, nil
 }
 
 // NextDevice returns the next available device.
@@ -69,8 +87,7 @@ func getLocalVolumeMap() (map[string]string, error) {
 	mappedVolumesMap := make(map[string]*sdcMappedVolume)
 	volumeMap := make(map[string]string)
 
-	out, err := exec.Command(
-		"/opt/emc/scaleio/sdc/bin/drv_cfg", "--query_vols").Output()
+	out, err := exec.Command(sioBinPath, "--query_vols").Output()
 	if err != nil {
 		return nil, goof.WithError("error querying volumes", err)
 	}
@@ -132,8 +149,7 @@ func GetInstanceID() (*types.InstanceID, error) {
 }
 
 func getSdcLocalGUID() (sdcGUID string, err error) {
-	out, err := exec.Command(
-		"/opt/emc/scaleio/sdc/bin/drv_cfg", "--query_guid").Output()
+	out, err := exec.Command(sioBinPath, "--query_guid").Output()
 	if err != nil {
 		return "", goof.WithError("problem getting sdc guid", err)
 	}

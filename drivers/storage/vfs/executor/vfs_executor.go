@@ -42,6 +42,13 @@ func (d *driver) Name() string {
 	return vfs.Name
 }
 
+func (d *driver) Supported(
+	ctx types.Context,
+	opts types.Store) (bool, error) {
+
+	return true, nil
+}
+
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 

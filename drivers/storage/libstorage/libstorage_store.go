@@ -20,16 +20,6 @@ func (s *lss) GetExecutorInfo(lsx string) *types.ExecutorInfo {
 	return nil
 }
 
-func (s *lss) GetInstanceID(service string) *types.InstanceID {
-	if obj, ok := s.Get(service).(*types.InstanceID); ok {
-		return obj
-	}
-	return nil
-}
-
-func (s *lss) GetLocalDevices(service string) map[string]string {
-	if obj, ok := s.Get(service).(map[string]string); ok {
-		return obj
-	}
-	return nil
+func (s *lss) GetInstanceID(driverName string) *types.InstanceID {
+	return s.Store.GetInstanceID(driverName)
 }

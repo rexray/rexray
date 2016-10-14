@@ -1,8 +1,10 @@
 package libstorage
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -15,6 +17,60 @@ import (
 	"github.com/emccode/libstorage/api/utils"
 )
 
+func (c *client) Supported(
+	ctx types.Context,
+	opts types.Store) (bool, error) {
+
+	if c.isController() {
+		return false, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "Supported")
+	}
+
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return false, goof.New("missing service name")
+	}
+
+	si, err := c.getServiceInfo(serviceName)
+	if err != nil {
+		return false, err
+	}
+	driverName := strings.ToLower(si.Driver.Name)
+
+	// check to see if the driver's executor is supported on this host
+	if ok := c.supportedCache.IsSet(driverName); ok {
+		return c.supportedCache.GetBool(driverName), nil
+	}
+
+	out, err := c.runExecutor(ctx, driverName, types.LSXCmdSupported)
+	if err != nil {
+		if err == types.ErrNotImplemented {
+			ctx.WithField("serviceDriver", driverName).Warn(
+				"supported cmd not implemented")
+			c.supportedCache.Set(driverName, true)
+			ctx.WithField("supported", true).Debug("cached supported flag")
+			return true, nil
+		}
+		return false, err
+	}
+
+	if len(out) == 0 {
+		return false, nil
+	}
+
+	out = bytes.TrimSpace(out)
+	b, err := strconv.ParseBool(string(out))
+	if err != nil {
+		return false, err
+	}
+
+	c.supportedCache.Set(driverName, b)
+	ctx.WithField("supported", b).Debug("cached supported flag")
+	return b, nil
+}
+
 func (c *client) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
@@ -24,6 +80,10 @@ func (c *client) InstanceID(
 			c.clientType, "InstanceID")
 	}
 
+	if supported, _ := c.Supported(ctx, opts); !supported {
+		return nil, errExecutorNotSupported
+	}
+
 	ctx = context.RequireTX(ctx.Join(c.ctx))
 
 	serviceName, ok := context.ServiceName(ctx)
@@ -31,15 +91,16 @@ func (c *client) InstanceID(
 		return nil, goof.New("missing service name")
 	}
 
-	if iid := c.instanceIDCache.GetInstanceID(serviceName); iid != nil {
-		return iid, nil
-	}
-
 	si, err := c.getServiceInfo(serviceName)
 	if err != nil {
 		return nil, err
 	}
 	driverName := strings.ToLower(si.Driver.Name)
+
+	// check to see if the driver's instance ID is cached
+	if iid := c.instanceIDCache.GetInstanceID(driverName); iid != nil {
+		return iid, nil
+	}
 
 	out, err := c.runExecutor(ctx, driverName, types.LSXCmdInstanceID)
 	if err != nil {
@@ -65,7 +126,7 @@ func (c *client) InstanceID(
 		iid.DeleteMetadata()
 	}
 
-	c.instanceIDCache.Set(serviceName, iid)
+	c.instanceIDCache.Set(driverName, iid)
 	ctx.Debug("cached instanceID")
 
 	ctx.Debug("xli instanceID success")
@@ -79,6 +140,10 @@ func (c *client) NextDevice(
 	if c.isController() {
 		return "", utils.NewUnsupportedForClientTypeError(
 			c.clientType, "NextDevice")
+	}
+
+	if supported, _ := c.Supported(ctx, opts); !supported {
+		return "", errExecutorNotSupported
 	}
 
 	ctx = context.RequireTX(ctx.Join(c.ctx))
@@ -110,6 +175,10 @@ func (c *client) LocalDevices(
 	if c.isController() {
 		return nil, utils.NewUnsupportedForClientTypeError(
 			c.clientType, "LocalDevices")
+	}
+
+	if supported, _ := c.Supported(ctx, opts.Opts); !supported {
+		return nil, errExecutorNotSupported
 	}
 
 	ctx = context.RequireTX(ctx.Join(c.ctx))
@@ -149,6 +218,10 @@ func (c *client) WaitForDevice(
 			c.clientType, "WaitForDevice")
 	}
 
+	if supported, _ := c.Supported(ctx, opts.Opts); !supported {
+		return false, nil, errExecutorNotSupported
+	}
+
 	ctx = context.RequireTX(ctx.Join(c.ctx))
 
 	serviceName, ok := context.ServiceName(ctx)
@@ -162,19 +235,15 @@ func (c *client) WaitForDevice(
 	}
 	driverName := si.Driver.Name
 
-	exitCode := 0
 	out, err := c.runExecutor(
 		ctx, driverName, types.LSXCmdWaitForDevice,
 		opts.ScanType.String(), opts.Token, opts.Timeout.String())
-	if exitError, ok := err.(*exec.ExitError); ok {
-		exitCode = exitError.Sys().(syscall.WaitStatus).ExitStatus()
-	}
 
-	if err != nil && exitCode > 0 {
+	if err != types.ErrTimedOut {
 		return false, nil, err
 	}
 
-	matched := exitCode == 0
+	matched := err == nil
 
 	ld, err := unmarshalLocalDevices(ctx, out)
 	if err != nil {
@@ -225,7 +294,8 @@ func (c *client) runExecutor(
 		}
 	}()
 
-	cmd := exec.Command(types.LSX.String(), args...)
+	lsxBin := types.LSX.String()
+	cmd := exec.Command(lsxBin, args...)
 	cmd.Env = os.Environ()
 
 	configEnvVars := c.config.EnvVars()
@@ -234,7 +304,26 @@ func (c *client) runExecutor(
 		cmd.Env = append(cmd.Env, cev)
 	}
 
-	return cmd.Output()
+	out, err := cmd.Output()
+
+	if exitError, ok := err.(*exec.ExitError); ok {
+		exitCode := exitError.Sys().(syscall.WaitStatus).ExitStatus()
+		switch exitCode {
+		case types.LSXExitCodeNotImplemented:
+			return nil, types.ErrNotImplemented
+		case types.LSXExitCodeTimedOut:
+			return nil, types.ErrTimedOut
+		}
+		return nil, goof.WithFieldsE(
+			map[string]interface{}{
+				"lsx":  lsxBin,
+				"args": args,
+			},
+			"error executing xcli",
+			err)
+	}
+
+	return out, err
 }
 
 func (c *client) lsxMutexWait() error {

@@ -106,6 +106,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		}
 
 		d.lsxCache = &lss{Store: utils.NewStore()}
+		d.supportedCache = utils.NewStore()
 		d.instanceIDCache = &lss{Store: newIIDCache()}
 	}
 

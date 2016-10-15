@@ -7,6 +7,14 @@ import (
 const (
 	// Name is the provider's name.
 	Name = "efs"
+
+	// InstanceIDFieldRegion is the key to retrieve the region value from the
+	// InstanceID Field map.
+	InstanceIDFieldRegion = "region"
+
+	// InstanceIDFieldAvailabilityZone is the key to retrieve the availability
+	// zone value from the InstanceID Field map.
+	InstanceIDFieldAvailabilityZone = "availabilityZone"
 )
 
 func init() {

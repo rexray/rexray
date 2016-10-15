@@ -45,8 +45,8 @@ The following items are configurable specific to this driver.
 
  * `volumePath` represents the location under `/ifs/volumes` to allow volumes to
    be created and removed.
- * `nfsHost` is the configurable host used when mounting exports
- * `dataSubnet` is the subnet the REX-Ray driver is running on
+ * `nfsHost` is the configurable NFS server hostname or IP (often a SmartConnect name) used when mounting exports
+ * `dataSubnet` is the subnet the REX-Ray driver is running on.  This is used for the NFS export host ACLs.
 
 ### Optional Parameters
 The following items are not required, but available to this driver.

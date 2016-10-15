@@ -1,18 +1,25 @@
 package executor
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/akutz/gofig"
+	"github.com/akutz/gotil"
 
 	"github.com/emccode/libstorage/api/registry"
 	"github.com/emccode/libstorage/api/types"
 	"github.com/emccode/libstorage/drivers/storage/vbox"
+)
+
+const (
+	dmidecodeCmd = "dmidecode"
 )
 
 // driver is the storage executor for the vbox storage driver.
@@ -35,6 +42,54 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 func (d *driver) Name() string {
 	return vbox.Name
+}
+
+func (d *driver) Supported(
+	ctx types.Context,
+	opts types.Store) (bool, error) {
+
+	// Use dmidecode if installed
+	if gotil.FileExistsInPath("dmidecode") {
+		out, err := exec.Command(
+			dmidecodeCmd, "-s", "system-product-name").Output()
+		if err == nil {
+			outStr := strings.ToLower(gotil.Trim(string(out)))
+			if outStr == "virtualbox" {
+				return true, nil
+			}
+		}
+		out, err = exec.Command(
+			dmidecodeCmd, "-s", "system-manufacturer").Output()
+		if err == nil {
+			outStr := strings.ToLower(gotil.Trim(string(out)))
+			if outStr == "innotek gmbh" {
+				return true, nil
+			}
+		}
+	}
+
+	// No luck with dmidecode, try dmesg
+	cmd := exec.Command("dmesg")
+	cmdReader, err := cmd.StdoutPipe()
+	if err != nil {
+		return false, nil
+	}
+	defer cmdReader.Close()
+
+	scanner := bufio.NewScanner(cmdReader)
+
+	err = cmd.Run()
+	if err != nil {
+		return false, nil
+	}
+
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), "BIOS VirtualBox") {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func getMacs() ([]string, error) {

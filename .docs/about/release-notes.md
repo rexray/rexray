@@ -14,6 +14,7 @@ as the EC2 driver in REX-Ray <=0.3.x.
 
 ### Bug Fixes
 * Volume Removal Instance ID Fix ([#292](https://github.com/emccode/libstorage/issues/292))
+* Avoid Client Failure when Server Driver not Supported ([#296](https://github.com/emccode/libstorage/issues/296), [#297](https://github.com/emccode/libstorage/issues/297), [#299](https://github.com/emccode/libstorage/issues/299), [#300](https://github.com/emccode/libstorage/issues/300))
 
 ## Version 0.2.1 (2016/09/14)
 This is a minor release that includes a fix for the EFS storage driver as well

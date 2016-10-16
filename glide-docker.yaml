@@ -10,7 +10,7 @@ import:
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/emccode/libstorage
-    ref:     master # libstorage-version
+    version: v0.3.0 # libstorage-version
     repo:    https://github.com/emccode/libstorage # libstorage-repo
 
   - package: github.com/akutz/gofig
@@ -42,11 +42,3 @@ import:
     repo:    https://github.com/google/google-api-go-client.git
   - package: golang.org/x/net
     repo:    https://github.com/golang/net
-
-################################################################################
-##                         Storage Driver Dependencies                        ##
-################################################################################
-
-### ScaleIO
-  - package: github.com/emccode/goscaleio
-    ref:     support/tls-sio-gw-2.0.0.2

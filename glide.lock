@@ -1,5 +1,5 @@
-hash: 74be64e2131694880ea154eb70d834b95edef9f7ee3ba2e49f1e0733d2395433
-updated: 2016-10-08T13:21:45.233842008-05:00
+hash: 6546c217b20cd4cbc96071417f4ceb18256fc6e7296756136718feda73e092f6
+updated: 2016-10-16T15:14:34.700308699-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -69,6 +69,7 @@ imports:
   - api/v2
 - name: github.com/emccode/goscaleio
   version: c44530c3896b770bb2a93f46f50e1b7ac7a01e57
+  repo: https://github.com/emccode/goscaleio
   subpackages:
   - tls
   - types/v1
@@ -77,7 +78,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/emccode/libstorage
-  version: 947e771ec1ea1ef3553b6ab51f909fb0074b79f8
+  version: 80f4fc4dc7711abcf7375f84419143c446dbe6e6
   repo: https://github.com/emccode/libstorage
   subpackages:
   - api

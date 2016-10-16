@@ -2,21 +2,18 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/drivers/storage/ebs"
+	"github.com/emccode/libstorage/drivers/storage/efs"
 )
 
 const (
 	raddr  = "169.254.169.254"
 	mdtURL = "http://" + raddr + "/latest/meta-data/"
 	iidURL = "http://" + raddr + "/latest/dynamic/instance-identity/document"
-	bdmURL = "http://" + raddr + "/latest/meta-data/block-device-mapping/"
 )
 
 // IsEC2Instance returns a flag indicating whether the executing host is an EC2
@@ -67,59 +64,10 @@ func InstanceID(ctx types.Context) (*types.InstanceID, error) {
 
 	return &types.InstanceID{
 		ID:     iid.InstanceID,
-		Driver: ebs.Name,
+		Driver: efs.Name,
 		Fields: map[string]string{
-			ebs.InstanceIDFieldRegion:           iid.Region,
-			ebs.InstanceIDFieldAvailabilityZone: iid.AvailabilityZone,
+			efs.InstanceIDFieldRegion:           iid.Region,
+			efs.InstanceIDFieldAvailabilityZone: iid.AvailabilityZone,
 		},
 	}, nil
-}
-
-// BlockDevices returns the EBS devices attached to the local host.
-func BlockDevices(ctx types.Context) ([]byte, error) {
-
-	req, err := http.NewRequest(http.MethodGet, bdmURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := doRequest(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	buf, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf, nil
-}
-
-// BlockDeviceName returns the name of the provided EBS device.
-func BlockDeviceName(
-	ctx types.Context,
-	device string) ([]byte, error) {
-
-	req, err := http.NewRequest(
-		http.MethodGet,
-		fmt.Sprintf("%s%s", bdmURL, device),
-		nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := doRequest(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	buf, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf, nil
 }

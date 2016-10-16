@@ -49,6 +49,16 @@ func (d *driver) Name() string {
 	return d.name
 }
 
+// Supported returns a flag indicating whether or not the platform
+// implementing the executor is valid for the host on which the executor
+// resides.
+func (d *driver) Supported(
+	ctx types.Context,
+	opts types.Store) (bool, error) {
+
+	return ebsUtils.IsEC2Instance(ctx)
+}
+
 // InstanceID returns the instance ID from the current instance from metadata
 func (d *driver) InstanceID(
 	ctx types.Context,

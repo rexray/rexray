@@ -52,11 +52,16 @@ func (c *client) withInstanceID(
 		return ctx
 	}
 
-	if !c.instanceIDCache.IsSet(service) {
+	si := c.serviceCache.GetServiceInfo(service)
+	if si == nil {
 		return ctx
 	}
 
-	iid := c.instanceIDCache.GetInstanceID(service)
+	if !c.instanceIDCache.IsSet(si.Driver.Name) {
+		return ctx
+	}
+
+	iid := c.instanceIDCache.GetInstanceID(si.Driver.Name)
 	return ctx.WithValue(context.InstanceIDKey, iid)
 }
 
@@ -67,7 +72,6 @@ func (c *client) withAllLocalDevices(ctx types.Context) (types.Context, error) {
 	}
 
 	ldm := types.LocalDevicesMap{}
-
 	hit := map[string]bool{}
 
 	for _, service := range c.serviceCache.Keys() {
@@ -79,6 +83,11 @@ func (c *client) withAllLocalDevices(ctx types.Context) (types.Context, error) {
 		ctx := ctx.WithValue(context.ServiceKey, service)
 		ld, err := c.LocalDevices(ctx, &types.LocalDevicesOpts{})
 		if err != nil {
+			if err == errExecutorNotSupported ||
+				err == types.ErrNotImplemented {
+				ctx.WithError(err).Warn("cannot get local deviecs")
+				continue
+			}
 			return nil, err
 		}
 		hit[dn] = true

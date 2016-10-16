@@ -8,6 +8,9 @@ import (
 // a function is not implemented.
 var ErrNotImplemented = goof.New("not implemented")
 
+// ErrTimedOut is the error that is used to indicate an operation timed out.
+var ErrTimedOut = goof.New("timed out")
+
 // ErrUnsupportedForClientType is the error that occurs when an operation is
 // invoked that is unsupported for the current client type.
 type ErrUnsupportedForClientType struct{ goof.Goof }

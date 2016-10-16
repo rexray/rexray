@@ -11,6 +11,15 @@ import (
 type DeviceScanType int
 
 const (
+	// LSXExitCodeNotImplemented is the exit code the executor binary uses to
+	// indicate a function is not implemented for a given storage driver on the
+	// current system.
+	LSXExitCodeNotImplemented = 2
+
+	// LSXExitCodeTimedOut is the exit code the executor binary uses to indicate
+	// a function timed out.
+	LSXExitCodeTimedOut = 255
+
 	// LSXCmdInstanceID is the command to execute to get the instance ID.
 	LSXCmdInstanceID = "instanceID"
 
@@ -24,6 +33,10 @@ const (
 	// LSXCmdWaitForDevice is the command to execute to wait until a device,
 	// identified by volume ID, is presented to the system.
 	LSXCmdWaitForDevice = "wait"
+
+	// LSXCmdSupported is the command to execute to find out if an executor
+	// is valid for a given platform on the current host.
+	LSXCmdSupported = "supported"
 )
 
 const (
@@ -122,6 +135,21 @@ type StorageExecutorFunctions interface {
 		opts *LocalDevicesOpts) (*LocalDevices, error)
 }
 
+// StorageExecutorWithSupported is an interface that executor implementations
+// may use by defining the function "Supported(Context, Store) (bool, error)".
+// This function indicates whether a storage platform is valid when executing
+// the executor binary on a given client.
+type StorageExecutorWithSupported interface {
+	StorageExecutorFunctions
+
+	// Supported returns a flag indicating whether or not the platform
+	// implementing the executor is valid for the host on which the executor
+	// resides.
+	Supported(
+		ctx Context,
+		opts Store) (bool, error)
+}
+
 // ProvidesStorageExecutorCLI is a type that provides the StorageExecutorCLI.
 type ProvidesStorageExecutorCLI interface {
 	// XCLI returns the StorageExecutorCLI.
@@ -131,7 +159,7 @@ type ProvidesStorageExecutorCLI interface {
 // StorageExecutorCLI provides a way to interact with the CLI tool built with
 // the driver implementations of the StorageExecutor interface.
 type StorageExecutorCLI interface {
-	StorageExecutorFunctions
+	StorageExecutorWithSupported
 
 	// WaitForDevice blocks until the provided attach token appears in the
 	// map returned from LocalDevices or until the timeout expires, whichever

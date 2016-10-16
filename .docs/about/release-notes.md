@@ -4,17 +4,25 @@ Release early, release often
 
 ---
 
-## Version 0.3.0 (TBA)
+## Version 0.3.0 (2016/10/16)
 This release introduces the Elastic Block Storage (EBS) driver, formerly known
 as the EC2 driver in REX-Ray <=0.3.x.
 
 ### Enhancements
 * Amazon Elastic Block Storage (EBS) Support ([#248](https://github.com/emccode/libstorage/issues/248), [#279](https://github.com/emccode/libstorage/issues/279))
 * Build with Docker ([#274](https://github.com/emccode/libstorage/issues/274), [#281](https://github.com/emccode/libstorage/issues/281))
+* Documentation updates ([#298](https://github.com/emccode/libstorage/issues/298))
 
 ### Bug Fixes
 * Volume Removal Instance ID Fix ([#292](https://github.com/emccode/libstorage/issues/292))
 * Avoid Client Failure when Server Driver not Supported ([#296](https://github.com/emccode/libstorage/issues/296), [#297](https://github.com/emccode/libstorage/issues/297), [#299](https://github.com/emccode/libstorage/issues/299), [#300](https://github.com/emccode/libstorage/issues/300))
+
+### Thank You
+  Name | Blame  
+-------|------
+[Proud Heng](https://github.com/proudh) | So long Proud, and thanks for all the fish. EBS is now part of a tagged release!
+[Aaron Spiegel](https://github.com/spiegela) | Aaron, you may be a new contributor, but I feel like we've known each other since we were kids, running around the front-yard on a summer's dusky-eve, catching fireflies and speaking of the day we'd be patching Markdown documentation together.
+[Travis Rhoden](https://github.com/codenrhoden) | While we've been colleagues a while, I'm thrilled you're finally working with the rest of the nerdiest of nerds, on libStorage and the secret holographic unicorn fight club we run on Thursday nights.
 
 ## Version 0.2.1 (2016/09/14)
 This is a minor release that includes a fix for the EFS storage driver as well

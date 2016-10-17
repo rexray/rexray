@@ -36,6 +36,8 @@ supported.
 ### Enhancements
 * libStorage 0.3.0 ([#docs](http://libstorage.readthedocs.io/en/v0.3.0-rc2))
 * Amazon Elastic Block Storage (EBS) Support ([#522](https://github.com/emccode/rexray/issues/522))
+* New CLI Output ([#579](https://github.com/emccode/rexray/issues/579))
+* Support for ScaleIO 2.0.1 ([#599](https://github.com/emccode/rexray/issues/599))
 
 ### Bug Fixes
 * Handle phantom mounts for EBS (formerly EC2) ([#410](https://github.com/emccode/rexray/issues/410))

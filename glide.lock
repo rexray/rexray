@@ -1,5 +1,5 @@
-hash: 6546c217b20cd4cbc96071417f4ceb18256fc6e7296756136718feda73e092f6
-updated: 2016-10-16T15:14:34.700308699-05:00
+hash: 6e697911d63e383bbe767b4fc2693c980b07bbac3579b4cdf9cdf8db946774fd
+updated: 2016-10-17T15:26:12.409280797-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -68,8 +68,7 @@ imports:
   - api/v1
   - api/v2
 - name: github.com/emccode/goscaleio
-  version: c44530c3896b770bb2a93f46f50e1b7ac7a01e57
-  repo: https://github.com/emccode/goscaleio
+  version: 09ca0f748eb937adf2ec979b7c92915d4dbf35b4
   subpackages:
   - tls
   - types/v1
@@ -174,13 +173,13 @@ imports:
   version: 317ec73d0d7507658ee3be15866b445d6d921848
   repo: https://github.com/akutz/viper.git
 - name: golang.org/x/net
-  version: f4b625ec9b21d620bb5ce57f2dfc3e08ca97fce6
+  version: 8b4af36cd21a1f85a7484b49feb7c79363106d8e
   repo: https://github.com/golang/net
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: 8d1157a435470616f975ff9bb013bea8d0962067
+  version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
   subpackages:
   - unix
 - name: google.golang.org/api
@@ -189,7 +188,7 @@ imports:
   subpackages:
   - compute/v1
 - name: gopkg.in/fsnotify.v1
-  version: 944cff21b3baf3ced9a880365682152ba577d348
+  version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: gopkg.in/yaml.v1
   version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
   repo: https://github.com/akutz/yaml.git

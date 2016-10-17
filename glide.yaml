@@ -42,3 +42,11 @@ import:
     repo:    https://github.com/google/google-api-go-client.git
   - package: golang.org/x/net
     repo:    https://github.com/golang/net
+
+################################################################################
+##                         Storage Driver Dependencies                        ##
+################################################################################
+
+### ScaleIO
+  - package: github.com/emccode/goscaleio
+    ref:     support/tls-sio-gw-2.0.0.2

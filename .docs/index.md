@@ -10,18 +10,9 @@ example, here's how to list the volumes for a VirtualBox VM running Linux with
 REX-Ray:
 
 ```sh
-$ rexray volume --service virtualbox
-- attachments:
-  - instanceID:
-      id: e71578b0-1bfb-4fa5-bcd5-4ae982fd4a9b
-      driver: virtualbox
-    status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-    volumeID: 1b819454-a280-4cff-aff5-141f4e8fd154
-  name: libStorage.vmdk
-  size: 64
-  status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-  id: 1b819454-a280-4cff-aff5-141f4e8fd154
-  type: ""
+$ rexray volume --service virtualbox ls
+ID                                    Name             Status    Size
+1b819454-a280-4cff-aff5-141f4e8fd154  libStorage.vmdk  attached  16
 ```
 
 ## Overview
@@ -133,18 +124,9 @@ $ rexray --help
 To verify the configuration file, use REX-Ray to list the volumes:
 
 ```sh
-$ rexray volume
-- attachments:
-  - instanceID:
-      id: e71578b0-1bfb-4fa5-bcd5-4ae982fd4a9b
-      driver: virtualbox
-    status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-    volumeID: 1b819454-a280-4cff-aff5-141f4e8fd154
-  name: libStorage.vmdk
-  size: 64
-  status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-  id: 1b819454-a280-4cff-aff5-141f4e8fd154
-  type: ""
+$ rexray volume ls
+ID                                    Name             Status    Size
+1b819454-a280-4cff-aff5-141f4e8fd154  libStorage.vmdk  attached  16
 ```
 
 If there is an error, use the `-l debug` flag and consult
@@ -323,7 +305,7 @@ output. The following command will list all of the volumes visible to REX-Ray
 with debug logging enabled:
 
 ```
-$ rexray volume -l debug
+$ rexray volume -l debug ls
 ```
 
 For an example of the full output from the above command, please refer to this

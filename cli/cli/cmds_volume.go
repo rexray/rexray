@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"regexp"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -21,16 +22,12 @@ func (c *CLI) initVolumeCmds() {
 		Short:            "The volume manager",
 		PersistentPreRun: c.preRunActivateLibStorage,
 		Run: func(cmd *cobra.Command, args []string) {
-			if isHelpFlags(cmd) {
-				cmd.Usage()
-			} else {
-				c.volumeGetCmd.Run(c.volumeGetCmd, args)
-			}
+			cmd.Usage()
 		},
 	}
 	c.c.AddCommand(c.volumeCmd)
 
-	c.volumeMapCmd = &cobra.Command{
+	/*c.volumeMapCmd = &cobra.Command{
 		Use:   "map",
 		Short: "Print the volume mapping(s)",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -38,43 +35,24 @@ func (c *CLI) initVolumeCmds() {
 				c.ctx, &apitypes.VolumesOpts{Attachments: true}))
 		},
 	}
-	c.volumeCmd.AddCommand(c.volumeMapCmd)
+	c.volumeCmd.AddCommand(c.volumeMapCmd)*/
 
-	c.volumeGetCmd = &cobra.Command{
-		Use:     "get",
-		Short:   "Get one or more volumes",
-		Aliases: []string{"ls", "list"},
+	c.volumeListCmd = &cobra.Command{
+		Use:     "ls",
+		Short:   "List volumes",
+		Aliases: []string{"list", "get", "inspect"},
+		Example: "rexray volume ls [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			vols, err := c.r.Storage().Volumes(
-				c.ctx, &apitypes.VolumesOpts{Attachments: false})
-			if err != nil {
-				log.Fatal(err)
-			}
-			var (
-				vid = c.volumeID
-				vnm = c.volumeName
-			)
-			if vid != "" || vnm != "" {
-				oldVols := vols
-				vols = []*apitypes.Volume{}
-				for _, v := range oldVols {
-					if (vid != "" && strings.EqualFold(v.ID, vid)) ||
-						(vnm != "" && strings.EqualFold(v.Name, vnm)) {
-						vols = append(vols, v)
-					}
-				}
-			}
-			c.marshalOutput(vols)
+			c.mustMarshalOutput(c.lsVolumes(args))
 		},
 	}
-	c.volumeCmd.AddCommand(c.volumeGetCmd)
+	c.volumeCmd.AddCommand(c.volumeListCmd)
 
 	c.volumeCreateCmd = &cobra.Command{
 		Use:     "create",
 		Short:   "Create a new volume",
 		Aliases: []string{"new"},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			opts := &apitypes.VolumeCreateOpts{
 				AvailabilityZone: &c.availabilityZone,
 				Size:             &c.size,
@@ -82,7 +60,6 @@ func (c *CLI) initVolumeCmds() {
 				IOPS:             &c.iops,
 				Opts:             store(),
 			}
-
 			if c.volumeID != "" && c.volumeName != "" {
 				c.mustMarshalOutput(c.r.Storage().VolumeCopy(
 					c.ctx, c.volumeID, c.volumeName, opts.Opts))
@@ -98,140 +75,293 @@ func (c *CLI) initVolumeCmds() {
 	c.volumeCmd.AddCommand(c.volumeCreateCmd)
 
 	c.volumeRemoveCmd = &cobra.Command{
-		Use:     "remove",
+		Use:     "rm",
 		Short:   "Remove a volume",
-		Aliases: []string{"rm"},
+		Example: "rexray volume rm [OPTIONS] VOLUME [VOLUME...]",
+		Aliases: []string{"remove"},
 		Run: func(cmd *cobra.Command, args []string) {
-
-			if c.volumeID == "" {
-				log.Fatalf("missing --volumeid")
+			if len(args) == 0 {
+				log.Fatal("no volumes specified")
 			}
-
-			err := c.r.Storage().VolumeRemove(c.ctx, c.volumeID, store())
+			vols, err := c.lsVolumes(args)
 			if err != nil {
 				log.Fatal(err)
 			}
-
+			hasError := false
+			opts := store()
+			results := []*apitypes.Volume{}
+			for _, v := range vols {
+				err := c.r.Storage().VolumeRemove(c.ctx, v.ID, opts)
+				if err != nil {
+					hasError = true
+					log.WithFields(log.Fields{
+						"id":   v.ID,
+						"name": v.Name,
+					}).WithError(err).Error("error removing volume")
+				} else {
+					results = append(results, v)
+				}
+			}
+			c.mustMarshalOutput(results, nil)
+			if hasError {
+				panic(1)
+			}
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeRemoveCmd)
 
 	c.volumeAttachCmd = &cobra.Command{
-		Use:   "attach",
-		Short: "Attach a volume",
+		Use:     "attach",
+		Short:   "Attach a volume",
+		Example: "rexray volume attach [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			if c.volumeID == "" {
-				log.Fatalf("missing --volumeid")
+			if len(args) == 0 {
+				log.Fatal("no volumes specified")
 			}
-			c.mustMarshalOutput3(c.r.Storage().VolumeAttach(
-				c.ctx, c.volumeID,
-				&apitypes.VolumeAttachOpts{
-					Force: c.force,
-					Opts:  store(),
-				}))
+			vols, err := c.lsVolumes(args)
+			if err != nil {
+				log.Fatal(err)
+			}
+			hasError := false
+			opts := &apitypes.VolumeAttachOpts{
+				Force: c.force,
+				Opts:  store(),
+			}
+			results := []*apitypes.Volume{}
+			for _, v := range vols {
+				_, _, err := c.r.Storage().VolumeAttach(c.ctx, v.ID, opts)
+				if err != nil {
+					hasError = true
+					log.WithFields(log.Fields{
+						"id":   v.ID,
+						"name": v.Name,
+					}).WithError(err).Error("error attaching volume")
+				} else {
+					results = append(results, v)
+				}
+			}
+			c.mustMarshalOutput(results, nil)
+			if hasError {
+				panic(1)
+			}
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeAttachCmd)
 
 	c.volumeDetachCmd = &cobra.Command{
-		Use:   "detach",
-		Short: "Detach a volume",
+		Use:     "detach",
+		Short:   "Detach a volume",
+		Example: "rexray volume detach [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			if c.volumeID == "" {
-				log.Fatalf("missing --volumeid")
+			if len(args) == 0 {
+				log.Fatal("no volumes specified")
 			}
-			if _, err := c.r.Storage().VolumeDetach(
-				c.ctx, c.volumeID, &apitypes.VolumeDetachOpts{
-					Force: c.force,
-					Opts:  store(),
-				}); err != nil {
+			vols, err := c.lsVolumes(args)
+			if err != nil {
 				log.Fatal(err)
+			}
+			hasError := false
+			opts := &apitypes.VolumeDetachOpts{
+				Force: c.force,
+				Opts:  store(),
+			}
+			results := []*apitypes.Volume{}
+			for _, v := range vols {
+				_, err := c.r.Storage().VolumeDetach(c.ctx, v.ID, opts)
+				if err != nil {
+					hasError = true
+					log.WithFields(log.Fields{
+						"id":   v.ID,
+						"name": v.Name,
+					}).WithError(err).Error("error detaching volume")
+				} else {
+					results = append(results, v)
+				}
+			}
+			c.mustMarshalOutput(results, nil)
+			if hasError {
+				panic(1)
 			}
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeDetachCmd)
 
 	c.volumeMountCmd = &cobra.Command{
-		Use:   "mount",
-		Short: "Mount a volume",
+		Use:     "mount",
+		Short:   "Mount a volume",
+		Example: "rexray volume mount [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			if c.volumeName == "" && c.volumeID == "" {
-				log.Fatal("Missing --volumename or --volumeid")
+			if len(args) == 0 {
+				log.Fatal("no volumes specified")
 			}
-			c.mustMarshalOutput3(c.r.Integration().Mount(
-				c.ctx, c.volumeID, c.volumeName,
-				&apitypes.VolumeMountOpts{
-					NewFSType:   c.fsType,
-					OverwriteFS: c.overwriteFs,
-				}))
+			vols, err := c.lsVolumes(args)
+			if err != nil {
+				log.Fatal(err)
+			}
+			hasError := false
+			opts := &apitypes.VolumeMountOpts{
+				NewFSType:   c.fsType,
+				OverwriteFS: c.overwriteFs,
+			}
+			results := []*volumeWithPath{}
+			for _, v := range vols {
+				p, _, err := c.r.Integration().Mount(c.ctx, v.ID, "", opts)
+				if err != nil {
+					hasError = true
+					log.WithFields(log.Fields{
+						"id":   v.ID,
+						"name": v.Name,
+					}).WithError(err).Error("error mounting volume")
+				} else {
+					results = append(results, &volumeWithPath{v, p})
+				}
+			}
+			c.mustMarshalOutput(results, nil)
+			if hasError {
+				panic(1)
+			}
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeMountCmd)
 
 	c.volumeUnmountCmd = &cobra.Command{
-		Use:   "unmount",
-		Short: "Unmount a volume",
+		Use:     "unmount",
+		Short:   "Unmount a volume",
+		Example: "rexray volume unmount [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			if c.volumeName == "" && c.volumeID == "" {
-				log.Fatal("Missing --volumename or --volumeid")
+			if len(args) == 0 {
+				log.Fatal("no volumes specified")
 			}
-			err := c.r.Integration().Unmount(
-				c.ctx, c.volumeID, c.volumeName, store())
+			vols, err := c.lsVolumes(args)
 			if err != nil {
 				log.Fatal(err)
+			}
+			hasError := false
+			opts := store()
+			results := []*apitypes.Volume{}
+			for _, v := range vols {
+				err := c.r.Integration().Unmount(c.ctx, v.ID, "", opts)
+				if err != nil {
+					hasError = true
+					log.WithFields(log.Fields{
+						"id":   v.ID,
+						"name": v.Name,
+					}).WithError(err).Error("error unmounting volume")
+				} else {
+					results = append(results, v)
+				}
+			}
+			c.mustMarshalOutput(results, nil)
+			if hasError {
+				panic(1)
 			}
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeUnmountCmd)
 
 	c.volumePathCmd = &cobra.Command{
-		Use:   "path",
-		Short: "Print the volume path",
+		Use:     "path",
+		Short:   "Print the volume path",
+		Example: "rexray volume path [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			if c.volumeName == "" && c.volumeID == "" {
-				log.Fatal("Missing --volumename or --volumeid")
+			if len(args) == 0 {
+				args = []string{"/.*/"}
 			}
-			c.mustMarshalOutput(c.r.Integration().Path(
-				c.ctx, c.volumeID, c.volumeName, store()))
+			vols, err := c.lsVolumes(args)
+			if err != nil {
+				log.Fatal(err)
+			}
+			hasError := false
+			opts := store()
+			results := []*volumeWithPath{}
+			for _, v := range vols {
+				p, err := c.r.Integration().Path(c.ctx, v.ID, "", opts)
+				if err != nil {
+					hasError = true
+					log.WithFields(log.Fields{
+						"id":   v.ID,
+						"name": v.Name,
+					}).WithError(err).Error("error getting volume path")
+				} else {
+					results = append(results, &volumeWithPath{v, p})
+				}
+			}
+			c.mustMarshalOutput(results, nil)
+			if hasError {
+				panic(1)
+			}
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumePathCmd)
 }
 
-func (c *CLI) initVolumeFlags() {
-	c.volumeGetCmd.Flags().StringVar(&c.volumeName, "volumename", "", "volumename")
-	c.volumeGetCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumeCreateCmd.Flags().BoolVar(&c.runAsync, "runasync", false, "runasync")
-	c.volumeCreateCmd.Flags().StringVar(&c.volumeName, "volumename", "", "volumename")
-	c.volumeCreateCmd.Flags().StringVar(&c.volumeType, "volumetype", "", "volumetype")
-	c.volumeCreateCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumeCreateCmd.Flags().StringVar(&c.snapshotID, "snapshotid", "", "snapshotid")
-	c.volumeCreateCmd.Flags().Int64Var(&c.iops, "iops", 0, "IOPS")
-	c.volumeCreateCmd.Flags().Int64Var(&c.size, "size", 0, "size")
-	c.volumeCreateCmd.Flags().StringVar(&c.availabilityZone, "availabilityzone", "", "availabilityzone")
-	c.volumeRemoveCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumeAttachCmd.Flags().BoolVar(&c.runAsync, "runasync", false, "runasync")
-	c.volumeAttachCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumeAttachCmd.Flags().StringVar(&c.instanceID, "instanceid", "", "instanceid")
-	c.volumeAttachCmd.Flags().BoolVar(&c.force, "force", false, "force")
-	c.volumeDetachCmd.Flags().BoolVar(&c.runAsync, "runasync", false, "runasync")
-	c.volumeDetachCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumeDetachCmd.Flags().StringVar(&c.instanceID, "instanceid", "", "instanceid")
-	c.volumeDetachCmd.Flags().BoolVar(&c.force, "force", false, "force")
-	c.volumeMountCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumeMountCmd.Flags().StringVar(&c.volumeName, "volumename", "", "volumename")
-	c.volumeMountCmd.Flags().BoolVar(&c.overwriteFs, "overwritefs", false, "overwritefs")
-	c.volumeMountCmd.Flags().StringVar(&c.fsType, "fstype", "", "fstype")
-	c.volumeUnmountCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumeUnmountCmd.Flags().StringVar(&c.volumeName, "volumename", "", "volumename")
-	c.volumePathCmd.Flags().StringVar(&c.volumeID, "volumeid", "", "volumeid")
-	c.volumePathCmd.Flags().StringVar(&c.volumeName, "volumename", "", "volumename")
+type volumeWithPath struct {
+	*apitypes.Volume
+	Path string
+}
 
-	c.addOutputFormatFlag(c.volumeCmd.Flags())
-	c.addOutputFormatFlag(c.volumeGetCmd.Flags())
+func (c *CLI) lsVolumes(args []string) ([]*apitypes.Volume, error) {
+	opts := &apitypes.VolumesOpts{Attachments: c.volumeAttached}
+	vols, err := c.r.Storage().Volumes(c.ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	if len(args) == 0 {
+		return vols, nil
+	}
+	isRX := regexp.MustCompile(`^/(.*)/$`)
+	patts := make([]interface{}, len(args))
+	for i, a := range args {
+		if m := isRX.FindStringSubmatch(a); len(m) > 0 {
+			rx, err := regexp.Compile(m[1])
+			if err != nil {
+				return nil, err
+			}
+			patts[i] = rx
+		} else {
+			patts[i] = a
+		}
+	}
+	results := []*apitypes.Volume{}
+	for _, vol := range vols {
+		for _, p := range patts {
+			switch tp := p.(type) {
+			case string:
+				if strings.HasPrefix(vol.ID, tp) ||
+					strings.HasPrefix(vol.Name, tp) {
+					results = append(results, vol)
+				}
+			case *regexp.Regexp:
+				if tp.MatchString(vol.ID) || tp.MatchString(vol.Name) {
+					results = append(results, vol)
+				}
+			}
+		}
+	}
+	return results, nil
+}
+
+func (c *CLI) initVolumeFlags() {
+	c.volumeListCmd.Flags().BoolVar(&c.volumeAttached, "attached", false,
+		"Set to \"true\" to obtain volume-device mappings for volumes "+
+			"attached to this host")
+	c.volumeCreateCmd.Flags().StringVar(&c.volumeName, "volumeName", "", "")
+	c.volumeCreateCmd.Flags().StringVar(&c.volumeType, "volumeType", "", "")
+	c.volumeCreateCmd.Flags().StringVar(&c.volumeID, "volumeID", "", "")
+	c.volumeCreateCmd.Flags().StringVar(&c.snapshotID, "snapshotID", "", "")
+	c.volumeCreateCmd.Flags().Int64Var(&c.iops, "iops", 0, "")
+	c.volumeCreateCmd.Flags().Int64Var(&c.size, "size", 0, "")
+	c.volumeCreateCmd.Flags().StringVar(
+		&c.availabilityZone, "availabilityZone", "", "")
+	c.volumeAttachCmd.Flags().BoolVar(&c.force, "force", false, "force")
+	c.volumeDetachCmd.Flags().BoolVar(&c.force, "force", false, "")
+	c.volumeMountCmd.Flags().BoolVar(&c.overwriteFs, "overwritefs", false, "")
+	c.volumeMountCmd.Flags().StringVar(&c.fsType, "fsType", "", "")
+
+	c.addOutputFormatFlag(c.volumeListCmd.Flags())
 	c.addOutputFormatFlag(c.volumeCreateCmd.Flags())
 	c.addOutputFormatFlag(c.volumeAttachCmd.Flags())
 	c.addOutputFormatFlag(c.volumeMountCmd.Flags())
+	c.addOutputFormatFlag(c.volumeUnmountCmd.Flags())
 	c.addOutputFormatFlag(c.volumePathCmd.Flags())
-	c.addOutputFormatFlag(c.volumeMapCmd.Flags())
 }

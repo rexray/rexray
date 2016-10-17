@@ -49,18 +49,9 @@ volumes available to a Linux VM hosted by VirtualBox:
     [documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox).
 
 ```sh
-$ rexray volume --service virtualbox
-- attachments:
-  - instanceID:
-      id: e71578b0-1bfb-4fa5-bcd5-4ae982fd4a9b
-      driver: virtualbox
-    status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-    volumeID: 1b819454-a280-4cff-aff5-141f4e8fd154
-  name: libStorage.vmdk
-  size: 64
-  status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-  id: 1b819454-a280-4cff-aff5-141f4e8fd154
-  type: ""
+$ rexray volume --service virtualbox ls
+ID                                    Name             Status    Size
+1b819454-a280-4cff-aff5-141f4e8fd154  libStorage.vmdk  attached  16
 ```
 In addition to listing volumes, the REX-Ray CLI can be used to create and
 remove them as well as manage volume snapshots. For an end-to-end example of
@@ -742,10 +733,10 @@ log level:
 
 *Use the `debug` log level - Example 1*
 ```bash
-rexray volume -l debug
+rexray volume -l debug ls
 ```
 
 *Use the `debug` log level - Example 2*
 ```bash
-env REXRAY_LOGLEVEL=debug rexray volume
+env REXRAY_LOGLEVEL=debug rexray volume ls
 ```

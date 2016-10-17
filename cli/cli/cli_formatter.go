@@ -64,6 +64,8 @@ func (c *CLI) fmtOutput(w io.Writer, o interface{}) error {
 			return c.fmtOutput(w, []*apitypes.Volume{to})
 		case []*apitypes.Volume:
 			templName = templateNamePrintVolumeFields
+		case []*volumeWithPath:
+			templName = templateNamePrintVolumeWithPathFields
 		case *apitypes.Snapshot:
 			return c.fmtOutput(w, []*apitypes.Snapshot{to})
 		case []*apitypes.Snapshot:
@@ -193,15 +195,16 @@ func (c *CLI) volumeStatus(vol *apitypes.Volume) string {
 }
 
 const (
-	templateNamePrintCustom         = "printCustom"
-	templateNamePrintObject         = "printObject"
-	templateNamePrintJSON           = "printJSON"
-	templateNamePrintPrettyJSON     = "printPrettyJSON"
-	templateNamePrintVolumeFields   = "printVolumeFields"
-	templateNamePrintSnapshotFields = "printSnapshotFields"
-	templateNamePrintInstanceFields = "printInstanceFields"
-	templateNamePrintServiceFields  = "printServiceFields"
-	templateNamePrintMountFields    = "printMountFields"
+	templateNamePrintCustom               = "printCustom"
+	templateNamePrintObject               = "printObject"
+	templateNamePrintJSON                 = "printJSON"
+	templateNamePrintPrettyJSON           = "printPrettyJSON"
+	templateNamePrintVolumeFields         = "printVolumeFields"
+	templateNamePrintVolumeWithPathFields = "printVolumeWithPathFields"
+	templateNamePrintSnapshotFields       = "printSnapshotFields"
+	templateNamePrintInstanceFields       = "printInstanceFields"
+	templateNamePrintServiceFields        = "printServiceFields"
+	templateNamePrintMountFields          = "printMountFields"
 )
 
 type templateMetadata struct {
@@ -226,6 +229,16 @@ var defaultTemplates = map[string]*templateMetadata{
 			"Name",
 			"Status={{. | volumeStatus}}",
 			"Size",
+		},
+		sortBy: "Name",
+	},
+	templateNamePrintVolumeWithPathFields: &templateMetadata{
+		fields: []string{
+			"ID",
+			"Name",
+			"Status={{.Volume | volumeStatus}}",
+			"Size",
+			"Path",
 		},
 		sortBy: "Name",
 	},
@@ -257,8 +270,7 @@ var defaultTemplates = map[string]*templateMetadata{
 	templateNamePrintMountFields: &templateMetadata{
 		fields: []string{
 			"ID",
-			"Root",
-			"Source",
+			"Device={{.Source}}",
 			"MountPoint",
 		},
 		sortBy: "Source",

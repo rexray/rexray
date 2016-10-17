@@ -32,54 +32,60 @@ type subCommandPanic struct{}
 
 // CLI is the REX-Ray command line interface.
 type CLI struct {
-	l      *log.Logger
-	r      apitypes.Client
-	rs     apitypes.Server
-	rsErrs <-chan error
-	c      *cobra.Command
-	config gofig.Config
-	ctx    apitypes.Context
+	l                  *log.Logger
+	r                  apitypes.Client
+	rs                 apitypes.Server
+	rsErrs             <-chan error
+	c                  *cobra.Command
+	config             gofig.Config
+	ctx                apitypes.Context
+	activateLibStorage bool
 
-	activateLibStorage       bool
-	serviceCmd               *cobra.Command
+	envCmd     *cobra.Command
+	versionCmd *cobra.Command
+
+	installCmd   *cobra.Command
+	uninstallCmd *cobra.Command
+
 	moduleCmd                *cobra.Command
-	versionCmd               *cobra.Command
-	envCmd                   *cobra.Command
-	volumeCmd                *cobra.Command
-	snapshotCmd              *cobra.Command
-	deviceCmd                *cobra.Command
 	moduleTypesCmd           *cobra.Command
 	moduleInstancesCmd       *cobra.Command
 	moduleInstancesListCmd   *cobra.Command
 	moduleInstancesCreateCmd *cobra.Command
 	moduleInstancesStartCmd  *cobra.Command
-	installCmd               *cobra.Command
-	uninstallCmd             *cobra.Command
-	serviceStartCmd          *cobra.Command
-	serviceRestartCmd        *cobra.Command
-	serviceStopCmd           *cobra.Command
-	serviceStatusCmd         *cobra.Command
-	serviceInitSysCmd        *cobra.Command
-	adapterCmd               *cobra.Command
-	adapterGetTypesCmd       *cobra.Command
-	adapterGetInstancesCmd   *cobra.Command
-	volumeMapCmd             *cobra.Command
-	volumeGetCmd             *cobra.Command
-	snapshotGetCmd           *cobra.Command
-	snapshotCreateCmd        *cobra.Command
-	snapshotRemoveCmd        *cobra.Command
-	volumeCreateCmd          *cobra.Command
-	volumeRemoveCmd          *cobra.Command
-	volumeAttachCmd          *cobra.Command
-	volumeDetachCmd          *cobra.Command
-	snapshotCopyCmd          *cobra.Command
-	deviceGetCmd             *cobra.Command
-	deviceMountCmd           *cobra.Command
-	devuceUnmountCmd         *cobra.Command
-	deviceFormatCmd          *cobra.Command
-	volumeMountCmd           *cobra.Command
-	volumeUnmountCmd         *cobra.Command
-	volumePathCmd            *cobra.Command
+
+	serviceCmd        *cobra.Command
+	serviceStartCmd   *cobra.Command
+	serviceRestartCmd *cobra.Command
+	serviceStopCmd    *cobra.Command
+	serviceStatusCmd  *cobra.Command
+	serviceInitSysCmd *cobra.Command
+
+	adapterCmd             *cobra.Command
+	adapterGetTypesCmd     *cobra.Command
+	adapterGetInstancesCmd *cobra.Command
+
+	volumeCmd        *cobra.Command
+	volumeListCmd    *cobra.Command
+	volumeCreateCmd  *cobra.Command
+	volumeRemoveCmd  *cobra.Command
+	volumeAttachCmd  *cobra.Command
+	volumeDetachCmd  *cobra.Command
+	volumeMountCmd   *cobra.Command
+	volumeUnmountCmd *cobra.Command
+	volumePathCmd    *cobra.Command
+
+	snapshotCmd       *cobra.Command
+	snapshotGetCmd    *cobra.Command
+	snapshotCreateCmd *cobra.Command
+	snapshotRemoveCmd *cobra.Command
+	snapshotCopyCmd   *cobra.Command
+
+	deviceCmd        *cobra.Command
+	deviceGetCmd     *cobra.Command
+	deviceMountCmd   *cobra.Command
+	devuceUnmountCmd *cobra.Command
+	deviceFormatCmd  *cobra.Command
 
 	outputFormat            string
 	outputTemplate          string
@@ -91,6 +97,7 @@ type CLI struct {
 	snapshotID              string
 	volumeID                string
 	runAsync                bool
+	volumeAttached          bool
 	description             string
 	volumeType              string
 	iops                    int64
@@ -361,19 +368,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 				printNonColorizedError(err)
 			}
 			fmt.Println()
-
-			helpCmd := cmd
-			if cmd == c.volumeCmd {
-				helpCmd = c.volumeGetCmd
-			} else if cmd == c.snapshotCmd {
-				helpCmd = c.snapshotGetCmd
-			} else if cmd == c.deviceCmd {
-				helpCmd = c.deviceGetCmd
-			} else if cmd == c.adapterCmd {
-				helpCmd = c.adapterGetTypesCmd
-			}
-			helpCmd.Help()
-
+			cmd.Help()
 			panic(&printedErrorPanic{})
 		}
 	}

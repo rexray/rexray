@@ -34,7 +34,7 @@ as the EC2 driver. All vestigial EC2 configuration properties are still
 supported.
 
 ### Enhancements
-* libStorage 0.3.0 ([#docs](http://libstorage.readthedocs.io/en/v0.3.0-rc2))
+* libStorage 0.3.0 ([#docs](http://libstorage.readthedocs.io/en/v0.3.0))
 * Amazon Elastic Block Storage (EBS) Support ([#522](https://github.com/emccode/rexray/issues/522))
 * New CLI Output ([#579](https://github.com/emccode/rexray/issues/579))
 * Support for ScaleIO 2.0.1 ([#599](https://github.com/emccode/rexray/issues/599))

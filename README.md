@@ -18,40 +18,41 @@ directory in this repo will refer to the latest or specific commit.
 REX-Ray is available as a standalone process today and in the future (0.4)
 additionally as a distributed model of client-server.  The `client` performs a
 level abstraction of local host processes (request for volume attachment,
-  discovery, format, and mounting of devices) while the `server` provides the
-  necessary abstraction of the control plane for multiple storage platforms.
+discovery, format, and mounting of devices) while the `server` provides the
+necessary abstraction of the control plane for multiple storage platforms/
 
-Irrespective of platform, REX-Ray provides common functionality for the
-following.
+### Storage Provider Support
+The following storage providers and platforms are supported by REX-Ray.
 
-Cloud platforms:
-- AWS EC2 (EBS)
-- Google Compute Engine
-- OpenStack
- - Private Cloud
- - Public Cloud (RackSpace, and others)
+Provider              | Storage Platform(s)
+----------------------|--------------------
+EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
+[Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox) | Virtual Media
+Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs)
 
-Storage platforms:
- - EMC ScaleIO
-  - XtremIO
-  - VMAX
-  - Isilon
- - Others
- - VirtualBox
+Support for the following storage providers will be reintroduced in upcoming
+releases:
 
-## Operating System Support
-By default we prescribe the curl-bash method of installing REX-Ray.  Other
-methods are available, please consult the documentation for more information.
+Provider              | Storage Platform(s)
+----------------------|--------------------
+[Google Compute Engine](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Disk
+[Open Stack](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Cinder
+[Rackspace](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Cinder
+EMC | [XtremIO](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon), [VMAX](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon)
 
+### Operating System Support
+The following operating systems (OS) are supported by REX-Ray:
 
-We explicitly support the following operating system distributions.
-- Ubuntu
-- Debian
-- RedHat
-- CentOS
-- CoreOS
-- OSX
-- TinyLinux (boot2docker)
+OS             | Command Line | Service
+---------------|--------------|-----------
+Ubuntu 12+     | Yes          | Yes
+Debian 6+      | Yes          | Yes
+RedHat         | Yes          | Yes
+CentOS 6+      | Yes          | Yes
+CoreOS         | Yes          | Yes
+TinyLinux (boot2docker)| Yes          | Yes
+OS X Yosemite+ | Yes          | No
+Windows        | No           | No
 
 ## Installation
 The following command will install the REX-Ray client-server tool.  If using

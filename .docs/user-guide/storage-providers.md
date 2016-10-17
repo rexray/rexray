@@ -23,17 +23,16 @@ The following storage providers and platforms are supported by REX-Ray.
 
 Provider              | Storage Platform(s)
 ----------------------|--------------------
-EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#isilon)
-[Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox) | Virtual Media
+EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
+[Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox) | Virtual Media
 Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs)
 
-## Coming Soon
 Support for the following storage providers will be reintroduced in upcoming
 releases:
 
 Provider              | Storage Platform(s)
 ----------------------|--------------------
-Google Compute Engine (GCE) | Disk
-Open Stack | Cinder
-Rackspace | Cinder
-EMC | XtremIO, VMAX
+[Google Compute Engine](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Disk
+[Open Stack](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Cinder
+[Rackspace](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Cinder
+EMC | [XtremIO](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon)

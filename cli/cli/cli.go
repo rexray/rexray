@@ -1,13 +1,9 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
-
-	"gopkg.in/yaml.v1"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
@@ -36,56 +32,64 @@ type subCommandPanic struct{}
 
 // CLI is the REX-Ray command line interface.
 type CLI struct {
-	l      *log.Logger
-	r      apitypes.Client
-	rs     apitypes.Server
-	rsErrs <-chan error
-	c      *cobra.Command
-	config gofig.Config
-	ctx    apitypes.Context
+	l                  *log.Logger
+	r                  apitypes.Client
+	rs                 apitypes.Server
+	rsErrs             <-chan error
+	c                  *cobra.Command
+	config             gofig.Config
+	ctx                apitypes.Context
+	activateLibStorage bool
 
-	activateLibStorage       bool
-	serviceCmd               *cobra.Command
+	envCmd     *cobra.Command
+	versionCmd *cobra.Command
+
+	installCmd   *cobra.Command
+	uninstallCmd *cobra.Command
+
 	moduleCmd                *cobra.Command
-	versionCmd               *cobra.Command
-	envCmd                   *cobra.Command
-	volumeCmd                *cobra.Command
-	snapshotCmd              *cobra.Command
-	deviceCmd                *cobra.Command
 	moduleTypesCmd           *cobra.Command
 	moduleInstancesCmd       *cobra.Command
 	moduleInstancesListCmd   *cobra.Command
 	moduleInstancesCreateCmd *cobra.Command
 	moduleInstancesStartCmd  *cobra.Command
-	installCmd               *cobra.Command
-	uninstallCmd             *cobra.Command
-	serviceStartCmd          *cobra.Command
-	serviceRestartCmd        *cobra.Command
-	serviceStopCmd           *cobra.Command
-	serviceStatusCmd         *cobra.Command
-	serviceInitSysCmd        *cobra.Command
-	adapterCmd               *cobra.Command
-	adapterGetTypesCmd       *cobra.Command
-	adapterGetInstancesCmd   *cobra.Command
-	volumeMapCmd             *cobra.Command
-	volumeGetCmd             *cobra.Command
-	snapshotGetCmd           *cobra.Command
-	snapshotCreateCmd        *cobra.Command
-	snapshotRemoveCmd        *cobra.Command
-	volumeCreateCmd          *cobra.Command
-	volumeRemoveCmd          *cobra.Command
-	volumeAttachCmd          *cobra.Command
-	volumeDetachCmd          *cobra.Command
-	snapshotCopyCmd          *cobra.Command
-	deviceGetCmd             *cobra.Command
-	deviceMountCmd           *cobra.Command
-	devuceUnmountCmd         *cobra.Command
-	deviceFormatCmd          *cobra.Command
-	volumeMountCmd           *cobra.Command
-	volumeUnmountCmd         *cobra.Command
-	volumePathCmd            *cobra.Command
+
+	serviceCmd        *cobra.Command
+	serviceStartCmd   *cobra.Command
+	serviceRestartCmd *cobra.Command
+	serviceStopCmd    *cobra.Command
+	serviceStatusCmd  *cobra.Command
+	serviceInitSysCmd *cobra.Command
+
+	adapterCmd             *cobra.Command
+	adapterGetTypesCmd     *cobra.Command
+	adapterGetInstancesCmd *cobra.Command
+
+	volumeCmd        *cobra.Command
+	volumeListCmd    *cobra.Command
+	volumeCreateCmd  *cobra.Command
+	volumeRemoveCmd  *cobra.Command
+	volumeAttachCmd  *cobra.Command
+	volumeDetachCmd  *cobra.Command
+	volumeMountCmd   *cobra.Command
+	volumeUnmountCmd *cobra.Command
+	volumePathCmd    *cobra.Command
+
+	snapshotCmd       *cobra.Command
+	snapshotGetCmd    *cobra.Command
+	snapshotCreateCmd *cobra.Command
+	snapshotRemoveCmd *cobra.Command
+	snapshotCopyCmd   *cobra.Command
+
+	deviceCmd        *cobra.Command
+	deviceGetCmd     *cobra.Command
+	deviceMountCmd   *cobra.Command
+	devuceUnmountCmd *cobra.Command
+	deviceFormatCmd  *cobra.Command
 
 	outputFormat            string
+	outputTemplate          string
+	outputTemplateTabs      bool
 	fg                      bool
 	fork                    bool
 	force                   bool
@@ -93,6 +97,7 @@ type CLI struct {
 	snapshotID              string
 	volumeID                string
 	runAsync                bool
+	volumeAttached          bool
 	description             string
 	volumeType              string
 	iops                    int64
@@ -266,31 +271,16 @@ func (c *CLI) execute() {
 	c.c.Execute()
 }
 
-func (c *CLI) marshalOutput(v interface{}) (string, error) {
-	var err error
-	var buf []byte
-	if strings.ToUpper(c.outputFormat) == "JSON" {
-		buf, err = marshalJSONOutput(v)
-	} else {
-		buf, err = marshalYamlOutput(v)
-	}
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
-func marshalYamlOutput(v interface{}) ([]byte, error) {
-	return yaml.Marshal(v)
-}
-
-func marshalJSONOutput(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
-}
-
 func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 	fs.StringVarP(
-		&c.outputFormat, "format", "f", "yml", "The output format (yml, json)")
+		&c.outputFormat, "format", "f", "tmpl",
+		"The output format (tmpl, json, jsonp)")
+	fs.StringVarP(
+		&c.outputTemplate, "template", "", "",
+		"The Go template to use when --format is set to 'tmpl'")
+	fs.BoolVarP(
+		&c.outputTemplateTabs, "templateTabs", "", true,
+		"Set to true to use a Go tab writer with the output template")
 }
 
 func (c *CLI) updateLogLevel() {
@@ -378,19 +368,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 				printNonColorizedError(err)
 			}
 			fmt.Println()
-
-			helpCmd := cmd
-			if cmd == c.volumeCmd {
-				helpCmd = c.volumeGetCmd
-			} else if cmd == c.snapshotCmd {
-				helpCmd = c.snapshotGetCmd
-			} else if cmd == c.deviceCmd {
-				helpCmd = c.deviceGetCmd
-			} else if cmd == c.adapterCmd {
-				helpCmd = c.adapterGetTypesCmd
-			}
-			helpCmd.Help()
-
+			cmd.Help()
 			panic(&printedErrorPanic{})
 		}
 	}

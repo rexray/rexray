@@ -68,21 +68,9 @@ capabilities.
 $ export REXRAY_SERVICE=ebs
 $ export EBS_ACCESSKEY=access_key
 $ export EBS_SECRETKEY=secret_key
-$ rexray volume get
-
-- attachments:
-  - instanceID:
-      id: i-620efed6
-      driver: ebs
-    status: attached
-    volumeID: vol-6ac6c7d6
-  availabilityZone: us-west-1b
-  iops: 100
-  name: ""
-  size: 8
-  status: in-use
-  id: vol-6ac6c7d6
-  type: gp2
+$ rexray volume ls
+ID            Name  Status    Size
+vol-6ac6c7d6        attached  8
 ```
 
 ## Runtime - Service (Docker)

@@ -4,6 +4,12 @@ Release early, release often
 
 ---
 
+## Version 0.3.1 (2016/10/18)
+This is a minor update that includes support for ScaleIO 2.0.1.
+
+### Enhancements
+* Support for ScaleIO 2.0.1 ([#303](https://github.com/emccode/libstorage/issues/303))
+
 ## Version 0.3.0 (2016/10/16)
 This release introduces the Elastic Block Storage (EBS) driver, formerly known
 as the EC2 driver in REX-Ray <=0.3.x.

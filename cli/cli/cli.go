@@ -87,6 +87,7 @@ type CLI struct {
 	devuceUnmountCmd *cobra.Command
 	deviceFormatCmd  *cobra.Command
 
+	dryRun                  bool
 	outputFormat            string
 	outputTemplate          string
 	outputTemplateTabs      bool
@@ -281,6 +282,11 @@ func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 	fs.BoolVarP(
 		&c.outputTemplateTabs, "templateTabs", "", true,
 		"Set to true to use a Go tab writer with the output template")
+}
+
+func (c *CLI) addDryRunFlag(fs *pflag.FlagSet) {
+	fs.BoolVarP(&c.dryRun, "dryRun", "n", false,
+		"Show what action(s) will occur, but do not execute them.")
 }
 
 func (c *CLI) updateLogLevel() {

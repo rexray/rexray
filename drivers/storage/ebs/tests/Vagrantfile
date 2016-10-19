@@ -108,8 +108,8 @@ SCRIPT
 
 # rex-ray repo and branch information
 $rexray_dir = "#{$gopath}/src/github.com/emccode/rexray"
-$rexray_url = "https://github.com/emccode/rexray"
-$rexray_ref = "master"
+$rexray_url = ENV['RR_REPO']  ? ENV['RR_REPO'] : "https://github.com/emccode/rexray"
+$rexray_ref = ENV['RR_REF']  ? ENV['RR_REF'] : "master"
 $rexray_bin = "/usr/bin/rexray"
 $rexray_cfg = "/etc/rexray/config.yml"
 
@@ -348,9 +348,9 @@ Vagrant.configure("2") do |config|
 
       # list volume mapping with rex-ray to verify configuration
       node.vm.provision "shell" do |s|
-        s.name       = "rex-ray volume map"
+        s.name       = "rex-ray volume ls"
         s.privileged = false
-        s.inline     = "rexray volume map"
+        s.inline     = "rexray volume ls"
       end
 
       # copy the test plan
@@ -445,9 +445,9 @@ Vagrant.configure("2") do |config|
 
       # list volume mapping with rex-ray to verify configuration
       node.vm.provision "shell" do |s|
-        s.name       = "rex-ray volume map"
+        s.name       = "rex-ray volume ls"
         s.privileged = false
-        s.inline     = "rexray volume map"
+        s.inline     = "rexray volume ls"
       end
 
       # copy the test plan
@@ -540,9 +540,9 @@ Vagrant.configure("2") do |config|
 
       # list volume mapping with rex-ray to verify configuration
       node.vm.provision "shell" do |s|
-        s.name       = "rex-ray volume map"
+        s.name       = "rex-ray volume ls"
         s.privileged = false
-        s.inline     = "rexray volume map"
+        s.inline     = "rexray volume ls"
       end
 
       # copy the test plan

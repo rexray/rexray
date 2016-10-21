@@ -18,40 +18,41 @@ directory in this repo will refer to the latest or specific commit.
 REX-Ray is available as a standalone process today and in the future (0.4)
 additionally as a distributed model of client-server.  The `client` performs a
 level abstraction of local host processes (request for volume attachment,
-  discovery, format, and mounting of devices) while the `server` provides the
-  necessary abstraction of the control plane for multiple storage platforms.
+discovery, format, and mounting of devices) while the `server` provides the
+necessary abstraction of the control plane for multiple storage platforms/
 
-Irrespective of platform, REX-Ray provides common functionality for the
-following.
+### Storage Provider Support
+The following storage providers and platforms are supported by REX-Ray.
 
-Cloud platforms:
-- AWS EC2 (EBS)
-- Google Compute Engine
-- OpenStack
- - Private Cloud
- - Public Cloud (RackSpace, and others)
+Provider              | Storage Platform(s)
+----------------------|--------------------
+EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
+[Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox) | Virtual Media
+Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs)
 
-Storage platforms:
- - EMC ScaleIO
-  - XtremIO
-  - VMAX
-  - Isilon
- - Others
- - VirtualBox
+Support for the following storage providers will be reintroduced in upcoming
+releases:
 
-## Operating System Support
-By default we prescribe the curl-bash method of installing REX-Ray.  Other
-methods are available, please consult the documentation for more information.
+Provider              | Storage Platform(s)
+----------------------|--------------------
+[Google Compute Engine](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Disk
+[Open Stack](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Cinder
+[Rackspace](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon) | Cinder
+EMC | [XtremIO](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon), [VMAX](http://rexray.readthedocs.io/en/stable/user-guide/storage-providers/#coming-soon)
 
+### Operating System Support
+The following operating systems (OS) are supported by REX-Ray:
 
-We explicitly support the following operating system distributions.
-- Ubuntu
-- Debian
-- RedHat
-- CentOS
-- CoreOS
-- OSX
-- TinyLinux (boot2docker)
+OS             | Command Line | Service
+---------------|--------------|-----------
+Ubuntu 12+     | Yes          | Yes
+Debian 6+      | Yes          | Yes
+RedHat         | Yes          | Yes
+CentOS 6+      | Yes          | Yes
+CoreOS         | Yes          | Yes
+TinyLinux (boot2docker)| Yes          | Yes
+OS X Yosemite+ | Yes          | No
+Windows        | No           | No
 
 ## Installation
 The following command will install the REX-Ray client-server tool.  If using
@@ -65,17 +66,12 @@ REX-Ray can be ran as an interactive CLI to perform volume management
 capabilities.
 
 ```bash
-$ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESSKEY=access_key
-$ export AWS_SECRETKEY=secret_key
-$ rexray volume get
-
-- providername: ec2
-  instanceid: i-695bb6ab
-  volumeid: vol-dedbadc3
-  devicename: /dev/sda1
-  region: us-west-1
-  status: attached
+$ export REXRAY_SERVICE=ebs
+$ export EBS_ACCESSKEY=access_key
+$ export EBS_SECRETKEY=secret_key
+$ rexray volume ls
+ID            Name  Status    Size
+vol-6ac6c7d6        attached  8
 ```
 
 ## Runtime - Service (Docker)
@@ -83,9 +79,9 @@ Additionally, it can be ran as a service to support `Docker`, `Mesos`, and other
  platforms that can communicate through `HTTP/JSON`.
 
 ```bash
-$ export REXRAY_STORAGEDRIVERS=ec2
-$ export AWS_ACCESSKEY=access_key
-$ export AWS_SECRETKEY=secret_key
+$ export REXRAY_SERVICE=ebs
+$ export EBS_ACCESSKEY=access_key
+$ export EBS_SECRETKEY=secret_key
 $ rexray service start
 Starting REX-Ray...SUCCESS!
 
@@ -96,5 +92,4 @@ Starting REX-Ray...SUCCESS!
 
 $ docker run -ti --volume-driver=rexray -v test:/test busybox
 $ df /test
-
 ```

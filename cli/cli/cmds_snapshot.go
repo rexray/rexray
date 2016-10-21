@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -33,19 +31,7 @@ func (c *CLI) initSnapshotCmds() {
 		Short:   "Get one or more snapshots",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-
-			allSnapshots, err := c.r.Storage().Snapshots(c.ctx, store())
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			if len(allSnapshots) > 0 {
-				out, err := c.marshalOutput(&allSnapshots)
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Println(out)
-			}
+			c.mustMarshalOutput(c.r.Storage().Snapshots(c.ctx, store()))
 		},
 	}
 	c.snapshotCmd.AddCommand(c.snapshotGetCmd)
@@ -55,23 +41,11 @@ func (c *CLI) initSnapshotCmds() {
 		Short:   "Create a new snapshot",
 		Aliases: []string{"new"},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.volumeID == "" {
 				log.Fatalf("missing --volumeid")
 			}
-
-			snapshot, err := c.r.Storage().VolumeSnapshot(
-				c.ctx, c.volumeID, c.snapshotName, store())
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			out, err := c.marshalOutput(&snapshot)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(out)
-
+			c.mustMarshalOutput(c.r.Storage().VolumeSnapshot(
+				c.ctx, c.volumeID, c.snapshotName, store()))
 		},
 	}
 	c.snapshotCmd.AddCommand(c.snapshotCreateCmd)
@@ -81,16 +55,13 @@ func (c *CLI) initSnapshotCmds() {
 		Short:   "Remove a snapshot",
 		Aliases: []string{"rm"},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.snapshotID == "" {
 				log.Fatalf("missing --snapshotid")
 			}
-
-			err := c.r.Storage().SnapshotRemove(c.ctx, c.snapshotID, store())
-			if err != nil {
+			if err := c.r.Storage().SnapshotRemove(
+				c.ctx, c.snapshotID, store()); err != nil {
 				log.Fatal(err)
 			}
-
 		},
 	}
 	c.snapshotCmd.AddCommand(c.snapshotRemoveCmd)
@@ -99,23 +70,12 @@ func (c *CLI) initSnapshotCmds() {
 		Use:   "copy",
 		Short: "Copies a snapshot",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if c.snapshotID == "" && c.volumeID == "" && c.volumeName == "" {
 				log.Fatalf("missing --volumeid or --snapshotid or --volumename")
 			}
-
-			snapshot, err := c.r.Storage().SnapshotCopy(
+			c.mustMarshalOutput(c.r.Storage().SnapshotCopy(
 				c.ctx, c.snapshotID, c.snapshotName,
-				c.destinationRegion, store())
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			out, err := c.marshalOutput(&snapshot)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(out)
+				c.destinationRegion, store()))
 		},
 	}
 	c.snapshotCmd.AddCommand(c.snapshotCopyCmd)

@@ -255,7 +255,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", run: "always" do |s|
       s.name       = "rex-ray volume map"
       s.privileged = false
-      s.inline     = "rexray volume map"
+      s.inline     = "rexray volume ls"
     end
 
   end # configure node0
@@ -324,7 +324,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", run: "always" do |s|
       s.name       = "rex-ray volume map"
       s.privileged = false
-      s.inline     = "rexray volume map"
+      s.inline     = "rexray volume ls"
     end
 
   end # configure node1

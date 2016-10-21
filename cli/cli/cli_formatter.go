@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -13,7 +14,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	apitypes "github.com/emccode/libstorage/api/types"
-	apiutils "github.com/emccode/libstorage/api/utils"
 	"github.com/emccode/rexray/cli/cli/template"
 )
 
@@ -23,12 +23,12 @@ type templateObject struct {
 	D interface{}
 }
 
-func (c *CLI) fmtOutput(w io.Writer, o interface{}) error {
+func (c *CLI) fmtOutput(w io.Writer, templateName string, o interface{}) error {
 
 	var (
-		templName    string
 		tabWriter    *tabwriter.Writer
 		newTabWriter func()
+		templName    = templateName
 		format       = c.outputFormat
 		tplFormat    = c.outputTemplate
 		tplTabs      = c.outputTemplateTabs
@@ -61,23 +61,42 @@ func (c *CLI) fmtOutput(w io.Writer, o interface{}) error {
 		}
 		switch to := o.(type) {
 		case *apitypes.Volume:
-			return c.fmtOutput(w, []*apitypes.Volume{to})
+			return c.fmtOutput(w, templName, []*apitypes.Volume{to})
 		case []*apitypes.Volume:
-			templName = templateNamePrintVolumeFields
+			if templName == "" {
+				templName = templateNamePrintVolumeFields
+			}
 		case []*volumeWithPath:
-			templName = templateNamePrintVolumeWithPathFields
+			if templName == "" {
+				templName = templateNamePrintVolumeWithPathFields
+			}
 		case *apitypes.Snapshot:
-			return c.fmtOutput(w, []*apitypes.Snapshot{to})
+			return c.fmtOutput(w, templName, []*apitypes.Snapshot{to})
 		case []*apitypes.Snapshot:
-			templName = templateNamePrintSnapshotFields
+			if templName == "" {
+				templName = templateNamePrintSnapshotFields
+			}
 		case map[string]*apitypes.ServiceInfo:
-			templName = templateNamePrintServiceFields
+			if templName == "" {
+				templName = templateNamePrintServiceFields
+			}
 		case map[string]*apitypes.Instance:
-			templName = templateNamePrintInstanceFields
+			if templName == "" {
+				templName = templateNamePrintInstanceFields
+			}
 		case []*apitypes.MountInfo:
-			templName = templateNamePrintMountFields
+			if templName == "" {
+				templName = templateNamePrintMountFields
+			}
+		case []string:
+			sort.Strings(to)
+			if templName == "" {
+				templName = templateNamePrintStringSlice
+			}
 		default:
-			templName = templateNamePrintObject
+			if templName == "" {
+				templName = templateNamePrintObject
+			}
 		}
 	default:
 		if tplTabs {
@@ -109,14 +128,16 @@ func (c *CLI) fmtOutput(w io.Writer, o interface{}) error {
 	if tplFormat == "" {
 		tplMetadata, hasMetadata := defaultTemplates[templName]
 		if hasMetadata {
-			if fields := tplMetadata.fields; len(fields) > 0 {
-				for i, f := range fields {
-					fmt.Fprint(tplBuf, strings.SplitN(f, "=", 2)[0])
-					if i < len(fields)-1 {
-						fmt.Fprintf(tplBuf, "\t")
+			if !c.quiet {
+				if fields := tplMetadata.fields; len(fields) > 0 {
+					for i, f := range fields {
+						fmt.Fprint(tplBuf, strings.SplitN(f, "=", 2)[0])
+						if i < len(fields)-1 {
+							fmt.Fprintf(tplBuf, "\t")
+						}
 					}
+					fmt.Fprintf(tplBuf, "\n")
 				}
-				fmt.Fprintf(tplBuf, "\n")
 			}
 		}
 		fmt.Fprintf(tplBuf, "{{range ")
@@ -146,60 +167,55 @@ func (c *CLI) fmtOutput(w io.Writer, o interface{}) error {
 }
 
 func (c *CLI) marshalOutput(v interface{}) {
-	if err := c.fmtOutput(os.Stdout, v); err != nil {
+	c.marshalOutputWithTemplateName("", v)
+}
+
+func (c *CLI) marshalOutputWithTemplateName(
+	templateName string, v interface{}) {
+
+	if err := c.fmtOutput(os.Stdout, templateName, v); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func (c *CLI) mustMarshalOutput(v interface{}, err error) {
+	c.mustMarshalOutputWithTemplateName("", v, err)
+}
+
+func (c *CLI) mustMarshalOutputWithTemplateName(
+	templateName string, v interface{}, err error) {
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	c.marshalOutput(v)
+	switch tv := v.(type) {
+	case *lsVolumesResult:
+		c.marshalOutputWithTemplateName(templateName, tv.vols)
+	default:
+		c.marshalOutputWithTemplateName(templateName, v)
+	}
 }
 
-func (c *CLI) mustMarshalOutput3(v interface{}, noop interface{}, err error) {
+func (c *CLI) mustMarshalOutput3(v, noop interface{}, err error) {
+	c.mustMarshalOutput3WithTemplateName("", v, nil, err)
+}
+
+func (c *CLI) mustMarshalOutput3WithTemplateName(
+	templateName string, v, noop interface{}, err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	c.marshalOutput(v)
-}
-
-const (
-	volumeStatusAttached    = "attached"
-	volumeStatusAvailable   = "available"
-	volumeStatusUnavailable = "unavailable"
-	volumeStatusUnknown     = "unknown"
-	volumeStatusError       = "error"
-)
-
-var voluemStatusStore = apiutils.NewStore()
-
-func (c *CLI) volumeStatus(vol *apitypes.Volume) string {
-	if len(vol.Attachments) == 0 {
-		return volumeStatusAvailable
-	}
-	if c.r == nil || c.r.Executor() == nil {
-		return volumeStatusUnknown
-	}
-	iid, err := c.r.Executor().InstanceID(c.ctx, voluemStatusStore)
-	if err != nil {
-		return volumeStatusError
-	}
-	for _, a := range vol.Attachments {
-		if a.InstanceID.ID == iid.ID {
-			return volumeStatusAttached
-		}
-	}
-	return volumeStatusUnavailable
+	c.marshalOutputWithTemplateName(templateName, v)
 }
 
 const (
 	templateNamePrintCustom               = "printCustom"
 	templateNamePrintObject               = "printObject"
+	templateNamePrintStringSlice          = "printStringSlice"
 	templateNamePrintJSON                 = "printJSON"
 	templateNamePrintPrettyJSON           = "printPrettyJSON"
 	templateNamePrintVolumeFields         = "printVolumeFields"
+	templateNamePrintVolumeID             = "printVolumeID"
 	templateNamePrintVolumeWithPathFields = "printVolumeWithPathFields"
 	templateNamePrintSnapshotFields       = "printSnapshotFields"
 	templateNamePrintInstanceFields       = "printInstanceFields"
@@ -217,11 +233,18 @@ var defaultTemplates = map[string]*templateMetadata{
 	templateNamePrintObject: &templateMetadata{
 		format: `{{printf "%v" .}}`,
 	},
+	templateNamePrintStringSlice: &templateMetadata{
+		format: `{{.}}`,
+	},
 	templateNamePrintJSON: &templateMetadata{
 		format: "{{. | json}}",
 	},
 	templateNamePrintPrettyJSON: &templateMetadata{
 		format: "{{. | jsonp}}",
+	},
+	templateNamePrintVolumeID: &templateMetadata{
+		fields: []string{"ID"},
+		sortBy: "ID",
 	},
 	templateNamePrintVolumeFields: &templateMetadata{
 		fields: []string{

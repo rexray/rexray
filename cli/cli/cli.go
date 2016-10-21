@@ -87,7 +87,11 @@ type CLI struct {
 	devuceUnmountCmd *cobra.Command
 	deviceFormatCmd  *cobra.Command
 
+	attach                  bool
+	amount                  bool
+	quiet                   bool
 	dryRun                  bool
+	continueOnError         bool
 	outputFormat            string
 	outputTemplate          string
 	outputTemplateTabs      bool
@@ -283,10 +287,18 @@ func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 		&c.outputTemplateTabs, "templateTabs", "", true,
 		"Set to true to use a Go tab writer with the output template")
 }
+func (c *CLI) addQuietFlag(fs *pflag.FlagSet) {
+	fs.BoolVarP(&c.quiet, "quiet", "q", false, "Suppress table headers")
+}
 
 func (c *CLI) addDryRunFlag(fs *pflag.FlagSet) {
 	fs.BoolVarP(&c.dryRun, "dryRun", "n", false,
-		"Show what action(s) will occur, but do not execute them.")
+		"Show what action(s) will occur, but do not execute them")
+}
+
+func (c *CLI) addContinueOnErrorFlag(fs *pflag.FlagSet) {
+	fs.BoolVar(&c.continueOnError, "continueOnError", false,
+		"Continue processing a collection upon error")
 }
 
 func (c *CLI) updateLogLevel() {

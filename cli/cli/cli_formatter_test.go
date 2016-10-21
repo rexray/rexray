@@ -27,11 +27,11 @@ func newCLI(format, tpl string, tplTabs bool) *CLI {
 }
 
 func TestFormatEmptyVolumes(t *testing.T) {
-	newCLI("tmpl", "", true).fmtOutput(os.Stdout, []*apitypes.Volume{})
+	newCLI("tmpl", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{})
 }
 
 func TestFormatVolume(t *testing.T) {
-	newCLI("tmpl", "", true).fmtOutput(os.Stdout, &apitypes.Volume{
+	newCLI("tmpl", "", true).fmtOutput(os.Stdout, "", &apitypes.Volume{
 		ID:     "vol-1234",
 		Name:   "abuilds",
 		Size:   10240,
@@ -40,7 +40,7 @@ func TestFormatVolume(t *testing.T) {
 }
 
 func TestFormatVolumes(t *testing.T) {
-	newCLI("tmpl", "", true).fmtOutput(os.Stdout, []*apitypes.Volume{
+	newCLI("tmpl", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
 		&apitypes.Volume{
 			ID:     "vol-5",
 			Name:   "bbuilds",
@@ -62,7 +62,7 @@ func TestFormatVolumes(t *testing.T) {
 }
 
 func TestFormatVolumesCustom(t *testing.T) {
-	newCLI("{{.ID}}", "", true).fmtOutput(os.Stdout, []*apitypes.Volume{
+	newCLI("{{.ID}}", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
 		&apitypes.Volume{
 			ID:     "vol-5",
 			Name:   "bbuilds",
@@ -82,7 +82,7 @@ func TestFormatVolumesCustomRaw(t *testing.T) {
 		"tmpl",
 		`{{range .D}}{{.Name}}\n{{end}}`,
 		true).fmtOutput(
-		os.Stdout, []*apitypes.Volume{
+		os.Stdout, "", []*apitypes.Volume{
 			&apitypes.Volume{
 				ID:     "vol-5",
 				Name:   "bbuilds",
@@ -101,7 +101,7 @@ func TestFormatVolumesCustomRaw(t *testing.T) {
 		"tmpl",
 		`{{with .D}}{{range .}}{{.Name}}\n{{end}}{{end}}`,
 		true).fmtOutput(
-		os.Stdout, []*apitypes.Volume{
+		os.Stdout, "", []*apitypes.Volume{
 			&apitypes.Volume{
 				ID:     "vol-5",
 				Name:   "bbuilds",
@@ -119,7 +119,7 @@ func TestFormatVolumesCustomRaw(t *testing.T) {
 }
 
 func TestFormatVolumesAsJSON(t *testing.T) {
-	newCLI("json", "", true).fmtOutput(os.Stdout, []*apitypes.Volume{
+	newCLI("json", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
 		&apitypes.Volume{
 			ID:     "vol-5",
 			Name:   "bbuilds",
@@ -135,7 +135,7 @@ func TestFormatVolumesAsJSON(t *testing.T) {
 }
 
 func TestFormatVolumesAsJSONP(t *testing.T) {
-	newCLI("jsonp", "", true).fmtOutput(os.Stdout, []*apitypes.Volume{
+	newCLI("jsonp", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
 		&apitypes.Volume{
 			ID:     "vol-5",
 			Name:   "bbuilds",

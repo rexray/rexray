@@ -66,7 +66,7 @@ func (c *CLI) initServiceCmds() {
 		Use:   "initsys",
 		Short: "Print the detected init system type",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("\nInit System: %s\n", getInitSystemCmd())
+			fmt.Println(getInitSystemCmd())
 		},
 	}
 	c.serviceCmd.AddCommand(c.serviceInitSysCmd)

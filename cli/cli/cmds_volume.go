@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -36,7 +37,20 @@ func (c *CLI) initVolumeCmds() {
 		Short:   "List volumes",
 		Example: "rexray volume ls [OPTIONS] [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.lsVolumes(args))
+			result, err := c.lsVolumes(args)
+			if err != nil {
+				log.Fatal(err)
+			}
+			ch := make(chan interface{})
+			go func() {
+				for _, v := range result.vols {
+					ch <- v
+				}
+				close(ch)
+			}()
+			if err := c.fmtOutput(ch); err != nil {
+				log.Fatal(err)
+			}
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeListCmd)
@@ -54,9 +68,6 @@ func (c *CLI) initVolumeCmds() {
 				attachOpts      *apitypes.VolumeAttachOpts
 				mountOpts       *apitypes.VolumeMountOpts
 				withAttachments []*apitypes.VolumeAttachment
-				processed       interface{}
-				processedVols   []*apitypes.Volume
-				processedPVols  []*volumeWithPath
 				opts            = &apitypes.VolumeCreateOpts{
 					AvailabilityZone: &c.availabilityZone,
 					Size:             &c.size,
@@ -66,10 +77,22 @@ func (c *CLI) initVolumeCmds() {
 				}
 			)
 
-			if c.amount {
-				processedPVols = []*volumeWithPath{}
-			} else {
-				processedVols = []*apitypes.Volume{}
+			var (
+				chMarshal = make(chan interface{})
+				marshaled = &sync.WaitGroup{}
+			)
+			c.marshalOutput(chMarshal)
+			defer func() {
+				close(chMarshal)
+				marshaled.Wait()
+			}()
+			waitForMarshal := func(o interface{}) {
+				chMarshal <- o
+				marshaled.Done()
+			}
+			marshal := func(o interface{}) {
+				marshaled.Add(1)
+				go waitForMarshal(o)
 			}
 
 			if c.attach || c.amount {
@@ -106,18 +129,13 @@ func (c *CLI) initVolumeCmds() {
 					if c.attach || c.amount {
 						dv.Attachments = withAttachments
 					}
-					if c.amount {
-						processedPVols = append(
-							processedPVols, &volumeWithPath{dv, ""})
-					} else {
-						processedVols = append(processedVols, dv)
-					}
+					marshal(dv)
 					continue
 				}
 				v, err := c.r.Storage().VolumeCreate(c.ctx, name, opts)
 				if err != nil {
 					c.logVolumeLoopError(
-						processed,
+						marshal,
 						name,
 						"error creating volume",
 						err)
@@ -128,7 +146,7 @@ func (c *CLI) initVolumeCmds() {
 						c.ctx, v.ID, attachOpts)
 					if err != nil {
 						c.logVolumeLoopError(
-							processed,
+							marshal,
 							name,
 							"error attaching volume",
 							err)
@@ -139,34 +157,20 @@ func (c *CLI) initVolumeCmds() {
 							c.ctx, nv.ID, "", mountOpts)
 						if err != nil {
 							c.logVolumeLoopError(
-								processed,
+								marshal,
 								name,
 								"error mounting volume",
 								err)
 							continue
 						}
-						processedPVols = append(
-							processedPVols, &volumeWithPath{nv, p})
+						marshal(&volumeWithPath{nv, p})
 					} else {
-						processedVols = append(processedVols, nv)
+						marshal(nv)
 					}
 				} else {
-					processedVols = append(processedVols, v)
-				}
-				if c.amount {
-					processed = processedPVols
-				} else {
-					processed = processedVols
+					marshal(v)
 				}
 			}
-			if c.dryRun {
-				if c.amount {
-					processed = processedPVols
-				} else {
-					processed = processedVols
-				}
-			}
-			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeCreateCmd)
@@ -189,9 +193,26 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			var (
-				opts      = store()
-				processed = []string{}
+				opts = store()
 			)
+
+			var (
+				chMarshal = make(chan interface{})
+				marshaled = &sync.WaitGroup{}
+			)
+			c.marshalOutput(chMarshal)
+			defer func() {
+				close(chMarshal)
+				marshaled.Wait()
+			}()
+			waitForMarshal := func(o interface{}) {
+				chMarshal <- o
+				marshaled.Done()
+			}
+			marshal := func(o interface{}) {
+				marshaled.Add(1)
+				go waitForMarshal(o)
+			}
 
 			for _, v := range result.vols {
 				// only remove exact matches or regexp matches. partial matches
@@ -202,21 +223,20 @@ func (c *CLI) initVolumeCmds() {
 				}
 
 				if c.dryRun {
-					processed = append(processed, result.matchedIDOrName(v))
+					marshal(result.matchedIDOrName(v))
 					continue
 				}
 				err := c.r.Storage().VolumeRemove(c.ctx, v.ID, opts)
 				if err != nil {
 					c.logVolumeLoopError(
-						processed,
+						marshal,
 						result.matchedIDOrName(v),
 						"error removing volume",
 						err)
 					continue
 				}
-				processed = append(processed, result.matchedIDOrName(v))
+				marshal(result.matchedIDOrName(v))
 			}
-			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeRemoveCmd)
@@ -241,12 +261,29 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			var (
-				processed = []*apitypes.Volume{}
-				opts      = &apitypes.VolumeAttachOpts{
+				opts = &apitypes.VolumeAttachOpts{
 					Force: c.force,
 					Opts:  store(),
 				}
 			)
+
+			var (
+				chMarshal = make(chan interface{})
+				marshaled = &sync.WaitGroup{}
+			)
+			c.marshalOutput(chMarshal)
+			defer func() {
+				close(chMarshal)
+				marshaled.Wait()
+			}()
+			waitForMarshal := func(o interface{}) {
+				chMarshal <- o
+				marshaled.Done()
+			}
+			marshal := func(o interface{}) {
+				marshaled.Add(1)
+				go waitForMarshal(o)
+			}
 
 			for _, v := range result.vols {
 				// if a partial match it must be unique
@@ -254,22 +291,20 @@ func (c *CLI) initVolumeCmds() {
 					continue
 				}
 				if c.dryRun {
-					processed = append(processed, v)
+					marshal(v)
 					continue
 				}
 				nv, _, err := c.r.Storage().VolumeAttach(c.ctx, v.ID, opts)
 				if err != nil {
 					c.logVolumeLoopError(
-						processed,
+						marshal,
 						result.matchedIDOrName(v),
 						"error attaching volume",
 						err)
 					continue
 				}
-				processed = append(processed, nv)
+				marshal(nv)
 			}
-
-			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeAttachCmd)
@@ -294,12 +329,29 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			var (
-				processed = []*apitypes.Volume{}
-				opts      = &apitypes.VolumeDetachOpts{
+				opts = &apitypes.VolumeDetachOpts{
 					Force: c.force,
 					Opts:  store(),
 				}
 			)
+
+			var (
+				chMarshal = make(chan interface{})
+				marshaled = &sync.WaitGroup{}
+			)
+			c.marshalOutput(chMarshal)
+			defer func() {
+				close(chMarshal)
+				marshaled.Wait()
+			}()
+			waitForMarshal := func(o interface{}) {
+				chMarshal <- o
+				marshaled.Done()
+			}
+			marshal := func(o interface{}) {
+				marshaled.Add(1)
+				go waitForMarshal(o)
+			}
 
 			for _, v := range result.vols {
 				// if a partial match it must be unique
@@ -308,22 +360,21 @@ func (c *CLI) initVolumeCmds() {
 				}
 				if c.dryRun {
 					v.Attachments = nil
-					processed = append(processed, v)
+					marshal(v)
 					continue
 				}
 				_, err := c.r.Storage().VolumeDetach(c.ctx, v.ID, opts)
 				if err != nil {
 					c.logVolumeLoopError(
-						processed,
+						marshal,
 						result.matchedIDOrName(v),
 						"error detaching volume",
 						err)
 					continue
 				}
 				v.Attachments = nil
-				processed = append(processed, v)
+				marshal(v)
 			}
-			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeDetachCmd)
@@ -348,8 +399,7 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			var (
-				processed = []*volumeWithPath{}
-				opts      = &apitypes.VolumeMountOpts{
+				opts = &apitypes.VolumeMountOpts{
 					NewFSType:   c.fsType,
 					OverwriteFS: c.overwriteFs,
 				}
@@ -358,19 +408,37 @@ func (c *CLI) initVolumeCmds() {
 				}
 			)
 
+			var (
+				chMarshal = make(chan interface{})
+				marshaled = &sync.WaitGroup{}
+			)
+			c.marshalOutput(chMarshal)
+			defer func() {
+				close(chMarshal)
+				marshaled.Wait()
+			}()
+			waitForMarshal := func(o interface{}) {
+				chMarshal <- o
+				marshaled.Done()
+			}
+			marshal := func(o interface{}) {
+				marshaled.Add(1)
+				go waitForMarshal(o)
+			}
+
 			for _, v := range result.vols {
 				// if a partial match it must be unique
 				if pmt := result.isPartialMatch(v); pmt > 0 && !pmt.isUnique() {
 					continue
 				}
 				if c.dryRun {
-					processed = append(processed, &volumeWithPath{v, ""})
+					marshal(&volumeWithPath{v, ""})
 					continue
 				}
 				p, _, err := c.r.Integration().Mount(c.ctx, v.ID, "", opts)
 				if err != nil {
 					c.logVolumeLoopError(
-						processed,
+						marshal,
 						result.matchedIDOrName(v),
 						"error mounting volume",
 						err)
@@ -378,9 +446,8 @@ func (c *CLI) initVolumeCmds() {
 				}
 				nv := &volumeWithPath{v, p}
 				nv.Attachments = withAttachments
-				processed = append(processed, nv)
+				marshal(nv)
 			}
-			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeMountCmd)
@@ -405,9 +472,26 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			var (
-				opts      = store()
-				processed = []*apitypes.Volume{}
+				opts = store()
 			)
+
+			var (
+				chMarshal = make(chan interface{})
+				marshaled = &sync.WaitGroup{}
+			)
+			c.marshalOutput(chMarshal)
+			defer func() {
+				close(chMarshal)
+				marshaled.Wait()
+			}()
+			waitForMarshal := func(o interface{}) {
+				chMarshal <- o
+				marshaled.Done()
+			}
+			marshal := func(o interface{}) {
+				marshaled.Add(1)
+				go waitForMarshal(o)
+			}
 
 			for _, v := range result.vols {
 				// if a partial match it must be unique
@@ -416,22 +500,21 @@ func (c *CLI) initVolumeCmds() {
 				}
 				if c.dryRun {
 					v.Attachments = nil
-					processed = append(processed, v)
+					marshal(v)
 					continue
 				}
 				err := c.r.Integration().Unmount(c.ctx, v.ID, "", opts)
 				if err != nil {
 					c.logVolumeLoopError(
-						processed,
+						marshal,
 						result.matchedIDOrName(v),
 						"error unmounting volume",
 						err)
 					continue
 				}
 				v.Attachments = nil
-				processed = append(processed, v)
+				marshal(v)
 			}
-			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeUnmountCmd)
@@ -448,27 +531,43 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			var (
-				opts      = store()
-				processed = []*volumeWithPath{}
+				opts = store()
 			)
+
+			var (
+				chMarshal = make(chan interface{})
+				marshaled = &sync.WaitGroup{}
+			)
+			c.marshalOutput(chMarshal)
+			defer func() {
+				close(chMarshal)
+				marshaled.Wait()
+			}()
+			waitForMarshal := func(o interface{}) {
+				chMarshal <- o
+				marshaled.Done()
+			}
+			marshal := func(o interface{}) {
+				marshaled.Add(1)
+				go waitForMarshal(o)
+			}
 
 			for _, v := range result.vols {
 				if c.dryRun {
-					processed = append(processed, &volumeWithPath{v, ""})
+					marshal(&volumeWithPath{v, ""})
 					continue
 				}
 				p, err := c.r.Integration().Path(c.ctx, v.ID, "", opts)
 				if err != nil {
 					c.logVolumeLoopError(
-						processed,
+						marshal,
 						result.matchedIDOrName(v),
 						"error getting volume path",
 						err)
 					continue
 				}
-				processed = append(processed, &volumeWithPath{v, p})
+				marshal(&volumeWithPath{v, p})
 			}
-			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumePathCmd)
@@ -482,13 +581,22 @@ func checkVolumeArgs(cmd *cobra.Command, args []string) {
 	os.Exit(1)
 }
 
+var logVolumeLoopErrorLogger = &log.Logger{
+	Out:       os.Stderr,
+	Formatter: log.StandardLogger().Formatter,
+	Level:     log.StandardLogger().Level,
+}
+
 func (c *CLI) logVolumeLoopError(
-	processed interface{}, name, msg string, err error) {
-	logEntry := log.WithField("volume", name).WithError(err)
+	marshal func(o interface{}), name, msg string, err error) {
+	logEntry := logVolumeLoopErrorLogger.WithField(
+		"volume", name).WithError(err)
 	if c.continueOnError {
-		logEntry.Error(msg)
+		marshal(func() error {
+			logEntry.Error(msg)
+			return nil
+		})
 	} else {
-		c.mustMarshalOutput(processed, nil)
 		logEntry.Fatal(msg)
 	}
 }
@@ -958,12 +1066,22 @@ const (
 
 var voluemStatusStore = apiutils.NewStore()
 
-func (c *CLI) volumeStatus(vol *apitypes.Volume) string {
+func (c *CLI) volumeStatus(vol interface{}) string {
 	return c.volumeStatusWithInstanceID(nil, vol)
 }
 
 func (c *CLI) volumeStatusWithInstanceID(
-	iid *apitypes.InstanceID, vol *apitypes.Volume) string {
+	iid *apitypes.InstanceID, volObj interface{}) string {
+
+	var vol *apitypes.Volume
+	switch tv := volObj.(type) {
+	case *apitypes.Volume:
+		vol = tv
+	case *volumeWithPath:
+		vol = tv.Volume
+	default:
+		panic("volObj not a volume")
+	}
 
 	if len(vol.Attachments) == 0 {
 		return volumeStatusAvailable

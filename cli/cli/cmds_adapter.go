@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +31,20 @@ func (c *CLI) initAdapterCmds() {
 		Short:   "List the configured services",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.r.API().Services(c.ctx))
+			coll, err := c.r.API().Services(c.ctx)
+			if err != nil {
+				log.Fatal(err)
+			}
+			ch := make(chan interface{})
+			go func() {
+				for _, v := range coll {
+					ch <- v
+				}
+				close(ch)
+			}()
+			if err := c.fmtOutput(ch); err != nil {
+				log.Fatal(err)
+			}
 		},
 	}
 	c.adapterCmd.AddCommand(c.adapterGetTypesCmd)
@@ -38,7 +53,20 @@ func (c *CLI) initAdapterCmds() {
 		Use:   "instances",
 		Short: "List the configured adapter instances",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.r.API().Instances(c.ctx))
+			coll, err := c.r.API().Instances(c.ctx)
+			if err != nil {
+				log.Fatal(err)
+			}
+			ch := make(chan interface{})
+			go func() {
+				for _, v := range coll {
+					ch <- v
+				}
+				close(ch)
+			}()
+			if err := c.fmtOutput(ch); err != nil {
+				log.Fatal(err)
+			}
 		},
 	}
 	c.adapterCmd.AddCommand(c.adapterGetInstancesCmd)

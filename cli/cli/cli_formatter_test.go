@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"fmt"
+	"math/rand"
 	"os"
 	"testing"
 	"text/template"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -11,7 +14,9 @@ import (
 	apitypes "github.com/emccode/libstorage/api/types"
 )
 
-func newCLI(format, tpl string, tplTabs bool) *CLI {
+var r = rand.New(rand.NewSource(99))
+
+func newCLI(format string) *CLI {
 	ctx := context.Background()
 	if testing.Verbose() {
 		context.SetLogLevel(ctx, log.DebugLevel)
@@ -19,135 +24,114 @@ func newCLI(format, tpl string, tplTabs bool) *CLI {
 		context.SetLogLevel(ctx, log.WarnLevel)
 	}
 	return &CLI{
-		ctx:                ctx,
-		outputFormat:       format,
-		outputTemplate:     tpl,
-		outputTemplateTabs: tplTabs,
+		ctx:          ctx,
+		outputFormat: format,
 	}
 }
 
 func TestFormatEmptyVolumes(t *testing.T) {
-	newCLI("tmpl", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{})
+	if err := newCLI("tmpl").fmtOutput(nil); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestFormatVolume(t *testing.T) {
-	newCLI("tmpl", "", true).fmtOutput(os.Stdout, "", &apitypes.Volume{
-		ID:     "vol-1234",
-		Name:   "abuilds",
-		Size:   10240,
-		Status: "attached",
-	})
+	ch := make(chan interface{})
+	go func() {
+		ch <- &apitypes.Volume{
+			ID:     "vol-1234",
+			Name:   "abuilds",
+			Size:   10240,
+			Status: "attached",
+		}
+		close(ch)
+	}()
+	if err := newCLI("tmpl").fmtOutput(ch); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func newVolumeChannel() chan interface{} {
+	return newVolumeChannelWithError(false)
+}
+
+func newVolumeChannelWithError(withError bool) chan interface{} {
+	ch := make(chan interface{})
+	go func() {
+		for i := 0; i < 5; i++ {
+			if withError && i == 2 {
+				ch <- fmt.Errorf("error queryig volume vol-2")
+				continue
+			}
+
+			vol := &apitypes.Volume{
+				ID:     fmt.Sprintf("vol-%d", i),
+				Name:   fmt.Sprintf("builds-%d", i),
+				Size:   10240,
+				Status: "attached",
+			}
+			if i == 3 {
+				vol.Name = fmt.Sprintf("builds-%d-abcdefghik", i)
+			}
+			if r.Intn(1) == 1 {
+				vol.Attachments = []*apitypes.VolumeAttachment{
+					&apitypes.VolumeAttachment{
+						MountPoint: fmt.Sprintf(
+							"/var/lib/rexray/vol%d/data", i),
+						InstanceID: &apitypes.InstanceID{ID: "test"},
+					},
+				}
+			}
+			if i == 2 {
+				ch <- &volumeWithPath{vol, ""}
+			} else {
+				ch <- vol
+			}
+			time.Sleep(time.Duration(r.Intn(3)) * time.Second)
+		}
+		close(ch)
+	}()
+	return ch
 }
 
 func TestFormatVolumes(t *testing.T) {
-	newCLI("tmpl", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
-		&apitypes.Volume{
-			ID:     "vol-5",
-			Name:   "bbuilds",
-			Size:   10240,
-			Status: "attached",
-		},
-		&apitypes.Volume{
-			ID:   "vol-1234",
-			Name: "abuilds",
-			Size: 10240,
-			Attachments: []*apitypes.VolumeAttachment{
-				&apitypes.VolumeAttachment{
-					MountPoint: "/data",
-					InstanceID: &apitypes.InstanceID{ID: "test"},
-				},
-			},
-		},
-	})
+	if err := newCLI("tmpl").fmtOutput(newVolumeChannel()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFormatVolumesWithError(t *testing.T) {
+	if err := newCLI("tmpl").fmtOutput(
+		newVolumeChannelWithError(true)); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestFormatVolumesCustom(t *testing.T) {
-	newCLI("{{.ID}}", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
-		&apitypes.Volume{
-			ID:     "vol-5",
-			Name:   "bbuilds",
-			Size:   10240,
-			Status: "attached",
-		},
-		&apitypes.Volume{
-			ID:   "vol-1234",
-			Name: "abuilds",
-			Size: 10240,
-		},
-	})
+	if err := newCLI("{{.ID}}").fmtOutput(newVolumeChannel()); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestFormatVolumesCustomRaw(t *testing.T) {
-	if err := newCLI(
-		"tmpl",
-		`{{range .D}}{{.Name}}\n{{end}}`,
-		true).fmtOutput(
-		os.Stdout, "", []*apitypes.Volume{
-			&apitypes.Volume{
-				ID:     "vol-5",
-				Name:   "bbuilds",
-				Size:   10240,
-				Status: "attached",
-			},
-			&apitypes.Volume{
-				ID:   "vol-1234",
-				Name: "abuilds",
-				Size: 10240,
-			},
-		}); err != nil {
-		t.Fatal(err)
-	}
-	if err := newCLI(
-		"tmpl",
-		`{{with .D}}{{range .}}{{.Name}}\n{{end}}{{end}}`,
-		true).fmtOutput(
-		os.Stdout, "", []*apitypes.Volume{
-			&apitypes.Volume{
-				ID:     "vol-5",
-				Name:   "bbuilds",
-				Size:   10240,
-				Status: "attached",
-			},
-			&apitypes.Volume{
-				ID:   "vol-1234",
-				Name: "abuilds",
-				Size: 10240,
-			},
-		}); err != nil {
+	if err := newCLI("{{.Name}}").fmtOutput(
+		newVolumeChannel()); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestFormatVolumesAsJSON(t *testing.T) {
-	newCLI("json", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
-		&apitypes.Volume{
-			ID:     "vol-5",
-			Name:   "bbuilds",
-			Size:   10240,
-			Status: "attached",
-		},
-		&apitypes.Volume{
-			ID:   "vol-1234",
-			Name: "abuilds",
-			Size: 10240,
-		},
-	})
+	if err := newCLI("json").fmtOutput(
+		newVolumeChannel()); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestFormatVolumesAsJSONP(t *testing.T) {
-	newCLI("jsonp", "", true).fmtOutput(os.Stdout, "", []*apitypes.Volume{
-		&apitypes.Volume{
-			ID:     "vol-5",
-			Name:   "bbuilds",
-			Size:   10240,
-			Status: "attached",
-		},
-		&apitypes.Volume{
-			ID:   "vol-1234",
-			Name: "abuilds",
-			Size: 10240,
-		},
-	})
+	if err := newCLI("jsonp").fmtOutput(
+		newVolumeChannel()); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestTemplateDefs(t *testing.T) {

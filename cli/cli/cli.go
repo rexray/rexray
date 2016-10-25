@@ -93,8 +93,6 @@ type CLI struct {
 	dryRun                  bool
 	continueOnError         bool
 	outputFormat            string
-	outputTemplate          string
-	outputTemplateTabs      bool
 	fg                      bool
 	fork                    bool
 	force                   bool
@@ -280,12 +278,6 @@ func (c *CLI) addOutputFormatFlag(fs *pflag.FlagSet) {
 	fs.StringVarP(
 		&c.outputFormat, "format", "f", "tmpl",
 		"The output format (tmpl, json, jsonp)")
-	fs.StringVarP(
-		&c.outputTemplate, "template", "", "",
-		"The Go template to use when --format is set to 'tmpl'")
-	fs.BoolVarP(
-		&c.outputTemplateTabs, "templateTabs", "", true,
-		"Set to true to use a Go tab writer with the output template")
 }
 func (c *CLI) addQuietFlag(fs *pflag.FlagSet) {
 	fs.BoolVarP(&c.quiet, "quiet", "q", false, "Suppress table headers")

@@ -12,7 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 
-	"github.com/emccode/rexray/util"
+	"github.com/codedellemc/rexray/util"
 )
 
 // init system types
@@ -194,7 +194,7 @@ func installSystemD(exeFile string) {
 	}
 
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/emccode/rexray for instructions on how to ")
+	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
 	fmt.Print("started with the command 'sudo systemctl start rexray'.\n\n")
 }
@@ -229,7 +229,7 @@ func installUpdateRcd(exeFile string) {
 	}
 
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/emccode/rexray for instructions on how to ")
+	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
 	fmt.Print("started with the command 'sudo /etc/init.d/rexray start'.\n\n")
 }
@@ -260,7 +260,7 @@ func installChkConfig(exeFile string) {
 	}
 
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/emccode/rexray for instructions on how to ")
+	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
 	fmt.Print("started with the command 'sudo /etc/init.d/rexray start'.\n\n")
 }

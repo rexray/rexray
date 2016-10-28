@@ -9,8 +9,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	apitypes "github.com/emccode/libstorage/api/types"
-	apiutils "github.com/emccode/libstorage/api/utils"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	apiutils "github.com/codedellemc/libstorage/api/utils"
 )
 
 func (c *CLI) initVolumeCmdsAndFlags() {

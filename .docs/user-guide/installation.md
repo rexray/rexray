@@ -85,10 +85,10 @@ It is also easy to build REX-Ray from source.
 
 ```sh
 # go get the rexray repo using the -d flag to enable "download only" mode
-go get -d github.com/emccode/rexray
+go get -d github.com/codedellemc/rexray
 
 # change directories into the freshly-cloned repo
-cd $GOPATH/src/github.com/emccode/rexray
+cd $GOPATH/src/github.com/codedellemc/rexray
 
 # get and build REX-Ray's dependencies and then build and install REX-Ray
 make deps && make
@@ -269,4 +269,4 @@ including Docker, using the VirtualBox driver. All volume requests are handled
 using VirtualBox's Virtual Media.
 
 A Vagrant environment and instructions using it are provided
-[here](https://github.com/emccode/vagrant/tree/master/rexray).
+[here](https://github.com/codedellemc/vagrant/tree/master/rexray).

@@ -11,11 +11,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 
-	"github.com/emccode/libstorage/api/context"
-	apitypes "github.com/emccode/libstorage/api/types"
-	"github.com/emccode/rexray/core"
-	rrdaemon "github.com/emccode/rexray/daemon"
-	"github.com/emccode/rexray/util"
+	"github.com/codedellemc/libstorage/api/context"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/core"
+	rrdaemon "github.com/codedellemc/rexray/daemon"
+	"github.com/codedellemc/rexray/util"
 )
 
 var (

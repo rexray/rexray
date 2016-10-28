@@ -12,14 +12,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/emccode/libstorage/api/context"
-	apiserver "github.com/emccode/libstorage/api/server"
-	apitypes "github.com/emccode/libstorage/api/types"
-	apiutils "github.com/emccode/libstorage/api/utils"
-	apiclient "github.com/emccode/libstorage/client"
+	"github.com/codedellemc/libstorage/api/context"
+	apiserver "github.com/codedellemc/libstorage/api/server"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	apiutils "github.com/codedellemc/libstorage/api/utils"
+	apiclient "github.com/codedellemc/libstorage/client"
 
-	"github.com/emccode/rexray/cli/cli/term"
-	"github.com/emccode/rexray/util"
+	"github.com/codedellemc/rexray/cli/cli/term"
+	"github.com/codedellemc/rexray/util"
 )
 
 func init() {
@@ -436,7 +436,7 @@ func printColorizedError(err error) {
 		"  - Debug output by using the flag \x1b[%dm-l debug\x1b[0m\n",
 		lightBlue)
 	fmt.Fprintf(stderr, "  - The REX-ray website at \x1b[%dm%s\x1b[0m\n",
-		blueBg, "https://github.com/emccode/rexray")
+		blueBg, "https://github.com/codedellemc/rexray")
 	fmt.Fprintf(stderr, "  - The on%[1]sine he%[1]sp be%[1]sow\n", l)
 }
 
@@ -449,7 +449,7 @@ func printNonColorizedError(err error) {
 	fmt.Fprintf(stderr, "  - Debug output by using the flag \"-l debug\"\n")
 	fmt.Fprintf(
 		stderr,
-		"  - The REX-ray website at https://github.com/emccode/rexray\n")
+		"  - The REX-ray website at https://github.com/codedellemc/rexray\n")
 	fmt.Fprintf(stderr, "  - The online help below\n")
 }
 

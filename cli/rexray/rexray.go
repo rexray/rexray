@@ -10,13 +10,13 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/emccode/libstorage/api/context"
-	apitypes "github.com/emccode/libstorage/api/types"
-	"github.com/emccode/rexray/cli/cli"
-	"github.com/emccode/rexray/core"
+	"github.com/codedellemc/libstorage/api/context"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/cli/cli"
+	"github.com/codedellemc/rexray/core"
 
 	// load REX-Ray
-	_ "github.com/emccode/rexray"
+	_ "github.com/codedellemc/rexray"
 )
 
 func main() {

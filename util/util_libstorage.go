@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/akutz/gofig"
-	apitypes "github.com/emccode/libstorage/api/types"
+	apitypes "github.com/codedellemc/libstorage/api/types"
 )
 
 const defaultServiceConfigFormat = `

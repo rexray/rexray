@@ -163,7 +163,7 @@ $ cd $(mktemp -d)
 ```
 
 Inside the newly created, temporary directory, download the REX-Ray
-[Vagrantfile](https://github.com/emccode/rexray/blob/master/Vagrantfile):
+[Vagrantfile](https://github.com/codedellemc/rexray/blob/master/Vagrantfile):
 
 ```sh
 $ curl -fsSLO https://raw.githubusercontent.com/emccode/rexray/master/Vagrantfile
@@ -313,7 +313,7 @@ For an example of the full output from the above command, please refer to this
 
 ### GitHub and Slack
 If a little extra help is needed, please don't hesitate to use
-[GitHub issues](https://github.com/emccode/rexray/issues) or join the active
+[GitHub issues](https://github.com/codedellemc/rexray/issues) or join the active
 conversation on the
 [EMC {code} Community Slack Team](http://community.emccode.com/) in
 the #project-rexray channel

@@ -1,6 +1,6 @@
 site_name: REX-Ray
-site_url: https://github.com/emccode/rexray
-repo_url: https://github.com/emccode/rexray.git
+site_url: https://github.com/codedellemc/rexray
+repo_url: https://github.com/codedellemc/rexray.git
 docs_dir: .docs
 site_dir: .site
 theme_dir: .docs/.themes/yeti

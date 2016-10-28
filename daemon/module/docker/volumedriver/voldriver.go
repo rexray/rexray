@@ -14,10 +14,10 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
-	apitypes "github.com/emccode/libstorage/api/types"
-	apiutils "github.com/emccode/libstorage/api/utils"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	apiutils "github.com/codedellemc/libstorage/api/utils"
 
-	"github.com/emccode/rexray/daemon/module"
+	"github.com/codedellemc/rexray/daemon/module"
 )
 
 const (

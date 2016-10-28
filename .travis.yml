@@ -1,4 +1,4 @@
-go_import_path: github.com/emccode/rexray
+go_import_path: github.com/codedellemc/rexray
 
 language: go
 

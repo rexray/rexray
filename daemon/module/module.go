@@ -9,10 +9,10 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-	apitypes "github.com/emccode/libstorage/api/types"
-	apiclient "github.com/emccode/libstorage/client"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	apiclient "github.com/codedellemc/libstorage/client"
 
-	"github.com/emccode/rexray/util"
+	"github.com/codedellemc/rexray/util"
 )
 
 // Module is the interface to which types adhere in order to participate as

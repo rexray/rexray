@@ -3,6 +3,12 @@
 Release early, release often
 
 ---
+## Version 0.3.2 (2016/10/18)
+This release updates the project to reflect its new location at
+github.com/codedellemc.
+
+### Enhancements
+* Relocated to codedellemc ([#307](https://github.com/codedellemc/libstorage/pull/307))
 
 ## Version 0.3.1 (2016/10/18)
 This is a minor update that includes support for ScaleIO 2.0.1.

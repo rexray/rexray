@@ -3,7 +3,7 @@
 Release early, release often
 
 ---
-## Version 0.3.2 (TBA)
+## Version 0.3.2 (2016/10/18)
 This release updates the project to reflect its new location at
 github.com/codedellemc.
 

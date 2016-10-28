@@ -7,16 +7,16 @@ Version: %{v_semver}
 Release: 1
 License: Apache License
 Group: Applications/Storage
-#Source: https://github.com/emccode/rexray/archive/master.zip
-URL: https://github.com/emccode/rexray
-Vendor: EMC{code}
+#Source: https://github.com/codedellemc/rexray/archive/master.zip
+URL: https://github.com/codedellemc/rexray
+Vendor: {code} by Dell EMC
 Packager: Andrew Kutz <sakutz@gmail.com>
 BuildArch: %{v_arch}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}
 
 %description
-A guest based storage introspection tool that 
-allows local visibility and management from cloud 
+A guest based storage introspection tool that
+allows local visibility and management from cloud
 and storage platforms.
 
 %prep

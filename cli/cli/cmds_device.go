@@ -2,7 +2,7 @@ package cli
 
 import (
 	log "github.com/Sirupsen/logrus"
-	apitypes "github.com/emccode/libstorage/api/types"
+	apitypes "github.com/codedellemc/libstorage/api/types"
 	"github.com/spf13/cobra"
 )
 

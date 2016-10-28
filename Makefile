@@ -20,7 +20,7 @@ PROG := rexray
 ################################################################################
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
-DPKG := github.com/emccode/rexray
+DPKG := github.com/codedellemc/rexray
 DIMG := golang:1.7.1
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
@@ -593,7 +593,7 @@ import (
 	"runtime"
 	"time"
 
-	apitypes "github.com/emccode/libstorage/api/types"
+	apitypes "github.com/codedellemc/libstorage/api/types"
 )
 
 func init() {
@@ -748,7 +748,7 @@ endif
 ##                                LIBSTORAGE                                  ##
 ################################################################################
 
-LIBSTORAGE_DIR := vendor/github.com/emccode/libstorage
+LIBSTORAGE_DIR := vendor/github.com/codedellemc/libstorage
 LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
 LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
 $(LIBSTORAGE_API) $(LIBSTORAGE_LSX):

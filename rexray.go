@@ -28,7 +28,7 @@
 // Using REX-Ray as a library is easy too. To perform the same volume listing
 // as above, simply use the following snippet:
 //
-//     import "github.com/emccode/rexray"
+//     import "github.com/codedellemc/rexray"
 //
 //     r := rexray.NewWithEnv(map[string]string{
 //         "REXRAY_STORAGEDRIVERS": "ec2",
@@ -48,10 +48,10 @@ import (
 	"github.com/akutz/gotil"
 
 	// load libStorage
-	_ "github.com/emccode/libstorage"
-	_ "github.com/emccode/libstorage/imports/local"
-	_ "github.com/emccode/libstorage/imports/remote"
-	"github.com/emccode/rexray/util"
+	_ "github.com/codedellemc/libstorage"
+	_ "github.com/codedellemc/libstorage/imports/local"
+	_ "github.com/codedellemc/libstorage/imports/remote"
+	"github.com/codedellemc/rexray/util"
 )
 
 func init() {

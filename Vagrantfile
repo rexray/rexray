@@ -73,8 +73,8 @@ go install ./...
 SCRIPT
 
 # rex-ray repo and branch information
-$rexray_dir = "#{$gopath}/src/github.com/emccode/rexray"
-$rexray_url = "https://github.com/emccode/rexray"
+$rexray_dir = "#{$gopath}/src/github.com/codedellemc/rexray"
+$rexray_url = "https://github.com/codedellemc/rexray"
 $rexray_ref = "master"
 $rexray_bin = "/usr/bin/rexray"
 $rexray_cfg = "/etc/rexray/config.yml"

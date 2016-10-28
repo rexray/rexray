@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/akutz/gofig"
-	apitypes "github.com/emccode/libstorage/api/types"
+	apitypes "github.com/codedellemc/libstorage/api/types"
 
-	"github.com/emccode/rexray/daemon/module"
-	"github.com/emccode/rexray/util"
+	"github.com/codedellemc/rexray/daemon/module"
+	"github.com/codedellemc/rexray/util"
 )
 
 // Start starts the daemon.

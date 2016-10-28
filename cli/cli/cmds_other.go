@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/emccode/rexray/util"
+	"github.com/codedellemc/rexray/util"
 )
 
 func (c *CLI) initOtherCmdsAndFlags() {

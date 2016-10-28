@@ -1,7 +1,7 @@
 package httputils
 
 import (
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // route defines an individual API route.

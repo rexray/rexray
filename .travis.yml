@@ -1,4 +1,4 @@
-go_import_path: github.com/emccode/libstorage
+go_import_path: github.com/codedellemc/libstorage
 
 language: go
 go:

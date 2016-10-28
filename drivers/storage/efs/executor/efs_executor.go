@@ -12,10 +12,10 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/drivers/storage/efs"
-	efsUtils "github.com/emccode/libstorage/drivers/storage/efs/utils"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/drivers/storage/efs"
+	efsUtils "github.com/codedellemc/libstorage/drivers/storage/efs/utils"
 )
 
 // driver is the storage executor for the efs storage driver.

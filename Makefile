@@ -14,7 +14,7 @@ endif
 ################################################################################
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
-DPKG := github.com/emccode/libstorage
+DPKG := github.com/codedellemc/libstorage
 DIMG := golang:1.7.1
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
@@ -649,7 +649,7 @@ package api
 import (
 	"time"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func init() {

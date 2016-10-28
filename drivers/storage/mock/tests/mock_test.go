@@ -12,17 +12,17 @@ import (
 	"github.com/akutz/goof"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/server/executors"
-	apitests "github.com/emccode/libstorage/api/tests"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/server"
+	"github.com/codedellemc/libstorage/api/server/executors"
+	apitests "github.com/codedellemc/libstorage/api/tests"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 
 	// load the  driver
 
-	"github.com/emccode/libstorage/drivers/storage/mock"
-	mockx "github.com/emccode/libstorage/drivers/storage/mock/executor"
+	"github.com/codedellemc/libstorage/drivers/storage/mock"
+	mockx "github.com/codedellemc/libstorage/drivers/storage/mock/executor"
 )
 
 var (

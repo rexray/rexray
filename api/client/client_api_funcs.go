@@ -6,7 +6,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func (c *client) Root(ctx types.Context) ([]string, error) {

@@ -6,14 +6,14 @@ import (
 
 	gocontext "golang.org/x/net/context"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	apicnfg "github.com/emccode/libstorage/api/utils/config"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
+	apicnfg "github.com/codedellemc/libstorage/api/utils/config"
 
 	// load the local imports
-	_ "github.com/emccode/libstorage/imports/local"
+	_ "github.com/codedellemc/libstorage/imports/local"
 )
 
 type client struct {

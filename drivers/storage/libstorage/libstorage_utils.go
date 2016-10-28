@@ -3,8 +3,8 @@ package libstorage
 import (
 	"strings"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func (c *client) requireCtx(ctx types.Context) types.Context {

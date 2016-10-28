@@ -41,7 +41,7 @@ Using libStorage can be broken down into several, distinct steps:
 ## Getting Help
 To get help with libStorage, please use the
 [discussion group](https://groups.google.com/forum/#!forum/emccode-users),
-[GitHub issues](https://github.com/emccode/libstorage/issues), or tagging
+[GitHub issues](https://github.com/codedellemc/libstorage/issues), or tagging
 questions with **EMC** at [StackOverflow](https://stackoverflow.com).
 
 The code and documentation are released with no warranties or SLAs and are

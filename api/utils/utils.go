@@ -8,7 +8,7 @@ import (
 	"time"
 
 	_ "github.com/akutz/golf"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // GetTypePkgPathAndName gets ths type and package path of the provided

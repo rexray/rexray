@@ -1,4 +1,4 @@
-# libStorage [![GoDoc](https://godoc.org/github.com/emccode/libstorage?status.svg)](http://godoc.org/github.com/emccode/libstorage) [![Build Status](http://travis-ci.org/emccode/libstorage.svg?branch=master)](https://travis-ci.org/emccode/libstorage) [![Go Report Card](https://goreportcard.com/badge/github.com/emccode/libstorage)](https://goreportcard.com/report/github.com/emccode/libstorage) [![codecov](https://codecov.io/gh/emccode/libstorage/branch/master/graph/badge.svg)](https://codecov.io/gh/emccode/libstorage)
+# libStorage [![GoDoc](https://godoc.org/github.com/codedellemc/libstorage?status.svg)](http://godoc.org/github.com/codedellemc/libstorage) [![Build Status](http://travis-ci.org/emccode/libstorage.svg?branch=master)](https://travis-ci.org/emccode/libstorage) [![Go Report Card](https://goreportcard.com/badge/github.com/codedellemc/libstorage)](https://goreportcard.com/report/github.com/codedellemc/libstorage) [![codecov](https://codecov.io/gh/emccode/libstorage/branch/master/graph/badge.svg)](https://codecov.io/gh/emccode/libstorage)
 `libStorage` provides a vendor agnostic storage orchestration model, API, and
 reference client and server implementations.
 
@@ -12,7 +12,7 @@ experience gained from the project authors' building of
 [several](https://www.emc.com/cloud-virtualization/virtual-storage-integrator.htm)
 different
 [storage](https://www.emc.com/storage/storage-analytics.htm)
-orchestration [tools](https://github.com/emccode/rexray). While created using
+orchestration [tools](https://github.com/codedellemc/rexray). While created using
 different languages and targeting disparate storage platforms, all the tools
 were architecturally aligned and embedded functionality directly inside the
 tools and affected storage platforms.
@@ -56,7 +56,7 @@ still able to provide volume management for container runtimes.
 In a centralized architecture, `libStorage` is hosted as a service, acting as a
 go-between for container runtimes and backend storage platforms.
 
-The `libStorage` endpoint is advertised by a tool like [REX-Ray](https://github.com/emccode/rexray), run from anywhere, and is
+The `libStorage` endpoint is advertised by a tool like [REX-Ray](https://github.com/codedellemc/rexray), run from anywhere, and is
 responsible for all control plane operations to the storage platform along with
 maintaining escalated credentials for these platforms. All client based
 processes within the operating system are still embedded in the container

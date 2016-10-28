@@ -3,9 +3,9 @@ package help
 import (
 	"github.com/akutz/gofig"
 
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/server/httputils"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/server/httputils"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func init() {

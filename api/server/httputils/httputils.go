@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/akutz/gofig"
-	"github.com/emccode/libstorage/api/server/services"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/server/services"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // WriteJSON writes the value v to the http response stream as json with

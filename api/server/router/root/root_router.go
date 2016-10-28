@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/emccode/libstorage/api/server/httputils"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/server/httputils"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 var (

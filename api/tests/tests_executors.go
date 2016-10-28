@@ -7,7 +7,7 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // TestExecutors tests the GET /executors route.

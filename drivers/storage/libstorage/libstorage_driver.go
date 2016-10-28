@@ -10,10 +10,10 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
 
-	apiclient "github.com/emccode/libstorage/api/client"
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	apiclient "github.com/codedellemc/libstorage/api/client"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 )
 
 var (

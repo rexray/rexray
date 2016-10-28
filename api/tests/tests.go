@@ -18,11 +18,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	yaml "gopkg.in/yaml.v2"
 
-	apiserver "github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/server/executors"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/client"
+	apiserver "github.com/codedellemc/libstorage/api/server"
+	"github.com/codedellemc/libstorage/api/server/executors"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/client"
 )
 
 var (
@@ -58,7 +58,7 @@ func init() {
 
 var (
 	tlsPath = fmt.Sprintf(
-		"%s/src/github.com/emccode/libstorage/.tls", os.Getenv("GOPATH"))
+		"%s/src/github.com/codedellemc/libstorage/.tls", os.Getenv("GOPATH"))
 	serverCrt    = fmt.Sprintf("%s/libstorage-server.crt", tlsPath)
 	serverKey    = fmt.Sprintf("%s/libstorage-server.key", tlsPath)
 	clientCrt    = fmt.Sprintf("%s/libstorage-client.crt", tlsPath)

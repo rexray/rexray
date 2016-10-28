@@ -5,8 +5,8 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/server/httputils"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/server/httputils"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // errorHandler is a global HTTP filter for handlling errors

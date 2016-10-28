@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/emccode/libstorage/api"
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/server/httputils"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/api"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/server/httputils"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 )
 
 func (r *router) helpInspect(

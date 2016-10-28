@@ -3,7 +3,7 @@
 package utils
 
 import (
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // NextDeviceInfo is the NextDeviceInfo object for EBS.

@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/emccode/libstorage/api/types"
+import "github.com/codedellemc/libstorage/api/types"
 
 type sdm struct {
 	types.StorageDriver

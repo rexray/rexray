@@ -1,6 +1,6 @@
 site_name: libStorage
-site_url: https://github.com/emccode/libstorage
-repo_url: https://github.com/emccode/libstorage.git
+site_url: https://github.com/codedellemc/libstorage
+repo_url: https://github.com/codedellemc/libstorage.git
 docs_dir: .docs
 site_dir: .site
 theme_dir: .docs/.themes/yeti

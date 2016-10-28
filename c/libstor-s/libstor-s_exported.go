@@ -8,8 +8,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/libstorage/api/server"
-	apicfg "github.com/emccode/libstorage/api/utils/config"
+	"github.com/codedellemc/libstorage/api/server"
+	apicfg "github.com/codedellemc/libstorage/api/utils/config"
 )
 
 // closeOnAbort is a helper function that can be called by programs, such as

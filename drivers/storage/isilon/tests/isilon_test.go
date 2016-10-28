@@ -10,14 +10,14 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/server"
-	"github.com/emccode/libstorage/api/server/executors"
-	apitests "github.com/emccode/libstorage/api/tests"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/server"
+	"github.com/codedellemc/libstorage/api/server/executors"
+	apitests "github.com/codedellemc/libstorage/api/tests"
+	"github.com/codedellemc/libstorage/api/types"
 
 	// load the  driver
-	"github.com/emccode/libstorage/drivers/storage/isilon"
-	isilonx "github.com/emccode/libstorage/drivers/storage/isilon/executor"
+	"github.com/codedellemc/libstorage/drivers/storage/isilon"
+	isilonx "github.com/codedellemc/libstorage/drivers/storage/isilon/executor"
 )
 
 var (

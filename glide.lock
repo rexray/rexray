@@ -1,5 +1,5 @@
-hash: 9bf64d1ef1d1dc736991d9e54e5e77dbfdfd5dcb44ce79433c82232c20bf7e87
-updated: 2016-10-18T15:28:37.975949078-05:00
+hash: 6c2c34bc383d9ae951e6c4297f046592250527fb71d2708c31be0541ac880e8b
+updated: 2016-10-28T14:09:43.676382142-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -54,27 +54,27 @@ imports:
   version: 2f16017c76fc2403d143e93cea1e1b9526a01148
   subpackages:
   - schema
-- name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
-  subpackages:
-  - spew
-- name: github.com/emccode/goisilon
-  version: 653c13de5e1e0294ca0c7eead83e396fe308b497
+- name: github.com/codedellemc/goisilon
+  version: 2ea94fb4dd4f34507c9d67d8d2e35dcc0edb5f89
   subpackages:
   - api
   - api/json
   - api/v1
   - api/v2
-- name: github.com/emccode/goscaleio
-  version: 09ca0f748eb937adf2ec979b7c92915d4dbf35b4
-  repo: https://github.com/emccode/goscaleio
+- name: github.com/codedellemc/goscaleio
+  version: 485da3636bfcc8e70f74fe7bdc7cb25e5a6e4c4a
+  repo: https://github.com/codedellemc/goscaleio
   subpackages:
   - tls
   - types/v1
-- name: github.com/emccode/gournal
-  version: 3bd901de15097583a5b1f4b377421cfc647c3664
+- name: github.com/codedellemc/gournal
+  version: 4293aaf7e91602963a5777caef4b346e1cf21936
   subpackages:
   - logrus
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml
@@ -138,7 +138,7 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/net
-  version: a625e3953219464fdd5611bb48bf87c927717295
+  version: b336a971b799939dd16ae9b1df8334cb8b977c4d
   subpackages:
   - context
   - context/ctxhttp

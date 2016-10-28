@@ -3,7 +3,7 @@ package utils
 import (
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // NewUnsupportedForClientTypeError returns a new ErrUnsupportedForClientType

@@ -9,7 +9,7 @@ import (
 	gcontext "github.com/gorilla/context"
 	"golang.org/x/net/context"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 type lsc struct {

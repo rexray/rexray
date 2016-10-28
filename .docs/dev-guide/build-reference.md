@@ -29,7 +29,7 @@ Linux, but by default Clang is used on OS X and GCC on Linux.
 
 ## Cross-Compilation
 This project's
-[`Makefile`](https://github.com/emccode/libstorage/blob/master/Makefile)
+[`Makefile`](https://github.com/codedellemc/libstorage/blob/master/Makefile)
 is configured by default to cross-compile certain project components for both
 Linux x86_64 and Darwin (OS X) x86_64. Therefore the build process will fail if
 the local Go environment is not configured for cross-compilation. Please take a
@@ -50,7 +50,7 @@ can be achieved by executing `make` from the project's root directory.
 ```sh
 $ make
 make deps
-make[1]: Entering directory './github.com/emccode/libstorage'
+make[1]: Entering directory './github.com/codedellemc/libstorage'
 glide up && touch glide.lock.d
 [INFO] Downloading dependencies. Please wait...
 [INFO] Fetching updates for github.com/Sirupsen/logrus.
@@ -59,17 +59,17 @@ glide up && touch glide.lock.d
 [INFO] Fetching updates for github.com/akutz/gofig.
 [INFO] Fetching updates for github.com/appropriate/go-virtualboxclient.
 [INFO] Fetching updates for github.com/jteeuwen/go-bindata.
-[INFO] Fetching updates for github.com/emccode/goisilon.
+[INFO] Fetching updates for github.com/codedellemc/goisilon.
 [INFO] Fetching updates for github.com/blang/semver.
 [INFO] Fetching updates for github.com/cesanta/validate-json.
 [INFO] Fetching updates for github.com/akutz/goof.
-[INFO] Fetching updates for github.com/emccode/goscaleio.
+[INFO] Fetching updates for github.com/codedellemc/goscaleio.
 [INFO] Fetching updates for github.com/akutz/gotil.
 [INFO] Setting version for github.com/Sirupsen/logrus to feature/logrus-aware-types.
 [INFO] Setting version for github.com/blang/semver to v3.0.1.
 [INFO] Setting version for github.com/jteeuwen/go-bindata to feature/md5checksum.
-[INFO] Setting version for github.com/emccode/goscaleio to 53ea76f52205380ab52b9c1f4ad89321c286bb95.
-[INFO] Setting version for github.com/emccode/goisilon to f9b53f0aaadb12a26b134830142fc537f492cb13.
+[INFO] Setting version for github.com/codedellemc/goscaleio to 53ea76f52205380ab52b9c1f4ad89321c286bb95.
+[INFO] Setting version for github.com/codedellemc/goisilon to f9b53f0aaadb12a26b134830142fc537f492cb13.
 [INFO] Setting version for github.com/appropriate/go-virtualboxclient to e0978ab2ed407095400a69d5933958dd260058cd.
 [INFO] Resolving imports
 [INFO] Setting version for github.com/akutz/goof to master.
@@ -104,10 +104,10 @@ glide up && touch glide.lock.d
 [INFO] Fetching updates for github.com/gorilla/context.
 [INFO] Setting references for remaining imports
 [INFO] Project relies on 32 dependencies.
-go install github.com/emccode/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
-make[1]: Leaving directory './github.com/emccode/libstorage'
+go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
+make[1]: Leaving directory './github.com/codedellemc/libstorage'
 make build
-make[1]: Entering directory './github.com/emccode/libstorage'
+make[1]: Entering directory './github.com/codedellemc/libstorage'
 gcc -Wall -pedantic -std=c99 cli/semaphores/open.c -o cli/semaphores/open -lpthread
 gcc -Wall -pedantic -std=c99 cli/semaphores/wait.c -o cli/semaphores/wait -lpthread
 gcc -Wall -pedantic -std=c99 cli/semaphores/signal.c -o cli/semaphores/signal -lpthread
@@ -133,7 +133,7 @@ go install ./drivers/storage/vfs
 go install ./drivers/storage/vfs/storage
 go install ./imports/remote
 env GOOS=linux GOARCH=amd64 make -j $GOPATH/bin/linux_amd64/lsx-linux
-make[2]: Entering directory './github.com/emccode/libstorage'
+make[2]: Entering directory './github.com/codedellemc/libstorage'
 go install ./api/types
 go install ./drivers/storage/isilon
 go install ./api/context
@@ -147,7 +147,7 @@ go install ./drivers/storage/vfs/executor
 go install ./imports/executors
 go install ./cli/lsx
 go install ./cli/lsx/lsx-linux
-make[2]: Leaving directory './github.com/emccode/libstorage'
+make[2]: Leaving directory './github.com/codedellemc/libstorage'
 go install ./imports/config
 go install ./drivers/storage/isilon/executor
 go install ./drivers/storage/scaleio/executor
@@ -156,7 +156,7 @@ go install ./drivers/storage/vfs/executor
 go install ./imports/executors
 go install ./cli/lsx
 go install ./cli/lsx/lsx-darwin
-go install github.com/emccode/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
+go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
 $GOPATH/bin/go-bindata -md5checksum -pkg executors -prefix api/server/executors/bin -o api/server/executors/executors_generated.go api/server/executors/bin/...
 go install ./api/server/executors
 go install ./api/server/router/executor
@@ -184,30 +184,30 @@ go install ./cli/lss
 go install ./cli/lss/lss-darwin
 go install ./drivers/storage/vbox/client
 make -j libstor-c libstor-s
-make[2]: Entering directory './github.com/emccode/libstorage'
-go build -buildmode=c-shared -o $GOPATH/pkg/darwin_amd64/github.com/emccode/libstorage/c/libstor-c.so ./c/libstor-c
+make[2]: Entering directory './github.com/codedellemc/libstorage'
+go build -buildmode=c-shared -o $GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/libstor-c.so ./c/libstor-c
 go install ./drivers/storage/isilon/storage
-go install github.com/emccode/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
-go build -buildmode=c-shared -o $GOPATH/pkg/darwin_amd64/github.com/emccode/libstorage/c/libstor-s.so ./c/libstor-s
-gcc -Wall -pedantic -std=c99 -I$GOPATH/src/github.com/emccode/libstorage/c/libstor-c \
-          -I$GOPATH/pkg/darwin_amd64/github.com/emccode/libstorage/c/ \
-          -L$GOPATH/pkg/darwin_amd64/github.com/emccode/libstorage/c/ \
+go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
+go build -buildmode=c-shared -o $GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/libstor-s.so ./c/libstor-s
+gcc -Wall -pedantic -std=c99 -I$GOPATH/src/github.com/codedellemc/libstorage/c/libstor-c \
+          -I$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
+          -L$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
           -o $GOPATH/bin/libstor-c \
           ./c/libstor-c.c \
           -lstor-c
-gcc -Wall -pedantic -std=c99 -I$GOPATH/src/github.com/emccode/libstorage/c \
-          -I$GOPATH/pkg/darwin_amd64/github.com/emccode/libstorage/c/ \
-          -L$GOPATH/pkg/darwin_amd64/github.com/emccode/libstorage/c/ \
+gcc -Wall -pedantic -std=c99 -I$GOPATH/src/github.com/codedellemc/libstorage/c \
+          -I$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
+          -L$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
           -o $GOPATH/bin/libstor-s \
           ./c/libstor-s.c \
           -lstor-s
-make[2]: Leaving directory './github.com/emccode/libstorage'
+make[2]: Leaving directory './github.com/codedellemc/libstorage'
 make build-lss
-make[2]: Entering directory './github.com/emccode/libstorage'
+make[2]: Entering directory './github.com/codedellemc/libstorage'
 go install ./drivers/storage/isilon/storage
-go install github.com/emccode/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
-make[2]: Leaving directory './github.com/emccode/libstorage'
-make[1]: Leaving directory './github.com/emccode/libstorage'
+go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
+make[2]: Leaving directory './github.com/codedellemc/libstorage'
+make[1]: Leaving directory './github.com/codedellemc/libstorage'
 ```
 
 ## Version File

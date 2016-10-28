@@ -11,15 +11,15 @@ import (
 	"github.com/akutz/gotil"
 	flag "github.com/spf13/pflag"
 
-	"github.com/emccode/libstorage/api"
-	"github.com/emccode/libstorage/api/server"
-	apitypes "github.com/emccode/libstorage/api/types"
-	apiconfig "github.com/emccode/libstorage/api/utils/config"
+	"github.com/codedellemc/libstorage/api"
+	"github.com/codedellemc/libstorage/api/server"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	apiconfig "github.com/codedellemc/libstorage/api/utils/config"
 
 	// load the drivers
-	_ "github.com/emccode/libstorage/imports/config"
-	_ "github.com/emccode/libstorage/imports/remote"
-	_ "github.com/emccode/libstorage/imports/routers"
+	_ "github.com/codedellemc/libstorage/imports/config"
+	_ "github.com/codedellemc/libstorage/imports/remote"
+	_ "github.com/codedellemc/libstorage/imports/routers"
 )
 
 var (

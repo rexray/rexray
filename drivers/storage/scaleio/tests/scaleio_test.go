@@ -10,13 +10,13 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/server"
-	apitests "github.com/emccode/libstorage/api/tests"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/server"
+	apitests "github.com/codedellemc/libstorage/api/tests"
+	"github.com/codedellemc/libstorage/api/types"
 
 	// load the  driver
-	sio "github.com/emccode/libstorage/drivers/storage/scaleio"
-	siox "github.com/emccode/libstorage/drivers/storage/scaleio/executor"
+	sio "github.com/codedellemc/libstorage/drivers/storage/scaleio"
+	siox "github.com/codedellemc/libstorage/drivers/storage/scaleio/executor"
 )
 
 var (

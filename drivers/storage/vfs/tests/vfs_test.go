@@ -20,17 +20,17 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/server"
-	apitests "github.com/emccode/libstorage/api/tests"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/server"
+	apitests "github.com/codedellemc/libstorage/api/tests"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 
 	// load the vfs driver packages
 
-	"github.com/emccode/libstorage/drivers/storage/vfs"
-	_ "github.com/emccode/libstorage/drivers/storage/vfs/client"
-	_ "github.com/emccode/libstorage/drivers/storage/vfs/storage"
+	"github.com/codedellemc/libstorage/drivers/storage/vfs"
+	_ "github.com/codedellemc/libstorage/drivers/storage/vfs/client"
+	_ "github.com/codedellemc/libstorage/drivers/storage/vfs/storage"
 )
 
 func TestMain(m *testing.M) {

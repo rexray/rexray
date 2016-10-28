@@ -3,7 +3,7 @@ package utils
 import (
 	"sort"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // ByVolumeID implements sort.Interface for []*types.Volume based on the ID

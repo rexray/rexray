@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/emccode/libstorage/api/server/handlers"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/server/handlers"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func (s *server) initGlobalMiddleware() {

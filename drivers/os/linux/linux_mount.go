@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 const (

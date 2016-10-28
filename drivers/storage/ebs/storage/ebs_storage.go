@@ -19,11 +19,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/drivers/storage/ebs"
-	ebsUtils "github.com/emccode/libstorage/drivers/storage/ebs/utils"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/drivers/storage/ebs"
+	ebsUtils "github.com/codedellemc/libstorage/drivers/storage/ebs/utils"
 )
 
 const (

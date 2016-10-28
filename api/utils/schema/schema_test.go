@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func TestVolumeObject(t *testing.T) {

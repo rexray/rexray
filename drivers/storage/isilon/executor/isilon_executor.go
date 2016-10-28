@@ -12,9 +12,9 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/drivers/storage/isilon"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/drivers/storage/isilon"
 )
 
 // driver is the storage executor for the vbox storage driver.

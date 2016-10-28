@@ -308,7 +308,7 @@ be configured.
 
 ### Embedded Configuration
 If `libStorage` is embedded into another application, such as
-[`REX-Ray`](https://github.com/emccode/rexray), then that application may
+[`REX-Ray`](https://github.com/codedellemc/rexray), then that application may
 manage its own configuration and supply the embedded `libStorage` instance
 directly with a configuration object. In this scenario, the `libStorage`
 configuration files are ignored in deference to the embedding application.

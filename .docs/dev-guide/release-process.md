@@ -27,8 +27,8 @@ or `stable` release.
 
 ## Review Issues & Pull Requests
 The first step to a release is to review the outstanding
-[issues](https://github.com/emccode/libstorage/issues) and
-[pull requests](https://github.com/emccode/libstorage/pulls) that are tagged
+[issues](https://github.com/codedellemc/libstorage/issues) and
+[pull requests](https://github.com/codedellemc/libstorage/pulls) that are tagged
 for the release in question.
 
 If there are outstanding issues requiring changes or pending pull requests to
@@ -117,7 +117,7 @@ Release Type | Tag Format | Example
 ### Tag Methods
 There are two ways to tag a release:
 
-  1. [GitHub Releases](https://github.com/emccode/libstorage/releases/new)
+  1. [GitHub Releases](https://github.com/codedellemc/libstorage/releases/new)
   2. Command Line
 
 ### Command Line

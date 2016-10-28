@@ -12,8 +12,8 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/client"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/client"
 )
 
 func toCVolume(v *types.Volume) (*C.volume, error) {

@@ -13,7 +13,7 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 const (

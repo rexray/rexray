@@ -1,6 +1,6 @@
 package libstorage
 
-import "github.com/emccode/libstorage/api/types"
+import "github.com/codedellemc/libstorage/api/types"
 
 type lss struct {
 	types.Store

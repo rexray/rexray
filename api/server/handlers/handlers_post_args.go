@@ -8,8 +8,8 @@ import (
 
 	//log "github.com/Sirupsen/logrus"
 
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 )
 
 // postArgsHandler is an HTTP filter for injecting the store with the POST

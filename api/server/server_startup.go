@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emccode/libstorage/api"
-	"github.com/emccode/libstorage/api/server/services"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api"
+	"github.com/codedellemc/libstorage/api/server/services"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 var (

@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/akutz/goof"
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 )
 
 func (d *driver) getVolumeMountPath(volumeName string) (string, error) {

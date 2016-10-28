@@ -10,17 +10,17 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/server"
-	apitests "github.com/emccode/libstorage/api/tests"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/server"
+	apitests "github.com/codedellemc/libstorage/api/tests"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 
 	// load the  driver
-	"github.com/emccode/libstorage/drivers/storage/vbox"
-	vboxx "github.com/emccode/libstorage/drivers/storage/vbox/executor"
-	_ "github.com/emccode/libstorage/drivers/storage/vbox/storage"
+	"github.com/codedellemc/libstorage/drivers/storage/vbox"
+	vboxx "github.com/codedellemc/libstorage/drivers/storage/vbox/executor"
+	_ "github.com/codedellemc/libstorage/drivers/storage/vbox/storage"
 )
 
 var (

@@ -8,20 +8,20 @@ Release early, release often
 This is a minor update that includes support for ScaleIO 2.0.1.
 
 ### Enhancements
-* Support for ScaleIO 2.0.1 ([#303](https://github.com/emccode/libstorage/issues/303))
+* Support for ScaleIO 2.0.1 ([#303](https://github.com/codedellemc/libstorage/issues/303))
 
 ## Version 0.3.0 (2016/10/16)
 This release introduces the Elastic Block Storage (EBS) driver, formerly known
 as the EC2 driver in REX-Ray <=0.3.x.
 
 ### Enhancements
-* Amazon Elastic Block Storage (EBS) Support ([#248](https://github.com/emccode/libstorage/issues/248), [#279](https://github.com/emccode/libstorage/issues/279))
-* Build with Docker ([#274](https://github.com/emccode/libstorage/issues/274), [#281](https://github.com/emccode/libstorage/issues/281))
-* Documentation updates ([#298](https://github.com/emccode/libstorage/issues/298))
+* Amazon Elastic Block Storage (EBS) Support ([#248](https://github.com/codedellemc/libstorage/issues/248), [#279](https://github.com/codedellemc/libstorage/issues/279))
+* Build with Docker ([#274](https://github.com/codedellemc/libstorage/issues/274), [#281](https://github.com/codedellemc/libstorage/issues/281))
+* Documentation updates ([#298](https://github.com/codedellemc/libstorage/issues/298))
 
 ### Bug Fixes
-* Volume Removal Instance ID Fix ([#292](https://github.com/emccode/libstorage/issues/292))
-* Avoid Client Failure when Server Driver not Supported ([#296](https://github.com/emccode/libstorage/issues/296), [#297](https://github.com/emccode/libstorage/issues/297), [#299](https://github.com/emccode/libstorage/issues/299), [#300](https://github.com/emccode/libstorage/issues/300))
+* Volume Removal Instance ID Fix ([#292](https://github.com/codedellemc/libstorage/issues/292))
+* Avoid Client Failure when Server Driver not Supported ([#296](https://github.com/codedellemc/libstorage/issues/296), [#297](https://github.com/codedellemc/libstorage/issues/297), [#299](https://github.com/codedellemc/libstorage/issues/299), [#300](https://github.com/codedellemc/libstorage/issues/300))
 
 ### Thank You
   Name | Blame  
@@ -36,12 +36,12 @@ as improvements to the build process. For example, Travis-CI now builds
 libStorage against multiple versions of Golang and both Linux and Darwin.
 
 ### Bug Fixes
-* EFS Volume / Tag Creation Bug ([#261](https://github.com/emccode/libstorage/issues/261))
-* Next Device Fix ([#268](https://github.com/emccode/libstorage/issues/268))
+* EFS Volume / Tag Creation Bug ([#261](https://github.com/codedellemc/libstorage/issues/261))
+* Next Device Fix ([#268](https://github.com/codedellemc/libstorage/issues/268))
 
 ### Enhancements
-* Build Matrix Support ([#263](https://github.com/emccode/libstorage/issues/263))
-* Glide 12 Support ([#265](https://github.com/emccode/libstorage/issues/265))
+* Build Matrix Support ([#263](https://github.com/codedellemc/libstorage/issues/263))
+* Glide 12 Support ([#265](https://github.com/codedellemc/libstorage/issues/265))
 
 ## Version 0.2.0 (2016/09/07)
 Beginning with this release, libStorage's versions will increment the MINOR
@@ -49,14 +49,14 @@ component with the introduction of a new storage driver in concert with the
 [guidelines](http://semver.org) set forth by semantic versioning.
 
 ### New Features
-* Amazon Elastic File System (EFS) Support ([#231](https://github.com/emccode/libstorage/issues/231))
+* Amazon Elastic File System (EFS) Support ([#231](https://github.com/codedellemc/libstorage/issues/231))
 
 ### Enhancements
-* Support for Go 1.7 ([#251](https://github.com/emccode/libstorage/issues/251))
+* Support for Go 1.7 ([#251](https://github.com/codedellemc/libstorage/issues/251))
 
 ### Bug Fixes
-* Isilon Export Permissions ([#252](https://github.com/emccode/libstorage/issues/252), [#257](https://github.com/emccode/libstorage/issues/257))
-* Isilon Volume Removal ([#253](https://github.com/emccode/libstorage/issues/253))
+* Isilon Export Permissions ([#252](https://github.com/codedellemc/libstorage/issues/252), [#257](https://github.com/codedellemc/libstorage/issues/257))
+* Isilon Volume Removal ([#253](https://github.com/codedellemc/libstorage/issues/253))
 
 ### Thank You
   Name | Blame  
@@ -73,12 +73,12 @@ that were taking minutes now take seconds or less. Memory consumption that
 could exceed 50GB is now kept neat and tidy.
 
 ### Bug Fixes
-* Task service memory fix ([#225](https://github.com/emccode/libstorage/issues/225))
-* Context logger optimizations ([#224](https://github.com/emccode/libstorage/issues/224))
+* Task service memory fix ([#225](https://github.com/codedellemc/libstorage/issues/225))
+* Context logger optimizations ([#224](https://github.com/codedellemc/libstorage/issues/224))
 
 ### Enhancements
-* Improved volume path caching ([#227](https://github.com/emccode/libstorage/issues/227))
-* Make Gometalinter optional ([#223](https://github.com/emccode/libstorage/issues/223))
+* Improved volume path caching ([#227](https://github.com/codedellemc/libstorage/issues/227))
+* Make Gometalinter optional ([#223](https://github.com/codedellemc/libstorage/issues/223))
 
 
 ## Version 0.1.4 (2016/07/08)
@@ -86,21 +86,21 @@ This update provides a major performance improvement as well as a few other,
 minor bug fixes and enhancements.
 
 ### Bug Fixes
-* Performance degradation bug ([#218](https://github.com/emccode/libstorage/issues/218))
-* Close bug in ScaleIO driver ([#213](https://github.com/emccode/libstorage/issues/213))
-* Panic when checking attached instances with Isilon driver ([#211](https://github.com/emccode/libstorage/issues/211))
+* Performance degradation bug ([#218](https://github.com/codedellemc/libstorage/issues/218))
+* Close bug in ScaleIO driver ([#213](https://github.com/codedellemc/libstorage/issues/213))
+* Panic when checking attached instances with Isilon driver ([#211](https://github.com/codedellemc/libstorage/issues/211))
 
 ### Enhancements
-* Improved build process ([#220](https://github.com/emccode/libstorage/issues/220))
-* Improved executor logging ([#217](https://github.com/emccode/libstorage/issues/217))
-* Log timestamps in ms ([#219](https://github.com/emccode/libstorage/issues/219))
-* Updated ScaleIO docs ([#214](https://github.com/emccode/libstorage/issues/214))
+* Improved build process ([#220](https://github.com/codedellemc/libstorage/issues/220))
+* Improved executor logging ([#217](https://github.com/codedellemc/libstorage/issues/217))
+* Log timestamps in ms ([#219](https://github.com/codedellemc/libstorage/issues/219))
+* Updated ScaleIO docs ([#214](https://github.com/codedellemc/libstorage/issues/214))
 
 ## Version 0.1.3 (2016/06/14)
 This is a minor update to support the release of REX-Ray 0.4.0.
 
 ### Enhancements
-* Marshal to YAML Enhancements ([#203](https://github.com/emccode/libstorage/issues/203))
+* Marshal to YAML Enhancements ([#203](https://github.com/codedellemc/libstorage/issues/203))
 
 ## Version 0.1.2 (2016/06/13)
 This release updates the default VirtualBox endpoint to `http://10.0.2.2:18083`.

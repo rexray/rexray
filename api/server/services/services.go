@@ -8,8 +8,8 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 var (

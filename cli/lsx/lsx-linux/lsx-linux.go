@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/emccode/libstorage/cli/lsx"
+	"github.com/codedellemc/libstorage/cli/lsx"
 )
 
 func main() {

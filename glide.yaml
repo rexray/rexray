@@ -1,4 +1,4 @@
-package: github.com/emccode/libstorage
+package: github.com/codedellemc/libstorage
 import:
 
 ################################################################################
@@ -16,8 +16,8 @@ import:
     version: v0.1.0
   - package: github.com/akutz/golf
     version: v0.1.1
-  - package: github.com/emccode/gournal
-    version: v0.2.0
+  - package: github.com/codedellemc/gournal
+    version: v0.3.0
   - package: github.com/cesanta/validate-json
 
 ################################################################################
@@ -25,9 +25,9 @@ import:
 ################################################################################
 
 ### ScaleIO
-  - package: github.com/emccode/goscaleio
+  - package: github.com/codedellemc/goscaleio
     ref:     support/tls-sio-gw-2.0.0.2
-    repo:    https://github.com/emccode/goscaleio
+    repo:    https://github.com/codedellemc/goscaleio
 
 ### VirtualBox
   - package: github.com/appropriate/go-virtualboxclient
@@ -35,8 +35,8 @@ import:
     repo:    https://github.com/clintonskitson/go-virtualboxclient
 
 ### Isilon
-  - package: github.com/emccode/goisilon
-    version: v1.4.0
+  - package: github.com/codedellemc/goisilon
+    version: v1.5.0
 
 ### EFS and EBS
   - package: github.com/aws/aws-sdk-go

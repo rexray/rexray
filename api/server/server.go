@@ -15,20 +15,20 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
-	"github.com/emccode/gournal"
-	glogrus "github.com/emccode/gournal/logrus"
+	"github.com/codedellemc/gournal"
+	glogrus "github.com/codedellemc/gournal/logrus"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/server/services"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	apicnfg "github.com/emccode/libstorage/api/utils/config"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/server/services"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
+	apicnfg "github.com/codedellemc/libstorage/api/utils/config"
 
 	// imported to load routers
-	_ "github.com/emccode/libstorage/imports/routers"
+	_ "github.com/codedellemc/libstorage/imports/routers"
 
 	// imported to load remote storage drivers
-	_ "github.com/emccode/libstorage/imports/remote"
+	_ "github.com/codedellemc/libstorage/imports/remote"
 )
 
 var (

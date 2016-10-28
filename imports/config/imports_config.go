@@ -7,7 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 const (

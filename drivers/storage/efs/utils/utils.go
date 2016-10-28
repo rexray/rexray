@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/drivers/storage/efs"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/drivers/storage/efs"
 )
 
 const (

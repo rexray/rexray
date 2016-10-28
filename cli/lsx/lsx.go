@@ -11,14 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/registry"
-	apitypes "github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	apiconfig "github.com/emccode/libstorage/api/utils/config"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
+	apiconfig "github.com/codedellemc/libstorage/api/utils/config"
 
-	_ "github.com/emccode/libstorage/imports/config"
-	_ "github.com/emccode/libstorage/imports/executors"
+	// load these packages
+	_ "github.com/codedellemc/libstorage/imports/config"
+	_ "github.com/codedellemc/libstorage/imports/executors"
 )
 
 var (

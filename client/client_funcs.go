@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func (c *client) API() types.APIClient {

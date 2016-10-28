@@ -7,13 +7,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
-	sio "github.com/emccode/goscaleio"
-	siotypes "github.com/emccode/goscaleio/types/v1"
+	sio "github.com/codedellemc/goscaleio"
+	siotypes "github.com/codedellemc/goscaleio/types/v1"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/drivers/storage/scaleio"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/drivers/storage/scaleio"
 )
 
 const (

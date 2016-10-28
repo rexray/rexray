@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/net/context/ctxhttp"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 func doRequest(ctx types.Context, req *http.Request) (*http.Response, error) {

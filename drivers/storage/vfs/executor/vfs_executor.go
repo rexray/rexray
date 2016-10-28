@@ -13,10 +13,10 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
-	"github.com/emccode/libstorage/drivers/storage/vfs"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/drivers/storage/vfs"
 )
 
 var (

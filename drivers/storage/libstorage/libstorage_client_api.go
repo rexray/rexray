@@ -3,9 +3,9 @@ package libstorage
 import (
 	"io"
 
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 )
 
 func (c *client) Instances(

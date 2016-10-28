@@ -5,11 +5,11 @@ import (
 
 	"github.com/akutz/gofig"
 
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/server/handlers"
-	"github.com/emccode/libstorage/api/server/httputils"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/api/utils/schema"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/server/handlers"
+	"github.com/codedellemc/libstorage/api/server/httputils"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils/schema"
 )
 
 // OnVolume is a handler to which an external provider can attach that is

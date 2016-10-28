@@ -9,11 +9,11 @@ import (
 	"github.com/cesanta/ucl"
 	"github.com/cesanta/validate-json/schema"
 
-	"github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 const (
-	jsonSchemaID = "https://github.com/emccode/libstorage"
+	jsonSchemaID = "https://github.com/codedellemc/libstorage"
 )
 
 var (

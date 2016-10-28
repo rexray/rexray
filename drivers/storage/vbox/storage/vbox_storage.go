@@ -11,10 +11,10 @@ import (
 	vboxw "github.com/appropriate/go-virtualboxclient/vboxwebsrv"
 	vboxc "github.com/appropriate/go-virtualboxclient/virtualboxclient"
 
-	"github.com/emccode/libstorage/api/context"
-	"github.com/emccode/libstorage/api/registry"
-	"github.com/emccode/libstorage/api/types"
-	"github.com/emccode/libstorage/drivers/storage/vbox"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/drivers/storage/vbox"
 )
 
 // Driver represents a vbox driver implementation of StorageDriver

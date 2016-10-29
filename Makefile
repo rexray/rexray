@@ -1091,6 +1091,13 @@ test-gcepd:
 test-gcepd-clean:
 	DRIVERS=gcepd $(MAKE) clean
 
+test-digitalocean:
+	DRIVERS=digitalocean $(MAKE) deps
+	DRIVERS=digitalocean $(MAKE) ./drivers/storage/digitalocean/tests/digitalocean.test
+
+test-digitalocean-clean:
+	DRIVERS=digitalocean $(MAKE) clean
+
 clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)

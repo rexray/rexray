@@ -41,7 +41,7 @@ $gourl  = "https://storage.googleapis.com/golang/#{$gotgz}"
 $gopath = "/opt/go"
 
 # project info
-$srcs = "#{$gopath}/src/github.com/emccode/libstorage"
+$srcs = "#{$gopath}/src/github.com/codedellemc/libstorage"
 
 # the script to ensure the copied working source is a git repo
 $validate_copied_sources = <<SCRIPT
@@ -107,8 +107,8 @@ go install ./...
 SCRIPT
 
 # rex-ray repo and branch information
-$rexray_dir = "#{$gopath}/src/github.com/emccode/rexray"
-$rexray_url = ENV['RR_REPO']  ? ENV['RR_REPO'] : "https://github.com/emccode/rexray"
+$rexray_dir = "#{$gopath}/src/github.com/codedellemc/rexray"
+$rexray_url = ENV['RR_REPO']  ? ENV['RR_REPO'] : "https://github.com/codedellemc/rexray"
 $rexray_ref = ENV['RR_REF']  ? ENV['RR_REF'] : "master"
 $rexray_bin = "/usr/bin/rexray"
 $rexray_cfg = "/etc/rexray/config.yml"
@@ -169,6 +169,15 @@ libstorage:
   host:    tcp://#{$node0_name}:7979
   service: ebs
 EOF
+SCRIPT
+
+# the script to update the root profile with go info
+$to_root_profile = ">> /root/.bash_profile"
+$update_root_profile_with_go_info = <<SCRIPT
+echo 'alias cde="cd #{$gopath}/src/github.com/codedellemc"' #{$to_root_profile}
+echo 'alias cdr="cd #{$gopath}/src/github.com/codedellemc/rexray"' #{$to_root_profile}
+echo export GOPATH=#{$gopath} #{$to_root_profile}
+echo export PATH=#{$gopath}/bin:/usr/local/go/bin:$PATH #{$to_root_profile}
 SCRIPT
 
 # init the environment variables used when building go source
@@ -307,12 +316,18 @@ Vagrant.configure("2") do |config|
         s.inline = $provision_golang
       end
 
-       # build go-bindata
-       node.vm.provision "shell" do |s|
-         s.name   = "go-bindata"
-         s.env    = $build_env_vars
-         s.inline = $build_go_bindata
-       end
+      # build go-bindata
+      node.vm.provision "shell" do |s|
+        s.name   = "go-bindata"
+        s.env    = $build_env_vars
+        s.inline = $build_go_bindata
+      end
+
+      # update root profile with go info
+      node.vm.provision "shell" do |s|
+        s.name   = "update root profile"
+        s.inline = $update_root_profile_with_go_info
+      end
 
       # build rex-ray
       node.vm.provision "shell" do |s|

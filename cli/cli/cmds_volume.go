@@ -800,6 +800,12 @@ func (c *CLI) lsVolumes(
 	args []string,
 	validStatuses ...string) (*lsVolumesResult, error) {
 
+	// if the volume status matters then send the flag that requests a
+	// volume's attachment information
+	if len(validStatuses) > 0 {
+		c.volumeAttached = true
+	}
+
 	opts := &apitypes.VolumesOpts{Attachments: c.volumeAttached}
 	vols, err := c.r.Storage().Volumes(c.ctx, opts)
 	if err != nil {

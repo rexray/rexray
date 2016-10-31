@@ -31,7 +31,20 @@ func (c *CLI) initSnapshotCmds() {
 		Short:   "Get one or more snapshots",
 		Aliases: []string{"ls", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.r.Storage().Snapshots(c.ctx, store()))
+			coll, err := c.r.Storage().Snapshots(c.ctx, store())
+			if err != nil {
+				log.Fatal(err)
+			}
+			ch := make(chan interface{})
+			go func() {
+				for _, v := range coll {
+					ch <- v
+				}
+				close(ch)
+			}()
+			if err := c.fmtOutput(ch); err != nil {
+				log.Fatal(err)
+			}
 		},
 	}
 	c.snapshotCmd.AddCommand(c.snapshotGetCmd)
@@ -44,8 +57,19 @@ func (c *CLI) initSnapshotCmds() {
 			if c.volumeID == "" {
 				log.Fatalf("missing --volumeid")
 			}
-			c.mustMarshalOutput(c.r.Storage().VolumeSnapshot(
-				c.ctx, c.volumeID, c.snapshotName, store()))
+			obj, err := c.r.Storage().VolumeSnapshot(
+				c.ctx, c.volumeID, c.snapshotName, store())
+			if err != nil {
+				log.Fatal(err)
+			}
+			ch := make(chan interface{})
+			go func() {
+				ch <- obj
+				close(ch)
+			}()
+			if err := c.fmtOutput(ch); err != nil {
+				log.Fatal(err)
+			}
 		},
 	}
 	c.snapshotCmd.AddCommand(c.snapshotCreateCmd)
@@ -73,9 +97,20 @@ func (c *CLI) initSnapshotCmds() {
 			if c.snapshotID == "" && c.volumeID == "" && c.volumeName == "" {
 				log.Fatalf("missing --volumeid or --snapshotid or --volumename")
 			}
-			c.mustMarshalOutput(c.r.Storage().SnapshotCopy(
+			obj, err := c.r.Storage().SnapshotCopy(
 				c.ctx, c.snapshotID, c.snapshotName,
-				c.destinationRegion, store()))
+				c.destinationRegion, store())
+			if err != nil {
+				log.Fatal(err)
+			}
+			ch := make(chan interface{})
+			go func() {
+				ch <- obj
+				close(ch)
+			}()
+			if err := c.fmtOutput(ch); err != nil {
+				log.Fatal(err)
+			}
 		},
 	}
 	c.snapshotCmd.AddCommand(c.snapshotCopyCmd)

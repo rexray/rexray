@@ -27,8 +27,21 @@ func (c *CLI) initDeviceCmds() {
 		Short:   "Get a device's mount(s)",
 		Aliases: []string{"get", "list"},
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.r.OS().Mounts(
-				c.ctx, c.deviceName, c.mountPoint, store()))
+			coll, err := c.r.OS().Mounts(
+				c.ctx, c.deviceName, c.mountPoint, store())
+			if err != nil {
+				log.Fatal(err)
+			}
+			ch := make(chan interface{})
+			go func() {
+				for _, v := range coll {
+					ch <- v
+				}
+				close(ch)
+			}()
+			if err := c.fmtOutput(ch); err != nil {
+				log.Fatal(err)
+			}
 		},
 	}
 	c.deviceCmd.AddCommand(c.deviceGetCmd)

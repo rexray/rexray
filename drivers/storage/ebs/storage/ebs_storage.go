@@ -293,7 +293,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	if err != nil {
 		return nil, goof.WithFieldsE(fields, "error getting volume", err)
 	}
-	volumes, convErr := d.toTypesVolume(ctx, ec2vols, false)
+	volumes, convErr := d.toTypesVolume(ctx, ec2vols, 0)
 	if convErr != nil {
 		return nil, goof.WithFieldsE(
 			fields, "error converting to types.Volume", convErr)
@@ -329,7 +329,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	}
 	// Return the volume created
 	return d.VolumeInspect(ctx, *vol.VolumeId, &types.VolumeInspectOpts{
-		Attachments: true,
+		Attachments: types.VolumeAttachmentsTrue,
 	})
 }
 
@@ -579,7 +579,8 @@ func (d *driver) VolumeAttach(
 	if err != nil {
 		return nil, "", goof.WithError("error getting volume", err)
 	}
-	volumes, convErr := d.toTypesVolume(ctx, ec2vols, true)
+	volumes, convErr := d.toTypesVolume(
+		ctx, ec2vols, types.VolumeAttachmentsTrue)
 	if convErr != nil {
 		return nil, "", goof.WithError(
 			"error converting to types.Volume", convErr)
@@ -631,7 +632,7 @@ func (d *driver) VolumeAttach(
 	// Check if successful attach
 	attachedVol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: true,
+			Attachments: types.VolumeAttachmentsTrue,
 			Opts:        opts.Opts,
 		})
 	if err != nil {
@@ -655,7 +656,8 @@ func (d *driver) VolumeDetach(
 	if err != nil {
 		return nil, goof.WithError("error getting volume", err)
 	}
-	volumes, convErr := d.toTypesVolume(ctx, ec2vols, true)
+	volumes, convErr := d.toTypesVolume(
+		ctx, ec2vols, types.VolumeAttachmentsTrue)
 	if convErr != nil {
 		return nil, goof.WithError("error converting to types.Volume", convErr)
 	}
@@ -692,7 +694,7 @@ func (d *driver) VolumeDetach(
 	// check if successful detach
 	detachedVol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: true,
+			Attachments: types.VolumeAttachmentsTrue,
 			Opts:        opts.Opts,
 		})
 	if err != nil {
@@ -917,7 +919,7 @@ var errGetLocDevs = goof.New("error getting local devices from context")
 func (d *driver) toTypesVolume(
 	ctx types.Context,
 	ec2vols []*awsec2.Volume,
-	attachments bool) ([]*types.Volume, error) {
+	attachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
 	// Get local devices map from context
 	ld, ldOK := context.LocalDevices(ctx)
 	if !ldOK {
@@ -930,7 +932,7 @@ func (d *driver) toTypesVolume(
 		// Leave attachment's device name blank if attachments is false
 		for _, attachment := range volume.Attachments {
 			deviceName := ""
-			if attachments {
+			if attachments.Devices() {
 				// Compensate for kernel volume mapping i.e. change "/dev/sda"
 				// to "/dev/xvda"
 				deviceName = strings.Replace(

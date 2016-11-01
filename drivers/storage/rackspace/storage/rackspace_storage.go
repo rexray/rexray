@@ -138,7 +138,7 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 	// always return attachments to align against other drivers for now
-	return d.getVolume(ctx, "", "", true)
+	return d.getVolume(ctx, "", "", types.VolumeAttachmentsTrue)
 }
 
 // 	// VolumeInspect inspects a single volume.
@@ -311,7 +311,7 @@ func (d *driver) VolumeDetach(
 	if volumeID == "" {
 		return nil, goof.WithFields(fields, "volumeId is required for VolumeDetach")
 	}
-	vols, err := d.getVolume(ctx, volumeID, "", true)
+	vols, err := d.getVolume(ctx, volumeID, "", types.VolumeAttachmentsTrue)
 	if err != nil {
 		return nil, err
 	}
@@ -465,8 +465,11 @@ func (d *driver) getInstanceRegion() (string, error) {
 	return region, nil
 }
 
-func (d *driver) getVolume(ctx types.Context, volumeID, volumeName string,
-	attachments bool) ([]*types.Volume, error) {
+func (d *driver) getVolume(
+	ctx types.Context,
+	volumeID, volumeName string,
+	attachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
+
 	var volumesRet []volumes.Volume
 	fields := eff(goof.Fields{
 		"moduleName": ctx,
@@ -583,13 +586,16 @@ func (d *driver) createVolume(
 				"error waiting for volume creation to complete", err)
 	}
 	log.WithFields(fields).Debug("created volume")
-	return translateVolume(resp, true), nil
+	return translateVolume(resp, types.VolumeAttachmentsTrue), nil
 }
 
 //Reformats from volumes.Volume to types.Volume credit to github.com/MatMaul
-func translateVolume(volume *volumes.Volume, includeAttachments bool) *types.Volume {
+func translateVolume(
+	volume *volumes.Volume,
+	includeAttachments types.VolumeAttachmentsTypes) *types.Volume {
+
 	var attachments []*types.VolumeAttachment
-	if includeAttachments {
+	if includeAttachments.Requested() {
 		for _, attachment := range volume.Attachments {
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID: attachment["volume_id"].(string),
@@ -652,7 +658,9 @@ func (d *driver) volumeAttached(ctx types.Context,
 	if volumeID == "" {
 		return true, goof.WithFields(fields, "volumeId is required")
 	}
-	volume, err := d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{Attachments: true})
+	volume, err := d.VolumeInspect(
+		ctx, volumeID, &types.VolumeInspectOpts{
+			Attachments: types.VolumeAttachmentsTrue})
 	if err != nil {
 		return true, goof.WithFieldsE(fields, "error getting volume when waiting", err)
 	}
@@ -701,7 +709,9 @@ func (d *driver) waitVolumeAttachStatus(
 	}
 
 	for {
-		volume, err := d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{Attachments: true})
+		volume, err := d.VolumeInspect(
+			ctx, volumeID,
+			&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
 		if err != nil {
 			return nil, goof.WithFieldsE(fields, "error getting volume when waiting", err)
 		}
@@ -717,7 +727,6 @@ func (d *driver) waitVolumeAttachStatus(
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return nil, nil
 }
 
 //error reporting

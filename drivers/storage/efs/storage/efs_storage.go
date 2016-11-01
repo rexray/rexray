@@ -153,7 +153,7 @@ func (d *driver) Volumes(
 		}
 
 		var atts []*types.VolumeAttachment
-		if opts.Attachments {
+		if opts.Attachments.Requested() {
 			atts, err = d.getVolumeAttachments(ctx, *fileSystem.FileSystemId)
 			if err != nil {
 				return nil, err
@@ -207,7 +207,7 @@ func (d *driver) VolumeInspect(
 
 		var atts []*types.VolumeAttachment
 
-		if opts.Attachments {
+		if opts.Attachments.Requested() {
 			atts, err = d.getVolumeAttachments(ctx, *fileSystem.FileSystemId)
 			if err != nil {
 				return nil, err
@@ -292,7 +292,7 @@ func (d *driver) VolumeCreate(
 	}
 
 	return d.VolumeInspect(ctx, *fileSystem.FileSystemId,
-		&types.VolumeInspectOpts{Attachments: false})
+		&types.VolumeInspectOpts{Attachments: 0})
 }
 
 // VolumeRemove removes a volume.
@@ -389,7 +389,7 @@ func (d *driver) VolumeAttach(
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
 	vol, err := d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: true})
+		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
 	if err != nil {
 		return nil, "", err
 	}

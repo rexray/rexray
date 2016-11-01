@@ -1,20 +1,149 @@
 package types
 
+import "strconv"
+
 // LibStorageDriverName is the name of the libStorage storage driver.
 const LibStorageDriverName = "libstorage"
 
 // NewStorageDriver is a function that constructs a new StorageDriver.
 type NewStorageDriver func() StorageDriver
 
+// VolumeAttachmentsTypes is the type of the volume attachments bitmask.
+type VolumeAttachmentsTypes int
+
+const (
+
+	// VolumeAttachmentsRequested indicates attachment information is requested.
+	VolumeAttachmentsRequested VolumeAttachmentsTypes = 1 << iota // 1
+
+	// VolumeAttachmentsMine indicates attachment information should
+	// be returned for volumes attached to the instance specified in the
+	// instance ID request header. If this bit is set then the instance ID
+	// header is required.
+	VolumeAttachmentsMine // 2
+
+	// VolumeAttachmentsDevices indicates an attempt should made to map devices
+	// provided via the local devices request header to the appropriate
+	// attachment information. If this bit is set then the instance ID and
+	// local device headers are required.
+	VolumeAttachmentsDevices // 4
+
+	// VolumeAttachmentsAttached indicates only volumes that are attached
+	// should be returned.
+	VolumeAttachmentsAttached // 8
+
+	// VolumeAttachmentsUnattached indicates only volumes that are unattached
+	// should be returned.
+	VolumeAttachmentsUnattached // 16
+)
+
+const (
+	// VolumeAttachmentsNone specifies no attachment information is requested.
+	// This is the default value and the same as omitting this parameter
+	// altogether.
+	VolumeAttachmentsNone VolumeAttachmentsTypes = 0
+
+	// VolumeAttachmentsFalse is an alias for VolumeAttachmentsNone.
+	VolumeAttachmentsFalse = VolumeAttachmentsNone
+
+	// VolumeAttachmentsTrue is a mask of
+	// VolumeAttachmentsRequested | VolumeAttachmentsMine |
+	// VolumeAttachmentsDevices | VolumeAttachmentsAttached
+	VolumeAttachmentsTrue = VolumeAttachmentsRequested |
+		VolumeAttachmentsMine | VolumeAttachmentsDevices |
+		VolumeAttachmentsAttached
+)
+
+// ParseVolumeAttachmentTypes parses a value into a VolumeAttachmentsTypes
+// value.
+func ParseVolumeAttachmentTypes(v interface{}) VolumeAttachmentsTypes {
+	switch tv := v.(type) {
+	case VolumeAttachmentsTypes:
+		return tv
+	case bool:
+		if tv {
+			return VolumeAttachmentsTrue
+		}
+		return VolumeAttachmentsRequested
+	case int:
+		return VolumeAttachmentsTypes(tv)
+	case uint:
+		return VolumeAttachmentsTypes(tv)
+	case int8:
+		return VolumeAttachmentsTypes(tv)
+	case uint8:
+		return VolumeAttachmentsTypes(tv)
+	case int16:
+		return VolumeAttachmentsTypes(tv)
+	case uint16:
+		return VolumeAttachmentsTypes(tv)
+	case int32:
+		return VolumeAttachmentsTypes(tv)
+	case uint32:
+		return VolumeAttachmentsTypes(tv)
+	case int64:
+		return VolumeAttachmentsTypes(tv)
+	case uint64:
+		return VolumeAttachmentsTypes(tv)
+	case string:
+		if i, err := strconv.ParseInt(tv, 10, 64); err == nil {
+			return ParseVolumeAttachmentTypes(i)
+		}
+		if b, err := strconv.ParseBool(tv); err == nil {
+			return ParseVolumeAttachmentTypes(b)
+		}
+	}
+	return VolumeAttachmentsNone
+}
+
+// RequiresInstanceID returns a flag that indicates whether the attachment
+// bit requires an instance ID to perform successfully.
+func (v VolumeAttachmentsTypes) RequiresInstanceID() bool {
+	return v.Mine() || v.Devices()
+}
+
+// Requested returns a flag that indicates attachment information is requested.
+func (v VolumeAttachmentsTypes) Requested() bool {
+	return v&VolumeAttachmentsRequested > 0
+}
+
+// Mine returns a flag that indicates attachment information should
+// be returned for volumes attached to the instance specified in the
+// instance ID request header. If this bit is set then the instance ID
+// header is required.
+func (v VolumeAttachmentsTypes) Mine() bool {
+	return v&VolumeAttachmentsMine > 0
+}
+
+// Devices returns a flag that indicates an attempt should made to map devices
+// provided via the local devices request header to the appropriate
+// attachment information. If this bit is set then the instance ID and
+// local device headers are required.
+func (v VolumeAttachmentsTypes) Devices() bool {
+	return v&VolumeAttachmentsDevices > 0
+}
+
+// Attached returns a flag that indicates only volumes that are attached should
+// be returned.
+func (v VolumeAttachmentsTypes) Attached() bool {
+	return v&VolumeAttachmentsAttached > 0
+}
+
+// Unattached returns a flag that indicates only volumes that are unattached
+// should be returned.
+func (v VolumeAttachmentsTypes) Unattached() bool {
+	return v&VolumeAttachmentsUnattached > 0
+}
+
 // VolumesOpts are options when inspecting a volume.
 type VolumesOpts struct {
-	Attachments bool
+	Attachments VolumeAttachmentsTypes
 	Opts        Store
 }
 
 // VolumeInspectOpts are options when inspecting a volume.
 type VolumeInspectOpts struct {
-	Attachments bool
+	Attachments VolumeAttachmentsTypes
 	Opts        Store
 }
 

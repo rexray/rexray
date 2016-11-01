@@ -233,7 +233,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 
 	size := *opts.Size * 1024 * 1024 * 1024
 
-	vol, err := d.getVolume(ctx, "", volumeName, false)
+	vol, err := d.getVolume(ctx, "", volumeName, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +327,7 @@ func (d *driver) VolumeAttach(
 	}
 
 	// review volume with attachments to any host
-	volumes, err := d.getVolume(ctx, volumeID, "", false)
+	volumes, err := d.getVolume(ctx, volumeID, "", 0)
 	if err != nil {
 		return nil, "", err
 	}
@@ -356,7 +356,7 @@ func (d *driver) VolumeAttach(
 		)
 	}
 
-	volumes, err = d.getVolume(ctx, volumeID, "", true)
+	volumes, err = d.getVolume(ctx, volumeID, "", types.VolumeAttachmentsTrue)
 	if err != nil {
 		return nil, "", err
 	}
@@ -384,7 +384,7 @@ func (d *driver) VolumeDetach(
 		return nil, goof.New("missing volume id")
 	}
 
-	volumes, err := d.getVolume(ctx, volumeID, "", false)
+	volumes, err := d.getVolume(ctx, volumeID, "", 0)
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +402,8 @@ func (d *driver) VolumeDetach(
 
 	ctx.Info("detached volume", volumeID)
 	return d.VolumeInspect(
-		ctx, volumeID, &types.VolumeInspectOpts{Attachments: true})
+		ctx, volumeID, &types.VolumeInspectOpts{
+			Attachments: types.VolumeAttachmentsTrue})
 }
 
 func (d *driver) VolumeDetachAll(
@@ -477,7 +478,7 @@ func (d *driver) VolumeInspect(
 func (d *driver) getVolume(
 	ctx types.Context,
 	volumeID string, volumeName string,
-	attachments bool) ([]*types.Volume, error) {
+	attachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
 
 	if err := d.refreshSession(ctx); err != nil {
 		return nil, err
@@ -493,7 +494,7 @@ func (d *driver) getVolume(
 	}
 
 	var mapDN map[string]string
-	if attachments {
+	if attachments.Requested() {
 		volumeMapping, err := d.getVolumeMapping(ctx)
 		if err != nil {
 			return nil, err

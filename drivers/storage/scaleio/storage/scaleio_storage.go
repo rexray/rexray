@@ -163,7 +163,7 @@ func (d *driver) Volumes(
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
 	sdcMappedVolumes := make(map[string]string)
-	if opts.Attachments {
+	if opts.Attachments.Requested() {
 		if ld, ok := context.LocalDevices(ctx); ok {
 			sdcMappedVolumes = ld.DeviceMap
 		}
@@ -200,7 +200,7 @@ func (d *driver) Volumes(
 		return ""
 	}
 
-	volumes, err := d.getVolume("", "", false)
+	volumes, err := d.getVolume("", "", 0)
 	if err != nil {
 		return []*types.Volume{}, err
 	}
@@ -256,7 +256,7 @@ func (d *driver) VolumeInspect(
 	}
 
 	sdcMappedVolumes := make(map[string]string)
-	if opts.Attachments {
+	if opts.Attachments.Requested() {
 		if ld, ok := context.LocalDevices(ctx); ok {
 			sdcMappedVolumes = ld.DeviceMap
 		}
@@ -374,7 +374,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	}
 
 	return d.VolumeInspect(ctx, vol.ID, &types.VolumeInspectOpts{
-		Attachments: true,
+		Attachments: types.VolumeAttachmentsTrue,
 	})
 }
 
@@ -389,7 +389,7 @@ func (d *driver) VolumeCreateFromSnapshot(
 		return nil, goof.New("no volume name specified")
 	}
 
-	volumes, err := d.getVolume("", volumeName, false)
+	volumes, err := d.getVolume("", volumeName, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -406,7 +406,7 @@ func (d *driver) VolumeCreateFromSnapshot(
 	}
 
 	volumeInspectOpts := &types.VolumeInspectOpts{
-		Attachments: true,
+		Attachments: types.VolumeAttachmentsTrue,
 		Opts:        opts.Opts,
 	}
 
@@ -448,7 +448,7 @@ func (d *driver) VolumeRemove(
 	var err error
 	var volumes []*siotypes.Volume
 
-	if volumes, err = d.getVolume(volumeID, "", false); err != nil {
+	if volumes, err = d.getVolume(volumeID, "", 0); err != nil {
 		return goof.WithFieldsE(fields, "error getting volume", err)
 	}
 
@@ -478,7 +478,7 @@ func (d *driver) VolumeAttach(
 
 	vol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: true,
+			Attachments: types.VolumeAttachmentsTrue,
 		})
 	if err != nil {
 		return nil, "", goof.WithError("error getting volume", err)
@@ -505,7 +505,7 @@ func (d *driver) VolumeAttach(
 
 	attachedVol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: true,
+			Attachments: types.VolumeAttachmentsTrue,
 			Opts:        opts.Opts,
 		})
 	if err != nil {
@@ -522,7 +522,7 @@ func (d *driver) VolumeDetach(
 
 	iid := context.MustInstanceID(ctx)
 
-	volumes, err := d.getVolume(volumeID, "", false)
+	volumes, err := d.getVolume(volumeID, "", 0)
 	if err != nil {
 		return nil, goof.WithError("error getting volume", err)
 	}
@@ -551,7 +551,7 @@ func (d *driver) VolumeDetach(
 	}
 
 	vol, err := d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{
-		Attachments: true,
+		Attachments: types.VolumeAttachmentsTrue,
 	})
 	if err != nil {
 		return nil, err
@@ -636,12 +636,15 @@ func (d *driver) getProtectionDomainIDs() (
 }
 
 func (d *driver) getVolume(
-	volumeID, volumeName string, getSnapshots bool) (
+	volumeID, volumeName string, attachments types.VolumeAttachmentsTypes) (
+
 	[]*siotypes.Volume, error) {
 
 	volumeName = shrink(volumeName)
 
-	volumes, err := d.client.GetVolume("", volumeID, "", volumeName, getSnapshots)
+	volumes, err := d.client.GetVolume(
+		"", volumeID, "", volumeName, attachments.Requested())
+
 	if err != nil {
 		return nil, err
 	}

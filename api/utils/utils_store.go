@@ -192,6 +192,15 @@ func (s *keyValueStore) GetStore(k string) types.Store {
 	}
 }
 
+func (s *keyValueStore) GetAttachments() types.VolumeAttachmentsTypes {
+	return s.GetVolumeAttachmentsTypes("attachments")
+}
+
+func (s *keyValueStore) GetVolumeAttachmentsTypes(
+	k string) types.VolumeAttachmentsTypes {
+	return types.ParseVolumeAttachmentTypes(s.Get(k))
+}
+
 func (s *keyValueStore) GetString(k string) string {
 	v := s.Get(k)
 	switch tv := v.(type) {

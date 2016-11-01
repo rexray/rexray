@@ -126,7 +126,7 @@ func volumeByName(
 	t *testing.T, client types.Client, volumeName string) *types.Volume {
 
 	log.WithField("volumeName", volumeName).Info("get volume byvbox.Name")
-	vols, err := client.API().Volumes(nil, false)
+	vols, err := client.API().Volumes(nil, 0)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -205,7 +205,7 @@ func volumeInspect(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, false)
+	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, 0)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -220,7 +220,8 @@ func volumeInspectAttached(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, true)
+	reply, err := client.API().VolumeInspect(
+		nil, vbox.Name, volumeID, types.VolumeAttachmentsTrue)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -236,7 +237,8 @@ func volumeInspectAttachedFail(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, true)
+	reply, err := client.API().VolumeInspect(
+		nil, vbox.Name, volumeID, types.VolumeAttachmentsTrue)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -252,7 +254,8 @@ func volumeInspectDetached(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, true)
+	reply, err := client.API().VolumeInspect(
+		nil, vbox.Name, volumeID, types.VolumeAttachmentsTrue)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -269,7 +272,7 @@ func volumeInspectDetachedFail(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, false)
+	reply, err := client.API().VolumeInspect(nil, vbox.Name, volumeID, 0)
 	assert.NoError(t, err)
 
 	if err != nil {

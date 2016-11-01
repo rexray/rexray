@@ -215,7 +215,7 @@ func (d *driver) Volumes(
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
 	// always return attachments to align against other drivers for now
-	return d.getVolume(ctx, "", "", true)
+	return d.getVolume(ctx, "", "", opts.Attachments)
 }
 
 func (d *driver) VolumeInspect(
@@ -240,7 +240,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
 	vol, err := d.VolumeInspect(ctx, volumeName,
-		&types.VolumeInspectOpts{Attachments: false})
+		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +281,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	}
 
 	return d.VolumeInspect(ctx, volumeName,
-		&types.VolumeInspectOpts{Attachments: false})
+		&types.VolumeInspectOpts{Attachments: 0})
 }
 
 // VolumeRemove removes a volume.
@@ -329,7 +329,7 @@ func (d *driver) VolumeAttach(
 
 	// ensure the volume exists and is exported
 	vol, err := d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: true})
+		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
 	if err != nil {
 		return nil, "", err
 	}
@@ -390,7 +390,7 @@ func (d *driver) VolumeAttach(
 	}
 
 	vol, err = d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: true})
+		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
 	if err != nil {
 		return nil, "", err
 	}
@@ -408,9 +408,7 @@ func (d *driver) VolumeDetach(
 	defer d.Unlock()
 
 	vol, err := d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{
-			Attachments: false,
-		})
+		&types.VolumeInspectOpts{Attachments: 0})
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +452,7 @@ func (d *driver) VolumeDetach(
 	}
 
 	return d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{
-		Attachments: true,
+		Attachments: types.VolumeAttachmentsTrue,
 	})
 }
 
@@ -517,8 +515,11 @@ func (d *driver) SnapshotRemove(
 	return nil
 }
 
-func (d *driver) getVolume(ctx types.Context, volumeID, volumeName string,
-	attachments bool) ([]*types.Volume, error) {
+func (d *driver) getVolume(
+	ctx types.Context,
+	volumeID, volumeName string,
+	attachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
+
 	var volumes []isi.Volume
 	if volumeID != "" || volumeName != "" {
 		volume, err := d.client.GetVolume(ctx, volumeID, volumeName)
@@ -542,7 +543,7 @@ func (d *driver) getVolume(ctx types.Context, volumeID, volumeName string,
 	}
 
 	var atts []*types.VolumeAttachment
-	if attachments {
+	if attachments.Requested() {
 		var err error
 		atts, err = d.getVolumeAttachments(ctx)
 		if err != nil {

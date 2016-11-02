@@ -3,6 +3,16 @@
 Release early, release often
 
 ---
+## Version 0.3.3 (TBD)
+This release includes some minor fixes as well as a new way to query
+attachment information about one or more volumes.
+
+### Enhancements
+* Enhanced attachment querying ([#313](https://github.com/codedellemc/libstorage/pull/313))
+
+### Bug Fixes
+* AWS Config Support ([#314](https://github.com/codedellemc/libstorage/pull/314))
+
 ## Version 0.3.2 (2016/10/18)
 This release updates the project to reflect its new location at
 github.com/codedellemc.

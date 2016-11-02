@@ -103,6 +103,8 @@ type CLI struct {
 	volumeID                string
 	runAsync                bool
 	volumeAttached          bool
+	volumeAttachedToMe      bool
+	volumeUnattached        bool
 	description             string
 	volumeType              string
 	iops                    int64

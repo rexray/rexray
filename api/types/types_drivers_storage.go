@@ -60,11 +60,6 @@ func ParseVolumeAttachmentTypes(v interface{}) VolumeAttachmentsTypes {
 	switch tv := v.(type) {
 	case VolumeAttachmentsTypes:
 		return tv
-	case bool:
-		if tv {
-			return VolumeAttachmentsTrue
-		}
-		return VolumeAttachmentsRequested
 	case int:
 		return VolumeAttachmentsTypes(tv)
 	case uint:
@@ -92,6 +87,11 @@ func ParseVolumeAttachmentTypes(v interface{}) VolumeAttachmentsTypes {
 		if b, err := strconv.ParseBool(tv); err == nil {
 			return ParseVolumeAttachmentTypes(b)
 		}
+	case bool:
+		if tv {
+			return VolumeAttachmentsTrue
+		}
+		return VolumeAttachmentsRequested
 	}
 	return VolumeAttachmentsNone
 }
@@ -104,7 +104,7 @@ func (v VolumeAttachmentsTypes) RequiresInstanceID() bool {
 
 // Requested returns a flag that indicates attachment information is requested.
 func (v VolumeAttachmentsTypes) Requested() bool {
-	return v&VolumeAttachmentsRequested > 0
+	return v.bitSet(VolumeAttachmentsRequested)
 }
 
 // Mine returns a flag that indicates attachment information should
@@ -112,7 +112,7 @@ func (v VolumeAttachmentsTypes) Requested() bool {
 // instance ID request header. If this bit is set then the instance ID
 // header is required.
 func (v VolumeAttachmentsTypes) Mine() bool {
-	return v&VolumeAttachmentsMine > 0
+	return v.bitSet(VolumeAttachmentsMine)
 }
 
 // Devices returns a flag that indicates an attempt should made to map devices
@@ -120,19 +120,23 @@ func (v VolumeAttachmentsTypes) Mine() bool {
 // attachment information. If this bit is set then the instance ID and
 // local device headers are required.
 func (v VolumeAttachmentsTypes) Devices() bool {
-	return v&VolumeAttachmentsDevices > 0
+	return v.bitSet(VolumeAttachmentsDevices)
 }
 
 // Attached returns a flag that indicates only volumes that are attached should
 // be returned.
 func (v VolumeAttachmentsTypes) Attached() bool {
-	return v&VolumeAttachmentsAttached > 0
+	return v.bitSet(VolumeAttachmentsAttached)
 }
 
 // Unattached returns a flag that indicates only volumes that are unattached
 // should be returned.
 func (v VolumeAttachmentsTypes) Unattached() bool {
-	return v&VolumeAttachmentsUnattached > 0
+	return v.bitSet(VolumeAttachmentsUnattached)
+}
+
+func (v VolumeAttachmentsTypes) bitSet(b VolumeAttachmentsTypes) bool {
+	return v&b == b
 }
 
 // VolumesOpts are options when inspecting a volume.

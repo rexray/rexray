@@ -6,67 +6,107 @@ import (
 )
 
 const (
-	//ConfigEBS is a config key.
+	// ConfigEBS is a config key.
 	ConfigEBS = "ebs"
 
-	//ConfigEBSAccessKey is a config key.
+	// ConfigEBSAccessKey is a config key.
 	ConfigEBSAccessKey = ConfigEBS + "." + AccessKey
 
-	//ConfigEBSSecretKey is a config key.
+	// ConfigEBSSecretKey is a config key.
 	ConfigEBSSecretKey = ConfigEBS + "." + SecretKey
 
-	//ConfigEBSRegion is a config key.
+	// ConfigEBSRegion is a config key.
 	ConfigEBSRegion = ConfigEBS + "." + Region
 
-	//ConfigEBSEndpoint is a config key.
+	// ConfigEBSEndpoint is a config key.
 	ConfigEBSEndpoint = ConfigEBS + "." + Endpoint
 
-	//ConfigEBSMaxRetries is a config key.
+	// ConfigEBSMaxRetries is a config key.
 	ConfigEBSMaxRetries = ConfigEBS + "." + MaxRetries
 
-	//ConfigEBSTag is a config key.
+	// ConfigEBSTag is a config key.
 	ConfigEBSTag = ConfigEBS + "." + Tag
 
-	//ConfigEBSRexrayTag is a config key.
+	// ConfigEBSRexrayTag is a config key.
 	ConfigEBSRexrayTag = ConfigEBS + ".rexrayTag"
 
-	//ConfigOldEBS is a config key.
-	ConfigOldEBS = "ec2"
+	// ConfigEC2 is a config key.
+	ConfigEC2 = "ec2"
 
-	//ConfigOldEBSAccessKey is a config key.
-	ConfigOldEBSAccessKey = ConfigOldEBS + "." + AccessKey
+	// ConfigEC2AccessKey is a config key.
+	ConfigEC2AccessKey = ConfigEC2 + "." + AccessKey
 
-	//ConfigOldEBSSecretKey is a config key.
-	ConfigOldEBSSecretKey = ConfigOldEBS + "." + SecretKey
+	// ConfigEC2SecretKey is a config key.
+	ConfigEC2SecretKey = ConfigEC2 + "." + SecretKey
 
-	//ConfigOldEBSRegion is a config key.
-	ConfigOldEBSRegion = ConfigOldEBS + "." + Region
+	// ConfigEC2Region is a config key.
+	ConfigEC2Region = ConfigEC2 + "." + Region
 
-	//ConfigOldEBSEndpoint is a config key.
-	ConfigOldEBSEndpoint = ConfigOldEBS + "." + Endpoint
+	// ConfigEC2Endpoint is a config key.
+	ConfigEC2Endpoint = ConfigEC2 + "." + Endpoint
 
-	//ConfigOldEBSMaxRetries is a config key.
-	ConfigOldEBSMaxRetries = ConfigOldEBS + "." + MaxRetries
+	// ConfigEC2MaxRetries is a config key.
+	ConfigEC2MaxRetries = ConfigEC2 + "." + MaxRetries
 
-	//ConfigOldEBSTag is a config key.
-	ConfigOldEBSTag = ConfigOldEBS + "." + Tag
+	// ConfigEC2Tag is a config key.
+	ConfigEC2Tag = ConfigEC2 + "." + Tag
 
-	//ConfigOldEBSRexrayTag is a config key.
-	ConfigOldEBSRexrayTag = ConfigOldEBS + ".rexrayTag"
+	// ConfigEC2RexrayTag is a config key.
+	ConfigEC2RexrayTag = ConfigEC2 + ".rexrayTag"
+
+	// ConfigAWS is a config key.
+	ConfigAWS = "aws"
+
+	// ConfigAWSAccessKey is a config key.
+	ConfigAWSAccessKey = ConfigAWS + "." + AccessKey
+
+	// ConfigAWSSecretKey is a config key.
+	ConfigAWSSecretKey = ConfigAWS + "." + SecretKey
+
+	// ConfigAWSRegion is a config key.
+	ConfigAWSRegion = ConfigAWS + "." + Region
+
+	// ConfigAWSEndpoint is a config key.
+	ConfigAWSEndpoint = ConfigAWS + "." + Endpoint
+
+	// ConfigAWSMaxRetries is a config key.
+	ConfigAWSMaxRetries = ConfigAWS + "." + MaxRetries
+
+	// ConfigAWSTag is a config key.
+	ConfigAWSTag = ConfigAWS + "." + Tag
+
+	// ConfigAWSRexrayTag is a config key.
+	ConfigAWSRexrayTag = ConfigAWS + ".rexrayTag"
 )
 
 // BackCompat ensures keys can be used from old configurations.
 func BackCompat(config gofig.Config) {
-	checks := [][]string{
-		{ConfigEBSAccessKey, ConfigOldEBSAccessKey},
-		{ConfigEBSSecretKey, ConfigOldEBSSecretKey},
-		{ConfigEBSRegion, ConfigOldEBSRegion},
-		{ConfigEBSEndpoint, ConfigOldEBSEndpoint},
-		{ConfigEBSMaxRetries, ConfigOldEBSMaxRetries},
-		{ConfigEBSTag, ConfigOldEBSTag},
-		{ConfigEBSRexrayTag, ConfigOldEBSRexrayTag},
+	ec2Checks := [][]string{
+		{ConfigEBSAccessKey, ConfigEC2AccessKey},
+		{ConfigEBSSecretKey, ConfigEC2SecretKey},
+		{ConfigEBSRegion, ConfigEC2Region},
+		{ConfigEBSEndpoint, ConfigEC2Endpoint},
+		{ConfigEBSMaxRetries, ConfigEC2MaxRetries},
+		{ConfigEBSTag, ConfigEC2Tag},
+		{ConfigEBSRexrayTag, ConfigEC2RexrayTag},
 	}
-	for _, check := range checks {
+	for _, check := range ec2Checks {
+		if !config.IsSet(check[0]) && config.IsSet(check[1]) {
+			log.Debug(config.Get(check[1]))
+			config.Set(check[0], config.Get(check[1]))
+		}
+	}
+
+	awsChecks := [][]string{
+		{ConfigEBSAccessKey, ConfigAWSAccessKey},
+		{ConfigEBSSecretKey, ConfigAWSSecretKey},
+		{ConfigEBSRegion, ConfigAWSRegion},
+		{ConfigEBSEndpoint, ConfigAWSEndpoint},
+		{ConfigEBSMaxRetries, ConfigAWSMaxRetries},
+		{ConfigEBSTag, ConfigAWSTag},
+		{ConfigEBSRexrayTag, ConfigAWSRexrayTag},
+	}
+	for _, check := range awsChecks {
 		if !config.IsSet(check[0]) && config.IsSet(check[1]) {
 			log.Debug(config.Get(check[1]))
 			config.Set(check[0], config.Get(check[1]))

@@ -47,15 +47,17 @@ type driver struct {
 func init() {
 	registry.RegisterStorageDriver(ebs.Name, newDriver)
 	// Backwards compatibility for ec2 driver
-	registry.RegisterStorageDriver(ebs.OldName, newOldDriver)
+	registry.RegisterStorageDriver(ebs.NameEC2, newEC2Driver)
+	// Backwards compatibility for ec2 driver
+	registry.RegisterStorageDriver(ebs.NameEC2, newEC2Driver)
 }
 
 func newDriver() types.StorageDriver {
 	return &driver{name: ebs.Name}
 }
 
-func newOldDriver() types.StorageDriver {
-	return &driver{name: ebs.OldName}
+func newEC2Driver() types.StorageDriver {
+	return &driver{name: ebs.NameEC2}
 }
 
 func (d *driver) Name() string {
@@ -1309,7 +1311,11 @@ func (d *driver) getAccessKey() string {
 		ebs.ConfigEBSAccessKey); accessKey != "" {
 		return accessKey
 	}
-	return d.config.GetString(ebs.ConfigOldEBSAccessKey)
+	if accessKey := d.config.GetString(
+		ebs.ConfigAWSAccessKey); accessKey != "" {
+		return accessKey
+	}
+	return d.config.GetString(ebs.ConfigEC2AccessKey)
 }
 
 func (d *driver) secretKey() string {
@@ -1317,35 +1323,51 @@ func (d *driver) secretKey() string {
 		ebs.ConfigEBSSecretKey); secretKey != "" {
 		return secretKey
 	}
-	return d.config.GetString(ebs.ConfigOldEBSSecretKey)
+	if secretKey := d.config.GetString(
+		ebs.ConfigAWSSecretKey); secretKey != "" {
+		return secretKey
+	}
+	return d.config.GetString(ebs.ConfigEC2SecretKey)
 }
 
 func (d *driver) getRegion() string {
 	if region := d.config.GetString(ebs.ConfigEBSRegion); region != "" {
 		return region
 	}
-	return d.config.GetString(ebs.ConfigOldEBSRegion)
+	if region := d.config.GetString(ebs.ConfigAWSRegion); region != "" {
+		return region
+	}
+	return d.config.GetString(ebs.ConfigEC2Region)
 }
 
 func (d *driver) getEndpoint() string {
 	if endpoint := d.config.GetString(ebs.ConfigEBSEndpoint); endpoint != "" {
 		return endpoint
 	}
-	return d.config.GetString(ebs.ConfigOldEBSEndpoint)
+	if endpoint := d.config.GetString(ebs.ConfigAWSEndpoint); endpoint != "" {
+		return endpoint
+	}
+	return d.config.GetString(ebs.ConfigEC2Endpoint)
 }
 
 func (d *driver) getMaxRetries() int {
 	if d.config.IsSet(ebs.ConfigEBSMaxRetries) {
 		return d.config.GetInt(ebs.ConfigEBSMaxRetries)
 	}
-	return d.config.GetInt(ebs.ConfigOldEBSMaxRetries)
+	if d.config.IsSet(ebs.ConfigAWSMaxRetries) {
+		return d.config.GetInt(ebs.ConfigAWSMaxRetries)
+	}
+	return d.config.GetInt(ebs.ConfigEC2MaxRetries)
 }
 
 func (d *driver) tag() string {
 	if tag := d.config.GetString(ebs.ConfigEBSTag); tag != "" {
 		return tag
 	}
-	return d.config.GetString(ebs.ConfigOldEBSTag)
+	if tag := d.config.GetString(ebs.ConfigAWSTag); tag != "" {
+		return tag
+	}
+	return d.config.GetString(ebs.ConfigEC2Tag)
 }
 
 // TODO rexrayTag

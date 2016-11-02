@@ -8,8 +8,11 @@ const (
 	// Name is the provider's name.
 	Name = "ebs"
 
-	// OldName is the provider's old name.
-	OldName = "ec2"
+	// NameEC2 is the provider's old EC2 name.
+	NameEC2 = "ec2"
+
+	// NameAWS is the provider's old AWS name.
+	NameAWS = "aws"
 
 	// TagDelimiter separates tags from volume or snapshot names
 	TagDelimiter = "/"
@@ -56,11 +59,19 @@ func registerConfig() {
 	r.Key(gofig.String, "", "", "", Name+"."+Endpoint)
 	r.Key(gofig.Int, "", DefaultMaxRetries, "", Name+"."+MaxRetries)
 	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", Name+"."+Tag)
-	r.Key(gofig.String, "", "", "", OldName+"."+AccessKey)
-	r.Key(gofig.String, "", "", "", OldName+"."+SecretKey)
-	r.Key(gofig.String, "", "", "", OldName+"."+Region)
-	r.Key(gofig.String, "", "", "", OldName+"."+Endpoint)
-	r.Key(gofig.Int, "", DefaultMaxRetries, "", OldName+"."+MaxRetries)
-	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", OldName+"."+Tag)
+
+	r.Key(gofig.String, "", "", "", NameEC2+"."+AccessKey)
+	r.Key(gofig.String, "", "", "", NameEC2+"."+SecretKey)
+	r.Key(gofig.String, "", "", "", NameEC2+"."+Region)
+	r.Key(gofig.String, "", "", "", NameEC2+"."+Endpoint)
+	r.Key(gofig.Int, "", DefaultMaxRetries, "", NameEC2+"."+MaxRetries)
+	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", NameEC2+"."+Tag)
+
+	r.Key(gofig.String, "", "", "", NameAWS+"."+AccessKey)
+	r.Key(gofig.String, "", "", "", NameAWS+"."+SecretKey)
+	r.Key(gofig.String, "", "", "", NameAWS+"."+Region)
+	r.Key(gofig.String, "", "", "", NameAWS+"."+Endpoint)
+	r.Key(gofig.Int, "", DefaultMaxRetries, "", NameAWS+"."+MaxRetries)
+	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", NameAWS+"."+Tag)
 	gofig.Register(r)
 }

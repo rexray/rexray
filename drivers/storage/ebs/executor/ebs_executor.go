@@ -27,15 +27,15 @@ type driver struct {
 func init() {
 	registry.RegisterStorageExecutor(ebs.Name, newDriver)
 	// backwards compatibility for ec2 executor
-	registry.RegisterStorageExecutor(ebs.OldName, newOldDriver)
+	registry.RegisterStorageExecutor(ebs.NameEC2, newEC2Driver)
 }
 
 func newDriver() types.StorageExecutor {
 	return &driver{name: ebs.Name}
 }
 
-func newOldDriver() types.StorageExecutor {
-	return &driver{name: ebs.OldName}
+func newEC2Driver() types.StorageExecutor {
+	return &driver{name: ebs.NameEC2}
 }
 
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {

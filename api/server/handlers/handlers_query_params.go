@@ -49,7 +49,9 @@ func (h *queryParamsHandler) Handle(
 			if len(v[0]) == 0 {
 				store.Set(k, true)
 			} else {
-				if b, err := strconv.ParseBool(v[0]); err == nil {
+				if i, err := strconv.ParseInt(v[0], 10, 64); err == nil {
+					store.Set(k, i)
+				} else if b, err := strconv.ParseBool(v[0]); err == nil {
 					store.Set(k, b)
 				} else {
 					store.Set(k, v[0])

@@ -137,6 +137,7 @@ func TestVolumes(t *testing.T) {
 			t.Fatal(err)
 		}
 		for volumeID, volume := range vols {
+			volume.Attachments = nil
 			assert.NotNil(t, reply["vfs"][volumeID])
 			assert.EqualValues(t, volume, reply["vfs"][volumeID])
 		}
@@ -145,7 +146,7 @@ func TestVolumes(t *testing.T) {
 	apitests.RunWithClientType(t, types.ControllerClient, vfs.Name, tc, tf)
 }
 
-func TestVolumesWithAttachments(t *testing.T) {
+func TestVolumesWithAttachmentsTrue(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Volumes(nil, types.VolumeAttachmentsTrue)
@@ -160,6 +161,153 @@ func TestVolumesWithAttachments(t *testing.T) {
 		assert.EqualValues(t, vols["vfs-001"], reply["vfs"]["vfs-001"])
 	}
 	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsRequested(t *testing.T) {
+	tc, _, vols, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().Volumes(nil,
+			types.VolumeAttachmentsRequested)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, reply["vfs"]["vfs-000"])
+		assert.NotNil(t, reply["vfs"]["vfs-001"])
+		assert.NotNil(t, reply["vfs"]["vfs-002"])
+		assert.EqualValues(t, vols["vfs-000"], reply["vfs"]["vfs-000"])
+		assert.EqualValues(t, vols["vfs-001"], reply["vfs"]["vfs-001"])
+		assert.Len(t, reply["vfs"]["vfs-002"].Attachments, 0)
+	}
+	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsNone(t *testing.T) {
+	tc, _, _, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().Volumes(nil, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, reply["vfs"]["vfs-000"])
+		assert.NotNil(t, reply["vfs"]["vfs-001"])
+		assert.NotNil(t, reply["vfs"]["vfs-002"])
+		assert.Len(t, reply["vfs"]["vfs-000"].Attachments, 0)
+		assert.Len(t, reply["vfs"]["vfs-001"].Attachments, 0)
+		assert.Len(t, reply["vfs"]["vfs-002"].Attachments, 0)
+	}
+	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsAttached(t *testing.T) {
+	tc, _, vols, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().Volumes(nil,
+			types.VolumeAttachmentsRequested|
+				types.VolumeAttachmentsAttached)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, reply["vfs"]["vfs-000"])
+		assert.NotNil(t, reply["vfs"]["vfs-001"])
+		assert.Nil(t, reply["vfs"]["vfs-002"])
+		assert.EqualValues(t, vols["vfs-000"], reply["vfs"]["vfs-000"])
+		assert.EqualValues(t, vols["vfs-001"], reply["vfs"]["vfs-001"])
+	}
+	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsUnattached(t *testing.T) {
+	tc, _, _, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().Volumes(nil,
+			types.VolumeAttachmentsRequested|
+				types.VolumeAttachmentsUnattached)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Nil(t, reply["vfs"]["vfs-000"])
+		assert.Nil(t, reply["vfs"]["vfs-001"])
+		assert.NotNil(t, reply["vfs"]["vfs-002"])
+		assert.Len(t, reply["vfs"]["vfs-002"].Attachments, 0)
+	}
+	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsAttachedAndUnattached(t *testing.T) {
+	tc, _, vols, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().Volumes(nil,
+			types.VolumeAttachmentsRequested|
+				types.VolumeAttachmentsAttached|
+				types.VolumeAttachmentsUnattached)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, reply["vfs"]["vfs-000"])
+		assert.NotNil(t, reply["vfs"]["vfs-001"])
+		assert.NotNil(t, reply["vfs"]["vfs-002"])
+		assert.EqualValues(t, vols["vfs-000"], reply["vfs"]["vfs-000"])
+		assert.EqualValues(t, vols["vfs-001"], reply["vfs"]["vfs-001"])
+	}
+	apitests.Run(t, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsMineWithNotMyInstanceID(
+	t *testing.T) {
+	tc, _, _, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		ctx := context.Background()
+		iidm := types.InstanceIDMap{
+			"vfs": &types.InstanceID{ID: "none", Driver: "vfs"},
+		}
+		ctx = ctx.WithValue(context.AllInstanceIDsKey, iidm)
+
+		reply, err := client.API().Volumes(ctx,
+			types.VolumeAttachmentsRequested|types.VolumeAttachmentsMine)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, reply["vfs"]["vfs-000"])
+		assert.NotNil(t, reply["vfs"]["vfs-001"])
+		assert.NotNil(t, reply["vfs"]["vfs-002"])
+		assert.Len(t, reply["vfs"]["vfs-000"].Attachments, 0)
+		assert.Len(t, reply["vfs"]["vfs-001"].Attachments, 0)
+		assert.Len(t, reply["vfs"]["vfs-002"].Attachments, 0)
+	}
+	apitests.RunWithClientType(t, types.ControllerClient, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsAttachedAndMineWithNotMyInstanceID(
+	t *testing.T) {
+	tc, _, _, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		ctx := context.Background()
+		iidm := types.InstanceIDMap{
+			"vfs": &types.InstanceID{ID: "none", Driver: "vfs"},
+		}
+		ctx = ctx.WithValue(context.AllInstanceIDsKey, iidm)
+
+		reply, err := client.API().Volumes(ctx,
+			types.VolumeAttachmentsRequested|
+				types.VolumeAttachmentsAttached|
+				types.VolumeAttachmentsMine)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Nil(t, reply["vfs"]["vfs-000"])
+		assert.Nil(t, reply["vfs"]["vfs-001"])
+		assert.Nil(t, reply["vfs"]["vfs-002"])
+	}
+	apitests.RunWithClientType(t, types.ControllerClient, vfs.Name, tc, tf)
 }
 
 func TestVolumesWithAttachmentsWithControllerClient(t *testing.T) {
@@ -182,6 +330,7 @@ func TestVolumesByService(t *testing.T) {
 			t.Fatal(err)
 		}
 		for volumeID, volume := range vols {
+			volume.Attachments = nil
 			assert.NotNil(t, reply[volumeID])
 			assert.EqualValues(t, volume, reply[volumeID])
 		}
@@ -213,6 +362,7 @@ func TestVolumeInspect(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		vols[reply.ID].Attachments = nil
 		assert.NotNil(t, reply)
 		assert.EqualValues(t, vols[reply.ID], reply)
 	}

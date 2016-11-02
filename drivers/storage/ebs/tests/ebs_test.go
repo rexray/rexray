@@ -348,7 +348,7 @@ func volumeByName(
 	t *testing.T, client types.Client, volumeName, tag string) *types.Volume {
 	log.WithField("volumeName", volumeName).Info("get volume by ebs.Name")
 	// Retrieve all volumes
-	vols, err := client.API().Volumes(nil, false)
+	vols, err := client.API().Volumes(nil, 0)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -379,7 +379,7 @@ func volumeByID(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("get volume by ebs.Name using ID")
 	// Retrieve all volumes
-	vols, err := client.API().Volumes(nil, false)
+	vols, err := client.API().Volumes(nil, 0)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -447,7 +447,7 @@ func volumeAttach(
 func volumeInspect(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, false)
+	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, 0)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -462,7 +462,9 @@ func volumeInspect(
 func volumeInspectAttached(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, true)
+	reply, err := client.API().VolumeInspect(
+		nil, ebs.Name, volumeID,
+		types.VolumeAttachmentsTrue)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -478,7 +480,9 @@ func volumeInspectAttached(
 func volumeInspectDetached(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, true)
+	reply, err := client.API().VolumeInspect(
+		nil, ebs.Name, volumeID,
+		types.VolumeAttachmentsTrue)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -498,7 +502,7 @@ func volumeInspectDetachedFail(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, false)
+	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, 0)
 	assert.NoError(t, err)
 
 	if err != nil {

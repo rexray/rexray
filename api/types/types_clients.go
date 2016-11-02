@@ -106,19 +106,19 @@ type APIClient interface {
 	// Volumes returns a list of all Volumes for all Services.
 	Volumes(
 		ctx Context,
-		attachments bool) (ServiceVolumeMap, error)
+		attachments VolumeAttachmentsTypes) (ServiceVolumeMap, error)
 
 	// VolumesByService returns a list of all Volumes for a service.
 	VolumesByService(
 		ctx Context,
 		service string,
-		attachments bool) (VolumeMap, error)
+		attachments VolumeAttachmentsTypes) (VolumeMap, error)
 
 	// VolumeInspect gets information about a single volume.
 	VolumeInspect(
 		ctx Context,
 		service, volumeID string,
-		attachments bool) (*Volume, error)
+		attachments VolumeAttachmentsTypes) (*Volume, error)
 
 	// VolumeCreate creates a single volume.
 	VolumeCreate(

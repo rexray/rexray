@@ -32,7 +32,9 @@ type ClientDriver interface {
 
 	// VolumeInspectBefore may return an error, preventing the operation.
 	VolumeInspectBefore(
-		ctx *Context, service, volumeID string, attachments bool) error
+		ctx *Context,
+		service, volumeID string,
+		attachments VolumeAttachmentsTypes) error
 
 	// VolumeInspectAfter provides an opportunity to inspect/mutate the result.
 	VolumeInspectAfter(ctx Context, result *Volume)

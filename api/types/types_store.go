@@ -15,6 +15,14 @@ type Store interface {
 	// Get returns a value for the key; a nil value if the key does not exist.
 	Get(k string) interface{}
 
+	// GetAttachments returns a VolumeAttachmentsTypes value for the key
+	// "attachments" or a zero value if the key does not exist.
+	GetAttachments() VolumeAttachmentsTypes
+
+	// GetVolumeAttachmentsTypes returns a VolumeAttachmentsTypes value for a
+	// key; a zero value if the key does not exist.
+	GetVolumeAttachmentsTypes(k string) VolumeAttachmentsTypes
+
 	// GetString returns a string value for a key; an empty string if the key
 	// does not exist.
 	GetString(k string) string

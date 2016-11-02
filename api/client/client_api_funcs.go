@@ -84,7 +84,7 @@ func (c *client) ServiceInspect(
 
 func (c *client) Volumes(
 	ctx types.Context,
-	attachments bool) (types.ServiceVolumeMap, error) {
+	attachments types.VolumeAttachmentsTypes) (types.ServiceVolumeMap, error) {
 
 	reply := types.ServiceVolumeMap{}
 	url := fmt.Sprintf("/volumes?attachments=%v", attachments)
@@ -97,7 +97,7 @@ func (c *client) Volumes(
 func (c *client) VolumesByService(
 	ctx types.Context,
 	service string,
-	attachments bool) (types.VolumeMap, error) {
+	attachments types.VolumeAttachmentsTypes) (types.VolumeMap, error) {
 
 	reply := types.VolumeMap{}
 	url := fmt.Sprintf("/volumes/%s?attachments=%v", service, attachments)
@@ -110,7 +110,7 @@ func (c *client) VolumesByService(
 func (c *client) VolumeInspect(
 	ctx types.Context,
 	service, volumeID string,
-	attachments bool) (*types.Volume, error) {
+	attachments types.VolumeAttachmentsTypes) (*types.Volume, error) {
 
 	reply := types.Volume{}
 	url := fmt.Sprintf(

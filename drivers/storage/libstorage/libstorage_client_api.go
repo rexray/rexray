@@ -66,7 +66,7 @@ func (c *client) ServiceInspect(
 
 func (c *client) Volumes(
 	ctx types.Context,
-	attachments bool) (types.ServiceVolumeMap, error) {
+	attachments types.VolumeAttachmentsTypes) (types.ServiceVolumeMap, error) {
 
 	ctx = c.requireCtx(ctx)
 
@@ -82,7 +82,7 @@ func (c *client) Volumes(
 func (c *client) VolumesByService(
 	ctx types.Context,
 	service string,
-	attachments bool) (types.VolumeMap, error) {
+	attachments types.VolumeAttachmentsTypes) (types.VolumeMap, error) {
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	ctxA, err := c.withAllLocalDevices(ctx)
@@ -97,7 +97,7 @@ func (c *client) VolumesByService(
 func (c *client) VolumeInspect(
 	ctx types.Context,
 	service, volumeID string,
-	attachments bool) (*types.Volume, error) {
+	attachments types.VolumeAttachmentsTypes) (*types.Volume, error) {
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	ctxA, err := c.withAllLocalDevices(ctx)

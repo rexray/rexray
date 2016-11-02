@@ -21,7 +21,8 @@ func (d *driver) getVolumeMountPath(volumeName string) (string, error) {
 
 func (d *driver) volumeInspectByID(
 	ctx types.Context,
-	volumeID string, attachments bool,
+	volumeID string,
+	attachments types.VolumeAttachmentsTypes,
 	opts types.Store) (*types.Volume, error) {
 	client := context.MustClient(ctx)
 	vol, err := client.Storage().VolumeInspect(ctx, volumeID,
@@ -35,7 +36,8 @@ func (d *driver) volumeInspectByID(
 
 func (d *driver) volumeInspectByIDOrName(
 	ctx types.Context,
-	volumeID, volumeName string, attachments bool,
+	volumeID, volumeName string,
+	attachments types.VolumeAttachmentsTypes,
 	opts types.Store) (*types.Volume, error) {
 
 	if volumeID != "" && volumeName != "" {
@@ -47,20 +49,22 @@ func (d *driver) volumeInspectByIDOrName(
 	var obj *types.Volume
 	if volumeID != "" {
 		var err error
-		obj, err = d.volumeInspectByID(ctx, volumeID, true, opts)
+		obj, err = d.volumeInspectByID(
+			ctx, volumeID, types.VolumeAttachmentsTrue, opts)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		objs, err := client.Storage().Volumes(ctx, &types.VolumesOpts{
-			Attachments: false})
+			Attachments: 0})
 		if err != nil {
 			return nil, err
 		}
 		for _, o := range objs {
-			if strings.ToLower(volumeName) == strings.ToLower(o.Name) {
-				if attachments {
-					obj, err = d.volumeInspectByID(ctx, o.ID, true, opts)
+			if strings.EqualFold(volumeName, o.Name) {
+				if attachments.Requested() {
+					obj, err = d.volumeInspectByID(
+						ctx, o.ID, types.VolumeAttachmentsTrue, opts)
 					if err != nil {
 						return nil, err
 					}

@@ -60,7 +60,8 @@ func (d *driver) VolumesByServiceAfter(
 
 func (d *driver) VolumeInspectBefore(
 	ctx *types.Context,
-	service, volumeID string, attachments bool) error {
+	service, volumeID string,
+	attachments types.VolumeAttachmentsTypes) error {
 	return nil
 }
 

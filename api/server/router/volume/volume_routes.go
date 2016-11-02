@@ -34,7 +34,7 @@ func (r *router) volumes(
 		tasks   = map[string]*types.Task{}
 		taskIDs []int
 		opts    = &types.VolumesOpts{
-			Attachments: store.GetBool("attachments"),
+			Attachments: store.GetAttachments(),
 			Opts:        store,
 		}
 		reply = types.ServiceVolumeMap{}
@@ -107,7 +107,7 @@ func (r *router) volumesForService(
 	service := context.MustService(ctx)
 
 	opts := &types.VolumesOpts{
-		Attachments: store.GetBool("attachments"),
+		Attachments: store.GetAttachments(),
 		Opts:        store,
 	}
 
@@ -143,18 +143,13 @@ func getFilteredVolumes(
 	)
 
 	iid, iidOK := context.InstanceID(ctx)
-	if opts.Attachments && !iidOK {
+	if opts.Attachments.RequiresInstanceID() && !iidOK {
 		return nil, utils.NewMissingInstanceIDError(storSvc.Name())
 	}
 
 	objs, err := storSvc.Driver().Volumes(ctx, opts)
 	if err != nil {
 		return nil, err
-	}
-
-	lcaseIID := ""
-	if iid != nil {
-		lcaseIID = strings.ToLower(iid.ID)
 	}
 
 	if filter != nil {
@@ -166,22 +161,29 @@ func getFilteredVolumes(
 	for _, obj := range objs {
 
 		if filterOp == types.FilterEqualityMatch && filterLeft == "name" {
-			if strings.ToLower(obj.Name) != filterRight {
+			if !strings.EqualFold(obj.Name, filterRight) {
 				continue
 			}
 		}
 
-		if opts.Attachments {
+		// if only the requesting instance's attachments are requested then
+		// filter the volume's attachments list
+		if opts.Attachments.Mine() {
 			atts := []*types.VolumeAttachment{}
 			for _, a := range obj.Attachments {
-				if lcaseIID == strings.ToLower(a.InstanceID.ID) {
+				if strings.EqualFold(iid.ID, a.InstanceID.ID) {
 					atts = append(atts, a)
 				}
 			}
 			obj.Attachments = atts
-			if len(obj.Attachments) == 0 {
-				continue
-			}
+		}
+
+		if opts.Attachments.Attached() && len(obj.Attachments) == 0 {
+			continue
+		}
+
+		if opts.Attachments.Unattached() && len(obj.Attachments) > 0 {
+			continue
 		}
 
 		if OnVolume != nil {
@@ -207,10 +209,11 @@ func (r *router) volumeInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	attachments := store.GetBool("attachments")
+	attachments := store.GetAttachments()
 
 	service := context.MustService(ctx)
-	if _, ok := context.InstanceID(ctx); !ok && attachments {
+	if _, ok := context.InstanceID(ctx); !ok &&
+		attachments.RequiresInstanceID() {
 		return utils.NewMissingInstanceIDError(service.Name())
 	}
 

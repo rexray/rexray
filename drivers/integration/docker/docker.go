@@ -83,7 +83,7 @@ func (d *driver) List(
 	vols, err := client.Storage().Volumes(
 		ctx,
 		&types.VolumesOpts{
-			Attachments: opts.GetBool("attachments"),
+			Attachments: opts.GetAttachments(),
 			Opts:        opts,
 		},
 	)
@@ -168,7 +168,7 @@ func (d *driver) Mount(
 		"opts":       opts}).Info("mounting volume")
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, true, opts.Opts)
+		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts.Opts)
 	if isErrNotFound(err) && d.volumeCreateImplicit() {
 		var err error
 		if vol, err = d.Create(ctx, volumeName, &types.VolumeCreateOpts{
@@ -223,7 +223,7 @@ func (d *driver) Mount(
 		}
 
 		vol, err = d.volumeInspectByIDOrName(
-			ctx, vol.ID, "", true, opts.Opts)
+			ctx, vol.ID, "", types.VolumeAttachmentsTrue, opts.Opts)
 		if err != nil {
 			return "", nil, err
 		}
@@ -322,7 +322,7 @@ func (d *driver) Unmount(
 	}
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, true, opts)
+		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts)
 	if err != nil {
 		return err
 	}
@@ -400,7 +400,7 @@ func (d *driver) Path(
 		"opts":       opts}).Info("getting path to volume")
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, true, opts)
+		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts)
 	if err != nil {
 		return "", err
 	} else if vol == nil {
@@ -505,7 +505,7 @@ func (d *driver) Remove(
 	}
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, "", volumeName, false, opts)
+		ctx, "", volumeName, 0, opts)
 	if err != nil {
 		return err
 	}

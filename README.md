@@ -100,3 +100,6 @@ a portable format such as JSON.
 ## Documentation [![Docs](https://readthedocs.org/projects/libstorage/badge/?version=latest)](http://libstorage.readthedocs.org)
 The `libStorage` documentation is available at
 [libstorage.rtfd.org](http://libstorage.rtfd.org).
+
+## License
+The `libStorage` project is licensed to you under the Apache License, Version 2.0. Please reference the LICENSE file for additional information.

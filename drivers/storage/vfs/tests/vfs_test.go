@@ -1006,6 +1006,7 @@ const volJSON = `{
         },
         "status":       "attached"
     }],
+	"attachmentState":  2,
     "fields": {
         "owner":        "root@example.com",
         "priority":     "2"
@@ -1019,6 +1020,7 @@ const volNoAttachJSON = `{
     "size":             10240,
     "id":               "vfs-%03[1]d",
     "type":             "myType",
+	"attachmentState":  3,
     "fields": {
         "owner":        "root@example.com",
         "priority":     "2"

@@ -8,7 +8,7 @@ This release includes some minor fixes as well as a new way to query
 attachment information about one or more volumes.
 
 ### Enhancements
-* Enhanced attachment querying ([#313](https://github.com/codedellemc/libstorage/pull/313), [#316](https://github.com/codedellemc/libstorage/pull/316))
+* Enhanced attachment querying ([#313](https://github.com/codedellemc/libstorage/pull/313), [#316](https://github.com/codedellemc/libstorage/pull/316), [#319](https://github.com/codedellemc/libstorage/pull/319))
 
 ### Bug Fixes
 * AWS Config Support ([#314](https://github.com/codedellemc/libstorage/pull/314))

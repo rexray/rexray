@@ -395,6 +395,9 @@ func (r *router) volumeCreate(
 			}
 		}
 
+		if v.AttachmentState == 0 {
+			v.AttachmentState = types.VolumeAvailable
+		}
 		return v, nil
 	}
 
@@ -439,6 +442,9 @@ func (r *router) volumeCopy(
 			}
 		}
 
+		if v.AttachmentState == 0 {
+			v.AttachmentState = types.VolumeAvailable
+		}
 		return v, nil
 	}
 
@@ -517,6 +523,10 @@ func (r *router) volumeAttach(
 			}
 		}
 
+		if v.AttachmentState == 0 {
+			v.AttachmentState = types.VolumeAttached
+		}
+
 		return &types.VolumeAttachResponse{
 			Volume:      v,
 			AttachToken: attTokn,
@@ -567,6 +577,10 @@ func (r *router) volumeDetach(
 			if !ok {
 				return nil, utils.NewNotFoundError(v.ID)
 			}
+		}
+
+		if v.AttachmentState == 0 {
+			v.AttachmentState = types.VolumeAvailable
 		}
 
 		return v, nil
@@ -655,6 +669,10 @@ func (r *router) volumeDetachAll(
 					}
 				}
 
+				if v.AttachmentState == 0 {
+					v.AttachmentState = types.VolumeAvailable
+				}
+
 				volumeMap[v.ID] = v
 			}
 
@@ -733,6 +751,10 @@ func (r *router) volumeDetachAllForService(
 				if !ok {
 					return nil, utils.NewNotFoundError(v.ID)
 				}
+			}
+
+			if v.AttachmentState == 0 {
+				v.AttachmentState = types.VolumeAvailable
 			}
 
 			reply[v.ID] = v

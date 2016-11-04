@@ -124,10 +124,40 @@ type Snapshot struct {
 	Fields map[string]string `json:"fields,omitempty" yaml:",omitempty"`
 }
 
+// VolumeAttachmentStates is the volume's attachment state possibilities.
+type VolumeAttachmentStates int
+
+const (
+	// VolumeAttachmentStateUnknown indicates the driver has set the state,
+	// but it is explicitly unknown and should not be inferred from the list of
+	// attachments alone.
+	VolumeAttachmentStateUnknown VolumeAttachmentStates = 1
+
+	// VolumeAttached indicates the volume is attached to the instance
+	// specified in the API call that requested the volume information.
+	VolumeAttached VolumeAttachmentStates = 2
+
+	// VolumeAvailable indicates the volume is not attached to any instance.
+	VolumeAvailable VolumeAttachmentStates = 3
+
+	// VolumeUnavailable indicates the volume is attached to some instance
+	// other than the one specified in the API call that requested the
+	// volume information.
+	VolumeUnavailable VolumeAttachmentStates = 4
+)
+
 // Volume provides information about a storage volume.
 type Volume struct {
-	// The volume's attachments.
-	Attachments []*VolumeAttachment `json:"attachments,omitempty" yaml:",omitempty"`
+	// Attachments is information about the instances to which the volume
+	// is attached.
+	Attachments []*VolumeAttachment `json:"attachments,omitempty" yaml:"attachments,omitempty"`
+
+	// AttachmentState indicates whether or not a volume is attached. A client
+	// can surmise the same state stored in this field by inspecting a volume's
+	// Attachments field, but this field provides the server a means of doing
+	// that inspection and storing the result so the client does not have to do
+	// so.
+	AttachmentState VolumeAttachmentStates `json:"attachmentState,omitempty" yaml:"attachmentState,omitempty"`
 
 	// The availability zone for which the volume is available.
 	AvailabilityZone string `json:"availabilityZone,omitempty" yaml:"availabilityZone,omitempty"`
@@ -139,17 +169,17 @@ type Volume struct {
 	IOPS int64 `json:"iops,omitempty" yaml:"iops,omitempty"`
 
 	// The name of the volume.
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name,omitempty"`
 
 	// NetworkName is the name the device is known by in order to discover
 	// locally.
 	NetworkName string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
 
 	// The size of the volume.
-	Size int64 `json:"size,omitempty" yaml:",omitempty"`
+	Size int64 `json:"size,omitempty" yaml:"size,omitempty"`
 
 	// The volume status.
-	Status string `json:"status,omitempty" yaml:",omitempty"`
+	Status string `json:"status,omitempty" yaml:"status,omitempty"`
 
 	// ID is a piece of information that uniquely identifies the volume on
 	// the storage platform to which the volume belongs. A volume ID is not
@@ -157,10 +187,10 @@ type Volume struct {
 	ID string `json:"id" yaml:"id"`
 
 	// The volume type.
-	Type string `json:"type"`
+	Type string `json:"type" yaml:"type"`
 
 	// Fields are additional properties that can be defined for this type.
-	Fields map[string]string `json:"fields,omitempty" yaml:",omitempty"`
+	Fields map[string]string `json:"fields,omitempty" yaml:"fields,omitempty"`
 }
 
 // VolumeName returns the volume's name.

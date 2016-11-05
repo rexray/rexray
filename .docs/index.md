@@ -95,24 +95,21 @@ on building REX-Ray from source, installing specific versions, and more.
 ### Configuring REX-Ray
 REX-Ray requires a configuration file for storing details used to communicate
 with storage providers. This can include authentication credentials and
-driver-specific configuration options. Refer to the libStorage Storage Providers
-[documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/)
-for sample configurations of all supported storage platforms. Additionally, look
-at [core properties](./user-guide/config.md#configuration-properties) &
-[logging](./user-guide/config.md#logging-configuration) for advanced
-configurations.
+driver-specific configuration options. 
 
-Create a configuration file on the host at `/etc/rexray/config.yml`. Here is a
-simple example for using Oracle VirtualBox:
+After REX-Ray has been installed, copy and paste the contents from the [REX-Ray Configuration Generator](https://rexrayconfig.emccode.com/) to a new file on the host at `/etc/rexray/config.yml`. The configuration generator will satisfy the majority of use cases for REX-Ray.
+
+For more advanced and manual options, such as using multiple storage platforms, refer to the libStorage Storage Providers [documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/) and [core properties](./user-guide/config.md#configuration-properties) & [logging](./user-guide/config.md#logging-configuration).
+
+##### Example
+Here is a simple example for using Oracle VirtualBox:
 
 ```yaml
 libstorage:
   service: virtualbox
+virtualbox:
+  volumePath: $HOME/VirtualBox/Volumes
 ```
-
-Refer to the
-[VirtualBox documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox)
-for additional VirtualBox configuration options.
 
 From here, REX-Ray can now be used as a command line tool. View the commands
 available:

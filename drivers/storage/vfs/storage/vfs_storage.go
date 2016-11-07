@@ -5,7 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	"github.com/codedellemc/libstorage/api/context"

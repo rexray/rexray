@@ -1,7 +1,8 @@
 package ebs
 
 import (
-	"github.com/akutz/gofig"
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 )
 
 const (
@@ -48,11 +49,7 @@ const (
 )
 
 func init() {
-	registerConfig()
-}
-
-func registerConfig() {
-	r := gofig.NewRegistration("EBS")
+	r := gofigCore.NewRegistration("EBS")
 	r.Key(gofig.String, "", "", "", Name+"."+AccessKey)
 	r.Key(gofig.String, "", "", "", Name+"."+SecretKey)
 	r.Key(gofig.String, "", "", "", Name+"."+Region)
@@ -73,5 +70,5 @@ func registerConfig() {
 	r.Key(gofig.String, "", "", "", NameAWS+"."+Endpoint)
 	r.Key(gofig.Int, "", DefaultMaxRetries, "", NameAWS+"."+MaxRetries)
 	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", NameAWS+"."+Tag)
-	gofig.Register(r)
+	gofigCore.Register(r)
 }

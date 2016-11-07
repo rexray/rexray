@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 )
 
 func isSet(

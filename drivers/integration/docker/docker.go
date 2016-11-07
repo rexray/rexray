@@ -8,8 +8,10 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
+
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
@@ -46,7 +48,6 @@ func (v *volumeMapping) Status() map[string]interface{} {
 
 func init() {
 	registry.RegisterIntegrationDriver(providerName, newDriver)
-	registerConfig()
 }
 
 func newDriver() types.IntegrationDriver {
@@ -577,20 +578,4 @@ func (d *driver) mountDirPath() string {
 
 func (d *driver) volumeCreateImplicit() bool {
 	return d.config.GetBool(types.ConfigIgVolOpsCreateImplicit)
-}
-
-func registerConfig() {
-	r := gofig.NewRegistration("Docker")
-	r.Key(gofig.String, "", "ext4", "",
-		types.ConfigIgVolOpsCreateDefaultFsType)
-	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultType)
-	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultIOPS)
-	r.Key(gofig.String, "", "16", "", types.ConfigIgVolOpsCreateDefaultSize)
-	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultAZ)
-	r.Key(gofig.String, "", types.Lib.Join("volumes"), "",
-		types.ConfigIgVolOpsMountPath)
-	r.Key(gofig.String, "", "/data", "", types.ConfigIgVolOpsMountRootPath)
-	r.Key(gofig.Bool, "", true, "", types.ConfigIgVolOpsCreateImplicit)
-	r.Key(gofig.Bool, "", false, "", types.ConfigIgVolOpsMountPreempt)
-	gofig.Register(r)
 }

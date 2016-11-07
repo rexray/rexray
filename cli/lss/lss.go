@@ -1,3 +1,5 @@
+// +build gofig pflag
+
 package lss
 
 import (
@@ -7,7 +9,10 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/akutz/gotil"
 	flag "github.com/spf13/pflag"
 
@@ -72,7 +77,7 @@ func Run() {
 	// if a config is specified then do not care about any other options
 	if flagConfig != nil && gotil.FileExists(*flagConfig) {
 
-		config = gofig.New()
+		config = gofigCore.New()
 
 		if err := config.ReadConfigFile(*flagConfig); err != nil {
 			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)

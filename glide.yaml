@@ -9,7 +9,7 @@ import:
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
   - package: github.com/akutz/gofig
-    version: v0.1.4
+    version: v0.1.6
   - package: github.com/akutz/gotil
     version: v0.1.0
   - package: github.com/akutz/goof
@@ -19,6 +19,21 @@ import:
   - package: github.com/codedellemc/gournal
     version: v0.3.0
   - package: github.com/cesanta/validate-json
+
+
+################################################################################
+##                                  Golang X                                  ##
+################################################################################
+  - package: golang.org/x/net
+    version: b336a971b799939dd16ae9b1df8334cb8b977c4d
+    subpackages:
+    - context
+    - context/ctxhttp
+  - package: golang.org/x/sys
+    version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+    subpackages:
+    - unix
+
 
 ################################################################################
 ##                         Storage Driver Dependencies                        ##
@@ -62,12 +77,3 @@ import:
 ################################################################################
 
   - package: github.com/stretchr/testify
-  - package: github.com/go-yaml/yaml
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
-    repo:    https://github.com/akutz/yaml.git
-  - package: gopkg.in/yaml.v1
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
-    repo:    https://github.com/akutz/yaml.git
-  - package: gopkg.in/yaml.v2
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
-    repo:    https://github.com/akutz/yaml.git

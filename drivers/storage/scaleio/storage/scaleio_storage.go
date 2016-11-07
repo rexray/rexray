@@ -5,7 +5,8 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/akutz/goof"
 	sio "github.com/codedellemc/goscaleio"
 	siotypes "github.com/codedellemc/goscaleio/types/v1"

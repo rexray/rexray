@@ -1,7 +1,8 @@
 package scaleio
 
 import (
-	"github.com/akutz/gofig"
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 )
 
@@ -24,11 +25,7 @@ var (
 )
 
 func init() {
-	registerConfig()
-}
-
-func registerConfig() {
-	r := gofig.NewRegistration("ScaleIO")
+	r := gofigCore.NewRegistration("ScaleIO")
 	r.Key(gofig.String, "", "", "", "scaleio.endpoint")
 	r.Key(gofig.Bool, "", false, "", "scaleio.insecure")
 	r.Key(gofig.Bool, "", false, "", "scaleio.useCerts")
@@ -43,5 +40,5 @@ func registerConfig() {
 	r.Key(gofig.String, "", "", "", "scaleio.storagePoolName")
 	r.Key(gofig.String, "", "", "", "scaleio.thinOrThick")
 	r.Key(gofig.String, "", "", "", "scaleio.version")
-	gofig.Register(r)
+	gofigCore.Register(r)
 }

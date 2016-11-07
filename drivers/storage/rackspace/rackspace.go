@@ -1,16 +1,15 @@
 package rackspace
 
-import	"github.com/akutz/gofig";
+import (
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+)
 
 // Name is the provider's name.
-const	Name string  = "rackspace";
+const Name string = "rackspace"
 
 func init() {
-	registerConfig()
-}
-
-func registerConfig() {
-	r := gofig.NewRegistration("Rackspace")
+	r := gofigCore.NewRegistration("Rackspace")
 	r.Key(gofig.String, "", "", "", "rackspace.authURL")
 	r.Key(gofig.String, "", "", "", "rackspace.userID")
 	r.Key(gofig.String, "", "", "", "rackspace.userName")
@@ -19,5 +18,5 @@ func registerConfig() {
 	r.Key(gofig.String, "", "", "", "rackspace.tenantName")
 	r.Key(gofig.String, "", "", "", "rackspace.domainID")
 	r.Key(gofig.String, "", "", "", "rackspace.domainName")
-	gofig.Register(r)
+	gofigCore.Register(r)
 }

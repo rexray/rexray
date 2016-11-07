@@ -1,8 +1,6 @@
 package types
 
-import (
-	"github.com/akutz/gofig"
-)
+import gofig "github.com/akutz/gofig/types"
 
 // Driver is the base interface for a libStorage driver.
 type Driver interface {

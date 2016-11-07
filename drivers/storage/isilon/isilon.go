@@ -1,7 +1,8 @@
 package isilon
 
 import (
-	"github.com/akutz/gofig"
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 )
 
 const (
@@ -10,11 +11,7 @@ const (
 )
 
 func init() {
-	registerConfig()
-}
-
-func registerConfig() {
-	r := gofig.NewRegistration("Isilon")
+	r := gofigCore.NewRegistration("Isilon")
 	r.Key(gofig.String, "", "", "", "isilon.endpoint")
 	r.Key(gofig.Bool, "", false, "", "isilon.insecure")
 	r.Key(gofig.String, "", "", "", "isilon.userName")
@@ -25,5 +22,5 @@ func registerConfig() {
 	r.Key(gofig.String, "", "", "", "isilon.dataSubnet")
 	r.Key(gofig.Bool, "", false, "", "isilon.quotas")
 	r.Key(gofig.Bool, "", false, "", "isilon.sharedMounts")
-	gofig.Register(r)
+	gofigCore.Register(r)
 }

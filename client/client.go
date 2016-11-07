@@ -2,8 +2,7 @@ package client
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
-
+	gofig "github.com/akutz/gofig/types"
 	gocontext "golang.org/x/net/context"
 
 	"github.com/codedellemc/libstorage/api/context"

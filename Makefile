@@ -209,6 +209,9 @@ export PATH := $(GOPATH)/bin:$(PATH)
 ################################################################################
 
 GO_LIST_BUILD_INFO_CMD := go list -f '{{with $$ip:=.}}{{with $$ctx:=context}}{{printf "%s %s %s %s %s 0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ctx.GOOS $$ctx.GOARCH (join $$ctx.BuildTags ",")}}{{end}}{{end}}'
+ifneq (,$(BUILD_TAGS))
+GO_LIST_BUILD_INFO_CMD += -tags "$(BUILD_TAGS)"
+endif
 BUILD_INFO := $(shell $(GO_LIST_BUILD_INFO_CMD))
 ROOT_IMPORT_PATH := $(word 1,$(BUILD_INFO))
 ROOT_IMPORT_PATH_NV := $(ROOT_IMPORT_PATH)
@@ -216,9 +219,6 @@ ROOT_IMPORT_NAME := $(word 2,$(BUILD_INFO))
 ROOT_DIR := $(word 3,$(BUILD_INFO))
 GOOS ?= $(word 4,$(BUILD_INFO))
 GOARCH ?= $(word 5,$(BUILD_INFO))
-BUILD_TAGS := $(word 6,$(BUILD_INFO))
-BUILD_TAGS := $(subst $(COMMA), ,$(BUILD_TAGS))
-BUILD_TAGS := $(wordlist 2,$(words $(BUILD_TAGS)),$(BUILD_TAGS))
 VENDORED := 0
 ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
 VENDORED := 1
@@ -262,7 +262,11 @@ endif
 ##                              PROJECT DETAIL                                ##
 ################################################################################
 
-GO_LIST_IMPORT_PATHS_INFO_CMD := go list -f '{{with $$ip:=.}}{{if $$ip.ImportPath | le "$(ROOT_IMPORT_PATH)"}}{{if $$ip.ImportPath | gt "$(ROOT_IMPORT_PATH)/vendor" }}{{printf "%s;%s;%s;%s;%v;0,%s,%s,%s,%s;0,%s;0,%s;0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ip.Target $$ip.Stale (join $$ip.GoFiles ",") (join $$ip.CgoFiles ",") (join $$ip.CFiles ",") (join $$ip.HFiles ",") (join $$ip.TestGoFiles ",") (join $$ip.Imports ",") (join $$ip.TestImports ",")}};{{end}}{{end}}{{end}}' ./...
+GO_LIST_IMPORT_PATHS_INFO_CMD := go list -f '{{with $$ip:=.}}{{if $$ip.ImportPath | le "$(ROOT_IMPORT_PATH)"}}{{if $$ip.ImportPath | gt "$(ROOT_IMPORT_PATH)/vendor" }}{{printf "%s;%s;%s;%s;%v;0,%s,%s,%s,%s;0,%s;0,%s;0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ip.Target $$ip.Stale (join $$ip.GoFiles ",") (join $$ip.CgoFiles ",") (join $$ip.CFiles ",") (join $$ip.HFiles ",") (join $$ip.TestGoFiles ",") (join $$ip.Imports ",") (join $$ip.TestImports ",")}};{{end}}{{end}}{{end}}'
+ifneq (,$(BUILD_TAGS))
+GO_LIST_IMPORT_PATHS_INFO_CMD += -tags "$(BUILD_TAGS)"
+endif
+GO_LIST_IMPORT_PATHS_INFO_CMD += ./...
 IMPORT_PATH_INFO := $(shell $(GO_LIST_IMPORT_PATHS_INFO_CMD))
 
 # this runtime ruleset acts as a pre-processor, processing the import path
@@ -376,6 +380,7 @@ ifeq (1,$(VENDORED))
 endif
 	$(info Project Name................$(ROOT_IMPORT_NAME))
 	$(info OS / Arch...................$(GOOS)_$(GOARCH))
+	$(info Build Tags..................$(BUILD_TAGS))
 	$(info Vendored....................$(VENDORED))
 	$(info GOPATH......................$(GOPATH))
 	$(info GOHOSTOS....................$(GOHOSTOS))
@@ -707,7 +712,11 @@ $$(PKG_D_$1)-clean:
 GO_CLEAN += $$(PKG_D_$1)-clean
 
 $$(PKG_A_$1): $$(EXT_DEPS_SRCS_$1) $$(SRCS_$1) | $$(DEPS_ARKS_$1)
+ifeq (,$$(BUILD_TAGS))
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $1
+else
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go install -tags "$$(BUILD_TAGS)" $1
+endif
 
 ifeq (true,$$(STALE_$1))
 GO_PHONY += $$(PKG_A_$1)
@@ -751,7 +760,12 @@ $$(PKG_TA_$1): $$(SRCS_$1)
 endif
 
 $$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
+ifeq (,$$(BUILD_TAGS))
 	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
+else
+	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -tags "$$(BUILD_TAGS)" -c -o $$@ $1
+endif
+
 $$(PKG_TA_$1)-clean:
 	rm -f $$(PKG_TA_$1)
 GO_PHONY += $$(PKG_TA_$1)-clean
@@ -814,7 +828,7 @@ LSX_EMBEDDED_$2 := ./api/server/executors/bin/$$(notdir $1)
 
 ifneq ($2,$$(GOOS))
 $1:
-	env GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
+	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 GO_PHONY += $1-clean
@@ -866,7 +880,11 @@ libstor-c: $(C_LIBSTOR_C_SO) $(C_LIBSTOR_C_BIN)
 
 $(C_LIBSTOR_C_SO):  $(EXT_DEPS_SRCS_./c/libstor-c) \
 					$(SRCS_./c/libstor-c) | $(DEPS_ARKS_./c/libstor-c)
+ifeq (,$(BUILD_TAGS))
 	go build -buildmode=c-shared -o $@ $(C_LIBSTOR_C_DIR)
+else
+	go build -tags "$(BUILD_TAGS)" -buildmode=c-shared -o $@ $(C_LIBSTOR_C_DIR)
+endif
 
 $(C_LIBSTOR_C_SO)-clean:
 	rm -f $(C_LIBSTOR_C_SO) $(basename $(C_LIBSTOR_C_SO).h)
@@ -897,7 +915,11 @@ libstor-s: $(C_LIBSTOR_S_BIN) $(C_LIBSTOR_S_SO)
 
 $(C_LIBSTOR_S_SO):  $(EXT_DEPS_SRCS_./c/libstor-s) \
 					$(SRCS_./c/libstor-s) | $(DEPS_ARKS_./c/libstor-s)
+ifeq (,$(BUILD_TAGS))
 	go build -buildmode=c-shared -o $@ $(C_LIBSTOR_S_DIR)
+else
+	go build -tags "$(BUILD_TAGS)" -buildmode=c-shared -o $@ $(C_LIBSTOR_S_DIR)
+endif
 
 $(C_LIBSTOR_S_SO)-clean:
 	rm -f $(C_LIBSTOR_S_SO) $(basename $(C_LIBSTOR_S_SO).h)
@@ -931,7 +953,7 @@ build-lss-windows: $(LSS_WINDOWS)
 define LSS_RULES
 ifneq ($2,$$(GOOS))
 $1:
-	env GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
+	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 GO_PHONY += $1-clean
@@ -1001,6 +1023,9 @@ build-libstorage: $(GO_BUILD)
 build-generated:
 	$(MAKE) build-lsx
 	$(MAKE) $(API_GENERATED_SRC)
+
+build-client-nogofig:
+	go build ./client
 
 build:
 	$(MAKE) build-generated

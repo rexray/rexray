@@ -4,7 +4,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"

@@ -5,7 +5,7 @@ package darwin
 import (
 	"runtime"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/libstorage/api/registry"
@@ -22,7 +22,6 @@ var (
 
 func init() {
 	registry.RegisterOSDriver(driverName, newDriver)
-	gofig.Register(configRegistration())
 }
 
 type driver struct {
@@ -83,9 +82,4 @@ func (d *driver) Format(
 	opts *types.DeviceFormatOpts) error {
 
 	return nil
-}
-
-func configRegistration() *gofig.Registration {
-	r := gofig.NewRegistration("Darwin")
-	return r
 }

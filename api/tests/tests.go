@@ -12,7 +12,9 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	"github.com/stretchr/testify/assert"
@@ -315,7 +317,7 @@ func getTestConfig(
 	configBuf []byte,
 	debug bool) gofig.Config {
 
-	config := gofig.New()
+	config := gofigCore.New()
 
 	if debug {
 		log.SetLevel(log.DebugLevel)

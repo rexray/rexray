@@ -1,6 +1,9 @@
 package vbox
 
-import "github.com/akutz/gofig"
+import (
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+)
 
 const (
 	// Name is the provider's name.
@@ -8,12 +11,7 @@ const (
 )
 
 func init() {
-	registerConfig()
-}
-
-func registerConfig() {
-
-	r := gofig.NewRegistration("VirtualBox")
+	r := gofigCore.NewRegistration("VirtualBox")
 	r.Key(gofig.String, "", "", "", "virtualbox.username")
 	r.Key(gofig.String, "", "", "", "virtualbox.password")
 	r.Key(gofig.String, "", "http://10.0.2.2:18083", "", "virtualbox.endpoint")
@@ -24,5 +22,5 @@ func registerConfig() {
 	r.Key(gofig.String, "", "/dev/disk/by-id", "", "virtualbox.diskIDPath")
 	r.Key(gofig.String,
 		"", "/sys/class/scsi_host/", "", "virtualbox.scsiHostPath")
-	gofig.Register(r)
+	gofigCore.Register(r)
 }

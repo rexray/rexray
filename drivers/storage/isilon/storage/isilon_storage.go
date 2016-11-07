@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	isi "github.com/codedellemc/goisilon"
 

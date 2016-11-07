@@ -2,7 +2,7 @@ package ebs
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 )
 
 const (

@@ -7,7 +7,8 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/codedellemc/libstorage/api/context"
@@ -98,7 +99,7 @@ func TestInstanceID(t *testing.T) {
 
 	// initialize storage driver
 	ctx := context.Background()
-	if err := sd.Init(ctx, gofig.New()); err != nil {
+	if err := sd.Init(ctx, registry.NewConfig()); err != nil {
 		t.Fatal(err)
 	}
 	// Get Instance ID metadata from executor
@@ -142,7 +143,7 @@ func TestInstanceIDEC2(t *testing.T) {
 
 	// initialize storage driver
 	ctx := context.Background()
-	if err := sd.Init(ctx, gofig.New()); err != nil {
+	if err := sd.Init(ctx, registry.NewConfig()); err != nil {
 		t.Fatal(err)
 	}
 	// Get Instance ID metadata from executor

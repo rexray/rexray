@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/libstorage/api/context"

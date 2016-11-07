@@ -6,7 +6,8 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/akutz/goof"
 	vboxw "github.com/appropriate/go-virtualboxclient/vboxwebsrv"
 	vboxc "github.com/appropriate/go-virtualboxclient/virtualboxclient"

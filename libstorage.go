@@ -34,8 +34,9 @@ has a minimal set of dependencies in order to avoid a large, runtime footprint.
 package libstorage
 
 import (
-	"github.com/akutz/gofig"
 	"golang.org/x/net/context"
+
+	gofig "github.com/akutz/gofig/types"
 
 	"github.com/codedellemc/libstorage/api/server"
 	"github.com/codedellemc/libstorage/api/types"

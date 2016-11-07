@@ -11,7 +11,8 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/libstorage/api/registry"
@@ -28,7 +29,6 @@ var (
 
 func init() {
 	registry.RegisterOSDriver(driverName, newDriver)
-	gofig.Register(configRegistration())
 }
 
 type driver struct {
@@ -256,11 +256,4 @@ func (d *driver) volumeFileMode() int {
 
 func (d *driver) volumeRootPath() string {
 	return d.config.GetString("linux.volume.rootpath")
-}
-
-func configRegistration() *gofig.Registration {
-	r := gofig.NewRegistration("Linux")
-	r.Key(gofig.Int, "", 0700, "", "linux.volume.filemode")
-	r.Key(gofig.String, "", "/data", "", "linux.volume.rootpath")
-	return r
 }

@@ -1,0 +1,5 @@
+package config
+
+var (
+	defaultIntDriver = ""
+)

@@ -1,5 +1,9 @@
 SHELL := /bin/bash
 
+ifeq (undefined,$(origin BUILD_TAGS))
+BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
+endif
+
 all:
 # if docker is running, then let's use docker to build it
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
@@ -82,7 +86,9 @@ else
 	@tar -C $(GOPATH)/src -c $(DTARC) $(DLOCAL_IMPORTS_FILES) | docker cp - $(DNAME):$(DPATH)/vendor
 endif
 endif
-	docker exec -t $(DNAME) env GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 make -C $(DPATH) -j build
+	docker exec -t $(DNAME) \
+		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+		make -C $(DPATH) -j build
 
 docker-build: docker-init
 	@docker cp $(DNAME):$(DPROG1_PATH) $(DPROG1_NAME)
@@ -102,7 +108,9 @@ endif
 docker-test: DGOOS=linux
 docker-test: DTEST_ENV_VARS=TRAVIS=true LIBSTORAGE_DISABLE_STARTUP_INFO=true
 docker-test: docker-init
-	docker exec -t $(DNAME) env $(DTEST_ENV_VARS) make -C $(DPATH) test
+	docker exec -t $(DNAME) \
+		env BUILD_TAGS="$(BUILD_TAGS)" $(DTEST_ENV_VARS) \
+		make -C $(DPATH) test
 
 docker-clean:
 	-docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null

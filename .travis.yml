@@ -28,8 +28,8 @@ before_install:
 
 script:
   - make gometalinter-all
-  - BUILD_TAGS="gofig pflag" make -j build
-  - BUILD_TAGS="gofig pflag" make -j test
+  - make -j build
+  - make -j test
   - VFS_INSTANCEID_USE_FIELDS=true ./drivers/storage/vfs/tests/vfs.test
   - go clean -i ./client && go build ./client
 

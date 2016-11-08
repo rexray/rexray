@@ -3,6 +3,6 @@
 package local
 
 import (
-	// load the client drivers
+	// load the packages
 	_ "github.com/codedellemc/libstorage/drivers/storage/vfs/client"
 )

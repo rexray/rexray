@@ -48,16 +48,14 @@ func init() {
 	}
 
 	defaultAEM := types.UnixEndpoint.String()
-	defaultOSDriver := runtime.GOOS
 	defaultStorageDriver := types.LibStorageDriverName
-	defaultIntDriver := "docker"
 	defaultLogLevel := logLevel.String()
 	defaultClientType := types.IntegrationClient.String()
 
 	rk(gofig.String, "", "", types.ConfigHost)
 	rk(gofig.String, "", "", types.ConfigService)
 	rk(gofig.String, defaultAEM, "", types.ConfigServerAutoEndpointMode)
-	rk(gofig.String, defaultOSDriver, "", types.ConfigOSDriver)
+	rk(gofig.String, runtime.GOOS, "", types.ConfigOSDriver)
 	rk(gofig.String, defaultStorageDriver, "", types.ConfigStorageDriver)
 	rk(gofig.String, defaultIntDriver, "", types.ConfigIntegrationDriver)
 	rk(gofig.String, defaultClientType, "", types.ConfigClientType)

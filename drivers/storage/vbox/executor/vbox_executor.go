@@ -2,6 +2,7 @@ package executor
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -49,7 +50,7 @@ func (d *driver) Supported(
 	opts types.Store) (bool, error) {
 
 	// Use dmidecode if installed
-	if gotil.FileExistsInPath("dmidecode") {
+	if gotil.FileExistsInPath(dmidecodeCmd) {
 		out, err := exec.Command(
 			dmidecodeCmd, "-s", "system-product-name").Output()
 		if err == nil {
@@ -69,19 +70,13 @@ func (d *driver) Supported(
 	}
 
 	// No luck with dmidecode, try dmesg
-	cmd := exec.Command("dmesg")
-	cmdReader, err := cmd.StdoutPipe()
+	out, err := exec.Command("dmesg").Output()
 	if err != nil {
 		return false, nil
 	}
-	defer cmdReader.Close()
 
-	scanner := bufio.NewScanner(cmdReader)
-
-	err = cmd.Run()
-	if err != nil {
-		return false, nil
-	}
+	rdr := bytes.NewReader(out)
+	scanner := bufio.NewScanner(rdr)
 
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), "BIOS VirtualBox") {

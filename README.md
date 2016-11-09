@@ -93,7 +93,7 @@ coordinating requests between clients and backend orchestration packages. The
 server's reference implementation is also written using Go.
 
 ## Model
-The `libStorage` [model](http://libstorage.rtfd.org/en/latest/user-guide/model/)
+The `libStorage` [model](http://docs.libstorage.apiary.io)
 defines several data structures that are easily represented using Go structs or
 a portable format such as JSON.
 

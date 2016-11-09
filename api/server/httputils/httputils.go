@@ -6,7 +6,8 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/codedellemc/libstorage/api/server/services"
 	"github.com/codedellemc/libstorage/api/types"
 )

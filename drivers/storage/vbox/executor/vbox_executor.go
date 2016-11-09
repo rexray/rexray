@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 
 	"github.com/codedellemc/libstorage/api/registry"

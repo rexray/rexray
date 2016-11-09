@@ -1,7 +1,8 @@
 package tasks
 
 import (
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/server/httputils"
 	"github.com/codedellemc/libstorage/api/types"

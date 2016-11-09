@@ -2,7 +2,8 @@ package utils
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
+
 	"github.com/codedellemc/libstorage/api/types"
 )
 

@@ -13,8 +13,8 @@ import (
 	gocontext "golang.org/x/net/context"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
 
+	gofig "github.com/akutz/gofig/types"
 	"github.com/codedellemc/gournal"
 	glogrus "github.com/codedellemc/gournal/logrus"
 

@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/types"
@@ -60,7 +60,7 @@ func (d *idm) initPathCache(ctx types.Context) {
 		return
 	}
 
-	if _, ok := context.ServiceName(ctx); !ok {
+	if name, ok := context.ServiceName(ctx); !ok || name == "" {
 		ctx.Info("path cache initializion disabled; no service name in ctx")
 		return
 	}

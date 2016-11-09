@@ -1,7 +1,9 @@
 package types
 
-import "github.com/akutz/gofig"
-import log "github.com/Sirupsen/logrus"
+import (
+	log "github.com/Sirupsen/logrus"
+	gofig "github.com/akutz/gofig/types"
+)
 
 const (
 	//ConfigOldRoot is a config key.

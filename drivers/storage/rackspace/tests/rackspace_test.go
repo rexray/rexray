@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/codedellemc/libstorage/api/context"
@@ -70,7 +70,7 @@ func TestInstanceID(t *testing.T) { //PASSES lowercase hidden for testing other 
 	}
 
 	ctx := context.Background()
-	configR := gofig.New()
+	configR := registry.NewConfig()
 	if err := configR.ReadConfig(bytes.NewReader(configYAML)); err != nil {
 		panic(err)
 	}

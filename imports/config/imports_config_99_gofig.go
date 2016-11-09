@@ -1,3 +1,5 @@
+// +build gofig
+
 package config
 
 import (
@@ -5,8 +7,8 @@ import (
 	"runtime"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
-
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/codedellemc/libstorage/api/types"
 )
 
@@ -16,9 +18,9 @@ const (
 )
 
 func init() {
-	gofig.LogGetAndSet = false
-	gofig.LogSecureKey = false
-	gofig.LogFlattenEnvVars = false
+	gofigCore.LogGetAndSet = false
+	gofigCore.LogSecureKey = false
+	gofigCore.LogFlattenEnvVars = false
 
 	logLevelSz := os.Getenv("LIBSTORAGE_LOGGING_LEVEL")
 	logLevel, err := log.ParseLevel(logLevelSz)
@@ -27,10 +29,10 @@ func init() {
 	}
 	log.SetLevel(logLevel)
 
-	r := gofig.NewRegistration("libStorage")
+	r := gofigCore.NewRegistration("libStorage")
 
 	rk := func(
-		keyType gofig.KeyType,
+		keyType gofig.ConfigKeyTypes,
 		defaultVal interface{},
 		description string,
 		keyVal types.ConfigKey,
@@ -46,16 +48,14 @@ func init() {
 	}
 
 	defaultAEM := types.UnixEndpoint.String()
-	defaultOSDriver := runtime.GOOS
 	defaultStorageDriver := types.LibStorageDriverName
-	defaultIntDriver := "docker"
 	defaultLogLevel := logLevel.String()
 	defaultClientType := types.IntegrationClient.String()
 
 	rk(gofig.String, "", "", types.ConfigHost)
 	rk(gofig.String, "", "", types.ConfigService)
 	rk(gofig.String, defaultAEM, "", types.ConfigServerAutoEndpointMode)
-	rk(gofig.String, defaultOSDriver, "", types.ConfigOSDriver)
+	rk(gofig.String, runtime.GOOS, "", types.ConfigOSDriver)
 	rk(gofig.String, defaultStorageDriver, "", types.ConfigStorageDriver)
 	rk(gofig.String, defaultIntDriver, "", types.ConfigIntegrationDriver)
 	rk(gofig.String, defaultClientType, "", types.ConfigClientType)
@@ -82,5 +82,5 @@ func init() {
 	rk(gofig.String, "1m", "", types.ConfigServerTasksExeTimeout)
 	rk(gofig.String, "0s", "", types.ConfigServerTasksLogTimeout)
 
-	gofig.Register(r)
+	gofigCore.Register(r)
 }

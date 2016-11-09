@@ -1,8 +1,6 @@
 package types
 
-import (
-	"github.com/akutz/gofig"
-)
+import gofig "github.com/akutz/gofig/types"
 
 // Router defines an interface to specify a group of routes to add the the
 // server.

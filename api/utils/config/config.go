@@ -5,16 +5,17 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	gofig "github.com/akutz/gofig/types"
 
-	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
+	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
 )
 
 // NewConfig returns a new configuration instance.
 func NewConfig() (gofig.Config, error) {
-	config := gofig.New()
+	config := registry.NewConfig()
 
 	etcYML := types.Etc.Join("config.yml")
 	etcYAML := types.Etc.Join("config.yaml")

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/codedellemc/libstorage/api/server"

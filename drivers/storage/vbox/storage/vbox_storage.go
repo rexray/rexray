@@ -356,7 +356,7 @@ func (d *driver) VolumeAttach(
 		)
 	}
 
-	volumes, err = d.getVolume(ctx, volumeID, "", types.VolumeAttachmentsTrue)
+	volumes, err = d.getVolume(ctx, volumeID, "", types.VolAttReqTrue)
 	if err != nil {
 		return nil, "", err
 	}
@@ -403,7 +403,7 @@ func (d *driver) VolumeDetach(
 	ctx.Info("detached volume", volumeID)
 	return d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: types.VolumeAttachmentsTrue})
+			Attachments: types.VolAttReqTrue})
 }
 
 func (d *driver) VolumeDetachAll(

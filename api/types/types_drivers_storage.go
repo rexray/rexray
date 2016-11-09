@@ -38,20 +38,90 @@ const (
 )
 
 const (
-	// VolumeAttachmentsNone specifies no attachment information is requested.
-	// This is the default value and the same as omitting this parameter
-	// altogether.
-	VolumeAttachmentsNone VolumeAttachmentsTypes = 0
+	// VolAttNone is the default value. This indicates no attachment
+	// information is requested.
+	VolAttNone VolumeAttachmentsTypes = 0
 
-	// VolumeAttachmentsFalse is an alias for VolumeAttachmentsNone.
-	VolumeAttachmentsFalse = VolumeAttachmentsNone
+	// VolAttFalse is an alias for VolAttNone.
+	VolAttFalse = VolAttNone
 
-	// VolumeAttachmentsTrue is a mask of
-	// VolumeAttachmentsRequested | VolumeAttachmentsMine |
-	// VolumeAttachmentsDevices | VolumeAttachmentsAttached
-	VolumeAttachmentsTrue = VolumeAttachmentsRequested |
-		VolumeAttachmentsMine | VolumeAttachmentsDevices |
+	// VolAttReq requests attachment information for all retrieved volumes.
+	//
+	// Mask: 1
+	VolAttReq = VolumeAttachmentsRequested
+
+	// VolAttReqForInstance requests attachment information for volumes attached
+	// to the instance provided in the instance ID
+	//
+	// Mask: 1 | 2
+	VolAttReqForInstance = VolAttReq | VolumeAttachmentsMine
+
+	// VolAttReqWithDevMapForInstance requests attachment information for
+	// volumes attached to the instance provided in the instance ID and perform
+	// device mappings where possible.
+	//
+	// Mask: 1 | 2 | 4
+	VolAttReqWithDevMapForInstance = VolAttReqForInstance |
+		VolumeAttachmentsDevices
+
+	// VolAttReqOnlyAttachedVols requests attachment information for all
+	// retrieved volumes and return only volumes that are attached to some
+	// instance.
+	//
+	// Mask: 1 | 8
+	VolAttReqOnlyAttachedVols = VolAttReq | VolumeAttachmentsAttached
+
+	// VolAttReqOnlyUnattachedVols requests attachment information for
+	// all retrieved volumes and return only volumes that are not attached to
+	// any instance.
+	//
+	// Mask: 1 | 16
+	VolAttReqOnlyUnattachedVols = VolAttReq | VolumeAttachmentsUnattached
+
+	// VolAttReqOnlyVolsAttachedToInstance requests attachment
+	// information for all retrieved volumes and return only volumes that
+	// attached to the instance provided in the instance ID.
+	//
+	// Mask: 1 | 2 | 8
+	VolAttReqOnlyVolsAttachedToInstance = VolAttReqForInstance |
 		VolumeAttachmentsAttached
+
+	// VolAttReqWithDevMapOnlyVolsAttachedToInstance requests attachment
+	// information for all retrieved volumes and return only volumes that
+	// attached to the instance provided in the instance ID and perform device
+	// mappings where possible.
+	//
+	// Mask: 1 | 2 | 4 | 8
+	VolAttReqWithDevMapOnlyVolsAttachedToInstance = VolumeAttachmentsDevices |
+		VolAttReqOnlyVolsAttachedToInstance
+
+	// VolAttReqTrue is an alias for
+	// VolAttReqWithDevMapOnlyVolsAttachedToInstance.
+	VolAttReqTrue = VolAttReqWithDevMapOnlyVolsAttachedToInstance
+
+	// VolumeAttachmentsTrue is an alias for VolAttReqTrue.
+	VolumeAttachmentsTrue = VolAttReqTrue
+
+	// VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols requests attachment
+	// information for all retrieved volumes and return only volumes that
+	// attached to the instance provided in the instance ID or are not attached
+	// to any instance at all. tl;dr - Attached To Me or Available
+	//
+	// Mask: 1 | 2 | 8 | 16
+	VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols = 0 |
+		VolAttReqOnlyVolsAttachedToInstance |
+		VolumeAttachmentsUnattached
+
+	// VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols requests
+	// attachment information for all retrieved volumes and return only volumes
+	// that attached to the instance provided in the instance ID or are not
+	// attached to any instance at all and perform device mappings where
+	// possible. tl;dr - Attached To Me With Device Mappings or Available
+	//
+	// Mask: 1 | 2 | 4 | 8 | 16
+	VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols = 0 |
+		VolumeAttachmentsDevices |
+		VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols
 )
 
 // ParseVolumeAttachmentTypes parses a value into a VolumeAttachmentsTypes
@@ -60,11 +130,6 @@ func ParseVolumeAttachmentTypes(v interface{}) VolumeAttachmentsTypes {
 	switch tv := v.(type) {
 	case VolumeAttachmentsTypes:
 		return tv
-	case bool:
-		if tv {
-			return VolumeAttachmentsTrue
-		}
-		return VolumeAttachmentsRequested
 	case int:
 		return VolumeAttachmentsTypes(tv)
 	case uint:
@@ -92,8 +157,13 @@ func ParseVolumeAttachmentTypes(v interface{}) VolumeAttachmentsTypes {
 		if b, err := strconv.ParseBool(tv); err == nil {
 			return ParseVolumeAttachmentTypes(b)
 		}
+	case bool:
+		if tv {
+			return VolumeAttachmentsTrue
+		}
+		return VolumeAttachmentsRequested
 	}
-	return VolumeAttachmentsNone
+	return VolAttNone
 }
 
 // RequiresInstanceID returns a flag that indicates whether the attachment
@@ -104,7 +174,7 @@ func (v VolumeAttachmentsTypes) RequiresInstanceID() bool {
 
 // Requested returns a flag that indicates attachment information is requested.
 func (v VolumeAttachmentsTypes) Requested() bool {
-	return v&VolumeAttachmentsRequested > 0
+	return v.bitSet(VolumeAttachmentsRequested)
 }
 
 // Mine returns a flag that indicates attachment information should
@@ -112,7 +182,7 @@ func (v VolumeAttachmentsTypes) Requested() bool {
 // instance ID request header. If this bit is set then the instance ID
 // header is required.
 func (v VolumeAttachmentsTypes) Mine() bool {
-	return v&VolumeAttachmentsMine > 0
+	return v.bitSet(VolumeAttachmentsMine)
 }
 
 // Devices returns a flag that indicates an attempt should made to map devices
@@ -120,19 +190,23 @@ func (v VolumeAttachmentsTypes) Mine() bool {
 // attachment information. If this bit is set then the instance ID and
 // local device headers are required.
 func (v VolumeAttachmentsTypes) Devices() bool {
-	return v&VolumeAttachmentsDevices > 0
+	return v.bitSet(VolumeAttachmentsDevices)
 }
 
 // Attached returns a flag that indicates only volumes that are attached should
 // be returned.
 func (v VolumeAttachmentsTypes) Attached() bool {
-	return v&VolumeAttachmentsAttached > 0
+	return v.bitSet(VolumeAttachmentsAttached)
 }
 
 // Unattached returns a flag that indicates only volumes that are unattached
 // should be returned.
 func (v VolumeAttachmentsTypes) Unattached() bool {
-	return v&VolumeAttachmentsUnattached > 0
+	return v.bitSet(VolumeAttachmentsUnattached)
+}
+
+func (v VolumeAttachmentsTypes) bitSet(b VolumeAttachmentsTypes) bool {
+	return v&b == b
 }
 
 // VolumesOpts are options when inspecting a volume.

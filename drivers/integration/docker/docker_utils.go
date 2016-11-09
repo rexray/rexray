@@ -50,7 +50,7 @@ func (d *driver) volumeInspectByIDOrName(
 	if volumeID != "" {
 		var err error
 		obj, err = d.volumeInspectByID(
-			ctx, volumeID, types.VolumeAttachmentsTrue, opts)
+			ctx, volumeID, types.VolAttReqTrue, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +64,7 @@ func (d *driver) volumeInspectByIDOrName(
 			if strings.EqualFold(volumeName, o.Name) {
 				if attachments.Requested() {
 					obj, err = d.volumeInspectByID(
-						ctx, o.ID, types.VolumeAttachmentsTrue, opts)
+						ctx, o.ID, types.VolAttReqTrue, opts)
 					if err != nil {
 						return nil, err
 					}

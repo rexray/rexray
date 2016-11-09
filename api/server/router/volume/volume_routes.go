@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/libstorage/api/context"
@@ -127,6 +128,66 @@ func (r *router) volumesForService(
 		http.StatusOK)
 }
 
+func handleVolAttachments(
+	ctx types.Context,
+	lf log.Fields,
+	iid *types.InstanceID,
+	vol *types.Volume,
+	attachments types.VolumeAttachmentsTypes) bool {
+
+	if attachments == 0 {
+		vol.Attachments = nil
+		return true
+	}
+
+	if lf == nil {
+		lf = log.Fields{}
+	}
+
+	// if only the requesting instance's attachments are requested then
+	// filter the volume's attachments list
+	if attachments.Mine() {
+		atts := []*types.VolumeAttachment{}
+		for _, a := range vol.Attachments {
+			alf := log.Fields{
+				"attDeviceName": a.DeviceName,
+				"attDountPoint": a.MountPoint,
+				"attVolumeID":   a.VolumeID,
+			}
+			if strings.EqualFold(iid.ID, a.InstanceID.ID) {
+				atts = append(atts, a)
+				ctx.WithFields(lf).WithFields(alf).Debug(
+					"including volume attachment")
+			} else {
+				ctx.WithFields(lf).WithFields(alf).Debug(
+					"omitting volume attachment")
+			}
+		}
+		vol.Attachments = atts
+		ctx.WithFields(lf).Debug("included volume attached to instance")
+	}
+
+	// if the volume has no attachments and the mask indicates that
+	// only attached volumes should be returned then omit this volume
+	if len(vol.Attachments) == 0 &&
+		attachments.Attached() &&
+		!attachments.Unattached() {
+		ctx.WithFields(lf).Debug("omitting unattached volume")
+		return false
+	}
+
+	// if the volume has attachments and the mask indicates that
+	// only unattached volumes should be returned then omit this volume
+	if len(vol.Attachments) > 0 &&
+		!attachments.Attached() &&
+		attachments.Unattached() {
+		ctx.WithFields(lf).Debug("omitting attached volume")
+		return false
+	}
+
+	return true
+}
+
 func getFilteredVolumes(
 	ctx types.Context,
 	req *http.Request,
@@ -147,6 +208,8 @@ func getFilteredVolumes(
 		return nil, utils.NewMissingInstanceIDError(storSvc.Name())
 	}
 
+	ctx.WithField("attachments", opts.Attachments).Debug("querying volumes")
+
 	objs, err := storSvc.Driver().Volumes(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -160,34 +223,26 @@ func getFilteredVolumes(
 
 	for _, obj := range objs {
 
+		lf := log.Fields{
+			"attachments": opts.Attachments,
+			"volumeID":    obj.ID,
+			"volumeName":  obj.Name,
+		}
+
 		if filterOp == types.FilterEqualityMatch && filterLeft == "name" {
+			ctx.WithFields(lf).Debug("checking name filter")
 			if !strings.EqualFold(obj.Name, filterRight) {
+				ctx.WithFields(lf).Debug("omitted volume due to name filter")
 				continue
 			}
 		}
 
-		// if only the requesting instance's attachments are requested then
-		// filter the volume's attachments list
-		if opts.Attachments.Mine() {
-			atts := []*types.VolumeAttachment{}
-			for _, a := range obj.Attachments {
-				if strings.EqualFold(iid.ID, a.InstanceID.ID) {
-					atts = append(atts, a)
-				}
-			}
-			obj.Attachments = atts
-		}
-
-		if opts.Attachments.Attached() && len(obj.Attachments) == 0 {
-			continue
-		}
-
-		if opts.Attachments.Unattached() && len(obj.Attachments) > 0 {
+		if !handleVolAttachments(ctx, lf, iid, obj, opts.Attachments) {
 			continue
 		}
 
 		if OnVolume != nil {
-			ctx.Debug("invoking OnVolume handler")
+			ctx.WithFields(lf).Debug("invoking OnVolume handler")
 			ok, err := OnVolume(ctx, req, store, obj)
 			if err != nil {
 				return nil, err
@@ -212,8 +267,8 @@ func (r *router) volumeInspect(
 	attachments := store.GetAttachments()
 
 	service := context.MustService(ctx)
-	if _, ok := context.InstanceID(ctx); !ok &&
-		attachments.RequiresInstanceID() {
+	iid, iidOK := context.InstanceID(ctx)
+	if !iidOK && attachments.RequiresInstanceID() {
 		return utils.NewMissingInstanceIDError(service.Name())
 	}
 
@@ -239,10 +294,12 @@ func (r *router) volumeInspect(
 				return nil, err
 			}
 
-			volID := strings.ToLower(store.GetString("volumeID"))
+			volID := store.GetString("volumeID")
 			for _, v := range vols {
-				if strings.ToLower(v.Name) == volID {
-
+				if strings.EqualFold(v.Name, volID) {
+					if !handleVolAttachments(ctx, nil, iid, v, attachments) {
+						return nil, utils.NewNotFoundError(volID)
+					}
 					if OnVolume != nil {
 						ok, err := OnVolume(ctx, req, store, v)
 						if err != nil {
@@ -271,6 +328,10 @@ func (r *router) volumeInspect(
 
 			if err != nil {
 				return nil, err
+			}
+
+			if !handleVolAttachments(ctx, nil, iid, v, attachments) {
+				return nil, utils.NewNotFoundError(v.ID)
 			}
 
 			if OnVolume != nil {

@@ -331,7 +331,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	}
 	// Return the volume created
 	return d.VolumeInspect(ctx, *vol.VolumeId, &types.VolumeInspectOpts{
-		Attachments: types.VolumeAttachmentsTrue,
+		Attachments: types.VolAttReqTrue,
 	})
 }
 
@@ -582,7 +582,7 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.WithError("error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(
-		ctx, ec2vols, types.VolumeAttachmentsTrue)
+		ctx, ec2vols, types.VolAttReqTrue)
 	if convErr != nil {
 		return nil, "", goof.WithError(
 			"error converting to types.Volume", convErr)
@@ -634,7 +634,7 @@ func (d *driver) VolumeAttach(
 	// Check if successful attach
 	attachedVol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: types.VolumeAttachmentsTrue,
+			Attachments: types.VolAttReqTrue,
 			Opts:        opts.Opts,
 		})
 	if err != nil {
@@ -659,7 +659,7 @@ func (d *driver) VolumeDetach(
 		return nil, goof.WithError("error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(
-		ctx, ec2vols, types.VolumeAttachmentsTrue)
+		ctx, ec2vols, types.VolAttReqTrue)
 	if convErr != nil {
 		return nil, goof.WithError("error converting to types.Volume", convErr)
 	}
@@ -696,7 +696,7 @@ func (d *driver) VolumeDetach(
 	// check if successful detach
 	detachedVol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: types.VolumeAttachmentsTrue,
+			Attachments: types.VolAttReqTrue,
 			Opts:        opts.Opts,
 		})
 	if err != nil {

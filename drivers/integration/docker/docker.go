@@ -169,7 +169,7 @@ func (d *driver) Mount(
 		"opts":       opts}).Info("mounting volume")
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts.Opts)
+		ctx, volumeID, volumeName, types.VolAttReqTrue, opts.Opts)
 	if isErrNotFound(err) && d.volumeCreateImplicit() {
 		var err error
 		if vol, err = d.Create(ctx, volumeName, &types.VolumeCreateOpts{
@@ -224,7 +224,7 @@ func (d *driver) Mount(
 		}
 
 		vol, err = d.volumeInspectByIDOrName(
-			ctx, vol.ID, "", types.VolumeAttachmentsTrue, opts.Opts)
+			ctx, vol.ID, "", types.VolAttReqTrue, opts.Opts)
 		if err != nil {
 			return "", nil, err
 		}
@@ -323,7 +323,7 @@ func (d *driver) Unmount(
 	}
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts)
+		ctx, volumeID, volumeName, types.VolAttReqTrue, opts)
 	if err != nil {
 		return err
 	}
@@ -401,7 +401,7 @@ func (d *driver) Path(
 		"opts":       opts}).Info("getting path to volume")
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts)
+		ctx, volumeID, volumeName, types.VolAttReqTrue, opts)
 	if err != nil {
 		return "", err
 	} else if vol == nil {

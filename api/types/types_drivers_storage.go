@@ -38,20 +38,90 @@ const (
 )
 
 const (
-	// VolumeAttachmentsNone specifies no attachment information is requested.
-	// This is the default value and the same as omitting this parameter
-	// altogether.
-	VolumeAttachmentsNone VolumeAttachmentsTypes = 0
+	// VolAttNone is the default value. This indicates no attachment
+	// information is requested.
+	VolAttNone VolumeAttachmentsTypes = 0
 
-	// VolumeAttachmentsFalse is an alias for VolumeAttachmentsNone.
-	VolumeAttachmentsFalse = VolumeAttachmentsNone
+	// VolAttFalse is an alias for VolAttNone.
+	VolAttFalse = VolAttNone
 
-	// VolumeAttachmentsTrue is a mask of
-	// VolumeAttachmentsRequested | VolumeAttachmentsMine |
-	// VolumeAttachmentsDevices | VolumeAttachmentsAttached
-	VolumeAttachmentsTrue = VolumeAttachmentsRequested |
-		VolumeAttachmentsMine | VolumeAttachmentsDevices |
+	// VolAttReq requests attachment information for all retrieved volumes.
+	//
+	// Mask: 1
+	VolAttReq = VolumeAttachmentsRequested
+
+	// VolAttReqForInstance requests attachment information for volumes attached
+	// to the instance provided in the instance ID
+	//
+	// Mask: 1 | 2
+	VolAttReqForInstance = VolAttReq | VolumeAttachmentsMine
+
+	// VolAttReqWithDevMapForInstance requests attachment information for
+	// volumes attached to the instance provided in the instance ID and perform
+	// device mappings where possible.
+	//
+	// Mask: 1 | 2 | 4
+	VolAttReqWithDevMapForInstance = VolAttReqForInstance |
+		VolumeAttachmentsDevices
+
+	// VolAttReqOnlyAttachedVols requests attachment information for all
+	// retrieved volumes and return only volumes that are attached to some
+	// instance.
+	//
+	// Mask: 1 | 8
+	VolAttReqOnlyAttachedVols = VolAttReq | VolumeAttachmentsAttached
+
+	// VolAttReqOnlyUnattachedVols requests attachment information for
+	// all retrieved volumes and return only volumes that are not attached to
+	// any instance.
+	//
+	// Mask: 1 | 16
+	VolAttReqOnlyUnattachedVols = VolAttReq | VolumeAttachmentsUnattached
+
+	// VolAttReqOnlyVolsAttachedToInstance requests attachment
+	// information for all retrieved volumes and return only volumes that
+	// attached to the instance provided in the instance ID.
+	//
+	// Mask: 1 | 2 | 8
+	VolAttReqOnlyVolsAttachedToInstance = VolAttReqForInstance |
 		VolumeAttachmentsAttached
+
+	// VolAttReqWithDevMapOnlyVolsAttachedToInstance requests attachment
+	// information for all retrieved volumes and return only volumes that
+	// attached to the instance provided in the instance ID and perform device
+	// mappings where possible.
+	//
+	// Mask: 1 | 2 | 4 | 8
+	VolAttReqWithDevMapOnlyVolsAttachedToInstance = VolumeAttachmentsDevices |
+		VolAttReqOnlyVolsAttachedToInstance
+
+	// VolAttReqTrue is an alias for
+	// VolAttReqWithDevMapOnlyVolsAttachedToInstance.
+	VolAttReqTrue = VolAttReqWithDevMapOnlyVolsAttachedToInstance
+
+	// VolumeAttachmentsTrue is an alias for VolAttReqTrue.
+	VolumeAttachmentsTrue = VolAttReqTrue
+
+	// VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols requests attachment
+	// information for all retrieved volumes and return only volumes that
+	// attached to the instance provided in the instance ID or are not attached
+	// to any instance at all. tl;dr - Attached To Me or Available
+	//
+	// Mask: 1 | 2 | 8 | 16
+	VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols = 0 |
+		VolAttReqOnlyVolsAttachedToInstance |
+		VolumeAttachmentsUnattached
+
+	// VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols requests
+	// attachment information for all retrieved volumes and return only volumes
+	// that attached to the instance provided in the instance ID or are not
+	// attached to any instance at all and perform device mappings where
+	// possible. tl;dr - Attached To Me With Device Mappings or Available
+	//
+	// Mask: 1 | 2 | 4 | 8 | 16
+	VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols = 0 |
+		VolumeAttachmentsDevices |
+		VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols
 )
 
 // ParseVolumeAttachmentTypes parses a value into a VolumeAttachmentsTypes
@@ -93,7 +163,7 @@ func ParseVolumeAttachmentTypes(v interface{}) VolumeAttachmentsTypes {
 		}
 		return VolumeAttachmentsRequested
 	}
-	return VolumeAttachmentsNone
+	return VolAttNone
 }
 
 // RequiresInstanceID returns a flag that indicates whether the attachment

@@ -389,7 +389,7 @@ func (d *driver) VolumeAttach(
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
 	vol, err := d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, "", err
 	}

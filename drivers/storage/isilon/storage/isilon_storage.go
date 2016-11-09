@@ -240,7 +240,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
 	vol, err := d.VolumeInspect(ctx, volumeName,
-		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +329,7 @@ func (d *driver) VolumeAttach(
 
 	// ensure the volume exists and is exported
 	vol, err := d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, "", err
 	}
@@ -390,7 +390,7 @@ func (d *driver) VolumeAttach(
 	}
 
 	vol, err = d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, "", err
 	}
@@ -452,7 +452,7 @@ func (d *driver) VolumeDetach(
 	}
 
 	return d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{
-		Attachments: types.VolumeAttachmentsTrue,
+		Attachments: types.VolAttReqTrue,
 	})
 }
 

@@ -465,7 +465,7 @@ func volumeInspectAttached(
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(
 		nil, ebs.Name, volumeID,
-		types.VolumeAttachmentsTrue)
+		types.VolAttReqTrue)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -483,7 +483,7 @@ func volumeInspectDetached(
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(
 		nil, ebs.Name, volumeID,
-		types.VolumeAttachmentsTrue)
+		types.VolAttReqTrue)
 	assert.NoError(t, err)
 
 	if err != nil {

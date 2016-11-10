@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	apitypes "github.com/codedellemc/libstorage/api/types"

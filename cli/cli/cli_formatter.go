@@ -34,7 +34,18 @@ func (c *CLI) fmtOutput(w io.Writer, templateName string, o interface{}) error {
 		tplTabs      = c.outputTemplateTabs
 		tplBuf       = buildDefaultTemplate()
 		funcMap      = gtemplate.FuncMap{
-			"volumeStatus": c.volumeStatus,
+			"printAttState": func(s apitypes.VolumeAttachmentStates) string {
+				switch s {
+				case apitypes.VolumeAttached:
+					return "attached"
+				case apitypes.VolumeAvailable:
+					return "available"
+				case apitypes.VolumeUnavailable:
+					return "unavailable"
+				default:
+					return "unknown"
+				}
+			},
 		}
 	)
 
@@ -250,7 +261,7 @@ var defaultTemplates = map[string]*templateMetadata{
 		fields: []string{
 			"ID",
 			"Name",
-			"Status={{. | volumeStatus}}",
+			"Status={{.AttachmentState | printAttState}}",
 			"Size",
 		},
 		sortBy: "Name",
@@ -259,7 +270,7 @@ var defaultTemplates = map[string]*templateMetadata{
 		fields: []string{
 			"ID",
 			"Name",
-			"Status={{.Volume | volumeStatus}}",
+			"Status={{.Volume.AttachmentState | printAttState}}",
 			"Size",
 			"Path",
 		},

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	apitypes "github.com/codedellemc/libstorage/api/types"
 )
 

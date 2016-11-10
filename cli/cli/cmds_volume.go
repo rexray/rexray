@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	apitypes "github.com/codedellemc/libstorage/api/types"
-	apiutils "github.com/codedellemc/libstorage/api/utils"
 )
 
 func (c *CLI) initVolumeCmdsAndFlags() {
@@ -36,7 +35,7 @@ func (c *CLI) initVolumeCmds() {
 		Short:   "List volumes",
 		Example: "rexray volume ls [OPTIONS] [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.lsVolumes(args))
+			c.mustMarshalOutput(c.lsVolumes(args, c.defaultAttachments()))
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeListCmd)
@@ -179,7 +178,7 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args)
+			result, err := c.lsVolumes(args, 0)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -229,7 +228,9 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args, volumeStatusAvailable)
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqOnlyUnattachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -282,7 +283,9 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args, volumeStatusAttached)
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqOnlyAttachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -339,7 +342,8 @@ func (c *CLI) initVolumeCmds() {
 			// volumes that are attached or can be attached should be valid
 			// candidates for a mount operation
 			result, err := c.lsVolumes(
-				args, volumeStatusAttached, volumeStatusAvailable)
+				args,
+				apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -396,7 +400,9 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args, volumeStatusAttached)
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqOnlyVolsAttachedToInstance)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -445,7 +451,9 @@ func (c *CLI) initVolumeCmds() {
 		Short:   "Print the volume path",
 		Example: "rexray volume path [OPTIONS] [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			result, err := c.lsVolumes(args, volumeStatusAttached)
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqOnlyVolsAttachedToInstance)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -799,45 +807,31 @@ func (r *lsVolumesResult) regexMatches() int {
 	return total
 }
 
+func (c *CLI) defaultAttachments() apitypes.VolumeAttachmentsTypes {
+	if c.volumeUnattached {
+		return apitypes.VolAttReqOnlyUnattachedVols
+	}
+	if c.volumeAttachedToMe {
+		return apitypes.VolAttReqOnlyVolsAttachedToInstance
+	}
+	if c.volumeAttached {
+		return apitypes.VolAttReqOnlyAttachedVols
+	}
+	return apitypes.VolAttReq
+}
+
 func (c *CLI) lsVolumes(
 	args []string,
-	validStatuses ...string) (*lsVolumesResult, error) {
+	attachments apitypes.VolumeAttachmentsTypes) (*lsVolumesResult, error) {
 
-	// if the volume status matters then send the flag that requests a
-	// volume's attachment information
-	if len(validStatuses) > 0 {
-		c.volumeAttached = true
-	}
-
-	opts := &apitypes.VolumesOpts{Attachments: c.volumeAttached}
-	vols, err := c.r.Storage().Volumes(c.ctx, opts)
+	//opts :=
+	vols, err := c.r.Storage().Volumes(c.ctx,
+		&apitypes.VolumesOpts{Attachments: attachments})
 	if err != nil {
 		return nil, err
 	}
 
 	result := &lsVolumesResult{}
-
-	// remove volumes that don't have a status that matches
-	if len(validStatuses) > 0 {
-		iid, err := c.r.Executor().InstanceID(c.ctx, voluemStatusStore)
-		if err != nil {
-			return nil, err
-		}
-		result.iid = iid
-
-		matchedVols := []*apitypes.Volume{}
-		for _, v := range vols {
-			volStat := c.volumeStatusWithInstanceID(result.iid, v)
-			for _, s := range validStatuses {
-				if volStat == s {
-					matchedVols = append(matchedVols, v)
-					break
-				}
-			}
-		}
-
-		vols = matchedVols
-	}
 
 	if len(args) == 0 {
 		result.vols = vols
@@ -965,55 +959,17 @@ const (
 	volumeStatusError       = "error"
 )
 
-var voluemStatusStore = apiutils.NewStore()
-
-func (c *CLI) volumeStatus(vol *apitypes.Volume) string {
-	return c.volumeStatusWithInstanceID(nil, vol)
-}
-
-func (c *CLI) volumeStatusWithInstanceID(
-	iid *apitypes.InstanceID, vol *apitypes.Volume) string {
-
-	// do not get the status if already set
-	switch vol.Status {
-	case volumeStatusAttached,
-		volumeStatusAvailable,
-		volumeStatusError,
-		volumeStatusUnavailable,
-		volumeStatusUnknown:
-		return vol.Status
-	}
-
-	if len(vol.Attachments) == 0 {
-		vol.Status = volumeStatusAvailable
-		return vol.Status
-	}
-	if c.r == nil || c.r.Executor() == nil {
-		vol.Status = volumeStatusUnknown
-		return vol.Status
-	}
-	if iid == nil {
-		iid2, err := c.r.Executor().InstanceID(c.ctx, voluemStatusStore)
-		if err != nil {
-			vol.Status = volumeStatusError
-			return vol.Status
-		}
-		iid = iid2
-	}
-	for _, a := range vol.Attachments {
-		if a.InstanceID.ID == iid.ID {
-			vol.Status = volumeStatusAttached
-			return vol.Status
-		}
-	}
-	vol.Status = volumeStatusUnavailable
-	return vol.Status
-}
-
 func (c *CLI) initVolumeFlags() {
 	c.volumeListCmd.Flags().BoolVar(&c.volumeAttached, "attached", false,
-		"Set to \"true\" to obtain volume-device mappings for volumes "+
-			"attached to this host")
+		"A flag that indicates only attached volumes should be returned")
+	c.volumeListCmd.Flags().BoolVar(&c.volumeAttachedToMe, "attachedToMe",
+		false,
+		"A flag that indicates only volumes attached to this host should "+
+			"be returned")
+	c.volumeListCmd.Flags().BoolVar(&c.volumeUnattached, "available",
+		false,
+		"A flag that indicates only available volumes should be returned")
+
 	c.volumeAttachCmd.Flags().BoolVar(&c.force, "force", false, "")
 	c.volumeDetachCmd.Flags().BoolVar(&c.force, "force", false, "")
 	c.volumeMountCmd.Flags().BoolVar(&c.overwriteFs, "overwriteFS", false, "")

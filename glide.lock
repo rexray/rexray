@@ -1,8 +1,10 @@
-hash: e437275da2ef474d677f0860d4c353c08536f3af96f24a84a517ae0e2526f6af
-updated: 2016-10-28T18:04:37.530606158-05:00
+hash: e8e75d4f18a90969ea73f69f5fe21845f121bb5b20dafeae756c06bb7cf6c916
+updated: 2016-11-10T14:28:51.370879983-06:00
 imports:
 - name: github.com/akutz/gofig
-  version: 697c16916338166671910eeaccc50f21e3c10726
+  version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
+  subpackages:
+  - types
 - name: github.com/akutz/golf
   version: e26bdd995cb746e431d42ea303ebe7622389d29f
   subpackages:
@@ -48,8 +50,6 @@ imports:
   - private/waiter
   - service/ec2
   - service/efs
-- name: github.com/BurntSushi/toml
-  version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/cesanta/ucl
   version: 97c016fce90e6af1b14558563ac46852167e6a76
 - name: github.com/cesanta/validate-json
@@ -73,7 +73,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: 96e6a3a257dccbbd07b13d8b02e06bd9a4ed2ae9
+  version: 544bab7565684d875e611103fafb941e7101b1cf
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -124,15 +124,28 @@ imports:
   version: a65d4d2de4d5f7c74868dfa9b202a3c8be315aaa
   subpackages:
   - md2man
+- name: github.com/fsnotify/fsnotify
+  version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml
-  version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
+  version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 757bef944d0f21880861c2dd9c871ca543023cba
+- name: github.com/hashicorp/hcl
+  version: f74cf8281543a0797d7b4ab7d88e76e7ba125308
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmespath/go-jmespath
@@ -144,14 +157,20 @@ imports:
   version: c2c54e542fb797ad986b31721e1baedf214ca413
   repo: https://github.com/kardianos/osext.git
   vcs: git
-- name: github.com/kr/pretty
-  version: cfb55aafdaf3ec08f0db22699ab822c50091b1c4
-- name: github.com/kr/text
-  version: 7cafcd837844e784b526369c9bce262804aebc60
+- name: github.com/kr/fs
+  version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/magiconair/properties
   version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/mitchellh/mapstructure
   version: f3009df150dadf309fdee4a54ed65c124afad715
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: 45932ad32dfdd20826f5671da37a5f3ce9f26a8d
+- name: github.com/pkg/errors
+  version: 248dadf4e9068a0b3e79f02ed0a610d935de5302
+- name: github.com/pkg/sftp
+  version: 4d0e916071f68db74f8a73926335f809396d6b42
 - name: github.com/russross/blackfriday
   version: 5f33e7b7878355cd2b7e6b8eefc48a5472c69f70
 - name: github.com/shurcooL/sanitized_anchor_name
@@ -159,6 +178,11 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: 5f376aa629ac60c3215cc368e674bd996093a01a
   repo: https://github.com/akutz/logrus
+- name: github.com/spf13/afero
+  version: 52e4a6cfac46163658bd4f123c49b6ee7dc75f78
+  subpackages:
+  - mem
+  - sftp
 - name: github.com/spf13/cast
   version: 2580bc98dc0e62908119e4737030cc2fdfc45e4c
 - name: github.com/spf13/cobra
@@ -170,29 +194,38 @@ imports:
   version: b084184666e02084b8ccb9b704bf0d79c466eb1d
   repo: https://github.com/spf13/pflag
 - name: github.com/spf13/viper
-  version: 317ec73d0d7507658ee3be15866b445d6d921848
-  repo: https://github.com/akutz/viper.git
+  version: 651d9d916abc3c3d6a91a12549495caba5edffd2
+- name: golang.org/x/crypto
+  version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - ssh
 - name: golang.org/x/net
-  version: dffc95cbb4ff9af8614b2741ec26371fffcc19b3
+  version: b336a971b799939dd16ae9b1df8334cb8b977c4d
   repo: https://github.com/golang/net
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: c200b10b5d5e122be351b67af224adc6128af5bf
+  version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
   subpackages:
   - unix
+- name: golang.org/x/text
+  version: a8b38433e35b65ba247bb267317037dee1b70cea
+  subpackages:
+  - transform
+  - unicode/norm
 - name: google.golang.org/api
   version: fd081149e482b10c55262756934088ffe3197ea3
   repo: https://github.com/google/google-api-go-client.git
   subpackages:
   - compute/v1
-- name: gopkg.in/fsnotify.v1
-  version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: gopkg.in/yaml.v1
-  version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
+  version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git
 - name: gopkg.in/yaml.v2
-  version: b4a9f8c4b84c6c4256d669c649837f1441e4b050
+  version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git
 testImports: []

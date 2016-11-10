@@ -12,6 +12,7 @@ attachment information about one or more volumes.
 
 ### Bug Fixes
 * AWS Config Support ([#314](https://github.com/codedellemc/libstorage/pull/314))
+* VirtualBox Executor Fix ([#325](https://github.com/codedellemc/libstorage/pull/325))
 
 ## Version 0.3.2 (2016/10/18)
 This release updates the project to reflect its new location at

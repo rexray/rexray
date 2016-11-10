@@ -104,18 +104,6 @@ func (c *CLI) additionalFlags() *flag.FlagSet {
 	return af
 }
 
-func (c *CLI) additionalFlagSets() map[string]*flag.FlagSet {
-	afs := map[string]*flag.FlagSet{}
-	for fsn, fs := range c.config.FlagSets() {
-		if fsn == "Global Flags" || !fs.HasFlags() {
-			continue
-		}
-
-		afs[fsn] = fs
-	}
-	return afs
-}
-
 func isHelpFlag(cmd *cobra.Command) bool {
 	v, e := cmd.Flags().GetBool("help")
 	if e != nil {

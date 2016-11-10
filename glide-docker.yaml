@@ -10,11 +10,11 @@ import:
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/codedellemc/libstorage
-    version: v0.3.2 # libstorage-version
+    version: v0.3.3-rc4 # libstorage-version
     repo:    https://github.com/codedellemc/libstorage # libstorage-repo
 
   - package: github.com/akutz/gofig
-    version: v0.1.4
+    version: v0.1.6
   - package: github.com/akutz/gotil
     version: v0.1.0
   - package: github.com/akutz/goof
@@ -28,20 +28,27 @@ import:
   - package: github.com/spf13/cobra
     ref:     363816bb13ce1710460c2345017fd35593cbf5ed
     repo:    https://github.com/akutz/cobra
-  - package: github.com/go-yaml/yaml
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
-    repo:    https://github.com/akutz/yaml.git
-  - package: gopkg.in/yaml.v1
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
-    repo:    https://github.com/akutz/yaml.git
-  - package: gopkg.in/yaml.v2
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
-    repo:    https://github.com/akutz/yaml.git
   - package: google.golang.org/api/compute/v1
     ref:     fd081149e482b10c55262756934088ffe3197ea3
     repo:    https://github.com/google/google-api-go-client.git
   - package: golang.org/x/net
     repo:    https://github.com/golang/net
+
+
+################################################################################
+##                                  Go-YAML                                   ##
+################################################################################
+
+  - package: github.com/go-yaml/yaml
+    ref:     feature/preserve-json-compat
+    repo:    https://github.com/akutz/yaml.git
+  - package: gopkg.in/yaml.v1
+    ref:     feature/preserve-json-compat
+    repo:    https://github.com/akutz/yaml.git
+  - package: gopkg.in/yaml.v2
+    ref:     feature/preserve-json-compat
+    repo:    https://github.com/akutz/yaml.git
+
 
 ################################################################################
 ##                         Storage Driver Dependencies                        ##

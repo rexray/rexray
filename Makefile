@@ -1,5 +1,9 @@
 SHELL := /bin/bash
 
+ifeq (undefined,$(origin BUILD_TAGS))
+BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
+endif
+
 all:
 # if docker is running, then let's use docker to build it
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
@@ -84,7 +88,9 @@ else
 	@tar -C $(GOPATH)/src -c $(DTARC) $(DLOCAL_IMPORTS_FILES) | docker cp - $(DNAME):$(DPATH)/vendor
 endif
 endif
-	docker exec -t $(DNAME) env GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 make -C $(DPATH) -j build
+	docker exec -t $(DNAME) \
+		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+		make -C $(DPATH) -j build
 
 docker-build: docker-init
 	@docker cp $(DNAME):$(DPROG) $(PROG)
@@ -98,7 +104,9 @@ endif
 
 docker-test: DGOOS=linux
 docker-test: docker-init
-	docker exec -t $(DNAME) make -C $(DPATH) test
+	docker exec -t $(DNAME) \
+		env BUILD_TAGS="$(BUILD_TAGS)" \
+		make -C $(DPATH) test
 
 docker-clean:
 	-docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
@@ -179,6 +187,10 @@ export $(PATH)
 ################################################################################
 
 GO_LIST_BUILD_INFO_CMD := go list -f '{{with $$ip:=.}}{{with $$ctx:=context}}{{printf "%s %s %s %s %s 0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ctx.GOOS $$ctx.GOARCH (join $$ctx.BuildTags ",")}}{{end}}{{end}}'
+ifneq (,$(BUILD_TAGS))
+GO_LIST_BUILD_INFO_CMD += -tags "$(BUILD_TAGS)"
+endif
+
 BUILD_INFO := $(shell $(GO_LIST_BUILD_INFO_CMD))
 ROOT_IMPORT_PATH := $(word 1,$(BUILD_INFO))
 ROOT_IMPORT_NAME := $(word 2,$(BUILD_INFO))
@@ -230,7 +242,12 @@ endif
 ##                              PROJECT DETAIL                                ##
 ################################################################################
 
-GO_LIST_IMPORT_PATHS_INFO_CMD := go list -f '{{with $$ip:=.}}{{if $$ip.ImportPath | le "$(ROOT_IMPORT_PATH)"}}{{if $$ip.ImportPath | gt "$(ROOT_IMPORT_PATH)/vendor" }}{{printf "%s;%s;%s;%s;%v;0,%s,%s,%s,%s;0,%s;0,%s;0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ip.Target $$ip.Stale (join $$ip.GoFiles ",") (join $$ip.CgoFiles ",") (join $$ip.CFiles ",") (join $$ip.HFiles ",") (join $$ip.TestGoFiles ",") (join $$ip.Imports ",") (join $$ip.TestImports ",")}};{{end}}{{end}}{{end}}' ./...
+GO_LIST_IMPORT_PATHS_INFO_CMD := go list -f '{{with $$ip:=.}}{{if $$ip.ImportPath | le "$(ROOT_IMPORT_PATH)"}}{{if $$ip.ImportPath | gt "$(ROOT_IMPORT_PATH)/vendor" }}{{printf "%s;%s;%s;%s;%v;0,%s,%s,%s,%s;0,%s;0,%s;0,%s" $$ip.ImportPath $$ip.Name $$ip.Dir $$ip.Target $$ip.Stale (join $$ip.GoFiles ",") (join $$ip.CgoFiles ",") (join $$ip.CFiles ",") (join $$ip.HFiles ",") (join $$ip.TestGoFiles ",") (join $$ip.Imports ",") (join $$ip.TestImports ",")}};{{end}}{{end}}{{end}}'
+ifneq (,$(BUILD_TAGS))
+GO_LIST_IMPORT_PATHS_INFO_CMD += -tags "$(BUILD_TAGS)"
+endif
+GO_LIST_IMPORT_PATHS_INFO_CMD += ./...
+
 IMPORT_PATH_INFO := $(shell $(GO_LIST_IMPORT_PATHS_INFO_CMD))
 
 # this runtime ruleset acts as a pre-processor, processing the import path
@@ -341,6 +358,7 @@ info:
 	$(info Project Import Path.........$(ROOT_IMPORT_PATH))
 	$(info Project Name................$(ROOT_IMPORT_NAME))
 	$(info OS / Arch...................$(GOOS)_$(GOARCH))
+	$(info Build Tags..................$(BUILD_TAGS))
 	$(info Vendored....................$(VENDORED))
 	$(info GOPATH......................$(GOPATH))
 	$(info GOHOSTOS....................$(GOHOSTOS))
@@ -651,7 +669,11 @@ $$(PKG_D_$1)-clean:
 GO_CLEAN += $$(PKG_D_$1)-clean
 
 $$(PKG_A_$1): $$(EXT_DEPS_SRCS_$1) $$(SRCS_$1) | $$(DEPS_ARKS_$1)
+ifeq (,$$(BUILD_TAGS))
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $1
+else
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go install -tags "$$(BUILD_TAGS)" $1
+endif
 
 ifeq (true,$$(STALE_$1))
 GO_PHONY += $$(PKG_A_$1)
@@ -695,7 +717,12 @@ $$(PKG_TA_$1): $$(SRCS_$1)
 endif
 
 $$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
+ifeq (,$$(BUILD_TAGS))
 	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
+else
+	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -tags "$$(BUILD_TAGS)" -c -o $$@ $1
+endif
+
 $$(PKG_TA_$1)-clean:
 	rm -f $$(PKG_TA_$1)
 GO_PHONY += $$(PKG_TA_$1)-clean
@@ -752,7 +779,9 @@ LIBSTORAGE_DIR := vendor/github.com/codedellemc/libstorage
 LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
 LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
 $(LIBSTORAGE_API) $(LIBSTORAGE_LSX):
-	cd $(LIBSTORAGE_DIR) && $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && cd -
+	cd $(LIBSTORAGE_DIR) && \
+		BUILD_TAGS="$(BUILD_TAGS)" $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && \
+		cd -
 $(LIBSTORAGE_LSX): | $(GO_BINDATA)
 build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
 
@@ -761,9 +790,9 @@ build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
 ##                                   CLI                                      ##
 ################################################################################
 CLI := $(shell go list -f '{{.Target}}' ./cli/$(PROG))
-CLI_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/$(PROG))
-CLI_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/$(PROG))
-CLI_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/$(PROG))
+CLI_LINUX := $(shell GOOS=linux go list -f '{{.Target}}' ./cli/$(PROG))
+CLI_DARWIN := $(shell GOOS=darwin go list -f '{{.Target}}' ./cli/$(PROG))
+CLI_WINDOWS := $(shell GOOS=windows go list -f '{{.Target}}' ./cli/$(PROG))
 
 build-cli-linux: $(CLI_LINUX)
 build-cli-darwin: $(CLI_DARWIN)
@@ -772,7 +801,7 @@ build-cli-windows: $(CLI_WINDOWS)
 define CLI_RULES
 ifneq ($2,$$(GOOS))
 $1:
-	env GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
+	GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 GO_PHONY += $1-clean
@@ -970,7 +999,7 @@ pkg-clean:
 test: $(GO_TEST)
 
 test-debug:
-	env REXRAY_DEBUG=true $(MAKE) test
+	REXRAY_DEBUG=true $(MAKE) test
 
 cover: codecov
 

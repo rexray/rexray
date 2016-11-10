@@ -7,7 +7,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	apitypes "github.com/codedellemc/libstorage/api/types"
 	apiclient "github.com/codedellemc/libstorage/client"
@@ -89,8 +90,8 @@ func init() {
 }
 
 func initConfig() {
-	cfg := gofig.NewRegistration("Module")
-	cfg.Yaml(`
+	cfg := gofigCore.NewRegistration("Module")
+	cfg.SetYAML(`
 rexray:
     modules:
         default-docker:
@@ -101,7 +102,7 @@ rexray:
             disabled: false
 `)
 	cfg.Key(gofig.String, "", "10s", "", "rexray.module.startTimeout")
-	gofig.Register(cfg)
+	gofigCore.Register(cfg)
 }
 
 // Types returns a channel that receives the registered module types.

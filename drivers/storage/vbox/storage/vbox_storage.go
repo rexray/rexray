@@ -234,7 +234,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 
 	size := *opts.Size * 1024 * 1024 * 1024
 
-	vol, err := d.getVolume(ctx, "", volumeName, 0)
+	vol, err := d.getVolume(ctx, "", volumeName, types.VolAttFalse)
 	if err != nil {
 		return nil, err
 	}
@@ -328,7 +328,7 @@ func (d *driver) VolumeAttach(
 	}
 
 	// review volume with attachments to any host
-	volumes, err := d.getVolume(ctx, volumeID, "", 0)
+	volumes, err := d.getVolume(ctx, volumeID, "", types.VolAttReq)
 	if err != nil {
 		return nil, "", err
 	}
@@ -385,7 +385,7 @@ func (d *driver) VolumeDetach(
 		return nil, goof.New("missing volume id")
 	}
 
-	volumes, err := d.getVolume(ctx, volumeID, "", 0)
+	volumes, err := d.getVolume(ctx, volumeID, "", types.VolAttFalse)
 	if err != nil {
 		return nil, err
 	}
@@ -393,6 +393,8 @@ func (d *driver) VolumeDetach(
 	if len(volumes) == 0 {
 		return nil, goof.New("no volume returned")
 	}
+
+	// TODO: Check if volumes[[0].Attachments > 0?
 
 	if err := d.detachVolume(ctx, volumeID, ""); err != nil {
 		return nil, goof.WithFieldsE(
@@ -495,7 +497,7 @@ func (d *driver) getVolume(
 	}
 
 	var mapDN map[string]string
-	if attachments.Requested() {
+	if attachments.Devices() {
 		volumeMapping, err := d.getVolumeMapping(ctx)
 		if err != nil {
 			return nil, err
@@ -510,25 +512,33 @@ func (d *driver) getVolume(
 	var volumesSD []*types.Volume
 
 	for _, v := range volumes {
-		var attachmentsSD []*types.VolumeAttachment
-		for _, mid := range v.MachineIDs {
-			dn, _ := mapDN[v.ID]
-			attachmentSD := &types.VolumeAttachment{
-				VolumeID:   v.ID,
-				InstanceID: &types.InstanceID{ID: mid, Driver: vbox.Name},
-				DeviceName: dn,
-				Status:     v.Location,
-			}
-			attachmentsSD = append(attachmentsSD, attachmentSD)
+		volumeSD := &types.Volume{
+			Name:   v.Name,
+			ID:     v.ID,
+			Size:   int64(v.LogicalSize / 1024 / 1024 / 1024),
+			Status: v.Location,
+			Type:   string(v.DeviceType),
 		}
 
-		volumeSD := &types.Volume{
-			Name:        v.Name,
-			ID:          v.ID,
-			Size:        int64(v.LogicalSize / 1024 / 1024 / 1024),
-			Status:      v.Location,
-			Attachments: attachmentsSD,
+		if attachments.Requested() {
+			var attachmentsSD []*types.VolumeAttachment
+			for _, mid := range v.MachineIDs {
+				attachmentSD := &types.VolumeAttachment{
+					VolumeID: v.ID,
+					InstanceID: &types.InstanceID{
+						ID:     mid,
+						Driver: vbox.Name,
+					},
+				}
+				if attachments.Devices() && mapDN != nil {
+					dn, _ := mapDN[v.ID]
+					attachmentSD.DeviceName = dn
+				}
+				attachmentsSD = append(attachmentsSD, attachmentSD)
+			}
+			volumeSD.Attachments = attachmentsSD
 		}
+
 		volumesSD = append(volumesSD, volumeSD)
 	}
 

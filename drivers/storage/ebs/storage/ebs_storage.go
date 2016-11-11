@@ -923,39 +923,51 @@ func (d *driver) toTypesVolume(
 	ctx types.Context,
 	ec2vols []*awsec2.Volume,
 	attachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
-	// Get local devices map from context
-	ld, ldOK := context.LocalDevices(ctx)
-	if !ldOK {
-		return nil, errGetLocDevs
+
+	var (
+		ld   *types.LocalDevices
+		ldOK bool
+	)
+
+	if attachments.Devices() {
+		// Get local devices map from context
+		if ld, ldOK = context.LocalDevices(ctx); !ldOK {
+			return nil, errGetLocDevs
+		}
 	}
 
 	var volumesSD []*types.Volume
 	for _, volume := range ec2vols {
+
 		var attachmentsSD []*types.VolumeAttachment
-		// Leave attachment's device name blank if attachments is false
-		for _, attachment := range volume.Attachments {
-			deviceName := ""
-			if attachments.Devices() {
-				// Compensate for kernel volume mapping i.e. change "/dev/sda"
-				// to "/dev/xvda"
-				deviceName = strings.Replace(
-					*attachment.Device, "sd", ebsUtils.NextDeviceInfo.Prefix, 1)
-				// Keep device name if it is found in local devices
-				if _, ok := ld.DeviceMap[deviceName]; !ok {
-					deviceName = ""
+		if attachments.Requested() {
+			// Leave attachment's device name blank if attachments is false
+			for _, attachment := range volume.Attachments {
+				deviceName := ""
+				if attachments.Devices() {
+					// Compensate for kernel volume mapping i.e. change
+					// "/dev/sda" to "/dev/xvda"
+					deviceName = strings.Replace(
+						*attachment.Device, "sd",
+						ebsUtils.NextDeviceInfo.Prefix, 1)
+					// Keep device name if it is found in local devices
+					if _, ok := ld.DeviceMap[deviceName]; !ok {
+						deviceName = ""
+					}
 				}
+				attachmentSD := &types.VolumeAttachment{
+					VolumeID: *attachment.VolumeId,
+					InstanceID: &types.InstanceID{
+						ID:     *attachment.InstanceId,
+						Driver: d.Name(),
+					},
+					DeviceName: deviceName,
+					Status:     *attachment.State,
+				}
+				attachmentsSD = append(attachmentsSD, attachmentSD)
 			}
-			attachmentSD := &types.VolumeAttachment{
-				VolumeID: *attachment.VolumeId,
-				InstanceID: &types.InstanceID{
-					ID:     *attachment.InstanceId,
-					Driver: d.Name(),
-				},
-				DeviceName: deviceName,
-				Status:     *attachment.State,
-			}
-			attachmentsSD = append(attachmentsSD, attachmentSD)
 		}
+
 		name := d.getName(volume.Tags)
 		volumeSD := &types.Volume{
 			Name:             name,
@@ -967,6 +979,7 @@ func (d *driver) toTypesVolume(
 			Size:             *volume.Size,
 			Attachments:      attachmentsSD,
 		}
+
 		// Some volume types have no IOPS, so we get nil in volume.Iops
 		if volume.Iops != nil {
 			volumeSD.IOPS = *volume.Iops

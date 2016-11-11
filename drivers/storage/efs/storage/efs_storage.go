@@ -154,7 +154,8 @@ func (d *driver) Volumes(
 
 		var atts []*types.VolumeAttachment
 		if opts.Attachments.Requested() {
-			atts, err = d.getVolumeAttachments(ctx, *fileSystem.FileSystemId)
+			atts, err = d.getVolumeAttachments(
+				ctx, *fileSystem.FileSystemId, opts.Attachments)
 			if err != nil {
 				return nil, err
 			}
@@ -174,52 +175,53 @@ func (d *driver) VolumeInspect(
 	volumeID string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
-	resp, err := d.efsClient().DescribeFileSystems(&awsefs.DescribeFileSystemsInput{
-		FileSystemId: aws.String(volumeID),
-	})
+	resp, err := d.efsClient().DescribeFileSystems(
+		&awsefs.DescribeFileSystemsInput{FileSystemId: aws.String(volumeID)})
 	if err != nil {
 		return nil, err
 	}
-	if len(resp.FileSystems) > 0 {
-		fileSystem := resp.FileSystems[0]
 
-		// Only volumes in "available" state
-		if *fileSystem.LifeCycleState != awsefs.LifeCycleStateAvailable {
-			return nil, nil
-		}
-
-		// Name is optional via tag so make sure it exists
-		var fileSystemName string
-		if fileSystem.Name != nil {
-			fileSystemName = *fileSystem.Name
-		} else {
-			ctx.WithFields(log.Fields{
-				"filesystemid": *fileSystem.FileSystemId,
-			}).Warn("missing EFS filesystem name")
-		}
-
-		volume := &types.Volume{
-			Name:        d.getPrintableName(fileSystemName),
-			ID:          *fileSystem.FileSystemId,
-			Size:        *fileSystem.SizeInBytes.Value,
-			Attachments: nil,
-		}
-
-		var atts []*types.VolumeAttachment
-
-		if opts.Attachments.Requested() {
-			atts, err = d.getVolumeAttachments(ctx, *fileSystem.FileSystemId)
-			if err != nil {
-				return nil, err
-			}
-		}
-		if len(atts) > 0 {
-			volume.Attachments = atts
-		}
-		return volume, nil
+	if len(resp.FileSystems) == 0 {
+		return nil, types.ErrNotFound{}
 	}
 
-	return nil, types.ErrNotFound{}
+	fileSystem := resp.FileSystems[0]
+
+	// Only volumes in "available" state
+	if *fileSystem.LifeCycleState != awsefs.LifeCycleStateAvailable {
+		return nil, nil
+	}
+
+	// Name is optional via tag so make sure it exists
+	var fileSystemName string
+	if fileSystem.Name != nil {
+		fileSystemName = *fileSystem.Name
+	} else {
+		ctx.WithFields(log.Fields{
+			"filesystemid": *fileSystem.FileSystemId,
+		}).Warn("missing EFS filesystem name")
+	}
+
+	volume := &types.Volume{
+		Name:        d.getPrintableName(fileSystemName),
+		ID:          *fileSystem.FileSystemId,
+		Size:        *fileSystem.SizeInBytes.Value,
+		Attachments: nil,
+	}
+
+	var atts []*types.VolumeAttachment
+
+	if opts.Attachments.Requested() {
+		atts, err = d.getVolumeAttachments(
+			ctx, *fileSystem.FileSystemId, opts.Attachments)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if len(atts) > 0 {
+		volume.Attachments = atts
+	}
+	return volume, nil
 }
 
 // VolumeCreate creates a new volume.
@@ -534,12 +536,22 @@ func (d *driver) getFullVolumeName(name string) string {
 	return d.tag() + tagDelimiter + name
 }
 
-func (d *driver) getVolumeAttachments(ctx types.Context, volumeID string) (
+var errGetLocDevs = goof.New("error getting local devices from context")
+
+func (d *driver) getVolumeAttachments(
+	ctx types.Context,
+	volumeID string,
+	attachments types.VolumeAttachmentsTypes) (
 	[]*types.VolumeAttachment, error) {
+
+	if !attachments.Requested() {
+		return nil, nil
+	}
 
 	if volumeID == "" {
 		return nil, goof.New("missing volume ID")
 	}
+
 	resp, err := d.efsClient().DescribeMountTargets(
 		&awsefs.DescribeMountTargetsInput{
 			FileSystemId: aws.String(volumeID),
@@ -548,12 +560,24 @@ func (d *driver) getVolumeAttachments(ctx types.Context, volumeID string) (
 		return nil, err
 	}
 
-	ld, ldOK := context.LocalDevices(ctx)
+	var (
+		ld   *types.LocalDevices
+		ldOK bool
+	)
+
+	if attachments.Devices() {
+		// Get local devices map from context
+		if ld, ldOK = context.LocalDevices(ctx); !ldOK {
+			return nil, errGetLocDevs
+		}
+	}
 
 	var atts []*types.VolumeAttachment
 	for _, mountTarget := range resp.MountTargets {
-		var dev string
-		var status string
+		var (
+			dev    string
+			status string
+		)
 		if ldOK {
 			// TODO(kasisnu): Check lifecycle state and build the path better
 			dev = *mountTarget.IpAddress + ":" + "/"
@@ -566,8 +590,11 @@ func (d *driver) getVolumeAttachments(ctx types.Context, volumeID string) (
 			status = "Exported"
 		}
 		attachmentSD := &types.VolumeAttachment{
-			VolumeID:   *mountTarget.FileSystemId,
-			InstanceID: &types.InstanceID{ID: *mountTarget.SubnetId, Driver: d.Name()},
+			VolumeID: *mountTarget.FileSystemId,
+			InstanceID: &types.InstanceID{
+				ID:     *mountTarget.SubnetId,
+				Driver: d.Name(),
+			},
 			DeviceName: dev,
 			Status:     status,
 		}

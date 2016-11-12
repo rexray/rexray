@@ -138,7 +138,7 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 	// always return attachments to align against other drivers for now
-	return d.getVolume(ctx, "", "", types.VolAttReqTrue)
+	return d.getVolume(ctx, "", "", opts.Attachments)
 }
 
 // 	// VolumeInspect inspects a single volume.
@@ -592,31 +592,21 @@ func (d *driver) createVolume(
 //Reformats from volumes.Volume to types.Volume credit to github.com/MatMaul
 func translateVolume(
 	volume *volumes.Volume,
-	includeAttachments types.VolumeAttachmentsTypes) *types.Volume {
+	attachments types.VolumeAttachmentsTypes) *types.Volume {
 
-	var attachments []*types.VolumeAttachment
-	if includeAttachments.Requested() {
-		for _, attachment := range volume.Attachments {
-			libstorageAttachment := &types.VolumeAttachment{
-				VolumeID: attachment["volume_id"].(string),
+	var atts []*types.VolumeAttachment
+	if attachments.Requested() {
+		for _, att := range volume.Attachments {
+			lsAtt := &types.VolumeAttachment{
+				VolumeID: att["volume_id"].(string),
 				InstanceID: &types.InstanceID{
-					ID:     attachment["server_id"].(string),
+					ID:     att["server_id"].(string),
 					Driver: rackspace.Name},
-				DeviceName: attachment["device"].(string),
-				Status:     "",
 			}
-			attachments = append(attachments, libstorageAttachment)
-		}
-	} else {
-		for _, attachment := range volume.Attachments {
-			libstorageAttachment := &types.VolumeAttachment{
-				VolumeID:   attachment["volume_id"].(string),
-				InstanceID: &types.InstanceID{ID: attachment["server_id"].(string), Driver: rackspace.Name},
-				DeviceName: "",
-				Status:     "",
+			if attachments.Devices() {
+				lsAtt.DeviceName = att["device"].(string)
 			}
-			attachments = append(attachments, libstorageAttachment)
-			break
+			atts = append(atts, lsAtt)
 		}
 	}
 
@@ -628,7 +618,7 @@ func translateVolume(
 		Type:             volume.VolumeType,
 		IOPS:             0,
 		Size:             int64(volume.Size),
-		Attachments:      attachments,
+		Attachments:      atts,
 	}
 }
 

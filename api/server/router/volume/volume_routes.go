@@ -185,7 +185,11 @@ func handleVolAttachments(
 		return false
 	}
 
-	// determine a volume's attachment state
+	// determine a volume's attachment state if it hasn't been set already
+	if vol.AttachmentState > 0 {
+		return true
+	}
+
 	if len(vol.Attachments) == 0 {
 		vol.AttachmentState = types.VolumeAvailable
 	} else if iid != nil {

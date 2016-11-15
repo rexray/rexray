@@ -587,7 +587,11 @@ func (r *router) volumeDetach(
 			return nil, err
 		}
 
-		if v != nil && OnVolume != nil {
+		if v == nil {
+			return nil, nil
+		}
+
+		if OnVolume != nil {
 			ok, err := OnVolume(ctx, req, store, v)
 			if err != nil {
 				return nil, err
@@ -677,7 +681,11 @@ func (r *router) volumeDetachAll(
 					return nil, err
 				}
 
-				if v != nil && OnVolume != nil {
+				if v == nil {
+					continue
+				}
+
+				if OnVolume != nil {
 					ok, err := OnVolume(ctx, req, store, v)
 					if err != nil {
 						return nil, err
@@ -761,7 +769,11 @@ func (r *router) volumeDetachAllForService(
 				return nil, err
 			}
 
-			if v != nil && OnVolume != nil {
+			if v == nil {
+				continue
+			}
+
+			if OnVolume != nil {
 				ok, err := OnVolume(ctx, req, store, v)
 				if err != nil {
 					return nil, err

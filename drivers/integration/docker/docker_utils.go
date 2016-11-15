@@ -49,27 +49,21 @@ func (d *driver) volumeInspectByIDOrName(
 	var obj *types.Volume
 	if volumeID != "" {
 		var err error
-		obj, err = d.volumeInspectByID(
-			ctx, volumeID, types.VolAttReqTrue, opts)
+		obj, err = d.volumeInspectByID(ctx, volumeID, attachments, opts)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		objs, err := client.Storage().Volumes(ctx, &types.VolumesOpts{
-			Attachments: 0})
+		objs, err := client.Storage().Volumes(
+			ctx, &types.VolumesOpts{Attachments: 0})
 		if err != nil {
 			return nil, err
 		}
 		for _, o := range objs {
 			if strings.EqualFold(volumeName, o.Name) {
-				if attachments.Requested() {
-					obj, err = d.volumeInspectByID(
-						ctx, o.ID, types.VolAttReqTrue, opts)
-					if err != nil {
-						return nil, err
-					}
-				} else {
-					obj = o
+				obj, err = d.volumeInspectByID(ctx, o.ID, attachments, opts)
+				if err != nil {
+					return nil, err
 				}
 				break
 			}

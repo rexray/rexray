@@ -144,6 +144,38 @@ func handleVolAttachments(
 		lf = log.Fields{}
 	}
 
+	f := func(s types.VolumeAttachmentStates) bool {
+		lf["attachmentState"] = s
+		// if the volume has no attachments and the mask indicates that
+		// only attached volumes should be returned then omit this volume
+		if s == types.VolumeAvailable &&
+			attachments.Attached() &&
+			!attachments.Unattached() {
+			ctx.WithFields(lf).Debug("omitting unattached volume")
+			return false
+		}
+		// if the volume has attachments and the mask indicates that
+		// only unattached volumes should be returned then omit this volume
+		if (s == types.VolumeAttached || s == types.VolumeUnavailable) &&
+			!attachments.Attached() &&
+			attachments.Unattached() {
+			ctx.WithFields(lf).Debug("omitting attached volume")
+			return false
+		}
+		ctx.WithFields(lf).Debug("including volume")
+		return true
+	}
+
+	// if the attachment state has already been set by the driver then
+	// use it to determine whether the volume should be omitted
+	if vol.AttachmentState > 0 {
+		ctx.WithFields(lf).Debug(
+			"deferring to driver-specified attachment state")
+		return f(vol.AttachmentState)
+	}
+
+	ctx.WithFields(lf).Debug("manually calculating attachment state")
+
 	// if only the requesting instance's attachments are requested then
 	// filter the volume's attachments list
 	if attachments.Mine() {
@@ -167,43 +199,25 @@ func handleVolAttachments(
 		ctx.WithFields(lf).Debug("included volume attached to instance")
 	}
 
-	// if the volume has no attachments and the mask indicates that
-	// only attached volumes should be returned then omit this volume
-	if len(vol.Attachments) == 0 &&
-		attachments.Attached() &&
-		!attachments.Unattached() {
-		ctx.WithFields(lf).Debug("omitting unattached volume")
-		return false
-	}
-
-	// if the volume has attachments and the mask indicates that
-	// only unattached volumes should be returned then omit this volume
-	if len(vol.Attachments) > 0 &&
-		!attachments.Attached() &&
-		attachments.Unattached() {
-		ctx.WithFields(lf).Debug("omitting attached volume")
-		return false
-	}
-
-	// determine a volume's attachment state if it hasn't been set already
-	if vol.AttachmentState > 0 {
-		return true
-	}
-
+	// determine a volume's attachment state
 	if len(vol.Attachments) == 0 {
 		vol.AttachmentState = types.VolumeAvailable
-	} else if iid != nil {
+	} else {
 		vol.AttachmentState = types.VolumeUnavailable
-		for _, a := range vol.Attachments {
-			if a.InstanceID != nil &&
-				strings.EqualFold(iid.ID, a.InstanceID.ID) {
-				vol.AttachmentState = types.VolumeAttached
-				break
+		if iid != nil {
+			for _, a := range vol.Attachments {
+				if a.InstanceID != nil &&
+					strings.EqualFold(iid.ID, a.InstanceID.ID) {
+					vol.AttachmentState = types.VolumeAttached
+					break
+				}
 			}
 		}
 	}
 
-	return true
+	// use the ascertained attachment state to determine whether or not the
+	// volume should be omitted
+	return f(vol.AttachmentState)
 }
 
 func getFilteredVolumes(

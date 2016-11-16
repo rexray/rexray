@@ -150,6 +150,9 @@ func (d *driver) Volumes(
 		if err != nil {
 			return nil, err
 		}
+		if opts.Attachments > 0 {
+			v.AttachmentState = 0
+		}
 		volumes = append(volumes, v)
 	}
 
@@ -166,6 +169,9 @@ func (d *driver) VolumeInspect(
 	v, err := d.getVolumeByID(volumeID)
 	if err != nil {
 		return nil, err
+	}
+	if opts.Attachments > 0 {
+		v.AttachmentState = 0
 	}
 	return v, nil
 }

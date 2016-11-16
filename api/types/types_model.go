@@ -1,5 +1,7 @@
 package types
 
+import "strconv"
+
 // StorageType is the type of storage a driver provides.
 type StorageType string
 
@@ -145,6 +147,23 @@ const (
 	// volume information.
 	VolumeUnavailable VolumeAttachmentStates = 4
 )
+
+// String returns the string represntation of a VolumeAttachmentStates value.
+func (s VolumeAttachmentStates) String() string {
+	switch s {
+	case 0:
+		return "0"
+	case VolumeAttachmentStateUnknown:
+		return "unknown"
+	case VolumeAttached:
+		return "attached"
+	case VolumeAvailable:
+		return "available"
+	case VolumeUnavailable:
+		return "unavailable"
+	}
+	return strconv.Itoa(int(s))
+}
 
 // Volume provides information about a storage volume.
 type Volume struct {

@@ -1,43 +1,78 @@
 package: github.com/emccode/rexray
 import:
-
-################################################################################
-##                           Framework Dependencies                           ##
-################################################################################
-
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
-
+    vcs:     git
   - package: github.com/emccode/libstorage
     version: v0.1.3
-
-  - package: github.com/akutz/gofig
-    version: v0.1.4
-  - package: github.com/akutz/gotil
-    version: v0.1.0
   - package: github.com/akutz/goof
-    version: v0.1.0
-  - package: github.com/akutz/golf
-    version: v0.1.1
-
+    ref:     master
+    vcs:     git
   - package: github.com/spf13/pflag
     ref:     b084184666e02084b8ccb9b704bf0d79c466eb1d
     repo:    https://github.com/spf13/pflag
+    vcs:     git
   - package: github.com/spf13/cobra
     ref:     363816bb13ce1710460c2345017fd35593cbf5ed
     repo:    https://github.com/akutz/cobra
+    vcs:     git
+  - package: github.com/spf13/viper
+    ref:     master
+    repo:    https://github.com/akutz/viper.git
+    vcs:     git
+  - name:    github.com/aws/aws-sdk-go
+    ref:     v1.5.5
+    repo:    https://github.com/aws/aws-sdk-go.git
+    vcs:     git
+  - package: github.com/emccode/goscaleio
+    ref:     53ea76f52205380ab52b9c1f4ad89321c286bb95
+    repo:    https://github.com/emccode/goscaleio.git
+    vcs:     git
+  - package: github.com/emccode/goxtremio
+    ref:     89e87d4bdf43837a161fd36ad8dd32e0ce42ae98
+    repo:    https://github.com/akutz/goxtremio.git
+    vcs:     git
+  - package: github.com/akutz/golf
+    ref:     v0.1.1
+    vcs:     git
+  - package: github.com/akutz/gofig
+    ref:     v0.1.4
+    vcs:     git
+  - package: github.com/akutz/gotil
+    ref:     master
+    vcs:     git
   - package: github.com/go-yaml/yaml
     ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
     repo:    https://github.com/akutz/yaml.git
+    vcs:     git
   - package: gopkg.in/yaml.v1
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
     repo:    https://github.com/akutz/yaml.git
+    vcs:     git
   - package: gopkg.in/yaml.v2
-    ref:     b4a9f8c4b84c6c4256d669c649837f1441e4b050
     repo:    https://github.com/akutz/yaml.git
+    vcs:     git
+  - package: github.com/rackspace/gophercloud
+    ref:     42196eaf5b93739d335921404bb7c5f2205fceb3
+    repo:    https://github.com/clintonskitson/gophercloud.git
+    vcs:     git
   - package: google.golang.org/api/compute/v1
     ref:     fd081149e482b10c55262756934088ffe3197ea3
     repo:    https://github.com/google/google-api-go-client.git
+    vcs:     git
   - package: golang.org/x/net
+    ref:     master
     repo:    https://github.com/golang/net
+    vcs:     git
+  - package: github.com/emccode/govmax
+    ref:     39eb25ef96221a595aea883ffded341d37750d51
+    repo:    https://github.com/emccode/govmax
+    vcs:     git
+  - package: github.com/emccode/goisilon
+    ref:     f9b53f0aaadb12a26b134830142fc537f492cb13
+    repo:    https://github.com/emccode/goisilon
+    vcs:     git
+  - package: github.com/appropriate/go-virtualboxclient
+    ref:     e0978ab2ed407095400a69d5933958dd260058cd
+    repo:    https://github.com/clintonskitson/go-virtualboxclient
+    vcs:     git

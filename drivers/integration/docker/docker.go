@@ -326,7 +326,7 @@ func (d *driver) Unmount(
 
 	vol, err := d.volumeInspectByIDOrName(
 		ctx, volumeID, volumeName,
-		types.VolAttReqOnlyVolsAttachedToInstance, opts)
+		types.VolAttReqWithDevMapOnlyVolsAttachedToInstance, opts)
 	if err != nil {
 		return err
 	}

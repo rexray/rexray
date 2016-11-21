@@ -162,7 +162,7 @@ func (d *idm) Mount(
 func (d *idm) Unmount(
 	ctx types.Context,
 	volumeID, volumeName string,
-	opts types.Store) error {
+	opts types.Store) (*types.Volume, error) {
 
 	fields := log.Fields{
 		"volumeName": volumeName,
@@ -180,7 +180,7 @@ func (d *idm) Unmount(
 	}
 
 	d.decCount(volumeName)
-	return nil
+	return nil, nil
 }
 
 func (d *idm) Path(

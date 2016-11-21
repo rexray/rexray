@@ -428,7 +428,7 @@ func (c *CLI) initVolumeCmds() {
 					processed = append(processed, v)
 					continue
 				}
-				err := c.r.Integration().Unmount(c.ctx, v.ID, "", opts)
+				nv, err := c.r.Integration().Unmount(c.ctx, v.ID, "", opts)
 				if err != nil {
 					c.logVolumeLoopError(
 						processed,
@@ -437,8 +437,7 @@ func (c *CLI) initVolumeCmds() {
 						err)
 					continue
 				}
-				v.Attachments = nil
-				processed = append(processed, v)
+				processed = append(processed, nv)
 			}
 			c.mustMarshalOutput(processed, nil)
 		},

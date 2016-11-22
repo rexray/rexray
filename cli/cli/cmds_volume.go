@@ -812,12 +812,14 @@ func (c *CLI) defaultAttachments() apitypes.VolumeAttachmentsTypes {
 		return apitypes.VolAttReqOnlyUnattachedVols
 	}
 	if c.volumeAttachedToMe {
-		return apitypes.VolAttReqOnlyVolsAttachedToInstance
+		return apitypes.VolAttReqWithDevMapOnlyVolsAttachedToInstance
 	}
 	if c.volumeAttached {
-		return apitypes.VolAttReqOnlyAttachedVols
+		return apitypes.VolAttReqOnlyAttachedVols |
+			apitypes.VolumeAttachmentsDevices
 	}
-	return apitypes.VolAttReq
+	return apitypes.VolAttReq |
+		apitypes.VolumeAttachmentsDevices
 }
 
 func (c *CLI) lsVolumes(

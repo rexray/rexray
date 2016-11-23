@@ -60,7 +60,7 @@ type IntegrationDriver interface {
 	Unmount(
 		ctx Context,
 		volumeID, volumeName string,
-		opts Store) error
+		opts Store) (*Volume, error)
 
 	// Path will return the mounted path of the volumeName or volumeID.
 	Path(

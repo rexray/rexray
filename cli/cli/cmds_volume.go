@@ -360,9 +360,6 @@ func (c *CLI) initVolumeCmds() {
 					NewFSType:   c.fsType,
 					OverwriteFS: c.overwriteFs,
 				}
-				withAttachments = []*apitypes.VolumeAttachment{
-					&apitypes.VolumeAttachment{InstanceID: result.iid},
-				}
 			)
 
 			for _, v := range result.vols {
@@ -374,7 +371,7 @@ func (c *CLI) initVolumeCmds() {
 					processed = append(processed, &volumeWithPath{v, ""})
 					continue
 				}
-				p, _, err := c.r.Integration().Mount(c.ctx, v.ID, "", opts)
+				p, uv, err := c.r.Integration().Mount(c.ctx, v.ID, "", opts)
 				if err != nil {
 					c.logVolumeLoopError(
 						processed,
@@ -383,8 +380,7 @@ func (c *CLI) initVolumeCmds() {
 						err)
 					continue
 				}
-				nv := &volumeWithPath{v, p}
-				nv.Attachments = withAttachments
+				nv := &volumeWithPath{uv, p}
 				processed = append(processed, nv)
 			}
 			c.mustMarshalOutput(processed, nil)

@@ -47,7 +47,7 @@ The following items are configurable specific to this driver.
    be created and removed.
  * `nfsHost` is the configurable NFS server hostname or IP (often a
    SmartConnect name) used when mounting exports
- * `dataSubnet` is the subnet the REX-Ray driver is running on. This is used 
+ * `dataSubnet` is the subnet the REX-Ray driver is running on. This is used
    for the NFS export host ACLs.
 
 ### Optional Parameters
@@ -429,9 +429,13 @@ example see the `Examples` section.
 efs:
   accessKey:      XXXXXXXXXX
   secretKey:      XXXXXXXXXX
-  securityGroups: sg-XXXXXXX,sg-XXXXXX0,sg-XXXXXX1
-  region:         us-east-1
-  tag:            test
+  securityGroups:
+  - sg-XXXXXXX
+  - sg-XXXXXX0
+  - sg-XXXXXX1
+  region:              us-east-1
+  tag:                 test
+  disableSessionCache: false
 ```
 
 #### Configuration Notes
@@ -445,6 +449,9 @@ documentation for list of supported regions.
 If no security groups are provided the default VPC security group is used.
 - `tag` is used to partition multiple services within single AWS account and is
 used as prefix for EFS names in format `[tagprefix]/volumeName`.
+- `disableSessionCache` is a flag that can be used to disable the session cache.
+If the session cache is disabled then a new AWS connection is established with
+every API call.
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
@@ -500,7 +507,10 @@ libstorage:
         efs:
           accessKey:      XXXXXXXXXX
           secretKey:      XXXXXXXXXX
-          securityGroups: sg-XXXXXXX,sg-XXXXXX0,sg-XXXXXX1
+          securityGroups:
+          - sg-XXXXXXX
+          - sg-XXXXXX0
+          - sg-XXXXXX1
           region:         us-east-1
           tag:            test
 ```

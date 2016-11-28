@@ -3,7 +3,9 @@ package storage
 import (
 	"crypto/md5"
 	"fmt"
+	"hash"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -16,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
+	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 	awsefs "github.com/aws/aws-sdk-go/service/efs"
 
 	"github.com/codedellemc/libstorage/api/context"
@@ -30,8 +33,17 @@ const (
 
 // Driver represents a EFS driver implementation of StorageDriver
 type driver struct {
-	config   gofig.Config
-	awsCreds *credentials.Credentials
+	config              gofig.Config
+	region              *string
+	endpoint            *string
+	endpointFormat      string
+	endpointEC2         *string
+	endpointEC2Format   string
+	maxRetries          *int
+	tag                 string
+	accessKey           string
+	secGroups           []string
+	disableSessionCache bool
 }
 
 func init() {
@@ -51,36 +63,244 @@ func (d *driver) Name() string {
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 
-	fields := log.Fields{
-		"accessKey": d.accessKey(),
-		"secretKey": d.secretKey(),
-		"region":    d.region(),
-		"tag":       d.tag(),
-	}
+	fields := log.Fields{}
 
-	if d.accessKey() == "" {
-		fields["accessKey"] = ""
+	d.accessKey = d.getAccessKey()
+	fields["accessKey"] = d.accessKey
+
+	d.tag = d.getTag()
+	fields["tag"] = d.tag
+
+	d.secGroups = d.getSecurityGroups()
+	fields["securityGroups"] = d.secGroups
+
+	d.disableSessionCache = d.getDisableSessionCache()
+	fields["disableSessionCache"] = d.disableSessionCache
+
+	if v := d.getRegion(); v != "" {
+		d.region = &v
+		fields["region"] = v
+	}
+	if v := d.getEndpoint(); v != "" {
+		d.endpoint = &v
+		fields["endpoint"] = v
+	}
+	d.endpointFormat = d.getEndpointFormat()
+	fields["endpointFormat"] = d.endpointFormat
+	if v := d.getEndpointEC2(); v != "" {
+		d.endpointEC2 = &v
+		fields["endpointEC2"] = v
+	}
+	d.endpointEC2Format = d.getEndpointEC2Format()
+	fields["endpointEC2Format"] = d.endpointEC2Format
+	maxRetries := d.getMaxRetries()
+	d.maxRetries = &maxRetries
+	fields["maxRetries"] = maxRetries
+
+	log.WithFields(fields).Info("storage driver initialized")
+	return nil
+}
+
+const cacheKeyC = "cacheKey"
+
+var (
+	sessions  = map[string]*awsService{}
+	sessionsL = &sync.Mutex{}
+)
+
+func writeHkey(h hash.Hash, ps *string) {
+	if ps == nil {
+		return
+	}
+	h.Write([]byte(*ps))
+}
+
+func (d *driver) Login(ctx types.Context) (interface{}, error) {
+	sessionsL.Lock()
+	defer sessionsL.Unlock()
+
+	var (
+		endpoint    *string
+		endpointEC2 *string
+		ckey        string
+		hkey        = md5.New()
+		akey        = d.accessKey
+		region      = d.mustRegion(ctx)
+	)
+
+	if region != nil && d.endpointFormat != "" {
+		szEndpoint := fmt.Sprintf(d.endpointFormat, *region)
+		endpoint = &szEndpoint
 	} else {
-		fields["accessKey"] = "******"
+		endpoint = d.endpoint
 	}
 
-	if d.secretKey() == "" {
-		fields["secretKey"] = ""
+	if region != nil && d.endpointEC2Format != "" {
+		szEndpoint := fmt.Sprintf(d.endpointEC2Format, *region)
+		endpointEC2 = &szEndpoint
 	} else {
-		fields["secretKey"] = "******"
+		endpointEC2 = d.endpointEC2
 	}
 
-	d.awsCreds = credentials.NewChainCredentials(
-		[]credentials.Provider{
-			&credentials.StaticProvider{Value: credentials.Value{AccessKeyID: d.accessKey(), SecretAccessKey: d.secretKey()}},
-			&credentials.EnvProvider{},
-			&credentials.SharedCredentialsProvider{},
-			&ec2rolecreds.EC2RoleProvider{
-				Client: ec2metadata.New(session.New()),
+	if !d.disableSessionCache {
+		writeHkey(hkey, region)
+		writeHkey(hkey, endpoint)
+		writeHkey(hkey, &akey)
+		ckey = fmt.Sprintf("%x", hkey.Sum(nil))
+
+		// if the session is cached then return it
+		if svc, ok := sessions[ckey]; ok {
+			ctx.WithField(cacheKeyC, ckey).Debug("using cached efs service")
+			return svc, nil
+		}
+	}
+
+	var (
+		skey   = d.getSecretKey()
+		fields = map[string]interface{}{
+			efs.AccessKey: akey,
+			efs.Tag:       d.tag,
+			cacheKeyC:     ckey,
+		}
+	)
+
+	if skey == "" {
+		fields[efs.SecretKey] = ""
+	} else {
+		fields[efs.SecretKey] = "******"
+	}
+	if region != nil {
+		fields[efs.Region] = *region
+	}
+	if endpoint != nil {
+		fields[efs.Endpoint] = *endpoint
+	}
+	if endpointEC2 != nil {
+		fields[efs.EndpointEC2] = *endpointEC2
+	}
+
+	ctx.WithFields(fields).Debug("efs service connetion attempt")
+	sess := session.New()
+
+	var (
+		awsLogger   = &awsLogger{ctx: ctx}
+		awsLogLevel = aws.LogOff
+	)
+	if ll, ok := context.GetLogLevel(ctx); ok {
+		switch ll {
+		case log.DebugLevel:
+			awsLogger.lvl = log.DebugLevel
+			awsLogLevel = aws.LogDebugWithHTTPBody
+		case log.InfoLevel:
+			awsLogger.lvl = log.InfoLevel
+			awsLogLevel = aws.LogDebug
+		}
+	}
+
+	configEFS := &aws.Config{
+		Region:     region,
+		Endpoint:   endpoint,
+		MaxRetries: d.maxRetries,
+		Credentials: credentials.NewChainCredentials(
+			[]credentials.Provider{
+				&credentials.StaticProvider{
+					Value: credentials.Value{
+						AccessKeyID:     akey,
+						SecretAccessKey: skey,
+					},
+				},
+				&credentials.EnvProvider{},
+				&credentials.SharedCredentialsProvider{},
+				&ec2rolecreds.EC2RoleProvider{
+					Client: ec2metadata.New(sess),
+				},
 			},
-		})
+		),
+		Logger:   awsLogger,
+		LogLevel: aws.LogLevel(awsLogLevel),
+	}
 
-	ctx.WithFields(fields).Info("storage driver initialized")
+	configEC2 := &aws.Config{
+		Region:     region,
+		Endpoint:   endpointEC2,
+		MaxRetries: d.maxRetries,
+		Credentials: credentials.NewChainCredentials(
+			[]credentials.Provider{
+				&credentials.StaticProvider{
+					Value: credentials.Value{
+						AccessKeyID:     akey,
+						SecretAccessKey: skey,
+					},
+				},
+				&credentials.EnvProvider{},
+				&credentials.SharedCredentialsProvider{},
+				&ec2rolecreds.EC2RoleProvider{
+					Client: ec2metadata.New(sess),
+				},
+			},
+		),
+		Logger:   awsLogger,
+		LogLevel: aws.LogLevel(awsLogLevel),
+	}
+
+	svc := &awsService{
+		awsec2.New(sess, configEC2),
+		awsefs.New(sess, configEFS),
+	}
+	ctx.WithFields(fields).Info("efs service connection created")
+
+	if !d.disableSessionCache {
+		sessions[ckey] = svc
+		ctx.WithFields(fields).Info("efs service connection cached")
+	}
+
+	return svc, nil
+}
+
+type awsService struct {
+	ec2 *awsec2.EC2
+	efs *awsefs.EFS
+}
+
+type awsLogger struct {
+	lvl log.Level
+	ctx types.Context
+}
+
+func (a *awsLogger) Log(args ...interface{}) {
+	switch a.lvl {
+	case log.DebugLevel:
+		a.ctx.Debugln(args...)
+	case log.InfoLevel:
+		a.ctx.Infoln(args...)
+	}
+}
+
+func mustSession(ctx types.Context) *awsService {
+	return context.MustSession(ctx).(*awsService)
+}
+
+func mustInstanceIDID(ctx types.Context) *string {
+	return &context.MustInstanceID(ctx).ID
+}
+
+func (d *driver) mustRegion(ctx types.Context) *string {
+	if iid, ok := context.InstanceID(ctx); ok {
+		if v, ok := iid.Fields[efs.InstanceIDFieldRegion]; ok && v != "" {
+			return &v
+		}
+	}
+	return d.region
+}
+
+func (d *driver) mustAvailabilityZone(ctx types.Context) *string {
+	if iid, ok := context.InstanceID(ctx); ok {
+		if v, ok := iid.Fields[efs.InstanceIDFieldAvailabilityZone]; ok {
+			if v != "" {
+				return &v
+			}
+		}
+	}
 	return nil
 }
 
@@ -90,17 +310,12 @@ func (d *driver) InstanceInspect(
 	opts types.Store) (*types.Instance, error) {
 
 	iid := context.MustInstanceID(ctx)
-	if iid.ID != "" {
-		return &types.Instance{InstanceID: iid}, nil
-	}
-
-	var awsSubnetID string
-	if err := iid.UnmarshalMetadata(&awsSubnetID); err != nil {
-		return nil, err
-	}
-	instanceID := &types.InstanceID{ID: awsSubnetID, Driver: d.Name()}
-
-	return &types.Instance{InstanceID: instanceID}, nil
+	return &types.Instance{
+		Name:         iid.ID,
+		Region:       iid.Fields[efs.InstanceIDFieldRegion],
+		InstanceID:   iid,
+		ProviderName: iid.Driver,
+	}, nil
 }
 
 // Type returns the type of storage a driver provides
@@ -120,7 +335,9 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	fileSystems, err := d.getAllFileSystems()
+	svc := mustSession(ctx)
+
+	fileSystems, err := d.getAllFileSystems(svc)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +353,7 @@ func (d *driver) Volumes(
 		}
 
 		// Only volumes with partition prefix
-		if !strings.HasPrefix(*fileSystem.Name, d.tag()+tagDelimiter) {
+		if !strings.HasPrefix(*fileSystem.Name, d.tag+tagDelimiter) {
 			continue
 		}
 
@@ -175,7 +392,7 @@ func (d *driver) VolumeInspect(
 	volumeID string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
-	resp, err := d.efsClient().DescribeFileSystems(
+	resp, err := mustSession(ctx).efs.DescribeFileSystems(
 		&awsefs.DescribeFileSystemsInput{FileSystemId: aws.String(volumeID)})
 	if err != nil {
 		return nil, err
@@ -240,13 +457,15 @@ func (d *driver) VolumeCreate(
 	if opts.Type != nil && strings.ToLower(*opts.Type) == "maxio" {
 		request.PerformanceMode = aws.String(awsefs.PerformanceModeMaxIo)
 	}
-	fileSystem, err := d.efsClient().CreateFileSystem(request)
+
+	svc := mustSession(ctx)
+	fileSystem, err := svc.efs.CreateFileSystem(request)
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = d.efsClient().CreateTags(&awsefs.CreateTagsInput{
+	_, err = svc.efs.CreateTags(&awsefs.CreateTagsInput{
 		FileSystemId: fileSystem.FileSystemId,
 		Tags: []*awsefs.Tag{
 			{
@@ -259,7 +478,7 @@ func (d *driver) VolumeCreate(
 	if err != nil {
 		// To not leak the EFS instances remove the filesystem that couldn't
 		// be tagged with correct name before returning error response.
-		_, deleteErr := d.efsClient().DeleteFileSystem(
+		_, deleteErr := svc.efs.DeleteFileSystem(
 			&awsefs.DeleteFileSystemInput{
 				FileSystemId: fileSystem.FileSystemId,
 			})
@@ -274,7 +493,8 @@ func (d *driver) VolumeCreate(
 
 	// Wait until FS is in "available" state
 	for {
-		state, err := d.getFileSystemLifeCycleState(*fileSystem.FileSystemId)
+		state, err := d.getFileSystemLifeCycleState(
+			svc, *fileSystem.FileSystemId)
 		if err == nil {
 			if state != awsefs.LifeCycleStateCreating {
 				break
@@ -303,8 +523,10 @@ func (d *driver) VolumeRemove(
 	volumeID string,
 	opts types.Store) error {
 
+	svc := mustSession(ctx)
+
 	// Remove MountTarget(s)
-	resp, err := d.efsClient().DescribeMountTargets(
+	resp, err := svc.efs.DescribeMountTargets(
 		&awsefs.DescribeMountTargetsInput{
 			FileSystemId: aws.String(volumeID),
 		})
@@ -313,7 +535,7 @@ func (d *driver) VolumeRemove(
 	}
 
 	for _, mountTarget := range resp.MountTargets {
-		_, err = d.efsClient().DeleteMountTarget(
+		_, err = svc.efs.DeleteMountTarget(
 			&awsefs.DeleteMountTargetInput{
 				MountTargetId: aws.String(*mountTarget.MountTargetId),
 			})
@@ -327,7 +549,7 @@ func (d *driver) VolumeRemove(
 	// just in "deleting" life cycle state). Here code will wait until all
 	// mountpoints are deleted.
 	for {
-		resp, err := d.efsClient().DescribeMountTargets(
+		resp, err := svc.efs.DescribeMountTargets(
 			&awsefs.DescribeMountTargetsInput{
 				FileSystemId: aws.String(volumeID),
 			})
@@ -348,7 +570,7 @@ func (d *driver) VolumeRemove(
 	}
 
 	// Remove FileSystem
-	_, err = d.efsClient().DeleteFileSystem(
+	_, err = svc.efs.DeleteFileSystem(
 		&awsefs.DeleteFileSystemInput{
 			FileSystemId: aws.String(volumeID),
 		})
@@ -361,7 +583,7 @@ func (d *driver) VolumeRemove(
 			"filesystemid": volumeID,
 		}).Info("waiting for FileSystem deletion")
 
-		_, err := d.efsClient().DescribeFileSystems(
+		_, err := svc.efs.DescribeFileSystems(
 			&awsefs.DescribeFileSystemsInput{
 				FileSystemId: aws.String(volumeID),
 			})
@@ -383,6 +605,8 @@ func (d *driver) VolumeRemove(
 	return nil
 }
 
+var errInvalidSecGroups = goof.New("security groups required")
+
 // VolumeAttach attaches a volume and provides a token clients can use
 // to validate that device has appeared locally.
 func (d *driver) VolumeAttach(
@@ -390,20 +614,19 @@ func (d *driver) VolumeAttach(
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
+	svc := mustSession(ctx)
+
 	vol, err := d.VolumeInspect(ctx, volumeID,
 		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, "", err
 	}
 
-	inst, err := d.InstanceInspect(ctx, nil)
-	if err != nil {
-		return nil, "", err
-	}
+	iid := context.MustInstanceID(ctx)
 
 	var ma *types.VolumeAttachment
 	for _, att := range vol.Attachments {
-		if att.InstanceID.ID == inst.InstanceID.ID {
+		if att.InstanceID.ID == iid.ID {
 			ma = att
 			break
 		}
@@ -411,16 +634,30 @@ func (d *driver) VolumeAttach(
 
 	// No mount targets were found
 	if ma == nil {
+
+		secGrpIDs := d.secGroups
+		if v, ok := iid.Fields[efs.InstanceIDFieldSecurityGroups]; ok {
+			ctx.WithField("secGrpNames", v).Info("querying security group IDs")
+			qSecGrpIDs, err := d.querySecGrpIDs(ctx, svc, strings.Split(v, ";"))
+			if err != nil {
+				return nil, "", err
+			}
+			secGrpIDs = qSecGrpIDs
+		}
+
+		if len(secGrpIDs) == 0 {
+			return nil, "", errInvalidSecGroups
+		}
+
 		request := &awsefs.CreateMountTargetInput{
-			FileSystemId: aws.String(vol.ID),
-			SubnetId:     aws.String(inst.InstanceID.ID),
+			FileSystemId:   aws.String(vol.ID),
+			SubnetId:       aws.String(iid.ID),
+			SecurityGroups: aws.StringSlice(secGrpIDs),
 		}
-		if len(d.securityGroups()) > 0 {
-			request.SecurityGroups = aws.StringSlice(d.securityGroups())
-		}
-		// TODO(mhrabovcin): Should we block here until MountTarget is in "available"
-		// LifeCycleState? Otherwise mount could fail until creation is completed.
-		_, err = d.efsClient().CreateMountTarget(request)
+		// TODO(mhrabovcin): Should we block here until MountTarget is in
+		// "available" LifeCycleState? Otherwise mount could fail until creation
+		//  is completed.
+		_, err = svc.efs.CreateMountTarget(request)
 		// Failed to create mount target
 		if err != nil {
 			return nil, "", err
@@ -428,6 +665,32 @@ func (d *driver) VolumeAttach(
 	}
 
 	return vol, "", err
+}
+
+func (d *driver) querySecGrpIDs(
+	ctx types.Context,
+	svc *awsService,
+	secGrpNames []string) ([]string, error) {
+
+	req := &awsec2.DescribeSecurityGroupsInput{
+		Filters: []*awsec2.Filter{
+			&awsec2.Filter{
+				Name:   aws.String("group-name"),
+				Values: aws.StringSlice(secGrpNames),
+			},
+		},
+	}
+	res, err := svc.ec2.DescribeSecurityGroups(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var secGrpIDs []string
+	for _, sg := range res.SecurityGroups {
+		secGrpIDs = append(secGrpIDs, *sg.GroupId)
+	}
+
+	return secGrpIDs, nil
 }
 
 // VolumeDetach detaches a volume.
@@ -496,15 +759,17 @@ func (d *driver) SnapshotRemove(
 
 // Retrieve all filesystems with tags from AWS API. This is very expensive
 // operation as it issues AWS SDK call per filesystem to retrieve tags.
-func (d *driver) getAllFileSystems() (filesystems []*awsefs.FileSystemDescription, err error) {
-	resp, err := d.efsClient().DescribeFileSystems(&awsefs.DescribeFileSystemsInput{})
+func (d *driver) getAllFileSystems(
+	svc *awsService) (filesystems []*awsefs.FileSystemDescription, err error) {
+
+	resp, err := svc.efs.DescribeFileSystems(&awsefs.DescribeFileSystemsInput{})
 	if err != nil {
 		return nil, err
 	}
 	filesystems = append(filesystems, resp.FileSystems...)
 
 	for resp.NextMarker != nil {
-		resp, err = d.efsClient().DescribeFileSystems(&awsefs.DescribeFileSystemsInput{
+		resp, err = svc.efs.DescribeFileSystems(&awsefs.DescribeFileSystemsInput{
 			Marker: resp.NextMarker,
 		})
 		if err != nil {
@@ -516,10 +781,13 @@ func (d *driver) getAllFileSystems() (filesystems []*awsefs.FileSystemDescriptio
 	return filesystems, nil
 }
 
-func (d *driver) getFileSystemLifeCycleState(fileSystemID string) (string, error) {
-	resp, err := d.efsClient().DescribeFileSystems(&awsefs.DescribeFileSystemsInput{
-		FileSystemId: aws.String(fileSystemID),
-	})
+func (d *driver) getFileSystemLifeCycleState(
+	svc *awsService,
+	fileSystemID string) (string, error) {
+
+	resp, err := svc.efs.DescribeFileSystems(
+		&awsefs.DescribeFileSystemsInput{
+			FileSystemId: aws.String(fileSystemID)})
 	if err != nil {
 		return "", err
 	}
@@ -529,11 +797,11 @@ func (d *driver) getFileSystemLifeCycleState(fileSystemID string) (string, error
 }
 
 func (d *driver) getPrintableName(name string) string {
-	return strings.TrimPrefix(name, d.tag()+tagDelimiter)
+	return strings.TrimPrefix(name, d.tag+tagDelimiter)
 }
 
 func (d *driver) getFullVolumeName(name string) string {
-	return d.tag() + tagDelimiter + name
+	return d.tag + tagDelimiter + name
 }
 
 var errGetLocDevs = goof.New("error getting local devices from context")
@@ -552,7 +820,7 @@ func (d *driver) getVolumeAttachments(
 		return nil, goof.New("missing volume ID")
 	}
 
-	resp, err := d.efsClient().DescribeMountTargets(
+	resp, err := mustSession(ctx).efs.DescribeMountTargets(
 		&awsefs.DescribeMountTargetsInput{
 			FileSystemId: aws.String(volumeID),
 		})
@@ -604,51 +872,47 @@ func (d *driver) getVolumeAttachments(
 	return atts, nil
 }
 
-func (d *driver) efsClient() *awsefs.EFS {
-	config := aws.NewConfig().
-		WithCredentials(d.awsCreds).
-		WithRegion(d.region())
-
-	if types.Debug {
-		config = config.
-			WithLogger(newAwsLogger()).
-			WithLogLevel(aws.LogDebug)
-	}
-
-	return awsefs.New(session.New(), config)
+// Retrieve config arguments
+func (d *driver) getAccessKey() string {
+	return d.config.GetString(efs.ConfigEFSAccessKey)
 }
 
-func (d *driver) accessKey() string {
-	return d.config.GetString("efs.accessKey")
+func (d *driver) getSecretKey() string {
+	return d.config.GetString(efs.ConfigEFSSecretKey)
 }
 
-func (d *driver) secretKey() string {
-	return d.config.GetString("efs.secretKey")
+func (d *driver) getRegion() string {
+	return d.config.GetString(efs.ConfigEFSRegion)
 }
 
-func (d *driver) securityGroups() []string {
-	return strings.Split(d.config.GetString("efs.securityGroups"), ",")
+func (d *driver) getEndpoint() string {
+	return d.config.GetString(efs.ConfigEFSEndpoint)
 }
 
-func (d *driver) region() string {
-	return d.config.GetString("efs.region")
+func (d *driver) getEndpointFormat() string {
+	return d.config.GetString(efs.ConfigEFSEndpointFormat)
 }
 
-func (d *driver) tag() string {
-	return d.config.GetString("efs.tag")
+func (d *driver) getEndpointEC2() string {
+	return d.config.GetString(efs.ConfigEFSEndpointEC2)
 }
 
-// Simple logrus adapter for AWS Logger interface
-type awsLogger struct {
-	logger *log.Logger
+func (d *driver) getEndpointEC2Format() string {
+	return d.config.GetString(efs.ConfigEFSEndpointEC2Format)
 }
 
-func newAwsLogger() *awsLogger {
-	return &awsLogger{
-		logger: log.StandardLogger(),
-	}
+func (d *driver) getMaxRetries() int {
+	return d.config.GetInt(efs.ConfigEFSMaxRetries)
 }
 
-func (l *awsLogger) Log(args ...interface{}) {
-	l.logger.Println(args...)
+func (d *driver) getTag() string {
+	return d.config.GetString(efs.ConfigEFSTag)
+}
+
+func (d *driver) getSecurityGroups() []string {
+	return d.config.GetStringSlice(efs.ConfigEFSSecGroups)
+}
+
+func (d *driver) getDisableSessionCache() bool {
+	return d.config.GetBool(efs.ConfigEFSDisableSessionCache)
 }

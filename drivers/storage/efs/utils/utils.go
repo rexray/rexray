@@ -1,9 +1,13 @@
 package utils
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/codedellemc/libstorage/api/types"
@@ -14,6 +18,10 @@ const (
 	raddr  = "169.254.169.254"
 	mdtURL = "http://" + raddr + "/latest/meta-data/"
 	iidURL = "http://" + raddr + "/latest/dynamic/instance-identity/document"
+	macURL = "http://" + raddr + "/latest/meta-data/mac"
+	subURL = "http://" + raddr +
+		`/latest/meta-data/network/interfaces/macs/%s/subnet-id`
+	sgpURL = "http://" + raddr + "/latest/meta-data/security-groups"
 )
 
 // IsEC2Instance returns a flag indicating whether the executing host is an EC2
@@ -62,12 +70,94 @@ func InstanceID(ctx types.Context) (*types.InstanceID, error) {
 		return nil, err
 	}
 
+	subnetID, err := ResolveSubnet(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	secGroups, err := getSecurityGroups(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	iidFields := map[string]string{
+		efs.InstanceIDFieldRegion:           iid.Region,
+		efs.InstanceIDFieldAvailabilityZone: iid.AvailabilityZone,
+	}
+
+	if len(secGroups) == 1 {
+		iidFields[efs.InstanceIDFieldSecurityGroups] = strings.Join(
+			secGroups, ";")
+	}
+
 	return &types.InstanceID{
-		ID:     iid.InstanceID,
+		ID:     subnetID,
 		Driver: efs.Name,
-		Fields: map[string]string{
-			efs.InstanceIDFieldRegion:           iid.Region,
-			efs.InstanceIDFieldAvailabilityZone: iid.AvailabilityZone,
-		},
+		Fields: iidFields,
 	}, nil
+}
+
+// ResolveSubnet determines the VPC subnet ID on the running AWS instance.
+func ResolveSubnet(ctx types.Context) (string, error) {
+	mac, err := getMAC(ctx)
+	if err != nil {
+		return "", err
+	}
+	subnetID, err := getSubnetID(ctx, mac)
+	if err != nil {
+		return "", err
+	}
+	return subnetID, nil
+}
+
+func getMAC(ctx types.Context) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, macURL, nil)
+	if err != nil {
+		return "", err
+	}
+	res, err := doRequest(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	buf, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
+func getSubnetID(ctx types.Context, mac string) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(subURL, mac), nil)
+	if err != nil {
+		return "", err
+	}
+	res, err := doRequest(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	buf, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
+func getSecurityGroups(ctx types.Context) ([]string, error) {
+	req, err := http.NewRequest(http.MethodGet, sgpURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := doRequest(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	var secGroups []string
+	scanner := bufio.NewScanner(res.Body)
+	for scanner.Scan() {
+		secGroups = append(secGroups, scanner.Text())
+	}
+	return secGroups, nil
 }

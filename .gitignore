@@ -6,6 +6,7 @@
 *.a
 *.d
 *.out
+got
 libstorage.paw
 .site/
 site/
@@ -22,7 +23,9 @@ cli/semaphores/signal
 cli/semaphores/unlink
 api/api_generated.go
 api/server/executors/executors_generated.go
-drivers/storage/ebs/tests/.vagrant
+drivers/storage/ebs/tests/.vagrant/
+examples/ec2/vagrant/.vagrant/
+
 
 # Created by https://www.gitignore.io
 

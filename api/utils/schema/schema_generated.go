@@ -31,6 +31,12 @@ const (
                     "description": "The volume's attachments.",
                     "items": { "$ref": "#/definitions/volumeAttachment" }
                 },
+                "attachmentState": {
+                    "type": "number",
+                    "description": "Indicates the volume's attachment state - 0=none,1=unknown,2=attached,3=available,4=unavailable. A volume is marked as attached if attached to the instance specified in the requesting API call. A volume that is attached but not to the requesting instance is marked as unavailable.",
+                    "minimum": 0,
+                    "maximum": 4
+                },
                 "availabilityZone": {
                     "type": "string",
                     "description": "The zone for which the volume is available."

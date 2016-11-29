@@ -332,7 +332,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	}
 	// Return the volume created
 	return d.VolumeInspect(ctx, *vol.VolumeId, &types.VolumeInspectOpts{
-		Attachments: types.VolumeAttachmentsTrue,
+		Attachments: types.VolAttReqTrue,
 	})
 }
 
@@ -583,7 +583,7 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.WithError("error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(
-		ctx, ec2vols, types.VolumeAttachmentsTrue)
+		ctx, ec2vols, types.VolAttReqTrue)
 	if convErr != nil {
 		return nil, "", goof.WithError(
 			"error converting to types.Volume", convErr)
@@ -635,7 +635,7 @@ func (d *driver) VolumeAttach(
 	// Check if successful attach
 	attachedVol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: types.VolumeAttachmentsTrue,
+			Attachments: types.VolAttReqTrue,
 			Opts:        opts.Opts,
 		})
 	if err != nil {
@@ -660,7 +660,7 @@ func (d *driver) VolumeDetach(
 		return nil, goof.WithError("error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(
-		ctx, ec2vols, types.VolumeAttachmentsTrue)
+		ctx, ec2vols, types.VolAttReqTrue)
 	if convErr != nil {
 		return nil, goof.WithError("error converting to types.Volume", convErr)
 	}
@@ -697,7 +697,7 @@ func (d *driver) VolumeDetach(
 	// check if successful detach
 	detachedVol, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: types.VolumeAttachmentsTrue,
+			Attachments: types.VolAttReqTrue,
 			Opts:        opts.Opts,
 		})
 	if err != nil {
@@ -923,39 +923,51 @@ func (d *driver) toTypesVolume(
 	ctx types.Context,
 	ec2vols []*awsec2.Volume,
 	attachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
-	// Get local devices map from context
-	ld, ldOK := context.LocalDevices(ctx)
-	if !ldOK {
-		return nil, errGetLocDevs
+
+	var (
+		ld   *types.LocalDevices
+		ldOK bool
+	)
+
+	if attachments.Devices() {
+		// Get local devices map from context
+		if ld, ldOK = context.LocalDevices(ctx); !ldOK {
+			return nil, errGetLocDevs
+		}
 	}
 
 	var volumesSD []*types.Volume
 	for _, volume := range ec2vols {
+
 		var attachmentsSD []*types.VolumeAttachment
-		// Leave attachment's device name blank if attachments is false
-		for _, attachment := range volume.Attachments {
-			deviceName := ""
-			if attachments.Devices() {
-				// Compensate for kernel volume mapping i.e. change "/dev/sda"
-				// to "/dev/xvda"
-				deviceName = strings.Replace(
-					*attachment.Device, "sd", ebsUtils.NextDeviceInfo.Prefix, 1)
-				// Keep device name if it is found in local devices
-				if _, ok := ld.DeviceMap[deviceName]; !ok {
-					deviceName = ""
+		if attachments.Requested() {
+			// Leave attachment's device name blank if attachments is false
+			for _, attachment := range volume.Attachments {
+				deviceName := ""
+				if attachments.Devices() {
+					// Compensate for kernel volume mapping i.e. change
+					// "/dev/sda" to "/dev/xvda"
+					deviceName = strings.Replace(
+						*attachment.Device, "sd",
+						ebsUtils.NextDeviceInfo.Prefix, 1)
+					// Keep device name if it is found in local devices
+					if _, ok := ld.DeviceMap[deviceName]; !ok {
+						deviceName = ""
+					}
 				}
+				attachmentSD := &types.VolumeAttachment{
+					VolumeID: *attachment.VolumeId,
+					InstanceID: &types.InstanceID{
+						ID:     *attachment.InstanceId,
+						Driver: d.Name(),
+					},
+					DeviceName: deviceName,
+					Status:     *attachment.State,
+				}
+				attachmentsSD = append(attachmentsSD, attachmentSD)
 			}
-			attachmentSD := &types.VolumeAttachment{
-				VolumeID: *attachment.VolumeId,
-				InstanceID: &types.InstanceID{
-					ID:     *attachment.InstanceId,
-					Driver: d.Name(),
-				},
-				DeviceName: deviceName,
-				Status:     *attachment.State,
-			}
-			attachmentsSD = append(attachmentsSD, attachmentSD)
 		}
+
 		name := d.getName(volume.Tags)
 		volumeSD := &types.Volume{
 			Name:             name,
@@ -967,6 +979,7 @@ func (d *driver) toTypesVolume(
 			Size:             *volume.Size,
 			Attachments:      attachmentsSD,
 		}
+
 		// Some volume types have no IOPS, so we get nil in volume.Iops
 		if volume.Iops != nil {
 			volumeSD.IOPS = *volume.Iops

@@ -138,7 +138,7 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 	// always return attachments to align against other drivers for now
-	return d.getVolume(ctx, "", "", types.VolumeAttachmentsTrue)
+	return d.getVolume(ctx, "", "", opts.Attachments)
 }
 
 // 	// VolumeInspect inspects a single volume.
@@ -311,7 +311,7 @@ func (d *driver) VolumeDetach(
 	if volumeID == "" {
 		return nil, goof.WithFields(fields, "volumeId is required for VolumeDetach")
 	}
-	vols, err := d.getVolume(ctx, volumeID, "", types.VolumeAttachmentsTrue)
+	vols, err := d.getVolume(ctx, volumeID, "", types.VolAttReqTrue)
 	if err != nil {
 		return nil, err
 	}
@@ -586,37 +586,27 @@ func (d *driver) createVolume(
 				"error waiting for volume creation to complete", err)
 	}
 	log.WithFields(fields).Debug("created volume")
-	return translateVolume(resp, types.VolumeAttachmentsTrue), nil
+	return translateVolume(resp, types.VolAttReqTrue), nil
 }
 
 //Reformats from volumes.Volume to types.Volume credit to github.com/MatMaul
 func translateVolume(
 	volume *volumes.Volume,
-	includeAttachments types.VolumeAttachmentsTypes) *types.Volume {
+	attachments types.VolumeAttachmentsTypes) *types.Volume {
 
-	var attachments []*types.VolumeAttachment
-	if includeAttachments.Requested() {
-		for _, attachment := range volume.Attachments {
-			libstorageAttachment := &types.VolumeAttachment{
-				VolumeID: attachment["volume_id"].(string),
+	var atts []*types.VolumeAttachment
+	if attachments.Requested() {
+		for _, att := range volume.Attachments {
+			lsAtt := &types.VolumeAttachment{
+				VolumeID: att["volume_id"].(string),
 				InstanceID: &types.InstanceID{
-					ID:     attachment["server_id"].(string),
+					ID:     att["server_id"].(string),
 					Driver: rackspace.Name},
-				DeviceName: attachment["device"].(string),
-				Status:     "",
 			}
-			attachments = append(attachments, libstorageAttachment)
-		}
-	} else {
-		for _, attachment := range volume.Attachments {
-			libstorageAttachment := &types.VolumeAttachment{
-				VolumeID:   attachment["volume_id"].(string),
-				InstanceID: &types.InstanceID{ID: attachment["server_id"].(string), Driver: rackspace.Name},
-				DeviceName: "",
-				Status:     "",
+			if attachments.Devices() {
+				lsAtt.DeviceName = att["device"].(string)
 			}
-			attachments = append(attachments, libstorageAttachment)
-			break
+			atts = append(atts, lsAtt)
 		}
 	}
 
@@ -628,7 +618,7 @@ func translateVolume(
 		Type:             volume.VolumeType,
 		IOPS:             0,
 		Size:             int64(volume.Size),
-		Attachments:      attachments,
+		Attachments:      atts,
 	}
 }
 
@@ -660,7 +650,7 @@ func (d *driver) volumeAttached(ctx types.Context,
 	}
 	volume, err := d.VolumeInspect(
 		ctx, volumeID, &types.VolumeInspectOpts{
-			Attachments: types.VolumeAttachmentsTrue})
+			Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return true, goof.WithFieldsE(fields, "error getting volume when waiting", err)
 	}
@@ -711,7 +701,7 @@ func (d *driver) waitVolumeAttachStatus(
 	for {
 		volume, err := d.VolumeInspect(
 			ctx, volumeID,
-			&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+			&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 		if err != nil {
 			return nil, goof.WithFieldsE(fields, "error getting volume when waiting", err)
 		}

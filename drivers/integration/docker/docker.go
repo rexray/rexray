@@ -169,7 +169,9 @@ func (d *driver) Mount(
 		"opts":       opts}).Info("mounting volume")
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts.Opts)
+		ctx, volumeID, volumeName,
+		types.VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols,
+		opts.Opts)
 	if isErrNotFound(err) && d.volumeCreateImplicit() {
 		var err error
 		if vol, err = d.Create(ctx, volumeName, &types.VolumeCreateOpts{
@@ -224,7 +226,7 @@ func (d *driver) Mount(
 		}
 
 		vol, err = d.volumeInspectByIDOrName(
-			ctx, vol.ID, "", types.VolumeAttachmentsTrue, opts.Opts)
+			ctx, vol.ID, "", types.VolAttReqTrue, opts.Opts)
 		if err != nil {
 			return "", nil, err
 		}
@@ -311,7 +313,7 @@ func (d *driver) Mount(
 func (d *driver) Unmount(
 	ctx types.Context,
 	volumeID, volumeName string,
-	opts types.Store) error {
+	opts types.Store) (*types.Volume, error) {
 
 	ctx.WithFields(log.Fields{
 		"volumeName": volumeName,
@@ -319,24 +321,25 @@ func (d *driver) Unmount(
 		"opts":       opts}).Info("unmounting volume")
 
 	if volumeName == "" && volumeID == "" {
-		return goof.New("missing volume name or ID")
+		return nil, goof.New("missing volume name or ID")
 	}
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts)
+		ctx, volumeID, volumeName,
+		types.VolAttReqWithDevMapOnlyVolsAttachedToInstance, opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(vol.Attachments) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	client := context.MustClient(ctx)
 
 	inst, err := client.Storage().InstanceInspect(ctx, utils.NewStore())
 	if err != nil {
-		return goof.New("problem getting instance ID")
+		return nil, goof.New("problem getting instance ID")
 	}
 	var ma *types.VolumeAttachment
 	for _, att := range vol.Attachments {
@@ -347,17 +350,17 @@ func (d *driver) Unmount(
 	}
 
 	if ma == nil {
-		return goof.New("no attachment found for instance")
+		return nil, goof.New("no attachment found for instance")
 	}
 
 	if ma.DeviceName == "" {
-		return goof.New("no device name found for attachment")
+		return nil, goof.New("no device name found for attachment")
 	}
 
 	mounts, err := client.OS().Mounts(
 		ctx, ma.DeviceName, "", opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, mount := range mounts {
@@ -369,24 +372,24 @@ func (d *driver) Unmount(
 			ctx.WithField("mount", mount).Debug("unmounting mount point")
 			err = client.OS().Unmount(ctx, mount.MountPoint, opts)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	_, err = client.Storage().VolumeDetach(ctx, vol.ID,
+	vol, err = client.Storage().VolumeDetach(ctx, vol.ID,
 		&types.VolumeDetachOpts{
 			Force: opts.GetBool("force"),
 			Opts:  utils.NewStore(),
 		})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.WithFields(log.Fields{
 		"vol": vol}).Info("unmounted and detached volume")
 
-	return nil
+	return vol, nil
 }
 
 // Path will return the mounted path of the volumeName or volumeID.
@@ -401,7 +404,7 @@ func (d *driver) Path(
 		"opts":       opts}).Info("getting path to volume")
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName, types.VolumeAttachmentsTrue, opts)
+		ctx, volumeID, volumeName, types.VolAttReqTrue, opts)
 	if err != nil {
 		return "", err
 	} else if vol == nil {

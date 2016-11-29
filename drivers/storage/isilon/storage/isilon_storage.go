@@ -167,8 +167,14 @@ func (d *driver) NextDeviceInfo(
 	return nil, nil
 }
 
-func (d *driver) getVolumeAttachments(ctx types.Context) (
+func (d *driver) getVolumeAttachments(
+	ctx types.Context,
+	attachments types.VolumeAttachmentsTypes) (
 	[]*types.VolumeAttachment, error) {
+
+	if !attachments.Requested() {
+		return nil, nil
+	}
 
 	exports, err := d.getVolumeExports(ctx)
 	if err != nil {
@@ -176,14 +182,22 @@ func (d *driver) getVolumeAttachments(ctx types.Context) (
 	}
 
 	iid, iidOK := context.InstanceID(ctx)
-	ld, ldOK := context.LocalDevices(ctx)
+	var (
+		ld   *types.LocalDevices
+		ldOK bool
+	)
+	if attachments.Devices() {
+		ld, ldOK = context.LocalDevices(ctx)
+	}
 
 	var atts []*types.VolumeAttachment
 	for _, export := range exports {
-		var dev string
-		var status string
+		var (
+			dev    string
+			status string
+		)
 		for _, c := range export.Clients {
-			if iidOK && ldOK && c == iid.ID {
+			if iidOK && ldOK && strings.EqualFold(c, iid.ID) {
 				dev = d.nfsMountPath(export.ExportPath)
 				if _, ok := ld.DeviceMap[dev]; ok {
 					status = "Exported and Mounted"
@@ -240,7 +254,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
 	vol, err := d.VolumeInspect(ctx, volumeName,
-		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +343,7 @@ func (d *driver) VolumeAttach(
 
 	// ensure the volume exists and is exported
 	vol, err := d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, "", err
 	}
@@ -390,7 +404,7 @@ func (d *driver) VolumeAttach(
 	}
 
 	vol, err = d.VolumeInspect(ctx, volumeID,
-		&types.VolumeInspectOpts{Attachments: types.VolumeAttachmentsTrue})
+		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
 		return nil, "", err
 	}
@@ -452,7 +466,7 @@ func (d *driver) VolumeDetach(
 	}
 
 	return d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{
-		Attachments: types.VolumeAttachmentsTrue,
+		Attachments: types.VolAttReqTrue,
 	})
 }
 
@@ -542,21 +556,23 @@ func (d *driver) getVolume(
 		return nil, nil
 	}
 
-	var atts []*types.VolumeAttachment
+	var (
+		err    error
+		atts   []*types.VolumeAttachment
+		attMap map[string][]*types.VolumeAttachment
+	)
+
 	if attachments.Requested() {
-		var err error
-		atts, err = d.getVolumeAttachments(ctx)
-		if err != nil {
+		if atts, err = d.getVolumeAttachments(ctx, attachments); err != nil {
 			return nil, err
 		}
-	}
-
-	attMap := make(map[string][]*types.VolumeAttachment)
-	for _, att := range atts {
-		if attMap[att.VolumeID] == nil {
-			attMap[att.VolumeID] = make([]*types.VolumeAttachment, 0)
+		attMap = map[string][]*types.VolumeAttachment{}
+		for _, att := range atts {
+			if attMap[att.VolumeID] == nil {
+				attMap[att.VolumeID] = []*types.VolumeAttachment{}
+			}
+			attMap[att.VolumeID] = append(attMap[att.VolumeID], att)
 		}
-		attMap[att.VolumeID] = append(attMap[att.VolumeID], att)
 	}
 
 	var volumesSD []*types.Volume
@@ -565,13 +581,15 @@ func (d *driver) getVolume(
 		if err != nil {
 			return nil, err
 		}
-
-		vatts, _ := attMap[volume.Name]
 		volumeSD := &types.Volume{
-			Name:        volume.Name,
-			ID:          volume.Name,
-			Size:        volSize,
-			Attachments: vatts,
+			Name: volume.Name,
+			ID:   volume.Name,
+			Size: volSize,
+		}
+		if attachments.Requested() {
+			if vatts, ok := attMap[volume.Name]; ok {
+				volumeSD.Attachments = vatts
+			}
 		}
 		volumesSD = append(volumesSD, volumeSD)
 	}

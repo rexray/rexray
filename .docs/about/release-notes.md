@@ -3,7 +3,7 @@
 Release early, release often
 
 ---
-## Version 0.3.3 (TBD)
+## Version 0.3.3 (2016/11/29)
 This release includes some minor fixes as well as a new way to query
 attachment information about one or more volumes.
 

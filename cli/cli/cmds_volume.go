@@ -9,8 +9,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	apitypes "github.com/emccode/libstorage/api/types"
-	apiutils "github.com/emccode/libstorage/api/utils"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	apiutils "github.com/codedellemc/libstorage/api/utils"
 )
 
 func (c *CLI) initVolumeCmdsAndFlags() {
@@ -336,7 +336,10 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args, volumeStatusAttached)
+			// volumes that are attached or can be attached should be valid
+			// candidates for a mount operation
+			result, err := c.lsVolumes(
+				args, volumeStatusAttached, volumeStatusAvailable)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -800,6 +803,12 @@ func (c *CLI) lsVolumes(
 	args []string,
 	validStatuses ...string) (*lsVolumesResult, error) {
 
+	// if the volume status matters then send the flag that requests a
+	// volume's attachment information
+	if len(validStatuses) > 0 {
+		c.volumeAttached = true
+	}
+
 	opts := &apitypes.VolumesOpts{Attachments: c.volumeAttached}
 	vols, err := c.r.Storage().Volumes(c.ctx, opts)
 	if err != nil {
@@ -965,25 +974,40 @@ func (c *CLI) volumeStatus(vol *apitypes.Volume) string {
 func (c *CLI) volumeStatusWithInstanceID(
 	iid *apitypes.InstanceID, vol *apitypes.Volume) string {
 
+	// do not get the status if already set
+	switch vol.Status {
+	case volumeStatusAttached,
+		volumeStatusAvailable,
+		volumeStatusError,
+		volumeStatusUnavailable,
+		volumeStatusUnknown:
+		return vol.Status
+	}
+
 	if len(vol.Attachments) == 0 {
-		return volumeStatusAvailable
+		vol.Status = volumeStatusAvailable
+		return vol.Status
 	}
 	if c.r == nil || c.r.Executor() == nil {
-		return volumeStatusUnknown
+		vol.Status = volumeStatusUnknown
+		return vol.Status
 	}
 	if iid == nil {
 		iid2, err := c.r.Executor().InstanceID(c.ctx, voluemStatusStore)
 		if err != nil {
-			return volumeStatusError
+			vol.Status = volumeStatusError
+			return vol.Status
 		}
 		iid = iid2
 	}
 	for _, a := range vol.Attachments {
 		if a.InstanceID.ID == iid.ID {
-			return volumeStatusAttached
+			vol.Status = volumeStatusAttached
+			return vol.Status
 		}
 	}
-	return volumeStatusUnavailable
+	vol.Status = volumeStatusUnavailable
+	return vol.Status
 }
 
 func (c *CLI) initVolumeFlags() {

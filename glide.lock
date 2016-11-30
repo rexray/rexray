@@ -1,5 +1,5 @@
-hash: d118f5dfd3fe9c3b26b8db7c18efcdc5224eec4f5111448974d1ab920ac3730b
-updated: 2016-10-18T18:49:20.310678122-05:00
+hash: e437275da2ef474d677f0860d4c353c08536f3af96f24a84a517ae0e2526f6af
+updated: 2016-10-28T18:04:37.530606158-05:00
 imports:
 - name: github.com/akutz/gofig
   version: 697c16916338166671910eeaccc50f21e3c10726
@@ -56,29 +56,25 @@ imports:
   version: 2f16017c76fc2403d143e93cea1e1b9526a01148
   subpackages:
   - schema
-- name: github.com/cpuguy83/go-md2man
-  version: a65d4d2de4d5f7c74868dfa9b202a3c8be315aaa
-  subpackages:
-  - md2man
-- name: github.com/emccode/goisilon
-  version: 653c13de5e1e0294ca0c7eead83e396fe308b497
+- name: github.com/codedellemc/goisilon
+  version: 2ea94fb4dd4f34507c9d67d8d2e35dcc0edb5f89
   subpackages:
   - api
   - api/json
   - api/v1
   - api/v2
-- name: github.com/emccode/goscaleio
-  version: 09ca0f748eb937adf2ec979b7c92915d4dbf35b4
+- name: github.com/codedellemc/goscaleio
+  version: 485da3636bfcc8e70f74fe7bdc7cb25e5a6e4c4a
   subpackages:
   - tls
   - types/v1
-- name: github.com/emccode/gournal
-  version: 3bd901de15097583a5b1f4b377421cfc647c3664
+- name: github.com/codedellemc/gournal
+  version: 4293aaf7e91602963a5777caef4b346e1cf21936
   subpackages:
   - logrus
-- name: github.com/emccode/libstorage
-  version: a3a561a1b94bb8b7efb4ae998540c457deb39692
-  repo: https://github.com/emccode/libstorage
+- name: github.com/codedellemc/libstorage
+  version: 96e6a3a257dccbbd07b13d8b02e06bd9a4ed2ae9
+  repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
   - api/client
@@ -124,6 +120,10 @@ imports:
   - imports/local
   - imports/remote
   - imports/routers
+- name: github.com/cpuguy83/go-md2man
+  version: a65d4d2de4d5f7c74868dfa9b202a3c8be315aaa
+  subpackages:
+  - md2man
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml
@@ -151,7 +151,7 @@ imports:
 - name: github.com/magiconair/properties
   version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/mitchellh/mapstructure
-  version: a6ef2f080c66d0a2e94e97cf74f80f772855da63
+  version: f3009df150dadf309fdee4a54ed65c124afad715
 - name: github.com/russross/blackfriday
   version: 5f33e7b7878355cd2b7e6b8eefc48a5472c69f70
 - name: github.com/shurcooL/sanitized_anchor_name
@@ -173,13 +173,13 @@ imports:
   version: 317ec73d0d7507658ee3be15866b445d6d921848
   repo: https://github.com/akutz/viper.git
 - name: golang.org/x/net
-  version: 8b4af36cd21a1f85a7484b49feb7c79363106d8e
+  version: dffc95cbb4ff9af8614b2741ec26371fffcc19b3
   repo: https://github.com/golang/net
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/sys
-  version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
   subpackages:
   - unix
 - name: google.golang.org/api

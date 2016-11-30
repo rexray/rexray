@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/akutz/gotil"
-	apitypes "github.com/emccode/libstorage/api/types"
+	apitypes "github.com/codedellemc/libstorage/api/types"
 
-	"github.com/emccode/rexray/core"
+	"github.com/codedellemc/rexray/core"
 )
 
 var r10 string

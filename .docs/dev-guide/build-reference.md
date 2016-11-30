@@ -19,7 +19,7 @@ OS X ships with a very old version of GNU Make, and a package manager like
 [Homebrew](http://brew.sh/) can be used to install the required version.
 
 ## Cross-Compilation
-This project's [`Makefile`](https://github.com/emccode/rexray/blob/master/Makefile)
+This project's [`Makefile`](https://github.com/codedellemc/rexray/blob/master/Makefile)
 is configured by default to build for a Linux x86_64 target, but
 cross-compilation *is* supported. Therefore the build environment should be
 configured to support cross-compilation. Please take a minute to read
@@ -45,7 +45,7 @@ target: deps
 [INFO] Fetching updates for golang.org/x/net.
 [INFO] Fetching updates for github.com/spf13/cobra.
 [INFO] Fetching updates for github.com/akutz/gofig.
-[INFO] Fetching updates for github.com/emccode/libstorage.
+[INFO] Fetching updates for github.com/codedellemc/libstorage.
 [INFO] Fetching updates for gopkg.in/yaml.v1.
 [INFO] Fetching updates for gopkg.in/yaml.v2.
 [INFO] Fetching updates for google.golang.org/api.
@@ -65,38 +65,38 @@ target: deps
 [INFO] Setting version for github.com/Sirupsen/logrus to feature/logrus-aware-types.
 [INFO] Setting version for gopkg.in/yaml.v2 to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
 [INFO] Setting version for github.com/akutz/gotil to v0.1.0.
-[INFO] Setting version for github.com/emccode/libstorage to v0.1.3.
+[INFO] Setting version for github.com/codedellemc/libstorage to v0.1.3.
 [INFO] Resolving imports
-[INFO] Fetching github.com/spf13/viper into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
+[INFO] Fetching github.com/spf13/viper into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
 [INFO] Setting version for github.com/spf13/viper to support/rexray.
-[INFO] Fetching github.com/kardianos/osext into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
+[INFO] Fetching github.com/kardianos/osext into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
 [INFO] Setting version for github.com/kardianos/osext to master.
-[INFO] Fetching github.com/gorilla/context into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/gorilla/mux into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/gorilla/handlers into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/cpuguy83/go-md2man/md2man into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/inconshreveable/mousetrap into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/BurntSushi/toml into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/kr/pretty into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/magiconair/properties into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/mitchellh/mapstructure into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/spf13/cast into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/spf13/jwalterweatherman into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching gopkg.in/fsnotify.v1 into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/emccode/goisilon into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/emccode/goisilon to f9b53f0aaadb12a26b134830142fc537f492cb13.
-[INFO] Fetching github.com/emccode/goscaleio into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/emccode/goscaleio to 53ea76f52205380ab52b9c1f4ad89321c286bb95.
-[INFO] Fetching github.com/appropriate/go-virtualboxclient/vboxwebsrv into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
+[INFO] Fetching github.com/gorilla/context into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/gorilla/mux into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/gorilla/handlers into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/cpuguy83/go-md2man/md2man into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/inconshreveable/mousetrap into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/BurntSushi/toml into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/kr/pretty into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/magiconair/properties into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/mitchellh/mapstructure into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/spf13/cast into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/spf13/jwalterweatherman into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching gopkg.in/fsnotify.v1 into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/codedellemc/goisilon into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Setting version for github.com/codedellemc/goisilon to f9b53f0aaadb12a26b134830142fc537f492cb13.
+[INFO] Fetching github.com/codedellemc/goscaleio into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Setting version for github.com/codedellemc/goscaleio to 53ea76f52205380ab52b9c1f4ad89321c286bb95.
+[INFO] Fetching github.com/appropriate/go-virtualboxclient/vboxwebsrv into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
 [INFO] Setting version for github.com/appropriate/go-virtualboxclient to e0978ab2ed407095400a69d5933958dd260058cd.
-[INFO] Fetching github.com/russross/blackfriday into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/kr/text into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching golang.org/x/sys/unix into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/cesanta/ucl into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/cesanta/validate-json/schema into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/shurcooL/sanitized_anchor_name into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/asaskevich/govalidator into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/jteeuwen/go-bindata into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
+[INFO] Fetching github.com/russross/blackfriday into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/kr/text into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching golang.org/x/sys/unix into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/cesanta/ucl into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/cesanta/validate-json/schema into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/shurcooL/sanitized_anchor_name into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/asaskevich/govalidator into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
+[INFO] Fetching github.com/jteeuwen/go-bindata into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
 [INFO] Setting version for github.com/jteeuwen/go-bindata to feature/md5checksum.
 [INFO] Downloading dependencies. Please wait...
 [INFO] Setting references for remaining imports
@@ -104,11 +104,11 @@ target: deps
 [INFO] Project relies on 38 dependencies.
 SUCCESS!
   ...go get...SUCCESS!
-cd vendor/github.com/emccode/libstorage && make api/api_generated.go && cd -
+cd vendor/github.com/codedellemc/libstorage && make api/api_generated.go && cd -
 echo generating api/api_generated.go
 generating api/api_generated.go
-/Users/akutz/Projects/go/src/github.com/emccode/rexray
-cd vendor/github.com/emccode/libstorage && make api/server/executors/executors_generated.go && cd -
+/Users/akutz/Projects/go/src/github.com/codedellemc/rexray
+cd vendor/github.com/codedellemc/libstorage && make api/server/executors/executors_generated.go && cd -
 GOOS=darwin GOARCH=amd64 go install ./api/types
 GOOS=darwin GOARCH=amd64 go install ./api/context
 GOOS=darwin GOARCH=amd64 go install ./api/utils
@@ -127,7 +127,7 @@ GOOS=darwin GOARCH=amd64 go install ./imports/executors
 GOOS=darwin GOARCH=amd64 go install ./cli/lsx
 GOOS=darwin GOARCH=amd64 go install ./cli/lsx/lsx-darwin
 /Users/akutz/Projects/go/bin/go-bindata -md5checksum -pkg executors -prefix api/server/executors/bin -o api/server/executors/executors_generated.go api/server/executors/bin/...
-/Users/akutz/Projects/go/src/github.com/emccode/rexray
+/Users/akutz/Projects/go/src/github.com/codedellemc/rexray
 ```
 
 ### Basic Build

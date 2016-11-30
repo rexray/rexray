@@ -6,8 +6,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/emccode/libstorage/api/context"
-	apitypes "github.com/emccode/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/context"
+	apitypes "github.com/codedellemc/libstorage/api/types"
 )
 
 var (

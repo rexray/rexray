@@ -11,12 +11,12 @@ import (
 
 	"github.com/akutz/gofig"
 	"github.com/akutz/gotil"
-	apiversion "github.com/emccode/libstorage/api"
-	"github.com/emccode/libstorage/api/context"
-	apiserver "github.com/emccode/libstorage/api/server"
-	apitypes "github.com/emccode/libstorage/api/types"
+	apiversion "github.com/codedellemc/libstorage/api"
+	"github.com/codedellemc/libstorage/api/context"
+	apiserver "github.com/codedellemc/libstorage/api/server"
+	apitypes "github.com/codedellemc/libstorage/api/types"
 
-	"github.com/emccode/rexray/core"
+	"github.com/codedellemc/rexray/core"
 )
 
 const (

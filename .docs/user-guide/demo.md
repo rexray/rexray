@@ -1,6 +1,10 @@
 # Demo
 
-## REX-Ray with Two-Node libStorage Client/Server
+Easy as 1, 2, 3...
+
+---
+
+## Two-Node Client/Server
 
 This demo consists of a two-node deployment with the first node configured as a
 REX-Ray/libStorage server and the second node as merely a client. Both nodes

@@ -2,7 +2,7 @@
 
 Openly serious about storage
 
---- 
+---
 REX-Ray is an open source, storage management solution designed to support
 container runtimes such as Docker and Mesos. REX-Ray enables stateful
 applications, such as databases, to persist and maintain its data after the life
@@ -18,9 +18,9 @@ framework, REX-Ray's simplified architecture consists of a single binary and
 runs as a stateless service on every host using a configuration file to
 orchestrate multiple storage platforms.
 
-![REX-Ray Architecture](http://i.imgur.com/BJCmHDh.gif)
+![REX-Ray Architecture](./img/rexray-slide.gif)
 
-!!! note "note" 
+!!! note "note"
 
     The current REX-Ray release omits support for several, previously verified
     storage platforms. These providers will be reintroduced incrementally,
@@ -87,7 +87,7 @@ Marathon          | Docker, Mesos Containerizer
 
 ## Quick Start
 
-### Install 
+### Install
 The following command will download the most recent and stable build of REX-Ray
 and install to `/usr/bin/rexray` on Linux systems. REX-Ray will be registered
 as either a SystemD or SystemV service depending upon the OS.
@@ -104,8 +104,8 @@ specific configuration options. Use the [REX-Ray Configuration
 Generator](http://rexrayconfig.codedellemc.com/) or refer to the libStorage
 Storage Providers [documentation](http://libstorage.readthedocs.io/en/stable
 /user-guide/storage-providers/) for sample configurations of all supported
-storage platforms. Additionally, look at 
-[core properties](./user-guide/config.md#configuration-properties) & 
+storage platforms. Additionally, look at
+[core properties](./user-guide/config.md#configuration-properties) &
 [logging](./user-guide/config.md#logging-configuration) for advanced
 configurations.
 

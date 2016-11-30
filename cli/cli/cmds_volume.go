@@ -35,7 +35,48 @@ func (c *CLI) initVolumeCmds() {
 		Short:   "List volumes",
 		Example: "rexray volume ls [OPTIONS] [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.lsVolumes(args, c.defaultAttachments()))
+
+			if !c.volumePath {
+				attReqType := apitypes.VolAttReq
+				if c.volumeAttached {
+					attReqType = apitypes.VolAttReqOnlyVolsAttachedToInstance
+				} else if c.volumeAvailable {
+					attReqType = apitypes.VolAttReqOnlyUnattachedVols
+				}
+				c.mustMarshalOutput(c.lsVolumes(args, attReqType))
+				return
+			}
+
+			// treat this as a path listing
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqWithDevMapOnlyVolsAttachedToInstance)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			var (
+				opts      = store()
+				processed = []*volumeWithPath{}
+			)
+
+			for _, v := range result.vols {
+				if c.dryRun {
+					processed = append(processed, &volumeWithPath{v, ""})
+					continue
+				}
+				p, err := c.r.Integration().Path(c.ctx, v.ID, "", opts)
+				if err != nil {
+					c.logVolumeLoopError(
+						processed,
+						result.matchedIDOrName(v),
+						"error getting volume path",
+						err)
+					continue
+				}
+				processed = append(processed, &volumeWithPath{v, p})
+			}
+			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeListCmd)
@@ -439,45 +480,6 @@ func (c *CLI) initVolumeCmds() {
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeUnmountCmd)
-
-	c.volumePathCmd = &cobra.Command{
-		Use:     "path",
-		Aliases: []string{"p"},
-		Short:   "Print the volume path",
-		Example: "rexray volume path [OPTIONS] [VOLUME...]",
-		Run: func(cmd *cobra.Command, args []string) {
-			result, err := c.lsVolumes(
-				args,
-				apitypes.VolAttReqOnlyVolsAttachedToInstance)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			var (
-				opts      = store()
-				processed = []*volumeWithPath{}
-			)
-
-			for _, v := range result.vols {
-				if c.dryRun {
-					processed = append(processed, &volumeWithPath{v, ""})
-					continue
-				}
-				p, err := c.r.Integration().Path(c.ctx, v.ID, "", opts)
-				if err != nil {
-					c.logVolumeLoopError(
-						processed,
-						result.matchedIDOrName(v),
-						"error getting volume path",
-						err)
-					continue
-				}
-				processed = append(processed, &volumeWithPath{v, p})
-			}
-			c.mustMarshalOutput(processed, nil)
-		},
-	}
-	c.volumeCmd.AddCommand(c.volumePathCmd)
 }
 
 func checkVolumeArgs(cmd *cobra.Command, args []string) {
@@ -802,19 +804,6 @@ func (r *lsVolumesResult) regexMatches() int {
 	return total
 }
 
-func (c *CLI) defaultAttachments() apitypes.VolumeAttachmentsTypes {
-	if c.volumeUnattached {
-		return apitypes.VolAttReqOnlyUnattachedVols
-	}
-	if c.volumeAttachedToMe {
-		return apitypes.VolAttReqOnlyVolsAttachedToInstance
-	}
-	if c.volumeAttached {
-		return apitypes.VolAttReqOnlyAttachedVols
-	}
-	return apitypes.VolAttReq
-}
-
 func (c *CLI) lsVolumes(
 	args []string,
 	attachments apitypes.VolumeAttachmentsTypes) (*lsVolumesResult, error) {
@@ -946,24 +935,17 @@ func regexpMatchVolIDOrName(
 	return 0, "", false
 }
 
-const (
-	volumeStatusAttached    = "attached"
-	volumeStatusAvailable   = "available"
-	volumeStatusUnavailable = "unavailable"
-	volumeStatusUnknown     = "unknown"
-	volumeStatusError       = "error"
-)
-
 func (c *CLI) initVolumeFlags() {
 	c.volumeListCmd.Flags().BoolVar(&c.volumeAttached, "attached", false,
-		"A flag that indicates only attached volumes should be returned")
-	c.volumeListCmd.Flags().BoolVar(&c.volumeAttachedToMe, "attachedToMe",
-		false,
-		"A flag that indicates only volumes attached to this host should "+
-			"be returned")
-	c.volumeListCmd.Flags().BoolVar(&c.volumeUnattached, "available",
+		"A flag that indicates only volumes attached to this host "+
+			"should be returned")
+	c.volumeListCmd.Flags().BoolVar(&c.volumeAvailable, "available",
 		false,
 		"A flag that indicates only available volumes should be returned")
+	c.volumeListCmd.Flags().BoolVar(&c.volumePath, "path",
+		false,
+		"A flag that indicates only volumes attached to this host should be "+
+			"returned, along with their path info")
 
 	c.volumeAttachCmd.Flags().BoolVar(&c.force, "force", false, "")
 	c.volumeDetachCmd.Flags().BoolVar(&c.force, "force", false, "")
@@ -994,5 +976,4 @@ func (c *CLI) initVolumeFlags() {
 	c.addContinueOnErrorFlag(c.volumeDetachCmd.Flags())
 	c.addContinueOnErrorFlag(c.volumeMountCmd.Flags())
 	c.addContinueOnErrorFlag(c.volumeUnmountCmd.Flags())
-	c.addContinueOnErrorFlag(c.volumePathCmd.Flags())
 }

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	apitypes "github.com/codedellemc/libstorage/api/types"
@@ -295,7 +295,7 @@ func (m *mod) buildMux() *http.ServeMux {
 
 		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Unmount")
 
-		err := m.lsc.Integration().Unmount(
+		_, err := m.lsc.Integration().Unmount(
 			m.ctx, "", pr.Name, apiutils.NewStore())
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)

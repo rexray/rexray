@@ -111,7 +111,7 @@ install() {
         curl $INSECURE -o $FILE_NAME -sSL $URL
         if [ "$?" -ne "0" ]; then exit $?; fi
 
-        sudo rpm -ih --quiet $FILE_NAME > /dev/null
+        sudo rpm -U --quiet $FILE_NAME > /dev/null
         if [ "$?" -ne "0" ]; then ec=$?; rm -f $FILE_NAME; exit $ec; fi
 
         rm -f $FILE_NAME

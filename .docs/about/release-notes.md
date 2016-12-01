@@ -28,6 +28,20 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.6.1 (2016/12/01)
+This release includes some minor fixes as well as a new and improved version of
+the `volume ls` command.
+
+### Enhancements
+* [libStorage 0.3.3](https://github.com/codedellemc/libstorage/pull/348)
+* Enhanced `volume ls` command ([#634](https://github.com/codedellemc/rexray/pull/634))
+
+### Bug Fixes
+* EFS Mounting Issues ([#609](https://github.com/codedellemc/rexray/pull/609))
+* VirtualBox Attach Issues ([#610](https://github.com/codedellemc/rexray/pull/610))
+* Installer upgrade fix ([#637](https://github.com/codedellemc/rexray/pull/637))
+* Build deployment fix ([#638](https://github.com/codedellemc/rexray/pull/638))
+
 ## Version 0.6.0 (2016/10/20)
 This release reintroduces the Elastic Block Storage (EBS) driver, formerly known
 as the EC2 driver. All vestigial EC2 configuration properties are still

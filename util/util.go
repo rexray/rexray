@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 	apiversion "github.com/codedellemc/libstorage/api"
 	"github.com/codedellemc/libstorage/api/context"

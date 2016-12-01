@@ -6,7 +6,8 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/akutz/gofig"
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	glog "github.com/akutz/golf/logrus"
 	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
@@ -103,6 +104,8 @@ type CLI struct {
 	volumeID                string
 	runAsync                bool
 	volumeAttached          bool
+	volumeAvailable         bool
+	volumePath              bool
 	description             string
 	volumeType              string
 	iops                    int64
@@ -157,7 +160,7 @@ func validateConfig(path string) {
 
 	s := string(buf)
 
-	if _, err := gofig.ValidateYAMLString(s); err != nil {
+	if _, err := gofigCore.ValidateYAMLString(s); err != nil {
 		fmt.Fprintf(
 			os.Stderr,
 			"rexray: invalid config: %s\n\n  %v\n\n", path, err)
@@ -192,7 +195,7 @@ func NewWithArgs(ctx apitypes.Context, a ...string) *CLI {
 	c := &CLI{
 		l:      log.New(),
 		ctx:    ctx,
-		config: gofig.New(),
+		config: gofigCore.New(),
 	}
 
 	c.c = &cobra.Command{

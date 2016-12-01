@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	apitypes "github.com/codedellemc/libstorage/api/types"
-	apiutils "github.com/codedellemc/libstorage/api/utils"
 )
 
 func (c *CLI) initVolumeCmdsAndFlags() {
@@ -36,7 +35,48 @@ func (c *CLI) initVolumeCmds() {
 		Short:   "List volumes",
 		Example: "rexray volume ls [OPTIONS] [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.mustMarshalOutput(c.lsVolumes(args))
+
+			if !c.volumePath {
+				attReqType := apitypes.VolAttReq
+				if c.volumeAttached {
+					attReqType = apitypes.VolAttReqOnlyVolsAttachedToInstance
+				} else if c.volumeAvailable {
+					attReqType = apitypes.VolAttReqOnlyUnattachedVols
+				}
+				c.mustMarshalOutput(c.lsVolumes(args, attReqType))
+				return
+			}
+
+			// treat this as a path listing
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqWithDevMapOnlyVolsAttachedToInstance)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			var (
+				opts      = store()
+				processed = []*volumeWithPath{}
+			)
+
+			for _, v := range result.vols {
+				if c.dryRun {
+					processed = append(processed, &volumeWithPath{v, ""})
+					continue
+				}
+				p, err := c.r.Integration().Path(c.ctx, v.ID, "", opts)
+				if err != nil {
+					c.logVolumeLoopError(
+						processed,
+						result.matchedIDOrName(v),
+						"error getting volume path",
+						err)
+					continue
+				}
+				processed = append(processed, &volumeWithPath{v, p})
+			}
+			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeListCmd)
@@ -179,7 +219,7 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args)
+			result, err := c.lsVolumes(args, 0)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -229,7 +269,9 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args, volumeStatusAvailable)
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqOnlyUnattachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -282,7 +324,9 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args, volumeStatusAttached)
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqOnlyAttachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -339,7 +383,8 @@ func (c *CLI) initVolumeCmds() {
 			// volumes that are attached or can be attached should be valid
 			// candidates for a mount operation
 			result, err := c.lsVolumes(
-				args, volumeStatusAttached, volumeStatusAvailable)
+				args,
+				apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -356,9 +401,6 @@ func (c *CLI) initVolumeCmds() {
 					NewFSType:   c.fsType,
 					OverwriteFS: c.overwriteFs,
 				}
-				withAttachments = []*apitypes.VolumeAttachment{
-					&apitypes.VolumeAttachment{InstanceID: result.iid},
-				}
 			)
 
 			for _, v := range result.vols {
@@ -370,7 +412,7 @@ func (c *CLI) initVolumeCmds() {
 					processed = append(processed, &volumeWithPath{v, ""})
 					continue
 				}
-				p, _, err := c.r.Integration().Mount(c.ctx, v.ID, "", opts)
+				p, uv, err := c.r.Integration().Mount(c.ctx, v.ID, "", opts)
 				if err != nil {
 					c.logVolumeLoopError(
 						processed,
@@ -379,8 +421,7 @@ func (c *CLI) initVolumeCmds() {
 						err)
 					continue
 				}
-				nv := &volumeWithPath{v, p}
-				nv.Attachments = withAttachments
+				nv := &volumeWithPath{uv, p}
 				processed = append(processed, nv)
 			}
 			c.mustMarshalOutput(processed, nil)
@@ -396,7 +437,9 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(args, volumeStatusAttached)
+			result, err := c.lsVolumes(
+				args,
+				apitypes.VolAttReqOnlyVolsAttachedToInstance)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -422,7 +465,7 @@ func (c *CLI) initVolumeCmds() {
 					processed = append(processed, v)
 					continue
 				}
-				err := c.r.Integration().Unmount(c.ctx, v.ID, "", opts)
+				nv, err := c.r.Integration().Unmount(c.ctx, v.ID, "", opts)
 				if err != nil {
 					c.logVolumeLoopError(
 						processed,
@@ -431,50 +474,12 @@ func (c *CLI) initVolumeCmds() {
 						err)
 					continue
 				}
-				v.Attachments = nil
-				processed = append(processed, v)
+				processed = append(processed, nv)
 			}
 			c.mustMarshalOutput(processed, nil)
 		},
 	}
 	c.volumeCmd.AddCommand(c.volumeUnmountCmd)
-
-	c.volumePathCmd = &cobra.Command{
-		Use:     "path",
-		Aliases: []string{"p"},
-		Short:   "Print the volume path",
-		Example: "rexray volume path [OPTIONS] [VOLUME...]",
-		Run: func(cmd *cobra.Command, args []string) {
-			result, err := c.lsVolumes(args, volumeStatusAttached)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			var (
-				opts      = store()
-				processed = []*volumeWithPath{}
-			)
-
-			for _, v := range result.vols {
-				if c.dryRun {
-					processed = append(processed, &volumeWithPath{v, ""})
-					continue
-				}
-				p, err := c.r.Integration().Path(c.ctx, v.ID, "", opts)
-				if err != nil {
-					c.logVolumeLoopError(
-						processed,
-						result.matchedIDOrName(v),
-						"error getting volume path",
-						err)
-					continue
-				}
-				processed = append(processed, &volumeWithPath{v, p})
-			}
-			c.mustMarshalOutput(processed, nil)
-		},
-	}
-	c.volumeCmd.AddCommand(c.volumePathCmd)
 }
 
 func checkVolumeArgs(cmd *cobra.Command, args []string) {
@@ -801,43 +806,16 @@ func (r *lsVolumesResult) regexMatches() int {
 
 func (c *CLI) lsVolumes(
 	args []string,
-	validStatuses ...string) (*lsVolumesResult, error) {
+	attachments apitypes.VolumeAttachmentsTypes) (*lsVolumesResult, error) {
 
-	// if the volume status matters then send the flag that requests a
-	// volume's attachment information
-	if len(validStatuses) > 0 {
-		c.volumeAttached = true
-	}
-
-	opts := &apitypes.VolumesOpts{Attachments: c.volumeAttached}
-	vols, err := c.r.Storage().Volumes(c.ctx, opts)
+	//opts :=
+	vols, err := c.r.Storage().Volumes(c.ctx,
+		&apitypes.VolumesOpts{Attachments: attachments})
 	if err != nil {
 		return nil, err
 	}
 
 	result := &lsVolumesResult{}
-
-	// remove volumes that don't have a status that matches
-	if len(validStatuses) > 0 {
-		iid, err := c.r.Executor().InstanceID(c.ctx, voluemStatusStore)
-		if err != nil {
-			return nil, err
-		}
-		result.iid = iid
-
-		matchedVols := []*apitypes.Volume{}
-		for _, v := range vols {
-			volStat := c.volumeStatusWithInstanceID(result.iid, v)
-			for _, s := range validStatuses {
-				if volStat == s {
-					matchedVols = append(matchedVols, v)
-					break
-				}
-			}
-		}
-
-		vols = matchedVols
-	}
 
 	if len(args) == 0 {
 		result.vols = vols
@@ -957,63 +935,18 @@ func regexpMatchVolIDOrName(
 	return 0, "", false
 }
 
-const (
-	volumeStatusAttached    = "attached"
-	volumeStatusAvailable   = "available"
-	volumeStatusUnavailable = "unavailable"
-	volumeStatusUnknown     = "unknown"
-	volumeStatusError       = "error"
-)
-
-var voluemStatusStore = apiutils.NewStore()
-
-func (c *CLI) volumeStatus(vol *apitypes.Volume) string {
-	return c.volumeStatusWithInstanceID(nil, vol)
-}
-
-func (c *CLI) volumeStatusWithInstanceID(
-	iid *apitypes.InstanceID, vol *apitypes.Volume) string {
-
-	// do not get the status if already set
-	switch vol.Status {
-	case volumeStatusAttached,
-		volumeStatusAvailable,
-		volumeStatusError,
-		volumeStatusUnavailable,
-		volumeStatusUnknown:
-		return vol.Status
-	}
-
-	if len(vol.Attachments) == 0 {
-		vol.Status = volumeStatusAvailable
-		return vol.Status
-	}
-	if c.r == nil || c.r.Executor() == nil {
-		vol.Status = volumeStatusUnknown
-		return vol.Status
-	}
-	if iid == nil {
-		iid2, err := c.r.Executor().InstanceID(c.ctx, voluemStatusStore)
-		if err != nil {
-			vol.Status = volumeStatusError
-			return vol.Status
-		}
-		iid = iid2
-	}
-	for _, a := range vol.Attachments {
-		if a.InstanceID.ID == iid.ID {
-			vol.Status = volumeStatusAttached
-			return vol.Status
-		}
-	}
-	vol.Status = volumeStatusUnavailable
-	return vol.Status
-}
-
 func (c *CLI) initVolumeFlags() {
 	c.volumeListCmd.Flags().BoolVar(&c.volumeAttached, "attached", false,
-		"Set to \"true\" to obtain volume-device mappings for volumes "+
-			"attached to this host")
+		"A flag that indicates only volumes attached to this host "+
+			"should be returned")
+	c.volumeListCmd.Flags().BoolVar(&c.volumeAvailable, "available",
+		false,
+		"A flag that indicates only available volumes should be returned")
+	c.volumeListCmd.Flags().BoolVar(&c.volumePath, "path",
+		false,
+		"A flag that indicates only volumes attached to this host should be "+
+			"returned, along with their path info")
+
 	c.volumeAttachCmd.Flags().BoolVar(&c.force, "force", false, "")
 	c.volumeDetachCmd.Flags().BoolVar(&c.force, "force", false, "")
 	c.volumeMountCmd.Flags().BoolVar(&c.overwriteFs, "overwriteFS", false, "")
@@ -1043,5 +976,4 @@ func (c *CLI) initVolumeFlags() {
 	c.addContinueOnErrorFlag(c.volumeDetachCmd.Flags())
 	c.addContinueOnErrorFlag(c.volumeMountCmd.Flags())
 	c.addContinueOnErrorFlag(c.volumeUnmountCmd.Flags())
-	c.addContinueOnErrorFlag(c.volumePathCmd.Flags())
 }

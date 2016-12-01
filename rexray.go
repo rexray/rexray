@@ -44,7 +44,8 @@ package rexray
 import (
 	"fmt"
 
-	"github.com/akutz/gofig"
+	gofigCore "github.com/akutz/gofig"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 
 	// load libStorage
@@ -55,14 +56,11 @@ import (
 )
 
 func init() {
-	gofig.SetGlobalConfigPath(util.EtcDirPath())
-	gofig.SetUserConfigPath(fmt.Sprintf("%s/.rexray", gotil.HomeDir()))
-	gofig.Register(globalRegistration())
-}
+	gofigCore.SetGlobalConfigPath(util.EtcDirPath())
+	gofigCore.SetUserConfigPath(fmt.Sprintf("%s/.rexray", gotil.HomeDir()))
 
-func globalRegistration() *gofig.Registration {
-	r := gofig.NewRegistration("Global")
-	r.Yaml(`
+	r := gofigCore.NewRegistration("Global")
+	r.SetYAML(`
 rexray:
     logLevel: warn
 `)
@@ -75,5 +73,5 @@ rexray:
 	r.Key(gofig.String, "l", "warn",
 		"The log level (error, warn, info, debug)", "rexray.logLevel",
 		"logLevel")
-	return r
+	gofigCore.Register(r)
 }

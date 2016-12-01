@@ -39,6 +39,8 @@ the `volume ls` command.
 ### Bug Fixes
 * EFS Mounting Issues ([#609](https://github.com/codedellemc/rexray/pull/609))
 * VirtualBox Attach Issues ([#610](https://github.com/codedellemc/rexray/pull/610))
+* Installer upgrade fix ([#637](https://github.com/codedellemc/rexray/pull/637))
+* Build deployment fix ([#638](https://github.com/codedellemc/rexray/pull/638))
 
 ## Version 0.6.0 (2016/10/20)
 This release reintroduces the Elastic Block Storage (EBS) driver, formerly known

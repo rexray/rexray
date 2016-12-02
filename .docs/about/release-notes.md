@@ -3,6 +3,17 @@
 Release early, release often
 
 ---
+## Version 0.3.4 (2016/12/02)
+This is a minor release that restricts some initialization logging so
+that it only appears if the environment variable `LIBSTORAGE_DEBUG` is set to a
+truthy value.
+
+### Bug Fixes
+* Fix for path initialization logging ([#349](https://github.com/codedellemc/libstorage/pull/349))
+
+### Updates
+* Updated build matrix ([#350](https://github.com/codedellemc/libstorage/pull/350))
+
 ## Version 0.3.3 (2016/11/29)
 This release includes some minor fixes as well as a new way to query
 attachment information about one or more volumes.

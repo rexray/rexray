@@ -3,17 +3,16 @@ go_import_path: github.com/codedellemc/libstorage
 language: go
 go:
   - 1.6.3
-  - 1.7.3
+  - 1.7.4
   - tip
 
 os:
   - linux
-  - osx
 
 matrix:
   allow_failures:
+    - go: 1.6.3
     - go: tip
-    - os: osx
   fast_finish: true
 
 before_install:

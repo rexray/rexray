@@ -136,7 +136,7 @@ func TestPrefixAndDirs(t *testing.T) {
 func TestStdOutAndLogFile(t *testing.T) {
 	newPrefixDir("TestStdOutAndLogFile", t)
 
-	if _, err := StdOutAndLogFile("BadFile/"); err == nil {
+	if _, err := StdOutAndLogFile("BadFile/ (*$"); err == nil {
 		t.Fatal("error expected in created BadFile")
 	}
 

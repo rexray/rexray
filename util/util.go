@@ -5,10 +5,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"strconv"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 	apiversion "github.com/codedellemc/libstorage/api"
@@ -51,6 +53,7 @@ var (
 	runDirPath  string
 	etcDirPath  string
 	pidFilePath string
+	spcFilePath string
 )
 
 func init() {
@@ -77,6 +80,7 @@ func Prefix(p string) {
 	runDirPath = ""
 	etcDirPath = ""
 	pidFilePath = ""
+	spcFilePath = ""
 
 	prefix = p
 }
@@ -146,13 +150,13 @@ func LibDirPath() string {
 // LibFilePath returns the path to a file inside the REX-Ray lib directory
 // with the provided file name.
 func LibFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", LibDirPath(), fileName)
+	return path.Join(LibDirPath(), fileName)
 }
 
 // RunFilePath returns the path to a file inside the REX-Ray run directory
 // with the provided file name.
 func RunFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", RunDirPath(), fileName)
+	return path.Join(RunDirPath(), fileName)
 }
 
 // BinDirPath returns the path to the REX-Ray bin directory.
@@ -167,15 +171,23 @@ func BinDirPath() string {
 // PidFilePath returns the path to the REX-Ray PID file.
 func PidFilePath() string {
 	if pidFilePath == "" {
-		pidFilePath = fmt.Sprintf("%s/rexray.pid", RunDirPath())
+		pidFilePath = RunFilePath("rexray.pid")
 	}
 	return pidFilePath
+}
+
+// SpecFilePath returns the path to the REX-Ray spec file.
+func SpecFilePath() string {
+	if spcFilePath == "" {
+		spcFilePath = RunFilePath("rexray.spec")
+	}
+	return spcFilePath
 }
 
 // BinFilePath returns the path to the REX-Ray executable.
 func BinFilePath() string {
 	if binFilePath == "" {
-		binFilePath = fmt.Sprintf("%s/rexray", BinDirPath())
+		binFilePath = path.Join(BinDirPath(), "rexray")
 	}
 	return binFilePath
 }
@@ -183,13 +195,13 @@ func BinFilePath() string {
 // EtcFilePath returns the path to a file inside the REX-Ray etc directory
 // with the provided file name.
 func EtcFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", EtcDirPath(), fileName)
+	return path.Join(EtcDirPath(), fileName)
 }
 
 // LogFilePath returns the path to a file inside the REX-Ray log directory
 // with the provided file name.
 func LogFilePath(fileName string) string {
-	return fmt.Sprintf("%s/%s", LogDirPath(), fileName)
+	return path.Join(LogDirPath(), fileName)
 }
 
 // LogFile returns a writer to a file inside the REX-Ray log directory
@@ -211,28 +223,37 @@ func StdOutAndLogFile(fileName string) (io.Writer, error) {
 
 // WritePidFile writes the current process ID to the REX-Ray PID file.
 func WritePidFile(pid int) error {
-
 	if pid < 0 {
 		pid = os.Getpid()
 	}
-
 	return gotil.WriteStringToFile(fmt.Sprintf("%d", pid), PidFilePath())
 }
 
 // ReadPidFile reads the REX-Ray PID from the PID file.
 func ReadPidFile() (int, error) {
-
 	pidStr, pidStrErr := gotil.ReadFileToString(PidFilePath())
 	if pidStrErr != nil {
 		return -1, pidStrErr
 	}
-
 	pid, atoiErr := strconv.Atoi(pidStr)
 	if atoiErr != nil {
 		return -1, atoiErr
 	}
-
 	return pid, nil
+}
+
+// WriteSpecFile writes the current host address to the REX-Ray spec file.
+func WriteSpecFile(host string) error {
+	return gotil.WriteStringToFile(host, SpecFilePath())
+}
+
+// ReadSpecFile reads the REX-Ray host address from the spec file.
+func ReadSpecFile() (string, error) {
+	host, err := gotil.ReadFileToString(SpecFilePath())
+	if err != nil {
+		return "", err
+	}
+	return gotil.Trim(host), nil
 }
 
 // PrintVersion prints the current version information to the provided writer.
@@ -284,12 +305,27 @@ func WaitUntilLibStorageStopped(ctx apitypes.Context, errs <-chan error) {
 var localHostRX = regexp.MustCompile(
 	`(?i)^(localhost|(?:127\.0\.0\.1))(?::(\d+))?$`)
 
+func logHostSpec(ctx apitypes.Context, h, m string) {
+	ctx.WithFields(log.Fields{
+		"path": SpecFilePath(),
+		"host": h,
+	}).Debug(m)
+}
+
 // IsLocalServerActive returns a flag indicating whether or not a local
 // libStorage is already running.
 func IsLocalServerActive(
 	ctx apitypes.Context, config gofig.Config) (host string, running bool) {
 
-	host = config.GetString(apitypes.ConfigHost)
+	if gotil.FileExists(SpecFilePath()) {
+		if h, _ := ReadSpecFile(); h != "" {
+			host = h
+			logHostSpec(ctx, host, "read spec file")
+		}
+	}
+	if host == "" {
+		host = config.GetString(apitypes.ConfigHost)
+	}
 	if host == "" {
 		return "", false
 	}
@@ -316,6 +352,17 @@ func IsLocalServerActive(
 		return host, !gotil.IsTCPPortAvailable(port)
 	}
 	return "", false
+}
+
+func setHost(
+	ctx apitypes.Context,
+	config gofig.Config,
+	host string) apitypes.Context {
+	ctx = ctx.WithValue(context.HostKey, host)
+	ctx.WithField("host", host).Debug("set host in context")
+	config.Set(apitypes.ConfigHost, host)
+	ctx.WithField("host", host).Debug("set host in config")
+	return ctx
 }
 
 // ActivateLibStorage activates a libStorage server if conditions are met and
@@ -355,15 +402,15 @@ func ActivateLibStorage(
 		if !config.GetBool(apitypes.ConfigEmbedded) {
 			ctx.WithField(
 				"host", host,
-			).Debug("not starting embeddded server; embedded mode disabled")
+			).Debug("not starting embedded server; embedded mode disabled")
 			return ctx, config, nil, nil
 		}
 	}
 
 	if host, isRunning = IsLocalServerActive(ctx, config); isRunning {
-		ctx = ctx.WithValue(context.HostKey, host)
+		ctx = setHost(ctx, config, host)
 		ctx.WithField("host", host).Debug(
-			"not starting embeddded server; already running")
+			"not starting embedded server; already running")
 		return ctx, config, nil, nil
 	}
 
@@ -381,14 +428,34 @@ func ActivateLibStorage(
 		return ctx, config, nil, err
 	}
 
+	wroteSpecFile := false
+
 	go func() {
-		if err := <-errs; err != nil {
+		err := <-errs
+		if err != nil {
 			ctx.Error(err)
+		}
+		if wroteSpecFile {
+			if err := os.Remove(SpecFilePath()); err == nil {
+				logHostSpec(ctx, host, "removed spec file")
+			}
 		}
 	}()
 
 	if host == "" {
-		config.Set(apitypes.ConfigHost, server.Addrs()[0])
+		host = server.Addrs()[0]
+		ctx.WithField("host", host).Debug("got host from new server address")
+	}
+
+	ctx = setHost(ctx, config, host)
+
+	// write the host to the spec file so that other rex-ray invocations can
+	// find it, even if running as an embedded libStorage server
+	if !gotil.FileExists(SpecFilePath()) {
+		if err := WriteSpecFile(host); err == nil {
+			logHostSpec(ctx, host, "created spec file")
+			wroteSpecFile = true
+		}
 	}
 
 	return ctx, config, errs, nil

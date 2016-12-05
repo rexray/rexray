@@ -196,7 +196,14 @@ func (c *CLI) startDaemon() {
 		stop <- s
 		close(stop)
 
-		os.Remove(serverSockFile)
+		if err := os.Remove(serverSockFile); err == nil {
+			ctx.WithField(
+				"sockFile", serverSockFile).Info("removed server sock file")
+		}
+		if err := os.Remove(util.PidFilePath()); err == nil {
+			ctx.WithField(
+				"pidFile", util.PidFilePath()).Info("removed pid file")
+		}
 
 		// wait until the daemon stops
 		for range errs {

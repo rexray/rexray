@@ -107,13 +107,13 @@ func TrapSignals(ctx apitypes.Context) {
 
 // IsExitSignal returns a flag indicating whether a signal is SIGKILL, SIGHUP,
 // SIGINT, SIGTERM, or SIGQUIT. The second return value is whether it is a
-// graceful exit. This flag is true for SIGHUP, SIGINT, and SIGQUIT.
+// graceful exit. This flag is true for SIGTERM, SIGHUP, SIGINT, and SIGQUIT.
 func IsExitSignal(s os.Signal) (bool, bool) {
 	switch s {
-	case syscall.SIGKILL,
-		syscall.SIGTERM:
+	case syscall.SIGKILL:
 		return true, false
-	case syscall.SIGHUP,
+	case syscall.SIGTERM,
+		syscall.SIGHUP,
 		syscall.SIGINT,
 		syscall.SIGQUIT:
 		return true, true

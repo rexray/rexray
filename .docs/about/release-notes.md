@@ -28,7 +28,7 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
-## Version 0.6.2 (TBD)
+## Version 0.6.2 (2016/12/05)
 While a patch release, this new version includes some much-requested features
 and updates.
 

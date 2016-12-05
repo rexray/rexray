@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/exec"
 	"path"
@@ -297,7 +298,11 @@ func WaitUntilLibStorageStopped(ctx apitypes.Context, errs <-chan error) {
 	ctx.Debug("done sending close signals to libStorage")
 
 	// block until the err channel is closed
-	for range errs {
+	for err := range errs {
+		if err == nil {
+			continue
+		}
+		ctx.WithError(err).Error("error on closing libStorage server")
 	}
 	ctx.Debug("done waiting on err chan")
 }
@@ -312,15 +317,40 @@ func logHostSpec(ctx apitypes.Context, h, m string) {
 	}).Debug(m)
 }
 
+// IsAddressActive returns a flag indicating whether or not a an address is
+// responding to connection attempts. This does not validate whether the
+// address is using TLS or such a connection is possible.
+func IsAddressActive(proto, addr string) bool {
+	dialer := &net.Dialer{Timeout: time.Second * 1}
+	if _, err := dialer.Dial(proto, addr); err != nil {
+		return false
+	}
+	return true
+}
+
 // IsLocalServerActive returns a flag indicating whether or not a local
 // libStorage is already running.
 func IsLocalServerActive(
 	ctx apitypes.Context, config gofig.Config) (host string, running bool) {
 
-	if gotil.FileExists(SpecFilePath()) {
+	var (
+		isLocal  bool
+		specFile = SpecFilePath()
+	)
+
+	if gotil.FileExists(specFile) {
 		if h, _ := ReadSpecFile(); h != "" {
 			host = h
 			logHostSpec(ctx, host, "read spec file")
+			defer func() {
+				if running || !isLocal {
+					return
+				}
+				host = ""
+				os.RemoveAll(specFile)
+				ctx.WithField("specFile", specFile).Info(
+					"removed invalid spec file")
+			}()
 		}
 	}
 	if host == "" {
@@ -337,19 +367,29 @@ func IsLocalServerActive(
 
 	switch proto {
 	case "unix":
+		isLocal = true
 		ctx.WithField("sock", addr).Debug("is local unix server active")
-		return host, gotil.FileExists(addr)
+		var sockExists, isActive bool
+		if sockExists = gotil.FileExists(addr); sockExists {
+			if isActive = IsAddressActive(proto, addr); !isActive {
+				os.RemoveAll(addr)
+				ctx.WithField("sockFile", addr).Info(
+					"removed invalid sock file")
+			}
+		}
+		return host, isActive
 	case "tcp":
 		m := localHostRX.FindStringSubmatch(addr)
 		if len(m) < 3 {
 			return "", false
 		}
+		isLocal = true
 		port, err := strconv.Atoi(m[2])
 		if err != nil {
 			return "", false
 		}
 		ctx.WithField("port", port).Debug("is local tcp server active")
-		return host, !gotil.IsTCPPortAvailable(port)
+		return host, IsAddressActive(proto, addr)
 	}
 	return "", false
 }
@@ -378,7 +418,6 @@ func ActivateLibStorage(
 	// latter is
 	if !config.IsSet(apitypes.ConfigService) &&
 		config.IsSet("rexray.storageDrivers") {
-
 		if sd := config.GetStringSlice("rexray.storageDrivers"); len(sd) > 0 {
 			config.Set(apitypes.ConfigService, sd[0])
 		} else if sd := config.GetString("rexray.storageDrivers"); sd != "" {
@@ -391,11 +430,12 @@ func ActivateLibStorage(
 	}
 
 	var (
-		host      string
-		err       error
-		isRunning bool
-		errs      <-chan error
-		server    apitypes.Server
+		host          string
+		err           error
+		isRunning     bool
+		errs          chan error
+		serverErrChan <-chan error
+		server        apitypes.Server
 	)
 
 	if host = config.GetString(apitypes.ConfigHost); host != "" {
@@ -424,38 +464,33 @@ func ActivateLibStorage(
 
 	ctx.Debug("starting embedded libStorage server")
 
-	if server, errs, err = apiserver.Serve(ctx, config); err != nil {
+	if server, serverErrChan, err = apiserver.Serve(ctx, config); err != nil {
 		return ctx, config, nil, err
 	}
-
-	wroteSpecFile := false
-
-	go func() {
-		err := <-errs
-		if err != nil {
-			ctx.Error(err)
-		}
-		if wroteSpecFile {
-			if err := os.Remove(SpecFilePath()); err == nil {
-				logHostSpec(ctx, host, "removed spec file")
-			}
-		}
-	}()
 
 	if host == "" {
 		host = server.Addrs()[0]
 		ctx.WithField("host", host).Debug("got host from new server address")
 	}
-
 	ctx = setHost(ctx, config, host)
+
+	errs = make(chan error)
+	go func() {
+		for err := range serverErrChan {
+			if err != nil {
+				errs <- err
+			}
+		}
+		if err := os.RemoveAll(SpecFilePath()); err == nil {
+			logHostSpec(ctx, host, "removed spec file")
+		}
+		close(errs)
+	}()
 
 	// write the host to the spec file so that other rex-ray invocations can
 	// find it, even if running as an embedded libStorage server
-	if !gotil.FileExists(SpecFilePath()) {
-		if err := WriteSpecFile(host); err == nil {
-			logHostSpec(ctx, host, "created spec file")
-			wroteSpecFile = true
-		}
+	if err := WriteSpecFile(host); err == nil {
+		logHostSpec(ctx, host, "created spec file")
 	}
 
 	return ctx, config, errs, nil

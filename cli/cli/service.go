@@ -145,17 +145,26 @@ func (c *CLI) startDaemon() {
 		}
 	}
 
-	writePidErr := util.WritePidFile(-1)
-	if writePidErr != nil {
+	if err := util.WritePidFile(-1); err != nil {
+		if os.IsPermission(err) {
+			c.ctx.WithError(err).Errorf(
+				"user does not have write permissions for %s",
+				util.PidFilePath())
+		} else {
+			c.ctx.WithError(err).Errorf(
+				"error writing PID file at %s",
+				util.PidFilePath())
+		}
 		if conn != nil {
 			conn.Write(failure)
+			conn.Close()
 		}
-		panic(writePidErr)
+		return
 	}
 
 	defer func() {
 		r := recover()
-		os.Remove(util.PidFilePath())
+		os.RemoveAll(util.PidFilePath())
 		if r != nil {
 			panic(r)
 		}

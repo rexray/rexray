@@ -489,9 +489,19 @@ func ActivateLibStorage(
 
 	// write the host to the spec file so that other rex-ray invocations can
 	// find it, even if running as an embedded libStorage server
-	if err := WriteSpecFile(host); err == nil {
-		logHostSpec(ctx, host, "created spec file")
+	if err := WriteSpecFile(host); err != nil {
+		specFile := SpecFilePath()
+		if os.IsPermission(err) {
+			ctx.WithError(err).Errorf(
+				"user does not have write permissions for %s", specFile)
+		} else {
+			ctx.WithError(err).Errorf(
+				"error writing spec file at %s", specFile)
+		}
+		WaitUntilLibStorageStopped(ctx, serverErrChan)
+		return ctx, config, errs, err
 	}
+	logHostSpec(ctx, host, "created spec file")
 
 	return ctx, config, errs, nil
 }

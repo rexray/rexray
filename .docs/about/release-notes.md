@@ -28,6 +28,18 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.6.2 (TBD)
+While a patch release, this new version includes some much-requested features
+and updates.
+
+### Enhancements
+* [libStorage 0.3.4](https://github.com/codedellemc/libstorage/pull/351)
+* Auto-detect running service ([#642](https://github.com/codedellemc/rexray/pull/642))
+* Prettier error messages ([#645](https://github.com/codedellemc/rexray/pull/645))
+
+### Bug Fixes
+* Graceful exit with SystemD ([#644](https://github.com/codedellemc/rexray/pull/644))
+
 ## Version 0.6.1 (2016/12/01)
 This release includes some minor fixes as well as a new and improved version of
 the `volume ls` command.

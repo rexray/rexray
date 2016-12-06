@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
-	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 	awsefs "github.com/aws/aws-sdk-go/service/efs"
 
 	"github.com/codedellemc/libstorage/api/context"
@@ -37,8 +36,6 @@ type driver struct {
 	region              *string
 	endpoint            *string
 	endpointFormat      string
-	endpointEC2         *string
-	endpointEC2Format   string
 	maxRetries          *int
 	tag                 string
 	accessKey           string
@@ -87,12 +84,6 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	}
 	d.endpointFormat = d.getEndpointFormat()
 	fields["endpointFormat"] = d.endpointFormat
-	if v := d.getEndpointEC2(); v != "" {
-		d.endpointEC2 = &v
-		fields["endpointEC2"] = v
-	}
-	d.endpointEC2Format = d.getEndpointEC2Format()
-	fields["endpointEC2Format"] = d.endpointEC2Format
 	maxRetries := d.getMaxRetries()
 	d.maxRetries = &maxRetries
 	fields["maxRetries"] = maxRetries
@@ -104,7 +95,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 const cacheKeyC = "cacheKey"
 
 var (
-	sessions  = map[string]*awsService{}
+	sessions  = map[string]*awsefs.EFS{}
 	sessionsL = &sync.Mutex{}
 )
 
@@ -120,12 +111,11 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	defer sessionsL.Unlock()
 
 	var (
-		endpoint    *string
-		endpointEC2 *string
-		ckey        string
-		hkey        = md5.New()
-		akey        = d.accessKey
-		region      = d.mustRegion(ctx)
+		endpoint *string
+		ckey     string
+		hkey     = md5.New()
+		akey     = d.accessKey
+		region   = d.mustRegion(ctx)
 	)
 
 	if region != nil && d.endpointFormat != "" {
@@ -133,13 +123,6 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		endpoint = &szEndpoint
 	} else {
 		endpoint = d.endpoint
-	}
-
-	if region != nil && d.endpointEC2Format != "" {
-		szEndpoint := fmt.Sprintf(d.endpointEC2Format, *region)
-		endpointEC2 = &szEndpoint
-	} else {
-		endpointEC2 = d.endpointEC2
 	}
 
 	if !d.disableSessionCache {
@@ -175,9 +158,6 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	if endpoint != nil {
 		fields[efs.Endpoint] = *endpoint
 	}
-	if endpointEC2 != nil {
-		fields[efs.EndpointEC2] = *endpointEC2
-	}
 
 	ctx.WithFields(fields).Debug("efs service connetion attempt")
 	sess := session.New()
@@ -197,7 +177,7 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		}
 	}
 
-	configEFS := &aws.Config{
+	svc := awsefs.New(sess, &aws.Config{
 		Region:     region,
 		Endpoint:   endpoint,
 		MaxRetries: d.maxRetries,
@@ -218,35 +198,8 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		),
 		Logger:   awsLogger,
 		LogLevel: aws.LogLevel(awsLogLevel),
-	}
+	})
 
-	configEC2 := &aws.Config{
-		Region:     region,
-		Endpoint:   endpointEC2,
-		MaxRetries: d.maxRetries,
-		Credentials: credentials.NewChainCredentials(
-			[]credentials.Provider{
-				&credentials.StaticProvider{
-					Value: credentials.Value{
-						AccessKeyID:     akey,
-						SecretAccessKey: skey,
-					},
-				},
-				&credentials.EnvProvider{},
-				&credentials.SharedCredentialsProvider{},
-				&ec2rolecreds.EC2RoleProvider{
-					Client: ec2metadata.New(sess),
-				},
-			},
-		),
-		Logger:   awsLogger,
-		LogLevel: aws.LogLevel(awsLogLevel),
-	}
-
-	svc := &awsService{
-		awsec2.New(sess, configEC2),
-		awsefs.New(sess, configEFS),
-	}
 	ctx.WithFields(fields).Info("efs service connection created")
 
 	if !d.disableSessionCache {
@@ -255,11 +208,6 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	}
 
 	return svc, nil
-}
-
-type awsService struct {
-	ec2 *awsec2.EC2
-	efs *awsefs.EFS
 }
 
 type awsLogger struct {
@@ -276,8 +224,8 @@ func (a *awsLogger) Log(args ...interface{}) {
 	}
 }
 
-func mustSession(ctx types.Context) *awsService {
-	return context.MustSession(ctx).(*awsService)
+func mustSession(ctx types.Context) *awsefs.EFS {
+	return context.MustSession(ctx).(*awsefs.EFS)
 }
 
 func mustInstanceIDID(ctx types.Context) *string {
@@ -392,7 +340,7 @@ func (d *driver) VolumeInspect(
 	volumeID string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
-	resp, err := mustSession(ctx).efs.DescribeFileSystems(
+	resp, err := mustSession(ctx).DescribeFileSystems(
 		&awsefs.DescribeFileSystemsInput{FileSystemId: aws.String(volumeID)})
 	if err != nil {
 		return nil, err
@@ -459,13 +407,13 @@ func (d *driver) VolumeCreate(
 	}
 
 	svc := mustSession(ctx)
-	fileSystem, err := svc.efs.CreateFileSystem(request)
+	fileSystem, err := svc.CreateFileSystem(request)
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = svc.efs.CreateTags(&awsefs.CreateTagsInput{
+	_, err = svc.CreateTags(&awsefs.CreateTagsInput{
 		FileSystemId: fileSystem.FileSystemId,
 		Tags: []*awsefs.Tag{
 			{
@@ -478,7 +426,7 @@ func (d *driver) VolumeCreate(
 	if err != nil {
 		// To not leak the EFS instances remove the filesystem that couldn't
 		// be tagged with correct name before returning error response.
-		_, deleteErr := svc.efs.DeleteFileSystem(
+		_, deleteErr := svc.DeleteFileSystem(
 			&awsefs.DeleteFileSystemInput{
 				FileSystemId: fileSystem.FileSystemId,
 			})
@@ -526,7 +474,7 @@ func (d *driver) VolumeRemove(
 	svc := mustSession(ctx)
 
 	// Remove MountTarget(s)
-	resp, err := svc.efs.DescribeMountTargets(
+	resp, err := svc.DescribeMountTargets(
 		&awsefs.DescribeMountTargetsInput{
 			FileSystemId: aws.String(volumeID),
 		})
@@ -535,7 +483,7 @@ func (d *driver) VolumeRemove(
 	}
 
 	for _, mountTarget := range resp.MountTargets {
-		_, err = svc.efs.DeleteMountTarget(
+		_, err = svc.DeleteMountTarget(
 			&awsefs.DeleteMountTargetInput{
 				MountTargetId: aws.String(*mountTarget.MountTargetId),
 			})
@@ -549,7 +497,7 @@ func (d *driver) VolumeRemove(
 	// just in "deleting" life cycle state). Here code will wait until all
 	// mountpoints are deleted.
 	for {
-		resp, err := svc.efs.DescribeMountTargets(
+		resp, err := svc.DescribeMountTargets(
 			&awsefs.DescribeMountTargetsInput{
 				FileSystemId: aws.String(volumeID),
 			})
@@ -570,7 +518,7 @@ func (d *driver) VolumeRemove(
 	}
 
 	// Remove FileSystem
-	_, err = svc.efs.DeleteFileSystem(
+	_, err = svc.DeleteFileSystem(
 		&awsefs.DeleteFileSystemInput{
 			FileSystemId: aws.String(volumeID),
 		})
@@ -583,7 +531,7 @@ func (d *driver) VolumeRemove(
 			"filesystemid": volumeID,
 		}).Info("waiting for FileSystem deletion")
 
-		_, err := svc.efs.DescribeFileSystems(
+		_, err := svc.DescribeFileSystems(
 			&awsefs.DescribeFileSystemsInput{
 				FileSystemId: aws.String(volumeID),
 			})
@@ -637,12 +585,10 @@ func (d *driver) VolumeAttach(
 
 		secGrpIDs := d.secGroups
 		if v, ok := iid.Fields[efs.InstanceIDFieldSecurityGroups]; ok {
-			ctx.WithField("secGrpNames", v).Info("querying security group IDs")
-			qSecGrpIDs, err := d.querySecGrpIDs(ctx, svc, strings.Split(v, ";"))
-			if err != nil {
-				return nil, "", err
-			}
-			secGrpIDs = qSecGrpIDs
+			iSecGrpIDs := strings.Split(v, ";")
+			ctx.WithField("secGrpIDs", iSecGrpIDs).Debug(
+				"using instance security group IDs")
+			secGrpIDs = iSecGrpIDs
 		}
 
 		if len(secGrpIDs) == 0 {
@@ -657,7 +603,7 @@ func (d *driver) VolumeAttach(
 		// TODO(mhrabovcin): Should we block here until MountTarget is in
 		// "available" LifeCycleState? Otherwise mount could fail until creation
 		//  is completed.
-		_, err = svc.efs.CreateMountTarget(request)
+		_, err = svc.CreateMountTarget(request)
 		// Failed to create mount target
 		if err != nil {
 			return nil, "", err
@@ -665,32 +611,6 @@ func (d *driver) VolumeAttach(
 	}
 
 	return vol, "", err
-}
-
-func (d *driver) querySecGrpIDs(
-	ctx types.Context,
-	svc *awsService,
-	secGrpNames []string) ([]string, error) {
-
-	req := &awsec2.DescribeSecurityGroupsInput{
-		Filters: []*awsec2.Filter{
-			&awsec2.Filter{
-				Name:   aws.String("group-name"),
-				Values: aws.StringSlice(secGrpNames),
-			},
-		},
-	}
-	res, err := svc.ec2.DescribeSecurityGroups(req)
-	if err != nil {
-		return nil, err
-	}
-
-	var secGrpIDs []string
-	for _, sg := range res.SecurityGroups {
-		secGrpIDs = append(secGrpIDs, *sg.GroupId)
-	}
-
-	return secGrpIDs, nil
 }
 
 // VolumeDetach detaches a volume.
@@ -760,16 +680,16 @@ func (d *driver) SnapshotRemove(
 // Retrieve all filesystems with tags from AWS API. This is very expensive
 // operation as it issues AWS SDK call per filesystem to retrieve tags.
 func (d *driver) getAllFileSystems(
-	svc *awsService) (filesystems []*awsefs.FileSystemDescription, err error) {
+	svc *awsefs.EFS) (filesystems []*awsefs.FileSystemDescription, err error) {
 
-	resp, err := svc.efs.DescribeFileSystems(&awsefs.DescribeFileSystemsInput{})
+	resp, err := svc.DescribeFileSystems(&awsefs.DescribeFileSystemsInput{})
 	if err != nil {
 		return nil, err
 	}
 	filesystems = append(filesystems, resp.FileSystems...)
 
 	for resp.NextMarker != nil {
-		resp, err = svc.efs.DescribeFileSystems(&awsefs.DescribeFileSystemsInput{
+		resp, err = svc.DescribeFileSystems(&awsefs.DescribeFileSystemsInput{
 			Marker: resp.NextMarker,
 		})
 		if err != nil {
@@ -782,10 +702,10 @@ func (d *driver) getAllFileSystems(
 }
 
 func (d *driver) getFileSystemLifeCycleState(
-	svc *awsService,
+	svc *awsefs.EFS,
 	fileSystemID string) (string, error) {
 
-	resp, err := svc.efs.DescribeFileSystems(
+	resp, err := svc.DescribeFileSystems(
 		&awsefs.DescribeFileSystemsInput{
 			FileSystemId: aws.String(fileSystemID)})
 	if err != nil {
@@ -820,7 +740,7 @@ func (d *driver) getVolumeAttachments(
 		return nil, goof.New("missing volume ID")
 	}
 
-	resp, err := mustSession(ctx).efs.DescribeMountTargets(
+	resp, err := mustSession(ctx).DescribeMountTargets(
 		&awsefs.DescribeMountTargetsInput{
 			FileSystemId: aws.String(volumeID),
 		})
@@ -891,14 +811,6 @@ func (d *driver) getEndpoint() string {
 
 func (d *driver) getEndpointFormat() string {
 	return d.config.GetString(efs.ConfigEFSEndpointFormat)
-}
-
-func (d *driver) getEndpointEC2() string {
-	return d.config.GetString(efs.ConfigEFSEndpointEC2)
-}
-
-func (d *driver) getEndpointEC2Format() string {
-	return d.config.GetString(efs.ConfigEFSEndpointEC2Format)
 }
 
 func (d *driver) getMaxRetries() int {

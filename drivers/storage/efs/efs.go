@@ -42,14 +42,8 @@ const (
 	// Endpoint is a key constant.
 	Endpoint = "endpoint"
 
-	// EndpointEC2 is a key constant.
-	EndpointEC2 = "endpointEC2"
-
 	// EndpointFormat is a key constant.
 	EndpointFormat = "endpointFormat"
-
-	// EndpointEC2Format is a key constant.
-	EndpointEC2Format = "endpointEC2Format"
 
 	// MaxRetries is a key constant.
 	MaxRetries = "maxRetries"
@@ -80,14 +74,8 @@ const (
 	// ConfigEFSEndpoint is a config key.
 	ConfigEFSEndpoint = ConfigEFS + "." + Endpoint
 
-	// ConfigEFSEndpointEC2 is a config key.
-	ConfigEFSEndpointEC2 = ConfigEFS + "." + EndpointEC2
-
 	// ConfigEFSEndpointFormat is a config key.
 	ConfigEFSEndpointFormat = ConfigEFS + "." + EndpointFormat
-
-	// ConfigEFSEndpointEC2Format is a config key.
-	ConfigEFSEndpointEC2Format = ConfigEFS + "." + EndpointEC2Format
 
 	// ConfigEFSMaxRetries is a config key.
 	ConfigEFSMaxRetries = ConfigEFS + "." + MaxRetries
@@ -106,11 +94,8 @@ func init() {
 	r.Key(gofig.String, "", "", "List of security groups", ConfigEFSSecGroups)
 	r.Key(gofig.String, "", "", "AWS region", ConfigEFSRegion)
 	r.Key(gofig.String, "", "", "AWS EFS endpoint", ConfigEFSEndpoint)
-	r.Key(gofig.String, "", "", "AWS EC2 endpoint", ConfigEFSEndpointEC2)
 	r.Key(gofig.String, "", `elasticfilesystem.%s.amazonaws.com`,
 		"AWS EFS endpoint format", ConfigEFSEndpointFormat)
-	r.Key(gofig.String, "", `ec2.%s.amazonaws.com`,
-		"AWS EC2 endpoint format", ConfigEFSEndpointEC2Format)
 	r.Key(gofig.String, "", "", "Tag prefix for EFS naming", ConfigEFSTag)
 	r.Key(gofig.Bool, "", false,
 		"A flag that disables the session cache", ConfigEFSDisableSessionCache)

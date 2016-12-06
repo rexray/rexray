@@ -21,7 +21,8 @@ const (
 	macURL = "http://" + raddr + "/latest/meta-data/mac"
 	subURL = "http://" + raddr +
 		`/latest/meta-data/network/interfaces/macs/%s/subnet-id`
-	sgpURL = "http://" + raddr + "/latest/meta-data/security-groups"
+	sgpURL = "http://" + raddr +
+		`/latest/meta-data/network/interfaces/macs/%s/security-group-ids`
 )
 
 // IsEC2Instance returns a flag indicating whether the executing host is an EC2
@@ -70,12 +71,17 @@ func InstanceID(ctx types.Context) (*types.InstanceID, error) {
 		return nil, err
 	}
 
-	subnetID, err := ResolveSubnet(ctx)
+	mac, err := getMAC(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	secGroups, err := getSecurityGroups(ctx)
+	subnetID, err := ResolveSubnetWithMAC(ctx, mac)
+	if err != nil {
+		return nil, err
+	}
+
+	secGroups, err := getSecurityGroups(ctx, mac)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +109,12 @@ func ResolveSubnet(ctx types.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	return ResolveSubnetWithMAC(ctx, mac)
+}
+
+// ResolveSubnetWithMAC determines the VPC subnet ID on the running AWS
+// instance.
+func ResolveSubnetWithMAC(ctx types.Context, mac string) (string, error) {
 	subnetID, err := getSubnetID(ctx, mac)
 	if err != nil {
 		return "", err
@@ -144,8 +156,8 @@ func getSubnetID(ctx types.Context, mac string) (string, error) {
 	return string(buf), nil
 }
 
-func getSecurityGroups(ctx types.Context) ([]string, error) {
-	req, err := http.NewRequest(http.MethodGet, sgpURL, nil)
+func getSecurityGroups(ctx types.Context, mac string) ([]string, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(sgpURL, mac), nil)
 	if err != nil {
 		return nil, err
 	}

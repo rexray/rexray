@@ -228,6 +228,7 @@ type VolumeCreateOpts struct {
 	Size             *int64
 	Type             *string
 	Encrypted        *bool
+	EncryptionKey    *string
 	Opts             Store
 }
 

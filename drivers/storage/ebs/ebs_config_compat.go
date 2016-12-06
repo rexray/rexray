@@ -30,6 +30,9 @@ const (
 	// ConfigEBSRexrayTag is a config key.
 	ConfigEBSRexrayTag = ConfigEBS + ".rexrayTag"
 
+	// ConfigEBSKmsKeyID is a config key.
+	ConfigEBSKmsKeyID = ConfigEBS + "." + KmsKeyID
+
 	// ConfigEC2 is a config key.
 	ConfigEC2 = "ec2"
 
@@ -54,6 +57,9 @@ const (
 	// ConfigEC2RexrayTag is a config key.
 	ConfigEC2RexrayTag = ConfigEC2 + ".rexrayTag"
 
+	// ConfigEC2KmsKeyID is a config key.
+	ConfigEC2KmsKeyID = ConfigEC2 + "." + KmsKeyID
+
 	// ConfigAWS is a config key.
 	ConfigAWS = "aws"
 
@@ -77,6 +83,9 @@ const (
 
 	// ConfigAWSRexrayTag is a config key.
 	ConfigAWSRexrayTag = ConfigAWS + ".rexrayTag"
+
+	// ConfigAWSKmsKeyID is a config key.
+	ConfigAWSKmsKeyID = ConfigAWS + "." + KmsKeyID
 )
 
 // BackCompat ensures keys can be used from old configurations.
@@ -89,6 +98,7 @@ func BackCompat(config gofig.Config) {
 		{ConfigEBSMaxRetries, ConfigEC2MaxRetries},
 		{ConfigEBSTag, ConfigEC2Tag},
 		{ConfigEBSRexrayTag, ConfigEC2RexrayTag},
+		{ConfigEBSKmsKeyID, ConfigEC2KmsKeyID},
 	}
 	for _, check := range ec2Checks {
 		if !config.IsSet(check[0]) && config.IsSet(check[1]) {
@@ -105,6 +115,7 @@ func BackCompat(config gofig.Config) {
 		{ConfigEBSMaxRetries, ConfigAWSMaxRetries},
 		{ConfigEBSTag, ConfigAWSTag},
 		{ConfigEBSRexrayTag, ConfigAWSRexrayTag},
+		{ConfigEBSKmsKeyID, ConfigAWSKmsKeyID},
 	}
 	for _, check := range awsChecks {
 		if !config.IsSet(check[0]) && config.IsSet(check[1]) {

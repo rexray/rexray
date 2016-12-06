@@ -43,6 +43,7 @@ type driver struct {
 	endpoint   *string
 	maxRetries *int
 	accessKey  string
+	kmsKeyID   string
 }
 
 func init() {
@@ -79,6 +80,7 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	}
 	maxRetries := d.getMaxRetries()
 	d.maxRetries = &maxRetries
+	d.kmsKeyID = d.getKmsKeyID()
 	log.Info("storage driver initialized")
 	return nil
 }
@@ -306,27 +308,8 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 		return nil, goof.WithFields(fields, "volume name already exists")
 	}
 
-	volume := &types.Volume{}
-
-	// Pass arguments into libStorage types.Volume
-	if opts.AvailabilityZone != nil {
-		volume.AvailabilityZone = *opts.AvailabilityZone
-	}
-	if opts.Type != nil {
-		volume.Type = *opts.Type
-	}
-	if opts.Size != nil {
-		volume.Size = *opts.Size
-	}
-	if opts.IOPS != nil {
-		volume.IOPS = *opts.IOPS
-	}
-	if opts.Encrypted != nil {
-		volume.Encrypted = *opts.Encrypted
-	}
-
 	// Pass libStorage types.Volume to helper function which calls EC2 API
-	vol, err := d.createVolume(ctx, volumeName, "", volume)
+	vol, err := d.createVolume(ctx, volumeName, "", opts)
 	if err != nil {
 		return nil, goof.WithFieldsE(fields, "error creating volume", err)
 	}
@@ -1098,8 +1081,11 @@ func (d *driver) attachVolume(
 }
 
 // Used in VolumeCreate
-func (d *driver) createVolume(ctx types.Context, volumeName, snapshotID string,
-	vol *types.Volume) (*awsec2.Volume, error) {
+func (d *driver) createVolume(
+	ctx types.Context,
+	volumeName, snapshotID string,
+	opts *types.VolumeCreateOpts) (*awsec2.Volume, error) {
+
 	var (
 		err    error
 		server awsec2.Instance
@@ -1111,21 +1097,32 @@ func (d *driver) createVolume(ctx types.Context, volumeName, snapshotID string,
 	}
 
 	// Fill in Availability Zone if needed
-	d.createVolumeEnsureAvailabilityZone(&vol.AvailabilityZone, &server)
+	d.createVolumeEnsureAvailabilityZone(opts.AvailabilityZone, &server)
 
 	options := &awsec2.CreateVolumeInput{
-		Size:             &vol.Size,
-		AvailabilityZone: &vol.AvailabilityZone,
-		Encrypted:        &vol.Encrypted,
-		VolumeType:       &vol.Type,
+		Size:             opts.Size,
+		AvailabilityZone: opts.AvailabilityZone,
+		Encrypted:        opts.Encrypted,
+		VolumeType:       opts.Type,
 	}
 	if snapshotID != "" {
 		options.SnapshotId = &snapshotID
 	}
-
-	if vol.IOPS > 0 {
-		options.Iops = &vol.IOPS
+	if opts.IOPS != nil && *opts.IOPS > 0 {
+		options.Iops = opts.IOPS
 	}
+	if opts.Encrypted != nil && *opts.Encrypted {
+		if opts.EncryptionKey != nil && len(*opts.EncryptionKey) > 0 {
+			ctx.Debug("creating encrypted volume w client enc key")
+			options.KmsKeyId = opts.EncryptionKey
+		} else if len(d.kmsKeyID) > 0 {
+			ctx.Debug("creating encrypted volume w server enc key")
+			options.KmsKeyId = aws.String(d.kmsKeyID)
+		} else {
+			ctx.Debug("creating encrypted volume w default enc key")
+		}
+	}
+
 	var resp *awsec2.Volume
 
 	if resp, err = mustSession(ctx).CreateVolume(options); err != nil {
@@ -1382,6 +1379,16 @@ func (d *driver) tag() string {
 		return tag
 	}
 	return d.config.GetString(ebs.ConfigEC2Tag)
+}
+
+func (d *driver) getKmsKeyID() string {
+	if v := d.config.GetString(ebs.ConfigEBSKmsKeyID); v != "" {
+		return v
+	}
+	if v := d.config.GetString(ebs.ConfigAWSKmsKeyID); v != "" {
+		return v
+	}
+	return d.config.GetString(ebs.ConfigEC2KmsKeyID)
 }
 
 // TODO rexrayTag

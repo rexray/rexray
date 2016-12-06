@@ -46,6 +46,20 @@ const (
 
 	// Tag is a key constant.
 	Tag = "tag"
+
+	// KmsKeyID is the full ARN of the AWS Key Management Service (AWS KMS)
+	// customer master key (CMK) to use when creating the encrypted volume.
+	//
+	// This parameter is only required if you want to use a non-default CMK;
+	// if this parameter is not specified, the default CMK for EBS is used.
+	// The ARN contains the arn:aws:kms namespace, followed by the region of
+	// the CMK, the AWS account ID of the CMK owner, the key namespace, and
+	// then the CMK ID. For example,
+	// arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//
+	// If a KmsKeyID is specified, all volumes will be created with their
+	// Encrypted flag set to true.
+	KmsKeyID = "kmsKeyID"
 )
 
 func init() {
@@ -56,6 +70,7 @@ func init() {
 	r.Key(gofig.String, "", "", "", Name+"."+Endpoint)
 	r.Key(gofig.Int, "", DefaultMaxRetries, "", Name+"."+MaxRetries)
 	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", Name+"."+Tag)
+	r.Key(gofig.String, "", "", "", Name+"."+KmsKeyID)
 
 	r.Key(gofig.String, "", "", "", NameEC2+"."+AccessKey)
 	r.Key(gofig.String, "", "", "", NameEC2+"."+SecretKey)
@@ -63,6 +78,7 @@ func init() {
 	r.Key(gofig.String, "", "", "", NameEC2+"."+Endpoint)
 	r.Key(gofig.Int, "", DefaultMaxRetries, "", NameEC2+"."+MaxRetries)
 	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", NameEC2+"."+Tag)
+	r.Key(gofig.String, "", "", "", NameEC2+"."+KmsKeyID)
 
 	r.Key(gofig.String, "", "", "", NameAWS+"."+AccessKey)
 	r.Key(gofig.String, "", "", "", NameAWS+"."+SecretKey)
@@ -70,5 +86,7 @@ func init() {
 	r.Key(gofig.String, "", "", "", NameAWS+"."+Endpoint)
 	r.Key(gofig.Int, "", DefaultMaxRetries, "", NameAWS+"."+MaxRetries)
 	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", NameAWS+"."+Tag)
+	r.Key(gofig.String, "", "", "", NameAWS+"."+KmsKeyID)
+
 	gofigCore.Register(r)
 }

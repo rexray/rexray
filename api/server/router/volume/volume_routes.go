@@ -410,6 +410,7 @@ func (r *router) volumeCreate(
 				Size:             store.GetInt64Ptr("size"),
 				Type:             store.GetStringPtr("type"),
 				Encrypted:        store.GetBoolPtr("encrypted"),
+				EncryptionKey:    store.GetStringPtr("encryptionKey"),
 				Opts:             store,
 			})
 

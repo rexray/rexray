@@ -338,6 +338,7 @@ ebs:
   accessKey:      XXXXXXXXXX
   secretKey:      XXXXXXXXXX
   region:         us-east-1
+  kmsKeyID:       arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef
 ```
 
 #### Configuration Notes
@@ -349,6 +350,8 @@ access credentials, like environment variables or instance profile IAM permissio
 See official AWS documentation for list of supported regions.
 <!-- - `tag` is used to partition multiple services within single AWS account and is
 used as prefix for EBS names in format `[tagprefix]/volumeName`. -->
+- If the `kmsKeyID` field is specified it will be used as the encryption key for
+all volumes that are created with a truthy encryption request field.
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are

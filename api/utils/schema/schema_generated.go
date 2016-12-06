@@ -436,6 +436,9 @@ const (
                 "encrypted": {
                     "type": "boolean"
                 },
+                "encryptionKey": {
+                    "type": "string"
+                },
                 "iops": {
                     "type": "number"
                 },

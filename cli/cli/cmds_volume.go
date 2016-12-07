@@ -107,6 +107,10 @@ func (c *CLI) initVolumeCmds() {
 				}
 			)
 
+			if c.encryptionKey != "" {
+				opts.EncryptionKey = &c.encryptionKey
+			}
+
 			if c.amount {
 				processedPVols = []*volumeWithPath{}
 			} else {
@@ -971,6 +975,8 @@ func (c *CLI) initVolumeFlags() {
 		"A flag that requests the storage platform create an encrypted "+
 			"volume. Specifying true doesn't guarantee encryption; it's up "+
 			"the storage driver and platform to implement this feature.")
+	c.volumeCreateCmd.Flags().StringVar(&c.encryptionKey, "encryptionKey", "",
+		"The key used to encrypt the volume.")
 
 	c.addQuietFlag(c.volumeCmd.PersistentFlags())
 	c.addOutputFormatFlag(c.volumeCmd.PersistentFlags())

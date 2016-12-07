@@ -107,6 +107,10 @@ func (c *CLI) initVolumeCmds() {
 				}
 			)
 
+			if c.encryptionKey != "" {
+				opts.EncryptionKey = &c.encryptionKey
+			}
+
 			if c.amount {
 				processedPVols = []*volumeWithPath{}
 			} else {
@@ -147,6 +151,7 @@ func (c *CLI) initVolumeCmds() {
 					}
 					if c.attach || c.amount {
 						dv.Attachments = withAttachments
+						dv.AttachmentState = apitypes.VolumeAttached
 					}
 					if c.amount {
 						processedPVols = append(
@@ -271,9 +276,12 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
+			// get volumes already attached as well as any that are avaialble.
+			// this enables us to emit which volumes are already attached
+			// instead of just emitting an error.
 			result, err := c.lsVolumes(
 				args,
-				apitypes.VolAttReqOnlyUnattachedVols)
+				apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -293,6 +301,12 @@ func (c *CLI) initVolumeCmds() {
 			)
 
 			for _, v := range result.vols {
+				// if the volume is already attached then we do not need to
+				// attach it
+				if v.AttachmentState == apitypes.VolumeAttached {
+					processed = append(processed, v)
+					continue
+				}
 				// if a partial match it must be unique
 				if pmt := result.isPartialMatch(v); pmt > 0 && !pmt.isUnique() {
 					continue
@@ -354,6 +368,7 @@ func (c *CLI) initVolumeCmds() {
 				}
 				if c.dryRun {
 					v.Attachments = nil
+					v.AttachmentState = apitypes.VolumeAvailable
 					processed = append(processed, v)
 					continue
 				}
@@ -367,6 +382,7 @@ func (c *CLI) initVolumeCmds() {
 					continue
 				}
 				v.Attachments = nil
+				v.AttachmentState = apitypes.VolumeAvailable
 				processed = append(processed, v)
 			}
 			c.mustMarshalOutput(processed, nil)
@@ -464,6 +480,7 @@ func (c *CLI) initVolumeCmds() {
 				}
 				if c.dryRun {
 					v.Attachments = nil
+					v.AttachmentState = apitypes.VolumeAvailable
 					processed = append(processed, v)
 					continue
 				}
@@ -971,6 +988,8 @@ func (c *CLI) initVolumeFlags() {
 		"A flag that requests the storage platform create an encrypted "+
 			"volume. Specifying true doesn't guarantee encryption; it's up "+
 			"the storage driver and platform to implement this feature.")
+	c.volumeCreateCmd.Flags().StringVar(&c.encryptionKey, "encryptionKey", "",
+		"The key used to encrypt the volume.")
 
 	c.addQuietFlag(c.volumeCmd.PersistentFlags())
 	c.addOutputFormatFlag(c.volumeCmd.PersistentFlags())

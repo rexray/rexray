@@ -271,9 +271,12 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
+			// get volumes already attached as well as any that are avaialble.
+			// this enables us to emit which volumes are already attached
+			// instead of just emitting an error.
 			result, err := c.lsVolumes(
 				args,
-				apitypes.VolAttReqOnlyUnattachedVols)
+				apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -293,6 +296,12 @@ func (c *CLI) initVolumeCmds() {
 			)
 
 			for _, v := range result.vols {
+				// if the volume is already attached then we do not need to
+				// attach it
+				if v.AttachmentState == apitypes.VolumeAttached {
+					processed = append(processed, v)
+					continue
+				}
 				// if a partial match it must be unique
 				if pmt := result.isPartialMatch(v); pmt > 0 && !pmt.isUnique() {
 					continue

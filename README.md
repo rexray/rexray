@@ -35,7 +35,7 @@ has a minimal set of dependencies in order to avoid a large, runtime footprint.
 
 ## Storage Orchestration Tools Today
 Today there are many storage orchestration and abstraction tools relevant to
-to container runtimes. These tools often must be installed locally and run
+container runtimes. These tools often must be installed locally and run
 alongside the container runtime.
 
 ![Storage Orchestration Tool Architecture Today](/.docs/.themes/yeti/img/architecture-today.png "Storage Orchestration Tool Architecture Today")

@@ -62,21 +62,24 @@ func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 			context.ServiceKey, config.GetString(types.ConfigService))
 	}
 
-	storageDriverName := config.GetString(types.ConfigStorageDriver)
-	if c.sd, err = registry.NewStorageDriver(storageDriverName); err != nil {
-		return nil, err
+	storDriverName := config.GetString(types.ConfigStorageDriver)
+	if storDriverName == "" {
+		c.ctx.Warn("no storage driver found")
+	} else {
+		if c.sd, err = registry.NewStorageDriver(storDriverName); err != nil {
+			return nil, err
+		}
+		if err = c.sd.Init(c.ctx, config); err != nil {
+			return nil, err
+		}
+		if papi, ok := c.sd.(types.ProvidesAPIClient); ok {
+			c.api = papi.API()
+		}
+		if pxli, pxliOk := c.sd.(types.ProvidesStorageExecutorCLI); pxliOk {
+			c.xli = pxli.XCLI()
+		}
+		c.ctx.Info("storage driver initialized")
 	}
-	if err = c.sd.Init(c.ctx, config); err != nil {
-		return nil, err
-	}
-	if papi, ok := c.sd.(types.ProvidesAPIClient); ok {
-		c.api = papi.API()
-	}
-	if pxli, pxliOk := c.sd.(types.ProvidesStorageExecutorCLI); pxliOk {
-		c.xli = pxli.XCLI()
-	}
-
-	c.ctx.Info("storage driver initialized")
 
 	// if the API or XLI are nil, then the storage driver is not the libStorage
 	// storage driver, and we should jump avoid any more initialization
@@ -86,23 +89,31 @@ func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 	}
 
 	osDriverName := config.GetString(types.ConfigOSDriver)
-	if c.od, err = registry.NewOSDriver(osDriverName); err != nil {
-		return nil, err
+	if osDriverName == "" {
+		c.ctx.Warn("no os driver found")
+	} else {
+		if c.od, err = registry.NewOSDriver(osDriverName); err != nil {
+			return nil, err
+		}
+		if err = c.od.Init(c.ctx, config); err != nil {
+			return nil, err
+		}
+		c.ctx.Info("os driver initialized")
 	}
-	if err = c.od.Init(c.ctx, config); err != nil {
-		return nil, err
-	}
-	c.ctx.Info("os driver initialized")
 
-	integrationDriverName := config.GetString(types.ConfigIntegrationDriver)
-	if c.id, err = registry.NewIntegrationDriver(
-		integrationDriverName); err != nil {
-		return nil, err
+	intDriverName := config.GetString(types.ConfigIntegrationDriver)
+	if intDriverName == "" {
+		c.ctx.Warn("no integration driver found")
+	} else {
+		if c.id, err = registry.NewIntegrationDriver(
+			intDriverName); err != nil {
+			return nil, err
+		}
+		if err := c.id.Init(c.ctx, config); err != nil {
+			return nil, err
+		}
+		c.ctx.Info("integration driver initialized")
 	}
-	if err := c.id.Init(c.ctx, config); err != nil {
-		return nil, err
-	}
-	c.ctx.Info("integration driver initialized")
 
 	c.ctx.Info("created libStorage client")
 	return c, nil

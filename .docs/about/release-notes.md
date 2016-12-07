@@ -37,6 +37,9 @@ creating volumes and makes the `volume attach` command idempotent.
 * Support for creating encrypted volumes ([#649](https://github.com/codedellemc/rexray/pull/649), [#652](https://github.com/codedellemc/rexray/pull/652))
 * Idempotent volume attach command ([#651](https://github.com/codedellemc/rexray/pull/651))
 
+### Bug Fixes
+* Fix volume status for detach op ([#654](https://github.com/codedellemc/rexray/pull/654))
+
 ## Version 0.6.2 (2016/12/05)
 While a patch release, this new version includes some much-requested features
 and updates.

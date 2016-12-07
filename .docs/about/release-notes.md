@@ -9,7 +9,7 @@ custom encryption key for encrypting volumes as well as includes a fix for
 determining an EFS instance's security groups.
 
 ### Enhancements
-* Custom encryption key support ([#355](https://github.com/codedellemc/libstorage/issues/355))
+* Custom encryption key support ([#355](https://github.com/codedellemc/libstorage/issues/355), [#358](https://github.com/codedellemc/libstorage/issues/358),)
 * Support for build-tag driven driver inclusion ([#356](https://github.com/codedellemc/libstorage/issues/356))
 
 ### Bug Fixes

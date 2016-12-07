@@ -3,7 +3,7 @@
 Release early, release often
 
 ---
-## Version 0.3.5 (TBD)
+## Version 0.3.5 (2016/12/07)
 This build updates the libStorage model and EBS driver to function with a
 custom encryption key for encrypting volumes as well as includes a fix for
 determining an EFS instance's security groups.

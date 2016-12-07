@@ -28,12 +28,12 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
-## Version 0.6.3 (TBD)
+## Version 0.6.3 (2016/12/07)
 This release includes the ability to specify a custom encryption key when
 creating volumes and makes the `volume attach` command idempotent.
 
 ### Enhancements
-* [libStorage 0.3.5-rc1](https://github.com/codedellemc/libstorage/pull/357)
+* [libStorage 0.3.5](https://github.com/codedellemc/libstorage/releases/tag/v0.3.5)
 * Support for creating encrypted volumes ([#649](https://github.com/codedellemc/rexray/pull/649), [#652](https://github.com/codedellemc/rexray/pull/652))
 * Idempotent volume attach command ([#651](https://github.com/codedellemc/rexray/pull/651))
 

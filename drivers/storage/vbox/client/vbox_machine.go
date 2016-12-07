@@ -1,3 +1,5 @@
+// +build none
+
 package client
 
 // Machine represents an installed virtual machine in vbox.

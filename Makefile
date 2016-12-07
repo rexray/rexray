@@ -1,7 +1,15 @@
 SHELL := /bin/bash
 
 ifeq (undefined,$(origin BUILD_TAGS))
-BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
+BUILD_TAGS :=   gofig \
+				pflag \
+				libstorage_integration_driver_docker
+ifneq (true,$(TRAVIS))
+BUILD_TAGS +=   libstorage_storage_driver \
+				libstorage_storage_driver_vfs \
+				libstorage_storage_executor \
+				libstorage_storage_executor_vfs
+endif
 endif
 
 all:
@@ -184,7 +192,7 @@ else
 GOVERSION := $(shell go version | awk '{print $$3}' | cut -c3-)
 endif
 
-ifeq (1.7.1,$(TRAVIS_GO_VERSION))
+ifeq (1.7.4,$(TRAVIS_GO_VERSION))
 ifeq (linux,$(TRAVIS_OS_NAME))
 COVERAGE_ENABLED := 1
 endif

@@ -1,3 +1,5 @@
+// +build !libstorage_storage_driver libstorage_storage_driver_scaleio
+
 package storage
 
 import (

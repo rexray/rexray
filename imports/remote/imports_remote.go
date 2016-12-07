@@ -1,3 +1,5 @@
+// +build !libstorage_storage_driver
+
 package remote
 
 import (

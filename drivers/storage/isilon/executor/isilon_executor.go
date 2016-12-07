@@ -1,3 +1,5 @@
+// +build !libstorage_storage_executor libstorage_storage_executor_isilon
+
 package executor
 
 import (

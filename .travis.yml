@@ -9,13 +9,19 @@ go:
 os:
   - linux
 
+env:
+  - BUILD_TAGS="gofig pflag libstorage_integration_driver_docker libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+  - BUILD_TAGS="gofig pflag libstorage_integration_driver_docker"
+  - BUILD_TAGS=""
+
 matrix:
   allow_failures:
-    - go: 1.6.3
-    - go: tip
+    - go:  1.6.3
+    - go:  tip
   fast_finish: true
 
 before_install:
+  - if [ "$BUILD_TAGS" = "$DEFAULT_BUILD_TAGS" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then echo coverage enabled; fi
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
   - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
   - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
@@ -28,12 +34,11 @@ before_install:
 script:
   - make gometalinter-all
   - make -j build
-  - make -j test
-  - VFS_INSTANCEID_USE_FIELDS=true ./drivers/storage/vfs/tests/vfs.test
-  - go clean -i ./client && go build ./client
+  - if [ "$BUILD_TAGS" = "$DEFAULT_BUILD_TAGS" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j test; fi
+  - if [ "$BUILD_TAGS" = "$DEFAULT_BUILD_TAGS" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then VFS_INSTANCEID_USE_FIELDS=true ./drivers/storage/vfs/tests/vfs.test; fi
 
 after_success:
-  - make -j cover
+  - if [ "$BUILD_TAGS" = "$DEFAULT_BUILD_TAGS" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j cover; fi
 
 addons:
   apt:

@@ -117,6 +117,7 @@ func (d *driver) VolumeCreate(
 		Name:             name,
 		AvailabilityZone: opts.AvailabilityZone,
 		Encrypted:        opts.Encrypted,
+		EncryptionKey:    opts.EncryptionKey,
 		IOPS:             opts.IOPS,
 		Size:             opts.Size,
 		Type:             opts.Type,

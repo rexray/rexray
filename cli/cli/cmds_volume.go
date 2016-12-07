@@ -151,6 +151,7 @@ func (c *CLI) initVolumeCmds() {
 					}
 					if c.attach || c.amount {
 						dv.Attachments = withAttachments
+						dv.AttachmentState = apitypes.VolumeAttached
 					}
 					if c.amount {
 						processedPVols = append(
@@ -367,6 +368,7 @@ func (c *CLI) initVolumeCmds() {
 				}
 				if c.dryRun {
 					v.Attachments = nil
+					v.AttachmentState = apitypes.VolumeAvailable
 					processed = append(processed, v)
 					continue
 				}
@@ -380,6 +382,7 @@ func (c *CLI) initVolumeCmds() {
 					continue
 				}
 				v.Attachments = nil
+				v.AttachmentState = apitypes.VolumeAvailable
 				processed = append(processed, v)
 			}
 			c.mustMarshalOutput(processed, nil)
@@ -477,6 +480,7 @@ func (c *CLI) initVolumeCmds() {
 				}
 				if c.dryRun {
 					v.Attachments = nil
+					v.AttachmentState = apitypes.VolumeAvailable
 					processed = append(processed, v)
 					continue
 				}

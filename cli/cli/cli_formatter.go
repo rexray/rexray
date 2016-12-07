@@ -74,12 +74,34 @@ func (c *CLI) fmtOutput(w io.Writer, templateName string, o interface{}) error {
 		case *apitypes.Volume:
 			return c.fmtOutput(w, templName, []*apitypes.Volume{to})
 		case []*apitypes.Volume:
+			isEnc := false
+			for _, v := range to {
+				if v.Encrypted {
+					isEnc = true
+					break
+				}
+			}
 			if templName == "" {
-				templName = templateNamePrintVolumeFields
+				if isEnc {
+					templName = templateNamePrintEncVolumeFields
+				} else {
+					templName = templateNamePrintVolumeFields
+				}
 			}
 		case []*volumeWithPath:
+			isEnc := false
+			for _, v := range to {
+				if v.Encrypted {
+					isEnc = true
+					break
+				}
+			}
 			if templName == "" {
-				templName = templateNamePrintVolumeWithPathFields
+				if isEnc {
+					templName = templateNamePrintEncVolumeWithPathFields
+				} else {
+					templName = templateNamePrintVolumeWithPathFields
+				}
 			}
 		case *apitypes.Snapshot:
 			return c.fmtOutput(w, templName, []*apitypes.Snapshot{to})
@@ -220,18 +242,20 @@ func (c *CLI) mustMarshalOutput3WithTemplateName(
 }
 
 const (
-	templateNamePrintCustom               = "printCustom"
-	templateNamePrintObject               = "printObject"
-	templateNamePrintStringSlice          = "printStringSlice"
-	templateNamePrintJSON                 = "printJSON"
-	templateNamePrintPrettyJSON           = "printPrettyJSON"
-	templateNamePrintVolumeFields         = "printVolumeFields"
-	templateNamePrintVolumeID             = "printVolumeID"
-	templateNamePrintVolumeWithPathFields = "printVolumeWithPathFields"
-	templateNamePrintSnapshotFields       = "printSnapshotFields"
-	templateNamePrintInstanceFields       = "printInstanceFields"
-	templateNamePrintServiceFields        = "printServiceFields"
-	templateNamePrintMountFields          = "printMountFields"
+	templateNamePrintCustom                  = "printCustom"
+	templateNamePrintObject                  = "printObject"
+	templateNamePrintStringSlice             = "printStringSlice"
+	templateNamePrintJSON                    = "printJSON"
+	templateNamePrintPrettyJSON              = "printPrettyJSON"
+	templateNamePrintVolumeFields            = "printVolumeFields"
+	templateNamePrintVolumeID                = "printVolumeID"
+	templateNamePrintVolumeWithPathFields    = "printVolumeWithPathFields"
+	templateNamePrintEncVolumeFields         = "printEncVolumeFields"
+	templateNamePrintEncVolumeWithPathFields = "printEncVolumeWithPathFields"
+	templateNamePrintSnapshotFields          = "printSnapshotFields"
+	templateNamePrintInstanceFields          = "printInstanceFields"
+	templateNamePrintServiceFields           = "printServiceFields"
+	templateNamePrintMountFields             = "printMountFields"
 )
 
 type templateMetadata struct {
@@ -272,6 +296,27 @@ var defaultTemplates = map[string]*templateMetadata{
 			"Name",
 			"Status={{.Volume.AttachmentState | printAttState}}",
 			"Size",
+			"Path",
+		},
+		sortBy: "Name",
+	},
+	templateNamePrintEncVolumeFields: &templateMetadata{
+		fields: []string{
+			"ID",
+			"Name",
+			"Status={{.AttachmentState | printAttState}}",
+			"Size",
+			"Encrypted",
+		},
+		sortBy: "Name",
+	},
+	templateNamePrintEncVolumeWithPathFields: &templateMetadata{
+		fields: []string{
+			"ID",
+			"Name",
+			"Status={{.Volume.AttachmentState | printAttState}}",
+			"Size",
+			"Encrypted",
 			"Path",
 		},
 		sortBy: "Name",

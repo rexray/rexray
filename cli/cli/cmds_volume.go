@@ -102,6 +102,7 @@ func (c *CLI) initVolumeCmds() {
 					Size:             &c.size,
 					Type:             &c.volumeType,
 					IOPS:             &c.iops,
+					Encrypted:        &c.encrypted,
 					Opts:             store(),
 				}
 			)
@@ -142,6 +143,7 @@ func (c *CLI) initVolumeCmds() {
 						Type:             c.volumeType,
 						IOPS:             c.iops,
 						AvailabilityZone: c.availabilityZone,
+						Encrypted:        c.encrypted,
 					}
 					if c.attach || c.amount {
 						dv.Attachments = withAttachments
@@ -965,6 +967,10 @@ func (c *CLI) initVolumeFlags() {
 	c.volumeCreateCmd.Flags().BoolVar(&c.force, "force", false, "")
 	c.volumeCreateCmd.Flags().BoolVar(&c.overwriteFs, "overwriteFS", false, "")
 	c.volumeCreateCmd.Flags().StringVar(&c.fsType, "fsType", "", "")
+	c.volumeCreateCmd.Flags().BoolVar(&c.encrypted, "encrypted", false,
+		"A flag that requests the storage platform create an encrypted "+
+			"volume. Specifying true doesn't guarantee encryption; it's up "+
+			"the storage driver and platform to implement this feature.")
 
 	c.addQuietFlag(c.volumeCmd.PersistentFlags())
 	c.addOutputFormatFlag(c.volumeCmd.PersistentFlags())

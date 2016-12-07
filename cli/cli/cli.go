@@ -127,6 +127,7 @@ type CLI struct {
 	moduleInstanceAddress   string
 	moduleInstanceStart     bool
 	moduleConfig            []string
+	encrypted               bool
 }
 
 const (

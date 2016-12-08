@@ -129,6 +129,7 @@ type CLI struct {
 	moduleConfig            []string
 	encrypted               bool
 	encryptionKey           string
+	idempotent              bool
 }
 
 const (
@@ -304,6 +305,11 @@ func (c *CLI) addDryRunFlag(fs *pflag.FlagSet) {
 func (c *CLI) addContinueOnErrorFlag(fs *pflag.FlagSet) {
 	fs.BoolVar(&c.continueOnError, "continueOnError", false,
 		"Continue processing a collection upon error")
+}
+
+func (c *CLI) addIdempotentFlag(fs *pflag.FlagSet) {
+	fs.BoolVarP(&c.idempotent, "idempotent", "i", false,
+		"Make this command idempotent.")
 }
 
 func (c *CLI) updateLogLevel() {

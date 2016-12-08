@@ -276,12 +276,16 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			// get volumes already attached as well as any that are avaialble.
-			// this enables us to emit which volumes are already attached
-			// instead of just emitting an error.
-			result, err := c.lsVolumes(
-				args,
-				apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols)
+			lsVolAttType := apitypes.VolAttReqOnlyUnattachedVols
+			if c.idempotent {
+				// get volumes already attached as well as any that are
+				// avaialble. this enables us to emit which volumes are already
+				// attached instead of just emitting an error.
+				lsVolAttType =
+					apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols
+			}
+
+			result, err := c.lsVolumes(args, lsVolAttType)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -340,9 +344,16 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(
-				args,
-				apitypes.VolAttReqOnlyAttachedVols)
+			lsVolAttType := apitypes.VolAttReqOnlyAttachedVols
+			if c.idempotent {
+				// get volumes already attached as well as any that are
+				// avaialble. this enables us to emit which volumes are already
+				// attached instead of just emitting an error.
+				lsVolAttType =
+					apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols
+			}
+
+			result, err := c.lsVolumes(args, lsVolAttType)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -362,6 +373,12 @@ func (c *CLI) initVolumeCmds() {
 			)
 
 			for _, v := range result.vols {
+				// if the volume is already detached then we do not need to
+				// detach it
+				if v.AttachmentState == apitypes.VolumeAvailable {
+					processed = append(processed, v)
+					continue
+				}
 				// if a partial match it must be unique
 				if pmt := result.isPartialMatch(v); pmt > 0 && !pmt.isUnique() {
 					continue
@@ -419,9 +436,19 @@ func (c *CLI) initVolumeCmds() {
 					NewFSType:   c.fsType,
 					OverwriteFS: c.overwriteFs,
 				}
+				pathOpts = store()
 			)
 
 			for _, v := range result.vols {
+				// if the volume is already mounted then we do not need to
+				// mount it
+				if c.idempotent {
+					p, _ := c.r.Integration().Path(c.ctx, v.ID, "", pathOpts)
+					if p != "" {
+						processed = append(processed, &volumeWithPath{v, p})
+						continue
+					}
+				}
 				// if a partial match it must be unique
 				if pmt := result.isPartialMatch(v); pmt > 0 && !pmt.isUnique() {
 					continue
@@ -455,9 +482,16 @@ func (c *CLI) initVolumeCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
-			result, err := c.lsVolumes(
-				args,
-				apitypes.VolAttReqOnlyVolsAttachedToInstance)
+			lsVolAttType := apitypes.VolAttReqOnlyVolsAttachedToInstance
+			if c.idempotent {
+				// get volumes already attached as well as any that are
+				// avaialble. this enables us to emit which volumes are already
+				// attached instead of just emitting an error.
+				lsVolAttType =
+					apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols
+			}
+
+			result, err := c.lsVolumes(args, lsVolAttType)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -471,9 +505,25 @@ func (c *CLI) initVolumeCmds() {
 			var (
 				opts      = store()
 				processed = []*apitypes.Volume{}
+				pathOpts  = store()
 			)
 
 			for _, v := range result.vols {
+				// if the volume is not attached then we do not need to
+				// unmount it
+				if v.AttachmentState == apitypes.VolumeAvailable {
+					processed = append(processed, v)
+					continue
+				}
+				// if the volume is already unmounted then we do not need to
+				// unmount it
+				if c.idempotent {
+					p, _ := c.r.Integration().Path(c.ctx, v.ID, "", pathOpts)
+					if p == "" {
+						processed = append(processed, v)
+						continue
+					}
+				}
 				// if a partial match it must be unique
 				if pmt := result.isPartialMatch(v); pmt > 0 && !pmt.isUnique() {
 					continue
@@ -1001,4 +1051,9 @@ func (c *CLI) initVolumeFlags() {
 	c.addContinueOnErrorFlag(c.volumeDetachCmd.Flags())
 	c.addContinueOnErrorFlag(c.volumeMountCmd.Flags())
 	c.addContinueOnErrorFlag(c.volumeUnmountCmd.Flags())
+
+	c.addIdempotentFlag(c.volumeAttachCmd.Flags())
+	c.addIdempotentFlag(c.volumeDetachCmd.Flags())
+	c.addIdempotentFlag(c.volumeMountCmd.Flags())
+	c.addIdempotentFlag(c.volumeUnmountCmd.Flags())
 }

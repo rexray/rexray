@@ -854,13 +854,13 @@ endif
 $$(LSX_EMBEDDED_$2): $1
 	@mkdir -p $$(@D) && cp -f $$? $$@
 
+ifeq (linux,$2)
 EXECUTORS_EMBEDDED += $$(LSX_EMBEDDED_$2)
+endif
 endef
 
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux))
-ifneq (true,$(TRAVIS))
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin))
-endif
 #$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
 
 $(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)

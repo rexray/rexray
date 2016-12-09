@@ -4,6 +4,11 @@ ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
 endif
 
+ifneq (,$(DRIVERS))
+BUILD_TAGS += libstorage_storage_driver libstorage_storage_executor
+BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d) libstorage_storage_executor_$(d))
+endif
+
 all:
 # if docker is running, then let's use docker to build it
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))

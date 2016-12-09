@@ -103,16 +103,16 @@ func TestExecutorsWithControllerClient(t *testing.T) {
 func TestExecutorHead(t *testing.T) {
 	apitests.RunGroup(
 		t, vfs.Name, newTestConfig(t),
-		apitests.TestHeadExecutorLinux,
-		apitests.TestHeadExecutorDarwin)
+		apitests.TestHeadExecutorLinux)
+	//apitests.TestHeadExecutorDarwin)
 	//apitests.TestHeadExecutorWindows)
 }
 
 func TestExecutorGet(t *testing.T) {
 	apitests.RunGroup(
 		t, vfs.Name, newTestConfig(t),
-		apitests.TestGetExecutorLinux,
-		apitests.TestGetExecutorDarwin)
+		apitests.TestGetExecutorLinux)
+	//	apitests.TestGetExecutorDarwin)
 	//apitests.TestGetExecutorWindows)
 }
 

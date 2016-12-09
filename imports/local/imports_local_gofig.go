@@ -1,4 +1,4 @@
-// +build gofig
+// +build gofig,libstorage_storage_driver_vfs
 
 package local
 

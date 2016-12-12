@@ -99,6 +99,9 @@ rexray:
             desc:     The default docker module.
             host:     unix:///run/docker/plugins/rexray.sock
             spec:     /etc/docker/plugins/rexray.spec
+            http:
+              writetimeout: 10
+              readtimeout: 10
             disabled: false
 `)
 	cfg.Key(gofig.String, "", "10s", "", "rexray.module.startTimeout")

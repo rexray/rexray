@@ -3,13 +3,20 @@
 Release early, release often
 
 ---
+## Version 0.3.6 (2016/12/13)
+This is a minor release to update the build process so that smaller binaries
+for embedding projects, such as REX-Ray, is supported.
+
+### Enhancements
+* Do not build Darwin executor on Travis-CI ([#362](https://github.com/codedellemc/libstorage/issues/362))
+
 ## Version 0.3.5 (2016/12/07)
 This build updates the libStorage model and EBS driver to function with a
 custom encryption key for encrypting volumes as well as includes a fix for
 determining an EFS instance's security groups.
 
 ### Enhancements
-* Custom encryption key support ([#355](https://github.com/codedellemc/libstorage/issues/355), [#358](https://github.com/codedellemc/libstorage/issues/358),)
+* Custom encryption key support ([#355](https://github.com/codedellemc/libstorage/issues/355), [#358](https://github.com/codedellemc/libstorage/issues/358))
 * Support for build-tag driven driver inclusion ([#356](https://github.com/codedellemc/libstorage/issues/356))
 
 ### Bug Fixes

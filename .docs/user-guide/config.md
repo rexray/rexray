@@ -586,8 +586,8 @@ remote storage systems. Currently the following storage drivers are supported:
 [Isilon](./storage-providers.md#isilon) | isilon
 [ScaleIO](./storage-providers.md#scaleio) | scaleio
 [VirtualBox](./storage-providers.md#virtualbox) | virtualbox
-[EBS](./storage-providers.md#ebs) | ebs, ec2
-[EFS](./storage-providers.md#efs) | efs
+[EBS](./storage-providers.md#aws-ebs) | ebs, ec2
+[EFS](./storage-providers.md#aws-efs) | efs
 ..more coming|
 
 The `libstorage.server.libstorage.storage.driver` property can be used to

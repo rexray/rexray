@@ -1039,6 +1039,7 @@ BINTRAY_STABLE := bintray-stable.json
 $(BINTRAY_UNSTABLE) $(BINTRAY_STAGED) $(BINTRAY_STABLE): $(BINTRAY_JSON)
 	sed -e 's/$${SUBJ}/$(BINTRAY_SUBJ)/g' \
 		-e 's/$${PROG}/$(PROG)/g' \
+		-e 's/$${PROG_ROOT}/$(PROG_ROOT)/g' \
 		-e 's/$${REPO}/$(subst bintray-,,$(subst .json,,$@))/g' \
 		-e 's/$${SEMVER}/$(V_SEMVER)/g' \
 		-e 's|$${DSCRIP}|$(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)|g' \

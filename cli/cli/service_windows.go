@@ -1,3 +1,5 @@
+// +build !rexray_build_type_client
+
 package cli
 
 import (

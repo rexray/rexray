@@ -3,6 +3,7 @@ package core
 import (
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 
@@ -13,6 +14,13 @@ import (
 var (
 	// Version of REX-Ray.
 	Version *apitypes.VersionInfo
+
+	// BuildType is the build type of this binary.
+	BuildType = "client+agent+controller"
+
+	// Debug is whether or not the REXRAY_DEBUG environment variable is set
+	// to a truthy value.
+	Debug, _ = strconv.ParseBool(os.Getenv("REXRAY_DEBUG"))
 )
 
 type osString string

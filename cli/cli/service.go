@@ -1,3 +1,5 @@
+// +build !rexray_build_type_client
+
 package cli
 
 import (
@@ -22,8 +24,12 @@ var (
 	useSystemDForSCMCmds = gotil.FileExists(util.UnitFilePath) &&
 		getInitSystemType() == SystemD
 
-	serverSockFile = util.RunFilePath("server.sock")
-	clientSockFile = util.RunFilePath("client.sock")
+	serverSockFilePath = util.RunFilePath(
+		fmt.Sprintf("%s-server.sock", util.BinFileName()))
+	clientSockFilePath = util.RunFilePath(
+		fmt.Sprintf("%s-client.sock", util.BinFileName()))
+
+	logFilePath = util.LogFilePath(fmt.Sprintf("%s.log", util.BinFileName()))
 )
 
 func (c *CLI) start() {
@@ -93,7 +99,7 @@ func statusViaSystemD() {
 }
 
 func execSystemDCmd(cmdType string) {
-	cmd := exec.Command("systemctl", cmdType, "-l", "rexray")
+	cmd := exec.Command("systemctl", cmdType, "-l", util.UnitFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -109,9 +115,9 @@ func (c *CLI) startDaemon() {
 
 	var out io.Writer = os.Stdout
 	if !log.IsTerminal() {
-		logFile, logFileErr := util.LogFile("rexray.log")
+		logFile, logFileErr := util.LogFile(logFilePath)
 		failOnError(logFileErr)
-		out = io.MultiWriter(os.Stdout, logFile)
+		out = io.MultiWriter(os.Stdout, os.Stderr, logFile)
 	}
 	log.SetOutput(out)
 
@@ -138,8 +144,9 @@ func (c *CLI) startDaemon() {
 
 		var dialErr error
 
-		c.ctx.WithField("addr", clientSockFile).Debug("dialing rex-ray client")
-		conn, dialErr = net.Dial("unix", clientSockFile)
+		c.ctx.WithField("addr", clientSockFilePath).Debug(
+			"dialing rex-ray client")
+		conn, dialErr = net.Dial("unix", clientSockFilePath)
 		if dialErr != nil {
 			panic(dialErr)
 		}
@@ -174,8 +181,8 @@ func (c *CLI) startDaemon() {
 
 	stop := make(chan os.Signal)
 
-	os.Remove(serverSockFile)
-	host := fmt.Sprintf("unix://%s", serverSockFile)
+	os.Remove(serverSockFilePath)
+	host := fmt.Sprintf("unix://%s", serverSockFilePath)
 	errs, err := rrdaemon.Start(c.ctx, c.config, host, stop)
 	if err != nil {
 		c.ctx.WithError(err).Error("error starting rex-ray")
@@ -205,9 +212,9 @@ func (c *CLI) startDaemon() {
 		stop <- s
 		close(stop)
 
-		if err := os.Remove(serverSockFile); err == nil {
+		if err := os.Remove(serverSockFilePath); err == nil {
 			ctx.WithField(
-				"sockFile", serverSockFile).Info("removed server sock file")
+				"sockFile", serverSockFilePath).Info("removed server sock file")
 		}
 		if err := os.Remove(util.PidFilePath()); err == nil {
 			ctx.WithField(
@@ -233,10 +240,11 @@ func (c *CLI) tryToStartDaemon() {
 	fmt.Print("Starting REX-Ray...")
 
 	signal := make(chan byte)
-	os.Remove(clientSockFile)
-	c.ctx.WithField("client", clientSockFile).Debug("trying to start service")
+	os.Remove(clientSockFilePath)
+	c.ctx.WithField("client", clientSockFilePath).Debug(
+		"trying to start service")
 
-	l, lErr := net.Listen("unix", clientSockFile)
+	l, lErr := net.Listen("unix", clientSockFilePath)
 	failOnError(lErr)
 
 	go func() {
@@ -246,7 +254,7 @@ func (c *CLI) tryToStartDaemon() {
 			panic(acceptErr)
 		}
 		defer conn.Close()
-		defer os.Remove(clientSockFile)
+		defer os.Remove(clientSockFilePath)
 
 		c.ctx.Debug("accepted connection")
 
@@ -353,14 +361,6 @@ func (c *CLI) restart() {
 	}
 
 	c.start()
-}
-
-func checkOpPerms(op string) error {
-	//if os.Geteuid() != 0 {
-	//	return goof.Newf("REX-Ray can only be %s by root", op)
-	//}
-
-	return nil
 }
 
 const rexRayLogoASCII = `

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -113,21 +114,8 @@ func TestPrefixAndDirs(t *testing.T) {
 			libDirFilePath, expLibFilePath)
 	}
 
-	binDirPath := BinDirPath()
-	expBinDirPath := fmt.Sprintf("%s/usr/bin", tmpDir)
-	if binDirPath != expBinDirPath {
-		t.Fatalf("BinDirPath() == %s, != %s", binDirPath, expBinDirPath)
-	}
-
-	binDirFilePath := BinFilePath()
-	expBinFilePath := fmt.Sprintf("%s/%s", binDirPath, "rexray")
-	if expBinFilePath != binDirFilePath {
-		t.Fatalf("BinFilePath(\"rexray\") == %s, != %s",
-			binDirFilePath, expBinFilePath)
-	}
-
 	pidFilePath := PidFilePath()
-	expPidFilePath := fmt.Sprintf("%s/var/run/rexray/rexray.pid", tmpDir)
+	expPidFilePath := path.Join(tmpDir, "/var/run/rexray", PIDFileName)
 	if expPidFilePath != pidFilePath {
 		t.Fatalf("PidFilePath() == %s, != %s", pidFilePath, expPidFilePath)
 	}

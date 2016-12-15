@@ -1,5 +1,5 @@
-hash: 07320f944f19a6b4c9840b8de5a9173f9c2bb0ec254330d8d85212e8d999f200
-updated: 2016-12-07T17:09:31.6250369-06:00
+hash: e137fbb0517c72219a1c737caf65647bdc02a49ee0708b79d001fcf4c16de9df
+updated: 2016-12-13T10:18:38.579745727-06:00
 imports:
 - name: github.com/akutz/gofig
   version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
@@ -77,7 +77,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: 456dd68123dd6b49da0275d9bbabd6c800583f61
+  version: 3654489852a36502979483328eeb5b600e6e4450
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api

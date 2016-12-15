@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"fmt"
 	"io/ioutil"
+	"path"
 	rx "regexp"
 	"strings"
 	"text/template"
@@ -11,12 +11,16 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
+	"github.com/codedellemc/rexray/util"
 )
+
+var additionalFlagSetsFunc func(*CLI) map[string]*flag.FlagSet
 
 func (c *CLI) initUsageTemplates() {
 
 	var ut string
-	utPath := fmt.Sprintf("%s/.rexray/usage.template", gotil.HomeDir())
+	utPath := path.Join(gotil.HomeDir(), util.DotDirName, "usage.template")
 	log.WithField("path", utPath).Debug("usage template path")
 
 	if gotil.FileExists(utPath) {
@@ -94,6 +98,13 @@ func (c *CLI) sansAdditionalFlags(flags *flag.FlagSet) *flag.FlagSet {
 
 func hasFlags(flags *flag.FlagSet) bool {
 	return flags != nil && flags.HasFlags()
+}
+
+func (c *CLI) additionalFlagSets() map[string]*flag.FlagSet {
+	if additionalFlagSetsFunc != nil {
+		return additionalFlagSetsFunc(c)
+	}
+	return nil
 }
 
 func (c *CLI) additionalFlags() *flag.FlagSet {

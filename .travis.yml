@@ -3,7 +3,21 @@ go_import_path: github.com/codedellemc/rexray
 language: go
 
 go:
-  - 1.7.3
+  - 1.7.4
+  - 1.6.3
+  - tip
+
+env:
+  - REXRAY_BUILD_TYPE=
+  - REXRAY_BUILD_TYPE=client
+  - REXRAY_BUILD_TYPE=agent
+  - REXRAY_BUILD_TYPE=controller
+
+matrix:
+  allow_failures:
+    - go:  1.6.3
+    - go:  tip
+  fast_finish: true
 
 before_install:
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
@@ -15,20 +29,21 @@ before_install:
   - go get github.com/onsi/ginkgo
   - go get golang.org/x/tools/cmd/cover
   - make deps
+  - make info
 
 script:
   - make gometalinter-all
   - make -j build-libstorage
-  - env GOOS=linux  GOARCH=amd64 make -j build
-  - env GOOS=darwin GOARCH=amd64 make -j build
+  - env GOOS=linux GOARCH=amd64 make -j build
+  - if [ "$REXRAY_BUILD_TYPE" = "" ]; then REXRAY_DEBUG=true $GOPATH/bin/rexray version; else REXRAY_DEBUG=true $GOPATH/bin/rexray-$REXRAY_BUILD_TYPE version; fi
   - make -j test
 
 after_success:
   - make -j cover
-  - make tgz
-  - make rpm
-  - make deb
-  - make bintray
+  - if [ "$TRAVIS_GO_VERSION" = "$BINTRAY_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make tgz; fi
+  - if [ "$TRAVIS_GO_VERSION" = "$BINTRAY_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make rpm; fi
+  - if [ "$TRAVIS_GO_VERSION" = "$BINTRAY_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make deb; fi
+  - if [ "$TRAVIS_GO_VERSION" = "$BINTRAY_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make bintray; fi
   - ls -al
 
 deploy:
@@ -39,7 +54,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+      condition: $TRAVIS_GO_VERSION = $BINTRAY_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
   - provider: bintray
     file: bintray-staged.json
@@ -48,7 +63,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $TRAVIS_GO_VERSION = $BINTRAY_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: bintray
     file: bintray-stable.json
@@ -57,7 +72,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $TRAVIS_GO_VERSION = $BINTRAY_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
 cache:
   apt: true

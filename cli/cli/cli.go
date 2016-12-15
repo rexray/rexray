@@ -2,11 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	glog "github.com/akutz/golf/logrus"
 	"github.com/akutz/gotil"
@@ -14,14 +12,14 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/codedellemc/libstorage/api/context"
-	apiserver "github.com/codedellemc/libstorage/api/server"
 	apitypes "github.com/codedellemc/libstorage/api/types"
 	apiutils "github.com/codedellemc/libstorage/api/utils"
-	apiclient "github.com/codedellemc/libstorage/client"
 
 	"github.com/codedellemc/rexray/cli/cli/term"
 	"github.com/codedellemc/rexray/util"
 )
+
+var initCmdFuncs []func(*CLI)
 
 func init() {
 	log.SetFormatter(&glog.TextFormatter{TextFormatter: log.TextFormatter{}})
@@ -149,37 +147,6 @@ const (
 	lightBlueBg = lightBlue + 10
 )
 
-func validateConfig(path string) {
-	if !gotil.FileExists(path) {
-		return
-	}
-
-	buf, err := ioutil.ReadFile(path)
-	if err != nil {
-		fmt.Fprintf(
-			os.Stderr, "rexray: error reading config: %s\n%v\n", path, err)
-		os.Exit(1)
-	}
-
-	s := string(buf)
-
-	if _, err := gofigCore.ValidateYAMLString(s); err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"rexray: invalid config: %s\n\n  %v\n\n", path, err)
-		fmt.Fprint(
-			os.Stderr,
-			"paste the contents between ---BEGIN--- and ---END---\n")
-		fmt.Fprint(
-			os.Stderr,
-			"into http://www.yamllint.com/ to discover the issue\n\n")
-		fmt.Fprintln(os.Stderr, "---BEGIN---")
-		fmt.Fprintln(os.Stderr, s)
-		fmt.Fprintln(os.Stderr, "---END---")
-		os.Exit(1)
-	}
-}
-
 // New returns a new CLI using the current process's arguments.
 func New(ctx apitypes.Context) *CLI {
 	return NewWithArgs(ctx, os.Args[1:]...)
@@ -187,10 +154,6 @@ func New(ctx apitypes.Context) *CLI {
 
 // NewWithArgs returns a new CLI using the specified arguments.
 func NewWithArgs(ctx apitypes.Context, a ...string) *CLI {
-
-	validateConfig(util.EtcFilePath("config.yml"))
-	validateConfig(fmt.Sprintf("%s/.rexray/config.yml", gotil.HomeDir()))
-
 	s := "REX-Ray:\n" +
 		"  A guest-based storage introspection tool that enables local\n" +
 		"  visibility and management from cloud and storage platforms."
@@ -198,7 +161,7 @@ func NewWithArgs(ctx apitypes.Context, a ...string) *CLI {
 	c := &CLI{
 		l:      log.New(),
 		ctx:    ctx,
-		config: gofigCore.New(),
+		config: util.NewConfig(ctx),
 	}
 
 	c.c = &cobra.Command{
@@ -212,15 +175,9 @@ func NewWithArgs(ctx apitypes.Context, a ...string) *CLI {
 
 	c.c.SetArgs(a)
 
-	c.initOtherCmdsAndFlags()
-
-	c.initAdapterCmdsAndFlags()
-	c.initDeviceCmdsAndFlags()
-	c.initVolumeCmdsAndFlags()
-	// c.initSnapshotCmdsAndFlags()
-
-	c.initServiceCmdsAndFlags()
-	c.initModuleCmdsAndFlags()
+	for _, f := range initCmdFuncs {
+		f(c)
+	}
 
 	c.initUsageTemplates()
 
@@ -332,7 +289,7 @@ func (c *CLI) preRunActivateLibStorage(cmd *cobra.Command, args []string) {
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	if c.cfgFile != "" && gotil.FileExists(c.cfgFile) {
-		validateConfig(c.cfgFile)
+		util.ValidateConfig(c.cfgFile)
 		if err := c.config.ReadConfigFile(c.cfgFile); err != nil {
 			panic(err)
 		}
@@ -373,21 +330,19 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	if c.activateLibStorage {
 
-		c.ctx.WithField("cmd", cmd.Name()).Debug("activating libStorage")
-
 		if c.runAsync {
 			c.ctx = c.ctx.WithValue("async", true)
 		}
 
-		apiserver.DisableStartupInfo = true
+		c.ctx.WithField("cmd", cmd.Name()).Debug("activating libStorage")
 
 		var err error
-
-		// activate libStorage if necessary
-		c.ctx, c.config, _, err = util.ActivateLibStorage(c.ctx, c.config)
-
+		c.ctx, c.config, c.rsErrs, err = util.ActivateLibStorage(
+			c.ctx, c.config)
 		if err == nil {
-			c.r, err = apiclient.New(c.ctx, c.config)
+			c.ctx.WithField("cmd", cmd.Name()).Debug(
+				"creating libStorage client")
+			c.r, err = util.NewClient(c.ctx, c.config)
 		}
 
 		if err != nil {
@@ -478,4 +433,11 @@ func (c *CLI) logLevel() string {
 
 func store() apitypes.Store {
 	return apiutils.NewStore()
+}
+
+func checkOpPerms(op string) error {
+	//if os.Geteuid() != 0 {
+	//	return goof.Newf("REX-Ray can only be %s by root", op)
+	//}
+	return nil
 }

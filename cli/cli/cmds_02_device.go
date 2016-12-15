@@ -1,3 +1,6 @@
+// +build !rexray_build_type_agent
+// +build !rexray_build_type_controller
+
 package cli
 
 import (
@@ -6,9 +9,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *CLI) initDeviceCmdsAndFlags() {
-	c.initDeviceCmds()
-	c.initDeviceFlags()
+func init() {
+	initCmdFuncs = append(initCmdFuncs, func(c *CLI) {
+		c.initDeviceCmds()
+		c.initDeviceFlags()
+	})
 }
 
 func (c *CLI) initDeviceCmds() {

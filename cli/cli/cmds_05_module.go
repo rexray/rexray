@@ -1,3 +1,6 @@
+// +build !rexray_build_type_client
+// +build !rexray_build_type_controller
+
 package cli
 
 import (
@@ -11,9 +14,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *CLI) initModuleCmdsAndFlags() {
-	c.initModuleCmds()
-	c.initModuleFlags()
+func init() {
+	initCmdFuncs = append(initCmdFuncs, func(c *CLI) {
+		c.initModuleCmds()
+		c.initModuleFlags()
+	})
 }
 
 func (c *CLI) initModuleCmds() {
@@ -196,7 +201,7 @@ func newHTTPClient() *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{
 			Dial: func(string, string) (net.Conn, error) {
-				return net.Dial("unix", serverSockFile)
+				return net.Dial("unix", serverSockFilePath)
 			},
 		},
 	}

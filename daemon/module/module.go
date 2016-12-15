@@ -1,3 +1,6 @@
+// +build !rexray_build_type_client
+// +build !rexray_build_type_controller
+
 package module
 
 import (
@@ -7,11 +10,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	apitypes "github.com/codedellemc/libstorage/api/types"
-	apiclient "github.com/codedellemc/libstorage/client"
 
 	"github.com/codedellemc/rexray/util"
 )
@@ -86,23 +87,6 @@ type Instance struct {
 func init() {
 	modTypes = map[string]*Type{}
 	modInstances = map[string]*Instance{}
-	initConfig()
-}
-
-func initConfig() {
-	cfg := gofigCore.NewRegistration("Module")
-	cfg.SetYAML(`
-rexray:
-    modules:
-        default-docker:
-            type:     docker
-            desc:     The default docker module.
-            host:     unix:///run/docker/plugins/rexray.sock
-            spec:     /etc/docker/plugins/rexray.spec
-            disabled: false
-`)
-	cfg.Key(gofig.String, "", "10s", "", "rexray.module.startTimeout")
-	gofigCore.Register(cfg)
 }
 
 // Types returns a channel that receives the registered module types.
@@ -178,7 +162,7 @@ func InitializeDefaultModules(
 		ctx.WithField("name", mc.Name).Debug(
 			"creating libStorage client for module instance")
 
-		if mc.Client, err = apiclient.New(ctx, mc.Config); err != nil {
+		if mc.Client, err = util.NewClient(ctx, mc.Config); err != nil {
 			panic(err)
 		}
 

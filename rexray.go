@@ -42,23 +42,21 @@
 package rexray
 
 import (
-	"fmt"
+	"path"
 
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 
-	// load libStorage
-	_ "github.com/codedellemc/libstorage"
-	_ "github.com/codedellemc/libstorage/imports/local"
-	_ "github.com/codedellemc/libstorage/imports/remote"
 	"github.com/codedellemc/rexray/util"
+
+	// load the libstorage packages
+	_ "github.com/codedellemc/libstorage/imports/config"
 )
 
 func init() {
 	gofigCore.SetGlobalConfigPath(util.EtcDirPath())
-	gofigCore.SetUserConfigPath(fmt.Sprintf("%s/.rexray", gotil.HomeDir()))
-
+	gofigCore.SetUserConfigPath(path.Join(gotil.HomeDir(), util.DotDirName))
 	r := gofigCore.NewRegistration("Global")
 	r.SetYAML(`
 rexray:

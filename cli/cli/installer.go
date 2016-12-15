@@ -1,3 +1,5 @@
+// +build !rexray_build_type_client
+
 package cli
 
 import (
@@ -5,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
 	"text/template"
@@ -14,6 +17,11 @@ import (
 
 	"github.com/codedellemc/rexray/util"
 )
+
+func init() {
+	installFunc = install
+	uninstallFunc = uninstall
+}
 
 // init system types
 const (
@@ -25,22 +33,20 @@ const (
 
 func install() {
 	checkOpPerms("installed")
-
-	_, _, exeFile := gotil.GetThisPathParts()
-
 	if runtime.GOOS == "linux" {
 		switch getInitSystemType() {
 		case SystemD:
-			installSystemD(exeFile)
+			installSystemD()
 		case UpdateRcD:
-			installUpdateRcd(exeFile)
+			installUpdateRcd()
 		case ChkConfig:
-			installChkConfig(exeFile)
+			installChkConfig()
 		}
 	}
 }
 
-func isRpmInstall(exePath string, pkgName *string) bool {
+func isRpmInstall(pkgName *string) bool {
+	exePath := util.BinFilePath()
 	cmd := exec.Command("rpm", "-qf", exePath)
 	output, err := cmd.CombinedOutput()
 	soutput := string(output)
@@ -62,7 +68,8 @@ func isRpmInstall(exePath string, pkgName *string) bool {
 	return true
 }
 
-func isDebInstall(exePath string, pkgName *string) bool {
+func isDebInstall(pkgName *string) bool {
+	exePath := util.BinFilePath()
 	cmd := exec.Command("dpkg-query", "-S", exePath)
 	output, err := cmd.CombinedOutput()
 	soutput := string(output)
@@ -111,17 +118,18 @@ func uninstallDeb(pkgName string) bool {
 func uninstall(pkgManager bool) {
 	checkOpPerms("uninstalled")
 
-	_, _, binFile := gotil.GetThisPathParts()
+	binFilePath := util.BinFilePath()
 
 	// if the uninstall command was executed manually we should check to see
 	// if this file is owned by a package manager and remove it that way if so
 	if !pkgManager {
-		log.WithField("binFile", binFile).Debug("is this a managed file?")
+		log.WithField("binFilePath", binFilePath).Debug(
+			"is this a managed file?")
 		var pkgName string
-		if isRpmInstall(binFile, &pkgName) {
+		if isRpmInstall(&pkgName) {
 			uninstallRpm(pkgName)
 			return
-		} else if isDebInstall(binFile, &pkgName) {
+		} else if isDebInstall(&pkgName) {
 			uninstallDeb(pkgName)
 			return
 		}
@@ -144,7 +152,7 @@ func uninstall(pkgManager bool) {
 	}
 
 	if !pkgManager {
-		os.Remove(binFile)
+		os.Remove(binFilePath)
 		if util.IsPrefixed() {
 			os.RemoveAll(util.GetPrefix())
 		}
@@ -180,11 +188,11 @@ func getInitSystemType() int {
 	return Unknown
 }
 
-func installSystemD(exeFile string) {
-	createUnitFile(exeFile)
+func installSystemD() {
+	createUnitFile()
 	createEnvFile()
 
-	cmd := exec.Command("systemctl", "enable", "-q", "rexray.service")
+	cmd := exec.Command("systemctl", "enable", "-q", util.UnitFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -203,9 +211,10 @@ func uninstallSystemD() {
 
 	// a link created by systemd as docker should "want" rexray as a service.
 	// the uninstaller will fail
-	os.Remove("/etc/systemd/system/docker.service.wants/rexray.service")
+	os.Remove(path.Join("/etc/systemd/system/docker.service.wants",
+		util.UnitFileName))
 
-	cmd := exec.Command("systemctl", "disable", "-q", "rexray.service")
+	cmd := exec.Command("systemctl", "disable", "-q", util.UnitFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -217,91 +226,78 @@ func uninstallSystemD() {
 	os.Remove(util.UnitFilePath)
 }
 
-func installUpdateRcd(exeFile string) {
-	createInitFile(exeFile)
-	cmd := exec.Command("update-rc.d", "rexray", "defaults")
+func installUpdateRcd() {
+	createInitFile()
+	cmd := exec.Command("update-rc.d", util.InitFileName, "defaults")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("installation error %v", err)
 	}
-
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
 	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
-	fmt.Print("started with the command 'sudo /etc/init.d/rexray start'.\n\n")
+	fmt.Print("started with the command ")
+	fmt.Printf("'sudo %s start'.\n\n", util.InitFilePath)
 }
 
 func uninstallUpdateRcd() {
-
 	os.Remove(util.InitFilePath)
-
-	cmd := exec.Command("update-rc.d", "rexray", "remove")
+	cmd := exec.Command("update-rc.d", util.InitFileName, "remove")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("uninstallation error %v", err)
 	}
 }
 
-func installChkConfig(exeFile string) {
-	createInitFile(exeFile)
-	cmd := exec.Command("chkconfig", "rexray", "on")
+func installChkConfig() {
+	createInitFile()
+	cmd := exec.Command("chkconfig", util.InitFileName, "on")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("installation error %v", err)
 	}
-
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
 	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
-	fmt.Print("started with the command 'sudo /etc/init.d/rexray start'.\n\n")
+	fmt.Print("started with the command ")
+	fmt.Printf("'sudo %s start'.\n\n", util.InitFilePath)
 }
 
 func uninstallChkConfig() {
-	cmd := exec.Command("chkconfig", "--del", "rexray")
+	cmd := exec.Command("chkconfig", "--del", util.InitFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("uninstallation error %v", err)
 	}
-
 	os.Remove(util.InitFilePath)
 }
 
 func createEnvFile() {
-	f, err := os.OpenFile(
-		util.EtcFilePath(util.EnvFileName), os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(util.EnvFilePath(), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-
 	if util.IsPrefixed() {
 		f.WriteString("REXRAY_HOME=")
 		f.WriteString(util.GetPrefix())
 	}
 }
 
-func createUnitFile(exeFile string) {
-
+func createUnitFile() {
 	data := struct {
-		RexrayBin string
-		EnvFile   string
+		BinFileName string
+		BinFilePath string
+		EnvFilePath string
 	}{
-		exeFile,
-		util.EtcFilePath(util.EnvFileName),
+		util.BinFileName(),
+		util.BinFilePath(),
+		util.EnvFilePath(),
 	}
-
 	tmpl, err := template.New("UnitFile").Parse(unitFileTemplate)
 	if err != nil {
 		panic(err)
@@ -312,23 +308,21 @@ func createUnitFile(exeFile string) {
 		panic(err)
 	}
 	text := buf.String()
-
 	f, err := os.OpenFile(util.UnitFilePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-
 	f.WriteString(text)
 }
 
 const unitFileTemplate = `[Unit]
-Description=rexray
+Description={{.BinFileName}}
 Before=docker.service
 
 [Service]
-EnvironmentFile={{.EnvFile}}
-ExecStart={{.RexrayBin}} start -f
+EnvironmentFile={{.EnvFilePath}}
+ExecStart={{.BinFilePath}} start -f
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 
@@ -336,14 +330,14 @@ KillMode=process
 WantedBy=docker.service
 `
 
-func createInitFile(exeFile string) {
-
+func createInitFile() {
 	data := struct {
-		RexrayBin string
+		BinFileName string
+		BinFilePath string
 	}{
-		exeFile,
+		util.BinFileName(),
+		util.BinFilePath(),
 	}
-
 	tmpl, err := template.New("InitScript").Parse(initScriptTemplate)
 	if err != nil {
 		panic(err)
@@ -354,7 +348,6 @@ func createInitFile(exeFile string) {
 		panic(err)
 	}
 	text := buf.String()
-
 	// wrapped in a function to defer the close to ensure file is written to
 	// disk before subsequent chmod below
 	func() {
@@ -363,15 +356,13 @@ func createInitFile(exeFile string) {
 			panic(err)
 		}
 		defer f.Close()
-
 		f.WriteString(text)
 	}()
-
 	os.Chmod(util.InitFilePath, 0755)
 }
 
 const initScriptTemplate = `### BEGIN INIT INFO
-# Provides:          rexray
+# Provides:          {{.BinFileName}}
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
@@ -382,22 +373,22 @@ const initScriptTemplate = `### BEGIN INIT INFO
 
 case "$1" in
   start)
-    {{.RexrayBin}} start
+    {{.BinFilePath}} start
     ;;
   stop)
-    {{.RexrayBin}} stop
+    {{.BinFilePath}} stop
     ;;
   status)
-    {{.RexrayBin}} status
+    {{.BinFilePath}} status
     ;;
   restart)
-    {{.RexrayBin}} restart
+    {{.BinFilePath}} restart
     ;;
   reload)
-    {{.RexrayBin}} reload
+    {{.BinFilePath}} reload
     ;;
   force-reload)
-    {{.RexrayBin}} force-reload
+    {{.BinFilePath}} force-reload
     ;;
   *)
     echo "Usage: $0 {start|stop|status|restart|reload|force-reload}"

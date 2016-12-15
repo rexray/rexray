@@ -1,4 +1,4 @@
-// +build !exclude_module
+// +build !rexray_build_type_client
 
 package daemon
 
@@ -8,7 +8,6 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	apitypes "github.com/codedellemc/libstorage/api/types"
 
-	"github.com/codedellemc/rexray/daemon/module"
 	"github.com/codedellemc/rexray/util"
 )
 
@@ -22,17 +21,11 @@ func Start(
 	var (
 		err           error
 		errs          = make(chan error)
-		serverErrChan <-chan error
+		daemonErrChan <-chan error
 	)
 
-	if serverErrChan, err = module.InitializeDefaultModules(
-		ctx, config); err != nil {
-		ctx.WithError(err).Error("default module(s) failed to initialize")
-		return nil, err
-	}
-
-	if err = module.StartDefaultModules(ctx, config); err != nil {
-		ctx.WithError(err).Error("default module(s) failed to start")
+	if daemonErrChan, err = start(ctx, config, host, stop); err != nil {
+		ctx.WithError(err).Error("daemon failed to initialize")
 		return nil, err
 	}
 
@@ -41,7 +34,7 @@ func Start(
 	go func() {
 		sig := <-stop
 		ctx.WithField("signal", sig).Info("service received stop signal")
-		util.WaitUntilLibStorageStopped(ctx, serverErrChan)
+		util.WaitUntilLibStorageStopped(ctx, daemonErrChan)
 		close(errs)
 	}()
 

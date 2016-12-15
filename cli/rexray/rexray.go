@@ -1,4 +1,4 @@
-package main
+package rexray
 
 import (
 	"net/http"
@@ -19,7 +19,8 @@ import (
 	_ "github.com/codedellemc/rexray"
 )
 
-func main() {
+// Run the CLI.
+func Run() {
 
 	updateLogLevel()
 

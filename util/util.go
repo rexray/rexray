@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -12,11 +13,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
+
 	apiversion "github.com/codedellemc/libstorage/api"
 	"github.com/codedellemc/libstorage/api/context"
-	apiserver "github.com/codedellemc/libstorage/api/server"
 	apitypes "github.com/codedellemc/libstorage/api/types"
 
 	"github.com/codedellemc/rexray/core"
@@ -25,19 +27,8 @@ import (
 const (
 	logDirPathSuffix = "/var/log/rexray"
 	etcDirPathSuffix = "/etc/rexray"
-	binDirPathSuffix = "/usr/bin"
 	runDirPathSuffix = "/var/run/rexray"
 	libDirPathSuffix = "/var/lib/rexray"
-
-	// UnitFilePath is the path to the SystemD service's unit file.
-	UnitFilePath = "/etc/systemd/system/rexray.service"
-
-	// InitFilePath is the path to the SystemV Service's init script.
-	InitFilePath = "/etc/init.d/rexray"
-
-	// EnvFileName is the name of the environment file used by the SystemD
-	// service.
-	EnvFileName = "rexray.env"
 )
 
 var (
@@ -48,19 +39,42 @@ var (
 	prefix string
 
 	binDirPath  string
-	binFilePath string
 	logDirPath  string
 	libDirPath  string
 	runDirPath  string
 	etcDirPath  string
 	pidFilePath string
 	spcFilePath string
+	envFilePath string
+
+	// UnitFileName is the name of the SystemD service's unit file.
+	UnitFileName string
+
+	// UnitFilePath is the path to the SystemD service's unit file.
+	UnitFilePath string
+
+	// InitFileName is the name of the SystemV service's unit file.
+	InitFileName string
+
+	// InitFilePath is the path to the SystemV service's init script.
+	InitFilePath string
+
+	// PIDFileName is the name of the PID file.
+	PIDFileName string
+
+	// DotDirName is the name of the hidden app directory.
+	DotDirName string
 )
 
 func init() {
 	prefix = os.Getenv("REXRAY_HOME")
-
 	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
+	UnitFileName = fmt.Sprintf("%s.service", thisExeName)
+	UnitFilePath = path.Join("/etc/systemd/system", UnitFileName)
+	InitFileName = thisExeName
+	InitFilePath = path.Join("/etc/init.d", InitFileName)
+	PIDFileName = fmt.Sprintf("%s.pid", thisExeName)
+	DotDirName = fmt.Sprintf(".rexray")
 }
 
 // GetPrefix gets the root path to the REX-Ray data.
@@ -74,14 +88,13 @@ func Prefix(p string) {
 		return
 	}
 
-	binDirPath = ""
-	binFilePath = ""
 	logDirPath = ""
 	libDirPath = ""
 	runDirPath = ""
 	etcDirPath = ""
 	pidFilePath = ""
 	spcFilePath = ""
+	envFilePath = ""
 
 	prefix = p
 }
@@ -160,21 +173,20 @@ func RunFilePath(fileName string) string {
 	return path.Join(RunDirPath(), fileName)
 }
 
-// BinDirPath returns the path to the REX-Ray bin directory.
-func BinDirPath() string {
-	if binDirPath == "" {
-		binDirPath = fmt.Sprintf("%s%s", prefix, binDirPathSuffix)
-		os.MkdirAll(binDirPath, 0755)
-	}
-	return binDirPath
-}
-
 // PidFilePath returns the path to the REX-Ray PID file.
 func PidFilePath() string {
 	if pidFilePath == "" {
-		pidFilePath = RunFilePath("rexray.pid")
+		pidFilePath = RunFilePath(fmt.Sprintf("%s.pid", thisExeName))
 	}
 	return pidFilePath
+}
+
+// EnvFilePath returns the path to the REX-Ray env file.
+func EnvFilePath() string {
+	if envFilePath == "" {
+		envFilePath = EtcFilePath(fmt.Sprintf("%s.env", thisExeName))
+	}
+	return envFilePath
 }
 
 // SpecFilePath returns the path to the REX-Ray spec file.
@@ -185,12 +197,19 @@ func SpecFilePath() string {
 	return spcFilePath
 }
 
+// BinDirPath returns the path to the REX-Ray bin directory.
+func BinDirPath() string {
+	return thisExeDir
+}
+
 // BinFilePath returns the path to the REX-Ray executable.
 func BinFilePath() string {
-	if binFilePath == "" {
-		binFilePath = path.Join(BinDirPath(), "rexray")
-	}
-	return binFilePath
+	return thisExeAbsPath
+}
+
+// BinFileName returns the name of the REX-Ray executable.
+func BinFileName() string {
+	return thisExeName
 }
 
 // EtcFilePath returns the path to a file inside the REX-Ray etc directory
@@ -262,6 +281,7 @@ func PrintVersion(out io.Writer) {
 	fmt.Fprintln(out, "REX-Ray")
 	fmt.Fprintln(out, "-------")
 	fmt.Fprintf(out, "Binary: %s\n", thisExeAbsPath)
+	fmt.Fprintf(out, "Flavor: %s\n", core.BuildType)
 	fmt.Fprintf(out, "SemVer: %s\n", core.Version.SemVer)
 	fmt.Fprintf(out, "OsArch: %s\n", core.Version.Arch)
 	fmt.Fprintf(out, "Branch: %s\n", core.Version.Branch)
@@ -278,33 +298,6 @@ func PrintVersion(out io.Writer) {
 
 	timestamp := apiversion.Version.BuildTimestamp.Format(time.RFC1123)
 	fmt.Fprintf(out, "Formed: %s\n", timestamp)
-}
-
-// WaitUntilLibStorageStopped blocks until libStorage is stopped.
-func WaitUntilLibStorageStopped(ctx apitypes.Context, errs <-chan error) {
-	ctx.Debug("waiting until libStorage is stopped")
-
-	// if there is no err channel then do not wait until libStorage is stopped
-	// as the absence of the err channel means libStorage was not started in
-	// embedded mode
-	if errs == nil {
-		ctx.Debug("done waiting on err chan; err chan is nil")
-		return
-	}
-
-	// in a goroutine, range over the apiserver.Close channel until it's closed
-	for range apiserver.Close() {
-	}
-	ctx.Debug("done sending close signals to libStorage")
-
-	// block until the err channel is closed
-	for err := range errs {
-		if err == nil {
-			continue
-		}
-		ctx.WithError(err).Error("error on closing libStorage server")
-	}
-	ctx.Debug("done waiting on err chan")
 }
 
 var localHostRX = regexp.MustCompile(
@@ -394,19 +387,8 @@ func IsLocalServerActive(
 	return "", false
 }
 
-func setHost(
-	ctx apitypes.Context,
-	config gofig.Config,
-	host string) apitypes.Context {
-	ctx = ctx.WithValue(context.HostKey, host)
-	ctx.WithField("host", host).Debug("set host in context")
-	config.Set(apitypes.ConfigHost, host)
-	ctx.WithField("host", host).Debug("set host in config")
-	return ctx
-}
-
-// ActivateLibStorage activates a libStorage server if conditions are met and
-// returns a possibly mutated context.
+// ActivateLibStorage activates libStorage and returns a possibly mutated
+// context.
 func ActivateLibStorage(
 	ctx apitypes.Context,
 	config gofig.Config) (apitypes.Context, gofig.Config, <-chan error, error) {
@@ -430,78 +412,158 @@ func ActivateLibStorage(
 	}
 
 	var (
-		host          string
-		err           error
-		isRunning     bool
-		errs          chan error
-		serverErrChan <-chan error
-		server        apitypes.Server
+		err  error
+		errs <-chan error
 	)
 
-	if host = config.GetString(apitypes.ConfigHost); host != "" {
-		if !config.GetBool(apitypes.ConfigEmbedded) {
-			ctx.WithField(
-				"host", host,
-			).Debug("not starting embedded server; embedded mode disabled")
-			return ctx, config, nil, nil
-		}
-	}
-
-	if host, isRunning = IsLocalServerActive(ctx, config); isRunning {
-		ctx = setHost(ctx, config, host)
-		ctx.WithField("host", host).Debug(
-			"not starting embedded server; already running")
-		return ctx, config, nil, nil
-	}
-
-	// if no host was specified then see if a set of default services need to
-	// be initialized
-	if host == "" {
-		if err = initDefaultLibStorageServices(ctx, config); err != nil {
-			return ctx, config, nil, err
-		}
-	}
-
-	ctx.Debug("starting embedded libStorage server")
-
-	if server, serverErrChan, err = apiserver.Serve(ctx, config); err != nil {
-		return ctx, config, nil, err
-	}
-
-	if host == "" {
-		host = server.Addrs()[0]
-		ctx.WithField("host", host).Debug("got host from new server address")
-	}
-	ctx = setHost(ctx, config, host)
-
-	errs = make(chan error)
-	go func() {
-		for err := range serverErrChan {
-			if err != nil {
-				errs <- err
-			}
-		}
-		if err := os.RemoveAll(SpecFilePath()); err == nil {
-			logHostSpec(ctx, host, "removed spec file")
-		}
-		close(errs)
-	}()
-
-	// write the host to the spec file so that other rex-ray invocations can
-	// find it, even if running as an embedded libStorage server
-	if err := WriteSpecFile(host); err != nil {
-		specFile := SpecFilePath()
-		if os.IsPermission(err) {
-			ctx.WithError(err).Errorf(
-				"user does not have write permissions for %s", specFile)
-		} else {
-			ctx.WithError(err).Errorf(
-				"error writing spec file at %s", specFile)
-		}
-		WaitUntilLibStorageStopped(ctx, serverErrChan)
+	ctx, config, errs, err = activateLibStorage(ctx, config)
+	if err != nil {
 		return ctx, config, errs, err
 	}
-	logHostSpec(ctx, host, "created spec file")
 
 	return ctx, config, errs, nil
+}
+
+func setHost(
+	ctx apitypes.Context,
+	config gofig.Config,
+	host string) apitypes.Context {
+	ctx = ctx.WithValue(context.HostKey, host)
+	ctx.WithField("host", host).Debug("set host in context")
+	config.Set(apitypes.ConfigHost, host)
+	ctx.WithField("host", host).Debug("set host in config")
+	return ctx
+}
+
+// WaitUntilLibStorageStopped blocks until libStorage is stopped.
+func WaitUntilLibStorageStopped(ctx apitypes.Context, errs <-chan error) {
+	waitUntilLibStorageStopped(ctx, errs)
+}
+
+// NewClient returns a new libStorage client.
+func NewClient(
+	ctx apitypes.Context, config gofig.Config) (apitypes.Client, error) {
+	return newClient(ctx, config)
+}
+
+// NewConfig returns a new config object.
+func NewConfig(ctx apitypes.Context) gofig.Config {
+	const cfgFileExt = "yml"
+
+	loadConfig := func(
+		allExists, usrExists, ignoreExists bool,
+		allPath, usrPath, name string) (gofig.Config, bool) {
+		fields := log.Fields{
+			"buildType":              core.BuildType,
+			"ignoreExists":           ignoreExists,
+			"configFileName":         name,
+			"globalConfigFilePath":   allPath,
+			"userConfigFilePath":     usrPath,
+			"globalConfigFileExists": allExists,
+			"userConfigFileExists":   usrExists,
+		}
+		ctx.WithFields(fields).Debug("loading config")
+		if ignoreExists {
+			ctx.WithFields(fields).Debug("disabled config file exist check")
+		} else if !allExists && !usrExists {
+			ctx.WithFields(fields).Debug("cannot find global or user file")
+			return nil, false
+		}
+		if allExists {
+			ctx.WithFields(fields).Debug("validating global config")
+			ValidateConfig(allPath)
+		}
+		if usrExists {
+			ctx.WithFields(fields).Debug("validating user config")
+			ValidateConfig(usrPath)
+		}
+		ctx.WithFields(fields).Debug("created new config")
+		return gofigCore.NewConfig(
+			allExists || ignoreExists,
+			usrExists || ignoreExists,
+			name, cfgFileExt), true
+	}
+
+	// load build-type specific config
+	switch core.BuildType {
+	case "client", "agent", "controller":
+		var (
+			fileName    = thisExeName
+			fileNameExt = fileName + "." + cfgFileExt
+			allFilePath = EtcFilePath(fileNameExt)
+			usrFilePath = path.Join(gotil.HomeDir(), DotDirName, fileNameExt)
+		)
+		if config, ok := loadConfig(
+			gotil.FileExists(allFilePath),
+			gotil.FileExists(usrFilePath),
+			false,
+			allFilePath, usrFilePath,
+			fileName); ok {
+			return config
+		}
+	}
+
+	// load config from rexray.yml?
+	{
+		var (
+			fileName    = "rexray"
+			fileNameExt = fileName + "." + cfgFileExt
+			allFilePath = EtcFilePath(fileNameExt)
+			usrFilePath = path.Join(gotil.HomeDir(), DotDirName, fileNameExt)
+		)
+		if config, ok := loadConfig(
+			gotil.FileExists(allFilePath),
+			gotil.FileExists(usrFilePath),
+			false,
+			allFilePath, usrFilePath,
+			fileName); ok {
+			return config
+		}
+	}
+
+	// load default config
+	{
+		var (
+			fileName    = "config"
+			fileNameExt = fileName + "." + cfgFileExt
+			allFilePath = EtcFilePath(fileNameExt)
+			usrFilePath = path.Join(gotil.HomeDir(), DotDirName, fileNameExt)
+		)
+		config, _ := loadConfig(
+			gotil.FileExists(allFilePath),
+			gotil.FileExists(usrFilePath),
+			true,
+			allFilePath, usrFilePath,
+			fileName)
+		return config
+	}
+}
+
+// ValidateConfig validates a provided configuration file.
+func ValidateConfig(path string) {
+	if !gotil.FileExists(path) {
+		return
+	}
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(
+			os.Stderr, "rexray: error reading config: %s\n%v\n", path, err)
+		os.Exit(1)
+	}
+	s := string(buf)
+	if _, err := gofigCore.ValidateYAMLString(s); err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"rexray: invalid config: %s\n\n  %v\n\n", path, err)
+		fmt.Fprint(
+			os.Stderr,
+			"paste the contents between ---BEGIN--- and ---END---\n")
+		fmt.Fprint(
+			os.Stderr,
+			"into http://www.yamllint.com/ to discover the issue\n\n")
+		fmt.Fprintln(os.Stderr, "---BEGIN---")
+		fmt.Fprintln(os.Stderr, s)
+		fmt.Fprintln(os.Stderr, "---END---")
+		os.Exit(1)
+	}
 }

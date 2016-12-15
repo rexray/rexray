@@ -1,7 +1,10 @@
 *.*-e
 .*-e
 *-e
-rexray
+/rexray
+/rexray-client
+/rexray-agent
+/rexray-controller
 *.a
 *.d
 *.out

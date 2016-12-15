@@ -9,9 +9,17 @@ import (
 	"github.com/codedellemc/rexray/util"
 )
 
-func (c *CLI) initOtherCmdsAndFlags() {
-	c.initOtherCmds()
-	c.initOtherFlags()
+var (
+	installFunc         func()
+	uninstallFunc       func(bool)
+	initConfigFlagsFunc func(*CLI)
+)
+
+func init() {
+	initCmdFuncs = append(initCmdFuncs, func(c *CLI) {
+		c.initOtherCmds()
+		c.initOtherFlags()
+	})
 }
 
 func (c *CLI) initOtherCmds() {
@@ -40,7 +48,9 @@ func (c *CLI) initOtherCmds() {
 		Use:   "install",
 		Short: "Install REX-Ray",
 		Run: func(cmd *cobra.Command, args []string) {
-			install()
+			if installFunc != nil {
+				installFunc()
+			}
 		},
 	}
 	c.c.AddCommand(c.installCmd)
@@ -49,8 +59,10 @@ func (c *CLI) initOtherCmds() {
 		Use:   "uninstall",
 		Short: "Uninstall REX-Ray",
 		Run: func(cmd *cobra.Command, args []string) {
-			pkgManager, _ := cmd.Flags().GetBool("package")
-			uninstall(pkgManager)
+			if uninstallFunc != nil {
+				pkgManager, _ := cmd.Flags().GetBool("package")
+				uninstallFunc(pkgManager)
+			}
 		},
 	}
 	c.c.AddCommand(c.uninstallCmd)
@@ -67,9 +79,8 @@ func (c *CLI) initOtherFlags() {
 	//c.c.PersistentFlags().StringVarP(&c.service, "service", "s", "",
 	//	"The name of the libStorage service")
 
-	// add the flag sets
-	for _, fs := range c.config.FlagSets() {
-		c.c.PersistentFlags().AddFlagSet(fs)
+	if initConfigFlagsFunc != nil {
+		initConfigFlagsFunc(c)
 	}
 
 	c.uninstallCmd.Flags().Bool("package", false,

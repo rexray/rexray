@@ -1,12 +1,63 @@
 SHELL := /bin/bash
 
+# the name of the program being compiled. this word is in place of file names,
+# directory paths, etc. changing the value of PROG is no guarantee everything
+# continues to function.
+PROG_ROOT := rexray
+PROG := $(PROG_ROOT)
+
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
 endif
 
+ifneq (,$(REXRAY_BUILD_TYPE))
+ifeq (client,$(REXRAY_BUILD_TYPE))
+BUILD_TAGS += rexray_build_type_client
+endif
+ifeq (agent,$(REXRAY_BUILD_TYPE))
+BUILD_TAGS += rexray_build_type_agent
+endif
+ifeq (controller,$(REXRAY_BUILD_TYPE))
+BUILD_TAGS += rexray_build_type_controller
+endif
+endif
+
+BUILD_LIBSTORAGE_SERVER := true
+
+ifneq (,$(findstring rexray_build_type_client,$(BUILD_TAGS)))
+PROG := $(PROG)-client
+REXRAY_BUILD_TYPE := client
+BUILD_LIBSTORAGE_SERVER := false
+BUILD_TAGS := $(filter-out libstorage_integration_driver_%,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_storage_driver,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_storage_driver_%,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_storage_executor,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_storage_executor_%,$(BUILD_TAGS))
+endif
+
+ifneq (,$(findstring rexray_build_type_agent,$(BUILD_TAGS)))
+PROG := $(PROG)-agent
+REXRAY_BUILD_TYPE := agent
+BUILD_LIBSTORAGE_SERVER := false
+BUILD_TAGS := $(filter-out libstorage_storage_driver,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_storage_driver_%,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_storage_executor,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_storage_executor_%,$(BUILD_TAGS))
+endif
+
+ifneq (,$(findstring rexray_build_type_controller,$(BUILD_TAGS)))
+PROG := $(PROG)-controller
+REXRAY_BUILD_TYPE := controller
+BUILD_TAGS := $(filter-out libstorage_integration_driver_%,$(BUILD_TAGS))
+endif
+
+ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
+# if this is a controller build then consider the DRIVERS var as it may
+# contain a list of drivers to include in the controller binary
 ifneq (,$(DRIVERS))
 BUILD_TAGS += libstorage_storage_driver libstorage_storage_executor
 BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d) libstorage_storage_executor_$(d))
+endif
 endif
 
 all:
@@ -18,11 +69,6 @@ else
 	$(MAKE) build
 endif
 
-# the name of the program being compiled. this word is in place of file names,
-# directory paths, etc. changing the value of PROG is no guarantee everything
-# continues to function.
-PROG := rexray
-
 
 ################################################################################
 ##                                  DOCKER                                    ##
@@ -30,14 +76,14 @@ PROG := rexray
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 DPKG := github.com/codedellemc/rexray
-DIMG := golang:1.7.1
+DIMG := golang:1.7.4
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
 DGOOS := $(DGOHOSTOS)
 endif
 DGOARCH := amd64
 DPRFX := build-rexray
-DNAME := $(DPRFX)
+DNAME := build-$(PROG)
 ifeq (1,$(DBUILD_ONCE))
 DNAME := $(DNAME)-$(shell date +%s)
 endif
@@ -93,11 +139,13 @@ else
 	@tar -C $(GOPATH)/src -c $(DTARC) $(DLOCAL_IMPORTS_FILES) | docker cp - $(DNAME):$(DPATH)/vendor
 endif
 endif
+
+docker-do-build: docker-init
 	docker exec -t $(DNAME) \
 		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
 		make -C $(DPATH) -j build
 
-docker-build: docker-init
+docker-build: docker-do-build
 	@docker cp $(DNAME):$(DPROG) $(PROG)
 	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
 		stat -f '%z' $(PROG) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
@@ -107,14 +155,46 @@ ifeq (1,$(DBUILD_ONCE))
 	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 endif
 
+docker-build-client:
+	REXRAY_BUILD_TYPE=client $(MAKE) docker-build
+
+docker-build-agent:
+	REXRAY_BUILD_TYPE=agent $(MAKE) docker-build
+
+docker-build-controller:
+	REXRAY_BUILD_TYPE=controller $(MAKE) docker-build
+
 docker-test: DGOOS=linux
-docker-test: docker-init
+docker-test: docker-do-build
 	docker exec -t $(DNAME) \
 		env BUILD_TAGS="$(BUILD_TAGS)" \
 		make -C $(DPATH) test
 
 docker-clean:
 	-docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
+
+docker-clean-client:
+	REXRAY_BUILD_TYPE=client $(MAKE) docker-clean
+
+docker-clean-agent:
+	REXRAY_BUILD_TYPE=agent $(MAKE) docker-clean
+
+docker-clean-controller:
+	REXRAY_BUILD_TYPE=controller $(MAKE) docker-clean
+
+docker-info: docker-init
+	docker exec -t $(DNAME) \
+		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+		make -C $(DPATH) info
+
+docker-info-client:
+	REXRAY_BUILD_TYPE=client $(MAKE) docker-info
+
+docker-info-agent:
+	REXRAY_BUILD_TYPE=agent $(MAKE) docker-info
+
+docker-info-controller:
+	REXRAY_BUILD_TYPE=controller $(MAKE) docker-info
 
 docker-clobber:
 	-CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
@@ -357,40 +437,6 @@ $(foreach i,\
 
 
 ################################################################################
-##                                  INFO                                      ##
-################################################################################
-info:
-	$(info Project Import Path.........$(ROOT_IMPORT_PATH))
-	$(info Project Name................$(ROOT_IMPORT_NAME))
-	$(info OS / Arch...................$(GOOS)_$(GOARCH))
-	$(info Build Tags..................$(BUILD_TAGS))
-	$(info Vendored....................$(VENDORED))
-	$(info GOPATH......................$(GOPATH))
-	$(info GOHOSTOS....................$(GOHOSTOS))
-	$(info GOHOSTARCH..................$(GOHOSTARCH))
-ifneq (,$(strip $(SRCS)))
-	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
-	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
-		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
-endif
-ifneq (,$(strip $(TEST_SRCS)))
-	$(info Test Sources................$(patsubst ./%,%,$(firstword $(TEST_SRCS))))
-	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_SRCS)),$(TEST_SRCS))),\
-		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
-endif
-ifneq (,$(strip $(EXT_DEPS_SRCS)))
-	$(info Dependency Sources..........$(patsubst ./%,%,$(firstword $(EXT_DEPS_SRCS))))
-	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(EXT_DEPS_SRCS)),$(EXT_DEPS_SRCS))),\
-		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
-endif
-ifneq (,$(strip $(TEST_EXT_DEPS_SRCS)))
-	$(info Test Dependency Sources.....$(patsubst ./%,%,$(firstword $(TEST_EXT_DEPS_SRCS))))
-	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_EXT_DEPS_SRCS)),$(TEST_EXT_DEPS_SRCS))),\
-		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
-endif
-
-
-################################################################################
 ##                               DEPENDENCIES                                 ##
 ################################################################################
 GO_BINDATA := $(GOPATH)/bin/go-bindata
@@ -452,6 +498,7 @@ GO_PHONY += $(GLIDE_LOCK)-clean
 GO_CLOBBER += $(GLIDE_LOCK)-clean
 endif
 
+ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
 GO_BINDATA_IMPORT_PATH := vendor/github.com/jteeuwen/go-bindata/go-bindata
 ifneq (1,$(VENDORED))
 GO_BINDATA_IMPORT_PATH := $(ROOT_IMPORT_PATH)/$(GO_BINDATA_IMPORT_PATH)
@@ -466,7 +513,7 @@ $(GO_BINDATA):
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
-
+endif
 
 ################################################################################
 ##                               GOMETALINTER                                 ##
@@ -608,6 +655,11 @@ endif
 # the rpm version cannot have any dashes
 V_RPM_SEMVER := $(subst -,+,$(V_SEMVER))
 
+GENERATED_BUILD_TYPE := client+agent+controller
+ifneq (,$(REXRAY_BUILD_TYPE))
+	GENERATED_BUILD_TYPE := $(REXRAY_BUILD_TYPE)
+endif
+
 define CORE_GENERATED_CONTENT
 package core
 
@@ -627,6 +679,7 @@ func init() {
 	Version.BuildTimestamp = time.Unix($(V_EPOCH), 0)
 	Version.SemVer = "$(V_SEMVER)"
 	Version.ShaLong = "$(V_SHA_LONG)"
+	BuildType = "$(GENERATED_BUILD_TYPE)"
 }
 endef
 export CORE_GENERATED_CONTENT
@@ -635,6 +688,8 @@ PRINTF_VERSION_CMD += @printf "SemVer: %s\nBinary: %s\nBranch: %s\nCommit:
 PRINTF_VERSION_CMD += %s\nFormed: %s\n" "$(V_SEMVER)" "$(V_OS_ARCH)"
 PRINTF_VERSION_CMD += "$(V_BRANCH)" "$(V_SHA_LONG)" "$(V_BUILD_DATE)"
 CORE_GENERATED_SRC := ./core/core_generated.go
+print-generated-core-src:
+	echo $(CORE_GENERATED_CONTENT)
 $(CORE_GENERATED_SRC):
 	echo generating $@
 	@echo "$$CORE_GENERATED_CONTENT" > $@
@@ -782,22 +837,37 @@ endif
 
 LIBSTORAGE_DIR := vendor/github.com/codedellemc/libstorage
 LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
+ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
 LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
 $(LIBSTORAGE_API) $(LIBSTORAGE_LSX):
+else
+$(LIBSTORAGE_API):
+endif
 	cd $(LIBSTORAGE_DIR) && \
 		BUILD_TAGS="$(BUILD_TAGS)" $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && \
 		cd -
+ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
 $(LIBSTORAGE_LSX): | $(GO_BINDATA)
 build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
+else
+build-libstorage: $(LIBSTORAGE_API)
+endif
 
 
 ################################################################################
 ##                                   CLI                                      ##
 ################################################################################
-CLI := $(shell go list -f '{{.Target}}' ./cli/$(PROG))
-CLI_LINUX := $(shell GOOS=linux go list -f '{{.Target}}' ./cli/$(PROG))
-CLI_DARWIN := $(shell GOOS=darwin go list -f '{{.Target}}' ./cli/$(PROG))
-CLI_WINDOWS := $(shell GOOS=windows go list -f '{{.Target}}' ./cli/$(PROG))
+ifneq (,$(BUILD_TAGS))
+CLI := $(shell go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_LINUX := $(shell GOOS=linux go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_DARWIN := $(shell GOOS=darwin go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_WINDOWS := $(shell GOOS=windows go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+else
+CLI := $(shell go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_LINUX := $(shell GOOS=linux go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_DARWIN := $(shell GOOS=darwin go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_WINDOWS := $(shell GOOS=windows go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
+endif
 
 build-cli-linux: $(CLI_LINUX)
 build-cli-darwin: $(CLI_DARWIN)
@@ -813,13 +883,51 @@ GO_PHONY += $1-clean
 GO_CLEAN += $1-clean
 endif
 
+ifeq (linux,$2)
 CLI_BINS += $1
+endif
 endef
 
 $(eval $(call CLI_RULES,$(CLI_LINUX),linux))
 $(eval $(call CLI_RULES,$(CLI_DARWIN),darwin))
 
 build-cli: $(CLI_BINS)
+
+
+################################################################################
+##                                  INFO                                      ##
+################################################################################
+info:
+	$(info Project Import Path.........$(ROOT_IMPORT_PATH))
+	$(info Project Name................$(ROOT_IMPORT_NAME))
+	$(info OS / Arch...................$(GOOS)_$(GOARCH))
+	$(info Program.....................$(CLI))
+	$(info Build Type..................$(REXRAY_BUILD_TYPE))
+	$(info Build Tags..................$(BUILD_TAGS))
+	$(info Vendored....................$(VENDORED))
+	$(info GOPATH......................$(GOPATH))
+	$(info GOHOSTOS....................$(GOHOSTOS))
+	$(info GOHOSTARCH..................$(GOHOSTARCH))
+ifneq (,$(strip $(SRCS)))
+	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(TEST_SRCS)))
+	$(info Test Sources................$(patsubst ./%,%,$(firstword $(TEST_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_SRCS)),$(TEST_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(EXT_DEPS_SRCS)))
+	$(info Dependency Sources..........$(patsubst ./%,%,$(firstword $(EXT_DEPS_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(EXT_DEPS_SRCS)),$(EXT_DEPS_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
+ifneq (,$(strip $(TEST_EXT_DEPS_SRCS)))
+	$(info Test Dependency Sources.....$(patsubst ./%,%,$(firstword $(TEST_EXT_DEPS_SRCS))))
+	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(TEST_EXT_DEPS_SRCS)),$(TEST_EXT_DEPS_SRCS))),\
+		$(info $(5S)$(5S)$(5S)$(5S)$(5S)$(SPACE)$(SPACE)$(SPACE)$(s)))
+endif
 
 
 ################################################################################
@@ -837,7 +945,9 @@ $$(TGZ_$1)-clean:
 GO_PHONY += $$(TGZ_$1)-clean
 GO_CLEAN += $$(TGZ_$1)-clean
 
+ifeq (Linux,$1)
 TGZ += $$(TGZ_$1)
+endif
 endef
 
 $(eval $(call TGZ_RULES,Linux,$(CLI_LINUX)))
@@ -871,7 +981,8 @@ $(RPM): $(CLI_LINUX)
 			-D "rpmbuild $(abspath $(RPMDIR))" \
 			-D "v_semver $(V_RPM_SEMVER)" \
 			-D "v_arch $(V_ARCH)" \
-			-D "$(PROG) $?" \
+			-D "prog_name $(PROG)" \
+			-D "prog_path $?" \
 			SPECS/$(PROG).spec
 	mv $(RPMDIR)/RPMS/$(V_ARCH)/$(RPM) $@
 
@@ -987,6 +1098,24 @@ ifneq (1,$(DOCKER))
 	$(MAKE) stat-prog
 endif
 
+build-client:
+	REXRAY_BUILD_TYPE=client $(MAKE) build
+
+build-agent:
+	REXRAY_BUILD_TYPE=agent $(MAKE) build
+
+build-controller:
+	REXRAY_BUILD_TYPE=controller $(MAKE) build
+
+info-client:
+	REXRAY_BUILD_TYPE=client $(MAKE) info
+
+info-agent:
+	REXRAY_BUILD_TYPE=agent $(MAKE) info
+
+info-controller:
+	REXRAY_BUILD_TYPE=controller $(MAKE) info
+
 cli: build-cli
 
 tgz: build-tgz
@@ -1003,12 +1132,30 @@ pkg-clean:
 
 test: $(GO_TEST)
 
+test-client:
+	REXRAY_BUILD_TYPE=client $(MAKE) test
+
+test-agent:
+	REXRAY_BUILD_TYPE=agent $(MAKE) test
+
+test-controller:
+	REXRAY_BUILD_TYPE=controller $(MAKE) test
+
 test-debug:
 	REXRAY_DEBUG=true $(MAKE) test
 
 cover: codecov
 
 clean: $(GO_CLEAN) pkg-clean
+
+clean-client:
+	REXRAY_BUILD_TYPE=client $(MAKE) clean
+
+clean-agent:
+	REXRAY_BUILD_TYPE=agent $(MAKE) clean
+
+clean-controller:
+	REXRAY_BUILD_TYPE=controller $(MAKE) clean
 
 clobber: clean $(GO_CLOBBER)
 

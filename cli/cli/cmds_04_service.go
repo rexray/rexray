@@ -1,3 +1,5 @@
+// +build !rexray_build_type_client
+
 package cli
 
 import (
@@ -6,9 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *CLI) initServiceCmdsAndFlags() {
-	c.initServiceCmds()
-	c.initServiceFlags()
+func init() {
+	initCmdFuncs = append(initCmdFuncs, func(c *CLI) {
+		c.initServiceCmds()
+		c.initServiceFlags()
+	})
 }
 
 func (c *CLI) initServiceCmds() {

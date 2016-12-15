@@ -1,3 +1,7 @@
+// +build none
+// +build !rexray_build_type_agent
+// +build !rexray_build_type_controller
+
 package cli
 
 import (
@@ -5,9 +9,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *CLI) initSnapshotCmdsAndFlags() {
-	c.initSnapshotCmds()
-	c.initSnapshotFlags()
+func init() {
+	initCmdFuncs = append(initCmdFuncs, func(c *CLI) {
+		c.initSnapshotCmds()
+		c.initSnapshotFlags()
+	})
 }
 
 func (c *CLI) initSnapshotCmds() {

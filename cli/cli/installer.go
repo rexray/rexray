@@ -46,7 +46,7 @@ func install() {
 }
 
 func isRpmInstall(pkgName *string) bool {
-	exePath := util.BinFilePath()
+	exePath := util.BinFilePath
 	cmd := exec.Command("rpm", "-qf", exePath)
 	output, err := cmd.CombinedOutput()
 	soutput := string(output)
@@ -69,7 +69,7 @@ func isRpmInstall(pkgName *string) bool {
 }
 
 func isDebInstall(pkgName *string) bool {
-	exePath := util.BinFilePath()
+	exePath := util.BinFilePath
 	cmd := exec.Command("dpkg-query", "-S", exePath)
 	output, err := cmd.CombinedOutput()
 	soutput := string(output)
@@ -118,7 +118,7 @@ func uninstallDeb(pkgName string) bool {
 func uninstall(pkgManager bool) {
 	checkOpPerms("uninstalled")
 
-	binFilePath := util.BinFilePath()
+	binFilePath := util.BinFilePath
 
 	// if the uninstall command was executed manually we should check to see
 	// if this file is owned by a package manager and remove it that way if so
@@ -294,8 +294,8 @@ func createUnitFile() {
 		BinFilePath string
 		EnvFilePath string
 	}{
-		util.BinFileName(),
-		util.BinFilePath(),
+		util.BinFileName,
+		util.BinFilePath,
 		util.EnvFilePath(),
 	}
 	tmpl, err := template.New("UnitFile").Parse(unitFileTemplate)
@@ -335,8 +335,8 @@ func createInitFile() {
 		BinFileName string
 		BinFilePath string
 	}{
-		util.BinFileName(),
-		util.BinFilePath(),
+		util.BinFileName,
+		util.BinFilePath,
 	}
 	tmpl, err := template.New("InitScript").Parse(initScriptTemplate)
 	if err != nil {

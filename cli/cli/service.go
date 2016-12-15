@@ -25,11 +25,11 @@ var (
 		getInitSystemType() == SystemD
 
 	serverSockFilePath = util.RunFilePath(
-		fmt.Sprintf("%s-server.sock", util.BinFileName()))
+		fmt.Sprintf("%s-server.sock", util.BinFileName))
 	clientSockFilePath = util.RunFilePath(
-		fmt.Sprintf("%s-client.sock", util.BinFileName()))
+		fmt.Sprintf("%s-client.sock", util.BinFileName))
 
-	logFilePath = util.LogFilePath(fmt.Sprintf("%s.log", util.BinFileName()))
+	logFileName = fmt.Sprintf("%s.log", util.BinFileName)
 )
 
 func (c *CLI) start() {
@@ -99,7 +99,7 @@ func statusViaSystemD() {
 }
 
 func execSystemDCmd(cmdType string) {
-	cmd := exec.Command("systemctl", cmdType, "-l", util.UnitFileName)
+	cmd := exec.Command("systemctl", cmdType, "-l", util.BinFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -115,9 +115,9 @@ func (c *CLI) startDaemon() {
 
 	var out io.Writer = os.Stdout
 	if !log.IsTerminal() {
-		logFile, logFileErr := util.LogFile(logFilePath)
+		logFile, logFileErr := util.LogFile(logFileName)
 		failOnError(logFileErr)
-		out = io.MultiWriter(os.Stdout, os.Stderr, logFile)
+		out = io.MultiWriter(os.Stdout, logFile)
 	}
 	log.SetOutput(out)
 
@@ -235,8 +235,6 @@ func (c *CLI) startDaemon() {
 }
 
 func (c *CLI) tryToStartDaemon() {
-	_, _, thisAbsPath := gotil.GetThisPathParts()
-
 	fmt.Print("Starting REX-Ray...")
 
 	signal := make(chan byte)
@@ -274,10 +272,24 @@ func (c *CLI) tryToStartDaemon() {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--config=%s", c.cfgFile))
 	}
 
-	cmd := exec.Command(thisAbsPath, cmdArgs...)
+	cmd := exec.Command(util.BinFilePath, cmdArgs...)
 
-	cmdErr := cmd.Start()
-	failOnError(cmdErr)
+	if v := os.Getenv("REXRAY_FORK_STDOUT"); v != "" {
+		f, err := os.Create(v)
+		if err != nil {
+			failOnError(err)
+		}
+		cmd.Stdout = f
+	}
+	if v := os.Getenv("REXRAY_FORK_STDERR"); v != "" {
+		f, err := os.Create(v)
+		if err != nil {
+			failOnError(err)
+		}
+		cmd.Stderr = f
+	}
+
+	failOnError(cmd.Start())
 
 	sigVal := <-signal
 	if sigVal != 0 {
@@ -289,7 +301,7 @@ func (c *CLI) tryToStartDaemon() {
 	fmt.Printf("SUCCESS!\n\n")
 	fmt.Printf("  The REX-Ray daemon is now running at PID %d. To\n", pid)
 	fmt.Printf("  shutdown the daemon execute the following command:\n\n")
-	fmt.Printf("    sudo %s stop\n\n", thisAbsPath)
+	fmt.Printf("    sudo %s stop\n\n", util.BinFilePath)
 }
 
 func stop() {

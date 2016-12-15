@@ -32,10 +32,6 @@ const (
 )
 
 var (
-	thisExeDir     string
-	thisExeName    string
-	thisExeAbsPath string
-
 	prefix string
 
 	binDirPath  string
@@ -46,6 +42,16 @@ var (
 	pidFilePath string
 	spcFilePath string
 	envFilePath string
+
+	// BinFileName is the name of the executing binary.
+	BinFileName string
+
+	// BinFilePath is the full path of the executing binary.
+	BinFilePath string
+
+	// BinFileDirPath is the full path of the executing binary's parent
+	// directory.
+	BinFileDirPath string
 
 	// UnitFileName is the name of the SystemD service's unit file.
 	UnitFileName string
@@ -68,12 +74,12 @@ var (
 
 func init() {
 	prefix = os.Getenv("REXRAY_HOME")
-	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
-	UnitFileName = fmt.Sprintf("%s.service", thisExeName)
+	BinFileDirPath, BinFileName, BinFilePath = gotil.GetThisPathParts()
+	UnitFileName = fmt.Sprintf("%s.service", BinFileName)
 	UnitFilePath = path.Join("/etc/systemd/system", UnitFileName)
-	InitFileName = thisExeName
+	InitFileName = BinFileName
 	InitFilePath = path.Join("/etc/init.d", InitFileName)
-	PIDFileName = fmt.Sprintf("%s.pid", thisExeName)
+	PIDFileName = fmt.Sprintf("%s.pid", BinFileName)
 	DotDirName = fmt.Sprintf(".rexray")
 }
 
@@ -176,7 +182,7 @@ func RunFilePath(fileName string) string {
 // PidFilePath returns the path to the REX-Ray PID file.
 func PidFilePath() string {
 	if pidFilePath == "" {
-		pidFilePath = RunFilePath(fmt.Sprintf("%s.pid", thisExeName))
+		pidFilePath = RunFilePath(fmt.Sprintf("%s.pid", BinFileName))
 	}
 	return pidFilePath
 }
@@ -184,7 +190,7 @@ func PidFilePath() string {
 // EnvFilePath returns the path to the REX-Ray env file.
 func EnvFilePath() string {
 	if envFilePath == "" {
-		envFilePath = EtcFilePath(fmt.Sprintf("%s.env", thisExeName))
+		envFilePath = EtcFilePath(fmt.Sprintf("%s.env", BinFileName))
 	}
 	return envFilePath
 }
@@ -195,21 +201,6 @@ func SpecFilePath() string {
 		spcFilePath = RunFilePath("rexray.spec")
 	}
 	return spcFilePath
-}
-
-// BinDirPath returns the path to the REX-Ray bin directory.
-func BinDirPath() string {
-	return thisExeDir
-}
-
-// BinFilePath returns the path to the REX-Ray executable.
-func BinFilePath() string {
-	return thisExeAbsPath
-}
-
-// BinFileName returns the name of the REX-Ray executable.
-func BinFileName() string {
-	return thisExeName
 }
 
 // EtcFilePath returns the path to a file inside the REX-Ray etc directory
@@ -280,7 +271,7 @@ func ReadSpecFile() (string, error) {
 func PrintVersion(out io.Writer) {
 	fmt.Fprintln(out, "REX-Ray")
 	fmt.Fprintln(out, "-------")
-	fmt.Fprintf(out, "Binary: %s\n", thisExeAbsPath)
+	fmt.Fprintf(out, "Binary: %s\n", BinFilePath)
 	fmt.Fprintf(out, "Flavor: %s\n", core.BuildType)
 	fmt.Fprintf(out, "SemVer: %s\n", core.Version.SemVer)
 	fmt.Fprintf(out, "OsArch: %s\n", core.Version.Arch)
@@ -488,7 +479,7 @@ func NewConfig(ctx apitypes.Context) gofig.Config {
 	switch core.BuildType {
 	case "client", "agent", "controller":
 		var (
-			fileName    = thisExeName
+			fileName    = BinFileName
 			fileNameExt = fileName + "." + cfgFileExt
 			allFilePath = EtcFilePath(fileNameExt)
 			usrFilePath = path.Join(gotil.HomeDir(), DotDirName, fileNameExt)

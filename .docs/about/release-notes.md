@@ -28,6 +28,14 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.7.0 (TBD)
+This feature release includes support for libStorage 0.4.0 and the Ceph RBD
+storage platform.
+
+### Enhancements
+* [libStorage 0.4.0](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc2)
+* [Ceph/RBD storage platform](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc2)
+
 ## Version 0.6.3 (2016/12/07)
 This release includes the ability to specify a custom encryption key when
 creating volumes and makes the `volume attach` command idempotent.

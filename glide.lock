@@ -1,5 +1,5 @@
-hash: e137fbb0517c72219a1c737caf65647bdc02a49ee0708b79d001fcf4c16de9df
-updated: 2016-12-13T10:18:38.579745727-06:00
+hash: 3836a92231abae67bd7576cafaddb0d22f6b1889f985135df222d8eaed92c50f
+updated: 2016-12-16T13:00:38.966712213-06:00
 imports:
 - name: github.com/akutz/gofig
   version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
@@ -106,21 +106,29 @@ imports:
   - drivers/os/darwin
   - drivers/os/linux
   - drivers/storage/ebs
+  - drivers/storage/ebs/executor
   - drivers/storage/ebs/storage
   - drivers/storage/ebs/utils
   - drivers/storage/efs
+  - drivers/storage/efs/executor
   - drivers/storage/efs/storage
+  - drivers/storage/efs/utils
   - drivers/storage/isilon
+  - drivers/storage/isilon/executor
   - drivers/storage/isilon/storage
   - drivers/storage/libstorage
   - drivers/storage/scaleio
+  - drivers/storage/scaleio/executor
   - drivers/storage/scaleio/storage
   - drivers/storage/vbox
+  - drivers/storage/vbox/executor
   - drivers/storage/vbox/storage
   - drivers/storage/vfs
   - drivers/storage/vfs/client
+  - drivers/storage/vfs/executor
   - drivers/storage/vfs/storage
   - imports/config
+  - imports/executors
   - imports/local
   - imports/remote
   - imports/routers

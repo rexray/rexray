@@ -1,0 +1,151 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Number of Ceph server nodes
+server_nodes = 2
+
+# /24 network to use for private network
+network = "172.21.13"
+
+# Flags to control which REX-Ray to install
+# Setting all options to false will use whatever rexray is already present
+install_latest_stable_rex = true
+install_latest_staged_rex = false
+install_rex_from_source = false
+
+# Script to build rexray from source
+$build_rexray = <<SCRIPT
+export GOPATH=~/go
+SRC_DIR=${GOPATH}/src/github.com/codedellemc
+REX_REPO=https://github.com/codedellemc/rexray
+REX_BRANCH=master
+DEFAULT_LIBSTORAGE=false
+LS_REPO=https://github.com/codenrhoden/libstorage
+LS_BRANCH=feature/rbd
+sudo yum -y install golang
+mkdir -p ${SRC_DIR}
+cd ${SRC_DIR}
+if [ ${DEFAULT_LIBSTORAGE} = false ]; then
+	git clone ${LS_REPO} --branch ${LS_BRANCH}
+fi
+git clone ${REX_REPO} --branch ${REX_BRANCH}
+cd rexray
+if [ ${DEFAULT_LIBSTORAGE} = false ]; then
+	sysctl -w net.ipv4.ip_forward=1
+	DLOCAL_IMPORTS="github.com/codedellemc/libstorage" DGOOS=linux make && \
+	cp rexray /usr/bin
+else
+	make deps && make build && cp ${GOPATH}/bin/rexray /usr/bin
+fi
+SCRIPT
+
+Vagrant.configure("2") do |config|
+
+  # some shared setup
+  config.vm.box = "codedellemc/ceph_rexray"
+  config.vm.box_url = "https://rawgit.com/codedellemc/vagrant/master/ceph/packer/vagrant_ceph_rexray.json"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.ssh.forward_agent = true
+  config.ssh.insert_key = false
+  config.hostmanager.enabled = true
+
+  file_root = File.dirname(File.expand_path(__FILE__))
+
+  # We provision nodes to be Ceph servers
+  (1..server_nodes).each do |i|
+    config.vm.define "libstorage-rbd-test-server#{i}" do |config|
+      config.vm.hostname = "libstorage-rbd-test-server#{i}"
+      config.vm.network "private_network", ip: "#{network}.#{i+10}"
+      config.vm.provider "virtualbox" do |vb|
+        vb.customize ["modifyvm", :id, "--macaddress1", "auto"]
+	vb.customize ["storagectl", :id, "--add", "sata", "--controller", "IntelAhci", "--name", "SATA", "--portcount", 30, "--hostiocache", "on"]
+        file_to_disk = File.join(file_root, "ceph#{i}osd.vdi")
+        unless File.exist?(file_to_disk)
+          vb.customize [
+            'createhd',
+            '--filename', file_to_disk,
+            '--format', 'VDI',
+            '--size', 10 * 1024
+          ]
+        end
+        vb.customize [
+          'storageattach', :id,
+          '--storagectl', 'SATA',
+          '--port', 1, '--device', 0,
+          '--type', 'hdd', '--medium',
+          file_to_disk
+        ]
+      end
+
+      # work around bug in Vagrant 1.9.1
+      config.vm.provision "shell", privileged: true, inline: <<-SHELL
+        service network restart
+      SHELL
+    end
+  end
+
+  # We need a Ceph client machine
+  config.vm.define "libstorage-rbd-test-client" do |client|
+    client.vm.hostname = "libstorage-rbd-test-client"
+    client.vm.network "private_network", ip: "#{network}.9"
+    client.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--macaddress1", "auto"]
+    end
+
+    client.vm.provision "shell", privileged: false, path: "rexconfig.sh"
+
+    # work around bug in Vagrant 1.9.1
+    config.vm.provision "shell", privileged: true, inline: <<-SHELL
+      service network restart
+    SHELL
+  end
+
+  # We need one Ceph admin machine to manage the cluster and act as a second
+  # client
+  config.vm.define "libstorage-rbd-test-admin" do |admin|
+    admin.vm.hostname = "libstorage-rbd-test-admin"
+    admin.vm.network "private_network", ip: "#{network}.10"
+    admin.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--macaddress1", "auto"]
+      vb.customize ["storagectl", :id, "--add", "sata", "--controller", "IntelAhci", "--name", "SATA", "--portcount", 30, "--hostiocache", "on"]
+    end
+
+    if install_latest_stable_rex
+      admin.vm.provision "shell", privileged: true, inline: <<-SHELL
+        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable
+      SHELL
+    end
+
+    if install_latest_staged_rex
+      admin.vm.provision "shell", privileged: true, inline: <<-SHELL
+        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s staged
+      SHELL
+    end
+
+    if install_rex_from_source
+      admin.vm.provision "shell" do |s|
+        s.name = "build rexray"
+        s.privileged = true
+        s.inline = $build_rexray
+      end
+    end
+
+    # work around bug in Vagrant 1.9.1
+    config.vm.provision "shell", privileged: true, inline: <<-SHELL
+      service network restart
+    SHELL
+
+    admin.vm.provision "shell", privileged: false, path: "cephconfig.sh", args: server_nodes
+    admin.vm.provision "shell", privileged: false, path: "rexconfig.sh"
+    admin.vm.provision "shell", privileged: true, inline: <<-SHELL
+      systemctl restart rexray
+    SHELL
+    admin.vm.provision "copyrex", type: "shell", privileged: false, inline: <<-SHELL
+      scp /usr/bin/rexray libstorage-rbd-test-client:
+      ssh libstorage-rbd-test-client "sudo mv ~vagrant/rexray /usr/bin && sudo systemctl restart rexray"
+    SHELL
+
+    # Run the tests
+    admin.vm.provision "tests", type: "shell", privileged: false, path: "tests.sh"
+  end
+end

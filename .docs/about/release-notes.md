@@ -3,6 +3,13 @@
 Release early, release often
 
 ---
+## Version 0.4.0 (TBD)
+Another exciting new feature release, this update brings with it support for
+the Ceph RBD platform.
+
+### New Features
+* Ceph RBD Support ([#347](https://github.com/codedellemc/libstorage/issues/347))
+
 ## Version 0.3.6 (2016/12/13)
 This is a minor release to update the build process so that smaller binaries
 for embedding projects, such as REX-Ray, is supported.

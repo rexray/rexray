@@ -8,7 +8,7 @@ Another exciting new feature release, this update brings with it support for
 the Ceph RBD platform.
 
 ### New Features
-* Ceph RBD Support ([#347](https://github.com/codedellemc/libstorage/issues/347))
+* Ceph RBD Support ([#347](https://github.com/codedellemc/libstorage/issues/347), [#367](https://github.com/codedellemc/libstorage/issues/367))
 
 ## Version 0.3.6 (2016/12/13)
 This is a minor release to update the build process so that smaller binaries

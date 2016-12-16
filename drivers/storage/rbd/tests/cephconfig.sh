@@ -44,3 +44,6 @@ for x in $(seq 1 $NUM_NODES); do
 	ceph-deploy osd create --zap-disk libstorage-rbd-test-server$x:/dev/sdb
 done
 ceph-deploy admin localhost libstorage-rbd-test-client
+
+# Create a second Ceph pool for testing purposes
+sudo ceph osd pool create test 64

@@ -3,6 +3,8 @@
 package utils
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -16,7 +18,7 @@ import (
 )
 
 const (
-	cephCmd   = "ceph"
+	radosCmd  = "rados"
 	rbdCmd    = "rbd"
 	formatOpt = "--format"
 	jsonArg   = "json"
@@ -56,7 +58,7 @@ type RBDInfo struct {
 //GetRadosPools returns a slice containing all the pool names
 func GetRadosPools() ([]*string, error) {
 
-	cmd := exec.Command(cephCmd, "osd", "pool", "ls", formatOpt, jsonArg)
+	cmd := exec.Command(radosCmd, "lspools")
 	log.Debugf("running command: %v", cmd.Args)
 
 	out, err := cmd.Output()
@@ -71,10 +73,12 @@ func GetRadosPools() ([]*string, error) {
 	}
 
 	var pools []string
-	err = json.Unmarshal(out, &pools)
-	if err != nil {
-		return nil, goof.WithError(
-			"Unable to parse ceph lspools", err)
+
+	rdr := bytes.NewReader(out)
+	scanner := bufio.NewScanner(rdr)
+
+	for scanner.Scan() {
+		pools = append(pools, scanner.Text())
 	}
 
 	return ConvStrArrayToPtr(pools), nil

@@ -23,19 +23,17 @@ import (
 	rbdx "github.com/codedellemc/libstorage/drivers/storage/rbd/executor"
 )
 
-const (
-	defaultPool = "rbd"
-)
-
 var (
-	configYAML = []byte(`
+	defaultPool = "rbd"
+	testPool    = "test"
+	configYAML  = []byte(`
 rbd:
   defaultPool: rbd
 `)
-)
 
-var volumeName string
-var volumeName2 string
+	volumeName  string
+	volumeName2 string
+)
 
 func skipTests() bool {
 	travis, _ := strconv.ParseBool(os.Getenv("TRAVIS"))
@@ -176,7 +174,7 @@ func volumeCreate(
 	t *testing.T,
 	client types.Client,
 	volumeName string,
-	pool string) *types.Volume {
+	pool *string) *types.Volume {
 
 	log.WithField("volumeName", volumeName).Info("creating volume")
 	size := int64(8)
@@ -186,8 +184,17 @@ func volumeCreate(
 		"owner":    "root@example.com",
 	}
 
+	createName := volumeName
+	volID := fmt.Sprintf("%s.%s", defaultPool, volumeName)
+	expectedPool := defaultPool
+	if pool != nil {
+		createName = fmt.Sprintf("%s.%s", *pool, volumeName)
+		volID = fmt.Sprintf("%s.%s", *pool, volumeName)
+		expectedPool = *pool
+	}
+
 	volumeCreateRequest := &types.VolumeCreateRequest{
-		Name: volumeName,
+		Name: createName,
 		Size: &size,
 		Opts: opts,
 	}
@@ -202,8 +209,8 @@ func volumeCreate(
 
 	assert.Equal(t, volumeName, reply.Name)
 	assert.Equal(t, size, reply.Size)
-	assert.Equal(t, pool, reply.Type)
-	assert.Equal(t, pool+"."+volumeName, reply.ID)
+	assert.Equal(t, expectedPool, reply.Type)
+	assert.Equal(t, volID, reply.ID)
 	return reply
 }
 
@@ -224,14 +231,26 @@ func TestVolumeCreateRemove(t *testing.T) {
 	}
 
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		vol := volumeCreate(t, client, volumeName, defaultPool)
+		// Use "name only" syntax
+		vol := volumeCreate(t, client, volumeName, nil)
+		volumeRemove(t, client, vol.ID)
+
+		// Specify exact pool, even though it is default
+		vol = volumeCreate(t, client, volumeName, &defaultPool)
+		volumeRemove(t, client, vol.ID)
+
+		// Make sure using a non-default pool works
+		vol = volumeCreate(t, client, volumeName, &testPool)
 		volumeRemove(t, client, vol.ID)
 	}
 	apitests.Run(t, rbd.Name, configYAML, tf)
 }
 
 func volumeByName(
-	t *testing.T, client types.Client, volumeName string) *types.Volume {
+	t *testing.T,
+	client types.Client,
+	volumeName string,
+	pool *string) *types.Volume {
 
 	log.WithField("volumeName", volumeName).Info("get volume name")
 	vols, err := client.API().Volumes(nil, 0)
@@ -239,9 +258,10 @@ func volumeByName(
 	if err != nil {
 		t.FailNow()
 	}
+	volID := fmt.Sprintf("%s.%s", *pool, volumeName)
 	assert.Contains(t, vols, rbd.Name)
 	for _, vol := range vols[rbd.Name] {
-		if vol.Name == volumeName {
+		if vol.Name == volumeName && vol.ID == volID {
 			return vol
 		}
 	}
@@ -256,11 +276,11 @@ func TestVolumes(t *testing.T) {
 	}
 
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		_ = volumeCreate(t, client, volumeName, defaultPool)
-		_ = volumeCreate(t, client, volumeName2, defaultPool)
+		_ = volumeCreate(t, client, volumeName, nil)
+		_ = volumeCreate(t, client, volumeName2, &testPool)
 
-		vol1 := volumeByName(t, client, volumeName)
-		vol2 := volumeByName(t, client, volumeName2)
+		vol1 := volumeByName(t, client, volumeName, &defaultPool)
+		vol2 := volumeByName(t, client, volumeName2, &testPool)
 
 		volumeRemove(t, client, vol1.ID)
 		volumeRemove(t, client, vol2.ID)
@@ -371,7 +391,7 @@ func TestVolumeAttach(t *testing.T) {
 	}
 	var vol *types.Volume
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		vol = volumeCreate(t, client, volumeName, defaultPool)
+		vol = volumeCreate(t, client, volumeName, nil)
 		_ = volumeAttach(t, client, vol.ID)
 		_ = volumeInspectAttached(t, client, vol.ID)
 		_ = volumeInspectAttachedDevices(t, client, vol.ID)

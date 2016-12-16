@@ -10,7 +10,7 @@ import:
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/codedellemc/libstorage
-    version: v0.3.6 # libstorage-version
+    version: v0.4.0-rc2 # libstorage-version
     repo:    https://github.com/codedellemc/libstorage # libstorage-repo
 
   - package: github.com/akutz/gofig

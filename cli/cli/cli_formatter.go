@@ -121,6 +121,12 @@ func (c *CLI) fmtOutput(w io.Writer, templateName string, o interface{}) error {
 			if templName == "" {
 				templName = templateNamePrintMountFields
 			}
+		case *scriptInfo:
+			return c.fmtOutput(w, templName, []*scriptInfo{to})
+		case []*scriptInfo:
+			if templName == "" {
+				templName = templateNamePrintScriptFields
+			}
 		case []string:
 			sort.Strings(to)
 			if templName == "" {
@@ -256,6 +262,7 @@ const (
 	templateNamePrintInstanceFields          = "printInstanceFields"
 	templateNamePrintServiceFields           = "printServiceFields"
 	templateNamePrintMountFields             = "printMountFields"
+	templateNamePrintScriptFields            = "printScriptFields"
 )
 
 type templateMetadata struct {
@@ -353,6 +360,14 @@ var defaultTemplates = map[string]*templateMetadata{
 			"MountPoint",
 		},
 		sortBy: "Source",
+	},
+	templateNamePrintScriptFields: &templateMetadata{
+		fields: []string{
+			"Path",
+			"Installed",
+			"Modified",
+		},
+		sortBy: "Path",
 	},
 }
 

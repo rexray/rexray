@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/util"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func (c *CLI) initVolumeCmds() {
 		Use:     "ls",
 		Aliases: []string{"l", "list", "get", "inspect"},
 		Short:   "List volumes",
-		Example: "rexray volume ls [OPTIONS] [VOLUME...]",
+		Example: util.BinFileName + " volume ls [OPTIONS] [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if !c.volumePath {
@@ -90,7 +91,7 @@ func (c *CLI) initVolumeCmds() {
 		Use:     "create",
 		Aliases: []string{"c", "n", "new"},
 		Short:   "Create a new volume",
-		Example: "rexray volume create [OPTIONS] VOLUME [VOLUME...]",
+		Example: util.BinFileName + " volume create [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
@@ -226,7 +227,7 @@ func (c *CLI) initVolumeCmds() {
 	c.volumeRemoveCmd = &cobra.Command{
 		Use:     "rm",
 		Short:   "Remove a volume",
-		Example: "rexray volume rm [OPTIONS] VOLUME [VOLUME...]",
+		Example: util.BinFileName + " volume rm [OPTIONS] VOLUME [VOLUME...]",
 		Aliases: []string{"r", "remove", "delete", "del"},
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
@@ -277,7 +278,7 @@ func (c *CLI) initVolumeCmds() {
 		Use:     "attach",
 		Aliases: []string{"a"},
 		Short:   "Attach a volume",
-		Example: "rexray volume attach [OPTIONS] VOLUME [VOLUME...]",
+		Example: util.BinFileName + " volume attach [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
@@ -345,7 +346,7 @@ func (c *CLI) initVolumeCmds() {
 		Use:     "detach",
 		Aliases: []string{"d"},
 		Short:   "Detach a volume",
-		Example: "rexray volume detach [OPTIONS] VOLUME [VOLUME...]",
+		Example: util.BinFileName + " volume detach [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
@@ -416,7 +417,7 @@ func (c *CLI) initVolumeCmds() {
 		Use:     "mount",
 		Aliases: []string{"m"},
 		Short:   "Mount a volume",
-		Example: "rexray volume mount [OPTIONS] VOLUME [VOLUME...]",
+		Example: util.BinFileName + " volume mount [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 
@@ -483,7 +484,7 @@ func (c *CLI) initVolumeCmds() {
 		Use:     "unmount",
 		Short:   "Unmount a volume",
 		Aliases: []string{"u", "umount"},
-		Example: "rexray volume unmount [OPTIONS] VOLUME [VOLUME...]",
+		Example: util.BinFileName + " volume unmount [OPTIONS] VOLUME [VOLUME...]",
 		Run: func(cmd *cobra.Command, args []string) {
 			checkVolumeArgs(cmd, args)
 

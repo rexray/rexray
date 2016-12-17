@@ -10,11 +10,8 @@ ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
 endif
 
-SCRIPTS_GENERATED_SRC := ./scripts/scripts_generated.go
-ifneq (,$(wildcard $(SCRIPTS_GENERATED_SRC)))
 ifeq (,$(findstring scripts_generated,$(BUILD_TAGS)))
 BUILD_TAGS += scripts_generated
-endif
 endif
 
 ifneq (,$(REXRAY_BUILD_TYPE))
@@ -877,6 +874,7 @@ ifeq (true,$(EMBED_SCRIPTS_FLEXREX))
 SCRIPTS += ./scripts/scripts/flexrex
 endif
 
+SCRIPTS_GENERATED_SRC := ./scripts/scripts_generated.go
 SCRIPTS_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/scripts.a
 
 IGNORE_TEST_SCRIPT_PATT := test(?:\.sh)?$

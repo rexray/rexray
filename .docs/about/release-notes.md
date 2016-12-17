@@ -32,8 +32,11 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
 This release includes the new script manager and FlexVol REX-Ray plug-in.
 
 ### Enhancements
-* [Script manager]([#669](https://github.com/codedellemc/rexray/pull/669))
-* [FlexVol plug-in]([#641](https://github.com/codedellemc/rexray/pull/641))
+* Script manager ([#669](https://github.com/codedellemc/rexray/pull/669))
+* FlexVol plug-in ([#641](https://github.com/codedellemc/rexray/pull/641))
+
+### Bug Fixes
+* Panic on `$ rexray-client volume mount` ([#673](https://github.com/codedellemc/rexray/pull/673))
 
 ## Version 0.6.3 (2016/12/07)
 This release includes the ability to specify a custom encryption key when

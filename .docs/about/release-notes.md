@@ -36,6 +36,9 @@ storage platform.
 * [libStorage 0.4.0](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc2)
 * [Ceph/RBD storage platform](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc2)
 
+### Bug Fixes
+* Panic on `$ rexray-client volume mount` ([#673](https://github.com/codedellemc/rexray/pull/673))
+
 ## Version 0.6.3 (2016/12/07)
 This release includes the ability to specify a custom encryption key when
 creating volumes and makes the `volume attach` command idempotent.

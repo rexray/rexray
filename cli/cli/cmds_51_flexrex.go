@@ -33,6 +33,9 @@ func (c *CLI) initFlexRexCmds() {
 		Use:   "install",
 		Short: "Install the FlexVol REX-Ray plug-in",
 		Run: func(cmd *cobra.Command, args []string) {
+			if c.force {
+				os.RemoveAll(c.scriptPath)
+			}
 			fp := util.ScriptFilePath("flexrex")
 			if !gotil.FileExists(fp) {
 				if _, err := c.installScripts("flexrex"); err != nil {
@@ -43,15 +46,12 @@ func (c *CLI) initFlexRexCmds() {
 			if err != nil {
 				c.ctx.Fatal(err)
 			}
-			if err := os.Symlink(fp, c.scriptPath); err != nil {
-				c.ctx.Fatal(err)
-			}
 			c.mustMarshalOutput(&scriptInfo{
 				Name:      "flexrex",
 				Path:      c.scriptPath,
 				Installed: true,
 				Modified:  false,
-			}, nil)
+			}, os.Symlink(fp, c.scriptPath))
 		},
 	}
 	c.flexRexCmd.AddCommand(c.flexRexInstallCmd)
@@ -74,6 +74,12 @@ const (
 )
 
 func (c *CLI) initFlexRexFlags() {
+	c.flexRexInstallCmd.Flags().BoolVar(
+		&c.force,
+		"force",
+		false,
+		"A flag indicating whether to install the script even if it already "+
+			"exists at the specified path")
 	c.flexRexInstallCmd.Flags().StringVar(
 		&c.scriptPath,
 		"path",

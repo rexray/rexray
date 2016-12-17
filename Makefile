@@ -28,7 +28,6 @@ ifneq (,$(findstring rexray_build_type_client,$(BUILD_TAGS)))
 PROG := $(PROG)-client
 REXRAY_BUILD_TYPE := client
 BUILD_LIBSTORAGE_SERVER := false
-BUILD_TAGS := $(filter-out libstorage_integration_driver_%,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_driver,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_driver_%,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_executor,$(BUILD_TAGS))

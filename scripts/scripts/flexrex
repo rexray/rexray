@@ -18,19 +18,23 @@
 #  - Please install "jq" package before using this driver.
 #  - Please install and configure REX-Ray before using this driver
 
-# detect which binary is available: rexray-client or rexray
-if which -s rexray-client; then
-	REXRAY_BIN=$(which rexray-client)
-elif which -s rexray; then
-	REXRAY_BIN=$(which rexray)
-else
-	echo "error: rexray-client/rexray not detected"
-	exit 1
-fi
-
 err() {
 	printf "%b" "$*" 1>&2
 }
+
+# detect which binary is available: rexray-client or rexray
+if [ -x /usr/bin/rexray-client ]; then
+	REXRAY_BIN=/usr/bin/rexray-client
+elif [ -x /usr/bin/rexray ]; then
+	REXRAY_BIN=/usr/bin/rexray
+elif which rexray-client > /dev/null 2>&1; then
+	REXRAY_BIN=$(which rexray-client)
+elif which rexray > /dev/null 2>&1; then
+	REXRAY_BIN=$(which rexray)
+else
+	err '{ "status": "Failure", "message": "Failed to find rexray binary}"}'
+	exit 1
+fi
 
 log() {
 	printf "%b" "$*" >&1
@@ -53,11 +57,7 @@ usage() {
 
 ismounted() {
 	MOUNT=$(findmnt -n "${MNTPATH}" 2>/dev/null | cut -d' ' -f1)
-	if [ "${MOUNT}" = "${MNTPATH}" ]; then
-		echo "1"
-	else
-		echo "0"
-	fi
+	if [ "${MOUNT}" = "${MNTPATH}" ]; then echo 1; else echo 0; fi
 }
 
 attach() {
@@ -77,16 +77,16 @@ attach() {
 			COUNTER_LOGGED=1
 			while [ "$COUNTER" -lt "$STATUS_CHECKS" ]; do
 				VOLUME_STATUS=$(${REXRAY_BIN} volume ls "${VOLUMEID}" --format json 2>/dev/null | jq '.[0].attachmentState')
-				if [ "$FLEXREX_DEBUG" -eq "1" ]; then
+				if [ "$FLEXREX_DEBUG" = "1" ]; then
 					echo "checked volume status. volume status is ${VOLUME_STATUS}" >> /var/log/flexrex_force.log
 				fi
 				if [ "$VOLUME_STATUS" -eq "3" ] || [ "$VOLUME_STATUS" -eq "2" ]; then
-					if [ "$FLEXREX_DEBUG" -eq "1" ]; then
+					if [ "$FLEXREX_DEBUG" = "1" ]; then
 						echo "volume is available, breaking loop" >> /var/log/flexrex_force.log
 					fi
 					break;
 				fi
-				if [ "$FLEXREX_DEBUG" -eq "1" ]; then
+				if [ "$FLEXREX_DEBUG" = "1" ]; then
 					echo "sleeping for 5 seconds after status check #${COUNTER_LOGGED}" >> /var/log/flexrex_force.log
 				fi
 				sleep 5
@@ -186,14 +186,11 @@ domount() {
 unmount() {
 	MNTPATH=$1
 	if [ "$(ismounted)" -eq "0" ] ; then success; fi
-
-
 	if ! umount "${MNTPATH}" > /dev/null 2>&1; then
 		err "{ \"status\": \"Failed\", \"message\": \"Failed to unmount volume at ${MNTPATH}\"}"
 		exit 1
 	fi
 	rmdir "${MNTPATH}" > /dev/null 2>&1
-
 	success
 }
 
@@ -206,7 +203,7 @@ shift
 
 case "$op" in
 	attach)
-		if [ "$FLEXREX_DEBUG" -eq "1" ]; then
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
 			printf "%s\t%b\n" "$(date)" "$*" >> /var/log/flexrex_attach.log
 		fi
 		attach "$@"
@@ -215,7 +212,7 @@ case "$op" in
 		detach "$@"
 		;;
 	mount)
-		if [ "$FLEXREX_DEBUG" -eq "1" ]; then
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
 			printf "%s\t%b\n" "$(date)" "$*" >> /var/log/flexrex_mount.log
 		fi
 		domount "$@"

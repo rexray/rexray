@@ -129,7 +129,7 @@ detach() {
 	fi
 
 	VOLUMES=$(${REXRAY_BIN} volume ls --path --format json 2>/dev/null)
-	VOLUMEID=$(echo "${VOLUMES}" | jq -r "[.[] | {id: .id, device:.attachments[0].deviceName}] | .[] | select(.device == '${DEV}') | .id")
+	VOLUMEID=$(echo "${VOLUMES}" | jq -r '[.[] | {id: .id, device:.attachments[0].deviceName}] | .[] | select(.device == '\""${DEV}"\"') | .id')
 
 	if [ -z "$VOLUMEID" ]; then
 		err "{\"status\": \"Failure\", \"message\": \"Could not find source volume for device ${DEV}\"}"

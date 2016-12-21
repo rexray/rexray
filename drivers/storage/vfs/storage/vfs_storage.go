@@ -155,6 +155,15 @@ func (d *driver) Volumes(
 		if opts.Attachments > 0 {
 			v.AttachmentState = 0
 		}
+		if opts.Attachments.Mine() {
+			atts := []*types.VolumeAttachment{}
+			for _, a := range v.Attachments {
+				if a.InstanceID != nil && a.InstanceID.ID == iid.ID {
+					atts = append(atts, a)
+				}
+			}
+			v.Attachments = atts
+		}
 		volumes = append(volumes, v)
 	}
 
@@ -174,6 +183,21 @@ func (d *driver) VolumeInspect(
 	}
 	if opts.Attachments > 0 {
 		v.AttachmentState = 0
+	}
+	if opts.Attachments.Mine() {
+		iid, iidOK := context.InstanceID(ctx)
+		if iidOK {
+			if iid.ID == "" {
+				return nil, goof.New("missing instance ID")
+			}
+		}
+		atts := []*types.VolumeAttachment{}
+		for _, a := range v.Attachments {
+			if a.InstanceID != nil && a.InstanceID.ID == iid.ID {
+				atts = append(atts, a)
+			}
+		}
+		v.Attachments = atts
 	}
 	return v, nil
 }

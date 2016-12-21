@@ -10,6 +10,12 @@ the Ceph RBD platform.
 ### New Features
 * Ceph RBD Support ([#347](https://github.com/codedellemc/libstorage/issues/347), [#367](https://github.com/codedellemc/libstorage/issues/367))
 
+## Version 0.3.7 (2016/12/21)
+This is a minor bugfix release that includes a fix for attachment querying.
+
+### Bug Fixes
+* EFS security group ID fix ([#369](https://github.com/codedellemc/libstorage/pull/369))
+
 ## Version 0.3.6 (2016/12/13)
 This is a minor release to update the build process so that smaller binaries
 for embedding projects, such as REX-Ray, is supported.

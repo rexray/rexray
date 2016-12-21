@@ -253,6 +253,30 @@ func TestVolumesWithAttachmentsAttachedAndUnattached(t *testing.T) {
 	apitests.Run(t, vfs.Name, tc, tf)
 }
 
+func TestVolumesWithAttachmentsAttachedToMeAndAvailable(t *testing.T) {
+	tc, _, vols, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().Volumes(nil,
+			types.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, reply["vfs"]["vfs-000"])
+		assert.NotNil(t, reply["vfs"]["vfs-001"])
+		assert.NotNil(t, reply["vfs"]["vfs-002"])
+		assert.EqualValues(t, vols["vfs-000"], reply["vfs"]["vfs-000"])
+		assert.EqualValues(t, vols["vfs-001"], reply["vfs"]["vfs-001"])
+		assert.Equal(
+			t, types.VolumeAttached, reply["vfs"]["vfs-000"].AttachmentState)
+		assert.Equal(
+			t, types.VolumeAttached, reply["vfs"]["vfs-001"].AttachmentState)
+		assert.Equal(
+			t, types.VolumeAvailable, reply["vfs"]["vfs-002"].AttachmentState)
+	}
+	apitests.Run(t, vfs.Name, tc, tf)
+}
+
 func TestVolumesWithAttachmentsMineWithNotMyInstanceID(
 	t *testing.T) {
 	tc, _, _, _ := newTestConfigAll(t)

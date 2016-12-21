@@ -32,6 +32,7 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
 This release includes the new script manager and FlexVol REX-Ray plug-in.
 
 ### Enhancements
+* [libStorage 0.3.7](https://github.com/codedellemc/libstorage/releases/tag/v0.3.7)
 * Script manager ([#669](https://github.com/codedellemc/rexray/pull/669))
 * FlexVol plug-in ([#641](https://github.com/codedellemc/rexray/pull/641))
 

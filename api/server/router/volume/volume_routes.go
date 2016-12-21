@@ -162,6 +162,16 @@ func handleVolAttachments(
 			ctx.WithFields(lf).Debug("omitting attached volume")
 			return false
 		}
+		// if the volume is attached to an instance other than the one provided
+		// and only the instance's volumes should be returned, then omit this
+		// volume
+		if attachments.Mine() &&
+			attachments.Attached() &&
+			(s == types.VolumeAvailable || s == types.VolumeUnavailable) &&
+			!attachments.Unattached() {
+			ctx.WithFields(lf).Debug("omitting unavailable volume")
+			return false
+		}
 		ctx.WithFields(lf).Debug("including volume")
 		return true
 	}
@@ -175,29 +185,6 @@ func handleVolAttachments(
 	}
 
 	ctx.WithFields(lf).Debug("manually calculating attachment state")
-
-	// if only the requesting instance's attachments are requested then
-	// filter the volume's attachments list
-	if attachments.Mine() {
-		atts := []*types.VolumeAttachment{}
-		for _, a := range vol.Attachments {
-			alf := log.Fields{
-				"attDeviceName": a.DeviceName,
-				"attDountPoint": a.MountPoint,
-				"attVolumeID":   a.VolumeID,
-			}
-			if strings.EqualFold(iid.ID, a.InstanceID.ID) {
-				atts = append(atts, a)
-				ctx.WithFields(lf).WithFields(alf).Debug(
-					"including volume attachment")
-			} else {
-				ctx.WithFields(lf).WithFields(alf).Debug(
-					"omitting volume attachment")
-			}
-		}
-		vol.Attachments = atts
-		ctx.WithFields(lf).Debug("included volume attached to instance")
-	}
 
 	// determine a volume's attachment state
 	if len(vol.Attachments) == 0 {

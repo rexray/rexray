@@ -33,7 +33,7 @@ This feature release includes support for libStorage 0.4.0 and the Ceph RBD
 storage platform.
 
 ### Enhancements
-* [libStorage 0.4.0](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc2)
+* [libStorage 0.4.0](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc3)
 * [Ceph/RBD storage platform](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc2)
 
 ### Bug Fixes

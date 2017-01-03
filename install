@@ -73,7 +73,7 @@ list() {
     else
         URL="$URL/$PKG"
         for v in $(curl $INSECURE -sSL $URL | \
-                    grep 'onclick' | grep -v 'latest' | \
+                    grep 'pre' | grep -v 'latest' | \
                     cut -d '>' -f3 | cut -d'/' -f1); do
             echo "$SCRIPT_CMD -- $PKG $v"
         done

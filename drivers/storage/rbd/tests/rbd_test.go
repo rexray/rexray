@@ -385,6 +385,23 @@ func volumeInspectAvailable(
 	return reply
 }
 
+func volumeAttachFail(
+	t *testing.T, client types.Client, volumeID string) *types.Volume {
+
+	log.WithField("volumeID", volumeID).Info("attaching volume")
+	reply, _, err := client.API().VolumeAttach(
+		nil, rbd.Name, volumeID, &types.VolumeAttachRequest{})
+
+	assert.Error(t, err)
+	if err == nil {
+		t.Error("volumeAttach succeeded when it should have failed")
+		t.FailNow()
+	}
+	apitests.LogAsJSON(reply, t)
+
+	return reply
+}
+
 func TestVolumeAttach(t *testing.T) {
 	if skipTests() {
 		t.SkipNow()
@@ -396,6 +413,7 @@ func TestVolumeAttach(t *testing.T) {
 		_ = volumeInspectAttached(t, client, vol.ID)
 		_ = volumeInspectAttachedDevices(t, client, vol.ID)
 		_ = volumeInspectNoAttachments(t, client, vol.ID)
+		_ = volumeAttachFail(t, client, vol.ID)
 		_ = volumeDetach(t, client, vol.ID)
 		_ = volumeInspectDetached(t, client, vol.ID)
 		_ = volumeInspectAvailable(t, client, vol.ID)

@@ -39,7 +39,7 @@ The following storage providers and platforms are supported by REX-Ray.
 
 Provider              | Storage Platform(s)
 ----------------------|--------------------
-EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
+Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
 [Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox) | Virtual Media
 Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs)
 
@@ -51,7 +51,8 @@ Provider              | Storage Platform(s)
 [Google Compute Engine](./user-guide/storage-providers.md#coming-soon) | Disk
 [Open Stack](./user-guide/storage-providers.md#coming-soon) | Cinder
 [Rackspace](./user-guide/storage-providers.md#coming-soon) | Cinder
-EMC | [XtremIO](./user-guide/storage-providers.md#coming-soon), [VMAX](./user-guide/storage-providers.md#coming-soon)
+Dell EMC | [XtremIO](./user-guide/storage-providers.md#coming-soon), [VMAX]
+(./user-guide/storage-providers.md#coming-soon)
 
 ### Operating System Support
 The following operating systems (OS) are supported by REX-Ray:
@@ -176,6 +177,6 @@ For an example of the full output from the above command, please refer to this
 
 ### GitHub and Slack
 If a little extra help is needed, please don't hesitate to use [GitHub
-issues](https://github.com/emccode/rexray/issues) or join the active
+issues](https://github.com/codedellemc/rexray/issues) or join the active
 conversation on the [{code} by Dell EMC Community Slack
 Team](http://community.codedellemc.com/) in the #project-rexray channel

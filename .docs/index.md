@@ -36,13 +36,11 @@ Using libStorage can be broken down into several, distinct steps:
 1. Configuring [libStorage](./user-guide/config.md)
 2. Understanding the [API](http://docs.libstorage.apiary.io)
 3. Identifying a production server and client implementation, such as
-   [REX-Ray](https://rexray.rtfd.org)
+   [REX-Ray](http://rexray.readthedocs.io/en/stable/)
 
 ## Getting Help
-To get help with libStorage, please use the
-[discussion group](https://groups.google.com/forum/#!forum/emccode-users),
-[GitHub issues](https://github.com/codedellemc/libstorage/issues), or tagging
-questions with **EMC** at [StackOverflow](https://stackoverflow.com).
+To get help with libStorage, please use [GitHub issues](https://github.com/codedellemc/libstorage/issues) or join the active
+conversation on the [{code} by Dell EMC Community Slack Team](http://community.codedellemc.com/) in the #project-libStorage channel.
 
 The code and documentation are released with no warranties or SLAs and are
 intended to be supported through a community driven process.

@@ -252,12 +252,27 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.WithError("Unable to set image name", err)
 	}
 
+	vol, err := d.VolumeInspect(
+		ctx, volumeID, &types.VolumeInspectOpts{
+			Attachments: types.VolAttReq,
+		})
+	if err != nil {
+		return nil, "", goof.WithError("error getting volume", err)
+	}
+
+	if vol.AttachmentState != types.VolumeAvailable {
+		if !opts.Force {
+			return nil, "",
+				goof.New("volume in wrong state for attach")
+		}
+	}
+
 	_, err = utils.RBDMap(pool, imageName)
 	if err != nil {
 		return nil, "", err
 	}
 
-	vol, err := d.VolumeInspect(ctx, volumeID,
+	vol, err = d.VolumeInspect(ctx, volumeID,
 		&types.VolumeInspectOpts{
 			Attachments: types.VolAttReqTrue,
 		},

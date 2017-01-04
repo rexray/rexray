@@ -167,8 +167,9 @@ func handleVolAttachments(
 		// volume
 		if attachments.Mine() &&
 			attachments.Attached() &&
-			(s == types.VolumeAvailable || s == types.VolumeUnavailable) &&
-			!attachments.Unattached() {
+			((s == types.VolumeAvailable && !attachments.Unattached()) ||
+				s == types.VolumeUnavailable) {
+			//!attachments.Unattached() {
 			ctx.WithFields(lf).Debug("omitting unavailable volume")
 			return false
 		}

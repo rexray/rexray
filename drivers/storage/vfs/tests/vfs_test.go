@@ -320,9 +320,46 @@ func TestVolumesWithAttachmentsAttachedAndMineWithNotMyInstanceID(
 			t.Fatal(err)
 		}
 
-		assert.Nil(t, reply["vfs"]["vfs-000"])
-		assert.Nil(t, reply["vfs"]["vfs-001"])
-		assert.Nil(t, reply["vfs"]["vfs-002"])
+		if !assert.Nil(t, reply["vfs"]["vfs-000"]) {
+			t.FailNow()
+		}
+		if !assert.Nil(t, reply["vfs"]["vfs-001"]) {
+			t.FailNow()
+		}
+		if !assert.Nil(t, reply["vfs"]["vfs-002"]) {
+			t.FailNow()
+		}
+	}
+	apitests.RunWithClientType(t, types.ControllerClient, vfs.Name, tc, tf)
+}
+
+func TestVolumesWithAttachmentsAttachedAndMineOrUnattachedWithNotMyInstanceID(
+	t *testing.T) {
+	t.SkipNow()
+	tc, _, _, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		ctx := context.Background()
+		iidm := types.InstanceIDMap{
+			"vfs": &types.InstanceID{ID: "none", Driver: "vfs"},
+		}
+		ctx = ctx.WithValue(context.AllInstanceIDsKey, iidm)
+
+		reply, err := client.API().Volumes(ctx,
+			types.VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !assert.Nil(t, reply["vfs"]["vfs-000"]) {
+			t.FailNow()
+		}
+		if !assert.Nil(t, reply["vfs"]["vfs-001"]) {
+			t.FailNow()
+		}
+		if !assert.Nil(t, reply["vfs"]["vfs-002"]) {
+			t.FailNow()
+		}
 	}
 	apitests.RunWithClientType(t, types.ControllerClient, vfs.Name, tc, tf)
 }
@@ -973,7 +1010,7 @@ func newTestConfigAll(
 		if x < 2 {
 			vj = []byte(fmt.Sprintf(volJSON, x, hostName))
 		} else {
-			vj = []byte(fmt.Sprintf(volNoAttachJSON, x, hostName))
+			vj = []byte(fmt.Sprintf(volNoAttachJSON, x))
 		}
 		v := &types.Volume{}
 		if err := json.Unmarshal(vj, v); err != nil {

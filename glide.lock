@@ -1,6 +1,11 @@
-hash: 4cee882016929bc1aa12aa52eedc34f0ebc5b8c0103600441f587b0ac4c48328
-updated: 2017-02-04T22:26:14.762400239-06:00
+hash: 626a0c16518d722d7925eeb2e610cd5f565c2160072414a99b4e1067aac5685a
+updated: 2017-02-13T10:56:51.332372709-07:00
 imports:
+- name: cloud.google.com/go
+  version: b4ca3d4ba32e251f6fee7bda65c5727ccbf3faa9
+  subpackages:
+  - compute/metadata
+  - internal
 - name: github.com/akutz/gofig
   version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
   subpackages:
@@ -85,6 +90,12 @@ imports:
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/go-ini/ini
   version: 6e4869b434bd001f6983749881c7ead3545887d8
+- name: github.com/golang/protobuf
+  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  subpackages:
+  - proto
+- name: github.com/googleapis/gax-go
+  version: da06d194a00e19ce00d9011a13931c3f6f6887c7
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -106,7 +117,7 @@ imports:
   version: 1dd44b25b79c4d9060e582e90798e4d72537818c
   repo: https://github.com/akutz/go-bindata
 - name: github.com/kardianos/osext
-  version: c2c54e542fb797ad986b31721e1baedf214ca413
+  version: 9b883c5eb462dd5cb1b0a7a104fe86bc6b9bd391
   repo: https://github.com/kardianos/osext.git
   vcs: git
 - name: github.com/kr/fs
@@ -174,6 +185,19 @@ imports:
   subpackages:
   - context
   - context/ctxhttp
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/oauth2
+  version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+  subpackages:
+  - google
+  - internal
+  - jws
+  - jwt
 - name: golang.org/x/sys
   version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
   subpackages:
@@ -183,6 +207,39 @@ imports:
   subpackages:
   - transform
   - unicode/norm
+- name: google.golang.org/api
+  version: d61af0b67e5c8213e8c260ac29a762487bad020d
+  repo: https://github.com/google/google-api-go-client
+  subpackages:
+  - compute/v0.beta
+  - gensupport
+  - googleapi
+  - googleapi/internal/uritemplates
+- name: google.golang.org/appengine
+  version: 8758a385849434ba5eac8aeedcf5192c5a0f5f10
+  subpackages:
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/modules
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
+- name: google.golang.org/grpc
+  version: 50955793b0183f9de69bd78e2ec251cf20aab121
+  subpackages:
+  - codes
+  - credentials
+  - grpclog
+  - internal
+  - metadata
+  - naming
+  - peer
+  - stats
+  - tap
+  - transport
 - name: gopkg.in/yaml.v2
   version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git

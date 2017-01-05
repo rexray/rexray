@@ -12,7 +12,7 @@ Regarding the examples below, please
 [read the provision](./config.md#clientserver-configuration) about
 client/server configurations before proceeding.
 
-## Isilon
+## Dell EMC Isilon
 The Isilon driver registers a storage driver named `isilon` with the
 `libStorage` driver manager and is used to connect and manage Isilon NAS
 storage. The driver creates logical volumes in directories on the Isilon
@@ -112,7 +112,7 @@ The Isilon driver is not without its caveats:
     * Quota (ISI_PRIV_QUOTA)          (if `quotas` are enabled)
     * Snapshot (ISI_PRIV_SNAPSHOT)    (if snapshots are used)
 
-## ScaleIO
+## Dell EMC ScaleIO
 The ScaleIO driver registers a storage driver named `scaleio` with the
 `libStorage` driver manager and is used to connect and manage ScaleIO storage.
 
@@ -413,6 +413,7 @@ libstorage:
           secretKey:      XXXXXXXXXX
           region:         us-east-1
 ```
+
 ## AWS EFS
 The AWS EFS driver registers a storage driver named `efs` with the
 `libStorage` driver manager and is used to connect and manage AWS Elastic File

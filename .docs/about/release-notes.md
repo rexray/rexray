@@ -3,6 +3,12 @@
 Release early, release often
 
 ---
+## Version 0.3.8 (2017/01/05)
+This is a minor bugfix release that includes a fix for volume filtering.
+
+### Bug Fixes
+* Fix for attachment filtering on unavailable volumes ([#383](https://github.com/codedellemc/libstorage/pull/383))
+
 ## Version 0.3.7 (2016/12/21)
 This is a minor bugfix release that includes a fix for attachment querying.
 

@@ -28,6 +28,17 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.6.4 (2017/01/05)
+This release includes the new script manager and FlexVol REX-Ray plug-in.
+
+### Enhancements
+* [libStorage 0.3.8](https://github.com/codedellemc/libstorage/releases/tag/v0.3.8)
+* Script manager ([#669](https://github.com/codedellemc/rexray/pull/669))
+* FlexVol plug-in for Kubernetes ([#641](https://github.com/codedellemc/rexray/pull/641))
+
+### Bug Fixes
+* Panic on `$ rexray-client volume mount` ([#673](https://github.com/codedellemc/rexray/pull/673))
+
 ## Version 0.6.3 (2016/12/07)
 This release includes the ability to specify a custom encryption key when
 creating volumes and makes the `volume attach` command idempotent.

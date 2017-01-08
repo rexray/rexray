@@ -42,6 +42,7 @@ var (
 	pidFilePath string
 	spcFilePath string
 	envFilePath string
+	scrDirPath  string
 
 	// BinFileName is the name of the executing binary.
 	BinFileName string
@@ -101,6 +102,7 @@ func Prefix(p string) {
 	pidFilePath = ""
 	spcFilePath = ""
 	envFilePath = ""
+	scrDirPath = ""
 
 	prefix = p
 }
@@ -171,6 +173,21 @@ func LibDirPath() string {
 // with the provided file name.
 func LibFilePath(fileName string) string {
 	return path.Join(LibDirPath(), fileName)
+}
+
+// ScriptDirPath returns the path to the REX-Ray script directory.
+func ScriptDirPath() string {
+	if scrDirPath == "" {
+		scrDirPath = LibFilePath("scripts")
+		os.MkdirAll(scrDirPath, 0755)
+	}
+	return scrDirPath
+}
+
+// ScriptFilePath returns the path to a file inside the REX-Ray script directory
+// with the provided file name.
+func ScriptFilePath(fileName string) string {
+	return path.Join(ScriptDirPath(), fileName)
 }
 
 // RunFilePath returns the path to a file inside the REX-Ray run directory

@@ -10,6 +10,10 @@ ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
 endif
 
+ifeq (,$(findstring scripts_generated,$(BUILD_TAGS)))
+BUILD_TAGS += scripts_generated
+endif
+
 ifneq (,$(REXRAY_BUILD_TYPE))
 ifeq (client,$(REXRAY_BUILD_TYPE))
 BUILD_TAGS += rexray_build_type_client
@@ -22,7 +26,10 @@ BUILD_TAGS += rexray_build_type_controller
 endif
 endif
 
+DEPEND_ON_GOBINDATA := true
 BUILD_LIBSTORAGE_SERVER := true
+EMBED_SCRIPTS := true
+EMBED_SCRIPTS_FLEXREX := true
 
 ifneq (,$(findstring rexray_build_type_client,$(BUILD_TAGS)))
 PROG := $(PROG)-client
@@ -38,6 +45,9 @@ ifneq (,$(findstring rexray_build_type_agent,$(BUILD_TAGS)))
 PROG := $(PROG)-agent
 REXRAY_BUILD_TYPE := agent
 BUILD_LIBSTORAGE_SERVER := false
+EMBED_SCRIPTS := false
+EMBED_SCRIPTS_FLEXREX := false
+DEPEND_ON_GOBINDATA := false
 BUILD_TAGS := $(filter-out libstorage_storage_driver,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_driver_%,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_executor,$(BUILD_TAGS))
@@ -47,6 +57,8 @@ endif
 ifneq (,$(findstring rexray_build_type_controller,$(BUILD_TAGS)))
 PROG := $(PROG)-controller
 REXRAY_BUILD_TYPE := controller
+EMBED_SCRIPTS := false
+EMBED_SCRIPTS_FLEXREX := false
 BUILD_TAGS := $(filter-out libstorage_integration_driver_%,$(BUILD_TAGS))
 endif
 
@@ -497,7 +509,7 @@ GO_PHONY += $(GLIDE_LOCK)-clean
 GO_CLOBBER += $(GLIDE_LOCK)-clean
 endif
 
-ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
+ifeq (true,$(DEPEND_ON_GOBINDATA))
 GO_BINDATA_IMPORT_PATH := vendor/github.com/jteeuwen/go-bindata/go-bindata
 ifneq (1,$(VENDORED))
 GO_BINDATA_IMPORT_PATH := $(ROOT_IMPORT_PATH)/$(GO_BINDATA_IMPORT_PATH)
@@ -854,6 +866,34 @@ endif
 
 
 ################################################################################
+##                                 SCRIPTS                                    ##
+################################################################################
+ifeq (true,$(EMBED_SCRIPTS))
+
+ifeq (true,$(EMBED_SCRIPTS_FLEXREX))
+SCRIPTS += ./scripts/scripts/flexrex
+endif
+
+SCRIPTS_GENERATED_SRC := ./scripts/scripts_generated.go
+SCRIPTS_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/scripts.a
+
+IGNORE_TEST_SCRIPT_PATT := test(?:\.sh)?$
+$(SCRIPTS_GENERATED_SRC): $(SCRIPTS)
+	$(GO_BINDATA) -ignore '$(IGNORE_TEST_SCRIPT_PATT)' -tags "scripts_generated,!rexray_build_type_agent,!rexray_build_type_controller" -md5checksum -pkg scripts -prefix $(@D)/scripts -o $@ $(@D)/scripts/...
+
+$(SCRIPTS_GENERATED_SRC)-clean:
+	rm -f $(SCRIPTS_GENERATED_SRC)
+GO_PHONY += $(SCRIPTS_GENERATED_SRC)-clean
+GO_CLEAN += $(SCRIPTS_GENERATED_SRC)-clean
+
+$(SCRIPTS_A): $(SCRIPTS_GENERATED_SRC)
+
+build-scripts: $(SCRIPTS_GENERATED_SRC)
+
+endif
+
+
+################################################################################
 ##                                   CLI                                      ##
 ################################################################################
 ifneq (,$(BUILD_TAGS))
@@ -1089,6 +1129,9 @@ build-$(PROG): $(GO_BUILD)
 
 build-generated:
 	$(MAKE) $(CORE_GENERATED_SRC)
+ifeq (true,$($EMBED_SCRIPTS))
+	$(MAKE) $(SCRIPTS_GENERATED_SRC)
+endif
 
 build:
 	$(MAKE) build-libstorage

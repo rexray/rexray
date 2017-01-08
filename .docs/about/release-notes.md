@@ -36,6 +36,14 @@ storage platform.
 * [libStorage 0.4.0](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc3)
 * [Ceph/RBD storage platform](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0-rc2)
 
+## Version 0.6.4 (2017/01/05)
+This release includes the new script manager and FlexVol REX-Ray plug-in.
+
+### Enhancements
+* [libStorage 0.3.8](https://github.com/codedellemc/libstorage/releases/tag/v0.3.8)
+* Script manager ([#669](https://github.com/codedellemc/rexray/pull/669))
+* FlexVol plug-in for Kubernetes ([#641](https://github.com/codedellemc/rexray/pull/641))
+
 ### Bug Fixes
 * Panic on `$ rexray-client volume mount` ([#673](https://github.com/codedellemc/rexray/pull/673))
 

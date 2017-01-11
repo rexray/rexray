@@ -107,10 +107,10 @@ func Run() {
 			ScanType: apitypes.ParseDeviceScanType(args[3]),
 			Opts:     store,
 		})
-		opResult.Driver = driverName
 		if opErr != nil {
 			err = opErr
 		} else {
+			opResult.Driver = driverName
 			result = opResult
 		}
 	} else if strings.EqualFold(cmd, apitypes.LSXCmdWaitForDevice) {

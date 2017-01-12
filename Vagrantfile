@@ -24,7 +24,7 @@ $node1_mem  = "512"
 # Golang information
 $goos   = "linux"
 $goarch = "amd64"
-$gover  = "1.6.2"
+$gover  = "1.7.4"
 $gotgz  = "go#{$gover}.#{$goos}-#{$goarch}.tar.gz"
 $gourl  = "https://storage.googleapis.com/golang/#{$gotgz}"
 $gopath = "/opt/go"
@@ -86,7 +86,7 @@ cd #{$rexray_dir.shellescape}
 git clone #{$rexray_url.shellescape} .
 git checkout #{$rexray_ref.shellescape}
 make deps
-make
+make build
 SCRIPT
 
 # volume_path is a valid directory path on the local, host system for storing

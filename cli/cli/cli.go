@@ -86,6 +86,16 @@ type CLI struct {
 	devuceUnmountCmd *cobra.Command
 	deviceFormatCmd  *cobra.Command
 
+	scriptsCmd          *cobra.Command
+	scriptsListCmd      *cobra.Command
+	scriptsInstallCmd   *cobra.Command
+	scriptsUninstallCmd *cobra.Command
+
+	flexRexCmd          *cobra.Command
+	flexRexInstallCmd   *cobra.Command
+	flexRexUninstallCmd *cobra.Command
+	flexRexStatusCmd    *cobra.Command
+
 	attach                  bool
 	amount                  bool
 	quiet                   bool
@@ -128,6 +138,7 @@ type CLI struct {
 	encrypted               bool
 	encryptionKey           string
 	idempotent              bool
+	scriptPath              string
 }
 
 const (

@@ -291,6 +291,12 @@ func (c *CLI) initVolumeCmds() {
 					apitypes.VolAttReqOnlyVolsAttachedToInstanceOrUnattachedVols
 			}
 
+			if c.force {
+				//Get all volumes including those that are unavailable
+				lsVolAttType =
+					apitypes.VolAttReq
+			}
+
 			result, err := c.lsVolumes(args, lsVolAttType)
 			if err != nil {
 				log.Fatal(err)

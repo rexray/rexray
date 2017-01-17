@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Uncomment line below to enable logging
+#FLEXREX_DEBUG=1
+
 # Notes:
 #  - Please install "jq" package before using this driver.
 #  - Please install and configure REX-Ray before using this driver
@@ -64,6 +67,7 @@ attach() {
 	VOLUMEID=$(echo "$1" | jq -r '.volumeID')
 	FORCE_ATTACH=$(echo "$1" | jq -r '.forceAttach')
 	FORCE_ATTACH_DELAY=$(echo "$1" | jq -r '.forceAttachDelay')
+	VOLUME_AVAILABLE=0
 
 	if [ -z "$VOLUMEID" ]; then
 		err '{"status": "Failure", "message": "Unable to extract volumeID"}'
@@ -78,42 +82,95 @@ attach() {
 			while [ "$COUNTER" -lt "$STATUS_CHECKS" ]; do
 				VOLUME_STATUS=$(${REXRAY_BIN} volume ls "${VOLUMEID}" --format json 2>/dev/null | jq '.[0].attachmentState')
 				if [ "$FLEXREX_DEBUG" = "1" ]; then
-					echo "checked volume status. volume status is ${VOLUME_STATUS}" >> /var/log/flexrex_force.log
+					case "$VOLUME_STATUS" in
+						1)
+							VOLUME_STATUS_NAME="unknown"
+							;;
+						2)
+							VOLUME_STATUS_NAME="attached"
+							;;
+						3)
+							VOLUME_STATUS_NAME="available"
+							;;
+						4)
+							VOLUME_STATUS_NAME="unavailable"
+							;;
+					esac
+					printf "%s - attach - %s - volume status is %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" "${VOLUME_STATUS_NAME}" >> /var/log/flexrex.log
 				fi
-				if [ "$VOLUME_STATUS" -eq "3" ] || [ "$VOLUME_STATUS" -eq "2" ]; then
+				if [ "$VOLUME_STATUS" -eq "2" ]; then
 					if [ "$FLEXREX_DEBUG" = "1" ]; then
-						echo "volume is available, breaking loop" >> /var/log/flexrex_force.log
+						printf "%s - attach - %s - volume is already attached, skipping attachment\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" >> /var/log/flexrex.log
 					fi
+					VOLUME_ATTACHED=1
+					break;
+				elif [ "$VOLUME_STATUS" -eq "3" ]; then
+					if [ "$FLEXREX_DEBUG" = "1" ]; then
+						printf "%s - attach - %s - volume is available, breaking loop\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" >> /var/log/flexrex.log
+					fi
+					VOLUME_AVAILABLE=1
 					break;
 				fi
 				if [ "$FLEXREX_DEBUG" = "1" ]; then
-					echo "sleeping for 5 seconds after status check #${COUNTER_LOGGED}" >> /var/log/flexrex_force.log
+					printf "%s - attach - %s - sleeping for 5 seconds after status check #%s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" "${COUNTER_LOGGED}" >> /var/log/flexrex.log
 				fi
 				sleep 5
 				[ "$(( COUNTER=COUNTER+1 ))" -ne 0 ]
 				[ "$(( COUNTER_LOGGED=COUNTER_LOGGED+1 ))" -ne 0 ]
 			done
 		fi
-		OUTPUT=$(${REXRAY_BIN} volume attach "${VOLUMEID}" -i --force --format json 2>/dev/null)
-		ATTACH_EXIT_CODE=$?
+		if [ "$VOLUME_ATTACHED" = "1" ]; then
+			ATTACH_EXIT_CODE=0
+		elif [ "$VOLUME_AVAILABLE" = "1" ]; then
+			if [ "$FLEXREX_DEBUG" = "1" ]; then
+				printf "%s - attach - %s - attaching after volume available\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" >> /var/log/flexrex.log
+			fi
+			OUTPUT=$(${REXRAY_BIN} volume attach "${VOLUMEID}" -i --format json 2>/dev/null)
+			ATTACH_EXIT_CODE=$?
+			if [ "$FLEXREX_DEBUG" = "1" ]; then
+				printf "%s - attach - %s - rexray_attach_response: %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" "${OUTPUT}" >> /var/log/flexrex.log
+			fi
+		else
+			if [ "$FLEXREX_DEBUG" = "1" ]; then
+				printf "%s - attach - %s - forcing attach after timer expiration\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" >> /var/log/flexrex.log
+			fi
+			OUTPUT=$(${REXRAY_BIN} volume attach "${VOLUMEID}" -i --force --format json 2>/var/log/rexray.log)
+			ATTACH_EXIT_CODE=$?
+			if [ "$FLEXREX_DEBUG" = "1" ]; then
+				printf "%s - attach - %s - rexray_attach_response: %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" "${OUTPUT}" >> /var/log/flexrex.log
+			fi
+		fi
+
 	else
 		OUTPUT=$(${REXRAY_BIN} volume attach "${VOLUMEID}" -i --format json 2>/dev/null)
 		ATTACH_EXIT_CODE=$?
 	fi
 
 	if [ "$ATTACH_EXIT_CODE" -ne "0" ]; then
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
+			printf "%s - attach - %s - nonzero exit code during attach: %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" "${ATTACH_EXIT_CODE}" >> /var/log/flexrex.log
+		fi
 		err "{\"status\": \"Failure\", \"message\": \"REX-Ray returned error during attach\"}"
 		exit 1
 	fi
+
+	#sleep for 2 seconds before checking device path
+	sleep 2
 
 	# Make second call to get device info
 	OUTPUT=$(${REXRAY_BIN} volume ls "${VOLUMEID}" --path --format json 2>/dev/null)
 	DEV=$(echo "${OUTPUT}" | jq -r '.[0].attachments[0].deviceName')
 	if [ -z "$DEV" ]; then
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
+			printf "%s - attach - %s - failed to get device name - rexray_response: %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" "${OUTPUT}" >> /var/log/flexrex.log
+		fi
 		err '{"status": "Failure", "message": "REX-Ray did not return attached device name"}'
 		exit 1
 	fi
 	if [ ! -b "${DEV}" ]; then
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
+			printf "%s - attach - %s - volume not present at %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUMEID}" "${DEV}" >> /var/log/flexrex.log
+		fi
 		err "{\"status\": \"Failure\", \"message\": \"Volume ${VOLUMEID} not present at ${DEV}\"}"
 		exit 1
 	fi
@@ -129,18 +186,30 @@ detach() {
 	fi
 
 	VOLUMES=$(${REXRAY_BIN} volume ls --path --format json 2>/dev/null)
-	VOLUMEID=$(echo "${VOLUMES}" | jq -r '[.[] | {id: .id, device:.attachments[0].deviceName}] | .[] | select(.device == '\""${DEV}"\"') | .id')
+	VOLUME_ATTACHMENT_DETAILS=$(${REXRAY_BIN} volume ls --path --format json | jq -r '[.[] | {name: .name, id: .id, device:.attachments[0].deviceName, path:.Path}] | .[] | select(.device == '\""${DEV}"\"')')
+	VOLUME_NAME=$(echo "${VOLUME_ATTACHMENT_DETAILS}" | jq -r '.name')
+	VOLUME_ID=$(echo "${VOLUME_ATTACHMENT_DETAILS}" | jq -r '.id')
+	VOLUME_PATH=$(echo "${VOLUME_ATTACHMENT_DETAILS}" | jq -r '.path')
 
-	if [ -z "$VOLUMEID" ]; then
+	if [ -z "$VOLUME_ID" ]; then
 		err "{\"status\": \"Failure\", \"message\": \"Could not find source volume for device ${DEV}\"}"
 		exit 1
 	fi
 
-	${REXRAY_BIN} volume detach -i "${VOLUMEID}" >/dev/null 2>&1
-	DETACH_EXIT_CODE=$?
-	if [ "$DETACH_EXIT_CODE" -ne "0" ]; then
-		err "{\"status\": \"Failure\", \"message\": \"REX-Ray returned error during detach\"}"
-		exit 1
+	if [ "$VOLUME_PATH" = "" ]; then
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
+			printf "%s - detach - %s - detaching volume\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUME_NAME}" >> /var/log/flexrex.log
+		fi
+		${REXRAY_BIN} volume detach -i "${VOLUME_ID}" >/dev/null 2>&1
+		DETACH_EXIT_CODE=$?
+		if [ "$DETACH_EXIT_CODE" -ne "0" ]; then
+			err "{\"status\": \"Failure\", \"message\": \"REX-Ray returned error during detach\"}"
+			exit 1
+		fi
+	else
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
+			printf "%s - detach - %s - volume is currently mounted to %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "${VOLUME_NAME}" "${VOLUME_PATH}" >> /var/log/flexrex.log
+		fi
 	fi
 
 	log "{\"status\": \"Success\"}"
@@ -204,20 +273,26 @@ shift
 case "$op" in
 	attach)
 		if [ "$FLEXREX_DEBUG" = "1" ]; then
-			printf "%s\t%b\n" "$(date)" "$*" >> /var/log/flexrex_attach.log
+			printf "%s - attach - %b\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$*" >> /var/log/flexrex.log
 		fi
 		attach "$@"
 		;;
 	detach)
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
+			printf "%s - detach -  %b\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$*" >> /var/log/flexrex.log
+		fi
 		detach "$@"
 		;;
 	mount)
 		if [ "$FLEXREX_DEBUG" = "1" ]; then
-			printf "%s\t%b\n" "$(date)" "$*" >> /var/log/flexrex_mount.log
+			printf "%s - mount -  %b\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$*" >> /var/log/flexrex.log
 		fi
 		domount "$@"
 		;;
 	unmount)
+		if [ "$FLEXREX_DEBUG" = "1" ]; then
+			printf "%s - unmount -  %b\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$*" >> /var/log/flexrex.log
+		fi
 		unmount "$@"
 		;;
 	*)

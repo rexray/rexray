@@ -168,12 +168,14 @@ func (d *driver) Mount(
 		"volumeID":   volumeID,
 		"opts":       opts}).Info("mounting volume")
 
+	lsAtt := types.VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols
+	if opts.Preempt {
+		lsAtt = types.VolAttReq
+	}
+
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName,
-		types.VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols,
-		opts.Opts)
+		ctx, volumeID, volumeName, lsAtt, opts.Opts)
 	if isErrNotFound(err) && d.volumeCreateImplicit() {
-		var err error
 		if vol, err = d.Create(ctx, volumeName, &types.VolumeCreateOpts{
 			Opts: utils.NewStore(),
 		}); err != nil {

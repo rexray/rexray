@@ -3,7 +3,7 @@ SHELL := /bin/bash
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS :=   gofig \
 				pflag \
-				libstorage_integration_driver_docker
+				libstorage_integration_driver_linux
 ifneq (true,$(TRAVIS))
 BUILD_TAGS +=   libstorage_storage_driver \
 				libstorage_storage_driver_vfs \

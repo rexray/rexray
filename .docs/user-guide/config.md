@@ -610,9 +610,9 @@ integration drivers are supported:
 
  Driver | Driver Name
 --------|------------
-Docker   | docker
+Linux   | linux
 
-The integration driver `docker` provides necessary functionality to enable
+The integration driver `linux` provides necessary functionality to enable
 most consuming platforms to work with storage volumes.
 
 ### Volume Configuration

@@ -259,7 +259,6 @@ unmount() {
 		err "{ \"status\": \"Failed\", \"message\": \"Failed to unmount volume at ${MNTPATH}\"}"
 		exit 1
 	fi
-	rmdir "${MNTPATH}" > /dev/null 2>&1
 	success
 }
 

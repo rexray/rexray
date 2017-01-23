@@ -83,6 +83,15 @@ import:
   - package: github.com/digitalocean/godo
     version: 2ff8a02a86cd6918b384a5000ceebe886844fbce
 
+### Azure
+  - package: github.com/Azure/azure-sdk-for-go
+    version: v7.0.1-beta
+  - package: github.com/Azure/go-autorest
+    version: v7.2.2
+  - package: github.com/rubiojr/go-vhd
+    ref:     96a0db67ea8209453cfa694bdf03de202d6dd8f8
+    repo:    https://github.com/codenrhoden/go-vhd
+
 ################################################################################
 ##                             Build System Tools                             ##
 ################################################################################

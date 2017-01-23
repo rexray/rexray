@@ -4,6 +4,7 @@ package remote
 
 import (
 	// import to load
+	_ "github.com/codedellemc/libstorage/drivers/storage/azure/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/digitalocean/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/ebs/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/efs/storage"

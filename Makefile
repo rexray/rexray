@@ -857,6 +857,7 @@ $1:
 	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
+	rm -f $(EXECUTORS_GENERATED)
 GO_PHONY += $1-clean
 GO_CLEAN += $1-clean
 endif

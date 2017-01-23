@@ -1,5 +1,5 @@
-hash: 056d7b5a924275c646e9d9db5e4c2b435a6e440ffe304b244acee2c9d12da379
-updated: 2017-01-05T17:28:21.126777652-06:00
+hash: 90a33ef62ac6381b87bde40e6fdb0ad39dd770ad8d19714b1204519bda36893f
+updated: 2017-01-23T08:25:21.439880273-06:00
 imports:
 - name: github.com/akutz/gofig
   version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
@@ -77,7 +77,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: e46cfc3effe8762c8ea96107ec64f15abfe95135
+  version: a1103d3f215117f7b9f51dae2b24f852c9c54995
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -102,7 +102,7 @@ imports:
   - api/utils/filters
   - api/utils/schema
   - client
-  - drivers/integration/docker
+  - drivers/integration/linux
   - drivers/os/darwin
   - drivers/os/linux
   - drivers/storage/ebs
@@ -117,6 +117,10 @@ imports:
   - drivers/storage/isilon/executor
   - drivers/storage/isilon/storage
   - drivers/storage/libstorage
+  - drivers/storage/rbd
+  - drivers/storage/rbd/executor
+  - drivers/storage/rbd/storage
+  - drivers/storage/rbd/utils
   - drivers/storage/scaleio
   - drivers/storage/scaleio/executor
   - drivers/storage/scaleio/storage

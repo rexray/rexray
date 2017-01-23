@@ -28,6 +28,19 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.7.0 (2017/01/23)
+This feature release includes support for libStorage 0.4.0 and the Ceph RBD
+storage platform.
+
+### Enhancements
+* [libStorage 0.4.0](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0)
+* Ceph/RBD storage platform ([#347](https://github.com/codedellemc/libstorage/pull/347))
+
+### Bug Fixes
+* Prevent unnecessary removal of directory by FlexRex ([#699](https://github.com/codedellemc/rexray/pull/699))
+* Update `volume attach` to check for `--force` flag ([#696](https://github.com/codedellemc/rexray/pull/696))
+* Fix installer to correctly parse new Bintray HTML ([#687](https://github.com/codedellemc/rexray/pull/687))
+
 ## Version 0.6.4 (2017/01/05)
 This release includes the new script manager and FlexVol REX-Ray plug-in.
 

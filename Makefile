@@ -7,7 +7,7 @@ PROG_ROOT := rexray
 PROG := $(PROG_ROOT)
 
 ifeq (undefined,$(origin BUILD_TAGS))
-BUILD_TAGS := gofig pflag libstorage_integration_driver_docker
+BUILD_TAGS := gofig pflag libstorage_integration_driver_linux
 endif
 
 ifeq (,$(findstring scripts_generated,$(BUILD_TAGS)))

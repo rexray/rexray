@@ -3,7 +3,7 @@ SHELL := /bin/bash
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS :=   gofig \
 				pflag \
-				libstorage_integration_driver_docker
+				libstorage_integration_driver_linux
 ifneq (true,$(TRAVIS))
 BUILD_TAGS +=   libstorage_storage_driver \
 				libstorage_storage_driver_vfs \
@@ -11,6 +11,14 @@ BUILD_TAGS +=   libstorage_storage_driver \
 				libstorage_storage_executor_vfs
 endif
 endif
+
+RBD_BUILD_TAGS := gofig \
+		pflag \
+		libstorage_integration_driver_docker \
+		libstorage_storage_driver \
+		libstorage_storage_driver_rbd \
+		libstorage_storage_executor \
+		libstorage_storage_executor_rbd
 
 all:
 # if docker is running, then let's use docker to build it
@@ -1061,6 +1069,10 @@ test:
 
 test-debug:
 	env LIBSTORAGE_DEBUG=true $(MAKE) test
+
+test-rbd:
+	env BUILD_TAGS="$(RBD_BUILD_TAGS)" $(MAKE) deps
+	env BUILD_TAGS="$(RBD_BUILD_TAGS)" $(MAKE) ./drivers/storage/rbd/tests/rbd.test
 
 clean: $(GO_CLEAN)
 

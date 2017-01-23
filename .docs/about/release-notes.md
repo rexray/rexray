@@ -3,6 +3,16 @@
 Release early, release often
 
 ---
+## Version 0.4.0 (2017/01/20)
+Another exciting new feature release, this update brings with it support for
+the Ceph RBD platform.
+
+### New Features
+* Ceph RBD Support ([#347](https://github.com/codedellemc/libstorage/issues/347), [#367](https://github.com/codedellemc/libstorage/issues/367))
+
+### Bug Fixes
+* Fix Linux integration driver preemption ([#391](https://github.com/codedellemc/libstorage/issues/391))
+
 ## Version 0.3.8 (2017/01/05)
 This is a minor bugfix release that includes a fix for volume filtering.
 

@@ -1,6 +1,6 @@
 // +build gofig
 
-package docker
+package linux
 
 import (
 	gofigCore "github.com/akutz/gofig"
@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	r := gofigCore.NewRegistration("Docker")
+	r := gofigCore.NewRegistration("Integration")
 	r.Key(gofig.String, "", "ext4", "",
 		types.ConfigIgVolOpsCreateDefaultFsType)
 	r.Key(gofig.String, "", "", "", types.ConfigIgVolOpsCreateDefaultType)

@@ -1,4 +1,4 @@
-package docker
+package linux
 
 import (
 	"os"
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	providerName            = "docker"
+	providerName            = "linux"
 	defaultVolumeSize int64 = 16
 )
 
@@ -66,7 +66,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		types.ConfigIgVolOpsCreateDefaultFsType: d.fsType(),
 		types.ConfigIgVolOpsMountPath:           d.mountDirPath(),
 		types.ConfigIgVolOpsCreateImplicit:      d.volumeCreateImplicit(),
-	}).Info("docker integration driver successfully initialized")
+	}).Info("linux integration driver successfully initialized")
 
 	return nil
 }
@@ -168,12 +168,14 @@ func (d *driver) Mount(
 		"volumeID":   volumeID,
 		"opts":       opts}).Info("mounting volume")
 
+	lsAtt := types.VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols
+	if opts.Preempt {
+		lsAtt = types.VolAttReq
+	}
+
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, volumeID, volumeName,
-		types.VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols,
-		opts.Opts)
+		ctx, volumeID, volumeName, lsAtt, opts.Opts)
 	if isErrNotFound(err) && d.volumeCreateImplicit() {
-		var err error
 		if vol, err = d.Create(ctx, volumeName, &types.VolumeCreateOpts{
 			Opts: utils.NewStore(),
 		}); err != nil {

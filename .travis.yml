@@ -10,8 +10,8 @@ os:
   - linux
 
 env:
-  - BUILD_TAGS="gofig pflag libstorage_integration_driver_docker libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
-  - BUILD_TAGS="gofig pflag libstorage_integration_driver_docker"
+  - BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+  - BUILD_TAGS="gofig pflag libstorage_integration_driver_linux"
   - BUILD_TAGS=""
 
 matrix:

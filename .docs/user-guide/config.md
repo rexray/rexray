@@ -588,6 +588,7 @@ remote storage systems. Currently the following storage drivers are supported:
 [VirtualBox](./storage-providers.md#virtualbox) | virtualbox
 [EBS](./storage-providers.md#aws-ebs) | ebs, ec2
 [EFS](./storage-providers.md#aws-efs) | efs
+[RBD](./storage-providers.md#ceph-rbd) | rbd
 ..more coming|
 
 The `libstorage.server.libstorage.storage.driver` property can be used to
@@ -609,9 +610,9 @@ integration drivers are supported:
 
  Driver | Driver Name
 --------|------------
-Docker   | docker
+Linux   | linux
 
-The integration driver `docker` provides necessary functionality to enable
+The integration driver `linux` provides necessary functionality to enable
 most consuming platforms to work with storage volumes.
 
 ### Volume Configuration
@@ -694,6 +695,7 @@ ScaleIO|Yes
 VirtualBox|Yes
 EBS|Yes
 EFS|No
+RBD|No
 
 #### Ignore Used Count
 By default accounting takes place during operations that are performed

@@ -186,7 +186,7 @@ func Run() {
 			result = opResult
 		}
 	} else if strings.EqualFold(cmd, apitypes.LSXCmdWaitForDevice) {
-		if len(args) < 5 {
+		if len(args) < 6 {
 			printUsageAndExit()
 		}
 		op = "wait"

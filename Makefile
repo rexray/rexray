@@ -865,6 +865,11 @@ $$(LSX_EMBEDDED_$2): $1
 ifeq (linux,$2)
 EXECUTORS_EMBEDDED += $$(LSX_EMBEDDED_$2)
 endif
+ifeq (darwin,$2)
+ifeq (1,$$(EMBED_EXECUTOR_DARWIN))
+EXECUTORS_EMBEDDED += $$(LSX_EMBEDDED_$2)
+endif
+endif
 endef
 
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux))

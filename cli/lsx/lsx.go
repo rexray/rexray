@@ -22,10 +22,8 @@ import (
 	_ "github.com/codedellemc/libstorage/imports/executors"
 )
 
-var (
-	cmdRx = regexp.MustCompile(
-		`(?i)^supported|instanceid|nextdevice|localdevices|wait$`)
-)
+var cmdRx = regexp.MustCompile(
+	`(?i)^(?:un?)?mount|supported|instanceid|nextdevice|localdevices|wait$`)
 
 // Run runs the executor CLI.
 func Run() {
@@ -75,11 +73,85 @@ func Run() {
 			opResult, opErr := dws.Supported(ctx, store)
 			if opErr != nil {
 				err = opErr
+			} else if opResult {
+				if _, ok := dws.(apitypes.StorageExecutorWithMount); ok {
+					result = apitypes.LSXOpAll
+				} else {
+					result = apitypes.LSXOpAllNoMount
+				}
 			} else {
-				result = opResult
+				result = apitypes.LSXSOpNone
 			}
 		} else {
 			err = apitypes.ErrNotImplemented
+		}
+	} else if strings.EqualFold(cmd, apitypes.LSXCmdMount) {
+		op = "mount"
+
+		dd, ok := d.(apitypes.StorageExecutorWithMount)
+		if !ok {
+			err = apitypes.ErrNotImplemented
+		} else {
+			var (
+				deviceName string
+				mountPath  string
+				mountOpts  = &apitypes.DeviceMountOpts{Opts: store}
+			)
+			mountArgs := args[3:]
+			if len(mountArgs) == 0 {
+				printUsageAndExit()
+			}
+
+			remArgs := []string{}
+			for x := 0; x < len(mountArgs); {
+				a := mountArgs[x]
+				if x < len(mountArgs)-1 {
+					switch a {
+					case "-l":
+						mountOpts.MountLabel = mountArgs[x+1]
+						x = x + 2
+						continue
+					case "-o":
+						mountOpts.MountOptions = mountArgs[x+1]
+						x = x + 2
+						continue
+					}
+				}
+				remArgs = append(remArgs, a)
+				x++
+			}
+
+			if len(remArgs) != 2 {
+				printUsageAndExit()
+			}
+
+			deviceName = remArgs[0]
+			mountPath = remArgs[1]
+
+			opErr := dd.Mount(ctx, deviceName, mountPath, mountOpts)
+			if opErr != nil {
+				err = opErr
+			} else {
+				result = mountPath
+			}
+		}
+	} else if strings.EqualFold(cmd, apitypes.LSXCmdUmount) ||
+		strings.EqualFold(cmd, "unmount") {
+		op = "umount"
+		dd, ok := d.(apitypes.StorageExecutorWithMount)
+		if !ok {
+			err = apitypes.ErrNotImplemented
+		} else {
+			if len(args) < 4 {
+				printUsageAndExit()
+			}
+			mountPath := args[3]
+			opErr := dd.Unmount(ctx, mountPath, store)
+			if opErr != nil {
+				err = opErr
+			} else {
+				result = mountPath
+			}
 		}
 	} else if strings.EqualFold(cmd, apitypes.LSXCmdInstanceID) {
 		op = "instance ID"
@@ -250,6 +322,8 @@ func printUsage() {
 	printUsageLeftPadded(w, lpad2, "nextDevice\n")
 	printUsageLeftPadded(w, lpad2, "localDevices <scanType>\n")
 	printUsageLeftPadded(w, lpad2, "wait <scanType> <attachToken> <timeout>\n")
+	printUsageLeftPadded(w, lpad2, "mount [-l label] [-o options] device path\n")
+	printUsageLeftPadded(w, lpad2, "umount path\n")
 	fmt.Fprintln(w)
 	executorVar := "executor:    "
 	printUsageLeftPadded(w, lpad1, executorVar)

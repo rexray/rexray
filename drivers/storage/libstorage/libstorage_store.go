@@ -23,3 +23,10 @@ func (s *lss) GetExecutorInfo(lsx string) *types.ExecutorInfo {
 func (s *lss) GetInstanceID(driverName string) *types.InstanceID {
 	return s.Store.GetInstanceID(driverName)
 }
+
+func (s *lss) GetLSXSupported(driverName string) types.LSXSupportedOp {
+	if obj, ok := s.Store.Get(driverName).(types.LSXSupportedOp); ok {
+		return obj
+	}
+	return 0
+}

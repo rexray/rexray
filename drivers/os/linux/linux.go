@@ -15,6 +15,7 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 )
@@ -81,6 +82,22 @@ func (d *driver) Mount(
 	deviceName, mountPoint string,
 	opts *types.DeviceMountOpts) error {
 
+	// see if we should use the executor?
+	if client, ok := context.Client(ctx); ok {
+		if _, ok := context.ServiceName(ctx); ok {
+			if client.Executor() != nil {
+				lsxSO, err := client.Executor().Supported(ctx, opts.Opts)
+				if err != nil {
+					return err
+				}
+				if lsxSO.Mount() {
+					return client.Executor().Mount(
+						ctx, deviceName, mountPoint, opts)
+				}
+			}
+		}
+	}
+
 	if d.isNfsDevice(deviceName) {
 
 		if err := d.nfsMount(deviceName, mountPoint); err != nil {
@@ -121,6 +138,21 @@ func (d *driver) Unmount(
 	ctx types.Context,
 	mountPoint string,
 	opts types.Store) error {
+
+	// see if we should use the executor?
+	if client, ok := context.Client(ctx); ok {
+		if _, ok := context.ServiceName(ctx); ok {
+			if client.Executor() != nil {
+				lsxSO, err := client.Executor().Supported(ctx, opts)
+				if err != nil {
+					return err
+				}
+				if lsxSO.Umount() {
+					return client.Executor().Unmount(ctx, mountPoint, opts)
+				}
+			}
+		}
+	}
 
 	return unmount(mountPoint)
 }

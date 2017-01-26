@@ -70,6 +70,27 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	return nil
 }
 
+// Mount mounts a device to a specified path.
+func (d *driver) Mount(
+	ctx types.Context,
+	deviceName, mountPoint string,
+	opts *types.DeviceMountOpts) error {
+
+	return os.MkdirAll(mountPoint, 0755)
+}
+
+// Unmount unmounts the underlying device from the specified path.
+func (d *driver) Unmount(
+	ctx types.Context,
+	mountPoint string,
+	opts types.Store) error {
+
+	if !gotil.FileExists(mountPoint) {
+		return os.ErrNotExist
+	}
+	return os.RemoveAll(mountPoint)
+}
+
 // InstanceID returns the local system's InstanceID.
 func (d *driver) InstanceID(
 	ctx types.Context,

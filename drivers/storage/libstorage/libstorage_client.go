@@ -25,7 +25,7 @@ type client struct {
 	clientType      types.ClientType
 	lsxCache        *lss
 	serviceCache    *lss
-	supportedCache  types.Store
+	supportedCache  *lss
 	instanceIDCache types.Store
 }
 
@@ -64,15 +64,15 @@ func (c *client) dial(ctx types.Context) error {
 		}
 	}
 
-	for service, _ := range svcInfos {
+	for service := range svcInfos {
 		ctx := c.ctx.WithValue(context.ServiceKey, service)
 		ctx.Info("initializing supported cache")
-		supported, err := c.Supported(ctx, store)
+		lsxSO, err := c.Supported(ctx, store)
 		if err != nil {
 			return goof.WithError("error initializing supported cache", err)
 		}
 
-		if !supported {
+		if lsxSO == types.LSXSOpNone {
 			ctx.Warn("executor not supported")
 			continue
 		}
@@ -211,6 +211,10 @@ func (c *client) downloadExecutor(ctx types.Context) error {
 	defer f.Close()
 
 	rdr, err := c.APIClient.ExecutorGet(ctx, types.LSX.Name())
+	if err != nil {
+		return err
+	}
+
 	n, err := io.Copy(f, rdr)
 	if err != nil {
 		return err

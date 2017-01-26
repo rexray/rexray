@@ -911,6 +911,52 @@ func TestLocalDevices(t *testing.T) {
 		}).Test)
 }
 
+func TestExecutorMountUnmount(t *testing.T) {
+
+	var (
+		ctx  = context.Background().WithValue(context.ServiceKey, vfs.Name)
+		opts = &types.DeviceMountOpts{Opts: utils.NewStore()}
+	)
+
+	td, err := ioutil.TempDir("", "")
+	func() {
+		testDirsLock.Lock()
+		defer testDirsLock.Unlock()
+		testDirs = append(testDirs, td)
+	}()
+
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, os.RemoveAll(td)) {
+		t.FailNow()
+	}
+	if !assert.False(t, gotil.FileExists(td)) {
+		t.FailNow()
+	}
+
+	mf := func(config gofig.Config, client types.Client, t *testing.T) {
+		if !assert.NoError(t, client.Executor().Mount(ctx, "", td, opts)) {
+			t.FailNow()
+		}
+		if !assert.True(t, gotil.FileExists(td)) {
+			t.FailNow()
+		}
+	}
+
+	uf := func(config gofig.Config, client types.Client, t *testing.T) {
+		if !assert.NoError(t, client.Executor().Unmount(ctx, td, opts.Opts)) {
+			t.FailNow()
+		}
+		if !assert.False(t, gotil.FileExists(td)) {
+			t.FailNow()
+		}
+	}
+
+	cfg, _, _, _ := newTestConfigAll(t)
+	apitests.RunGroup(t, vfs.Name, cfg, mf, uf)
+}
+
 func removeTestDirs() {
 	testDirsLock.RLock()
 	defer testDirsLock.RUnlock()

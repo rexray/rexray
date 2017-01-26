@@ -37,6 +37,12 @@ const (
 	// LSXCmdSupported is the command to execute to find out if an executor
 	// is valid for a given platform on the current host.
 	LSXCmdSupported = "supported"
+
+	// LSXCmdMount is the command for mounting a device to a file system path.
+	LSXCmdMount = "mount"
+
+	// LSXCmdUmount is the command for unmounting mounted file systems.
+	LSXCmdUmount = "umount"
 )
 
 const (
@@ -150,6 +156,23 @@ type StorageExecutorWithSupported interface {
 		opts Store) (bool, error)
 }
 
+// StorageExecutorWithMount is an interface that executor implementations
+// may use to become part of the mount/unmount workflow.
+type StorageExecutorWithMount interface {
+
+	// Mount mounts a device to a specified path.
+	Mount(
+		ctx Context,
+		deviceName, mountPoint string,
+		opts *DeviceMountOpts) error
+
+	// Unmount unmounts the underlying device from the specified path.
+	Unmount(
+		ctx Context,
+		mountPoint string,
+		opts Store) error
+}
+
 // ProvidesStorageExecutorCLI is a type that provides the StorageExecutorCLI.
 type ProvidesStorageExecutorCLI interface {
 	// XCLI returns the StorageExecutorCLI.
@@ -159,7 +182,8 @@ type ProvidesStorageExecutorCLI interface {
 // StorageExecutorCLI provides a way to interact with the CLI tool built with
 // the driver implementations of the StorageExecutor interface.
 type StorageExecutorCLI interface {
-	StorageExecutorWithSupported
+	StorageExecutorFunctions
+	StorageExecutorWithMount
 
 	// WaitForDevice blocks until the provided attach token appears in the
 	// map returned from LocalDevices or until the timeout expires, whichever
@@ -171,4 +195,92 @@ type StorageExecutorCLI interface {
 	WaitForDevice(
 		ctx Context,
 		opts *WaitForDeviceOpts) (bool, *LocalDevices, error)
+
+	// Supported returns a flag indicating whether the executor supports
+	// specific functions for a storage platform on the current host.
+	Supported(
+		ctx Context,
+		opts Store) (LSXSupportedOp, error)
+}
+
+// LSXSupportedOp is a bit for the mask returned from an executor's Supported
+// function.
+type LSXSupportedOp int
+
+const (
+	// LSXSOpInstanceID indicates an executor supports "InstanceID".
+	// "InstanceID" operation.
+	LSXSOpInstanceID LSXSupportedOp = 1 << iota // 1
+
+	// LSXSOpNextDevice indicates an executor supports "NextDevice".
+	LSXSOpNextDevice
+
+	// LSXSOpLocalDevices indicates an executor supports "LocalDevices".
+	LSXSOpLocalDevices
+
+	// LSXSOpWaitForDevice indicates an executor supports "WaitForDevice".
+	LSXSOpWaitForDevice
+
+	// LSXSOpMount indicates an executor supports "Mount".
+	LSXSOpMount
+
+	// LSXSOpUmount indicates an executor supports "Umount".
+	LSXSOpUmount
+)
+
+const (
+	// LSXSOpNone indicates the executor is not supported for the platform.
+	LSXSOpNone LSXSupportedOp = 0
+
+	// LSXOpAll indicates the executor supports all operations.
+	LSXOpAll LSXSupportedOp = LSXSOpInstanceID |
+		LSXSOpNextDevice |
+		LSXSOpLocalDevices |
+		LSXSOpWaitForDevice |
+		LSXSOpMount |
+		LSXSOpUmount
+
+	// LSXOpAllNoMount indicates the executor supports all operations except
+	// mount and unmount.
+	LSXOpAllNoMount = LSXOpAll & ^LSXSOpMount & ^LSXSOpUmount
+)
+
+// InstanceID returns a flag that indicates whether the LSXSOpInstanceID bit
+// is set.
+func (v LSXSupportedOp) InstanceID() bool {
+	return v.bitSet(LSXSOpInstanceID)
+}
+
+// NextDevice returns a flag that indicates whether the LSXSOpNextDevice bit
+// is set.
+func (v LSXSupportedOp) NextDevice() bool {
+	return v.bitSet(LSXSOpNextDevice)
+}
+
+// LocalDevices returns a flag that indicates whether the LSXSOpLocalDevices
+// bit is set.
+func (v LSXSupportedOp) LocalDevices() bool {
+	return v.bitSet(LSXSOpLocalDevices)
+}
+
+// WaitForDevice returns a flag that indicates whether the LSXSOpWaitForDevice
+// bit is set.
+func (v LSXSupportedOp) WaitForDevice() bool {
+	return v.bitSet(LSXSOpWaitForDevice)
+}
+
+// Mount returns a flag that indicates whether the LSXSOpMount bit
+// is set.
+func (v LSXSupportedOp) Mount() bool {
+	return v.bitSet(LSXSOpMount)
+}
+
+// Umount returns a flag that indicates whether the LSXSOpUmount bit
+// is set.
+func (v LSXSupportedOp) Umount() bool {
+	return v.bitSet(LSXSOpUmount)
+}
+
+func (v LSXSupportedOp) bitSet(b LSXSupportedOp) bool {
+	return v&b == b
 }

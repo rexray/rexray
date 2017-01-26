@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
@@ -19,10 +20,10 @@ import (
 
 func (c *client) Supported(
 	ctx types.Context,
-	opts types.Store) (bool, error) {
+	opts types.Store) (types.LSXSupportedOp, error) {
 
 	if c.isController() {
-		return false, utils.NewUnsupportedForClientTypeError(
+		return 0, utils.NewUnsupportedForClientTypeError(
 			c.clientType, "Supported")
 	}
 
@@ -30,18 +31,18 @@ func (c *client) Supported(
 
 	serviceName, ok := context.ServiceName(ctx)
 	if !ok {
-		return false, goof.New("missing service name")
+		return 0, goof.New("missing service name")
 	}
 
 	si, err := c.getServiceInfo(serviceName)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 	driverName := strings.ToLower(si.Driver.Name)
 
 	// check to see if the driver's executor is supported on this host
 	if ok := c.supportedCache.IsSet(driverName); ok {
-		return c.supportedCache.GetBool(driverName), nil
+		return c.supportedCache.GetLSXSupported(driverName), nil
 	}
 
 	out, err := c.runExecutor(ctx, driverName, types.LSXCmdSupported)
@@ -49,26 +50,27 @@ func (c *client) Supported(
 		if err == types.ErrNotImplemented {
 			ctx.WithField("serviceDriver", driverName).Warn(
 				"supported cmd not implemented")
-			c.supportedCache.Set(driverName, true)
+			c.supportedCache.Set(driverName, types.LSXOpAllNoMount)
 			ctx.WithField("supported", true).Debug("cached supported flag")
-			return true, nil
+			return types.LSXOpAllNoMount, nil
 		}
-		return false, err
+		return 0, err
 	}
 
 	if len(out) == 0 {
-		return false, nil
+		return 0, nil
 	}
 
 	out = bytes.TrimSpace(out)
-	b, err := strconv.ParseBool(string(out))
+	i, err := strconv.Atoi(string(out))
 	if err != nil {
-		return false, err
+		return 0, err
 	}
+	lsxSOp := types.LSXSupportedOp(i)
 
-	c.supportedCache.Set(driverName, b)
-	ctx.WithField("supported", b).Debug("cached supported flag")
-	return b, nil
+	c.supportedCache.Set(driverName, lsxSOp)
+	ctx.WithField("supported", lsxSOp).Debug("cached supported flag")
+	return lsxSOp, nil
 }
 
 func (c *client) InstanceID(
@@ -80,7 +82,7 @@ func (c *client) InstanceID(
 			c.clientType, "InstanceID")
 	}
 
-	if supported, _ := c.Supported(ctx, opts); !supported {
+	if lsxSO, _ := c.Supported(ctx, opts); !lsxSO.InstanceID() {
 		return nil, errExecutorNotSupported
 	}
 
@@ -142,7 +144,7 @@ func (c *client) NextDevice(
 			c.clientType, "NextDevice")
 	}
 
-	if supported, _ := c.Supported(ctx, opts); !supported {
+	if lsxSO, _ := c.Supported(ctx, opts); !lsxSO.NextDevice() {
 		return "", errExecutorNotSupported
 	}
 
@@ -177,7 +179,7 @@ func (c *client) LocalDevices(
 			c.clientType, "LocalDevices")
 	}
 
-	if supported, _ := c.Supported(ctx, opts.Opts); !supported {
+	if lsxSO, _ := c.Supported(ctx, opts.Opts); !lsxSO.LocalDevices() {
 		return nil, errExecutorNotSupported
 	}
 
@@ -218,7 +220,7 @@ func (c *client) WaitForDevice(
 			c.clientType, "WaitForDevice")
 	}
 
-	if supported, _ := c.Supported(ctx, opts.Opts); !supported {
+	if lsxSO, _ := c.Supported(ctx, opts.Opts); !lsxSO.WaitForDevice() {
 		return false, nil, errExecutorNotSupported
 	}
 
@@ -252,6 +254,95 @@ func (c *client) WaitForDevice(
 
 	ctx.Debug("xli waitfordevice success")
 	return matched, ld, nil
+}
+
+// Mount mounts a device to a specified path.
+func (c *client) Mount(
+	ctx types.Context,
+	deviceName, mountPoint string,
+	opts *types.DeviceMountOpts) error {
+
+	if c.isController() {
+		return utils.NewUnsupportedForClientTypeError(
+			c.clientType, "Mount")
+	}
+
+	if lsxSO, _ := c.Supported(ctx, opts.Opts); !lsxSO.Mount() {
+		return errExecutorNotSupported
+	}
+
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return goof.New("missing service name")
+	}
+
+	si, err := c.getServiceInfo(serviceName)
+	if err != nil {
+		return err
+	}
+	driverName := si.Driver.Name
+
+	args := []string{
+		driverName,
+		types.LSXCmdMount,
+		deviceName,
+		mountPoint,
+	}
+	if len(opts.MountLabel) > 0 {
+		args = append(args, "-l", opts.MountLabel)
+	}
+	if len(opts.MountOptions) > 0 {
+		args = append(args, "-o", opts.MountOptions)
+	}
+
+	if _, err = c.runExecutor(ctx, args...); err != nil {
+		return err
+	}
+
+	ctx.Debug("xli mount success")
+	return nil
+}
+
+// Unmount unmounts the underlying device from the specified path.
+func (c *client) Unmount(
+	ctx types.Context,
+	mountPoint string,
+	opts types.Store) error {
+
+	if c.isController() {
+		return utils.NewUnsupportedForClientTypeError(
+			c.clientType, "Unmount")
+	}
+
+	if lsxSO, _ := c.Supported(ctx, opts); !lsxSO.Umount() {
+		return errExecutorNotSupported
+	}
+
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return goof.New("missing service name")
+	}
+
+	si, err := c.getServiceInfo(serviceName)
+	if err != nil {
+		return err
+	}
+	driverName := si.Driver.Name
+
+	if _, err = c.runExecutor(
+		ctx,
+		driverName,
+		types.LSXCmdUmount,
+		mountPoint); err != nil {
+		return err
+	}
+
+	ctx.Debug("xli umount success")
+	return nil
 }
 
 func unmarshalLocalDevices(
@@ -297,6 +388,11 @@ func (c *client) runExecutor(
 	lsxBin := types.LSX.String()
 	cmd := exec.Command(lsxBin, args...)
 	cmd.Env = os.Environ()
+
+	ctx.WithFields(log.Fields{
+		"cmd":  lsxBin,
+		"args": args,
+	}).Debug("invoking executor cli")
 
 	configEnvVars := c.config.EnvVars()
 	for _, cev := range configEnvVars {

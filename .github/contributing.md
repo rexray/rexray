@@ -1,9 +1,4 @@
 # Contributing to REX-Ray
-
-An introduction to contributing to the REX-Ray project
-
----
-
 The REX-Ray project welcomes, and depends, on contributions from developers and
 users in the open source community. Contributions can be made in a number of
 ways, a few examples are:

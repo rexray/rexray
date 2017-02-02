@@ -12,13 +12,14 @@ BUILD_TAGS +=   libstorage_storage_driver \
 endif
 endif
 
-RBD_BUILD_TAGS := gofig \
-		pflag \
-		libstorage_integration_driver_docker \
-		libstorage_storage_driver \
-		libstorage_storage_driver_rbd \
-		libstorage_storage_executor \
-		libstorage_storage_executor_rbd
+ifneq (,$(DRIVERS))
+BUILD_TAGS += libstorage_storage_driver libstorage_storage_executor
+BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d) libstorage_storage_executor_$(d))
+endif
+
+ifneq (,$(BUILD_TAGS))
+BUILD_TAGS := $(sort $(BUILD_TAGS))
+endif
 
 all:
 # if docker is running, then let's use docker to build it
@@ -109,11 +110,11 @@ endif
 docker-build: docker-init
 	@docker cp $(DNAME):$(DPROG1_PATH) $(DPROG1_NAME)
 	@docker cp $(DNAME):$(DPROG2_PATH) $(DPROG2_NAME)
-	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
+	@bytes=$$(stat --format '%s' $(DPROG1_NAME) 2> /dev/null || \
 		stat -f '%z' $(DPROG1_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
 		printf "\nThe $(DPROG1_NAME) binary is $${mb}MB and located at: \n\n" && \
 		printf "  ./$(DPROG1_NAME)\n\n"
-	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
+	@bytes=$$(stat --format '%s' $(DPROG2_NAME) 2> /dev/null || \
 		stat -f '%z' $(DPROG2_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
 		printf "\nThe $(DPROG2_NAME) binary is $${mb}MB and located at: \n\n" && \
 		printf "  ./$(DPROG2_NAME)\n\n"
@@ -1076,8 +1077,8 @@ test-debug:
 	env LIBSTORAGE_DEBUG=true $(MAKE) test
 
 test-rbd:
-	env BUILD_TAGS="$(RBD_BUILD_TAGS)" $(MAKE) deps
-	env BUILD_TAGS="$(RBD_BUILD_TAGS)" $(MAKE) ./drivers/storage/rbd/tests/rbd.test
+	DRIVERS=rbd $(MAKE) deps
+	DRIVERS=rbd $(MAKE) ./drivers/storage/rbd/tests/rbd.test
 
 clean: $(GO_CLEAN)
 

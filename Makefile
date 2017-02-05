@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+GO_VERSION := 1.7.5
 
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS :=   gofig \
@@ -36,7 +37,7 @@ endif
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 DPKG := github.com/codedellemc/libstorage
-DIMG := golang:1.7.1
+DIMG := golang:$(GO_VERSION)
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
 DGOOS := $(DGOHOSTOS)
@@ -201,7 +202,7 @@ else
 GOVERSION := $(shell go version | awk '{print $$3}' | cut -c3-)
 endif
 
-ifeq (1.7.4,$(TRAVIS_GO_VERSION))
+ifeq ($(GO_VERSION),$(TRAVIS_GO_VERSION))
 ifeq (linux,$(TRAVIS_OS_NAME))
 COVERAGE_ENABLED := 1
 endif

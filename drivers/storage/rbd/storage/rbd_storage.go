@@ -212,7 +212,7 @@ func (d *driver) VolumeSnapshot(
 func (d *driver) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	fields := map[string]interface{}{
 		"driverName": d.Name(),

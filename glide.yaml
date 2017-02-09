@@ -57,9 +57,9 @@ import:
   - package: github.com/codedellemc/goisilon
     version: v1.5.0
 
-### EFS and EBS
+### EFS and EBS and S3FS
   - package: github.com/aws/aws-sdk-go
-    version: v1.5.6
+    version: v1.6.18
     repo:    https://github.com/aws/aws-sdk-go
 
 ### Rackspace

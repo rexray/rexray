@@ -23,7 +23,7 @@ import (
 )
 
 var cmdRx = regexp.MustCompile(
-	`(?i)^(?:un?)?mount|supported|instanceid|nextdevice|localdevices|wait$`)
+	`(?i)^((?:un?)?mounts?|supported|instanceid|nextdevice|localdevices|wait)$`)
 
 // Run runs the executor CLI.
 func Run() {
@@ -68,26 +68,46 @@ func Run() {
 	)
 
 	if strings.EqualFold(cmd, apitypes.LSXCmdSupported) {
-		op = "supported"
+		op = apitypes.LSXCmdSupported
 		if dws, ok := d.(apitypes.StorageExecutorWithSupported); ok {
 			opResult, opErr := dws.Supported(ctx, store)
 			if opErr != nil {
 				err = opErr
 			} else if opResult {
+				rflags := apitypes.LSXOpAllNoMount
 				if _, ok := dws.(apitypes.StorageExecutorWithMount); ok {
-					result = apitypes.LSXOpAll
-				} else {
-					result = apitypes.LSXOpAllNoMount
+					rflags = rflags | apitypes.LSXSOpMount
 				}
+				if _, ok := dws.(apitypes.StorageExecutorWithUnmount); ok {
+					rflags = rflags | apitypes.LSXSOpUmount
+				}
+				if _, ok := dws.(apitypes.StorageExecutorWithMounts); ok {
+					rflags = rflags | apitypes.LSXSOpMounts
+				}
+				result = rflags
 			} else {
 				result = apitypes.LSXSOpNone
 			}
 		} else {
 			err = apitypes.ErrNotImplemented
 		}
+	} else if strings.EqualFold(cmd, apitypes.LSXCmdMounts) {
+		op = apitypes.LSXCmdMounts
+		dd, ok := d.(apitypes.StorageExecutorWithMounts)
+		if !ok {
+			err = apitypes.ErrNotImplemented
+		} else {
+			mounts, opErr := dd.Mounts(ctx, store)
+			if opErr != nil {
+				err = opErr
+			} else if mounts == nil {
+				result = []*apitypes.MountInfo{}
+			} else {
+				result = mounts
+			}
+		}
 	} else if strings.EqualFold(cmd, apitypes.LSXCmdMount) {
-		op = "mount"
-
+		op = apitypes.LSXCmdMount
 		dd, ok := d.(apitypes.StorageExecutorWithMount)
 		if !ok {
 			err = apitypes.ErrNotImplemented
@@ -137,8 +157,8 @@ func Run() {
 		}
 	} else if strings.EqualFold(cmd, apitypes.LSXCmdUmount) ||
 		strings.EqualFold(cmd, "unmount") {
-		op = "umount"
-		dd, ok := d.(apitypes.StorageExecutorWithMount)
+		op = apitypes.LSXCmdUmount
+		dd, ok := d.(apitypes.StorageExecutorWithUnmount)
 		if !ok {
 			err = apitypes.ErrNotImplemented
 		} else {
@@ -154,7 +174,7 @@ func Run() {
 			}
 		}
 	} else if strings.EqualFold(cmd, apitypes.LSXCmdInstanceID) {
-		op = "instance ID"
+		op = apitypes.LSXCmdInstanceID
 		opResult, opErr := d.InstanceID(ctx, store)
 		if opErr != nil {
 			err = opErr
@@ -163,7 +183,7 @@ func Run() {
 			result = opResult
 		}
 	} else if strings.EqualFold(cmd, apitypes.LSXCmdNextDevice) {
-		op = "next device"
+		op = apitypes.LSXCmdNextDevice
 		opResult, opErr := d.NextDevice(ctx, store)
 		if opErr != nil && opErr != apitypes.ErrNotImplemented {
 			err = opErr
@@ -174,7 +194,7 @@ func Run() {
 		if len(args) < 4 {
 			printUsageAndExit()
 		}
-		op = "local devices"
+		op = apitypes.LSXCmdLocalDevices
 		opResult, opErr := d.LocalDevices(ctx, &apitypes.LocalDevicesOpts{
 			ScanType: apitypes.ParseDeviceScanType(args[3]),
 			Opts:     store,
@@ -189,7 +209,7 @@ func Run() {
 		if len(args) < 6 {
 			printUsageAndExit()
 		}
-		op = "wait"
+		op = apitypes.LSXCmdWaitForDevice
 		opts := &apitypes.WaitForDeviceOpts{
 			LocalDevicesOpts: apitypes.LocalDevicesOpts{
 				ScanType: apitypes.ParseDeviceScanType(args[3]),
@@ -322,6 +342,7 @@ func printUsage() {
 	printUsageLeftPadded(w, lpad2, "nextDevice\n")
 	printUsageLeftPadded(w, lpad2, "localDevices <scanType>\n")
 	printUsageLeftPadded(w, lpad2, "wait <scanType> <attachToken> <timeout>\n")
+	printUsageLeftPadded(w, lpad2, "mounts\n")
 	printUsageLeftPadded(w, lpad2, "mount [-l label] [-o options] device path\n")
 	printUsageLeftPadded(w, lpad2, "umount path\n")
 	fmt.Fprintln(w)

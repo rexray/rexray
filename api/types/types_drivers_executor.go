@@ -43,6 +43,9 @@ const (
 
 	// LSXCmdUmount is the command for unmounting mounted file systems.
 	LSXCmdUmount = "umount"
+
+	// LSXCmdMounts is the command for getting a list of mount info objects.
+	LSXCmdMounts = "mounts"
 )
 
 const (
@@ -157,7 +160,7 @@ type StorageExecutorWithSupported interface {
 }
 
 // StorageExecutorWithMount is an interface that executor implementations
-// may use to become part of the mount/unmount workflow.
+// may use to become part of the mount workflow.
 type StorageExecutorWithMount interface {
 
 	// Mount mounts a device to a specified path.
@@ -165,6 +168,21 @@ type StorageExecutorWithMount interface {
 		ctx Context,
 		deviceName, mountPoint string,
 		opts *DeviceMountOpts) error
+}
+
+// StorageExecutorWithMounts is an interface that executor implementations
+// may use to become part of the mounts workflow.
+type StorageExecutorWithMounts interface {
+
+	// Mounts get a list of mount points.
+	Mounts(
+		ctx Context,
+		opts Store) ([]*MountInfo, error)
+}
+
+// StorageExecutorWithUnmount is an interface that executor implementations
+// may use to become part of unmount workflow.
+type StorageExecutorWithUnmount interface {
 
 	// Unmount unmounts the underlying device from the specified path.
 	Unmount(
@@ -184,6 +202,8 @@ type ProvidesStorageExecutorCLI interface {
 type StorageExecutorCLI interface {
 	StorageExecutorFunctions
 	StorageExecutorWithMount
+	StorageExecutorWithMounts
+	StorageExecutorWithUnmount
 
 	// WaitForDevice blocks until the provided attach token appears in the
 	// map returned from LocalDevices or until the timeout expires, whichever
@@ -226,6 +246,9 @@ const (
 
 	// LSXSOpUmount indicates an executor supports "Umount".
 	LSXSOpUmount
+
+	// LSXSOpMounts indicates an executor supports "Mounts".
+	LSXSOpMounts
 )
 
 const (
@@ -238,11 +261,12 @@ const (
 		LSXSOpLocalDevices |
 		LSXSOpWaitForDevice |
 		LSXSOpMount |
-		LSXSOpUmount
+		LSXSOpUmount |
+		LSXSOpMounts
 
 	// LSXOpAllNoMount indicates the executor supports all operations except
 	// mount and unmount.
-	LSXOpAllNoMount = LSXOpAll & ^LSXSOpMount & ^LSXSOpUmount
+	LSXOpAllNoMount = LSXOpAll & ^LSXSOpMount & ^LSXSOpUmount & ^LSXSOpMounts
 )
 
 // InstanceID returns a flag that indicates whether the LSXSOpInstanceID bit
@@ -279,6 +303,12 @@ func (v LSXSupportedOp) Mount() bool {
 // is set.
 func (v LSXSupportedOp) Umount() bool {
 	return v.bitSet(LSXSOpUmount)
+}
+
+// Mounts returns a flag that indicates whether the LSXSOpMounts bit
+// is set.
+func (v LSXSupportedOp) Mounts() bool {
+	return v.bitSet(LSXSOpMounts)
 }
 
 func (v LSXSupportedOp) bitSet(b LSXSupportedOp) bool {

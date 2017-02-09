@@ -57,43 +57,43 @@ type Instance struct {
 // struct is populated from the content in the /proc/<pid>/mountinfo file.
 type MountInfo struct {
 	// ID is a unique identifier of the mount (may be reused after umount).
-	ID int `json:"id" yaml:"id"`
+	ID int `json:"id,omitempty" yaml:"id,omitempty"`
 
 	// Parent indicates the ID of the mount parent (or of self for the top of
 	// the mount tree).
-	Parent int `json:"parent"`
+	Parent int `json:"parent,omitempty" yaml:"parent,omitempty"`
 
 	// Major indicates one half of the device ID which identifies the device
 	// class.
-	Major int `json:"major"`
+	Major int `json:"major,omitempty" yaml:"major,omitempty"`
 
 	// Minor indicates one half of the device ID which identifies a specific
 	// instance of device.
-	Minor int `json:"minor"`
+	Minor int `json:"minor,omitempty" yaml:"minor,omitempty"`
 
 	// Root of the mount within the filesystem.
-	Root string `json:"root"`
+	Root string `json:"root,omitempty" yaml:"root,omitempty"`
 
 	// MountPoint indicates the mount point relative to the process's root.
-	MountPoint string `json:"mountPoint" yaml:"mountPoint"`
+	MountPoint string `json:"mountPoint,omitempty" yaml:"mountPoint,omitempty"`
 
 	// Opts represents mount-specific options.
-	Opts string `json:"opts"`
+	Opts string `json:"opts,omitempty" yaml:"opts,omitempty"`
 
 	// Optional represents optional fields.
-	Optional string `json:"optional"`
+	Optional string `json:"optional,omitempty" yaml:"optional,omitempty"`
 
 	// FSType indicates the type of filesystem, such as EXT3.
-	FSType string `json:"fsType" yaml:"fsType"`
+	FSType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
 
 	// Source indicates filesystem specific information or "none".
-	Source string `json:"source"`
+	Source string `json:"source,omitempty" yaml:"source,omitempty"`
 
 	// VFSOpts represents per super block options.
-	VFSOpts string `json:"vfsOpts" yaml:"vfsOpts"`
+	VFSOpts string `json:"vfsOpts,omitempty" yaml:"vfsOpts,omitempty"`
 
 	// Fields are additional properties that can be defined for this type.
-	Fields map[string]string `json:"fields,omitempty" yaml:",omitempty"`
+	Fields map[string]string `json:"fields,omitempty" yaml:"fields,omitempty"`
 }
 
 // Snapshot provides information about a storage-layer snapshot.

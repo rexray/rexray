@@ -294,7 +294,7 @@ func (d *driver) VolumeSnapshot(
 func (d *driver) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	d.Lock()
 	defer d.Unlock()

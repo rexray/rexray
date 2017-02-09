@@ -227,7 +227,7 @@ func (d *idm) Create(
 func (d *idm) Remove(
 	ctx types.Context,
 	volumeName string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	fields := log.Fields{
 		"volumeName": volumeName,

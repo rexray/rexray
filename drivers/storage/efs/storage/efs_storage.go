@@ -90,7 +90,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.maxRetries = &maxRetries
 	fields["maxRetries"] = maxRetries
 
-	log.WithFields(fields).Info("storage driver initialized")
+	ctx.WithFields(fields).Info("storage driver initialized")
 	return nil
 }
 
@@ -161,7 +161,7 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		fields[efs.Endpoint] = *endpoint
 	}
 
-	ctx.WithFields(fields).Debug("efs service connetion attempt")
+	ctx.WithFields(fields).Debug("efs service connection attempt")
 	sess := session.New()
 
 	var (
@@ -471,7 +471,7 @@ func (d *driver) VolumeCreate(
 func (d *driver) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	svc := mustSession(ctx)
 

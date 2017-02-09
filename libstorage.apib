@@ -1668,8 +1668,24 @@ Internal server error
 
             { "$ref": "https://raw.githubusercontent.com/codedellemc/libstorage/master/libstorage.json#/definitions/internalServerError" }
 
-## Remove [DELETE]
+## Remove [DELETE /volumes/{service}/{volumeID}?{force}]
 Removes the volume.
+
++ Parameters
+
+    + service: `ebs-00` (string, required)
+
+        The name of the service to which the Volume belongs
+
+    + volumeID: `vol-000` (string, required)
+
+        The volume's unique ID
+
+    + force (optional)
+
+        A flag that indicates whether or not this is a force delete. If true
+        the delete operation should remove the volume regardless of its state
+        or contents.
 
 + Request (application/json)
 

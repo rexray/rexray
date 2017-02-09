@@ -245,6 +245,12 @@ type VolumeDetachOpts struct {
 	Opts  Store
 }
 
+// VolumeRemoveOpts are options for removing a volume.
+type VolumeRemoveOpts struct {
+	Force bool
+	Opts  Store
+}
+
 // StorageDriverManager is the management wrapper for a StorageDriver.
 type StorageDriverManager interface {
 	StorageDriver
@@ -319,7 +325,7 @@ type StorageDriver interface {
 	VolumeRemove(
 		ctx Context,
 		volumeID string,
-		opts Store) error
+		opts *VolumeRemoveOpts) error
 
 	// VolumeAttach attaches a volume and provides a token clients can use
 	// to validate that device has appeared locally.

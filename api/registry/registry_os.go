@@ -1,7 +1,8 @@
 package registry
 
 import (
-	"strings"
+	"os"
+	"path"
 
 	"github.com/codedellemc/libstorage/api/types"
 )
@@ -58,8 +59,13 @@ func (d *odm) Format(
 
 	ctx = ctx.Join(d.Context)
 
-	if strings.Contains(deviceName, ":") {
+	if !path.IsAbs(deviceName) {
 		return nil
 	}
+
+	if _, err := os.Stat(deviceName); os.IsNotExist(err) {
+		return nil
+	}
+
 	return d.OSDriver.Format(ctx, deviceName, opts)
 }

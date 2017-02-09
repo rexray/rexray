@@ -518,6 +518,109 @@ libstorage:
           region:         us-east-1
           tag:            test
 ```
+
+## AWS S3FS
+The AWS S3FS driver registers a storage driver named `s3fs` with the
+`libStorage` driver manager and provides the ability to mount Amazon Simple
+Storage Service (S3) buckets as filesystems using the
+[`s3fs`](https://github.com/s3fs-fuse/s3fs-fuse) FUSE command.
+
+Unlike the other AWS-related drivers, the S3FS storage driver does not need
+to deployed or used by an EC2 instance. Any client can take advantage of
+Amazon's S3 buckets.
+
+### Requirements
+* AWS account
+* The [`s3fs`](https://github.com/s3fs-fuse/s3fs-fuse) FUSE command must be
+present on client nodes.
+
+### Configuration
+The following is an example with all possible fields configured.  For a running
+example see the `Examples` section.
+
+### Server-Side Configuration
+```yaml
+s3fs:
+  region:           us-east-1
+  accessKey:        XXXXXXXXXX
+  secretKey:        XXXXXXXXXX
+  disablePathStyle: false
+```
+
+* The `accessKey` and `secretKey` configuration parameters are optional and
+should be used when explicit AWS credentials configuration needs to be provided.
+The S3FS driver uses the official Golang AWS SDK library and supports all other
+ways of  providing access credentials, like environment variables or instance
+profile IAM permissions.
+* `region` represents AWS region where S3FS buckets should be provisioned.
+Please see the official AWS documentation for list of
+[supported regions](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region).
+* The `disablePathStyle` property disables the use of the path style for
+bucket endpoints. The path style is more stable with regards to regions
+than bucket URI FQDNs, but the path style is also less performant.
+
+### Client-Side Configuration
+```yaml
+s3fs:
+  cmd:            s3fs
+  options:
+  - XXXX
+  - XXXX
+  accessKey:      XXXXXXXXXX
+  secretKey:      XXXXXXXXXX
+```
+
+* The `cmd` property defaults simply to `s3fs` with the assumption that the
+`s3fs` binary will be in the path. This value can also be the absolute path
+to the `s3fs` binary.
+* `options` is a list of options to pass to the `s3fs` command. Please see the
+[official](https://github.com/s3fs-fuse/s3fs-fuse/wiki/Fuse-Over-Amazon)
+documentation for a full list of CLI options. The `-o` prefix should not be
+provided in the configuration file.
+* The credential properties can be defined on the client via the configuration
+file and will be supplied to the `s3fs` process via environment variables.
+However, the `s3fs` command will also look in all the
+[usual places](https://github.com/s3fs-fuse/s3fs-fuse/wiki/Fuse-Over-Amazon)
+for the credentials if they're not in this file.
+
+For information on the equivalent environment variable and CLI flag names
+please see the section on how non top-level configuration properties are
+[transformed](./config.md#configuration-properties).
+
+### Runtime Behavior
+The AWS S3FS storage driver can create new buckets as well as remove existing
+ones. Buckets are mounted to clients as filesystems using the
+[`s3fs`](https://github.com/s3fs-fuse/s3fs-fuse) FUSE command. For clients
+to correctly mount and unmount S3 buckets the `s3fs` command should be in
+the path of the executor or configured via the `s3fs.cmd` property in the
+client-side REX-Ray configuration file.
+
+The client must also have access to the AWS credentials used for mounting and
+unmounting S3 buckets. These credentials can be stored in the client-side
+REX-Ray configuration file or via
+[any means avaialble](https://github.com/s3fs-fuse/s3fs-fuse/wiki/Fuse-Over-Amazon)
+to the `s3fs` command.
+
+
+### Activating the Driver
+To activate the AWS S3FS driver please follow the instructions for
+[activating storage drivers](./config.md#storage-drivers),
+using `s3fs` as the driver name.
+
+### Examples
+Below is a working `config.yml` file that works with AWS S3FS.
+
+```yaml
+libstorage:
+  server:
+    services:
+      s3fs:
+        driver: s3fs
+        s3fs:
+          accessKey:      XXXXXXXXXX
+          secretKey:      XXXXXXXXXX
+```
+
 ## Ceph RBD
 The Ceph RBD driver registers a driver named `rbd` with the `libStorage` driver
 manager and is used to connect and mount RADOS Block Devices from a Ceph

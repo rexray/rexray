@@ -2,6 +2,7 @@ package libstorage
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"strconv"
@@ -303,6 +304,46 @@ func (c *client) Mount(
 
 	ctx.Debug("xli mount success")
 	return nil
+}
+
+func (c *client) Mounts(
+	ctx types.Context,
+	opts types.Store) ([]*types.MountInfo, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "Mounts")
+	}
+
+	if lsxSO, _ := c.Supported(ctx, opts); !lsxSO.Mounts() {
+		return nil, errExecutorNotSupported
+	}
+
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
+
+	si, err := c.getServiceInfo(serviceName)
+	if err != nil {
+		return nil, err
+	}
+	driverName := si.Driver.Name
+
+	out, err := c.runExecutor(ctx, driverName, types.LSXCmdMounts)
+	if err != nil {
+		return nil, err
+	}
+
+	var mounts []*types.MountInfo
+	if err := json.Unmarshal(out, &mounts); err != nil {
+		return nil, err
+	}
+
+	ctx.Debug("xli mounts success")
+	return mounts, nil
 }
 
 // Unmount unmounts the underlying device from the specified path.

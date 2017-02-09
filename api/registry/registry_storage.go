@@ -113,7 +113,7 @@ func (d *sdm) VolumeSnapshot(
 func (d *sdm) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	return d.StorageDriver.VolumeRemove(
 		ctx.Join(d.Context), volumeID, opts)

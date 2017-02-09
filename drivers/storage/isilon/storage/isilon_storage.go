@@ -304,7 +304,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 func (d *driver) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	if d.quotas() {
 		ctx.WithField("volume", volumeID).Debug("clearing volume quotas")

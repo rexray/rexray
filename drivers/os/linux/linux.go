@@ -57,7 +57,7 @@ func (d *driver) Mounts(
 	deviceName, mountPoint string,
 	opts types.Store) ([]*types.MountInfo, error) {
 
-	mounts, err := getMounts()
+	mounts, err := d.getMounts(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +77,28 @@ func (d *driver) Mounts(
 	return matchedMounts, nil
 }
 
+func (d *driver) getMounts(
+	ctx types.Context,
+	opts types.Store) ([]*types.MountInfo, error) {
+
+	// see if we should use the executor?
+	if client, ok := context.Client(ctx); ok {
+		if _, ok := context.ServiceName(ctx); ok {
+			if client.Executor() != nil {
+				lsxSO, err := client.Executor().Supported(ctx, opts)
+				if err != nil {
+					return nil, err
+				}
+				if lsxSO.Mounts() {
+					return client.Executor().Mounts(ctx, opts)
+				}
+			}
+		}
+	}
+
+	return getMounts()
+}
+
 func (d *driver) Mount(
 	ctx types.Context,
 	deviceName, mountPoint string,
@@ -91,22 +113,26 @@ func (d *driver) Mount(
 					return err
 				}
 				if lsxSO.Mount() {
-					return client.Executor().Mount(
-						ctx, deviceName, mountPoint, opts)
+					if err := client.Executor().Mount(
+						ctx, deviceName, mountPoint, opts); err != nil {
+						return err
+					}
+					mp := d.volumeMountPath(mountPoint)
+					fm := d.fileModeMountPath()
+					os.MkdirAll(mp, fm)
+					os.Chmod(mp, fm)
+					return nil
 				}
 			}
 		}
 	}
 
 	if d.isNfsDevice(deviceName) {
-
 		if err := d.nfsMount(deviceName, mountPoint); err != nil {
 			return err
 		}
-
 		os.MkdirAll(d.volumeMountPath(mountPoint), d.fileModeMountPath())
 		os.Chmod(d.volumeMountPath(mountPoint), d.fileModeMountPath())
-
 		return nil
 	}
 
@@ -162,7 +188,18 @@ func (d *driver) IsMounted(
 	mountPoint string,
 	opts types.Store) (bool, error) {
 
-	return mounted(mountPoint)
+	mounts, err := d.getMounts(ctx, opts)
+	if err != nil {
+		return false, err
+	}
+
+	for _, m := range mounts {
+		if m.MountPoint == mountPoint {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (d *driver) Format(

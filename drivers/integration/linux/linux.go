@@ -272,7 +272,6 @@ func (d *driver) Mount(
 	if opts.NewFSType == "" {
 		opts.NewFSType = d.fsType()
 	}
-
 	if err := client.OS().Format(
 		ctx,
 		ma.DeviceName,
@@ -504,14 +503,14 @@ func (d *driver) Create(
 func (d *driver) Remove(
 	ctx types.Context,
 	volumeName string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	if volumeName == "" {
 		return goof.New("missing volume name or ID")
 	}
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, "", volumeName, 0, opts)
+		ctx, "", volumeName, 0, opts.Opts)
 	if err != nil {
 		return err
 	}

@@ -1,5 +1,5 @@
-hash: bfed9a1798d05ab23243875113ae9bc97fdb346ac25be707c05d31e2e00c0915
-updated: 2016-11-17T13:57:46.85843333-06:00
+hash: 4cee882016929bc1aa12aa52eedc34f0ebc5b8c0103600441f587b0ac4c48328
+updated: 2017-02-04T22:26:14.762400239-06:00
 imports:
 - name: github.com/akutz/gofig
   version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
@@ -20,7 +20,7 @@ imports:
 - name: github.com/asaskevich/govalidator
   version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
 - name: github.com/aws/aws-sdk-go
-  version: 6627523f8671f323edb36dfc56cc0b47c810211f
+  version: 3f8f870ec9939e32b3372abf74d24e468bcd285d
   repo: https://github.com/aws/aws-sdk-go
   subpackages:
   - aws
@@ -35,10 +35,10 @@ imports:
   - aws/credentials/stscreds
   - aws/defaults
   - aws/ec2metadata
+  - aws/endpoints
   - aws/request
   - aws/session
   - aws/signer/v4
-  - private/endpoints
   - private/protocol
   - private/protocol/ec2query
   - private/protocol/json/jsonutil
@@ -47,10 +47,12 @@ imports:
   - private/protocol/query/queryutil
   - private/protocol/rest
   - private/protocol/restjson
+  - private/protocol/restxml
   - private/protocol/xml/xmlutil
   - private/waiter
   - service/ec2
   - service/efs
+  - service/s3
   - service/sts
 - name: github.com/cesanta/ucl
   version: 97c016fce90e6af1b14558563ac46852167e6a76

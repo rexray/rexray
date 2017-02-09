@@ -541,7 +541,7 @@ func TestVolumeRemove(t *testing.T) {
 
 	tf1 := func(config gofig.Config, client types.Client, t *testing.T) {
 		assertVolDir(t, config, "vfs-002", true)
-		err := client.API().VolumeRemove(nil, vfs.Name, "vfs-002")
+		err := client.API().VolumeRemove(nil, vfs.Name, "vfs-002", false)
 		assert.NoError(t, err)
 		assertVolDir(t, config, "vfs-002", false)
 	}
@@ -549,7 +549,7 @@ func TestVolumeRemove(t *testing.T) {
 	apitests.Run(t, vfs.Name, newTestConfig(t), tf1)
 
 	tf2 := func(config gofig.Config, client types.Client, t *testing.T) {
-		err := client.API().VolumeRemove(nil, vfs.Name, "vfs-002")
+		err := client.API().VolumeRemove(nil, vfs.Name, "vfs-002", false)
 		assert.Error(t, err)
 		httpErr := err.(goof.HTTPError)
 		assert.Equal(t, "resource not found", httpErr.Error())

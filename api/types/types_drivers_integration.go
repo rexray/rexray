@@ -78,7 +78,7 @@ type IntegrationDriver interface {
 	Remove(
 		ctx Context,
 		volumeName string,
-		opts Store) error
+		opts *VolumeRemoveOpts) error
 
 	// Attach will attach a volume based on volumeName to the instance of
 	// instanceID.

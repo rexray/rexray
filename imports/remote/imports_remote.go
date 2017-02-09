@@ -8,6 +8,7 @@ import (
 	_ "github.com/codedellemc/libstorage/drivers/storage/efs/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/isilon/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/rbd/storage"
+	_ "github.com/codedellemc/libstorage/drivers/storage/s3fs/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/scaleio/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/vbox/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/vfs/storage"

@@ -1,6 +1,6 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_azure
+// +build !libstorage_storage_driver libstorage_storage_driver_azureud
 
-package azure
+package azureud
 
 import (
 	"os"
@@ -10,32 +10,30 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
+	"github.com/akutz/goof"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/server"
 	apitests "github.com/codedellemc/libstorage/api/tests"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
-	"github.com/codedellemc/libstorage/drivers/storage/azure"
-	azureUtils "github.com/codedellemc/libstorage/drivers/storage/azure/utils"
+	"github.com/codedellemc/libstorage/drivers/storage/azureud"
+	azureUtils "github.com/codedellemc/libstorage/drivers/storage/azureud/utils"
 )
 
 // Put contents of sample config.yml here
 var (
 	configYAMLazure = []byte(`
-        azure:
-          resourceGroup: "trex"
-          subscriptionID: "c971aa51-5850-460a-b300-3265d4af154b"
-          tenantID: "ebbc4596-9828-453c-b95e-b8cb122f45bd"
-          clientID: "5d7fbebc-2e7b-487d-bf6e-04e4bee8e8cc"
-          clientSecret: "fill_your_secret"
-          certPath: ""
-          container: "vhds"
-          storageAccount: "trexdisks256"
-          storageAccessKey: "fill_your_seceret"
+azureud:
+  resourceGroup: "trex"
+  subscriptionID: "c971aa51-5850-460a-b300-3265d4af154b"
+  tenantID: "ebbc4596-9828-453c-b95e-b8cb122f45bd"
+  clientID: "5d7fbebc-2e7b-487d-bf6e-04e4bee8e8cc"
+  clientSecret: "fill_your_secret"
+  storageAccount: "trexdisks256"
+  storageAccessKey: "fill_your_seceret"
 `)
 )
 
@@ -68,20 +66,25 @@ type CleanupVolume struct {
 	client types.Client
 }
 
-func (ctx *CleanupObjectContextT) add(key string, vol *types.Volume, client types.Client) {
+func (ctx *CleanupObjectContextT) add(
+	key string,
+	vol *types.Volume,
+	client types.Client) {
+
 	cobj := &CleanupVolume{vol: vol, client: client}
 	ctx.objects[key] = cobj
 }
 
 func (cvol *CleanupVolume) cleanup(key string) {
-	cvol.client.API().VolumeDetach(nil, azure.Name, cvol.vol.Name, &types.VolumeDetachRequest{Force: true})
-	cvol.client.API().VolumeRemove(nil, azure.Name, cvol.vol.Name)
+	cvol.client.API().VolumeDetach(nil, azureud.Name, cvol.vol.Name,
+		&types.VolumeDetachRequest{Force: true})
+	cvol.client.API().VolumeRemove(nil, azureud.Name, cvol.vol.Name, false)
 }
 
 // Check environment vars to see whether or not to run this test
 func skipTests() bool {
 	travis, _ := strconv.ParseBool(os.Getenv("TRAVIS"))
-	noTestAZURE, _ := strconv.ParseBool(os.Getenv("TEST_SKIP_AZURE"))
+	noTestAZURE, _ := strconv.ParseBool(os.Getenv("TEST_SKIP_AZUREDISK"))
 	return travis || noTestAZURE
 }
 
@@ -89,10 +92,10 @@ func skipTests() bool {
 func init() {
 	uuid, _ := types.NewUUID()
 	uuids := strings.Split(uuid.String(), "-")
-	volumeName = "test-vol-" + uuids[0] + ".vhd"
+	volumeName = "test-vol-" + uuids[0]
 	uuid, _ = types.NewUUID()
 	uuids = strings.Split(uuid.String(), "-")
-	volumeName2 = "test-vol-" + uuids[0] + ".vhd"
+	volumeName2 = "test-vol-" + uuids[0]
 	cleanupObjectContext = CleanupObjectContextT{
 		objects: make(map[string]CleanupIface),
 	}
@@ -107,19 +110,6 @@ func TestMain(m *testing.M) {
 ///////////////////////////////////////////////////////////////////////
 /////////                    PUBLIC TESTS                     /////////
 ///////////////////////////////////////////////////////////////////////
-func TestConfig(t *testing.T) {
-	if skipTests() {
-		t.SkipNow()
-	}
-	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		assert.NotEqual(t, config.GetString("azure.clientID"), "")
-		assert.Equal(t, config.GetString("azure.clientID"),
-			"5d7fbebc-2e7b-487d-bf6e-04e4bee8e8cc")
-	}
-	apitests.Run(t, azure.Name, configYAMLazure, tf)
-	cleanupObjectContext.cleanup()
-}
-
 // Check if InstanceID metadata is properly returned by executor
 // and InstanceID.ID is filled out by InstanceInspect
 func TestInstanceID(t *testing.T) {
@@ -127,38 +117,21 @@ func TestInstanceID(t *testing.T) {
 		t.SkipNow()
 	}
 
-	// create storage driver
-	sd, err := registry.NewStorageDriver(azure.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// initialize storage driver
 	ctx := context.Background()
-	if err := sd.Init(ctx, registry.NewConfig()); err != nil {
-		t.Fatal(err)
-	}
-	// Get Instance ID metadata from executor
+	// Get Instance ID from executor
 	iid, err := azureUtils.InstanceID(ctx)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Fill in Instance ID's ID field with InstanceInspect
-	ctx = ctx.WithValue(context.InstanceIDKey, iid)
-	i, err := sd.InstanceInspect(ctx, utils.NewStore())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	iid = i.InstanceID
+	assert.NotEqual(t, iid.ID, "")
 
 	// test resulting InstanceID
 	apitests.Run(
-		t, azure.Name, configYAMLazure,
+		t, azureud.Name, configYAMLazure,
 		(&apitests.InstanceIDTest{
-			Driver:   azure.Name,
+			Driver:   azureud.Name,
 			Expected: iid,
 		}).Test)
 	cleanupObjectContext.cleanup()
@@ -175,10 +148,10 @@ func TestServices(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len(reply), 1)
 
-		_, ok := reply[azure.Name]
+		_, ok := reply[azureud.Name]
 		assert.True(t, ok)
 	}
-	apitests.Run(t, azure.Name, configYAMLazure, tf)
+	apitests.Run(t, azureud.Name, configYAMLazure, tf)
 	cleanupObjectContext.cleanup()
 }
 
@@ -192,7 +165,7 @@ func TestVolumeCreateRemove(t *testing.T) {
 		vol := volumeCreate(t, client, volumeName)
 		volumeRemove(t, client, vol.ID)
 	}
-	apitests.Run(t, azure.Name, configYAMLazure, tf)
+	apitests.Run(t, azureud.Name, configYAMLazure, tf)
 	cleanupObjectContext.cleanup()
 }
 
@@ -212,7 +185,7 @@ func TestVolumes(t *testing.T) {
 		volumeRemove(t, client, vol1.ID)
 		volumeRemove(t, client, vol2.ID)
 	}
-	apitests.Run(t, azure.Name, configYAMLazure, tf)
+	apitests.Run(t, azureud.Name, configYAMLazure, tf)
 	cleanupObjectContext.cleanup()
 }
 
@@ -229,16 +202,18 @@ func TestVolumeAttachDetach(t *testing.T) {
 		_ = volumeInspectAttachedToMyInstance(t, client, vol.ID)
 	}
 	tf2 := func(config gofig.Config, client types.Client, t *testing.T) {
-		_ = volumeInspectAttachedToMyInstanceWithForeignInstance(t, client, vol.ID)
+		_ = volumeInspectAttachedToMyInstanceWithForeignInstance(
+			t, client, vol.ID)
 	}
 	tf3 := func(config gofig.Config, client types.Client, t *testing.T) {
 		_ = volumeDetach(t, client, vol.ID)
 		_ = volumeInspectDetached(t, client, vol.ID)
 		volumeRemove(t, client, vol.ID)
 	}
-	apitests.Run(t, azure.Name, configYAMLazure, tf)
-	apitests.RunWithClientType(t, types.ControllerClient, azure.Name, configYAMLazure, tf2)
-	apitests.Run(t, azure.Name, configYAMLazure, tf3)
+	apitests.Run(t, azureud.Name, configYAMLazure, tf)
+	apitests.RunWithClientType(t, types.ControllerClient, azureud.Name,
+		configYAMLazure, tf2)
+	apitests.Run(t, azureud.Name, configYAMLazure, tf3)
 	cleanupObjectContext.cleanup()
 }
 
@@ -262,7 +237,8 @@ func volumeCreate(
 		Opts: opts,
 	}
 	// Send request and retrieve created libStorage types.Volume
-	vol, err := client.API().VolumeCreate(nil, azure.Name, volumeCreateRequest)
+	vol, err := client.API().VolumeCreate(nil, azureud.Name,
+		volumeCreateRequest)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -277,11 +253,12 @@ func volumeCreate(
 	return vol
 }
 
-// Test volume retrieval by volume name using Volumes, which retrieves all volumes
-// from the storage driver without filtering, and filters the volumes externally.
+// Test volume retrieval by volume name using Volumes, which retrieves all
+// volumes from the storage driver without filtering, and filters the volumes
+// externally.
 func volumeByName(
 	t *testing.T, client types.Client, volumeName string) *types.Volume {
-	log.WithField("volumeName", volumeName).Info("get volume by azure.Name")
+	log.WithField("volumeName", volumeName).Info("get volume by name")
 	// Retrieve all volumes
 	vols, err := client.API().Volumes(nil, 0)
 	assert.NoError(t, err)
@@ -290,8 +267,8 @@ func volumeByName(
 	}
 	// Filter volumes to those under the azure service,
 	// and find a volume matching inputted volume name
-	assert.Contains(t, vols, azure.Name)
-	for _, vol := range vols[azure.Name] {
+	assert.Contains(t, vols, azureud.Name)
+	for _, vol := range vols[azureud.Name] {
 		if vol.Name == volumeName {
 			return vol
 		}
@@ -306,7 +283,7 @@ func volumeByName(
 func volumeRemove(t *testing.T, client types.Client, volumeID string) {
 	log.WithField("volumeID", volumeID).Info("removing volume")
 	err := client.API().VolumeRemove(
-		nil, azure.Name, volumeID)
+		nil, azureud.Name, volumeID, false)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeRemove")
@@ -320,7 +297,9 @@ func volumeAttach(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("attaching volume")
 	// Get next device name from executor
-	nextDevice, err := client.Executor().NextDevice(context.Background().WithValue(context.ServiceKey, azure.Name),
+	nextDevice, err := client.Executor().NextDevice(
+		context.Background().WithValue(
+			context.ServiceKey, azureud.Name),
 		utils.NewStore())
 	assert.NoError(t, err)
 	if err != nil {
@@ -328,7 +307,7 @@ func volumeAttach(
 		t.FailNow()
 	}
 	reply, token, err := client.API().VolumeAttach(
-		nil, azure.Name, volumeID, &types.VolumeAttachRequest{
+		nil, azureud.Name, volumeID, &types.VolumeAttachRequest{
 			NextDeviceName: &nextDevice,
 		})
 	assert.NoError(t, err)
@@ -348,7 +327,8 @@ func volumeAttach(
 func volumeInspect(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, azure.Name, volumeID, 0)
+	reply, err := client.API().VolumeInspect(
+		nil, azureud.Name, volumeID, 0)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeInspect")
@@ -363,7 +343,7 @@ func volumeInspectAttached(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(
-		nil, azure.Name, volumeID,
+		nil, azureud.Name, volumeID,
 		types.VolAttReq)
 	assert.NoError(t, err)
 	if err != nil {
@@ -378,8 +358,11 @@ func volumeInspectAttached(
 // Test if volume is attached to specified instance
 func volumeInspectAttachedToMyInstance(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
-	log.WithField("volumeID", volumeID).Info("inspecting volume attached to my instance")
-	reply, err := client.API().VolumeInspect(nil, azure.Name, volumeID, types.VolAttReqForInstance)
+	log.WithField("volumeID", volumeID).Info(
+		"inspecting volume attached to my instance")
+	reply, err := client.API().VolumeInspect(
+		nil, azureud.Name, volumeID,
+		types.VolAttReqOnlyVolsAttachedToInstance)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeInspectAttached")
@@ -394,20 +377,20 @@ func volumeInspectAttachedToMyInstance(
 func volumeInspectAttachedToMyInstanceWithForeignInstance(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	ctx := context.Background()
-	iidm := types.InstanceIDMap{"azure": &types.InstanceID{ID: "none", Driver: "azure"}}
+	iidm := types.InstanceIDMap{"azureud": &types.InstanceID{
+		ID:     "none",
+		Driver: "azureud"}}
 	ctx = ctx.WithValue(context.AllInstanceIDsKey, iidm)
 	log.WithField("volumeID", volumeID).Info(
-		"inspecting volume attached to my instance with foreign instance in filter")
+		"inspecting volume attached to my instance with " +
+			"foreign instance in filter")
 	reply, err := client.API().VolumeInspect(
-		ctx, azure.Name, volumeID,
-		types.VolAttReqForInstance)
-	assert.NoError(t, err)
-	if err != nil {
-		t.Error("failed volumeInspectAttached")
-		t.FailNow()
-	}
-	apitests.LogAsJSON(reply, t)
-	assert.Len(t, reply.Attachments, 0)
+		ctx, azureud.Name, volumeID,
+		types.VolAttReqOnlyVolsAttachedToInstance)
+	// Filtering as "to me" returns a 404 since its not attached to us
+	assert.Error(t, err)
+	httpErr := err.(goof.HTTPError)
+	assert.Equal(t, 404, httpErr.Status())
 	return reply
 }
 
@@ -416,7 +399,7 @@ func volumeInspectDetached(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(
-		nil, azure.Name, volumeID,
+		nil, azureud.Name, volumeID,
 		types.VolAttNone)
 	assert.NoError(t, err)
 
@@ -435,7 +418,7 @@ func volumeDetach(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("detaching volume")
 	reply, err := client.API().VolumeDetach(
-		nil, azure.Name, volumeID, &types.VolumeDetachRequest{})
+		nil, azureud.Name, volumeID, &types.VolumeDetachRequest{})
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeDetach")

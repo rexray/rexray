@@ -1,6 +1,6 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_azure
+// +build !libstorage_storage_driver libstorage_storage_driver_azureud
 
-package azure
+package azureud
 
 import (
 	gofigCore "github.com/akutz/gofig"
@@ -9,7 +9,7 @@ import (
 
 const (
 	// Name is the provider's name.
-	Name = "azure"
+	Name = "azureud"
 
 	// TagDelimiter separates tags from volume or snapshot names
 	TagDelimiter = "/"
@@ -18,31 +18,40 @@ const (
 	// or not for Azure URI's
 	DefaultUseHTTPS = true
 
-	// TenantIDKey is a Directory ID from Azure
+	// TenantIDKey is an Active Directory ID from Azure
 	TenantIDKey = "tenantID"
+
 	// ClientIDKey is an Application ID from Azure
 	ClientIDKey = "clientID"
+
 	// ClientSecretKey is a secret of the application
 	ClientSecretKey = "clientSecret"
+
 	// CertPathKey is a path to application certificate in case of
 	// authorization via certificate
 	CertPathKey = "certPath"
 
 	// StorageAccountKey is a name of storage account
 	StorageAccountKey = "storageAccount"
+
 	// StorageAccessKey is an access key of storage account
 	StorageAccessKey = "storageAccessKey"
+
 	// TODO: add option to pass StorageURI
 
 	// SubscriptionIDKey is an ID of subscription
 	SubscriptionIDKey = "subscriptionID"
+
 	// ResourceGroupKey is a name of resource group
 	ResourceGroupKey = "resourceGroup"
+
 	// ContainerKey is a name of container in the storage account
 	// ('vhds' by default)
 	ContainerKey = "container"
+
 	// UseHTTPSKey is a flag about use https or not for making Azure URI's
 	UseHTTPSKey = "useHTTPS"
+
 	// TagKey is a tag key
 	TagKey = "tag"
 )
@@ -63,8 +72,8 @@ const (
 	// ConfigAzureStorageAccountKey is a config key
 	ConfigAzureStorageAccountKey = ConfigAzure + "." + StorageAccountKey
 
-	// ConfigAzureStorageAccessKeyKey is a config key
-	ConfigAzureStorageAccessKeyKey = ConfigAzure + "." + StorageAccessKey
+	// ConfigAzureStorageAccessKey is a config key
+	ConfigAzureStorageAccessKey = ConfigAzure + "." + StorageAccessKey
 
 	// ConfigAzureContainerKey is a config key
 	ConfigAzureContainerKey = ConfigAzure + "." + ContainerKey
@@ -86,12 +95,13 @@ const (
 )
 
 func init() {
-	r := gofigCore.NewRegistration("Azure")
+	r := gofigCore.NewRegistration("AzureUnmanagedDisk")
 	r.Key(gofig.String, "", "", "", ConfigAzureSubscriptionIDKey)
 	r.Key(gofig.String, "", "", "", ConfigAzureResourceGroupKey)
 	r.Key(gofig.String, "", "", "", ConfigAzureTenantIDKey)
 	r.Key(gofig.String, "", "", "", ConfigAzureStorageAccountKey)
-	r.Key(gofig.String, "", "", "", ConfigAzureContainerKey)
+	r.Key(gofig.String, "", "", "", ConfigAzureStorageAccessKey)
+	r.Key(gofig.String, "", "vhds", "", ConfigAzureContainerKey)
 	r.Key(gofig.String, "", "", "", ConfigAzureClientIDKey)
 	r.Key(gofig.String, "", "", "", ConfigAzureClientSecretKey)
 	r.Key(gofig.String, "", "", "", ConfigAzureCertPathKey)

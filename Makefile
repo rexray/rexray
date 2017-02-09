@@ -1099,6 +1099,13 @@ test-digitalocean:
 test-digitalocean-clean:
 	DRIVERS=digitalocean $(MAKE) clean
 
+test-azureud:
+	DRIVERS=azureud $(MAKE) deps
+	DRIVERS=azureud $(MAKE) ./drivers/storage/azureud/tests/azureud.test
+
+test-azureud-clean:
+	DRIVERS=azureud $(MAKE) clean
+
 clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)

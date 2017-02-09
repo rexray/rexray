@@ -1,4 +1,4 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_azure
+// +build !libstorage_storage_driver libstorage_storage_driver_azureud
 
 package storage
 
@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"hash"
 	"io/ioutil"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -28,8 +29,8 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/azure"
-	"github.com/codedellemc/libstorage/drivers/storage/azure/utils"
+	"github.com/codedellemc/libstorage/drivers/storage/azureud"
+	"github.com/codedellemc/libstorage/drivers/storage/azureud/utils"
 )
 
 const (
@@ -62,11 +63,11 @@ type driver struct {
 }
 
 func init() {
-	registry.RegisterStorageDriver(azure.Name, newDriver)
+	registry.RegisterStorageDriver(azureud.Name, newDriver)
 }
 
 func newDriver() types.StorageDriver {
-	return &driver{name: azure.Name}
+	return &driver{name: azureud.Name}
 }
 
 func (d *driver) Name() string {
@@ -76,36 +77,47 @@ func (d *driver) Name() string {
 // Init initializes the driver.
 func (d *driver) Init(context types.Context, config gofig.Config) error {
 	d.config = config
+
 	d.tenantID = d.getTenantID()
-	d.clientID = d.getClientID()
-	if d.tenantID == "" || d.clientID == "" {
-		context.Error(
-			"tenantID or clientID are not set. Login will fail.")
+	if d.tenantID == "" {
+		return goof.New("tenantID is a required config item")
 	}
+
+	d.clientID = d.getClientID()
+	if d.clientID == "" {
+		return goof.New("clientID is a required config item")
+	}
+
 	d.clientSecret = d.getClientSecret()
 	d.certPath = d.getCertPath()
 	if d.clientSecret == "" && d.certPath == "" {
-		context.Error(
+		return goof.New(
 			"clientSecret or certPath must be set for login.")
+	}
+	if d.clientSecret != "" && d.certPath != "" {
+		context.Warn("certPath will be ignored since clientSecret is set")
 	}
 
 	d.storageAccount = d.getStorageAccount()
-	d.storageAccessKey = d.getStorageAccessKey()
-	if d.storageAccount == "" || d.storageAccessKey == "" {
-		context.Error(
-			"storageAccount and storageAccessKey " +
-				"are needed for correct work.")
+	if d.storageAccount == "" {
+		return goof.New("storageAccount is a required config item")
 	}
+
+	d.storageAccessKey = d.getStorageAccessKey()
+	if d.storageAccessKey == "" {
+		return goof.New("storageAccessKey is a required config item")
+	}
+
 	d.container = d.getContainer()
 
 	d.subscriptionID = d.getSubscriptionID()
 	if d.subscriptionID == "" {
-		context.Error("subscriptionID must be set for correct work.")
+		return goof.New("subscriptionID is a required config item")
 	}
+
 	d.resourceGroup = d.getResourceGroup()
 	if d.resourceGroup == "" {
-		context.Warning("resourceGroup is not set." +
-			" Some operations will fail.")
+		return goof.New("resourceGroup is a required config item")
 	}
 
 	d.useHTTPS = d.getUseHTTPS()
@@ -179,37 +191,28 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		err      error
 	)
 
-	if d.tenantID == "" {
-		return nil, goof.New("Empty tenantID")
-	}
-
 	writeHkey(hkey, &d.subscriptionID)
 	writeHkey(hkey, &d.tenantID)
 	writeHkey(hkey, &d.storageAccount)
-	writeHkey(hkey, &d.storageAccessKey)
-	if d.clientID != "" && d.clientSecret != "" {
-		ctx.Debug("login to azure using clientID and clientSecret")
-		writeHkey(hkey, &d.clientID)
-		writeHkey(hkey, &d.clientSecret)
-	} else if d.certPath != "" {
-		ctx.Debug("login to azure using clientCert")
-		certData, err = ioutil.ReadFile(d.certPath)
-		if err != nil {
-			return nil, goof.WithError(
-				"Failed to read provided certificate file",
-				err)
-		}
-		writeHkeyB(hkey, certData)
-	} else {
-		ctx.Error("No login information provided")
-		return nil, errAuthFailed
-	}
+	writeHkey(hkey, &d.clientID)
 	ckey = fmt.Sprintf("%x", hkey.Sum(nil))
 
 	if session, ok := sessions[ckey]; ok {
 		ctx.WithField(cacheKeyC, ckey).Debug(
 			"using cached azure client")
 		return session, nil
+	}
+
+	if d.clientSecret != "" {
+		ctx.Info("Authenticating via clientSecret")
+	} else {
+		ctx.Info("Authenticating via client certificate")
+		certData, err = ioutil.ReadFile(d.certPath)
+		if err != nil {
+			return nil, goof.WithError(
+				"Failed to read provided certificate file",
+				err)
+		}
 	}
 
 	oauthConfig, err := autorest.PublicCloud.OAuthConfigForTenant(
@@ -219,7 +222,7 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 			"Failed to create OAuthConfig for tenant", err)
 	}
 
-	if d.clientID != "" && d.clientSecret != "" {
+	if d.clientSecret != "" {
 		spt, err = autorest.NewServicePrincipalToken(
 			*oauthConfig, d.clientID, d.clientSecret,
 			autorest.PublicCloud.ResourceManagerEndpoint)
@@ -249,6 +252,14 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	newVMC := armCompute.NewVirtualMachinesClient(d.subscriptionID)
 	newVMC.Authorizer = spt
 	newVMC.PollingDelay = 5 * time.Second
+
+	// Verify login is working by listing VMs
+	_, err = newVMC.List(d.resourceGroup)
+	if err != nil {
+		return nil, goof.WithError("Login does not appear functional",
+			err)
+	}
+
 	bc, err := blobStorage.NewBasicClient(
 		d.storageAccount,
 		d.storageAccessKey)
@@ -264,7 +275,7 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	sessions[ckey] = &session
 
 	ctx.WithField(cacheKeyC, ckey).Info(
-		"login to azure storage driver created and cached")
+		"login to azureud storage driver created and cached")
 
 	return &session, nil
 }
@@ -289,9 +300,7 @@ func (d *driver) InstanceInspect(
 
 	iid := context.MustInstanceID(ctx)
 	return &types.Instance{
-		Name:         iid.ID,
-		InstanceID:   iid,
-		ProviderName: iid.Driver,
+		InstanceID: iid,
 	}, nil
 }
 
@@ -306,7 +315,7 @@ func (d *driver) Volumes(
 		return nil, goof.WithError("error listing blobs", err)
 	}
 	// Convert retrieved volumes to libStorage types.Volume
-	vols, convErr := d.toTypesVolume(ctx, &list.Blobs, opts.Attachments)
+	vols, convErr := d.toTypesVolume(ctx, list.Blobs, opts.Attachments)
 	if convErr != nil {
 		return nil, goof.WithError(
 			"error converting to types.Volume", convErr)
@@ -331,16 +340,8 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 		return nil, types.ErrNotImplemented
 	}
 
-	id, ok := context.InstanceID(ctx)
-	if !ok || id == nil {
-		return nil, goof.New(
-			"Can't create volume outside of Azure instance")
-	}
-	vmName := id.ID
-
 	if !strings.HasSuffix(volumeName, vhdExtension) {
-		ctx.Warning("Disk name doesn't end with '.vhd'." +
-			" This extension will be added automatically.")
+		ctx.Debugf("Auto-adding %s extension", vhdExtension)
 		volumeName = volumeName + vhdExtension
 	}
 
@@ -351,34 +352,18 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	size *= size1GB
 
 	fields := map[string]interface{}{
-		"provider":      d.Name(),
-		"vmName":        vmName,
 		"volumeName":    volumeName,
 		"size_in_bytes": size,
 	}
 
-	_, err := d.getVM(ctx, vmName)
-	if err != nil {
-		return nil, goof.WithFieldsE(fields,
-			"VM could not be obtained.", err)
-	}
-
 	blobClient := mustSession(ctx).blobClient
-	err = d.createDiskBlob(volumeName, size, blobClient)
+	err := d.createDiskBlob(volumeName, size, blobClient)
 	if err != nil {
 		return nil, goof.WithFieldsE(fields,
 			"failed to create volume for VM", err)
 	}
 
-	var volume *types.Volume
-	volume, err = d.getVolume(ctx, volumeName, types.VolAttNone)
-	if err != nil {
-		d.deleteDiskBlob(volumeName, blobClient)
-		return nil, goof.WithFieldsE(fields,
-			"failed to get just created/attached volume", err)
-	}
-
-	return volume, nil
+	return d.getVolume(ctx, volumeName, types.VolAttNone)
 }
 
 // VolumeCreateFromSnapshot creates a new volume from an existing snapshot.
@@ -420,7 +405,6 @@ func (d *driver) VolumeRemove(
 		d.container, volumeID, nil)
 	if err != nil {
 		fields := map[string]interface{}{
-			"provider": d.Name(),
 			"volumeID": volumeID,
 		}
 		return goof.WithFieldsE(fields, "error removing volume", err)
@@ -440,15 +424,13 @@ func (d *driver) VolumeAttach(
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
 
-	id, ok := context.InstanceID(ctx)
-	if !ok || id == nil {
-		return nil, "", goof.New(
-			"Can't attach volume outside of Azure instance")
+	vmName := context.MustInstanceID(ctx).ID
+
+	if opts.NextDevice == nil || *opts.NextDevice == "" {
+		return nil, "", errMissingNextDevice
 	}
-	vmName := id.ID
 
 	fields := map[string]interface{}{
-		"provider":   d.Name(),
 		"vmName":     vmName,
 		"volumeID":   volumeID,
 		"nextDevice": *opts.NextDevice,
@@ -467,33 +449,25 @@ func (d *driver) VolumeAttach(
 		if !opts.Force {
 			return nil, "", errVolAlreadyAttached
 		}
-		_, err = d.VolumeDetach(
-			ctx,
-			volumeID,
-			&types.VolumeDetachOpts{
-				Force: opts.Force,
-				Opts:  opts.Opts,
-			})
-		if err != nil {
-			return nil, "", goof.WithFieldsE(fields,
-				"failed to detach volume first", err)
+		for _, att := range volume.Attachments {
+			err = d.detachDisk(ctx, &volumeID, &att.InstanceID.ID)
+			if err != nil {
+				return nil, "", goof.WithError(
+					"failed to detach volume first", err)
+			}
 		}
-	}
-
-	if opts.NextDevice == nil {
-		return nil, "", errMissingNextDevice
 	}
 
 	vm, err := d.getVM(ctx, vmName)
 	if err != nil {
 		return nil, "", goof.WithFieldsE(fields,
-			"VM could not be obtained.", err)
+			"VM could not be obtained", err)
 	}
 
-	err = d.attachDisk(ctx, volumeID, volume.Size*size1GB, vm)
+	err = d.attachDisk(ctx, volumeID, volume.Size, vm)
 	if err != nil {
 		return nil, "", goof.WithFieldsE(fields,
-			"failed to attach volume.", err)
+			"failed to attach volume", err)
 	}
 
 	volume, err = d.getVolume(ctx, volumeID,
@@ -501,10 +475,6 @@ func (d *driver) VolumeAttach(
 	if err != nil {
 		return nil, "", goof.WithFieldsE(fields,
 			"failed to get just created/attached volume", err)
-	}
-	if len(volume.Attachments) == 0 {
-		return nil, "", goof.WithFieldsE(fields,
-			"volume is not attached to VM", err)
 	}
 
 	return volume, *opts.NextDevice, nil
@@ -518,15 +488,9 @@ func (d *driver) VolumeDetach(
 	volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
-	id, ok := context.InstanceID(ctx)
-	if !ok || id == nil {
-		return nil, goof.New(
-			"Can't detach volume outside of Azure instance")
-	}
-	vmName := id.ID
+	vmName := context.MustInstanceID(ctx).ID
 
 	fields := map[string]interface{}{
-		"provider": d.Name(),
 		"vmName":   vmName,
 		"volumeID": volumeID,
 	}
@@ -541,35 +505,9 @@ func (d *driver) VolumeDetach(
 		return nil, errVolAlreadyDetached
 	}
 
-	vm, err := d.getVM(ctx, vmName)
+	err = d.detachDisk(ctx, &volumeID, &vmName)
 	if err != nil {
-		return nil, goof.WithFieldsE(fields,
-			"failed to detach volume to VM", err)
-	}
-
-	disks := *vm.StorageProfile.DataDisks
-	for i, disk := range disks {
-		// Disk is paged blob in Azure. So blob name is case sensitive.
-		if disk.Name != nil && *disk.Name == volumeID {
-			// found the disk
-			disks = append(disks[:i], disks[i+1:]...)
-			break
-		}
-	}
-	newVM := armCompute.VirtualMachine{
-		Location: vm.Location,
-		VirtualMachineProperties: &armCompute.VirtualMachineProperties{
-			StorageProfile: &armCompute.StorageProfile{
-				DataDisks: &disks,
-			},
-		},
-	}
-
-	_, err = mustSession(ctx).vmClient.CreateOrUpdate(d.resourceGroup,
-		vmName, newVM, nil)
-	if err != nil {
-		return nil, goof.WithFieldsE(fields,
-			"failed to detach volume", err)
+		return nil, err
 	}
 
 	volume, err = d.getVolume(ctx, volumeID,
@@ -577,10 +515,6 @@ func (d *driver) VolumeDetach(
 	if err != nil {
 		return nil, goof.WithFieldsE(fields,
 			"failed to get volume", err)
-	}
-	if len(volume.Attachments) != 0 {
-		return nil, goof.WithFieldsE(fields,
-			"volume is not detached", err)
 	}
 	return volume, nil
 }
@@ -622,64 +556,60 @@ func (d *driver) SnapshotRemove(
 
 // Get volume or snapshot name without config tag
 func (d *driver) getPrintableName(name string) string {
-	return strings.TrimPrefix(name, d.tag()+azure.TagDelimiter)
+	return strings.TrimPrefix(name, d.tag()+azureud.TagDelimiter)
 }
 
 // Prefix volume or snapshot name with config tag
 func (d *driver) getFullName(name string) string {
 	if d.tag() != "" {
-		return d.tag() + azure.TagDelimiter + name
+		return d.tag() + azureud.TagDelimiter + name
 	}
 	return name
 }
 
 // Retrieve config arguments
 func (d *driver) getSubscriptionID() string {
-	return d.config.GetString(azure.ConfigAzureSubscriptionIDKey)
+	return d.config.GetString(azureud.ConfigAzureSubscriptionIDKey)
 }
 
 func (d *driver) getResourceGroup() string {
-	return d.config.GetString(azure.ConfigAzureResourceGroupKey)
+	return d.config.GetString(azureud.ConfigAzureResourceGroupKey)
 }
 
 func (d *driver) getTenantID() string {
-	return d.config.GetString(azure.ConfigAzureTenantIDKey)
+	return d.config.GetString(azureud.ConfigAzureTenantIDKey)
 }
 
 func (d *driver) getStorageAccount() string {
-	return d.config.GetString(azure.ConfigAzureStorageAccountKey)
+	return d.config.GetString(azureud.ConfigAzureStorageAccountKey)
 }
 
 func (d *driver) getStorageAccessKey() string {
-	return d.config.GetString(azure.ConfigAzureStorageAccessKeyKey)
+	return d.config.GetString(azureud.ConfigAzureStorageAccessKey)
 }
 
 func (d *driver) getContainer() string {
-	result := d.config.GetString(azure.ConfigAzureContainerKey)
-	if result == "" {
-		result = "vhds"
-	}
-	return result
+	return d.config.GetString(azureud.ConfigAzureContainerKey)
 }
 
 func (d *driver) getClientID() string {
-	return d.config.GetString(azure.ConfigAzureClientIDKey)
+	return d.config.GetString(azureud.ConfigAzureClientIDKey)
 }
 
 func (d *driver) getClientSecret() string {
-	return d.config.GetString(azure.ConfigAzureClientSecretKey)
+	return d.config.GetString(azureud.ConfigAzureClientSecretKey)
 }
 
 func (d *driver) getCertPath() string {
-	return d.config.GetString(azure.ConfigAzureCertPathKey)
+	return d.config.GetString(azureud.ConfigAzureCertPathKey)
 }
 
 func (d *driver) getUseHTTPS() bool {
-	return d.config.GetBool(azure.ConfigAzureUseHTTPSKey)
+	return d.config.GetBool(azureud.ConfigAzureUseHTTPSKey)
 }
 
 func (d *driver) tag() string {
-	return d.config.GetString(azure.ConfigAzureTagKey)
+	return d.config.GetString(azureud.ConfigAzureTagKey)
 }
 
 // TODO rexrayTag
@@ -687,45 +617,38 @@ func (d *driver) tag() string {
   return d.config.GetString("azure.rexrayTag")
 }*/
 
-// var errGetLocDevs = goof.New("error getting local devices from context")
+var errGetLocDevs = goof.New("error getting local devices from context")
 
 func (d *driver) toTypesVolume(
 	ctx types.Context,
-	blobs *[]blobStorage.Blob,
+	blobs []blobStorage.Blob,
 	attachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
 
-	/* TODO:
 	var (
-		ld *types.LocalDevices
-		ldOK bool
+		ld      *types.LocalDevices
+		ldOK    bool
+		volumes []*types.Volume
+		iid     *types.InstanceID
+		vmDisks []armCompute.DataDisk
 	)
 
 	if attachments.Devices() {
-		// Get local devices map from context
 		if ld, ldOK = context.LocalDevices(ctx); !ldOK {
 			return nil, errGetLocDevs
 		}
-	}
-	*/
 
-	var volumesSD []*types.Volume
-	for _, blob := range *blobs {
-		volumeSD, err := d.toTypeVolume(ctx, &blob, attachments)
+		// We will need to query the VM to get its list of
+		// attached disks, to match on the LUN number
+		iid = context.MustInstanceID(ctx)
+		vm, err := d.getVM(ctx, iid.ID)
 		if err != nil {
-			ctx.WithError(err).Warning("Failed to convert volume")
-		} else if volumeSD != nil {
-			volumesSD = append(volumesSD, volumeSD)
+			return nil, goof.WithError(
+				"Unable to lookup devices on VM", err)
 		}
+		vmDisks = *vm.VirtualMachineProperties.StorageProfile.DataDisks
 	}
-	return volumesSD, nil
-}
 
-func (d *driver) toTypeVolume(
-	ctx types.Context,
-	blob *blobStorage.Blob,
-	attachments types.VolumeAttachmentsTypes) (*types.Volume, error) {
-
-	// Metadata can have these fileds:
+	// Metadata can have these fields:
 	// microsoftazurecompute_resourcegroupname:trex
 	// microsoftazurecompute_vmname:ttt
 	// microsoftazurecompute_disktype:DataDisk (or OSDisk)
@@ -733,66 +656,78 @@ func (d *driver) toTypeVolume(
 	// microsoftazurecompute_diskname:ttt-20161221-130722
 	// microsoftazurecompute_disksizeingb:50
 
-	btype := blob.Metadata["microsoftazurecompute_disktype"]
-	if btype == "" && !strings.HasSuffix(blob.Name, vhdExtension) {
-		return nil, nil
-	}
-	attachState := types.VolumeAvailable
-	bstate := "detached"
-	if blob.Metadata["microsoftazurecompute_vmname"] != "" {
-		bstate = "attached"
-		attachState = types.VolumeAttached
-	}
-	var attachmentsSD []*types.VolumeAttachment
-	if attachments.Requested() && attachState == types.VolumeAttached {
-		attachedIID := types.InstanceID{
-			ID:     blob.Metadata["microsoftazurecompute_vmname"],
-			Driver: d.name,
+	for _, blob := range blobs {
+
+		btype := blob.Metadata["microsoftazurecompute_disktype"]
+		if btype == "" && !strings.HasSuffix(blob.Name, vhdExtension) {
+			continue
 		}
-		if attachments.Mine() {
-			id, ok := context.InstanceID(ctx)
-			if !ok || id == nil {
-				return nil, goof.New("Can't get isntance" +
-					" ID to filter volume")
-			}
+		if btype == "OSDisk" {
+			continue
+		}
 
-			if id.ID == attachedIID.ID {
-				attachmentsSD = append(
-					attachmentsSD,
-					&types.VolumeAttachment{
-						InstanceID: &attachedIID,
-						VolumeID:   blob.Name,
-					})
+		bName := strings.TrimSuffix(blob.Name, vhdExtension)
+
+		volume := &types.Volume{
+			Name: bName,
+			ID:   blob.Name,
+			Type: btype,
+			Size: blob.Properties.ContentLength / size1GB,
+			// TODO:
+			//AvailabilityZone: *volume.AvailabilityZone,
+			//Encrypted:        *volume.Encrypted,
+		}
+
+		if attachments.Requested() {
+			var attachedVols []*types.VolumeAttachment
+			attVM := blob.Metadata["microsoftazurecompute_vmname"]
+			if attVM != "" {
+				att := &types.VolumeAttachment{
+					VolumeID: blob.Name,
+					InstanceID: &types.InstanceID{
+						ID:     attVM,
+						Driver: azureud.Name,
+					},
+				}
+				if attachments.Devices() {
+					if iid.ID == attVM {
+						att.DeviceName = getDevice(
+							ctx, vmDisks, &bName,
+							ld.DeviceMap,
+						)
+					}
+				}
+				attachedVols = append(attachedVols, att)
+				volume.Attachments = attachedVols
 			}
-		} else {
-			attachmentsSD = append(
-				attachmentsSD,
-				&types.VolumeAttachment{
-					InstanceID: &attachedIID,
-					VolumeID:   blob.Name,
-				})
+		}
+
+		volumes = append(volumes, volume)
+	}
+	return volumes, nil
+}
+
+func getDevice(
+	ctx types.Context,
+	vmDisks []armCompute.DataDisk,
+	bName *string,
+	devMap map[string]string) string {
+
+	for _, disk := range vmDisks {
+		name := strings.TrimSuffix(*disk.Name, vhdExtension)
+		if name == *bName {
+			strLun := strconv.Itoa(int(*disk.Lun))
+			ctx.Debugf("Found matching disk %v on LUN %v on "+
+				"instance, looking up dev from %v",
+				name, strLun, devMap)
+			for dev, lun := range devMap {
+				if lun == strLun {
+					return dev
+				}
+			}
 		}
 	}
-
-	volumeSD := &types.Volume{
-		Name:            blob.Name,
-		ID:              blob.Name,
-		Status:          bstate,
-		Type:            btype,
-		Size:            blob.Properties.ContentLength / size1GB,
-		AttachmentState: attachState,
-		Attachments:     attachmentsSD,
-		// TODO:
-		//AvailabilityZone: *volume.AvailabilityZone,
-		//Encrypted:        *volume.Encrypted,
-	}
-
-	// Some volume types have no IOPS, so we get nil in volume.Iops
-	//if volume.Iops != nil {
-	//	volumeSD.IOPS = *volume.Iops
-	//}
-
-	return volumeSD, nil
+	return ""
 }
 
 func (d *driver) diskURI(name string) string {
@@ -812,8 +747,7 @@ func (d *driver) getVM(ctx types.Context, name string) (
 	vm, err := mustSession(ctx).vmClient.Get(d.resourceGroup, name, "")
 	if err != nil {
 		fields := map[string]interface{}{
-			"provider": d.Name(),
-			"vmName":   name,
+			"vmName": name,
 		}
 		return nil, goof.WithFieldsE(
 			fields, "failed to get virtual machine", err)
@@ -835,10 +769,17 @@ func (d *driver) getVolume(
 		return nil, goof.WithError("error listing blobs", err)
 	}
 	if len(list.Blobs) == 0 {
-		return nil, goof.New("error to get volume")
+		return nil, goof.New("volume not found")
+	}
+	if len(list.Blobs) > 1 {
+		return nil, goof.New("multiple volumes found")
 	}
 	// Convert retrieved volumes to libStorage types.Volume
-	return d.toTypeVolume(ctx, &list.Blobs[0], attachments)
+	vols, err := d.toTypesVolume(ctx, list.Blobs, attachments)
+	if err != nil {
+		return nil, goof.WithError("failed to convert volume", err)
+	}
+	return vols[0], nil
 }
 
 func (d *driver) createDiskBlob(
@@ -915,7 +856,7 @@ func (d *driver) attachDisk(
 
 	uri := d.diskURI(volumeName)
 	disks := *vm.StorageProfile.DataDisks
-	sizeGB := int32(size / size1GB)
+	sizeGB := int32(size)
 	disks = append(disks,
 		armCompute.DataDisk{
 			Name:         &volumeName,
@@ -948,6 +889,49 @@ func (d *driver) attachDisk(
 			_, _ = d.VolumeDetach(ctx, volumeName, nil)
 		}
 		return goof.WithError("failed to attach volume to VM", err)
+	}
+
+	return nil
+}
+
+func (d *driver) detachDisk(
+	ctx types.Context,
+	volumeID *string,
+	vmName *string) error {
+
+	vm, err := d.getVM(ctx, *vmName)
+	if err != nil {
+		return goof.WithError("VM could not be obtained", err)
+	}
+
+	found := false
+	disks := *vm.StorageProfile.DataDisks
+	for i, disk := range disks {
+		// Disk is paged blob in Azure. So blob name is case sensitive.
+		if disk.Name != nil && *disk.Name == *volumeID {
+			ctx.Debugf("Removing %v from VM", volumeID)
+			// found the disk
+			disks = append(disks[:i], disks[i+1:]...)
+			found = true
+			break
+		}
+	}
+	if !found {
+		return goof.New("VolumeID not found on given instance")
+	}
+	newVM := armCompute.VirtualMachine{
+		Location: vm.Location,
+		VirtualMachineProperties: &armCompute.VirtualMachineProperties{
+			StorageProfile: &armCompute.StorageProfile{
+				DataDisks: &disks,
+			},
+		},
+	}
+
+	_, err = mustSession(ctx).vmClient.CreateOrUpdate(
+		d.resourceGroup, *vmName, newVM, nil)
+	if err != nil {
+		return goof.WithError("failed to detach volume", err)
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_azure
+// +build !libstorage_storage_driver libstorage_storage_driver_azureud
 
 package utils
 
@@ -13,7 +13,7 @@ import (
 )
 
 func skipTest(t *testing.T) {
-	if ok, _ := strconv.ParseBool(os.Getenv("AZURE_UTILS_TEST")); !ok {
+	if ok, _ := strconv.ParseBool(os.Getenv("AZUREUD_UTILS_TEST")); !ok {
 		t.Skip()
 	}
 }

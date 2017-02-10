@@ -233,8 +233,10 @@ func (m *mod) buildMux() *http.ServeMux {
 
 		m.ctx.WithField("pluginResponse", pr).Debug("/VolumeDriver.Remove")
 
+		opts := &apitypes.VolumeRemoveOpts{Opts: apiutils.NewStore()}
+
 		// TODO We need the service name
-		err := m.lsc.Integration().Remove(m.ctx, pr.Name, apiutils.NewStore())
+		err := m.lsc.Integration().Remove(m.ctx, pr.Name, opts)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("{\"Error\":\"%s\"}", err.Error()), 500)
 			m.ctx.WithError(err).Error("/VolumeDriver.Remove: error removing volume")

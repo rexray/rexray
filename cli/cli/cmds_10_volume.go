@@ -242,7 +242,10 @@ func (c *CLI) initVolumeCmds() {
 			}
 
 			var (
-				opts      = store()
+				opts = &apitypes.VolumeRemoveOpts{
+					Force: c.force,
+					Opts:  store(),
+				}
 				processed = []string{}
 			)
 
@@ -1007,6 +1010,9 @@ func (c *CLI) initVolumeFlags() {
 			"the storage driver and platform to implement this feature.")
 	c.volumeCreateCmd.Flags().StringVar(&c.encryptionKey, "encryptionKey", "",
 		"The key used to encrypt the volume.")
+
+	c.volumeRemoveCmd.Flags().BoolVar(&c.force, "force", false,
+		"Attempt to delete the volume regardless of state or contents")
 
 	c.addQuietFlag(c.volumeCmd.PersistentFlags())
 	c.addOutputFormatFlag(c.volumeCmd.PersistentFlags())

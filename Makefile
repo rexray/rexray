@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+GO_VERSION := 1.7.5
 
 # the name of the program being compiled. this word is in place of file names,
 # directory paths, etc. changing the value of PROG is no guarantee everything
@@ -87,7 +88,7 @@ endif
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 DPKG := github.com/codedellemc/rexray
-DIMG := golang:1.7.4
+DIMG := golang:$(GO_VERSION)
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
 DGOOS := $(DGOHOSTOS)
@@ -269,7 +270,11 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
-
+ifneq (,$(TRAVIS_GO_VERSION))
+GOVERSION := $(TRAVIS_GO_VERSION)
+else
+GOVERSION := $(shell go version | awk '{print $$3}' | cut -c3-)
+endif
 
 ################################################################################
 ##                                  PATH                                      ##
@@ -947,6 +952,7 @@ info:
 	$(info GOPATH......................$(GOPATH))
 	$(info GOHOSTOS....................$(GOHOSTOS))
 	$(info GOHOSTARCH..................$(GOHOSTARCH))
+	$(info GOVERSION...................$(GOVERSION))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\

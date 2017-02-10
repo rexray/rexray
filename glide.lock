@@ -1,5 +1,5 @@
-hash: 90a33ef62ac6381b87bde40e6fdb0ad39dd770ad8d19714b1204519bda36893f
-updated: 2017-01-23T08:25:21.439880273-06:00
+hash: c56967433017ec4fac6dcee7c253ced57e0627463612479021768e3c507ec317
+updated: 2017-02-09T18:05:23.673336537-06:00
 imports:
 - name: github.com/akutz/gofig
   version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
@@ -22,7 +22,7 @@ imports:
 - name: github.com/asaskevich/govalidator
   version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
 - name: github.com/aws/aws-sdk-go
-  version: 6627523f8671f323edb36dfc56cc0b47c810211f
+  version: 3f8f870ec9939e32b3372abf74d24e468bcd285d
   repo: https://github.com/aws/aws-sdk-go
   subpackages:
   - aws
@@ -37,10 +37,10 @@ imports:
   - aws/credentials/stscreds
   - aws/defaults
   - aws/ec2metadata
+  - aws/endpoints
   - aws/request
   - aws/session
   - aws/signer/v4
-  - private/endpoints
   - private/protocol
   - private/protocol/ec2query
   - private/protocol/json/jsonutil
@@ -49,10 +49,12 @@ imports:
   - private/protocol/query/queryutil
   - private/protocol/rest
   - private/protocol/restjson
+  - private/protocol/restxml
   - private/protocol/xml/xmlutil
   - private/waiter
   - service/ec2
   - service/efs
+  - service/s3
   - service/sts
 - name: github.com/cesanta/ucl
   version: 97c016fce90e6af1b14558563ac46852167e6a76
@@ -77,7 +79,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: a1103d3f215117f7b9f51dae2b24f852c9c54995
+  version: ad5dbe049c77f08ce84ce475637c5bf821f689b6
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -121,6 +123,10 @@ imports:
   - drivers/storage/rbd/executor
   - drivers/storage/rbd/storage
   - drivers/storage/rbd/utils
+  - drivers/storage/s3fs
+  - drivers/storage/s3fs/executor
+  - drivers/storage/s3fs/storage
+  - drivers/storage/s3fs/utils
   - drivers/storage/scaleio
   - drivers/storage/scaleio/executor
   - drivers/storage/scaleio/storage
@@ -170,7 +176,7 @@ imports:
   version: 1dd44b25b79c4d9060e582e90798e4d72537818c
   repo: https://github.com/akutz/go-bindata
 - name: github.com/kardianos/osext
-  version: c2c54e542fb797ad986b31721e1baedf214ca413
+  version: 9b883c5eb462dd5cb1b0a7a104fe86bc6b9bd391
   repo: https://github.com/kardianos/osext.git
   vcs: git
 - name: github.com/kr/fs

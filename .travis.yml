@@ -1,10 +1,14 @@
 go_import_path: github.com/codedellemc/rexray
 
+sudo: required
+
+services:
+  - docker
+
 language: go
 
 go:
   - 1.7.5
-  - 1.6.3
   - tip
 
 env:
@@ -12,38 +16,42 @@ env:
   - REXRAY_BUILD_TYPE=client
   - REXRAY_BUILD_TYPE=agent
   - REXRAY_BUILD_TYPE=controller
+  - REXRAY_BUILD_TYPE= DRIVERS=ebs
 
 matrix:
   allow_failures:
-    - go:  1.6.3
     - go:  tip
   fast_finish: true
 
 before_install:
+  - if [ "$DRIVERS" != "" ]; then sudo apt-get update; fi
+  - if [ "$DRIVERS" != "" ]; then sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-engine; fi
+  - if [ "$DRIVERS" != "" ]; then docker --version; fi
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
   - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
   - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
   - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
   - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
-  - go get github.com/onsi/gomega
-  - go get github.com/onsi/ginkgo
-  - go get golang.org/x/tools/cmd/cover
+  - if [ "$DRIVERS" = "" ]; then go get github.com/onsi/gomega; fi
+  - if [ "$DRIVERS" = "" ]; then go get github.com/onsi/ginkgo; fi
+  - if [ "$DRIVERS" = "" ]; then go get golang.org/x/tools/cmd/cover; fi
   - make deps
   - make info
 
 script:
   - make gometalinter-all
   - make -j build-libstorage
-  - env GOOS=linux GOARCH=amd64 make -j build
+  - GOOS=linux GOARCH=amd64 make -j build
   - if [ "$REXRAY_BUILD_TYPE" = "" ]; then REXRAY_DEBUG=true $GOPATH/bin/rexray version; else REXRAY_DEBUG=true $GOPATH/bin/rexray-$REXRAY_BUILD_TYPE version; fi
   - make -j test
+  - if [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make build-docker-plugin-${DRIVERS}; fi
 
 after_success:
-  - make -j cover
-  - if [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make tgz; fi
-  - if [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make rpm; fi
-  - if [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make deb; fi
-  - if [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make bintray; fi
+  - if [ "$DRIVERS" = "" ]; then make -j cover; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make tgz; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make rpm; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make deb; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make bintray; fi
   - ls -al
 
 deploy:

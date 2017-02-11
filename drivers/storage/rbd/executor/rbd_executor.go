@@ -160,17 +160,19 @@ func getCephMonIPs() ([]net.IP, error) {
 
 	monStrings := strings.Split(strings.TrimSpace(string(out)), ",")
 
-	monIps := make([]net.IP, 0, 4)
+	monIps := []net.IP{}
 
 	for _, mon := range monStrings {
-		ip := net.ParseIP(mon)
-		if ip != nil {
-			monIps = append(monIps, ip)
-		} else {
-			ipSlice, err := net.LookupIP(mon)
-			if err == nil {
-				monIps = append(monIps, ipSlice...)
-			}
+		host, _, err := net.SplitHostPort(mon)
+		if err != nil {
+			return nil, err
+		}
+		addrs, err := net.LookupIP(host)
+		if err != nil {
+			return nil, err
+		}
+		if len(addrs) > 0 {
+			monIps = append(monIps, addrs...)
 		}
 	}
 

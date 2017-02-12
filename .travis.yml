@@ -44,7 +44,7 @@ script:
   - GOOS=linux GOARCH=amd64 make -j build
   - if [ "$REXRAY_BUILD_TYPE" = "" ]; then REXRAY_DEBUG=true $GOPATH/bin/rexray version; else REXRAY_DEBUG=true $GOPATH/bin/rexray-$REXRAY_BUILD_TYPE version; fi
   - make -j test
-  - if [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make build-docker-plugin-${DRIVERS}; fi
+  - if [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make build-docker-plugin; fi
 
 after_success:
   - if [ "$DRIVERS" = "" ]; then make -j cover; fi

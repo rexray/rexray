@@ -1107,48 +1107,50 @@ else
 DOCKER_REQ_BRANCH := $(shell git branch --list | grep "*" | awk '{print $$2}')
 endif
 DOCKER_REQ_VERSION := $(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)
-ifeq (undefined,$(origin DOCKER_REQ_TRAVIS_ORG))
-DOCKER_REQ_TRAVIS_ORG := akutz
-endif
-TRAVIS_REQ_URI := https://api.travis-ci.org/repo/$(DOCKER_REQ_TRAVIS_ORG)%2Frexray/requests
 V_DOCKER_SEMVER := $(subst +,-,$(V_SEMVER))
+DOCKER_PLUGIN_DRIVERS := $(subst $(SPACE),-,$(DRIVERS))
+DOCKER_PLUGIN_NAME := $(PROG)/$(DOCKER_PLUGIN_DRIVERS):$(V_DOCKER_SEMVER)
 
 DOCKER_PLUGIN_DOCKERFILE := .docker/plugins/Dockerfile
 DOCKER_PLUGIN_ENTRYPOINT := .docker/plugins/rexray.sh
 DOCKER_PLUGIN_CONFIGFILE := .docker/plugins/rexray.yml
 DOCKER_PLUGIN_REXRAYFILE := $(GOPATH)/bin/rexray
 
-################################################################################
-##                    DOCKER PLUGINS - EBS - BUILD                            ##
-################################################################################
-DOCKER_PLUGIN_CONFIGJSON_EBS := .docker/plugins/ebs/config.json
+DOCKER_PLUGIN_BUILD_PATH := .docker/plugins/$(DOCKER_PLUGIN_DRIVERS)
+DOCKER_PLUGIN_CONFIGJSON_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/config.json
 
-DOCKER_PLUGIN_DOCKERFILE_EBS := .docker/plugins/ebs/Dockerfile
-$(DOCKER_PLUGIN_DOCKERFILE_EBS): $(DOCKER_PLUGIN_DOCKERFILE)
+DOCKER_PLUGIN_DOCKERFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/Dockerfile
+$(DOCKER_PLUGIN_DOCKERFILE_TGT): $(DOCKER_PLUGIN_DOCKERFILE)
 	sed -e 's/$${VERSION}/$(V_SEMVER)/g' \
-	    -e 's/$${DRIVERS}/ebs/g' \
+	    -e 's/$${DRIVERS}/$(DRIVERS)/g' \
 	    $? > $@
 
-DOCKER_PLUGIN_ENTRYPOINT_EBS := .docker/plugins/ebs/rexray.sh
-$(DOCKER_PLUGIN_ENTRYPOINT_EBS): $(DOCKER_PLUGIN_ENTRYPOINT)
+DOCKER_PLUGIN_ENTRYPOINT_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).sh
+$(DOCKER_PLUGIN_ENTRYPOINT_TGT): $(DOCKER_PLUGIN_ENTRYPOINT)
 	cp $? $@
 
-DOCKER_PLUGIN_CONFIGFILE_EBS := .docker/plugins/ebs/rexray.yml
-$(DOCKER_PLUGIN_CONFIGFILE_EBS): $(DOCKER_PLUGIN_CONFIGFILE)
-	sed -e 's/$${DRIVERS}/ebs/g' $? > $@
+SPACE6 := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
+SPACE8 := $(SPACE6)$(SPACE)$(SPACE)
+DOCKER_PLUGIN_CONFIGFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).yml
+$(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
+	cp $? $@
+	for d in $(DRIVERS); do \
+	    echo "$(SPACE6)$$d:" >> $@; \
+	    echo "$(SPACE8)driver: $$d" >> $@; \
+	done
 
-DOCKER_PLUGIN_REXRAYFILE_EBS := .docker/plugins/ebs/rexray
-$(DOCKER_PLUGIN_REXRAYFILE_EBS): $(DOCKER_PLUGIN_REXRAYFILE)
+DOCKER_PLUGIN_REXRAYFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG)
+$(DOCKER_PLUGIN_REXRAYFILE_TGT): $(DOCKER_PLUGIN_REXRAYFILE)
 	cp $? $@
 
-DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_EBS := .docker/plugins/ebs/rootfs/rexray.sh
-build-docker-plugin-ebs: $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_EBS)
-$(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_EBS): $(DOCKER_PLUGIN_CONFIGJSON_EBS) \
-										$(DOCKER_PLUGIN_DOCKERFILE_EBS) \
-										$(DOCKER_PLUGIN_ENTRYPOINT_EBS) \
-										$(DOCKER_PLUGIN_CONFIGFILE_EBS) \
-										$(DOCKER_PLUGIN_REXRAYFILE_EBS)
-	docker plugin rm rexray/ebs 2> /dev/null || true
+DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/rootfs/$(PROG).sh
+build-docker-plugin: $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT)
+$(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
+										$(DOCKER_PLUGIN_DOCKERFILE_TGT) \
+										$(DOCKER_PLUGIN_ENTRYPOINT_TGT) \
+										$(DOCKER_PLUGIN_CONFIGFILE_TGT) \
+										$(DOCKER_PLUGIN_REXRAYFILE_TGT)
+	docker plugin rm $(DOCKER_PLUGIN_NAME) 2> /dev/null || true
 	sudo rm -fr $(@D)
 	docker build -t rootfsimage $(<D) && \
 		id=$$(docker create rootfsimage true) && \
@@ -1156,8 +1158,9 @@ $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_EBS): $(DOCKER_PLUGIN_CONFIGJSON_EBS) \
 		sudo docker export "$$id" | sudo tar -x -C $(@D) && \
 		docker rm -vf "$$id" && \
 		docker rmi rootfsimage
-	sudo docker plugin create rexray/ebs:$(V_DOCKER_SEMVER) $(<D)
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME) $(<D)
 	docker plugin ls
+
 
 ################################################################################
 ##                                PROG Markers                                ##

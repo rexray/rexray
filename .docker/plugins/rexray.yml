@@ -1,7 +1,6 @@
 rexray:
   loglevel: warn
 libstorage:
-  service: ${DRIVERS}
   integration:
     volume:
       operations:
@@ -10,3 +9,5 @@ libstorage:
             fsType: ext4
         mount:
           preempt: true
+  server:
+    services:

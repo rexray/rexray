@@ -1,8 +1,10 @@
-#!/bin/bash
+#!/bin/ash
+# shellcheck shell=dash
 set -e
 
 # first arg is `-f` or `--some-option`
-if [ "${1:0:1}" = '-' ]; then
+if [ "$(echo "$1" | \
+	awk  '{ string=substr($0, 1, 1); print string; }' )" = '-' ]; then
 	set -- rexray start -f "$@"
 fi
 
@@ -18,10 +20,11 @@ if [ "$1" = 'rexray' ]; then
 		loglevel \
 		preempt \
 	; do
-		var="REXRAY_${rexray_option^^}"
-		val="${!var}"
+		val=$(eval echo "\$REXRAY_$(echo $rexray_option | \
+			awk '{print toupper($0)}')")
 		if [ "$val" ]; then
-			sed -ri 's/^([\ ]*'"$rexray_option"':).*/\1 '"$val"'/' /etc/rexray/rexray.yml
+			sed -ri 's/^([\ ]*'"$rexray_option"':).*/\1 '"$val"'/' \
+				/etc/rexray/rexray.yml
 		fi
 	done
 

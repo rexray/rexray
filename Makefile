@@ -1133,7 +1133,8 @@ SPACE6 := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
 SPACE8 := $(SPACE6)$(SPACE)$(SPACE)
 DOCKER_PLUGIN_CONFIGFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).yml
 $(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
-	cp $? $@
+	sed -e 's/$${DRIVERS}/$(firstword $(DRIVERS))/g' \
+	    $? > $@
 	for d in $(DRIVERS); do \
 	    echo "$(SPACE6)$$d:" >> $@; \
 	    echo "$(SPACE8)driver: $$d" >> $@; \

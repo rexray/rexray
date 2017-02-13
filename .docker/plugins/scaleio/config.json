@@ -1,0 +1,180 @@
+{
+      "Args": {
+        "Description": "",
+        "Name": "",
+        "Settable": null,
+        "Value": null
+      },
+      "Description": "REX-Ray for EMC Dell ScaleIO",
+      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/scaleio",
+      "Entrypoint": [
+        "/rexray.sh", "rexray", "start", "-f"
+      ],
+      "Env": [
+        {
+          "Description": "",
+          "Name": "REXRAY_FSTYPE",
+          "Settable": [
+            "value"
+          ],
+          "Value": "ext4"
+        },
+        {
+          "Description": "",
+          "Name": "REXRAY_LOGLEVEL",
+          "Settable": [
+            "value"
+          ],
+          "Value": "warn"
+        },
+        {
+          "Description": "",
+          "Name": "REXRAY_PREEMPT",
+          "Settable": [
+            "value"
+          ],
+          "Value": "false"
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_ENDPOINT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_INSECURE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_USECERTS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_USERNAME",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_PASSWORD",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_SYSTEMID",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_SYSTEMNAME",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_PROTECTIONDOMAINID",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_PROTECTIONDOMAINNAME",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_STORAGEPOOLID",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_STORAGEPOOLNAME",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_THINORTHICK",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "SCALEIO_VERSION",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        }
+      ],
+      "Interface": {
+        "Socket": "rexray.sock",
+        "Types": [
+          "docker.volumedriver/1.0"
+        ]
+      },
+      "Linux": {
+        "AllowAllDevices": true,
+        "Capabilities": ["CAP_SYS_ADMIN"],
+        "Devices": null
+      },
+      "Mounts": [
+        {
+          "Source": "/dev",
+          "Destination": "/dev",
+          "Type": "bind",
+          "Options": ["rbind"]
+        },
+        {
+          "Source": "/bin/emc",
+          "Destination": "/bin/emc",
+          "Type": "bind",
+          "Options": ["rbind"]
+        },
+        {
+          "Source": "/opt/emc/scaleio/sdc",
+          "Destination": "/opt/emc/scaleio/sdc",
+          "Type": "bind",
+          "Options": ["rbind"]
+        }
+      ],
+      "Network": {
+        "Type": "host"
+      },
+      "PropagatedMount": "/var/lib/libstorage/volumes",
+      "User": {},
+      "WorkDir": ""
+}

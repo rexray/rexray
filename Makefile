@@ -1075,11 +1075,21 @@ test:
 	$(MAKE) -j parallel-test
 
 test-debug:
-	env LIBSTORAGE_DEBUG=true $(MAKE) test
+	LIBSTORAGE_DEBUG=true $(MAKE) test
 
 test-rbd:
 	DRIVERS=rbd $(MAKE) deps
 	DRIVERS=rbd $(MAKE) ./drivers/storage/rbd/tests/rbd.test
+
+test-rbd-clean:
+	DRIVERS=rbd $(MAKE) clean
+
+test-gcepd:
+	DRIVERS=gcepd $(MAKE) deps
+	DRIVERS=gcepd $(MAKE) ./drivers/storage/gcepd/tests/gcepd.test
+
+test-gcepd-clean:
+	DRIVERS=gcepd $(MAKE) clean
 
 clean: $(GO_CLEAN)
 

@@ -67,6 +67,18 @@ import:
     ref:     42196eaf5b93739d335921404bb7c5f2205fceb3
     repo:    https://github.com/clintonskitson/gophercloud.git
 
+### GCE
+  - package: golang.org/x/oauth2
+    ref:     314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+    subpackages:
+    - google
+  - package: google.golang.org/api
+    ref:     d61af0b67e5c8213e8c260ac29a762487bad020d
+    repo:    https://github.com/google/google-api-go-client
+    subpackages:
+    - compute/v0.beta
+    - googleapi
+
 ################################################################################
 ##                             Build System Tools                             ##
 ################################################################################

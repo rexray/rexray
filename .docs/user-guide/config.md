@@ -589,6 +589,7 @@ remote storage systems. Currently the following storage drivers are supported:
 [EBS](./storage-providers.md#aws-ebs) | ebs, ec2
 [EFS](./storage-providers.md#aws-efs) | efs
 [RBD](./storage-providers.md#ceph-rbd) | rbd
+[GCEPD](./storage-providers.md#gcepd) | gcepd
 ..more coming|
 
 The `libstorage.server.libstorage.storage.driver` property can be used to

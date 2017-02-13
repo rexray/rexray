@@ -18,6 +18,7 @@ env:
   - REXRAY_BUILD_TYPE=controller
   - REXRAY_BUILD_TYPE= DRIVERS=ebs
   - REXRAY_BUILD_TYPE= DRIVERS=s3fs
+  - REXRAY_BUILD_TYPE= DRIVERS=scaleio
 
 matrix:
   allow_failures:

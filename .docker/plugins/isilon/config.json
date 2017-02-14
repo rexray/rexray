@@ -5,20 +5,12 @@
         "Settable": null,
         "Value": null
       },
-      "Description": "REX-Ray for Dell EMC ScaleIO",
-      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/scaleio",
+      "Description": "REX-Ray for Dell EMC Isilon",
+      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/isilon",
       "Entrypoint": [
         "/rexray.sh", "rexray", "start", "-f"
       ],
       "Env": [
-        {
-          "Description": "",
-          "Name": "REXRAY_FSTYPE",
-          "Settable": [
-            "value"
-          ],
-          "Value": "ext4"
-        },
         {
           "Description": "",
           "Name": "REXRAY_LOGLEVEL",
@@ -37,7 +29,7 @@
         },
         {
           "Description": "",
-          "Name": "SCALEIO_ENDPOINT",
+          "Name": "ISILON_ENDPOINT",
           "Settable": [
             "value"
           ],
@@ -45,7 +37,7 @@
         },
         {
           "Description": "",
-          "Name": "SCALEIO_INSECURE",
+          "Name": "ISILON_INSECURE",
           "Settable": [
             "value"
           ],
@@ -53,87 +45,47 @@
         },
         {
           "Description": "",
-          "Name": "SCALEIO_USECERTS",
+          "Name": "ISILON_USERNAME",
           "Settable": [
             "value"
           ],
           "Value": ""
         },
         {
-          "Description": "",
-          "Name": "SCALEIO_USERNAME",
+          "Description": "", 
+          "Name": "ISILON_PASSWORD",
           "Settable": [
             "value"
           ],
           "Value": ""
         },
         {
-          "Description": "",
-          "Name": "SCALEIO_PASSWORD",
+          "Description": "", 
+          "Name": "ISILON_VOLUMEPATH",
           "Settable": [
             "value"
           ],
           "Value": ""
         },
         {
-          "Description": "",
-          "Name": "SCALEIO_SYSTEMID",
+          "Description": "", 
+          "Name": "ISILON_NFSHOST",
           "Settable": [
             "value"
           ],
           "Value": ""
         },
         {
-          "Description": "",
-          "Name": "SCALEIO_SYSTEMNAME",
+          "Description": "", 
+          "Name": "ISILON_DATASUBNET",
           "Settable": [
             "value"
           ],
           "Value": ""
         },
         {
-          "Description": "",
-          "Name": "SCALEIO_PROTECTIONDOMAINID",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "",
-          "Name": "SCALEIO_PROTECTIONDOMAINNAME",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "",
-          "Name": "SCALEIO_STORAGEPOOLID",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "",
-          "Name": "SCALEIO_STORAGEPOOLNAME",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "",
-          "Name": "SCALEIO_THINORTHICK",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "",
-          "Name": "SCALEIO_VERSION",
+          "Description": "", 
+          "Name": "ISILON_QUOTAS",
           "Settable": [
             "value"
           ],
@@ -155,18 +107,6 @@
         {
           "Source": "/dev",
           "Destination": "/dev",
-          "Type": "bind",
-          "Options": ["rbind"]
-        },
-        {
-          "Source": "/bin/emc",
-          "Destination": "/bin/emc",
-          "Type": "bind",
-          "Options": ["rbind"]
-        },
-        {
-          "Source": "/opt/emc/scaleio/sdc",
-          "Destination": "/opt/emc/scaleio/sdc",
           "Type": "bind",
           "Options": ["rbind"]
         }

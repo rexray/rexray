@@ -12,9 +12,11 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/server"
 	apitests "github.com/codedellemc/libstorage/api/tests"
 	"github.com/codedellemc/libstorage/api/types"
+	apiconfig "github.com/codedellemc/libstorage/api/utils/config"
 
 	// load the  driver
 	sio "github.com/codedellemc/libstorage/drivers/storage/scaleio"
@@ -63,7 +65,12 @@ func TestInstanceID(t *testing.T) {
 		t.SkipNow()
 	}
 
-	iid, err := siox.GetInstanceID()
+	config, err := apiconfig.NewConfig()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	iid, err := siox.GetInstanceID(context.Background(), config)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed TestInstanceID")
@@ -160,7 +167,7 @@ func TestVolumeCreateRemove(t *testing.T) {
 func volumeRemove(t *testing.T, client types.Client, volumeID string) {
 	log.WithField("volumeID", volumeID).Info("removing volume")
 	err := client.API().VolumeRemove(
-		nil, sio.Name, volumeID)
+		nil, sio.Name, volumeID, false)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeRemove")

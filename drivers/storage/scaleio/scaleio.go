@@ -28,6 +28,12 @@ var (
 
 func init() {
 	r := gofigCore.NewRegistration("ScaleIO")
+	r.Key(gofig.String, "", "", "", "scaleio.guid")
+	r.Key(gofig.String,
+		"",
+		"/opt/emc/scaleio/sdc/bin/drv_cfg",
+		"",
+		"scaleio.drvCfg")
 	r.Key(gofig.String, "", "", "", "scaleio.endpoint")
 	r.Key(gofig.Bool, "", false, "", "scaleio.insecure")
 	r.Key(gofig.Bool, "", false, "", "scaleio.useCerts")

@@ -134,9 +134,6 @@ func (d *driver) getInstanceID() (*types.InstanceID, error) {
 
 	out, err := exec.Command(d.drvCfg, "--query_guid").CombinedOutput()
 	if err != nil {
-		return nil, err
-	}
-	if err != nil {
 		return nil, goof.WithError("error getting sdc guid", err)
 	}
 

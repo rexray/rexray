@@ -79,6 +79,10 @@ import:
     - compute/v0.beta
     - googleapi
 
+### DigitalOcean
+  - package: github.com/digitalocean/godo
+    version: 2ff8a02a86cd6918b384a5000ceebe886844fbce
+
 ################################################################################
 ##                             Build System Tools                             ##
 ################################################################################

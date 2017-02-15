@@ -1109,7 +1109,14 @@ endif
 DOCKER_REQ_VERSION := $(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)
 V_DOCKER_SEMVER := $(subst +,-,$(V_SEMVER))
 DOCKER_PLUGIN_DRIVERS := $(subst $(SPACE),-,$(DRIVERS))
-DOCKER_PLUGIN_NAME := $(PROG)/$(DOCKER_PLUGIN_DRIVERS):$(V_DOCKER_SEMVER)
+
+ifeq (undefined,$(origin DOCKER_PLUGIN_ROOT))
+DOCKER_PLUGIN_ROOT := $(PROG)
+endif
+DOCKER_PLUGIN_NAME := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):$(V_DOCKER_SEMVER)
+DOCKER_PLUGIN_NAME_UNSTABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):edge
+DOCKER_PLUGIN_NAME_STAGED := $(DOCKER_PLUGIN_NAME)
+DOCKER_PLUGIN_NAME_STABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):latest
 
 DOCKER_PLUGIN_BUILD_PATH := .docker/plugins/$(DOCKER_PLUGIN_DRIVERS)
 
@@ -1180,6 +1187,31 @@ $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
 		docker rmi rootfsimage
 	sudo docker plugin create $(DOCKER_PLUGIN_NAME) $(<D)
 	docker plugin ls
+
+
+push-docker-plugin:
+ifeq (1,$(DOCKER_PLUGIN_$(DOCKER_PLUGIN_DRIVERS)_NOPUSH))
+	echo "docker plugin push disabled"
+else
+	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
+ifeq (unstable,$(DOCKER_PLUGIN_TYPE))
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
+endif
+ifeq (staged,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME_STAGED)
+endif
+ifeq (stable,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_STABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_STABLE)
+endif
+ifeq (,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+endif
+endif
 
 
 ################################################################################

@@ -697,6 +697,7 @@ VirtualBox|Yes
 EBS|Yes
 EFS|No
 RBD|No
+GCEPD|Yes
 
 #### Ignore Used Count
 By default accounting takes place during operations that are performed

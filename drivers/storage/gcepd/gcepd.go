@@ -30,9 +30,10 @@ const (
 )
 
 func init() {
-	r := gofigCore.NewRegistration("GCE")
+	r := gofigCore.NewRegistration("GCEPD")
 	r.Key(gofig.String, "", "",
-		"Required: JSON keyfile for service account", "gcepd.keyfile")
+		"If defined, location of JSON keyfile for service account",
+		"gcepd.keyfile")
 	r.Key(gofig.String, "", "",
 		"If defined, limit GCE access to given zone", "gcepd.zone")
 	r.Key(gofig.String, "", DefaultDiskType, "Default GCE disk type",

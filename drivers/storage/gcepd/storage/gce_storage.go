@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"hash"
 	"io/ioutil"
-	"os"
-	"path/filepath"
+	"net/http"
 	"regexp"
 	"strings"
 	"sync"
@@ -19,6 +18,7 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 	goof "github.com/akutz/goof"
+	"github.com/akutz/gotil"
 
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
@@ -26,6 +26,7 @@ import (
 	"github.com/codedellemc/libstorage/drivers/storage/gcepd"
 	"github.com/codedellemc/libstorage/drivers/storage/gcepd/utils"
 
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	compute "google.golang.org/api/compute/v0.beta"
 	"google.golang.org/api/googleapi"
@@ -51,6 +52,8 @@ type driver struct {
 	zone            string
 	defaultDiskType string
 	tag             string
+	tokenSource     oauth2.TokenSource
+	svcAccount      string
 }
 
 func init() {
@@ -68,28 +71,40 @@ func (d *driver) Name() string {
 // Init initializes the driver.
 func (d *driver) Init(context types.Context, config gofig.Config) error {
 	d.config = config
-	d.keyFile = d.config.GetString("gcepd.keyfile")
-	if d.keyFile == "" {
-		return goof.New("GCE service account keyfile is required")
-	}
-	if !filepath.IsAbs(d.keyFile) {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return goof.New("Unable to determine CWD")
-		}
-		d.keyFile = filepath.Join(cwd, d.keyFile)
-	}
-	d.zone = d.config.GetString("gcepd.zone")
 
+	d.keyFile = d.config.GetString("gcepd.keyfile")
+	if d.keyFile != "" {
+		if !gotil.FileExists(d.keyFile) {
+			return goof.Newf("keyfile at %s does not exist", d.keyFile)
+		}
+		pID, err := d.extractProjectID()
+		if err != nil || pID == nil || *pID == "" {
+			return goof.New("Unable to set project ID from keyfile")
+		}
+		d.projectID = pID
+		context.Info("Will authenticate using local JSON credentials")
+	} else {
+		// We are using application default credentials
+		defCreds, err := google.FindDefaultCredentials(
+			context, compute.ComputeScope)
+		if err != nil {
+			return goof.WithError(
+				"Unable to get application default credentials",
+				err)
+		}
+		d.projectID = &defCreds.ProjectID
+		if *d.projectID == "" {
+			return goof.New(
+				"Unable to get project ID from default creds")
+		}
+		d.tokenSource = defCreds.TokenSource
+		context.Info("Will authenticate using app default credentials")
+	}
+
+	d.zone = d.config.GetString("gcepd.zone")
 	if d.zone != "" {
 		context.Infof("All access is restricted to zone: %s", d.zone)
 	}
-
-	pID, err := d.extractProjectID()
-	if err != nil || pID == nil || *pID == "" {
-		return goof.New("Unable to set project ID from keyfile")
-	}
-	d.projectID = pID
 
 	d.defaultDiskType = config.GetString("gcepd.defaultDiskType")
 
@@ -129,13 +144,17 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	defer sessionsL.Unlock()
 
 	var (
-		ckey string
-		hkey = md5.New()
+		ckey   string
+		hkey   = md5.New()
+		client *http.Client
 	)
 
 	// Unique connections to google APIs are based on project ID
-	// Project ID is embedded in the service account key JSON
+	// optionally there may be an additional service account
 	writeHkey(hkey, d.projectID)
+	if d.svcAccount != "" {
+		writeHkey(hkey, &d.svcAccount)
+	}
 	ckey = fmt.Sprintf("%x", hkey.Sum(nil))
 
 	// if the session is cached then return it
@@ -150,34 +169,48 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		"projectID": *d.projectID,
 	}
 
-	serviceAccountJSON, err := d.getKeyFileJSON()
-	if err != nil {
-		ctx.WithFields(fields).Errorf(
-			"Could not read service account credentials file: %s",
-			err)
-		return nil, err
+	if d.keyFile != "" {
+		serviceAccountJSON, err := d.getKeyFileJSON()
+		if err != nil {
+			ctx.WithFields(fields).Errorf(
+				"Could not read service account credentials file: %s",
+				err)
+			return nil, err
+		}
+
+		config, err := google.JWTConfigFromJSON(
+			serviceAccountJSON,
+			compute.ComputeScope,
+		)
+		if err != nil {
+			ctx.WithFields(fields).Errorf(
+				"Could not create JWT Config From JSON: %s", err)
+			return nil, err
+		}
+		d.svcAccount = config.Email
+		writeHkey(hkey, &config.Email)
+		ckey = fmt.Sprintf("%x", hkey.Sum(nil))
+		client = config.Client(ctx)
+	} else {
+		// Using application default credentials
+		if d.tokenSource == nil {
+			return nil, goof.New("Token Source is nil")
+		}
+
+		client = oauth2.NewClient(ctx, d.tokenSource)
 	}
 
-	config, err := google.JWTConfigFromJSON(
-		serviceAccountJSON,
-		compute.ComputeScope,
-	)
-	if err != nil {
-		ctx.WithFields(fields).Errorf(
-			"Could not create JWT Config From JSON: %s", err)
-		return nil, err
-	}
-
-	client, err := compute.New(config.Client(ctx))
+	svc, err := compute.New(client)
 	if err != nil {
 		ctx.WithFields(fields).Errorf(
 			"Could not create GCE service connection: %s", err)
 		return nil, err
+
 	}
 
-	sessions[ckey] = client
+	sessions[ckey] = svc
 	ctx.Info("GCE service connection created and cached")
-	return client, nil
+	return svc, nil
 }
 
 // NextDeviceInfo returns the information about the driver's next available

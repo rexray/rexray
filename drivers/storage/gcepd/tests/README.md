@@ -21,11 +21,14 @@ instance. You will also need to copy the JSON file with your service account
 credentials.
 
 Using an SSH session to connect to the GCE instance, please export the required
-GCE credentials used by the GCE storage driver:
+GCE service account credentials used by the GCE storage driver:
 
 ```bash
-export GCE_KEYFILE=/etc/gcekey.json
+export GCEPD_KEYFILE=/etc/gcekey.json
 ```
+
+If `GCEPD_KEYFILE` is not exported, the default location the test binary looks for
+a credentials file is at `/tmp/gce_key.json`.
 
 The tests may now be executed with the following command:
 

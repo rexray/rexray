@@ -1182,6 +1182,28 @@ $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
 	docker plugin ls
 
 
+push-docker-plugin: $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT)
+ifneq (,$(strip $(DOCKER_USER)))
+ifneq (,$(strip $(DOCKER_PASS)))
+	docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
+endif
+endif
+ifeq (unstable,$(DOCKER_PLUGIN_TYPE))
+	docker build -t $(PROG)/$(DOCKER_PLUGIN_DRIVERS):unstable $$(dirname $(@D))
+	docker plugin push $(PROG)/$(DOCKER_PLUGIN_DRIVERS):unstable
+endif
+ifeq (staged,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+endif
+ifeq (stable,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+	docker build -t $(PROG)/$(DOCKER_PLUGIN_DRIVERS):latest $$(dirname $(@D))
+	docker plugin push $(PROG)/$(DOCKER_PLUGIN_DRIVERS):latest
+endif
+ifeq (,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+endif
+
 ################################################################################
 ##                                PROG Markers                                ##
 ################################################################################

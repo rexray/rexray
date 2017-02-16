@@ -60,8 +60,20 @@ func (c *client) httpDo(
 	} else if iidMap, ok := ctx.Value(
 		context.AllInstanceIDsKey).(types.InstanceIDMap); ok {
 		if len(iidMap) > 0 {
-			var iids []fmt.Stringer
+			// iterate over the instance IDs and marshal them to strings,
+			// storing only the unique, marshaled output. any instance ID
+			// that specifies a service should be unique, but those that
+			// do not should collapse into a single header that only
+			// includes the driver
+			iidHdrs := map[string]bool{}
 			for _, iid := range iidMap {
+				szIID := iid.String()
+				if _, ok := iidHdrs[szIID]; !ok {
+					iidHdrs[szIID] = true
+				}
+			}
+			var iids []string
+			for iid := range iidHdrs {
 				iids = append(iids, iid)
 			}
 			ctx = ctx.WithValue(instanceIDHeaderKey, iids)

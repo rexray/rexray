@@ -974,6 +974,8 @@ func instanceID() (*types.InstanceID, error) {
 	iid := &types.InstanceID{ID: hostName, Driver: vfs.Name}
 	if ok, _ := strconv.ParseBool(os.Getenv("VFS_INSTANCEID_USE_FIELDS")); ok {
 		iid.Fields = map[string]string{"region": "east"}
+	} else {
+		iid.Service = vfs.Name
 	}
 	return iid, nil
 }

@@ -60,6 +60,24 @@ func TestInstanceIDMarshalText(t *testing.T) {
 		Fields: map[string]string{"region": "west"},
 	}
 	assert.Equal(t, "vfs=1234,region=west", i4.String())
+
+	i5 := &InstanceID{
+		ID:      "1234",
+		Driver:  "vfs",
+		Service: "vfs-001",
+		Fields:  map[string]string{"region": "west"},
+	}
+	assert.Equal(t, "vfs:vfs-001=1234,region=west", i5.String())
+
+	i6 := &InstanceID{}
+	if !assert.NoError(
+		t, i6.UnmarshalText([]byte(`vfs:vfs-001=1234,region=west`))) {
+		t.FailNow()
+	}
+	assert.Equal(t, "1234", i6.ID)
+	assert.Equal(t, "vfs", i6.Driver)
+	assert.Equal(t, "vfs-001", i6.Service)
+	assert.EqualValues(t, map[string]string{"region": "west"}, i6.Fields)
 }
 
 func TestInstanceIDMarshalJSON(t *testing.T) {

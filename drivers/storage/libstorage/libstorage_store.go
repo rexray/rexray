@@ -20,8 +20,8 @@ func (s *lss) GetExecutorInfo(lsx string) *types.ExecutorInfo {
 	return nil
 }
 
-func (s *lss) GetInstanceID(driverName string) *types.InstanceID {
-	return s.Store.GetInstanceID(driverName)
+func (s *lss) GetInstanceID(service string) *types.InstanceID {
+	return s.Store.GetInstanceID(service)
 }
 
 func (s *lss) GetLSXSupported(driverName string) types.LSXSupportedOp {

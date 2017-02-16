@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/codedellemc/libstorage/api/server/handlers"
+	"github.com/codedellemc/libstorage/api/server/services"
 	"github.com/codedellemc/libstorage/api/types"
 )
 
@@ -18,7 +19,8 @@ func (s *server) initGlobalMiddleware() {
 
 	s.addGlobalMiddleware(handlers.NewTransactionHandler())
 	s.addGlobalMiddleware(handlers.NewErrorHandler())
-	s.addGlobalMiddleware(handlers.NewInstanceIDHandler())
+	s.addGlobalMiddleware(
+		handlers.NewInstanceIDHandler(services.StorageServices(s.ctx)))
 	s.addGlobalMiddleware(handlers.NewLocalDevicesHandler())
 	s.addGlobalMiddleware(handlers.NewOnRequestHandler())
 }

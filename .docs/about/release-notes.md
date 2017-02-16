@@ -3,6 +3,33 @@
 Release early, release often
 
 ---
+## Version 0.5.0 (2017/02/15)
+This is one of the largest releases in a while, including support for new
+storage platforms, client enhancements, and more!
+
+### New Features
+* Amazon Simple Storage Service FUSE (S3FS) support ([#397](https://github.com/codedellemc/libstorage/issues/397), [#409](https://github.com/codedellemc/libstorage/issues/409))
+* Google Compute Engine Persistent Disk (GCEPD) support ([#394](https://github.com/codedellemc/libstorage/issues/394), [#416](https://github.com/codedellemc/libstorage/issues/416))
+* DigitalOcean support ([#392](https://github.com/codedellemc/libstorage/issues/392))
+* Storage-platform specific mount/unmount support ([#399](https://github.com/codedellemc/libstorage/issues/399))
+* The ScaleIO tool `drv_cfg` is now an optional client-side dependency instead of required ([#414](https://github.com/codedellemc/libstorage/issues/414))
+
+### Bug Fixes
+* Preemption fix ([#413](https://github.com/codedellemc/libstorage/issues/413))
+* Ceph RBD monitored IP fix ([#412](https://github.com/codedellemc/libstorage/issues/412))
+* Fix for `lsx-OS wait` argument count ([#401](https://github.com/codedellemc/libstorage/issues/401))
+* Build fixes ([#403](https://github.com/codedellemc/libstorage/issues/403))
+
+### Thank You
+  Name | Blame  
+-------|------
+[Travis Rhoden](https://github.com/codenrhoden) | Travis, or as I call him, T-Dawg, is essential to "taking care of business." He comes to work to chew bubblegum and kick butt, and he leaves the gum at home!
+[Dan Norris](https://github.com/protochron) | Dan "The Man" Norris is well known in the underground street-swimming circuit. Last year he tied Michael Phelps in the Santa Monica Sewer 120 meter medley. He would have won if not for stopping to create the DigitalOcean driver for libStorage.
+[Alexey Morlang](https://github.com/alexey-mr) | As a third-chair oboe player in the Moscow orchestra it is surprising that Alexey still finds time to contribute to the project, but coming from a long line of oboligarchs (oboe playing oligarchs), it's just in his nature. As is creating storage drivers. That, and, well, playing the oboe.
+[Andrey Pavlov](https://github.com/Andrey-mp) | There is no Andrey. You have not met him. He does not exist. Don't look behind you. He is not there. He is writing storage drivers. Then just like that, he's vanished.
+[Lax Kota](https://github.com/Lax77) | Lax is a rock star in the Slack channel, helping others by answering their questions before the project's developers can take a stab. We do not want to upset him. It's rumored he beats those who upset him in order to provide inspiration for his true passion -- corporal poetry. Every punch thrown is another verse towards his masterpiece.
+
+
 ## Version 0.4.0 (2017/01/20)
 Another exciting new feature release, this update brings with it support for
 the Ceph RBD platform.

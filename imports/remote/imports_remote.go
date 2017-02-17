@@ -7,6 +7,7 @@ import (
 	_ "github.com/codedellemc/libstorage/drivers/storage/digitalocean/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/ebs/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/efs/storage"
+	_ "github.com/codedellemc/libstorage/drivers/storage/fittedcloud/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/gcepd/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/isilon/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/rbd/storage"

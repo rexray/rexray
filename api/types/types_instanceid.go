@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/akutz/goof"
 )
@@ -24,6 +25,10 @@ type InstanceID struct {
 	// as well as the name of the StorageDriver for which the InstanceID is
 	// valid.
 	Driver string `json:"driver"`
+
+	// Service is the name of the libStorage service for which the InstanceID
+	// is valid.
+	Service string `json:"service"`
 
 	// Fields is additional, driver specific data about the Instance ID.
 	Fields map[string]string `json:"fields"`
@@ -98,12 +103,16 @@ func (i *InstanceID) UnmarshalMetadata(dest interface{}) error {
 }
 
 // MarshalText marshals InstanceID to a text string that adheres to the format
-// `DRIVER=ID[,METADATA]`. If metadata is present it is encoded as a base64
-// string.
+// `DRIVER[:SERVICE]=ID,FIELDS,[,METADATA]`. If metadata is present it is
+// encoded as a base64 string.
 func (i *InstanceID) MarshalText() ([]byte, error) {
 
 	t := &bytes.Buffer{}
-	fmt.Fprintf(t, "%s=%s", i.Driver, i.ID)
+	fmt.Fprint(t, i.Driver)
+	if len(i.Service) > 0 {
+		fmt.Fprintf(t, ":%s", i.Service)
+	}
+	fmt.Fprintf(t, "=%s", i.ID)
 
 	if len(i.Fields) == 0 && len(i.metadata) == 0 {
 		return t.Bytes(), nil
@@ -149,7 +158,11 @@ func (i *InstanceID) UnmarshalText(value []byte) error {
 		return goof.WithField("value", string(value), "invalid InstanceID")
 	}
 
-	i.Driver = string(m[1])
+	dos := strings.Split(string(m[1]), ":")
+	i.Driver = dos[0]
+	if len(dos) > 1 {
+		i.Service = dos[1]
+	}
 	i.ID = string(m[2])
 
 	if lm > 3 && len(m[3]) > 0 {
@@ -182,9 +195,10 @@ func (i *InstanceID) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID       string            `json:"id"`
 		Driver   string            `json:"driver"`
+		Service  string            `json:"service"`
 		Fields   map[string]string `json:"fields,omitempty"`
 		Metadata json.RawMessage   `json:"metadata,omitempty"`
-	}{i.ID, i.Driver, i.Fields, i.metadata})
+	}{i.ID, i.Driver, i.Service, i.Fields, i.metadata})
 }
 
 // UnmarshalJSON marshals the InstanceID to JSON.
@@ -193,6 +207,7 @@ func (i *InstanceID) UnmarshalJSON(data []byte) error {
 	iid := &struct {
 		ID       string            `json:"id"`
 		Driver   string            `json:"driver"`
+		Service  string            `json:"service"`
 		Fields   map[string]string `json:"fields,omitempty"`
 		Metadata json.RawMessage   `json:"metadata,omitempty"`
 	}{}
@@ -203,6 +218,7 @@ func (i *InstanceID) UnmarshalJSON(data []byte) error {
 
 	i.ID = iid.ID
 	i.Driver = iid.Driver
+	i.Service = iid.Service
 	i.Fields = iid.Fields
 	i.metadata = iid.Metadata
 
@@ -223,7 +239,8 @@ func (i *InstanceID) MarshalYAML() (interface{}, error) {
 	return &struct {
 		ID       string                 `yaml:"id"`
 		Driver   string                 `yaml:"driver"`
+		Service  string                 `yaml:"service"`
 		Fields   map[string]string      `yaml:"fields,omitempty"`
 		Metadata map[string]interface{} `yaml:"metadata,omitempty"`
-	}{i.ID, i.Driver, i.Fields, metadata}, nil
+	}{i.ID, i.Driver, i.Service, i.Fields, metadata}, nil
 }

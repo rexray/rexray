@@ -57,11 +57,11 @@ func (c *client) withInstanceID(
 		return ctx
 	}
 
-	if !c.instanceIDCache.IsSet(si.Driver.Name) {
+	if !c.instanceIDCache.IsSet(si.Name) {
 		return ctx
 	}
 
-	iid := c.instanceIDCache.GetInstanceID(si.Driver.Name)
+	iid := c.instanceIDCache.GetInstanceID(si.Name)
 	return ctx.WithValue(context.InstanceIDKey, iid)
 }
 

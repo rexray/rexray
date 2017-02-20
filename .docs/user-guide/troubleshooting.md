@@ -40,7 +40,7 @@ issues external to configuration.
 
 1. Shut down the REX-Ray service: `sudo rexray service stop`
 2. Save your original config: `sudo mv /etc/rexray/config.yml /etc/rexray/config.$(date +%Y-%m-%d-%T).yml`
-3. Create a new minimal config `vi \etx\rexray\config.yml`
+3. Create a new minimal config `vi /etc/rexray/config.yml`
 
 This is a minimal configuration for **AWS EBS** volumes. Other storage drivers 
 are similar and will mostly vary along the lines of authorization credentials, 
@@ -52,7 +52,7 @@ libstorage:
 ebs:
   accessKey: YOUR-ACCESS-KEY
   secretKey: your-secret-key
-  region:us-west-2
+  region: us-west-2
 ```
 
 This will parse the config and emit it in environment variable form 

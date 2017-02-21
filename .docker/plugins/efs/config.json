@@ -1,0 +1,104 @@
+{
+      "Args": {
+        "Description": "",
+        "Name": "",
+        "Settable": null,
+        "Value": null
+      },
+      "Description": "REX-Ray for Amazon EFS",
+      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/efs",
+      "Entrypoint": [
+        "/rexray.sh", "rexray", "start", "-f"
+      ],
+      "Env": [
+        {
+          "Description": "",
+          "Name": "REXRAY_LOGLEVEL",
+          "Settable": [
+            "value"
+          ],
+          "Value": "warn"
+        },
+        {
+          "Description": "",
+          "Name": "REXRAY_PREEMPT",
+          "Settable": [
+            "value"
+          ],
+          "Value": "false"
+        },
+        {
+          "Description": "",
+          "Name": "EFS_ACCESSKEY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_SECRETKEY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_SECURITYGROUPS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_REGION",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_TAG",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_DISABLESESSIONCACHE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        }
+      ],
+      "Interface": {
+        "Socket": "rexray.sock",
+        "Types": [
+          "docker.volumedriver/1.0"
+        ]
+      },
+      "Linux": {
+        "AllowAllDevices": true,
+        "Capabilities": ["CAP_SYS_ADMIN"],
+        "Devices": null
+      },
+      "Mounts": [
+        {
+          "Source": "/dev",
+          "Destination": "/dev",
+          "Type": "bind",
+          "Options": ["rbind"]
+        }
+      ],
+      "Network": {
+        "Type": "host"
+      },
+      "PropagatedMount": "/var/lib/libstorage/volumes",
+      "User": {},
+      "WorkDir": ""
+}

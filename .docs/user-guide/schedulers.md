@@ -155,6 +155,139 @@ $ docker volume rm vbox2
 Please review the [Applications](./applications.md) section for information on
 configuring popular applications with persistent storage via Docker and REX-Ray.
 
+## Docker Volume Plugins
+Starting with version 0.8, some REX-Ray drivers are distributed as Docker Engine 
+plugins which are made available on Docker Hub as a Docker images.  Using plugin,
+there is no need to download the REX-Ray binary and configure it separately.  This makes
+it easy to install, start, stop, and manage the REX-Ray drivers all using the 
+Docker engine tools.
+
+### ScaleIO Docker Plugin
+ScaleIO is one of the plugins available on Docker Hub. The REX-Ray ScaleIO Docker plugin, 
+has the following pre-requisites:
+
+  - Docker version 1.13.1 or higher
+  - The ScaleIO SDC binary installed on the Docker host
+
+### ScaleIO Plugin installation
+The ScaleIO Docker plugin must be configured properly during installation as Docker
+will start the plugin immediately. The plugin can be configured with the following 
+environment variables:
+
+|ENV|Description|
+|---|-----------|
+|`REXRAY_FSTYPE`|FSType to use, default `ext4`|
+|`REXRAY_LOGLEVEL`|REX-Ray log level, default `warn`|
+|`REXRAY_PREEMPT`|Pre-emption configuration, default  `false`|
+|`SCALEIO_ENDPOINT`|The ScaleIO gateway endpoint (required)|
+|`SCALEIO_INSECURE`|Flag for insecure gateway connection, default `true`|
+|`SCALEIO_USECERTS`|
+|`SCALEIO_USERNAME`|ScaleIO user for connection (required)|
+|`SCALEIO_PASSWORD`|ScaleIO password (required)
+|`SCALEIO_SYSTEMID`|The ID of the ScaleIO system to use|
+|`SCALEIO_SYSTEMNAME`|The name of the ScaleIO system to use (required if system id not provided)|
+|`SCALEIO_PROTECTIONDOMAINID`|The ID of the protection domain to use|
+|`SCALEIO_PROTECTIONDOMAINNAME`|The name of the protection domain to use (required if protection domain id not provided)|
+|`SCALEIO_STORAGEPOOLID`|The ID of the storage pool to use|
+|`SCALEIO_STORAGEPOOLNAME`|The name of the storage pool to use (required if pool id not provided)|
+|`SCALEIO_THINORTHICK`|The provision mode "ThinProvisioned" or "ThickProvisioned" (optional)|
+|`SCALEIO_VERSION`|The version of ScaleIO system (optional)|
+
+For instance, the following shows an example command to install plugin `rexray/scaleio` with tag `0.7.20`:
+
+```
+$> docker plugin install rexray/scaleio:0.7.20 \
+  REXRAY_FSTYPE=xfs \
+  REXRAY_LOGLEVEL=warn \
+  REXRAY_PREEMPT=false \
+  SCALEIO_ENDPOINT=https://localhost/api \
+  SCALEIO_INSECURE=true \
+  SCALEIO_USERNAME=admin \
+  SCALEIO_PASSWORD=MySCaleio123 \
+  SCALEIO_SYSTEMNAME=scaleio \
+  SCALEIO_PROTECTIONDOMAINNAME=default \
+  SCALEIO_STORAGEPOOLNAME=default
+```
+This will prompt you to grant the requested permissions as shown:
+
+```
+Plugin "rexray/scaleio:0.7.20" is requesting the following privileges:
+ - network: [host]
+ - mount: [/dev]
+ - mount: [/bin/emc]
+ - mount: [/opt/emc/scaleio/sdc]
+ - allow-all-devices: [true]
+ - capabilities: [CAP_SYS_ADMIN]
+Do you grant the above permissions? [y/N]
+```
+
+Once installed, get the status of the plugin as follows:
+
+```
+$> docker plugin ls
+ID                  NAME                            DESCRIPTION                    ENABLED
+5c08e5947d8f        rexray/scaleio:0.7.20           REX-Ray for EMC Dell ScaleIO   true
+```
+
+First let us create a volume using Docker:
+
+```
+$> docker volume create --driver rexray/scaleio:0.7.0-20 --name test-vol-1
+```
+
+Next, we can verify that the volume is created with the following:
+
+```
+$> docker volume ls
+DRIVER                          VOLUME NAME
+rexray/scaleio:0.7.0            test-vol-1
+```
+Next, we can get detail information about the created volume with the following: 
+
+```
+docker volume inspect test-vol-1
+[
+    {
+        "Driver": "rexray/scaleio:0.7.0-20",
+        "Labels": {},
+        "Mountpoint": "/var/lib/docker/plugins/9f30ec546a4b1bb19574e491ef3e936c2583eda6be374682eb42d21bbeec0dd8/rootfs",
+        "Name": "test-vol-1",
+        "Options": {},
+        "Scope": "global",
+        "Status": {
+            "availabilityZone": "default",
+            "fields": null,
+            "iops": 0,
+            "name": "test-vol-1",
+            "server": "scaleio",
+            "service": "scaleio",
+            "size": 16,
+            "type": "default"
+        }
+    }
+]
+```
+
+Now, let us start a container, mount the volume to it, and validate the mount point:
+
+```
+$> docker run -v test-vol-1:/data busybox mount | grep "/data"
+/dev/scinia on /data type xfs (rw,seclabel,relatime,nouuid,attr2,inode64,noquota)
+```
+
+We can delete the volume we create with the following:
+
+```
+$> docker volume rm test-vol-1
+```
+
+We validate the volume is deleted with:
+
+```
+docker volume ls
+DRIVER              VOLUME NAME
+```
+
 ## Kubernetes
 REX-Ray can be integrated with [Kubernetes](https://kubernetes.io/) allowing 
 pods to consume data stored on volumes that are orchestrated by REX-Ray. Using 

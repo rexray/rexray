@@ -662,6 +662,9 @@ volume ID is given as `<pool>.<name>`, a volume named *name* will be created in
 the *pool* storage pool. If no pool is referenced, the `defaultPool` will be
 used.
 
+Both *pool* and *name* may only contain alphanumeric characters, underscores,
+and dashes.
+
 When querying volumes, the driver will return all RBDs present in all pools in
 the cluster, prefixing each volume with the appropriate `<pool>.` value.
 

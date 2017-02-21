@@ -857,6 +857,7 @@ $1:
 	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
+	rm -f $(EXECUTORS_GENERATED)
 GO_PHONY += $1-clean
 GO_CLEAN += $1-clean
 endif
@@ -1097,6 +1098,13 @@ test-digitalocean:
 
 test-digitalocean-clean:
 	DRIVERS=digitalocean $(MAKE) clean
+
+test-azureud:
+	DRIVERS=azureud $(MAKE) deps
+	DRIVERS=azureud $(MAKE) ./drivers/storage/azureud/tests/azureud.test
+
+test-azureud-clean:
+	DRIVERS=azureud $(MAKE) clean
 
 clean: $(GO_CLEAN)
 

@@ -3,7 +3,7 @@
 Release early, release often
 
 ---
-## Version 0.5.0 (2017/02/15)
+## Version 0.5.0 (TBD)
 This is one of the largest releases in a while, including support for new
 storage platforms, client enhancements, and more!
 
@@ -11,8 +11,10 @@ storage platforms, client enhancements, and more!
 * Amazon Simple Storage Service FUSE (S3FS) support ([#397](https://github.com/codedellemc/libstorage/issues/397), [#409](https://github.com/codedellemc/libstorage/issues/409))
 * Google Compute Engine Persistent Disk (GCEPD) support ([#394](https://github.com/codedellemc/libstorage/issues/394), [#416](https://github.com/codedellemc/libstorage/issues/416))
 * DigitalOcean support ([#392](https://github.com/codedellemc/libstorage/issues/392))
+* Microsoft Azure unmanaged disk support ([#421](https://github.com/codedellemc/libstorage/issues/421))
 * Storage-platform specific mount/unmount support ([#399](https://github.com/codedellemc/libstorage/issues/399))
 * The ScaleIO tool `drv_cfg` is now an optional client-side dependency instead of required ([#414](https://github.com/codedellemc/libstorage/issues/414))
+* Multi-cluster support for ScaleIO ([#420](https://github.com/codedellemc/libstorage/issues/420))
 
 ### Bug Fixes
 * Preemption fix ([#413](https://github.com/codedellemc/libstorage/issues/413))

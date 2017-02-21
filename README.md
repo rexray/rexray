@@ -29,6 +29,7 @@ Provider              | Storage Platform(s)
 Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
 [Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox) | Virtual Media
 Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs)
+Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ceph-rbd)
 
 Support for the following storage providers will be reintroduced in upcoming
 releases:

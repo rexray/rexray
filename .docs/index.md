@@ -51,8 +51,8 @@ Provider              | Storage Platform(s)
 [Google Compute Engine](./user-guide/storage-providers.md#coming-soon) | Disk
 [Open Stack](./user-guide/storage-providers.md#coming-soon) | Cinder
 [Rackspace](./user-guide/storage-providers.md#coming-soon) | Cinder
-Dell EMC | [XtremIO](./user-guide/storage-providers.md#coming-soon), [VMAX]
-(./user-guide/storage-providers.md#coming-soon)
+Dell EMC | [XtremIO](./user-guide/storage-providers.md#coming-soon), [VMAX](./user-guide/storage-providers.md#coming-soon)
+Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ceph-rbd)
 
 ### Operating System Support
 The following operating systems (OS) are supported by REX-Ray:

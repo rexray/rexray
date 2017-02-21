@@ -67,7 +67,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
   - provider: bintray
     file: bintray-staged.json
@@ -76,7 +76,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: bintray
     file: bintray-stable.json
@@ -85,7 +85,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: script
     script: ./make.sh push-docker-plugin unstable
@@ -117,3 +117,6 @@ addons:
   apt:
     packages:
     - rpm
+    - debhelper
+    - dpkg
+    - dpkg-dev

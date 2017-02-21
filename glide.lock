@@ -1,5 +1,5 @@
-hash: c380528ee32eda8ba09fa3b796ac7265ffb760219f67ae1c3af062dd8a298630
-updated: 2017-02-11T12:11:28.85373544-06:00
+hash: 3857bc71629153678eea97d0937407162daf2a0b93cc85a6df3e8ac924a35fe8
+updated: 2017-02-13T13:42:30.792147824-07:00
 imports:
 - name: github.com/akutz/gofig
   version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
@@ -71,6 +71,7 @@ imports:
   - api/v2
 - name: github.com/codedellemc/goscaleio
   version: 485da3636bfcc8e70f74fe7bdc7cb25e5a6e4c4a
+  repo: https://github.com/codedellemc/goscaleio
   subpackages:
   - tls
   - types/v1
@@ -239,11 +240,6 @@ imports:
   subpackages:
   - transform
   - unicode/norm
-- name: google.golang.org/api
-  version: fd081149e482b10c55262756934088ffe3197ea3
-  repo: https://github.com/google/google-api-go-client.git
-  subpackages:
-  - compute/v1
 - name: gopkg.in/yaml.v1
   version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git

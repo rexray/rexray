@@ -1,16 +1,38 @@
-Functional tests for Azure Unmanaged Disk driver.
+# Azure Unmanaged Disk driver Testing
 
-It requires to be run inside of Azure instance.
+## Unit/Integration Tests
+The unit/integration tests must be executed on a node that is hosted within
+Azure. In order to execute the tests either compile the test binary locally or
+on the instance. From the root of the libStorage project execute the following:
 
-In order to run test the following environment variables should be defined
-(they should be filled with your data):
-        AZUREUD_SUBSCRIPTION_ID=<subscrption_id>                  # your subscription ID
-        AZUREUD_RESOURCE_GROUP=<resource_group_name>              # your resource group name
-        AZUREUD_TENANT_ID=<tenant_id>                             # your tenant ID
-        AZUREUD_CLIENT_ID=<client_id>                             # id of your client (application)
-        AZUREUD_CLIENT_SECRET=<put yout secret>                   # your client(application) secret key
-        AZUREUD_STORAGE_ACCOUNT=<storage_account_name>            # your storage account name
-        AZUREUD_STORAGE_ACCESS_KEY=<storage_account_access_key>   # your storage account access key
+```bash
+GOOS=linux make test-azureud
+```
 
-The driver and tests do not create container, instance, etc, all entities should
-be created before to run tests / use of libstorage.
+Once the test binary is compiled, if it was built locally, copy it to the Azure
+instance.
+
+Using an SSH session to connect to the instance, please export the required
+config options used by the Azure UD driver:
+
+```bash
+export AZUREUD_SUBSCRIPTIONID=<your subscription id>
+export AZUREUD_RESOURCEGROUP=<your resource group name>
+export AZUREUD_TENANTID=<your active directory tenant name>
+export AZUREUD_STORAGEACCOUNT=<your storage account name>
+export AZUREUD_STORAGEACCESSKEY=<your access key for storage account>
+export AZUREUD_CLIENTID=<your client ID>
+export AZUREUD_CLIENTSECRET=<your secret key for client>
+```
+
+The tests may now be executed with the following command:
+
+```bash
+./azureud.test
+```
+
+An exit code of `0` means the tests completed successfully. If there are errors
+then it may be useful to run the tests once more with increased logging:
+
+```bash
+LIBSTORAGE_LOGGING_LEVEL=debug ./azureud.test -test.v

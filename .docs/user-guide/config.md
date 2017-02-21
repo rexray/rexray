@@ -590,7 +590,7 @@ remote storage systems. Currently the following storage drivers are supported:
 [EFS](./storage-providers.md#aws-efs) | efs
 [RBD](./storage-providers.md#ceph-rbd) | rbd
 [GCEPD](./storage-providers.md#gcepd) | gcepd
-..more coming|
+[Azure UD](./storage-providers.md#azure-ud) | azureud
 
 The `libstorage.server.libstorage.storage.driver` property can be used to
 activate a storage drivers. That is not a typo; the `libstorage` key is repeated
@@ -698,6 +698,7 @@ EBS|Yes
 EFS|No
 RBD|No
 GCEPD|Yes
+Azure UD|Yes
 
 #### Ignore Used Count
 By default accounting takes place during operations that are performed

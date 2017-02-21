@@ -28,6 +28,43 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.8.0 (TBD)
+This is one of the largest releases in a while, including support for four new
+storage platformss!
+
+### New Features
+* Amazon Simple Storage Service FUSE (S3FS) support ([#397](https://github.com/codedellemc/libstorage/issues/397), [#409](https://github.com/codedellemc/libstorage/issues/409))
+* Google Compute Engine Persistent Disk (GCEPD) support ([#394](https://github.com/codedellemc/libstorage/issues/394), [#416](https://github.com/codedellemc/libstorage/issues/416))
+* DigitalOcean support ([#392](https://github.com/codedellemc/libstorage/issues/392))
+* Microsoft Azure unmanaged disk support ([#421](https://github.com/codedellemc/libstorage/issues/421))
+* Docker Volume Plug-in for EBS ([#720](https://github.com/codedellemc/rexray/issues/720))
+* Docker Volume Plug-in for EFS ([#729](https://github.com/codedellemc/rexray/issues/729))
+* Docker Volume Plug-in for Isilon ([#727](https://github.com/codedellemc/rexray/issues/727))
+* Docker Volume Plug-in for S3FS ([#724](https://github.com/codedellemc/rexray/issues/724))
+* Docker Volume Plug-in for ScaleIO ([#725](https://github.com/codedellemc/rexray/issues/725))
+* REX-Ray on Alpine Linux support ([#724](https://github.com/codedellemc/rexray/issues/724))
+* Storage-platform specific mount/unmount support ([#399](https://github.com/codedellemc/libstorage/issues/399))
+* The ScaleIO tool `drv_cfg` is now an optional client-side dependency instead of required ([#414](https://github.com/codedellemc/libstorage/issues/414))
+* Multi-cluster support for ScaleIO ([#420](https://github.com/codedellemc/libstorage/issues/420))
+* Forced volume remove support ([#717](https://github.com/codedellemc/rexray/issues/717))
+
+### Bug Fixes
+* Preemption fix ([#413](https://github.com/codedellemc/libstorage/issues/413))
+* Ceph RBD monitored IP fix ([#412](https://github.com/codedellemc/libstorage/issues/412))
+* Fix for `lsx-OS wait` argument count ([#401](https://github.com/codedellemc/libstorage/issues/401))
+* Build fixes ([#403](https://github.com/codedellemc/libstorage/issues/403))
+
+### Thank You
+  Name | Blame  
+-------|------
+[Travis Rhoden](https://github.com/codenrhoden) | Travis, or as I call him, T-Dawg, is essential to "taking care of business." He comes to work to chew bubblegum and kick butt, and he leaves the gum at home!
+[Vladimir Vivien](https://github.com/vladimirvivien) | A little known fact about Vladimir is that he's been seeded in the top 10 of the last US Opens, but has had to withdrawal at the last minute before each of those tournaments due to other responsibilities. What those are? Who can say? Are they contracts on people's lives? Perhaps. Are they appearances for Make a Wish? Probably. The only thing we know for sure is that when he is seen again, Vladimir seems rejuvenated and ready to conquer the tennis world yet again.
+[Steve Wong](https://github.com/cantbewong) | I've known Steve for a very long time, and in that time I can say I've never once seen him in the same room as President Barack Obama. Now, does that mean that I can definitively state that Steve and President Obama are in fact the same person. No, of course not. There are obvious differences. The most glaring of course being that Steve wears glasses and President Obama does not. However, other than that the two men are nearly identical. I guess we'll never know if Steve Wong lives a double life as the 44th President of these United States, but I personally would like to think that yeah, he does.
+[Dan Norris](https://github.com/protochron) | Dan "The Man" Norris is well known in the underground street-swimming circuit. Last year he tied Michael Phelps in the Santa Monica Sewer 120 meter medley. He would have won if not for stopping to create the DigitalOcean driver for libStorage.
+[Alexey Morlang](https://github.com/alexey-mr) | As a third-chair oboe player in the Moscow orchestra it is surprising that Alexey still finds time to contribute to the project, but coming from a long line of oboligarchs (oboe playing oligarchs), it's just in his nature. As is creating storage drivers. That, and, well, playing the oboe.
+[Andrey Pavlov](https://github.com/Andrey-mp) | There is no Andrey. You have not met him. He does not exist. Don't look behind you. He is not there. He is writing storage drivers. Then just like that, he's vanished.
+[Lax Kota](https://github.com/Lax77) | Lax is a rock star in the Slack channel, helping others by answering their questions before the project's developers can take a stab. We do not want to upset him. It's rumored he beats those who upset him in order to provide inspiration for his true passion -- corporal poetry. Every punch thrown is another verse towards his masterpiece.
+
 ## Version 0.7.0 (2017/01/23)
 This feature release includes support for libStorage 0.4.0 and the Ceph RBD
 storage platform.

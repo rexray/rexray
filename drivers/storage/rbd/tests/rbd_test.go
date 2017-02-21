@@ -46,7 +46,7 @@ func init() {
 	uuid, _ := types.NewUUID()
 	uuids := strings.Split(uuid.String(), "-")
 	volumeName = uuids[0]
-	volumeName2 = uuids[1]
+	volumeName2 = uuids[1] + "-test"
 }
 
 func TestMain(m *testing.M) {

@@ -853,6 +853,10 @@ machines.
 * An Azure subscription
 * An Azure storage account
 * An Azure resource group
+* Any virtual machine where disks are going to be attached must have the
+  `lsscsi` utility installed. You can install this with `yum install lsscsi` on
+  Red Hat based distributions, or with `apt-get install lsscsi` on Debian based
+  distributions.
 
 ### Configuration
 
@@ -902,6 +906,13 @@ azureud:
 * The `container` config option defaults to `vhds`, and this container is
   present by default in Azure. Changing this option is only necessary if you
   want to use a different container within your storage account.
+* Volume Attach/Detach operations in Azure take a long time, sometimes greater
+  than 60 seconds, which is libStorage's default task timeout. When the timeout
+  is hit, libStorage returns information to the caller about a queued task, and
+  that the task is still running. This may cause issues for upstream callers.
+  It is *highly* recommended to adjust this default timeout to 120 seconds by
+  setting the `libstorage.server.tasks.exeTimeout` property. This is done in
+  the `Examples` section below.
 
 ### Activating the Driver
 
@@ -927,6 +938,8 @@ Below is a full `config.yml` that works with Azure UD
 ```yaml
 libstorage:
   server:
+    tasks:
+      exeTimeout: 120s
     services:
       azure:
         driver: azureud
@@ -943,10 +956,6 @@ libstorage:
 ### Caveats
 
 * Snapshot and Copy functionality is not yet implemented
-* Volume Attach/Detach operations in Azure take a long time, sometimes greater
-  than 60 seconds. When the 60 second mark is passed, libStorage returns
-  information to the caller about a queued task, and that the task is still
-  running. This may cause issues for upstream callers.
 * The number of disks you can attach to a Virtual Machine depends on its type.
 * Good resources for reading about disks in Azure are
   [here](https://docs.microsoft.com/en-us/azure/storage/storage-standard-storage)

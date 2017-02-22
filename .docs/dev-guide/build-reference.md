@@ -4,7 +4,63 @@ How to build libStorage
 
 ---
 
-## Build Requirements
+## Basic Builds
+The following one-line command is the quickest, simplest, and most
+deterministic approach to building libStorage:
+
+```bash
+$ git clone https://github.com/codedellemc/libstorage && make -C libstorage
+```
+
+!!! note "note"
+
+    The above `make` command defaults to the `docker-build` target only if
+    Docker is detected and running on a host, otherwise the `build` target is
+    used. For more information about the `build` target, please see the
+    [Advanced Builds](#advanced-builds) section.
+
+### Basic Build Requirements
+Building libStorage with Docker has the following requirements:
+
+Requirement | Version
+------------|--------
+Operating System | Linux, OS X
+[Docker](https://www.docker.com/) | >=1.11
+[GNU Make](https://www.gnu.org/software/make/) | >=3.80
+[Git](https://git-scm.com/) | >= 1.7
+
+OS X ships with a very old version of GNU Make, and a package manager like
+[Homebrew](http://brew.sh/) can be used to install the required version.
+
+### Basic Build Targets
+The following targets are available when building libStorage with Docker:
+
+| Target | Description |
+| --- | --- |
+| `docker-build` | Builds libStorage inside a Docker container. |
+| `docker-test` | Executes all of the libStorage tests inside the container. |
+| `docker-clean` | This target stops and removes the default container used for libStorage builds. The name of the default container is `build-libstorage`. |
+| `docker-clobber` | This target stops and removes all Docker containers that have a name that matches the name of the configured container prefix (default prefix is `build-libstorage`). |
+| `docker-list` | Lists all Docker containers that have a name that matches the name of the configured prefix (default prefix is `build-libstorage`). |
+
+### Basic Build Options
+The following options (via environment variables) can be used to influence
+how libStorage is built with Docker:
+
+| Environment Variable | Description |
+| --- | --- |
+| `DRIVERS` | This variable can be set to a space-delimited list of driver names in order to indicate which storage platforms to support. For example, the command `$ DRIVERS="ebs scaleio" make docker-build` would build libStorage for only the EBS and ScaleIO storage platforms.
+| `DBUILD_ONCE` | When set to `1`, this environment variable instructs the Makefile to create a temporary, one-time use container for the subsequent build. The container is removed upon a successful build. If the build fails the container is not removed. This is because Makefile error logic is lacking. However, `make docker-clobber` can be used to easily clean up these containers. The containers will follow a given pattern using the container prefix (`build-libstorage` is the default prefix value). The one-time containers use `PREFIX-EPOCH`. For example, `build-libstorage-1474691232`. |
+| `DGOOS` | This sets the OS target for which to build the libStorage binaries. Valid values are `linux` and `darwin`. If omitted the host OS value returned from `uname -s` is used instead. |
+| `DLOCAL_IMPORTS` | Specify a list of space-delimited import paths that will be copied from the host OS's `GOPATH` into the container build's vendor area, overriding the dependency code that would normally be fetched by Glide.<br/><br/>For example, the project's `glide.yaml` file might specify to build REX-Ray with libStorage v0.2.1. However, the following command will build REX-Ray using the libStorage sources on the host OS at `$GOPATH/src/github.com/codedellemc/libstorage`:<br/><br/><pre lang="bash">$ DLOCAL_IMPORTS=github.com/codedellemc/libstorage make docker-build</pre>Using local sources can sometimes present a problem due to missing dependencies. Please see the next environment variable for instructions on how to overcome this issue. |
+| `DGLIDE_YAML` | Specify a file that will be used for the container build in place of the standard `glide.yaml` file.<br/><br/>This is necessary for occasions when sources injected into the build via the `DLOCAL_IMPORTS` variable import packages that are not imported by the package specified in the project's standard `glide.yaml` file.<br/><br/>For example, if `glide.yaml` specifies that libStorage depends upon AWS SDK v1.2.2, but `DLOCAL_IMPORTS` specifies the value `github.com/aws/aws-sdk-go` and the AWS SDK source code on the host includes a new dependency not present in the v1.2.2 version, Glide will not fetch the new dependency when doing the container build.<br/><br/>So it may be necessary to use `DGLIDE_YAML` to provide a superset of the project's standard `glide.yaml` file which also includes the dependencies necessary to build the packages specified in `DLOCAL_IMPORTS`. |
+
+## Advanced Builds
+While building libStorage with Docker is simple, it ultimately relies on the
+same `Makefile` included in the libStorage repository and so it's entirely
+possible (and often desirable) to build libStorage directly.
+
+### Advanced Build Requirements
 This project has very few build requirements, but there are still one or two
 items of which to be aware. Also, please note that this are the requirements to
 *build* `libStorage`, not run it.
@@ -27,188 +83,23 @@ OS X ships with a very old version of GNU Make, and a package manager like
 It's also possible to use GCC as the Cgo compiler for OS X or to use Clang on
 Linux, but by default Clang is used on OS X and GCC on Linux.
 
-## Cross-Compilation
-This project's
-[`Makefile`](https://github.com/codedellemc/libstorage/blob/master/Makefile)
-is configured by default to cross-compile certain project components for both
-Linux x86_64 and Darwin (OS X) x86_64. Therefore the build process will fail if
-the local Go environment is not configured for cross-compilation. Please take a
-minute to read this
-[blog post](http://dave.cheney.net/2015/08/22/cross-compilation-with-go-1-5)
-regarding cross-compilation with Go >=1.5.
+### Advanced Build Targets
+The following targets are available when building libStorage directly:
 
-While *some* of this project's components are cross-compiled as part of a
-standard build, the project as a whole is not. This is because the project
-has key components that are dependent upon the Cgo compiler, and most build
-systems do not possess the capability to cross-compile against the C stdlib
-tool-chain.
+| Target | Description |
+| --- | --- |
+| `build` | Builds libStorage. |
+| `test` | Executes all of the libStorage tests. |
+| `clean` | This target removes all of the source file markers. |
+| `clobber` | This is the same as `clean` but also removes any produced artifacts. |
 
-## Basic Build
-Building from source should be fairly straight-forward as the most basic build
-can be achieved by executing `make` from the project's root directory.
+### Advanced Build Options
+The following options (via environment variables) can be used to influence
+how libStorage is built:
 
-```sh
-$ make
-make deps
-make[1]: Entering directory './github.com/codedellemc/libstorage'
-glide up && touch glide.lock.d
-[INFO] Downloading dependencies. Please wait...
-[INFO] Fetching updates for github.com/Sirupsen/logrus.
-[INFO] Fetching updates for github.com/stretchr/testify.
-[INFO] Fetching updates for github.com/akutz/golf.
-[INFO] Fetching updates for github.com/akutz/gofig.
-[INFO] Fetching updates for github.com/appropriate/go-virtualboxclient.
-[INFO] Fetching updates for github.com/jteeuwen/go-bindata.
-[INFO] Fetching updates for github.com/codedellemc/goisilon.
-[INFO] Fetching updates for github.com/blang/semver.
-[INFO] Fetching updates for github.com/cesanta/validate-json.
-[INFO] Fetching updates for github.com/akutz/goof.
-[INFO] Fetching updates for github.com/codedellemc/goscaleio.
-[INFO] Fetching updates for github.com/akutz/gotil.
-[INFO] Setting version for github.com/Sirupsen/logrus to feature/logrus-aware-types.
-[INFO] Setting version for github.com/blang/semver to v3.0.1.
-[INFO] Setting version for github.com/jteeuwen/go-bindata to feature/md5checksum.
-[INFO] Setting version for github.com/codedellemc/goscaleio to 53ea76f52205380ab52b9c1f4ad89321c286bb95.
-[INFO] Setting version for github.com/codedellemc/goisilon to f9b53f0aaadb12a26b134830142fc537f492cb13.
-[INFO] Setting version for github.com/appropriate/go-virtualboxclient to e0978ab2ed407095400a69d5933958dd260058cd.
-[INFO] Resolving imports
-[INFO] Setting version for github.com/akutz/goof to master.
-[INFO] Setting version for github.com/akutz/gotil to master.
-[INFO] Fetching updates for github.com/spf13/pflag.
-[INFO] Setting version for github.com/spf13/pflag to b084184666e02084b8ccb9b704bf0d79c466eb1d.
-[INFO] Fetching updates for github.com/spf13/viper.
-[INFO] Setting version for github.com/spf13/viper to support/rexray.
-[INFO] Fetching updates for gopkg.in/yaml.v2.
-[INFO] Setting version for gopkg.in/yaml.v2 to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
-[INFO] Fetching updates for golang.org/x/sys.
-[INFO] Fetching updates for github.com/kardianos/osext.
-[INFO] Setting version for github.com/kardianos/osext to master.
-[INFO] Fetching updates for golang.org/x/net.
-[INFO] Found Godeps.json file in vendor/github.com/stretchr/testify
-[INFO] Fetching updates for github.com/davecgh/go-spew.
-[INFO] Setting version for github.com/davecgh/go-spew to 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d.
-[INFO] Fetching updates for github.com/pmezard/go-difflib.
-[INFO] Setting version for github.com/pmezard/go-difflib to d8ed2627bdf02c080bf22230dbb337003b7aba2d.
-[INFO] Fetching updates for github.com/asaskevich/govalidator.
-[INFO] Fetching updates for github.com/BurntSushi/toml.
-[INFO] Fetching updates for github.com/kr/pretty.
-[INFO] Fetching updates for github.com/magiconair/properties.
-[INFO] Fetching updates for github.com/mitchellh/mapstructure.
-[INFO] Fetching updates for github.com/spf13/cast.
-[INFO] Fetching updates for github.com/spf13/jwalterweatherman.
-[INFO] Fetching updates for gopkg.in/fsnotify.v1.
-[INFO] Fetching updates for github.com/kr/text.
-[INFO] Downloading dependencies. Please wait...
-[INFO] Fetching updates for github.com/gorilla/mux.
-[INFO] Fetching updates for github.com/cesanta/ucl.
-[INFO] Fetching updates for github.com/gorilla/context.
-[INFO] Setting references for remaining imports
-[INFO] Project relies on 32 dependencies.
-go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
-make[1]: Leaving directory './github.com/codedellemc/libstorage'
-make build
-make[1]: Entering directory './github.com/codedellemc/libstorage'
-gcc -Wall -pedantic -std=c99 cli/semaphores/open.c -o cli/semaphores/open -lpthread
-gcc -Wall -pedantic -std=c99 cli/semaphores/wait.c -o cli/semaphores/wait -lpthread
-gcc -Wall -pedantic -std=c99 cli/semaphores/signal.c -o cli/semaphores/signal -lpthread
-gcc -Wall -pedantic -std=c99 cli/semaphores/unlink.c -o cli/semaphores/unlink -lpthread
-go install ./api/types
-go install ./api/context
-go install ./api/utils
-go install ./api/registry
-go install ./api/utils/schema
-go install ./api/server/services
-go install ./api/server/httputils
-go install ./api/server/handlers
-go install ./api/utils/paths
-go install ./api/utils/config
-go install ./api/utils/semaphore
-go install ./drivers/storage/isilon
-go install ./drivers/storage/isilon/storage
-go install ./drivers/storage/scaleio
-go install ./drivers/storage/scaleio/storage
-go install ./drivers/storage/vbox
-go install ./drivers/storage/vbox/storage
-go install ./drivers/storage/vfs
-go install ./drivers/storage/vfs/storage
-go install ./imports/remote
-env GOOS=linux GOARCH=amd64 make -j $GOPATH/bin/linux_amd64/lsx-linux
-make[2]: Entering directory './github.com/codedellemc/libstorage'
-go install ./api/types
-go install ./drivers/storage/isilon
-go install ./api/context
-go install ./api/utils
-go install ./api/registry
-go install ./api/utils/config
-go install ./drivers/storage/isilon/executor
-go install ./drivers/storage/scaleio/executor
-go install ./drivers/storage/vbox/executor
-go install ./drivers/storage/vfs/executor
-go install ./imports/executors
-go install ./cli/lsx
-go install ./cli/lsx/lsx-linux
-make[2]: Leaving directory './github.com/codedellemc/libstorage'
-go install ./imports/config
-go install ./drivers/storage/isilon/executor
-go install ./drivers/storage/scaleio/executor
-go install ./drivers/storage/vbox/executor
-go install ./drivers/storage/vfs/executor
-go install ./imports/executors
-go install ./cli/lsx
-go install ./cli/lsx/lsx-darwin
-go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
-$GOPATH/bin/go-bindata -md5checksum -pkg executors -prefix api/server/executors/bin -o api/server/executors/executors_generated.go api/server/executors/bin/...
-go install ./api/server/executors
-go install ./api/server/router/executor
-go install ./api/server/router/root
-go install ./api/server/router/service
-go install ./api/utils/filters
-go install ./api/server/router/volume
-go install ./api/server/router/snapshot
-go install ./api/server/router/tasks
-go install ./imports/routers
-go install ./api/server
-go install ./drivers/integration/docker
-go install ./drivers/os/darwin
-go install ./drivers/os/linux
-go install ./api/client
-go install ./drivers/storage/libstorage
-go install ./drivers/storage/vfs/client
-go install ./imports/local
-go install ./client
-go install .
-go install ./api
-go install ./api/server/router
-go install ./api/tests
-go install ./cli/lss
-go install ./cli/lss/lss-darwin
-go install ./drivers/storage/vbox/client
-make -j libstor-c libstor-s
-make[2]: Entering directory './github.com/codedellemc/libstorage'
-go build -buildmode=c-shared -o $GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/libstor-c.so ./c/libstor-c
-go install ./drivers/storage/isilon/storage
-go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
-go build -buildmode=c-shared -o $GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/libstor-s.so ./c/libstor-s
-gcc -Wall -pedantic -std=c99 -I$GOPATH/src/github.com/codedellemc/libstorage/c/libstor-c \
-          -I$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
-          -L$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
-          -o $GOPATH/bin/libstor-c \
-          ./c/libstor-c.c \
-          -lstor-c
-gcc -Wall -pedantic -std=c99 -I$GOPATH/src/github.com/codedellemc/libstorage/c \
-          -I$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
-          -L$GOPATH/pkg/darwin_amd64/github.com/codedellemc/libstorage/c/ \
-          -o $GOPATH/bin/libstor-s \
-          ./c/libstor-s.c \
-          -lstor-s
-make[2]: Leaving directory './github.com/codedellemc/libstorage'
-make build-lss
-make[2]: Entering directory './github.com/codedellemc/libstorage'
-go install ./drivers/storage/isilon/storage
-go install github.com/codedellemc/libstorage/vendor/github.com/jteeuwen/go-bindata/go-bindata
-make[2]: Leaving directory './github.com/codedellemc/libstorage'
-make[1]: Leaving directory './github.com/codedellemc/libstorage'
-```
+| Environment Variable | Description |
+| --- | --- |
+| `DRIVERS` | This variable can be set to a space-delimited list of driver names in order to indicate which storage platforms to support. For example, the command `$ DRIVERS="ebs scaleio" make build` would build libStorage for only the EBS and ScaleIO storage platforms.
 
 ## Version File
 There is a file at the root of the project named `VERSION`. The file contains

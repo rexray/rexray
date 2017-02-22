@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-GO_VERSION := 1.7.5
+GO_VERSION := 1.8
 
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS :=   gofig \

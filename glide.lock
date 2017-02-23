@@ -1,5 +1,5 @@
-hash: 562747c3ee1d0c2f35f505c854ed342d8e72f391acd41e30bbac02e9b164f504
-updated: 2017-02-21T13:13:00.079483288-06:00
+hash: 4fbabb8bf8a37900dbcf1a11f160ddcd294e5fc9d9af165c8636d5172fdb8601
+updated: 2017-02-23T14:08:16.022926776-06:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -98,7 +98,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: 4a1b372134e27da77bbfa109ad5dac0e9499fbc4
+  version: 3a77b6fb0fa299d460381ab16efbf768fd3ee02d
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -142,6 +142,11 @@ imports:
   - drivers/storage/efs/executor
   - drivers/storage/efs/storage
   - drivers/storage/efs/utils
+  - drivers/storage/fittedcloud
+  - drivers/storage/fittedcloud/executor
+  - drivers/storage/fittedcloud/fcagent
+  - drivers/storage/fittedcloud/storage
+  - drivers/storage/fittedcloud/utils
   - drivers/storage/gcepd
   - drivers/storage/gcepd/executor
   - drivers/storage/gcepd/storage

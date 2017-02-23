@@ -39,20 +39,12 @@ The following storage providers and platforms are supported by REX-Ray.
 
 Provider              | Storage Platform(s)
 ----------------------|--------------------
-Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon)
+Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-isilon)
 [Oracle VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox) | Virtual Media
-Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs)
-
-Support for the following storage providers will be reintroduced in upcoming
-releases:
-
-Provider              | Storage Platform(s)
-----------------------|--------------------
-[Google Compute Engine](./user-guide/storage-providers.md#coming-soon) | Disk
-[Open Stack](./user-guide/storage-providers.md#coming-soon) | Cinder
-[Rackspace](./user-guide/storage-providers.md#coming-soon) | Cinder
-Dell EMC | [XtremIO](./user-guide/storage-providers.md#coming-soon), [VMAX]
-(./user-guide/storage-providers.md#coming-soon)
+Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs), [S3FS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-s3fs)
+Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#ceph-rbd)
+GCE | [Persistent Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk)
+Microsoft Azure | [Unmanaged Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud)
 
 ### Operating System Support
 The following operating systems (OS) are supported by REX-Ray:

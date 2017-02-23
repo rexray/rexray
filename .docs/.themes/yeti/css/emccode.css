@@ -1,0 +1,11 @@
+a.headerlink {
+    font-size:          0.5em;
+    vertical-align:     super;
+    padding-left:       10px;
+    opacity:            0.25;
+}
+
+a.headerlink:hover {
+    opacity:            1.00;
+    text-decoration:    none;
+}

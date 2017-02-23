@@ -6,10 +6,13 @@ site_dir: .site
 theme_dir: .docs/.themes/yeti
 site_favicon: favicon.ico
 extra_css:
+    - css/emccode.css
     - css/emccode-font.css
     - css/hX.css
 markdown_extensions:
     - admonition
+    - toc:
+        permalink: true
 pages:
 - Home: index.md
 - User Guide:

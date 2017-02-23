@@ -27,7 +27,6 @@ Requirement | Version
 Operating System | Linux, OS X
 [Docker](https://www.docker.com/) | >=1.11
 [GNU Make](https://www.gnu.org/software/make/) | >=3.80
-[Git](https://git-scm.com/) | >= 1.7
 
 OS X ships with a very old version of GNU Make, and a package manager like
 [Homebrew](http://brew.sh/) can be used to install the required version.
@@ -54,6 +53,42 @@ how libStorage is built with Docker:
 | `DGOOS` | This sets the OS target for which to build the libStorage binaries. Valid values are `linux` and `darwin`. If omitted the host OS value returned from `uname -s` is used instead. |
 | `DLOCAL_IMPORTS` | Specify a list of space-delimited import paths that will be copied from the host OS's `GOPATH` into the container build's vendor area, overriding the dependency code that would normally be fetched by Glide.<br/><br/>For example, the project's `glide.yaml` file might specify to build REX-Ray with libStorage v0.2.1. However, the following command will build REX-Ray using the libStorage sources on the host OS at `$GOPATH/src/github.com/codedellemc/libstorage`:<br/><br/><pre lang="bash">$ DLOCAL_IMPORTS=github.com/codedellemc/libstorage make docker-build</pre>Using local sources can sometimes present a problem due to missing dependencies. Please see the next environment variable for instructions on how to overcome this issue. |
 | `DGLIDE_YAML` | Specify a file that will be used for the container build in place of the standard `glide.yaml` file.<br/><br/>This is necessary for occasions when sources injected into the build via the `DLOCAL_IMPORTS` variable import packages that are not imported by the package specified in the project's standard `glide.yaml` file.<br/><br/>For example, if `glide.yaml` specifies that libStorage depends upon AWS SDK v1.2.2, but `DLOCAL_IMPORTS` specifies the value `github.com/aws/aws-sdk-go` and the AWS SDK source code on the host includes a new dependency not present in the v1.2.2 version, Glide will not fetch the new dependency when doing the container build.<br/><br/>So it may be necessary to use `DGLIDE_YAML` to provide a superset of the project's standard `glide.yaml` file which also includes the dependencies necessary to build the packages specified in `DLOCAL_IMPORTS`. |
+
+### Basic Build Notes
+This section outlines particular points of interest about basic builds.
+
+#### Git Is Not Required
+The example at the top of this section uses `git` in order to provide a
+simplified approach, but `git` is not actually a requirement for performing
+basic builds. A libStorage project directory is not even required to be a valid,
+initialized git repository. For example, here is a variation of the basic-build
+one-liner that doesn't use `git` at all:
+
+```bash
+curl -sSLO https://github.com/codedellemc/libstorage/archive/master.zip && \
+    unzip master.zip && \
+    rm -f master.zip && \
+    make -C libstorage-master
+```
+
+The above example is not as concise as the one with `git`, hence why the latter
+was preferred for a first-look at performing basic builds. However, for systems
+that do not have `git` installed, it's still very easy to build libStorage.
+
+In fact, it's possible to build branches from the primary repository or forks
+this way as well. To build the branch `feature/new-driver` or the fork `akutz`,
+the following variation of the above command would be used:
+
+```bash
+curl -sSLO https://github.com/akutz/libstorage/archive/feature/new-driver.zip && \
+    unzip new-driver.zip && \
+    rm -f new-driver.zip && \
+    make -C libstorage-feature-new-driver
+```
+
+Please note in the above command that when a branch contains a `/` character it
+is replaced with a `-` as part of the directory name when the zip file is
+inflated.
 
 ## Advanced Builds
 While building libStorage with Docker is simple, it ultimately relies on the

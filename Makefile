@@ -18,14 +18,8 @@ BUILD_TAGS += libstorage_storage_driver libstorage_storage_executor
 BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d) libstorage_storage_executor_$(d))
 endif
 
-ifneq (,$(strip $(BUILD_TAGS)))
+ifneq (,$(BUILD_TAGS))
 BUILD_TAGS := $(sort $(BUILD_TAGS))
-ifneq (,$(wildcard .buildtags))
-SAVED_BUILD_TAGS := $(shell cat .buildtags)
-endif
-ifneq ($(BUILD_TAGS),$(SAVED_BUILD_TAGS))
-$(file > .buildtags,$(BUILD_TAGS))
-endif
 endif
 
 all:
@@ -55,20 +49,7 @@ ifeq (1,$(DBUILD_ONCE))
 DNAME := $(DNAME)-$(shell date +%s)
 endif
 DPATH := /go/src/$(DPKG)
-ifneq (,$(wildcard .git))
 DSRCS := $(shell git ls-files)
-DGIT_DIR := .git
-else
-DSRCS := $(shell find . -type f)
-DOCKER_GIT_INIT := if [ ! -d $(DPATH)/.git ]; then
-DOCKER_GIT_INIT += git -C $(DPATH) init &> /dev/null &&
-DOCKER_GIT_INIT += git -C $(DPATH) config user.name  "root" &> /dev/null &&
-DOCKER_GIT_INIT += git -C $(DPATH) config user.email "root@localhost" &> /dev/null &&
-DOCKER_GIT_INIT += git -C $(DPATH) add -A &> /dev/null &&
-DOCKER_GIT_INIT += git -C $(DPATH) commit -m "Initial commit" &> /dev/null &&
-DOCKER_GIT_INIT += git -C $(DPATH) tag -a v0.1.0 -m v0.1.0 &> /dev/null;
-DOCKER_GIT_INIT += fi;
-endif
 ifneq (,$(DGLIDE_YAML))
 DSRCS := $(filter-out glide.yaml,$(DSRCS))
 DSRCS := $(filter-out glide.lock,$(DSRCS))
@@ -107,10 +88,7 @@ docker-init:
 	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
 	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
 		docker exec $(DNAME) mkdir -p $(DPATH) && \
-		tar -c $(DTARC) $(DGIT_DIR) $(DSRCS) | docker cp - $(DNAME):$(DPATH)
-ifeq (,$(strip $(wildcard .git)))
-	@docker exec -t $(DNAME) bash -c '$(DOCKER_GIT_INIT)'
-endif
+		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH)
 ifneq (,$(DGLIDE_YAML))
 	@docker cp $(DGLIDE_YAML) $(DNAME):$(DPATH)/glide.yaml
 endif
@@ -493,7 +471,7 @@ ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
 $(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
 	touch $@
 
-$(GLIDE_LOCK): .buildtags $(GLIDE_YAML)
+$(GLIDE_LOCK): $(GLIDE_YAML)
 	$(GLIDE) up
 
 else #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
@@ -501,7 +479,7 @@ else #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
 $(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
 	$(GLIDE) install && touch $@
 
-$(GLIDE_LOCK): .buildtags $(GLIDE_YAML)
+$(GLIDE_LOCK): $(GLIDE_YAML)
 	$(GLIDE) up && touch $@ && touch $(GLIDE_LOCK_D)
 
 endif #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
@@ -750,7 +728,7 @@ ifneq (1,$$(C_$1))
 
 DEPS_SRCS_$1 := $$(foreach d,$$(INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
-$$(PKG_D_$1): .buildtags $$(filter-out %_generated.go,$$(SRCS_$1))
+$$(PKG_D_$1): $$(filter-out %_generated.go,$$(SRCS_$1))
 	$$(file >$$@,$$(PKG_A_$1) $$(PKG_D_$1): $$(filter-out %_generated.go,$$(DEPS_SRCS_$1)))
 
 -include $$(PKG_D_$1)
@@ -788,7 +766,7 @@ ifneq (1,$$(TEST_C_$1))
 
 TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
 
-$$(PKG_TD_$1): .buildtags $$(filter-out %_generated.go,$$(TEST_SRCS_$1))
+$$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_SRCS_$1))
 	$$(file >$$@,$$(PKG_TA_$1) $$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_DEPS_SRCS_$1)))
 
 $$(PKG_TD_$1)-clean:

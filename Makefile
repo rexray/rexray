@@ -869,6 +869,10 @@ else
 build-libstorage: $(LIBSTORAGE_API)
 endif
 
+clean-libstorage:
+	$(MAKE) -C $(LIBSTORAGE_DIR) clean
+GO_CLEAN += clean-libstorage
+GO_PHONY += clean-libstorage
 
 ################################################################################
 ##                                 SCRIPTS                                    ##

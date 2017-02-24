@@ -1,5 +1,5 @@
-hash: 4fbabb8bf8a37900dbcf1a11f160ddcd294e5fc9d9af165c8636d5172fdb8601
-updated: 2017-02-23T14:08:16.022926776-06:00
+hash: 101063ad9e4c6b33478f1065dacc43b8cebfe947dc12c6a4f91be98607b5e412
+updated: 2017-02-24T16:30:58.261402-06:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -98,7 +98,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: 3a77b6fb0fa299d460381ab16efbf768fd3ee02d
+  version: 9dd3292292a2d9e94966e6ca9d744147cc65b2c0
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -130,10 +130,10 @@ imports:
   - drivers/storage/azureud/executor
   - drivers/storage/azureud/storage
   - drivers/storage/azureud/utils
-  - drivers/storage/digitalocean
-  - drivers/storage/digitalocean/executor
-  - drivers/storage/digitalocean/storage
-  - drivers/storage/digitalocean/utils
+  - drivers/storage/dobs
+  - drivers/storage/dobs/executor
+  - drivers/storage/dobs/storage
+  - drivers/storage/dobs/utils
   - drivers/storage/ebs
   - drivers/storage/ebs/executor
   - drivers/storage/ebs/storage

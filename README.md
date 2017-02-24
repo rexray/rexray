@@ -25,13 +25,15 @@ The following storage providers and platforms are supported by REX-Ray.
 
 Provider              | Storage Platform(s)
 ----------------------|--------------------
-Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#elastic-block-storage), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#elastic-file-system), [S3](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#simple-storage-service)
-Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#rados-block-device)
-Dell EMC | [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon), [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio)
+Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs), [S3FS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-s3fs)
+Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#ceph-rbd)
+Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-isilon)
 DigitalOcean | [Block Storage](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#do-block-storage)
-Google GCE | [Persistent Disks](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk)
-Microsoft Azure | [Unmanaged Disks](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-unmanaged-disk)
-Oracle VirtualBox | [Virtual Media](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox)
+FittedCloud | [EBS Optimizer](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ebs-optimizer)
+Google | [GCE Persistent Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk)
+Microsoft | [Azure Unmanaged Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud)
+VirtualBox | [Virtual Media](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox)
+
 
 ### Operating System Support
 The following operating systems are supported by REX-Ray:

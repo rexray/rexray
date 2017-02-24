@@ -16,6 +16,8 @@ client/server configurations before proceeding.
 libStorage includes support for multiple Amazon Web Services (AWS) storage
 services.
 
+<a class="headerlink hiddenanchor" name="aws-ebs"></a>
+
 ### Elastic Block Storage
 The AWS EBS driver registers a storage driver named `ebs` with the
 `libStorage` driver manager and is used to connect and manage AWS Elastic Block
@@ -123,6 +125,8 @@ libstorage:
           region:         us-east-1
 ```
 
+<a class="headerlink hiddenanchor" name="aws-efs"></a>
+
 ### Elastic File System
 The AWS EFS driver registers a storage driver named `efs` with the
 `libStorage` driver manager and is used to connect and manage AWS Elastic File
@@ -227,6 +231,8 @@ libstorage:
           region:         us-east-1
           tag:            test
 ```
+
+<a class="headerlink hiddenanchor" name="aws-s3fs"></a>
 
 ### Simple Storage Service
 The AWS S3FS driver registers a storage driver named `s3fs` with the
@@ -333,6 +339,8 @@ libstorage:
 ## Ceph
 libStorage includes support for the following Ceph storage technologies.
 
+<a class="headerlink hiddenanchor" name="ceph-rbd"></a>
+
 ### RADOS Block Device
 The Ceph RBD driver registers a driver named `rbd` with the `libStorage` driver
 manager and is used to connect and mount RADOS Block Devices from a Ceph
@@ -424,6 +432,8 @@ libstorage:
 
 ## Dell EMC
 libStorage includes support for several Dell EMC storage platforms.
+
+<a class="headerlink hiddenanchor" name="dell-emc-isilon"></a>
 
 ### Isilon
 The Isilon driver registers a storage driver named `isilon` with the
@@ -524,6 +534,8 @@ The Isilon driver is not without its caveats:
     * Restore (ISI_PRIV_IFS_RESTORE)
     * Quota (ISI_PRIV_QUOTA)          (if `quotas` are enabled)
     * Snapshot (ISI_PRIV_SNAPSHOT)    (if snapshots are used)
+
+<a class="headerlink hiddenanchor" name="dell-emc-scaleio"></a>
 
 ### ScaleIO
 The ScaleIO driver registers a storage driver named `scaleio` with the
@@ -647,6 +659,8 @@ libstorage:
 ## Google
 libStorage ships with support for Google Compute Engine (GCE) as well.
 
+<a class="headerlink hiddenanchor" name="gce-persistent-disk"></a>
+
 ### GCE Persistent Disk
 The Google Compute Engine Persistent Disk (GCEPD) driver registers a driver
 named `gcepd` with the `libStorage` driver manager and is used to connect and
@@ -768,6 +782,8 @@ libstorage:
 
 ## Microsoft
 Microsoft Azure support is included with libStorage as well.
+
+<a class="headerlink hiddenanchor" name="azure-ud"></a>
 
 ### Azure Unmanaged Disk
 The Microsoft Azure Unmanaged Disk (Azure UD) driver registers a driver

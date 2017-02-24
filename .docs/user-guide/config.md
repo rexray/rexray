@@ -716,6 +716,9 @@ Property Name | Environment Variable | CLI Flag
 `virtualbox.volumePath`    | `VIRTUALBOX_VOLUMEPATH`   | `--virtualboxVolumePath`
 
 ### Logging Configuration
+The REX-Ray log file is, by default, stored at `/var/log/rexray/rexray.log`.
+
+#### Log Levels
 The REX-Ray log level determines the level of verbosity emitted by the
 internal logger. The default level is `warn`, but there are three other levels
 as well:
@@ -739,4 +742,25 @@ rexray volume -l debug ls
 *Use the `debug` log level - Example 2*
 ```bash
 env REXRAY_LOGLEVEL=debug rexray volume ls
+```
+
+#### Verbose mode
+To enable the most verbose logging, use the following configuration snippet:
+```yaml
+rexray:
+  logLevel:        debug
+libstorage:
+  logging:
+    level:         debug
+    httpRequests:  true
+    httpResponses: true
+```
+
+The following command line example is the equivalent to the above configuration
+example:
+```bash
+$ REXRAY_DEBUG=true \
+  LIBSTORAGE_LOGGING_HTTPREQUESTS=true \
+  LIBSTORAGE_LOGGING_HTTPRESPONSES=true \
+  rexray ...
 ```

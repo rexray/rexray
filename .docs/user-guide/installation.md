@@ -44,21 +44,6 @@ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable
 There are a handful of necessary manual steps to properly install REX-Ray
 from pre-built binaries.
 
-#### REX-Ray 0.3.3
-
-!!! note "note"
-
-    The initial REX-Ray 0.4.x release omits support for several,
-    previously verified storage platforms. These providers will be
-    reintroduced incrementally, beginning with 0.4.1. If an absent driver
-    prevents the use of REX-Ray, please continue to use 0.3.3 until such time
-    the storage platform is introduced in REX-Ray 0.4.x. The following command
-    can be used to explicitly install REX-Ray 0.3.3:
-
-    ```
-    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.3.3
-    ```
-
 1. Download the proper binary. There are also pre-built binaries available for
 the various release types.
 
@@ -74,47 +59,42 @@ should be where REX-Ray is moved, but this path is not required.
 with SystemD or SystemV for proper initialization.
 
 ### Build and install from source
-It is also easy to build REX-Ray from source.
+It is also easy to build REX-Ray from source using Docker:
 
-!!! note "note"
-
-    REX-Ray requires at least Go 1.6.0. The REX-Ray developers use Go 1.6.2,
-    and that is what REX-Ray's Travis-CI build uses as well. The build
-    reference for REX-Ray is available in the
-    [Developer's Guide](/dev-guide/build-reference.md).
-
-```sh
-# go get the rexray repo using the -d flag to enable "download only" mode
-go get -d github.com/codedellemc/rexray
-
-# change directories into the freshly-cloned repo
-cd $GOPATH/src/github.com/codedellemc/rexray
-
-# get and build REX-Ray's dependencies and then build and install REX-Ray
-make deps && make
+```
+$ git clone https://github.com/codedellemc/rexray && make -C rexray
 ```
 
-Once REX-Ray is built and installed it will be available at
-`$GOPATH/bin/rexray`:
+For building REX-Ray without Docker or to review the various build options
+please see the [Build Reference](/dev-guide/build-reference.md).
+
+### Uninstall
+Depending on how it was installed, REX-Ray can be installed one of a few ways:
+
+#### RPM
+If REX-Ray was installed on a system that uses the RPM package management
+system, such as Redhat, CentOS, the following command can be used to uninstall
+REX-Ray:
 
 ```sh
-$ $GOPATH/bin/rexray version
-REX-Ray
--------
-Binary: /home/akutz/go/bin/rexray
-SemVer: 0.4.0-rc4+10+dirty
-OsArch: Linux-x86_64
-Branch: release/0.4.0-rc4
-Commit: 063a0794ac19af439c3ab5a01f2e6f5a4f4f85ae
-Formed: Tue, 14 Jun 2016 14:23:15 CDT
+$ sudo rpm -e rexray
+```
 
-libStorage
-----------
-SemVer: 0.1.3
-OsArch: Linux-x86_64
-Branch: v0.1.3
-Commit: 182a626937677a081b89651598ee2eac839308e7
-Formed: Tue, 14 Jun 2016 14:21:25 CDT
+#### DEB
+If REX-Ray was installed on a system that uses the DEB package management
+system, such as Debian, Ubuntu, the following command can be used to uninstall
+REX-Ray:
+
+```sh
+$ sudo dpkg --remove rexray
+```
+
+#### Default
+No matter how REX-Ray was installed, the following command will always attempt
+to perform an uninstallation using the OS-recommended method:
+
+```sh
+$ sudo rexray uninstall
 ```
 
 ## Automated Installs

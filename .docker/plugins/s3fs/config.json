@@ -8,7 +8,7 @@
       "Description": "REX-Ray for Amazon S3FS",
       "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/s3fs",
       "Entrypoint": [
-        "/rexray.sh", "rexray", "start", "-f"
+        "/rexray.sh", "rexray", "start", "-f", "--nopid"
       ],
       "Env": [
         {

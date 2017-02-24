@@ -79,6 +79,8 @@ func (c *CLI) initServiceCmds() {
 func (c *CLI) initServiceFlags() {
 	c.serviceStartCmd.Flags().BoolVarP(&c.fg, "foreground", "f", false,
 		"Starts the service in the foreground")
+	c.serviceStartCmd.Flags().BoolVarP(&c.nopid, "nopid", "", false,
+		"Disable PID file checking")
 	c.serviceStartCmd.Flags().BoolVarP(&c.force, "force", "", false,
 		"Forces the service to start, ignoring errors")
 	c.serviceStartCmd.Flags().BoolVarP(&c.fork, "fork", "", false,

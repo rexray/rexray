@@ -8,7 +8,7 @@
       "Description": "REX-Ray for Dell EMC Isilon",
       "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/isilon",
       "Entrypoint": [
-        "/rexray.sh", "rexray", "start", "-f"
+        "/rexray.sh", "rexray", "start", "-f", "--nopid"
       ],
       "Env": [
         {
@@ -52,7 +52,7 @@
           "Value": ""
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "ISILON_PASSWORD",
           "Settable": [
             "value"
@@ -60,7 +60,7 @@
           "Value": ""
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "ISILON_VOLUMEPATH",
           "Settable": [
             "value"
@@ -68,7 +68,7 @@
           "Value": ""
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "ISILON_NFSHOST",
           "Settable": [
             "value"
@@ -76,7 +76,7 @@
           "Value": ""
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "ISILON_DATASUBNET",
           "Settable": [
             "value"
@@ -84,7 +84,7 @@
           "Value": ""
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "ISILON_QUOTAS",
           "Settable": [
             "value"

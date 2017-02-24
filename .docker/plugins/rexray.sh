@@ -5,7 +5,7 @@ set -e
 # first arg is `-f` or `--some-option`
 if [ "$(echo "$1" | \
 	awk  '{ string=substr($0, 1, 1); print string; }' )" = '-' ]; then
-	set -- rexray start -f "$@"
+	set -- rexray start -f --nopid "$@"
 fi
 
 #set default rexray options

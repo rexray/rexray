@@ -6,10 +6,13 @@ site_dir: .site
 theme_dir: .docs/.themes/yeti
 site_favicon: favicon.png
 extra_css:
+    - css/emccode.css
     - css/emccode-font.css
     - css/hX.css
 markdown_extensions:
     - admonition
+    - toc:
+        permalink: true
 pages:
 - Home: index.md
 - User Guide:
@@ -17,8 +20,10 @@ pages:
     - Configuration: user-guide/config.md
     - Storage Providers: user-guide/storage-providers.md
     - Schedulers: user-guide/schedulers.md
+    - Docker Plug-ins: user-guide/docker-plugins.md
     - Applications: user-guide/applications.md
     - Demo: user-guide/demo.md
+    - Troubleshooting: user-guide/troubleshooting.md
 - Developers Guide:
     - Project Guidelines: dev-guide/project-guidelines.md
     - Build Reference: dev-guide/build-reference.md

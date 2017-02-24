@@ -1,0 +1,14 @@
+rexray:
+  loglevel: warn
+libstorage:
+  service: ${DRIVERS}
+  integration:
+    volume:
+      operations:
+        create:
+          default:
+            fsType: ext4
+        mount:
+          preempt: true
+  server:
+    services:

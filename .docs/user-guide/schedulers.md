@@ -37,14 +37,14 @@ socket file in the directory the Docker service continually scans.
 
 On the local system, and in fact on all systems where the Docker service needs
 to know about this externally accessible Volume Plug-in endpoint, a spec file
-must be created at `/etc/docker/plugins/rexray.spec`. Inside this file simply
+must be created at `/etc/docker/plug-ins/rexray.spec`. Inside this file simply
 include a single line with the network address of the endpoint. For example:
 
 ```bash
 tcp://192.168.56.20:7981
 ```
 
-With a spec file located at `/etc/docker/plugins/rexray.spec` that contains
+With a spec file located at `/etc/docker/plug-ins/rexray.spec` that contains
 the above contents, Docker instances will query the Volume Plug-in endpoint at
 `tcp://192.168.56.20:7981` when volume requests are received.
 
@@ -154,6 +154,178 @@ $ docker volume rm vbox2
 ### Containers with Volumes
 Please review the [Applications](./applications.md) section for information on
 configuring popular applications with persistent storage via Docker and REX-Ray.
+
+## Kubernetes
+REX-Ray can be integrated with [Kubernetes](https://kubernetes.io/) allowing
+pods to consume data stored on volumes that are orchestrated by REX-Ray. Using
+Kubernetes' [FlexVolume](https://kubernetes.io/docs/user-guide/volumes/#flexvolume)
+plug-in, REX-Ray can provide uniform access to storage operatations such as attach,
+mount, detach, and unmount for any configured storage provider.  REX-Ray provides an
+adapter script called `FlexRex` which integrates with the FlexVolume to interact
+with the backing storage system.
+
+### Pre-Requisites
+- [Kubernetes](https://kubernetes.io/) 1.5 or higher
+- REX-Ray 0.7 or higher
+- [jq binary](https://stedolan.github.io/jq/)
+
+### Installation
+It is assumed that you have a Kubernetes cluster at your disposal. On each
+Kubernetes node (running the kubelet), do the followings:
+
+- Install and configure the REX-Ray binary as prescribed in the
+[*Installation*](./installation.md) section.  
+- Next, validate the REX-Ray installation by running `rexray volume ls`
+as shown in the the following:
+
+```
+# rexray volume ls
+ID                Name   Status     Size
+925def7200000006  vol01  available  32
+925def7100000005  vol02  available  32
+```
+
+If there is no issue, you should see an output, similar to above, which shows
+a list of previously created volumes. If instead you get an error,  
+ensure that REX-Ray is properly configured for the intended storage system.
+
+Next, using the REX-Ray binary,  install the `FlexRex` adapter script on the node
+as shown below.  
+
+```
+# rexray flexrex install
+```
+
+This should produce the following output showing that the FlexRex script is
+installed successfully:
+
+```
+Path                                                                        Installed  Modified
+/usr/libexec/kubernetes/kubelet-plug-ins/volume/exec/rexray~flexrex/flexrex  true       false
+```
+
+The path shown above is the default location where the FlexVolume plug-in will
+expect to find its integration code.  If you are not using the default location
+with FlexVolume, you can install the  `FlexRex` in an arbitrary location using:
+
+```
+# rexray flexrex install --path /opt/plug-ins/rexray~flexrex/flexrex
+```
+
+Next, restart the kublet process on the node:
+
+```
+# systemctl restart kubelet
+```
+
+You can validate that the FlexRex script has been started successfully by searching
+the kubelet log for an entry similar to the following:
+
+```
+I0208 10:56:57.412207    5348 plug-ins.go:350] Loaded volume plug-in "rexray/flexrex"
+```
+
+### Pods and Persistent Volumes
+You can now deploy pods and persistent volumes that use storage systems orchestrated
+by REX-Ray.  It is worth pointing out that the Kubernetes FlexVolme plug-in can only
+attach volumes that already exist in the storge system.  Any volume that is to be used
+by a Kubernetes resource must be listed in a `rexray volume ls` command.
+
+#### Pod with REX-Ray volume
+The following YAML file shows the definition of a pod that uses FlexRex to attach a volume
+to be used by the pod.
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-0
+spec:
+  containers:
+  - image: gcr.io/google_containers/test-webserver
+    name: pod-0
+    volumeMounts:
+    - mountPath: /test-pd
+      name: vol-0
+  volumes:
+  - name: vol-0
+    flexVolume:
+      driver: rexray/flexrex
+      fsType: ext4
+      options:
+        volumeID: test-vol-1
+        forceAttach: "true"
+        forceAttachDelay: "15"
+```
+Notice in the section under `flexVolume` the name of the driver attribute
+`driver: rexray/flexrex`. This is used by the FlexVolume plug-in to launch REX-Ray.
+Additional options can be provided in the `options:` as follows:
+
+Option|Desription
+------|----------
+volumeID|Reference name of the volume in REX-Ray
+forceAttach|When true ensures the volume is availble before attahing (optinal, defaults to false)
+forceAttachDelay|Total amount of time (in sec) to attempt attachment with 5 sec interval between tries (optional)
+
+#### REX-Ray PersistentVolume
+The next example shows a YAML definition of Persistent Volume (PV) managed
+by REX-Ray.
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: vol01
+spec:
+  capacity:
+    storage: 32Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  flexVolume:
+    driver: rexray/flexrex
+    fsType: xfs
+    options:
+      volumeID: redis01
+      forceAttach: "true"
+      forceAttachDelay: "15"
+```
+
+The next YAML shows a `Persistent Volume Claim` (PVC) that carves out `10Gi` out of
+the PV defined above.
+
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vol01
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+```
+
+The claim can then be used by a pod in a YAML definition as shown below:
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+spec:
+  containers:
+  - image: gcr.io/google_containers/test-webserver
+    name: pod-1
+    volumeMounts:
+    - mountPath: /test-pd
+      name: vol01
+  volumes:
+  - name: vol01
+    persistentVolumeClaim:
+      claimName: vol01
+```
 
 ## Mesos
 In Mesos the frameworks are responsible for receiving requests from

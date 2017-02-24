@@ -42,31 +42,7 @@ func (c *CLI) start() {
 
 	c.ctx.WithField("os.Args", os.Args).Debug("invoking service start")
 
-	pidFile := util.PidFilePath()
-
-	if gotil.FileExists(pidFile) {
-		pid, pidErr := util.ReadPidFile()
-		if pidErr != nil {
-			fmt.Printf("Error reading REX-Ray PID file at %s\n", pidFile)
-			panic(1)
-		}
-
-		rrproc, err := findProcess(pid)
-		if err != nil {
-			fmt.Printf("Error finding process for PID %d", pid)
-			panic(1)
-		}
-
-		if rrproc != nil {
-			fmt.Printf("REX-Ray already running at PID %d\n", pid)
-			panic(1)
-		}
-
-		if err := os.RemoveAll(pidFile); err != nil {
-			fmt.Println("Error removing REX-Ray PID file")
-			panic(1)
-		}
-	}
+	c.handleStalePIDFile()
 
 	if c.fg || c.fork {
 		c.ctx.Debug("starting in foreground")
@@ -74,6 +50,40 @@ func (c *CLI) start() {
 	} else {
 		c.ctx.Debug("starting in background")
 		c.tryToStartDaemon()
+	}
+}
+
+func (c *CLI) handleStalePIDFile() {
+	if c.nopid {
+		return
+	}
+
+	pidFile := util.PidFilePath()
+
+	if !gotil.FileExists(pidFile) {
+		return
+	}
+
+	pid, pidErr := util.ReadPidFile()
+	if pidErr != nil {
+		fmt.Printf("Error reading REX-Ray PID file at %s\n", pidFile)
+		panic(1)
+	}
+
+	rrproc, err := findProcess(pid)
+	if err != nil {
+		fmt.Printf("Error finding process for PID %d", pid)
+		panic(1)
+	}
+
+	if rrproc != nil {
+		fmt.Printf("REX-Ray already running at PID %d\n", pid)
+		panic(1)
+	}
+
+	if err := os.RemoveAll(pidFile); err != nil {
+		fmt.Println("Error removing REX-Ray PID file")
+		panic(1)
 	}
 }
 
@@ -152,32 +162,34 @@ func (c *CLI) startDaemon() {
 		}
 	}
 
-	if err := util.WritePidFile(-1); err != nil {
-		if os.IsPermission(err) {
-			c.ctx.WithError(err).Errorf(
-				"user does not have write permissions for %s",
-				util.PidFilePath())
-		} else {
-			c.ctx.WithError(err).Errorf(
-				"error writing PID file at %s",
-				util.PidFilePath())
+	if !c.nopid {
+		if err := util.WritePidFile(-1); err != nil {
+			if os.IsPermission(err) {
+				c.ctx.WithError(err).Errorf(
+					"user does not have write permissions for %s",
+					util.PidFilePath())
+			} else {
+				c.ctx.WithError(err).Errorf(
+					"error writing PID file at %s",
+					util.PidFilePath())
+			}
+			if conn != nil {
+				conn.Write(failure)
+				conn.Close()
+			}
+			return
 		}
-		if conn != nil {
-			conn.Write(failure)
-			conn.Close()
-		}
-		return
+
+		defer func() {
+			r := recover()
+			os.RemoveAll(util.PidFilePath())
+			if r != nil {
+				panic(r)
+			}
+		}()
+
+		c.ctx.WithField("pid", os.Getpid()).Info("created pid file")
 	}
-
-	defer func() {
-		r := recover()
-		os.RemoveAll(util.PidFilePath())
-		if r != nil {
-			panic(r)
-		}
-	}()
-
-	c.ctx.WithField("pid", os.Getpid()).Info("created pid file")
 
 	stop := make(chan os.Signal)
 
@@ -216,9 +228,11 @@ func (c *CLI) startDaemon() {
 			ctx.WithField(
 				"sockFile", serverSockFilePath).Info("removed server sock file")
 		}
-		if err := os.Remove(util.PidFilePath()); err == nil {
-			ctx.WithField(
-				"pidFile", util.PidFilePath()).Info("removed pid file")
+		if !c.nopid {
+			if err := os.Remove(util.PidFilePath()); err == nil {
+				ctx.WithField(
+					"pidFile", util.PidFilePath()).Info("removed pid file")
+			}
 		}
 
 		// wait until the daemon stops

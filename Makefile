@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+GO_VERSION := 1.7.5
 
 # the name of the program being compiled. this word is in place of file names,
 # directory paths, etc. changing the value of PROG is no guarantee everything
@@ -87,7 +88,7 @@ endif
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 DPKG := github.com/codedellemc/rexray
-DIMG := golang:1.7.4
+DIMG := golang:$(GO_VERSION)
 DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
 DGOOS := $(DGOHOSTOS)
@@ -269,7 +270,11 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
-
+ifneq (,$(TRAVIS_GO_VERSION))
+GOVERSION := $(TRAVIS_GO_VERSION)
+else
+GOVERSION := $(shell go version | awk '{print $$3}' | cut -c3-)
+endif
 
 ################################################################################
 ##                                  PATH                                      ##
@@ -864,6 +869,10 @@ else
 build-libstorage: $(LIBSTORAGE_API)
 endif
 
+clean-libstorage:
+	$(MAKE) -C $(LIBSTORAGE_DIR) clean
+GO_CLEAN += clean-libstorage
+GO_PHONY += clean-libstorage
 
 ################################################################################
 ##                                 SCRIPTS                                    ##
@@ -947,6 +956,7 @@ info:
 	$(info GOPATH......................$(GOPATH))
 	$(info GOHOSTOS....................$(GOHOSTOS))
 	$(info GOHOSTARCH..................$(GOHOSTARCH))
+	$(info GOVERSION...................$(GOVERSION))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
@@ -1090,6 +1100,122 @@ bintray-clean:
 	rm -f bintray-*.json
 GO_PHONY += bintray-clean
 GO_CLEAN += bintray-clean
+
+
+################################################################################
+##                          DOCKER PLUGINS                                    ##
+################################################################################
+ifneq (,$(TRAVIS_BRANCH))
+DOCKER_REQ_BRANCH := $(TRAVIS_BRANCH)
+else
+DOCKER_REQ_BRANCH := $(shell git branch --list | grep "*" | awk '{print $$2}')
+endif
+DOCKER_REQ_VERSION := $(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)
+V_DOCKER_SEMVER := $(subst +,-,$(V_SEMVER))
+DOCKER_PLUGIN_DRIVERS := $(subst $(SPACE),-,$(DRIVERS))
+
+ifeq (undefined,$(origin DOCKER_PLUGIN_ROOT))
+DOCKER_PLUGIN_ROOT := $(PROG)
+endif
+DOCKER_PLUGIN_NAME := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):$(V_DOCKER_SEMVER)
+DOCKER_PLUGIN_NAME_UNSTABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):edge
+DOCKER_PLUGIN_NAME_STAGED := $(DOCKER_PLUGIN_NAME)
+DOCKER_PLUGIN_NAME_STABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):latest
+
+DOCKER_PLUGIN_BUILD_PATH := .docker/plugins/$(DOCKER_PLUGIN_DRIVERS)
+
+DOCKER_PLUGIN_DOCKERFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.Dockerfile
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_DOCKERFILE))))
+DOCKER_PLUGIN_DOCKERFILE := .docker/plugins/Dockerfile
+endif
+DOCKER_PLUGIN_DOCKERFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/Dockerfile
+$(DOCKER_PLUGIN_DOCKERFILE_TGT): $(DOCKER_PLUGIN_DOCKERFILE)
+	sed -e 's/$${VERSION}/$(V_SEMVER)/g' \
+	    -e 's/$${DRIVERS}/$(DRIVERS)/g' \
+	    $? > $@
+
+DOCKER_PLUGIN_ENTRYPOINT := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.sh
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_ENTRYPOINT))))
+DOCKER_PLUGIN_ENTRYPOINT := .docker/plugins/rexray.sh
+endif
+DOCKER_PLUGIN_ENTRYPOINT_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).sh
+$(DOCKER_PLUGIN_ENTRYPOINT_TGT): $(DOCKER_PLUGIN_ENTRYPOINT)
+	cp $? $@
+
+
+DOCKER_PLUGIN_CONFIGFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.yml
+DOCKER_PLUGIN_CONFIGFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).yml
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_CONFIGFILE))))
+DOCKER_PLUGIN_CONFIGFILE := .docker/plugins/rexray.yml
+SPACE6 := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
+SPACE8 := $(SPACE6)$(SPACE)$(SPACE)
+$(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
+	sed -e 's/$${DRIVERS}/$(firstword $(DRIVERS))/g' \
+	    $? > $@
+	for d in $(DRIVERS); do \
+	    echo "$(SPACE6)$$d:" >> $@; \
+	    echo "$(SPACE8)driver: $$d" >> $@; \
+	done
+else
+$(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
+	cp $? $@
+endif
+
+DOCKER_PLUGIN_REXRAYFILE := $(PROG)
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_REXRAYFILE))))
+DOCKER_PLUGIN_REXRAYFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.$(PROG)
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_REXRAYFILE))))
+DOCKER_PLUGIN_REXRAYFILE := $(GOPATH)/bin/$(PROG)
+endif
+endif
+DOCKER_PLUGIN_REXRAYFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG)
+$(DOCKER_PLUGIN_REXRAYFILE_TGT): $(DOCKER_PLUGIN_REXRAYFILE)
+	cp $? $@
+
+DOCKER_PLUGIN_CONFIGJSON_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/config.json
+
+DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/rootfs/$(PROG).sh
+build-docker-plugin: $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT)
+$(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
+										$(DOCKER_PLUGIN_DOCKERFILE_TGT) \
+										$(DOCKER_PLUGIN_ENTRYPOINT_TGT) \
+										$(DOCKER_PLUGIN_CONFIGFILE_TGT) \
+										| $(DOCKER_PLUGIN_REXRAYFILE_TGT)
+	docker plugin rm $(DOCKER_PLUGIN_NAME) 2> /dev/null || true
+	sudo rm -fr $(@D)
+	docker build -t rootfsimage $(<D) && \
+		id=$$(docker create rootfsimage true) && \
+		sudo mkdir -p $(@D) && \
+		sudo docker export "$$id" | sudo tar -x -C $(@D) && \
+		docker rm -vf "$$id" && \
+		docker rmi rootfsimage
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME) $(<D)
+	docker plugin ls
+
+
+push-docker-plugin:
+ifeq (1,$(DOCKER_PLUGIN_$(DOCKER_PLUGIN_DRIVERS)_NOPUSH))
+	echo "docker plugin push disabled"
+else
+	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
+ifeq (unstable,$(DOCKER_PLUGIN_TYPE))
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
+endif
+ifeq (staged,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME_STAGED)
+endif
+ifeq (stable,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_STABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_STABLE)
+endif
+ifeq (,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+endif
+endif
 
 
 ################################################################################

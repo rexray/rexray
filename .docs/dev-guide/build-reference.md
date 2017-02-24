@@ -4,9 +4,65 @@ How to build REX-Ray
 
 ---
 
-## Build Requirements
+## Basic Builds
+The following one-line command is the quickest, simplest, and most
+deterministic approach to building REX-Ray:
+
+```bash
+$ git clone https://github.com/codedellemc/rexray && make -C rexray
+```
+
+!!! note "note"
+
+    The above `make` command defaults to the `docker-build` target only if
+    Docker is detected and running on a host, otherwise the `build` target is
+    used. For more information about the `build` target, please see the
+    [Advanced Builds](#advanced-builds) section.
+
+### Basic Build Requirements
+Building REX-Ray with Docker has the following requirements:
+
+Requirement | Version
+------------|--------
+Operating System | Linux, OS X
+[Docker](https://www.docker.com/) | >=1.11
+[GNU Make](https://www.gnu.org/software/make/) | >=3.80
+[Git](https://git-scm.com/) | >= 1.7
+
+OS X ships with a very old version of GNU Make, and a package manager like
+[Homebrew](http://brew.sh/) can be used to install the required version.
+
+### Basic Build Targets
+The following targets are available when building REX-Ray with Docker:
+
+| Target | Description |
+| --- | --- |
+| `docker-build` | Builds REX-Ray inside a Docker container. |
+| `docker-test` | Executes all of the REX-Ray tests inside the container. |
+| `docker-clean` | This target stops and removes the default container used for REX-Ray builds. The name of the default container is `build-rexray`. |
+| `docker-clobber` | This target stops and removes all Docker containers that have a name that matches the name of the configured container prefix (default prefix is `build-rexray`). |
+| `docker-list` | Lists all Docker containers that have a name that matches the name of the configured prefix (default prefix is `build-rexray`). |
+
+### Basic Build Options
+The following options (via environment variables) can be used to influence
+how REX-Ray is built with Docker:
+
+| Environment Variable | Description |
+| --- | --- |
+| `DRIVERS` | This variable can be set to a space-delimited list of driver names in order to indicate which storage platforms to support. For example, the command `$ DRIVERS="ebs scaleio" make docker-build` would build REX-Ray for only the EBS and ScaleIO storage platforms.
+| `DBUILD_ONCE` | When set to `1`, this environment variable instructs the Makefile to create a temporary, one-time use container for the subsequent build. The container is removed upon a successful build. If the build fails the container is not removed. This is because Makefile error logic is lacking. However, `make docker-clobber` can be used to easily clean up these containers. The containers will follow a given pattern using the container prefix (`build-rexray` is the default prefix value). The one-time containers use `PREFIX-EPOCH`. For example, `build-rexray-1474691232`. |
+| `DGOOS` | This sets the OS target for which to build the REX-Ray binaries. Valid values are `linux` and `darwin`. If omitted the host OS value returned from `uname -s` is used instead. |
+| `DLOCAL_IMPORTS` | Specify a list of space-delimited import paths that will be copied from the host OS's `GOPATH` into the container build's vendor area, overriding the dependency code that would normally be fetched by Glide.<br/><br/>For example, the project's `glide.yaml` file might specify to build REX-Ray with libStorage v0.2.1. However, the following command will build REX-Ray using the libStorage sources on the host OS at `$GOPATH/src/github.com/codedellemc/libstorage`:<br/><br/><pre lang="bash">$ DLOCAL_IMPORTS=github.com/codedellemc/libstorage make docker-build</pre>Using local sources can sometimes present a problem due to missing dependencies. Please see the next environment variable for instructions on how to overcome this issue. |
+| `DGLIDE_YAML` | Specify a file that will be used for the container build in place of the standard `glide.yaml` file.<br/><br/>This is necessary for occasions when sources injected into the build via the `DLOCAL_IMPORTS` variable import packages that are not imported by the package specified in the project's standard `glide.yaml` file.<br/><br/>For example, if `glide.yaml` specifies that REX-Ray depends upon AWS SDK v1.2.2, but `DLOCAL_IMPORTS` specifies the value `github.com/aws/aws-sdk-go` and the AWS SDK source code on the host includes a new dependency not present in the v1.2.2 version, Glide will not fetch the new dependency when doing the container build.<br/><br/>So it may be necessary to use `DGLIDE_YAML` to provide a superset of the project's standard `glide.yaml` file which also includes the dependencies necessary to build the packages specified in `DLOCAL_IMPORTS`. |
+
+## Advanced Builds
+While building REX-Ray with Docker is simple, it ultimately relies on the
+same `Makefile` included in the REX-Ray repository and so it's entirely
+possible (and often desirable) to build REX-Ray directly.
+
+### Advanced Build Requirements
 This project has very few build requirements, but there are still one or two
-items of which to be aware. Also, please note that these are the requirements to
+items of which to be aware. Also, please note that this are the requirements to
 *build* REX-Ray, not run it.
 
 Requirement | Version
@@ -14,227 +70,36 @@ Requirement | Version
 Operating System | Linux, OS X
 [Go](https://golang.org/) | >=1.6
 [GNU Make](https://www.gnu.org/software/make/) | >=3.80
+[Glide](https://glide.sh/) | >=0.10
+[X-Code Command Line Tools (OS X only)](https://developer.apple.com/library/ios/technotes/tn2339/_index.html) | >= OS X 10.9
+Linux Kernel Headers (Linux only) | >=Linux Kernel 3.13
+[GNU C Compiler](https://gcc.gnu.org/) (Linux only) | >= 4.8
+[Perl](https://www.perl.org/)  | >= 5.0
+[Git](https://git-scm.com/) | >= 1.7
 
 OS X ships with a very old version of GNU Make, and a package manager like
 [Homebrew](http://brew.sh/) can be used to install the required version.
 
-## Cross-Compilation
-This project's [`Makefile`](https://github.com/codedellemc/rexray/blob/master/Makefile)
-is configured by default to build for a Linux x86_64 target, but
-cross-compilation *is* supported. Therefore the build environment should be
-configured to support cross-compilation. Please take a minute to read
-this [blog post](http://dave.cheney.net/2015/08/22/cross-compilation-with-go-1-5)
-regarding cross-compilation with Go >=1.5.
+It's also possible to use GCC as the Cgo compiler for OS X or to use Clang on
+Linux, but by default Clang is used on OS X and GCC on Linux.
 
-## Build Binary
-Building from source is pretty simple as all steps, including fetching
-dependencies (as well as fetching the tool that fetches dependencies), are
-configured as part of the included `Makefile`.
+### Advanced Build Targets
+The following targets are available when building REX-Ray directly:
 
-### Build Dependencies
-The `make deps` command should be executed prior to any other targets in order
-to ensure the necessary dependencies are available.
+| Target | Description |
+| --- | --- |
+| `build` | Builds REX-Ray. |
+| `test` | Executes all of the REX-Ray tests. |
+| `clean` | This target removes all of the source file markers. |
+| `clobber` | This is the same as `clean` but also removes any produced artifacts. |
 
-```sh
-$ make deps
-target: deps
-  ...installing glide...SUCCESS!
-  ...glide up...[WARN] Only resolving dependencies for the current OS/Arch
-[INFO] Downloading dependencies. Please wait...
-[INFO] Fetching updates for github.com/Sirupsen/logrus.
-[INFO] Fetching updates for golang.org/x/net.
-[INFO] Fetching updates for github.com/spf13/cobra.
-[INFO] Fetching updates for github.com/akutz/gofig.
-[INFO] Fetching updates for github.com/codedellemc/libstorage.
-[INFO] Fetching updates for gopkg.in/yaml.v1.
-[INFO] Fetching updates for gopkg.in/yaml.v2.
-[INFO] Fetching updates for google.golang.org/api.
-[INFO] Fetching updates for github.com/go-yaml/yaml.
-[INFO] Fetching updates for github.com/akutz/gotil.
-[INFO] Fetching updates for github.com/spf13/pflag.
-[INFO] Fetching updates for github.com/akutz/golf.
-[INFO] Fetching updates for github.com/akutz/goof.
-[INFO] Setting version for github.com/akutz/golf to v0.1.1.
-[INFO] Setting version for gopkg.in/yaml.v1 to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
-[INFO] Setting version for github.com/go-yaml/yaml to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
-[INFO] Setting version for github.com/spf13/cobra to 363816bb13ce1710460c2345017fd35593cbf5ed.
-[INFO] Setting version for google.golang.org/api to fd081149e482b10c55262756934088ffe3197ea3.
-[INFO] Setting version for github.com/akutz/goof to v0.1.0.
-[INFO] Setting version for github.com/akutz/gofig to v0.1.4.
-[INFO] Setting version for github.com/spf13/pflag to b084184666e02084b8ccb9b704bf0d79c466eb1d.
-[INFO] Setting version for github.com/Sirupsen/logrus to feature/logrus-aware-types.
-[INFO] Setting version for gopkg.in/yaml.v2 to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
-[INFO] Setting version for github.com/akutz/gotil to v0.1.0.
-[INFO] Setting version for github.com/codedellemc/libstorage to v0.1.3.
-[INFO] Resolving imports
-[INFO] Fetching github.com/spf13/viper into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Setting version for github.com/spf13/viper to support/rexray.
-[INFO] Fetching github.com/kardianos/osext into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Setting version for github.com/kardianos/osext to master.
-[INFO] Fetching github.com/gorilla/context into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/gorilla/mux into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/gorilla/handlers into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/cpuguy83/go-md2man/md2man into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/inconshreveable/mousetrap into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/BurntSushi/toml into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/kr/pretty into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/magiconair/properties into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/mitchellh/mapstructure into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/spf13/cast into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/spf13/jwalterweatherman into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching gopkg.in/fsnotify.v1 into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/codedellemc/goisilon into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Setting version for github.com/codedellemc/goisilon to f9b53f0aaadb12a26b134830142fc537f492cb13.
-[INFO] Fetching github.com/codedellemc/goscaleio into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Setting version for github.com/codedellemc/goscaleio to 53ea76f52205380ab52b9c1f4ad89321c286bb95.
-[INFO] Fetching github.com/appropriate/go-virtualboxclient/vboxwebsrv into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Setting version for github.com/appropriate/go-virtualboxclient to e0978ab2ed407095400a69d5933958dd260058cd.
-[INFO] Fetching github.com/russross/blackfriday into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/kr/text into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching golang.org/x/sys/unix into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/cesanta/ucl into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/cesanta/validate-json/schema into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/shurcooL/sanitized_anchor_name into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/asaskevich/govalidator into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Fetching github.com/jteeuwen/go-bindata into /Users/akutz/Projects/go/src/github.com/codedellemc/rexray/vendor
-[INFO] Setting version for github.com/jteeuwen/go-bindata to feature/md5checksum.
-[INFO] Downloading dependencies. Please wait...
-[INFO] Setting references for remaining imports
-[INFO] Versions did not change. Skipping glide.lock update.
-[INFO] Project relies on 38 dependencies.
-SUCCESS!
-  ...go get...SUCCESS!
-cd vendor/github.com/codedellemc/libstorage && make api/api_generated.go && cd -
-echo generating api/api_generated.go
-generating api/api_generated.go
-/Users/akutz/Projects/go/src/github.com/codedellemc/rexray
-cd vendor/github.com/codedellemc/libstorage && make api/server/executors/executors_generated.go && cd -
-GOOS=darwin GOARCH=amd64 go install ./api/types
-GOOS=darwin GOARCH=amd64 go install ./api/context
-GOOS=darwin GOARCH=amd64 go install ./api/utils
-GOOS=darwin GOARCH=amd64 go install ./api/registry
-GOOS=darwin GOARCH=amd64 go install ./api/utils/config
-GOOS=darwin GOARCH=amd64 go install ./imports/config
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/isilon
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/isilon/executor
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/scaleio
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/scaleio/executor
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vbox
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vbox/executor
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vfs
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vfs/executor
-GOOS=darwin GOARCH=amd64 go install ./imports/executors
-GOOS=darwin GOARCH=amd64 go install ./cli/lsx
-GOOS=darwin GOARCH=amd64 go install ./cli/lsx/lsx-darwin
-/Users/akutz/Projects/go/bin/go-bindata -md5checksum -pkg executors -prefix api/server/executors/bin -o api/server/executors/executors_generated.go api/server/executors/bin/...
-/Users/akutz/Projects/go/src/github.com/codedellemc/rexray
-```
+### Advanced Build Options
+The following options (via environment variables) can be used to influence
+how REX-Ray is built:
 
-### Basic Build
-The most basic build can be achieved by simply typing `make` from the project's
-root directory. For what it's worth, executing `make` sans arguments is the
-same as executing `make install` for this project's `Makefile`.
-
-```sh
-$ make
-SemVer: 0.4.0-rc4+10+dirty
-RpmVer: 0.4.0+rc4+10+dirty
-Branch: release/0.4.0-rc4
-Commit: d2f0283c7fed29ad0a142a6a51624828893f5db5
-Formed: Wed, 15 Jun 2016 16:53:44 CDT
-
-target: fmt
-  ...formatting rexray...SUCCESS!
-target: install
-  ...installing rexray Darwin-x86_64...SUCCESS!
-
-The REX-Ray binary is 40MB and located at:
-
-  /Users/akutz/Projects/go/bin/rexray
-```
-
-### Binary Size
-Please note that the large size of the binary is due to the Isilon
-storage adapter's dependency on the
-[VMware VMOMI library for Go](https://github.com/vmware/govmomi). The types
-definition source in that package compiles to a 45MB, uncompressed archive.
-Efforts are being made to figure out an alternative to this dependency in order
-to reduce the binary size, even if it means creating VMware SOAP messages from
-scratch.
-
-### Build All
-In order to build all versions of the binary type the following:
-
-```sh
-$ make build-all
-SemVer: 0.4.0-rc4+10
-RpmVer: 0.4.0+rc4+10
-Branch: release/0.4.0-rc4
-Commit: d2f0283c7fed29ad0a142a6a51624828893f5db5
-Formed: Wed, 15 Jun 2016 16:42:33 CDT
-
-target: fmt
-  ...formatting rexray...SUCCESS!
-target: build
-  ...building rexray Linux-x86_64...SUCCESS!
-
-The REX-Ray binary is 40MB and located at:
-
-  .build/bin/Linux-x86_64/rexray
-```
-
-## Build Packages
-The `Makefile` also includes targets that assist in the creation of
-distributable packages using the produced artifact.
-
-### Build Tarballs
-The `Makefile`'s `build` and `build-all` targets will not only build the binary
-in place, but it will also compress the binary as a tarball so it's ready for
-deployment. For example, after the `make build-all` above, this is the contents
-of the directory `.build/deploy`:
-
-```sh
-$ ls .build/deploy
-latest/
-Linux-x86_64/
-```
-
-Looking inside the directory `.build/deploy/Linux-x86_64` reveals:
-
-```sh
-$ ls .build/deploy/Linux-x86_64/
-rexray-Linux-x86_64-0.4.0-rc4+10.tar.gz
-```
-
-### Build RPMs
-The `Makefile`'s `rpm-all` target will package the binary as
-architecture-specific RPMs when executed on a system that supports the RPM
-development environment:
-
-```sh
-$ make rpm-all
-target: rpm
-  ...building rpm x86_64...SUCCESS!
-
-The REX-Ray RPM is 11MB and located at:
-
-  .build/deploy/Linux-x86_64/rexray-0.4.0+rc4+10-1.x86_64.rpm
-```
-
-### Build DEBs
-The `Makefile`'s `deb-all` target will package the binary as
-architecture-specific DEBs when executed on a system that supports the Alien
-RPM-to-DEB conversion tools:
-
-```sh
-$ make deb-all
-target: deb
-  ...building deb x86_64...SUCCESS!
-
-The REX-Ray DEB is 9MB and located at:
-
-  .build/deploy/Linux-x86_64/rexray_0.4.0+rc4+10-1_amd64.deb
-```
+| Environment Variable | Description |
+| --- | --- |
+| `DRIVERS` | This variable can be set to a space-delimited list of driver names in order to indicate which storage platforms to support. For example, the command `$ DRIVERS="ebs scaleio" make build` would build REX-Ray for only the EBS and ScaleIO storage platforms.
 
 ## Version File
 There is a file at the root of the project named `VERSION`. The file contains
@@ -243,14 +108,10 @@ follows the format:
 
   `(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(-rc\d+)?`
 
-For example, during active development of version `0.4.0` the file would
-contain the version `0.4.0`. When it's time to create `0.4.0`'s first
-release candidate the version in the file will be changed to `0.4.0-rc1`. And
-when it's time to release `0.4.0` the version is changed back to `0.4.0`.
-
-Please note that we've discussed making the actively developed version the
-targeted version with a `-dev` suffix, but trying this resulted in confusion
-for the RPM and DEB package managers when using `unstable` releases.
+For example, during active development of version `0.1.0` the file would
+contain the version `0.1.0`. When it's time to create `0.1.0`'s first
+release candidate the version in the file will be changed to `0.1.0-rc1`. And
+when it's time to release `0.1.0` the version is changed back to `0.1.0`.
 
 So what's the point of the file if it's basically duplicating the utility of a
 tag? Well, the `VERSION` file in fact has two purposes:

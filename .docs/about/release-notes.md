@@ -28,9 +28,9 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
-## Version 0.8.0 (TBD)
-This is one of the largest releases in a while, including support for four new
-storage platformss!
+## Version 0.8.0 (2017/02/24)
+This is one of the largest releases in a while, including support for five new
+storage platforms!
 
 ### New Features
 * Amazon Simple Storage Service FUSE (S3FS) support ([#397](https://github.com/codedellemc/libstorage/issues/397), [#409](https://github.com/codedellemc/libstorage/issues/409))
@@ -59,6 +59,7 @@ storage platformss!
 ### Thank You
   Name | Blame  
 -------|------
+[Chris Duchesne](https://github.com/cduchesne) | Chris is my partner in crime when it comes to libStorage and REX-Ray. Without him I would have absolutely no one to take the fall for the heist I'm planning. So is Chris invaluable? Yeah, in that way, as the patsy who will do at least a dime while I'm on the beach sipping my drink, yeah, he's invaluable.
 [Travis Rhoden](https://github.com/codenrhoden) | Travis, or as I call him, T-Dawg, is essential to "taking care of business." He comes to work to chew bubblegum and kick butt, and he leaves the gum at home!
 [Vladimir Vivien](https://github.com/vladimirvivien) | A little known fact about Vladimir is that he's been seeded in the top 10 of the last US Opens, but has had to withdrawal at the last minute before each of those tournaments due to other responsibilities. What those are? Who can say? Are they contracts on people's lives? Perhaps. Are they appearances for Make a Wish? Probably. The only thing we know for sure is that when he is seen again, Vladimir seems rejuvenated and ready to conquer the tennis world yet again.
 [Steve Wong](https://github.com/cantbewong) | I've known Steve for a very long time, and in that time I can say I've never once seen him in the same room as President Barack Obama. Now, does that mean that I can definitively state that Steve and President Obama are in fact the same person. No, of course not. There are obvious differences. The most glaring of course being that Steve wears glasses and President Obama does not. However, other than that the two men are nearly identical. I guess we'll never know if Steve Wong lives a double life as the 44th President of these United States, but I personally would like to think that yeah, he does.
@@ -66,6 +67,8 @@ storage platformss!
 [Alexey Morlang](https://github.com/alexey-mr) | As a third-chair oboe player in the Moscow orchestra it is surprising that Alexey still finds time to contribute to the project, but coming from a long line of oboligarchs (oboe playing oligarchs), it's just in his nature. As is creating storage drivers. That, and, well, playing the oboe.
 [Andrey Pavlov](https://github.com/Andrey-mp) | There is no Andrey. You have not met him. He does not exist. Don't look behind you. He is not there. He is writing storage drivers. Then just like that, he's vanished.
 [Lax Kota](https://github.com/Lax77) | Lax is a rock star in the Slack channel, helping others by answering their questions before the project's developers can take a stab. We do not want to upset him. It's rumored he beats those who upset him in order to provide inspiration for his true passion -- corporal poetry. Every punch thrown is another verse towards his masterpiece.
+[Jack Huang](https://github.com/jack-fittedcloud) | Jack is not his job. Jack is not the amount of money he has in the bank. Jack is not the car he drives. Jack is not the clothes he wears. Jack is a supernova, accelerating at the speed of light beyond the bounds of quantifiable space and time. Jack is not the stuff above. Jack is not the stuff below. Jack is not the stuff in between. Jack is not the empty void. Jack. just. is.
+
 
 ## Version 0.7.0 (2017/01/23)
 This feature release includes support for libStorage 0.4.0 and the Ceph RBD

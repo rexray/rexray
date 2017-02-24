@@ -45,23 +45,6 @@
         },
         {
           "Description": "",
-          "Name": "GCEPD_PROJECTID",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-
-        {
-          "Description": "",
-          "Name": "GCEPD_REGION",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "",
           "Name": "GCEPD_TAG",
           "Settable": [
             "value"

@@ -118,7 +118,7 @@ Environment Variable | Description | Default | Required
 `EFS_TAG` | Only consume volumes with tag (tag\volume_name)| |
 `EFS_DISABLESESSIONCACHE` | new AWS connection is established with every API call | `false` |
 
-### Simple Storage Service (S3)
+### Simple Storage Service
 The S3FS plug-in can be installed with the following command:
 
 ```bash
@@ -275,8 +275,6 @@ plug-in:
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `GCEPD_DEFAULTDISKTYPE` | The default disk type to consume | `pd-ssd` |
-`GCEPD_PROJECTID` | GCE Project ID | `true` |
-`GCEPD_REGION` | GCE Region | `false` |
 `GCEPD_TAG` | Only use volumes that are tagged with a label | |
 `GCEPD_ZONE` | GCE Availability Zone | |
 

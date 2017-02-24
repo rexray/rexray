@@ -8,7 +8,7 @@
       "Description": "REX-Ray for GCE Persistent Disks",
       "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/gcepd",
       "Entrypoint": [
-        "/rexray.sh", "rexray", "start", "-f"
+        "/rexray.sh", "rexray", "start", "-f", "--nopid"
       ],
       "Env": [
         {

@@ -105,6 +105,7 @@ type CLI struct {
 	outputTemplate          string
 	outputTemplateTabs      bool
 	fg                      bool
+	nopid                   bool
 	fork                    bool
 	force                   bool
 	cfgFile                 string

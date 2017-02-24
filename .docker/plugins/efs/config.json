@@ -8,7 +8,7 @@
       "Description": "REX-Ray for Amazon EFS",
       "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/efs",
       "Entrypoint": [
-        "/rexray.sh", "rexray", "start", "-f"
+        "/rexray.sh", "rexray", "start", "-f", "--nopid"
       ],
       "Env": [
         {

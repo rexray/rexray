@@ -19,4 +19,5 @@ ADD rexray.yml /etc/rexray/rexray.yml
 ADD rexray.sh /rexray.sh
 RUN chmod +x /rexray.sh
 
-ENTRYPOINT [ "/rexray.sh", "rexray", "start", "-f" ]
+CMD [ "rexray", "start", "-f", "--nopid" ]
+ENTRYPOINT [ "/rexray.sh" ]

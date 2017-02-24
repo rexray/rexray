@@ -37,6 +37,7 @@ storage platformss!
 * Google Compute Engine Persistent Disk (GCEPD) support ([#394](https://github.com/codedellemc/libstorage/issues/394), [#416](https://github.com/codedellemc/libstorage/issues/416))
 * DigitalOcean support ([#392](https://github.com/codedellemc/libstorage/issues/392))
 * Microsoft Azure unmanaged disk support ([#421](https://github.com/codedellemc/libstorage/issues/421))
+* FittedCloud support ([#408](https://github.com/codedellemc/libstorage/issues/408))
 * Docker Volume Plug-in for EBS ([#720](https://github.com/codedellemc/rexray/issues/720))
 * Docker Volume Plug-in for EFS ([#729](https://github.com/codedellemc/rexray/issues/729))
 * Docker Volume Plug-in for Isilon ([#727](https://github.com/codedellemc/rexray/issues/727))
@@ -50,7 +51,8 @@ storage platformss!
 
 ### Bug Fixes
 * Preemption fix ([#413](https://github.com/codedellemc/libstorage/issues/413))
-* Ceph RBD monitored IP fix ([#412](https://github.com/codedellemc/libstorage/issues/412))
+* Ceph RBD monitored IP fix ([#412](https://github.com/codedellemc/libstorage/issues/412), [#424](https://github.com/codedellemc/libstorage/issues/424))
+* Ceph RBD dashes in names fix ([#425](https://github.com/codedellemc/libstorage/issues/425))
 * Fix for `lsx-OS wait` argument count ([#401](https://github.com/codedellemc/libstorage/issues/401))
 * Build fixes ([#403](https://github.com/codedellemc/libstorage/issues/403))
 

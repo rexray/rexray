@@ -20,7 +20,7 @@ services.
 
 ### Elastic Block Storage
 The AWS EBS driver registers a storage driver named `ebs` with the
-`libStorage` driver manager and is used to connect and manage AWS Elastic Block
+libStorage service registry and is used to connect and manage AWS Elastic Block
 Storage volumes for EC2 instances.
 
 !!! note
@@ -129,7 +129,7 @@ libstorage:
 
 ### Elastic File System
 The AWS EFS driver registers a storage driver named `efs` with the
-`libStorage` driver manager and is used to connect and manage AWS Elastic File
+libStorage service registry and is used to connect and manage AWS Elastic File
 Systems.
 
 #### Requirements
@@ -236,7 +236,7 @@ libstorage:
 
 ### Simple Storage Service
 The AWS S3FS driver registers a storage driver named `s3fs` with the
-`libStorage` driver manager and provides the ability to mount Amazon Simple
+libStorage service registry and provides the ability to mount Amazon Simple
 Storage Service (S3) buckets as filesystems using the
 [`s3fs`](https://github.com/s3fs-fuse/s3fs-fuse) FUSE command.
 
@@ -437,7 +437,7 @@ libStorage includes support for several Dell EMC storage platforms.
 
 ### Isilon
 The Isilon driver registers a storage driver named `isilon` with the
-`libStorage` driver manager and is used to connect and manage Isilon NAS
+libStorage service registry and is used to connect and manage Isilon NAS
 storage. The driver creates logical volumes in directories on the Isilon
 cluster. Volumes are exported via NFS and restricted to a single client at a
 time. Quotas can also be used to ensure that a volume directory doesn't exceed
@@ -539,7 +539,7 @@ The Isilon driver is not without its caveats:
 
 ### ScaleIO
 The ScaleIO driver registers a storage driver named `scaleio` with the
-`libStorage` driver manager and is used to connect and manage ScaleIO storage.
+libStorage service registry and is used to connect and manage ScaleIO storage.
 
 
 #### Requirements
@@ -656,6 +656,46 @@ libstorage:
           storagePoolName: storagePoolName
 ```
 
+## DigitalOcean
+Thanks to the efforts of our tremendous community, libStorage also has built-in
+support for DigitalOcean!
+
+<a class="headerlink hiddenanchor" name="digitalocean-block-storage"></a>
+<a class="headerlink hiddenanchor" name="dobs"></a>
+
+### DO Block Storage
+The DigitalOcean Block Storage (DOBS) driver registers a driver named `dobs`
+with the libStorage service registry and is used to attach and mount
+DigitalOcean block storage devices to DigitalOcean instances.
+
+!!! note
+    The DigitalOcean Block Storage driver currently only supports operating in
+    _local only_ mode where the libStorage server must be running on the same
+    host as the client.
+
+#### Requirements
+The DigitalOcean block storage driver has the following requirements:
+
+* Valid DigitalOcean account
+* Valid DigitalOcean [access token](https://goo.gl/iKoAec)
+
+#### Configuration
+The following example illustrates a minimal configuration for the DigitalOcean
+block storage driver:
+
+```yaml
+dobs:
+  token:  123456
+  region: nyc1
+```
+
+!!! note
+    The standard environment variable for the DigitalOcean access token is
+    `DIGITALOCEAN_ACCESS_TOKEN`. However, the environment variable mapped to
+    this driver's `dobs.token` property is `DOBS_TOKEN`. This choice was made
+    to ensure that the driver must be explicitly configured for access instead
+    of detecting a default token that may not be intended for the driver.
+
 ## Google
 libStorage ships with support for Google Compute Engine (GCE) as well.
 
@@ -663,7 +703,7 @@ libStorage ships with support for Google Compute Engine (GCE) as well.
 
 ### GCE Persistent Disk
 The Google Compute Engine Persistent Disk (GCEPD) driver registers a driver
-named `gcepd` with the `libStorage` driver manager and is used to connect and
+named `gcepd` with the libStorage service registry and is used to connect and
 mount Google Compute Engine (GCE) persistent disks with GCE machine instances.
 
 #### Requirements
@@ -787,7 +827,7 @@ Microsoft Azure support is included with libStorage as well.
 
 ### Azure Unmanaged Disk
 The Microsoft Azure Unmanaged Disk (Azure UD) driver registers a driver
-named `azureud` with the `libStorage` driver manager and is used to connect and
+named `azureud` with the libStorage service registry and is used to connect and
 mount Azure unmanaged disks from Azure page blob storage with Azure virtual
 machines.
 
@@ -899,7 +939,7 @@ libstorage:
 
 ## VirtualBox
 The VirtualBox driver registers a storage driver named `virtualbox` with the
-`libStorage` driver manager and is used by VirtualBox's VMs to connect and
+libStorage service registry and is used by VirtualBox's VMs to connect and
 manage volumes provided by VirtualBox.
 
 ### Prerequisites

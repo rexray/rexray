@@ -1,6 +1,6 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_digitalocean
+// +build !libstorage_storage_driver libstorage_storage_driver_dobs
 
-package digitalocean
+package dobs
 
 import (
 	"os"
@@ -17,14 +17,14 @@ import (
 	apitests "github.com/codedellemc/libstorage/api/tests"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
-	do "github.com/codedellemc/libstorage/drivers/storage/digitalocean"
-	doUtils "github.com/codedellemc/libstorage/drivers/storage/digitalocean/utils"
+	do "github.com/codedellemc/libstorage/drivers/storage/dobs"
+	doUtils "github.com/codedellemc/libstorage/drivers/storage/dobs/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
 	configYAML = []byte(`
-digitalocean:
+dobs:
   token: 12345
   region: sfo2`)
 )

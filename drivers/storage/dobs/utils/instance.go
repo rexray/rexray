@@ -1,4 +1,4 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_digitalocean
+// +build !libstorage_storage_driver libstorage_storage_driver_dobs
 
 package utils
 
@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/digitalocean"
+	"github.com/codedellemc/libstorage/drivers/storage/dobs"
 )
 
 const (
@@ -38,10 +38,10 @@ func InstanceID(ctx types.Context) (*types.InstanceID, error) {
 
 	return &types.InstanceID{
 		ID:     id,
-		Driver: digitalocean.Name,
+		Driver: dobs.Name,
 		Fields: map[string]string{
-			digitalocean.InstanceIDFieldRegion: region,
-			digitalocean.InstanceIDFieldName:   name,
+			dobs.InstanceIDFieldRegion: region,
+			dobs.InstanceIDFieldName:   name,
 		},
 	}, nil
 }

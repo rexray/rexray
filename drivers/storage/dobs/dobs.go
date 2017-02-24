@@ -1,6 +1,6 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_digitalocean
+// +build !libstorage_storage_driver libstorage_storage_driver_dobs
 
-package digitalocean
+package dobs
 
 import (
 	gofigCore "github.com/akutz/gofig"
@@ -9,7 +9,7 @@ import (
 
 const (
 	// Name is the name of the driver
-	Name = "digitalocean"
+	Name = "dobs"
 
 	// InstanceIDFieldRegion is the key used to retrive the region from the
 	// instance id map
@@ -20,9 +20,11 @@ const (
 	InstanceIDFieldName = "name"
 
 	// VolumePrefix is the value that every DO volume appears with DigitalOcean
-	// volumes are are found using disk/by-id, ex:
-	// /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01 See
-	// https://www.digitalocean.com/community/tutorials/how-to-use-block-storage-on-digitalocean#preparing-volumes-for-use-in-linux
+	// volumes are are found using disk/by-id, for example:
+	//
+	//     /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01
+	//
+	// Please see https://goo.gl/MwReS6 for more information.
 	VolumePrefix = "scsi-0DO_Volume_"
 
 	// ConfigDOToken is the key for the token in the config file
@@ -37,11 +39,18 @@ func init() {
 }
 
 func registerConfig() {
-	r := gofigCore.NewRegistration("DigitalOcean")
-	r.Key(gofig.String, "", "", "",
-		ConfigDOToken,
-		"digitaloceanAccessToken",
-		"DIGITALOCEAN_ACCESS_TOKEN")
-	r.Key(gofig.String, "", "", "DigitalOcean region", ConfigDORegion)
+	r := gofigCore.NewRegistration("DigitalOcean Block Storage")
+	r.Key(
+		gofig.String,
+		"",
+		"",
+		"The DigitalOcean access token",
+		ConfigDOToken)
+	r.Key(
+		gofig.String,
+		"",
+		"",
+		"The DigitalOcean region",
+		ConfigDORegion)
 	gofigCore.Register(r)
 }

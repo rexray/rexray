@@ -17,7 +17,7 @@
           "Settable": [
             "value"
           ],
-          "Value": "ext4"
+          "Value": "xfs"
         },
         {
           "Description": "",
@@ -49,7 +49,7 @@
           "Settable": [
             "value"
           ],
-          "Value": ""
+          "Value": "true"
         },
         {
           "Description": "",
@@ -57,7 +57,7 @@
           "Settable": [
             "value"
           ],
-          "Value": ""
+          "Value": "false"
         },
         {
           "Description": "",

@@ -820,7 +820,10 @@ func (r *router) volumeRemove(
 		return nil, svc.Driver().VolumeRemove(
 			ctx,
 			store.GetString("volumeID"),
-			store)
+			&types.VolumeRemoveOpts{
+				Force: store.GetBool("force"),
+				Opts:  store,
+			})
 	}
 
 	return httputils.WriteTask(

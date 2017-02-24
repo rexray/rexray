@@ -160,18 +160,9 @@ func getCephMonIPs() ([]net.IP, error) {
 
 	monStrings := strings.Split(strings.TrimSpace(string(out)), ",")
 
-	monIps := make([]net.IP, 0, 4)
-
-	for _, mon := range monStrings {
-		ip := net.ParseIP(mon)
-		if ip != nil {
-			monIps = append(monIps, ip)
-		} else {
-			ipSlice, err := net.LookupIP(mon)
-			if err == nil {
-				monIps = append(monIps, ipSlice...)
-			}
-		}
+	monIps, err := utils.ParseMonitorAddresses(monStrings)
+	if err != nil {
+		return nil, err
 	}
 
 	return monIps, nil

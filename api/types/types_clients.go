@@ -141,7 +141,8 @@ type APIClient interface {
 	// VolumeRemove removes a single volume.
 	VolumeRemove(
 		ctx Context,
-		service, volumeID string) error
+		service, volumeID string,
+		force bool) error
 
 	// VolumeAttach attaches a single volume.
 	VolumeAttach(

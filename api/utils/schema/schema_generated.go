@@ -110,6 +110,10 @@ const (
                     "type": "string",
                     "description": "The name of the driver that created the instance ID."
                 },
+                "service": {
+                    "type": "string",
+                    "description": "The name of the service for which the instance ID is valid."
+                },
                 "formatted": {
                     "type": "boolean",
                     "description": "A flag indicating whether or not the instance ID has been formatted by an instance inspection."

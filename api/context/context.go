@@ -95,15 +95,16 @@ func WithStorageService(
 	parent context.Context, service types.StorageService) types.Context {
 
 	var (
-		driver     = service.Driver()
-		driverName = strings.ToLower(driver.Name())
+		serviceName = strings.ToLower(service.Name())
+		driver      = service.Driver()
+		driverName  = strings.ToLower(driver.Name())
 	)
 
 	parent = newContext(parent, DriverKey, driver, nil, nil)
 
 	// set the service's InstanceID if present
 	if iidm, ok := parent.Value(AllInstanceIDsKey).(types.InstanceIDMap); ok {
-		if iid, ok := iidm[driverName]; ok {
+		if iid, ok := iidm[serviceName]; ok {
 			parent = newContext(parent, InstanceIDKey, iid, nil, nil)
 		}
 	}

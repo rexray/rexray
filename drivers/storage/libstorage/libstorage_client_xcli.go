@@ -2,6 +2,7 @@ package libstorage
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"strconv"
@@ -100,7 +101,8 @@ func (c *client) InstanceID(
 	driverName := strings.ToLower(si.Driver.Name)
 
 	// check to see if the driver's instance ID is cached
-	if iid := c.instanceIDCache.GetInstanceID(driverName); iid != nil {
+	if iid := c.instanceIDCache.GetInstanceID(serviceName); iid != nil {
+		ctx.WithField("service", serviceName).Debug("found cached instance ID")
 		return iid, nil
 	}
 
@@ -114,6 +116,7 @@ func (c *client) InstanceID(
 		return nil, err
 	}
 
+	iid.Service = ""
 	ctx = ctx.WithValue(context.InstanceIDKey, iid)
 
 	if iid.HasMetadata() {
@@ -124,11 +127,27 @@ func (c *client) InstanceID(
 		}
 		ctx.Debug("received instanceID from API.InstanceInspect call")
 		iid.ID = instance.InstanceID.ID
+		iid.Driver = driverName
+
+		// Set the instance ID's Service field to be the service name. This is
+		// important as when the driver is marshalled to a string for inclusion
+		// in HTTP headers, the Service field will be included in the output.
+		//
+		// Instance ID headers without the Service field that are the same
+		// otherwise can be collapsed into a single header, reducing the
+		// amount of data that needs to be transmitted.
+		//
+		// Since this instance ID required inspection to transform it into its
+		// final format, it's likely that the instance ID is dependent upon
+		// the service and not the same for another service that uses the same
+		// driver type.
+		iid.Service = serviceName
+
 		iid.Fields = instance.InstanceID.Fields
 		iid.DeleteMetadata()
 	}
 
-	c.instanceIDCache.Set(driverName, iid)
+	c.instanceIDCache.Set(serviceName, iid)
 	ctx.Debug("cached instanceID")
 
 	ctx.Debug("xli instanceID success")
@@ -303,6 +322,46 @@ func (c *client) Mount(
 
 	ctx.Debug("xli mount success")
 	return nil
+}
+
+func (c *client) Mounts(
+	ctx types.Context,
+	opts types.Store) ([]*types.MountInfo, error) {
+
+	if c.isController() {
+		return nil, utils.NewUnsupportedForClientTypeError(
+			c.clientType, "Mounts")
+	}
+
+	if lsxSO, _ := c.Supported(ctx, opts); !lsxSO.Mounts() {
+		return nil, errExecutorNotSupported
+	}
+
+	ctx = context.RequireTX(ctx.Join(c.ctx))
+
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
+
+	si, err := c.getServiceInfo(serviceName)
+	if err != nil {
+		return nil, err
+	}
+	driverName := si.Driver.Name
+
+	out, err := c.runExecutor(ctx, driverName, types.LSXCmdMounts)
+	if err != nil {
+		return nil, err
+	}
+
+	var mounts []*types.MountInfo
+	if err := json.Unmarshal(out, &mounts); err != nil {
+		return nil, err
+	}
+
+	ctx.Debug("xli mounts success")
+	return mounts, nil
 }
 
 // Unmount unmounts the underlying device from the specified path.

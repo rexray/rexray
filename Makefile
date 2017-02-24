@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-GO_VERSION := 1.7.5
+GO_VERSION := 1.8
 
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS :=   gofig \
@@ -857,6 +857,7 @@ $1:
 	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
+	rm -f $(EXECUTORS_GENERATED)
 GO_PHONY += $1-clean
 GO_CLEAN += $1-clean
 endif
@@ -1075,11 +1076,35 @@ test:
 	$(MAKE) -j parallel-test
 
 test-debug:
-	env LIBSTORAGE_DEBUG=true $(MAKE) test
+	LIBSTORAGE_DEBUG=true $(MAKE) test
 
 test-rbd:
 	DRIVERS=rbd $(MAKE) deps
 	DRIVERS=rbd $(MAKE) ./drivers/storage/rbd/tests/rbd.test
+
+test-rbd-clean:
+	DRIVERS=rbd $(MAKE) clean
+
+test-gcepd:
+	DRIVERS=gcepd $(MAKE) deps
+	DRIVERS=gcepd $(MAKE) ./drivers/storage/gcepd/tests/gcepd.test
+
+test-gcepd-clean:
+	DRIVERS=gcepd $(MAKE) clean
+
+test-digitalocean:
+	DRIVERS=digitalocean $(MAKE) deps
+	DRIVERS=digitalocean $(MAKE) ./drivers/storage/digitalocean/tests/digitalocean.test
+
+test-digitalocean-clean:
+	DRIVERS=digitalocean $(MAKE) clean
+
+test-azureud:
+	DRIVERS=azureud $(MAKE) deps
+	DRIVERS=azureud $(MAKE) ./drivers/storage/azureud/tests/azureud.test
+
+test-azureud-clean:
+	DRIVERS=azureud $(MAKE) clean
 
 clean: $(GO_CLEAN)
 

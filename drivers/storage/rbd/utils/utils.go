@@ -7,7 +7,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -344,4 +346,53 @@ func ConvStrArrayToPtr(strArr []string) []*string {
 		ptrArr[i] = &strArr[i]
 	}
 	return ptrArr
+}
+
+// ParseMonitorAddresses returns a slice of IP address from the given slice of
+// string addresses. Addresses can be IPv4, IPv4:port, [IPv6], or [IPv6]:port
+func ParseMonitorAddresses(addrs []string) ([]net.IP, error) {
+	monIps := []net.IP{}
+
+	var (
+		host string
+		err  error
+	)
+
+	for _, mon := range addrs {
+		host = mon
+		if hasPort(mon) {
+			host, _, err = net.SplitHostPort(mon)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if strings.HasPrefix(host, "[") {
+			// pull the host/IP out of the brackets
+			host = strings.Trim(host, "[]")
+		}
+		ip := net.ParseIP(host)
+		if ip != nil {
+			monIps = append(monIps, ip)
+		} else {
+			ips, err := net.LookupIP(host)
+			if err != nil {
+				return nil, err
+			}
+			if len(ips) > 0 {
+				monIps = append(monIps, ips...)
+			}
+		}
+	}
+
+	return monIps, nil
+}
+
+var ipv6wPortRX = regexp.MustCompile(`^\[.*\]:\d+$`)
+
+func hasPort(addr string) bool {
+	if strings.HasPrefix(addr, "[") {
+		// IPv6
+		return ipv6wPortRX.MatchString(addr)
+	}
+	return strings.Contains(addr, ":")
 }

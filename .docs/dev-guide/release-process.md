@@ -23,7 +23,6 @@ or `stable` release.
   3. Update the version file
   4. Commit & pull request
   5. Tag the release
-  6. Update the version file (again)
 
 ## Review Issues & Pull Requests
 The first step to a release is to review the outstanding
@@ -88,9 +87,9 @@ something simple. Either way the commit message should have the following
 subject format and first line in its body:
 
 ```text
-Release (Candidate) v0.1.0-rc1
+Release Candidate 0.1.0-rc1
 
-This patch bumps the version to v0.1.0-rc1.
+This patch marks release candidate 0.1.0-rc1.
 ```
 
 If the commit message is longer it should simply reflect the same information
@@ -162,30 +161,3 @@ push the tag to the `upstream` repository:
 ```sh
 git push upstream v0.1.0-rc1
 ```
-
-## Update Version File (Again)
-After a release is tagged there is one final step involving the `VERSION` file.
-The contents of the file should be updated to reflect the next, targeted release
-so that the produced artifacts reflect the targeted version value and not a
-value based on the last, tagged commit.
-
-Following the above examples where version `v0.1.0-rc1` was just staged, the
-`VERSION` file should be updated to indicate that 0.1.0 Release Candidate 2
-(`0.1.0-rc2`) is the next, targeted release:
-
-```sh
-$ cat VERSION
-0.1.0-rc2
-```
-
-Commit the change to the `VERSION` file with a commit message similar to the
-following:
-
-```text
-Bumped active dev version to v0.1.0-rc2
-
-This patch bumps the active dev version to v0.1.0-rc2.
-```
-
-Once the `VERSION` file change is committed, push the change and open a pull
-request to merge into the project.

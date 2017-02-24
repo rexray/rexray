@@ -210,7 +210,8 @@ func (c *client) VolumeCopy(
 
 func (c *client) VolumeRemove(
 	ctx types.Context,
-	service, volumeID string) error {
+	service, volumeID string,
+	force bool) error {
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 
@@ -226,7 +227,7 @@ func (c *client) VolumeRemove(
 		}
 	}
 
-	err := c.APIClient.VolumeRemove(ctx, service, volumeID)
+	err := c.APIClient.VolumeRemove(ctx, service, volumeID, force)
 	if err != nil {
 		return err
 	}

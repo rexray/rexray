@@ -170,7 +170,7 @@ func (d *driver) Mount(
 
 	lsAtt := types.VolAttReqWithDevMapOnlyVolsAttachedToInstanceOrUnattachedVols
 	if opts.Preempt {
-		lsAtt = types.VolAttReq
+		lsAtt = types.VolAttReqWithDevMapForInstance
 	}
 
 	vol, err := d.volumeInspectByIDOrName(
@@ -191,7 +191,9 @@ func (d *driver) Mount(
 	}
 
 	client := context.MustClient(ctx)
-	if len(vol.Attachments) == 0 || opts.Preempt {
+	if vol.AttachmentState == types.VolumeAvailable ||
+		(opts.Preempt && vol.AttachmentState != types.VolumeAttached) {
+
 		mp, err := d.getVolumeMountPath(vol.Name)
 		if err != nil {
 			return "", nil, err
@@ -272,7 +274,6 @@ func (d *driver) Mount(
 	if opts.NewFSType == "" {
 		opts.NewFSType = d.fsType()
 	}
-
 	if err := client.OS().Format(
 		ctx,
 		ma.DeviceName,
@@ -504,14 +505,14 @@ func (d *driver) Create(
 func (d *driver) Remove(
 	ctx types.Context,
 	volumeName string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	if volumeName == "" {
 		return goof.New("missing volume name or ID")
 	}
 
 	vol, err := d.volumeInspectByIDOrName(
-		ctx, "", volumeName, 0, opts)
+		ctx, "", volumeName, 0, opts.Opts)
 	if err != nil {
 		return err
 	}

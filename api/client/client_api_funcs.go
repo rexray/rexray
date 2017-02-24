@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -164,10 +165,15 @@ func (c *client) VolumeCopy(
 
 func (c *client) VolumeRemove(
 	ctx types.Context,
-	service, volumeID string) error {
+	service, volumeID string,
+	force bool) error {
 
-	if _, err := c.httpDelete(ctx,
-		fmt.Sprintf("/volumes/%s/%s", service, volumeID), nil); err != nil {
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf, "/volumes/%s/%s", service, volumeID)
+	if force {
+		fmt.Fprintf(buf, "?force")
+	}
+	if _, err := c.httpDelete(ctx, buf.String(), nil); err != nil {
 		return err
 	}
 	return nil

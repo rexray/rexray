@@ -583,13 +583,15 @@ remote storage systems. Currently the following storage drivers are supported:
 
  Driver | Driver Name
 --------|------------
-[Isilon](./storage-providers.md#isilon) | isilon
-[ScaleIO](./storage-providers.md#scaleio) | scaleio
+[Dell EMC Isilon](./storage-providers.md#dell-emc-isilon) | isilon
+[Dell EMC ScaleIO](./storage-providers.md#dell-emc-scaleio) | scaleio
 [VirtualBox](./storage-providers.md#virtualbox) | virtualbox
-[EBS](./storage-providers.md#aws-ebs) | ebs, ec2
-[EFS](./storage-providers.md#aws-efs) | efs
-[RBD](./storage-providers.md#ceph-rbd) | rbd
-..more coming|
+[AWS EBS](./storage-providers.md#aws-ebs) | ebs, ec2
+[AWS EFS](./storage-providers.md#aws-efs) | efs
+[AWS S3FS](./storage-providers.md#aws-s3fs) | s3fs
+[Ceph RBD](./storage-providers.md#ceph-rbd) | rbd
+[GCE PD](./storage-providers.md#gce-persistent-disk) | gcepd
+[Azure UD](./storage-providers.md#azure-ud) | azureud
 
 The `libstorage.server.libstorage.storage.driver` property can be used to
 activate a storage drivers. That is not a typo; the `libstorage` key is repeated
@@ -690,12 +692,15 @@ libstorage:
 
 Driver|Supported
 ------|---------
-Isilon|Not yet
-ScaleIO|Yes
+Dell EMC Isilon|Not yet
+Dell EMC ScaleIO|Yes
 VirtualBox|Yes
-EBS|Yes
-EFS|No
-RBD|No
+AWS EBS|Yes
+AWS EFS|No
+AWS S3FS|No
+Ceph RBD|No
+GCE PD|Yes
+Azure UD|Yes
 
 #### Ignore Used Count
 By default accounting takes place during operations that are performed

@@ -191,7 +191,7 @@ func (d *driver) VolumeSnapshot(
 func (d *driver) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	ctx = d.requireCtx(ctx)
 	serviceName, ok := context.ServiceName(ctx)
@@ -199,7 +199,7 @@ func (d *driver) VolumeRemove(
 		return goof.New("missing service name")
 	}
 
-	return d.client.VolumeRemove(ctx, serviceName, volumeID)
+	return d.client.VolumeRemove(ctx, serviceName, volumeID, opts.Force)
 }
 
 func (d *driver) VolumeAttach(

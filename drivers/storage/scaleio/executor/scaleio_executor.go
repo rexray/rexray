@@ -3,28 +3,27 @@
 package executor
 
 import (
-	"fmt"
 	"io/ioutil"
-	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/drivers/storage/scaleio"
 )
 
-const (
-	sioBinPath = "/opt/emc/scaleio/sdc/bin/drv_cfg"
-)
-
 // driver is the storage executor for the VFS storage driver.
-type driver struct{}
+type driver struct {
+	guid   string
+	drvCfg string
+}
 
 func init() {
 	registry.RegisterStorageExecutor(scaleio.Name, newdriver)
@@ -35,6 +34,9 @@ func newdriver() types.StorageExecutor {
 }
 
 func (d *driver) Init(context types.Context, config gofig.Config) error {
+	if d.guid = config.GetString("scaleio.guid"); d.guid == "" {
+		d.drvCfg = config.GetString("scaleio.drvCfg")
+	}
 	return nil
 }
 
@@ -49,16 +51,18 @@ func (d *driver) Supported(
 	ctx types.Context,
 	opts types.Store) (bool, error) {
 
-	if _, err := os.Stat(sioBinPath); os.IsNotExist(err) {
-		return false, nil
+	if d.guid != "" {
+		return true, nil
 	}
-	return true, nil
+
+	return gotil.FileExists(d.drvCfg), nil
 }
 
 // NextDevice returns the next available device.
 func (d *driver) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
+
 	return "", types.ErrNotImplemented
 }
 
@@ -78,55 +82,27 @@ func (d *driver) LocalDevices(
 	}, nil
 }
 
-type sdcMappedVolume struct {
-	mdmID       string
-	volumeID    string
-	mdmVolumeID string
-	sdcDevice   string
-}
+const diskIDPath = "/dev/disk/by-id"
 
 func getLocalVolumeMap() (map[string]string, error) {
-	mappedVolumesMap := make(map[string]*sdcMappedVolume)
-	volumeMap := make(map[string]string)
-
-	out, err := exec.Command(sioBinPath, "--query_vols").Output()
+	volMap := map[string]string{}
+	files, err := ioutil.ReadDir(diskIDPath)
 	if err != nil {
-		return nil, goof.WithError("error querying volumes", err)
+		return nil, err
 	}
-
-	result := string(out)
-	lines := strings.Split(result, "\n")
-
-	for _, line := range lines {
-		split := strings.Split(line, " ")
-		if split[0] == "VOL-ID" {
-			mappedVolume := &sdcMappedVolume{
-				mdmID:    split[3],
-				volumeID: split[1],
-			}
-			mappedVolume.mdmVolumeID = fmt.Sprintf(
-				"%s-%s", mappedVolume.mdmID, mappedVolume.volumeID)
-			mappedVolumesMap[mappedVolume.mdmVolumeID] = mappedVolume
-		}
-	}
-
-	diskIDPath := "/dev/disk/by-id"
-	files, _ := ioutil.ReadDir(diskIDPath)
-	r, _ := regexp.Compile(`^emc-vol-\w*-\w*$`)
+	diskIDRX := regexp.MustCompile(`(?i)emc-vol-[^-].+-(.+)$`)
 	for _, f := range files {
-		matched := r.MatchString(f.Name())
-		if matched {
-			mdmVolumeID := strings.Replace(f.Name(), "emc-vol-", "", 1)
-			devPath, _ := filepath.EvalSymlinks(
-				fmt.Sprintf("%s/%s", diskIDPath, f.Name()))
-			if _, ok := mappedVolumesMap[mdmVolumeID]; ok {
-				volumeID := mappedVolumesMap[mdmVolumeID].volumeID
-				volumeMap[volumeID] = devPath
-			}
+		m := diskIDRX.FindStringSubmatch(f.Name())
+		if len(m) == 0 {
+			continue
 		}
+		devPath, err := filepath.EvalSymlinks(path.Join(diskIDPath, f.Name()))
+		if err != nil {
+			return nil, err
+		}
+		volMap[m[1]] = devPath
 	}
-
-	return volumeMap, nil
+	return volMap, nil
 }
 
 // InstanceID returns the local system's InstanceID.
@@ -134,29 +110,37 @@ func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 
-	return GetInstanceID()
+	return d.getInstanceID()
 }
 
 // GetInstanceID returns the instance ID object
-func GetInstanceID() (*types.InstanceID, error) {
-	sg, err := getSdcLocalGUID()
-	if err != nil {
-		return nil, err
+func GetInstanceID(
+	ctx types.Context, config gofig.Config) (*types.InstanceID, error) {
+
+	d := &driver{}
+	d.Init(ctx, config)
+	return d.getInstanceID()
+}
+
+func (d *driver) getInstanceID() (*types.InstanceID, error) {
+
+	if d.guid != "" {
+		iid := &types.InstanceID{Driver: scaleio.Name}
+		if err := iid.MarshalMetadata(d.guid); err != nil {
+			return nil, err
+		}
+		return iid, nil
 	}
+
+	out, err := exec.Command(d.drvCfg, "--query_guid").CombinedOutput()
+	if err != nil {
+		return nil, goof.WithError("error getting sdc guid", err)
+	}
+
+	sdcGUID := strings.Replace(string(out), "\n", "", -1)
 	iid := &types.InstanceID{Driver: scaleio.Name}
-	if err := iid.MarshalMetadata(sg); err != nil {
+	if err := iid.MarshalMetadata(sdcGUID); err != nil {
 		return nil, err
 	}
 	return iid, nil
-}
-
-func getSdcLocalGUID() (sdcGUID string, err error) {
-	out, err := exec.Command(sioBinPath, "--query_guid").Output()
-	if err != nil {
-		return "", goof.WithError("problem getting sdc guid", err)
-	}
-
-	sdcGUID = strings.Replace(string(out), "\n", "", -1)
-
-	return sdcGUID, nil
 }

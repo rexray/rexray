@@ -20,6 +20,7 @@ import (
 const (
 	rbdDefaultOrder = 22
 	bytesPerGiB     = 1024 * 1024 * 1024
+	validNameRX     = `[0-9A-Za-z_\-]+`
 )
 
 var (
@@ -212,7 +213,7 @@ func (d *driver) VolumeSnapshot(
 func (d *driver) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
-	opts types.Store) error {
+	opts *types.VolumeRemoveOpts) error {
 
 	fields := map[string]interface{}{
 		"driverName": d.Name(),
@@ -431,7 +432,8 @@ func (d *driver) toTypeVolumes(
 func (d *driver) parseVolumeID(name *string) (*string, *string, error) {
 
 	// Look for <pool>.<name>
-	re, _ := regexp.Compile(`^(\w+)\.(\w+)$`)
+	re, _ := regexp.Compile(
+		`^(` + validNameRX + `)\.(` + validNameRX + `)$`)
 	res := re.FindStringSubmatch(*name)
 	if len(res) == 3 {
 		// Name includes pool already
@@ -439,9 +441,10 @@ func (d *driver) parseVolumeID(name *string) (*string, *string, error) {
 	}
 
 	// make sure <name> is valid
-	re, _ = regexp.Compile(`^\w+$`)
+	re, _ = regexp.Compile(`^` + validNameRX + `$`)
 	if !re.MatchString(*name) {
-		return nil, nil, goof.New("Invalid VolumeID")
+		return nil, nil, goof.New(
+			"Invalid character(s) found in volume name")
 	}
 
 	pool := d.defaultPool()

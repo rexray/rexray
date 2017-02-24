@@ -1,4 +1,4 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_digitalocean
+// +build !libstorage_storage_driver libstorage_storage_driver_dobs
 
 package storage
 
@@ -18,8 +18,8 @@ import (
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 
-	do "github.com/codedellemc/libstorage/drivers/storage/digitalocean"
-	doUtils "github.com/codedellemc/libstorage/drivers/storage/digitalocean/utils"
+	do "github.com/codedellemc/libstorage/drivers/storage/dobs"
+	doUtils "github.com/codedellemc/libstorage/drivers/storage/dobs/utils"
 )
 
 type driver struct {

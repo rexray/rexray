@@ -1,8 +1,8 @@
-// +build libstorage_storage_executor,libstorage_storage_executor_digitalocean
+// +build libstorage_storage_executor,libstorage_storage_executor_dobs
 
 package executors
 
 import (
 	// load the packages
-	_ "github.com/codedellemc/libstorage/drivers/storage/digitalocean/executor"
+	_ "github.com/codedellemc/libstorage/drivers/storage/dobs/executor"
 )

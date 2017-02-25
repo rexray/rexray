@@ -28,6 +28,13 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.8.1 (2017/02/24)
+This is a minor release that reintroduces support for Go1.6 via
+libStorage 0.5.1.
+
+### Bug Fixes
+* Go1.6 support ([#444](https://github.com/codedellemc/libstorage/issues/444))
+
 ## Version 0.8.0 (2017/02/24)
 This is one of the largest releases in a while, including support for five new
 storage platforms!

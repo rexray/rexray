@@ -2,6 +2,7 @@ go_import_path: github.com/codedellemc/libstorage
 
 language: go
 go:
+  - 1.6.3
   - 1.7.5
   - 1.8
   - tip
@@ -16,8 +17,9 @@ env:
 
 matrix:
   allow_failures:
-    - go:  1.7.5
-    - go:  tip
+    - go: 1.6.3
+    - go: 1.7.5
+    - go: tip
   fast_finish: true
 
 before_install:

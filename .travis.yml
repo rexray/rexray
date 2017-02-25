@@ -9,7 +9,6 @@ language: go
 
 go:
   - 1.7.5
-  - tip
 
 env:
   - REXRAY_BUILD_TYPE=
@@ -22,11 +21,6 @@ env:
   - REXRAY_BUILD_TYPE= DRIVERS=isilon
   - REXRAY_BUILD_TYPE= DRIVERS=s3fs
   - REXRAY_BUILD_TYPE= DRIVERS=scaleio
-
-matrix:
-  allow_failures:
-    - go:  tip
-  fast_finish: true
 
 before_install:
   - if [ "$DRIVERS" != "" ]; then sudo apt-get update; fi

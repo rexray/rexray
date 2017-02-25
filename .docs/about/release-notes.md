@@ -3,6 +3,12 @@
 Release early, release often
 
 ---
+## Version 0.5.1 (2017/02/24)
+This is a minor release to ensure Go1.6 compatibility.
+
+### Bug Fixes
+* FittedCloud Go1.6 support ([#444](https://github.com/codedellemc/libstorage/pull/444))
+
 ## Version 0.5.0 (2017/02/24)
 This is one of the largest releases in a while, including support for new
 storage platforms, client enhancements, and more!

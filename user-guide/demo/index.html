@@ -6,11 +6,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/applications/">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/demo/">
         <link rel="shortcut icon" href="favicon.png">
         
 
-	<title>Applications - REX-Ray</title>
+	<title>Demo - REX-Ray</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -95,12 +95,12 @@
                             <a href="../docker-plugins/">Docker Plug-ins</a>
                         </li>
                     
-                        <li class="active">
-                            <a href="./">Applications</a>
+                        <li >
+                            <a href="../applications/">Applications</a>
                         </li>
                     
-                        <li >
-                            <a href="../demo/">Demo</a>
+                        <li class="active">
+                            <a href="./">Demo</a>
                         </li>
                     
                         <li >
@@ -145,14 +145,14 @@
                     
                     
                     
-                        <li class="active">
-                            <a href="./">Applications</a>
+                        <li >
+                            <a href="../applications/">Applications</a>
                         </li>
                     
                     
                     
-                        <li >
-                            <a href="../demo/">Demo</a>
+                        <li class="active">
+                            <a href="./">Demo</a>
                         </li>
                     
                     
@@ -266,12 +266,12 @@
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li >
-                    <a rel="next" href="../docker-plugins/">
+                    <a rel="next" href="../applications/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../demo/">
+                    <a rel="prev" href="../troubleshooting/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -298,17 +298,33 @@
             <div class="col-md-3"><div id="sidenav" class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#applications">Applications</a></li>
+        <li class="main active"><a href="#demo">Demo</a></li>
         
-            <li><a href="#getting-started">Getting Started</a>
+            <li><a href="#two-node-clientserver">Two-Node Client/Server</a>
             
-            </li>
-        
-            <li><a href="#instructions">Instructions</a>
-            
-            </li>
-        
-            <li><a href="#popular-applications">Popular Applications</a>
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#start-rex-ray-vagrant-environment">Start REX-Ray Vagrant Environment</a><!--
+                -->
+                </li>
+                
+                <li><a href="#node-0">Node 0</a><!--
+                -->
+                </li>
+                
+                <li><a href="#node-1">Node 1</a><!--
+                -->
+                </li>
+                
+                <li><a href="#cleaning-up">Cleaning Up</a><!--
+                -->
+                </li>
+                
+                <li><a href="#congratulations">Congratulations</a><!--
+                -->
+                </li>
+                
+                </ul>
             
             </li>
         
@@ -317,76 +333,128 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="applications">Applications<a class="headerlink" href="#applications" title="Permanent link">&para;</a></h1>
-<p>Persistence for applications in containers.</p>
+<h1 id="demo">Demo<a class="headerlink" href="#demo" title="Permanent link">&para;</a></h1>
+<p>Easy as 1, 2, 3...</p>
 <hr />
-<h2 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
-<p>This tutorial will serve as a generic guide for taking Docker images found on
-<a href="http://hub.docker.com">Docker Hub</a> and utilizing persistent external storage
-via REX-Ray. This should provide guidance for certain applications, but also
-generically so you can add persistence properly to other applications.</p>
-<h2 id="instructions">Instructions<a class="headerlink" href="#instructions" title="Permanent link">&para;</a></h2>
-<p>The following are a set of instructions for investigating an existing container
-image to determine how to properly apply persistence.</p>
-<p>The first step is to determine which application you are looking to deploy, then
-proceed to its <a href="http://hub.docker.com">Docker Hub</a> page. In this example, we
-will be using <a href="https://hub.docker.com/_/postgres/">PostgreSQL on Docker Hub</a>.</p>
-<p>Most application vendors will post their Dockerfile on the main page for that
-given image. Many of them will also make them available by version minimally via
-a download or via Github. Continuing with our PostgreSQL example, we will use
-the <a href="https://github.com/docker-library/postgres/blob/ed23320582f4ec5b0e5e35c99d98966dacbc6ed8/9.3/Dockerfile">Dockerfile for version 9.3</a>
-since it happens to be the default version provided with Ubuntu 14.04.</p>
-<p>Properly written Dockerfiles will include the proper information that separates
-persistent information from the container image and deployed container. This is
-visible when the author of the <code>Dockerfile</code> includes a <code>VOLUME</code> statement to
-define where stateful information should be held.</p>
-<p>Open the <code>Dockerfile</code> and do a search for <code>VOLUME</code> and take note of the
-volumes that will be created for this image. Then we can use REX-Ray or
-<code>Docker</code> to create the external persistent volume for this image. In the
-PostgreSQL 9.3 example, there is a single volume in the Dockerfile:</p>
-<pre><code>VOLUME /var/lib/postgresql/data
-</code></pre>
-
-<p>The single path or paths listed refer to the volumes that should be attached
-when running the container. Following this you can create a volume and attach
-it to a container with the <code>-v</code> flag.</p>
+<h2 id="two-node-clientserver">Two-Node Client/Server<a class="headerlink" href="#two-node-clientserver" title="Permanent link">&para;</a></h2>
+<p>This demo consists of a two-node deployment with the first node configured as a
+REX-Ray/libStorage server and the second node as merely a client. Both nodes
+have Docker installed and configured to leverage REX-Ray for persistent storage.</p>
+<p>The below example does have a few requirements:</p>
 <ul>
-<li><a href="https://hub.docker.com/_/postgres/">PostgreSQL</a>  </li>
+<li>VirtualBox 5.0+</li>
+<li>Vagrant 1.8+</li>
+<li>Ruby 2.0+</li>
 </ul>
-<pre><code>$ docker volume create --driver=rexray --name=postgresql --opt=size=&lt;sizeInGB&gt;
-$ docker run -d -e POSTGRES_PASSWORD=mysecretpassword --volume-driver=rexray \
-    -v data:/var/lib/postgresql/data postgres
+<h3 id="start-rex-ray-vagrant-environment">Start REX-Ray Vagrant Environment<a class="headerlink" href="#start-rex-ray-vagrant-environment" title="Permanent link">&para;</a></h3>
+<p>Before bringing the Vagrant environment online, please ensure it is accomplished
+in a clean directory</p>
+<pre><code class="sh">$ cd $(mktemp -d)
 </code></pre>
 
-<h2 id="popular-applications">Popular Applications<a class="headerlink" href="#popular-applications" title="Permanent link">&para;</a></h2>
-<p>External persistent storage can be applied to any number of applications
-including but not limited the following examples.</p>
-<ul>
-<li><a href="https://hub.docker.com/_/cassandra/">Cassandra</a></li>
-<li>
-<p><a href="https://hub.docker.com/_/postgres/">PostgreSQL</a></p>
-<pre><code>$ docker volume create --driver=rexray --name=postgresql --opt=size=&lt;sizeInGB&gt;
-$ docker run -d -e POSTGRES_PASSWORD=mysecretpassword --volume-driver=rexray \
-    -v data:/var/lib/postgresql/data postgres
+<p>Inside the newly created, temporary directory, download the REX-Ray
+<a href="https://github.com/emccode/rexray/master/Vagrantfile">Vagrantfile</a>:</p>
+<pre><code class="sh">$ curl -fsSLO https://raw.githubusercontent.com/emccode/rexray/master/Vagrantfile
 </code></pre>
-</li>
-<li>
-<p><a href="https://hub.docker.com/_/mariadb/">MariaDB</a></p>
-</li>
-<li>
-<p><a href="https://hub.docker.com/_/mongo/">MongoDB</a></p>
-<pre><code>$ docker volume create --driver=rexray --name=mongodb --opt=size=&lt;sizeInGB&gt;
-$ docker run -d --volume-driver=rexray -v mongodb:/data/db mongo
+
+<p>Now it is time to bring the REX-Ray environment online:</p>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>The next step could potentially open up the system on which the command is
+executed to security vulnerabilities. The Vagrantfile brings the VirtualBox
+web service online if it is not already running. However, in the name of
+simplicity the Vagrantfile also disables the web server's authentication
+module. Please do not disable authentication for the VirtualBox web server
+if this example is being executed on an open network or without some type of
+firewall in place.</p>
+</div>
+<pre><code class="sh">$ vagrant up
 </code></pre>
-</li>
-<li>
-<p><a href="https://hub.docker.com/_/mysql/">MySQL</a></p>
-</li>
-<li><a href="https://hub.docker.com/_/redis/">Redis</a><pre><code>$ docker volume create --driver=rexray --name=redis --opt=size=&lt;sizeInGB&gt;
-$ docker run -d --volume-driver=rexray -v redis:/data redis
+
+<p>The above command should result in output similar to <a href="https://gist.github.com/akutz/13fc3b2237ea2c295a25c2e367e6bd8f">this
+Gist</a>.</p>
+<p>Once the command has been completed successfully there will be two VMs online
+named <code>node0</code> and <code>node1</code>. Both nodes are running Docker and REX-Ray with
+<code>node0</code> configured to act as a libStorage server.</p>
+<p>Now that the environment is online it is time to showcase Docker leveraging REX-
+Ray to create persistent storage as well as illustrating REX-Ray's distributed
+deployment capabilities.</p>
+<h3 id="node-0">Node 0<a class="headerlink" href="#node-0" title="Permanent link">&para;</a></h3>
+<p>First, SSH into <code>node0</code></p>
+<pre><code class="sh">$ vagrant ssh node0
 </code></pre>
-</li>
-</ul></div>
+
+<p>From <code>node0</code> use Docker with REX-Ray to create a new volume named
+<code>hellopersistence</code>:</p>
+<pre><code class="sh">vagrant@node0:~$ docker volume create --driver rexray --opt size=1 \
+                 --name hellopersistence
+</code></pre>
+
+<p>After the volume is created, mount it to the host and container using the
+<code>--volume-driver</code> and <code>-v</code> flag in the <code>docker run</code> command:</p>
+<pre><code class="sh">vagrant@node0:~$ docker run -tid --volume-driver=rexray \
+                 -v hellopersistence:/mystore \
+                 --name temp01 busybox
+</code></pre>
+
+<p>Create a new file named <code>myfile</code> on the file system backed by the persistent
+volume using <code>docker exec</code>:</p>
+<pre><code class="sh">vagrant@node0:~$ docker exec temp01 touch /mystore/myfile
+</code></pre>
+
+<p>Verify the file was successfully created by listing the contents of the
+persistent volume:</p>
+<pre><code class="sh">vagrant@node0:~$ docker exec temp01 ls /mystore
+</code></pre>
+
+<p>Remove the container that was used to write the data to the persistent volume:</p>
+<pre><code class="sh">vagrant@node0:~$ docker rm -f temp01
+</code></pre>
+
+<p>Finally, exit the SSH session to <code>node0</code>:</p>
+<pre><code class="sh">vagrant@node0:~$ exit
+</code></pre>
+
+<h3 id="node-1">Node 1<a class="headerlink" href="#node-1" title="Permanent link">&para;</a></h3>
+<p>It's time to connect to <code>node1</code> and use the volume <code>hellopersistence</code> that was
+created in the previous section from <code>node0</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>While <code>node1</code> runs both the Docker and REX-Ray services like <code>node0</code>, the
+REX-Ray service on <code>node1</code> in no way understands or is configured for the
+VirtualBox storage driver. All interactions with the VirtualBox web service
+occurs via <code>node0</code>'s libStorage server with which <code>node1</code> communicates.</p>
+</div>
+<p>Use the vagrant command to SSH into <code>node1</code>:</p>
+<pre><code class="sh">$ vagrant ssh node1
+</code></pre>
+
+<p>Next, create a new container that mounts the existing volume,
+<code>hellopersistence</code>:</p>
+<pre><code class="sh">vagrant@node1:~$ docker run -tid --volume-driver=rexray \
+                 -v hellopersistence:/mystore \
+                 --name temp01 busybox
+</code></pre>
+
+<p>The next command validates the file <code>myfile</code> created from <code>node0</code> in the
+previous section has persisted inside the volume across machines:</p>
+<pre><code class="sh">vagrant@node1:~$ docker exec temp01 ls /mystore
+</code></pre>
+
+<p>Finally, exit the SSH session to <code>node1</code>:</p>
+<pre><code class="sh">vagrant@node1:~$ exit
+</code></pre>
+
+<h3 id="cleaning-up">Cleaning Up<a class="headerlink" href="#cleaning-up" title="Permanent link">&para;</a></h3>
+<p>Be sure to kill the VirtualBox web server with a quick <code>killall vboxwebsrv</code> and
+to tear down the Vagrant environment with <code>vagrant destroy</code>. Omitting these
+commands will leave the web service and REX-Ray Vagrant nodes online and consume
+additional system resources.</p>
+<h3 id="congratulations">Congratulations<a class="headerlink" href="#congratulations" title="Permanent link">&para;</a></h3>
+<p>REX-Ray has been used to provide persistence for stateless containers! Examples
+using MongoDB, Postgres, and more with persistent storage can be found at
+<a href="../applications/">Application Examples</a> or within the <a href="https://github.com/codedellemc/labs">{code} Labs
+repo</a>.</p></div>
         </div>
 
         <script src="../../js/jquery-1.10.2.min.js"></script>

@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/user-guide/config/">
-        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/config/">
+        <link rel="shortcut icon" href="favicon.png">
         
 
 	<title>Configuration - REX-Ray</title>
@@ -16,6 +16,7 @@
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../css/emccode.css" rel="stylesheet">
         <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/hX.css" rel="stylesheet">
 
@@ -91,7 +92,19 @@
                         </li>
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -127,7 +140,25 @@
                     
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     
@@ -246,7 +277,7 @@
                 </li>
                 
                 <li>
-                    <a href="https://github.com/emccode/rexray.git">
+                    <a href="https://github.com/codedellemc/rexray.git">
                         
                             <i class="fa fa-github"></i>
                         
@@ -368,6 +399,14 @@
                 </li>
                 
                 <li><a href="#logging-configuration">Logging Configuration</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#log-levels">Log Levels</a></li>
+                    
+                    <li><a href="#verbose-mode">Verbose mode</a></li>
+                    
+                </ul>
                 -->
                 </li>
                 
@@ -380,14 +419,14 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="configuring-rex-ray">Configuring REX-Ray</h1>
+<h1 id="configuring-rex-ray">Configuring REX-Ray<a class="headerlink" href="#configuring-rex-ray" title="Permanent link">&para;</a></h1>
 <p>Tweak this, turn that, peek behind the curtain...</p>
 <hr />
-<h2 id="overview">Overview</h2>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>This page reviews how to configure REX-Ray to suit any environment, beginning
 with the most common use cases, exploring recommended guidelines, and
 finally, delving into the details of more advanced settings.</p>
-<h2 id="basic-configuration">Basic Configuration</h2>
+<h2 id="basic-configuration">Basic Configuration<a class="headerlink" href="#basic-configuration" title="Permanent link">&para;</a></h2>
 <p>This section outlines the two most common configuration scenarios encountered
 by REX-Ray's users:</p>
 <ol>
@@ -410,7 +449,7 @@ running.</p>
 <p>The same goes for VirtualBox property <code>endpoint</code> as the VirtualBox
 web service is not always available at <code>10.0.2.2:18083</code>.</p>
 </div>
-<h3 id="stand-alone-cli-mode">Stand-alone CLI Mode</h3>
+<h3 id="stand-alone-cli-mode">Stand-alone CLI Mode<a class="headerlink" href="#stand-alone-cli-mode" title="Permanent link">&para;</a></h3>
 <p>It is possible to use REX-Ray directly from the command line without any
 configuration files. The following example uses REX-Ray to list the storage
 volumes available to a Linux VM hosted by VirtualBox:</p>
@@ -421,24 +460,15 @@ host OS with authentication disabled and accessible to the guest OS. For
 more information please refer to the VirtualBox storage driver
 <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox">documentation</a>.</p>
 </div>
-<pre><code class="sh">$ rexray volume --service virtualbox
-- attachments:
-  - instanceID:
-      id: e71578b0-1bfb-4fa5-bcd5-4ae982fd4a9b
-      driver: virtualbox
-    status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-    volumeID: 1b819454-a280-4cff-aff5-141f4e8fd154
-  name: libStorage.vmdk
-  size: 64
-  status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-  id: 1b819454-a280-4cff-aff5-141f4e8fd154
-  type: &quot;&quot;
+<pre><code class="sh">$ rexray volume --service virtualbox ls
+ID                                    Name             Status    Size
+1b819454-a280-4cff-aff5-141f4e8fd154  libStorage.vmdk  attached  16
 </code></pre>
 
 <p>In addition to listing volumes, the REX-Ray CLI can be used to create and
 remove them as well as manage volume snapshots. For an end-to-end example of
 volume creation, see <a href="../..#hello-rex-ray">Hello REX-Ray</a>.</p>
-<h4 id="embedded-server-mode">Embedded Server Mode</h4>
+<h4 id="embedded-server-mode">Embedded Server Mode<a class="headerlink" href="#embedded-server-mode" title="Permanent link">&para;</a></h4>
 <p>When operating as a stand-alone CLI, REX-Ray actually loads an embedded
 libStorage server for the duration of the CLI process and is accessible by
 only the process that hosts it. This is known as <em>Embedded Server Mode</em>.</p>
@@ -463,7 +493,7 @@ qualifications must be met for Embedded Server Mode to be activated:</p>
    not currently in use.</p>
 </li>
 </ul>
-<h4 id="auto-service-mode">Auto Service Mode</h4>
+<h4 id="auto-service-mode">Auto Service Mode<a class="headerlink" href="#auto-service-mode" title="Permanent link">&para;</a></h4>
 <p>The Stand-alone CLI Mode <a href="#stand-alone-cli-mode">example</a> also uses the
 <code>--service</code> flag. This flag's argument sets the <code>libstorage.service</code> property,
 which has a special meaning inside of REX-Ray -- it serves to enabled
@@ -495,11 +525,11 @@ created a service named <code>virtualbox</code> configured to use the <code>virt
 This service runs on the libStorage server embedded inside of REX-Ray and is
 accessible only by the executing CLI process for the duration of said process.
 When used in this manner, the service name must also be a valid driver name.</p>
-<h3 id="service-mode">Service Mode</h3>
+<h3 id="service-mode">Service Mode<a class="headerlink" href="#service-mode" title="Permanent link">&para;</a></h3>
 <p>REX-Ray can also run as a persistent service that advertises both
 <a href="https://docs.docker.com/engine/extend/plugins_volume/">Docker Volume Plug-in</a>
 and <a href="http://libstorage.readthedocs.io/en/stable/">libStorage</a> endpoints.</p>
-<h4 id="docker-volume-plug-in">Docker Volume Plug-in</h4>
+<h4 id="docker-volume-plug-in">Docker Volume Plug-in<a class="headerlink" href="#docker-volume-plug-in" title="Permanent link">&para;</a></h4>
 <p>This section refers to the only operational mode that REX-Ray supported in
 versions 0.3.3 and prior. A UNIX socket is created by REX-Ray that serves as a
 Docker Volume Plugin compliant API endpoint. Docker is able to leverage this
@@ -533,7 +563,7 @@ Starting REX-Ray...SUCCESS!
 and Volume Driver advertised by the UNIX socket <code>rexray</code> at
 <code>/run/docker/plugins/rexray.sock</code>. More details on configuring the Docker
 Volume Plug-in are available on the <a href="../schedulers/">Schedulers</a> page.</p>
-<h4 id="libstorage-server-and-client">libStorage Server and Client</h4>
+<h4 id="libstorage-server-and-client">libStorage Server and Client<a class="headerlink" href="#libstorage-server-and-client" title="Permanent link">&para;</a></h4>
 <p>In addition to <a href="#embedded-server-mode">Embedded Server Mode</a>, REX-Ray can also
 expose the libStorage API statically. This enables REX-Ray to serve a
 libStorage server and perform only a storage abstraction role.</p>
@@ -546,7 +576,7 @@ libStorage client role.</p>
 different roles. The <a href="../..#hello-rex-ray">Hello REX-Ray</a> section on
 the front page has an end-to-end illustration of this use case that leverages
 Vagrant to provide and configure the necessary systems.</p>
-<h4 id="libstorage-server">libStorage Server</h4>
+<h4 id="libstorage-server">libStorage Server<a class="headerlink" href="#libstorage-server" title="Permanent link">&para;</a></h4>
 <p>The example below illustrates the necessary settings for configuring REX-Ray
 as a libStorage server:</p>
 <pre><code class="yaml">rexray:
@@ -605,7 +635,7 @@ server:</p>
 </tbody>
 </table>
 <p>Start the REX-Ray service with <code>rexray service start</code>.</p>
-<h4 id="libstorage-client">libStorage Client</h4>
+<h4 id="libstorage-client">libStorage Client<a class="headerlink" href="#libstorage-client" title="Permanent link">&para;</a></h4>
 <p>On a separate OS instance running REX-Ray, the follow command can be used to
 list the instance's available VirtualBox storage volumes:</p>
 <pre><code class="sh">$ rexray volume -h tcp://REXRAY_SERVER:7979 -s virtualbox
@@ -627,7 +657,7 @@ the REX-Ray Docker Volume Plug-in endpoint will utilize the remote libStorage
 server as its method for communicating with VirtualBox.</p>
 <p>Again, a complete end-to-end Vagrant environment for the above example is
 available at <a href="../..#hello-rex-ray">Hello REX-Ray</a>.</p>
-<h4 id="example-sans-modules">Example sans Modules</h4>
+<h4 id="example-sans-modules">Example sans Modules<a class="headerlink" href="#example-sans-modules" title="Permanent link">&para;</a></h4>
 <p>Lets review the major sections of the configuration file:</p>
 <pre><code class="yaml">rexray:
   logLevel: warn
@@ -664,7 +694,7 @@ or loaded by REX-Ray, as indicated via the <code>libstorage.service</code> prope
 libStorage Storage Drivers page has information about the configuration details
 of <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers">each driver</a>,
 including <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox">VirtualBox</a>.</p>
-<h3 id="logging">Logging</h3>
+<h3 id="logging">Logging<a class="headerlink" href="#logging" title="Permanent link">&para;</a></h3>
 <p>The <code>-l|--logLevel</code> option or <code>rexray.logLevel</code> configuration key can be set
 to any of the following values to increase or decrease the verbosity of the
 information logged to the console or the REX-Ray log file (defaults to
@@ -677,7 +707,7 @@ information logged to the console or the REX-Ray log file (defaults to
 <li>info</li>
 <li>debug</li>
 </ul>
-<h3 id="troubleshooting">Troubleshooting</h3>
+<h3 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h3>
 <p>The command <code>rexray env</code> can be used to print out the runtime interpretation
 of the environment, including configured properties, in order to help diagnose
 configuration issues.</p>
@@ -699,14 +729,14 @@ LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_CREATE_DEFAULT_FSTYPE=ext4
 LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_CREATE_DEFAULT_AVAILABILITYZONE=
 </code></pre>
 
-<h2 id="advanced-configuration">Advanced Configuration</h2>
+<h2 id="advanced-configuration">Advanced Configuration<a class="headerlink" href="#advanced-configuration" title="Permanent link">&para;</a></h2>
 <p>The following sections detail every last aspect of how REX-Ray works and can
 be configured.</p>
-<h3 id="example-with-modules">Example with Modules</h3>
+<h3 id="example-with-modules">Example with Modules<a class="headerlink" href="#example-with-modules" title="Permanent link">&para;</a></h3>
 <p>Modules enable a single REX-Ray instance to present multiple personalities or
 volume endpoints, serving hosts that require access to multiple storage
 platforms.</p>
-<h4 id="defining-modules">Defining Modules</h4>
+<h4 id="defining-modules">Defining Modules<a class="headerlink" href="#defining-modules" title="Permanent link">&para;</a></h4>
 <p>The following example demonstrates a basic configuration that presents two
 modules using the VirtualBox driver: <code>default-docker</code> and <code>vb2-module</code>.</p>
 <pre><code class="yaml">rexray:
@@ -790,7 +820,7 @@ name and host. The host is the address used by Docker to communicate with
 REX-Ray. The base name of the socket file specified in the address can be
 used with <code>docker --volume-driver=</code>. With the current example the value of the
 <code>--volume-driver</code> parameter would be either <code>vb1</code> of <code>vb2</code>.</p>
-<h4 id="modules-and-inherited-properties">Modules and Inherited Properties</h4>
+<h4 id="modules-and-inherited-properties">Modules and Inherited Properties<a class="headerlink" href="#modules-and-inherited-properties" title="Permanent link">&para;</a></h4>
 <p>There is also another way to write the previous example while reducing the
 number of repeated, identical properties shared by two modules.</p>
 <pre><code class="yaml">rexray:
@@ -832,7 +862,7 @@ creation requests without an explicit size value sent to the <code>default-docke
 module will result in 1GB volumes whereas the same request sent to the <code>vb2</code>
 module will result in 16GB volumes (since 16GB is the default value for the
 <code>libstorage.integration.volume.operations.create.default.size</code> property).</p>
-<h3 id="defining-service-endpoints">Defining Service Endpoints</h3>
+<h3 id="defining-service-endpoints">Defining Service Endpoints<a class="headerlink" href="#defining-service-endpoints" title="Permanent link">&para;</a></h3>
 <p>Multiple libStorage services can be defined in order to leverage several
 different combinations of storage provider drivers and their respective
 configurations. The following section illustrates how to define two separate
@@ -874,7 +904,7 @@ which service to use. Notice how the <code>default-docker</code> module specifie
 the <code>virtualbox</code> service as its <code>libstorage.service</code>. Any requests to the
 Docker Volume Plug-in endpoint <code>/run/docker/plugins/virtualbox.sock</code> will
 utilize the libStorage service <code>virtualbox</code> on the backend.</p>
-<h4 id="defining-a-libstorage-server">Defining a libStorage Server</h4>
+<h4 id="defining-a-libstorage-server">Defining a libStorage Server<a class="headerlink" href="#defining-a-libstorage-server" title="Permanent link">&para;</a></h4>
 <p>The following example is very similar to the previous one, but in this instance
 there is a centralized REX-Ray server which services requests from many
 REX-Ray clients.</p>
@@ -941,7 +971,7 @@ server.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="defining-a-libstorage-client">Defining a libStorage Client</h4>
+<h4 id="defining-a-libstorage-client">Defining a libStorage Client<a class="headerlink" href="#defining-a-libstorage-client" title="Permanent link">&para;</a></h4>
 <p>The client configuration is still rather simple. As mentioned in the previous
 section, the <code>rexray.modules</code> configuration occurs here. This enables the Docker
 engines running on remote instances to communicate with local REX-Ray exposed
@@ -964,7 +994,7 @@ libstorage:
   host: tcp://REXRAY_SERVER:7979
 </code></pre>
 
-<h3 id="libstorage-configuration">libStorage Configuration</h3>
+<h3 id="libstorage-configuration">libStorage Configuration<a class="headerlink" href="#libstorage-configuration" title="Permanent link">&para;</a></h3>
 <p>REX-Ray embeds both the libStorage client as well as the libStorage server. For
 information on configuring the following, please refer to the
 <a href="http://libstorage.readthedocs.io/en/stable">libStorage documentation</a>:</p>
@@ -975,7 +1005,7 @@ information on configuring the following, please refer to the
 <li><a href="http://libstorage.readthedocs.io/en/stable/user-guide/config/#driver-configuration">Configuring</a>
    OS, integration, and storage drivers</li>
 </ul>
-<h3 id="data-directories">Data Directories</h3>
+<h3 id="data-directories">Data Directories<a class="headerlink" href="#data-directories" title="Permanent link">&para;</a></h3>
 <p>The first time REX-Ray is executed it will create several directories if
 they do not already exist:</p>
 <ul>
@@ -1008,7 +1038,7 @@ directories in the process:</p>
 a file located inside of <code>/etc/rexray</code>, but it should be noted that if
 <code>REXRAY_HOME</code> is set the location of the global configuration file can be
 changed.</p>
-<h3 id="configuration-methods">Configuration Methods</h3>
+<h3 id="configuration-methods">Configuration Methods<a class="headerlink" href="#configuration-methods" title="Permanent link">&para;</a></h3>
 <p>There are three ways to configure REX-Ray:</p>
 <ul>
 <li>Command line options</li>
@@ -1019,7 +1049,7 @@ changed.</p>
 options set in multiple locations that may override one another. Values set
 via CLI flags have the highest order of precedence, followed by values set by
 environment variables, followed, finally, by values set in configuration files.</p>
-<h3 id="configuration-files">Configuration Files</h3>
+<h3 id="configuration-files">Configuration Files<a class="headerlink" href="#configuration-files" title="Permanent link">&para;</a></h3>
 <p>There are two REX-Ray configuration files - global and user:</p>
 <ul>
 <li><code>/etc/rexray/config.yml</code></li>
@@ -1031,7 +1061,7 @@ if REX-Ray is being started as a service, then <code>sudo</code> is likely being
 which means that <code>$HOME/.rexray/config.yml</code> won't point to <em>your</em> home
 directory, but rather <code>/root/.rexray/config.yml</code>.</p>
 <p>The next section has an example configuration with the default configuration.</p>
-<h3 id="configuration-properties">Configuration Properties</h3>
+<h3 id="configuration-properties">Configuration Properties<a class="headerlink" href="#configuration-properties" title="Permanent link">&para;</a></h3>
 <p>The section <a href="#configuration-methods">Configuration Methods</a> mentions there are
 three ways to configure REX-Ray: config files, environment variables, and the
 command line. However, this section will illuminate the relationship between the
@@ -1096,7 +1126,9 @@ fall under some type of heading. For example, take the configuration above:</p>
 </tr>
 </tbody>
 </table>
-<h3 id="logging-configuration">Logging Configuration</h3>
+<h3 id="logging-configuration">Logging Configuration<a class="headerlink" href="#logging-configuration" title="Permanent link">&para;</a></h3>
+<p>The REX-Ray log file is, by default, stored at <code>/var/log/rexray/rexray.log</code>.</p>
+<h4 id="log-levels">Log Levels<a class="headerlink" href="#log-levels" title="Permanent link">&para;</a></h4>
 <p>The REX-Ray log level determines the level of verbosity emitted by the
 internal logger. The default level is <code>warn</code>, but there are three other levels
 as well:</p>
@@ -1130,11 +1162,30 @@ as well:</p>
 are functionally the same, both printing a list of volumes using the <code>debug</code>
 log level:</p>
 <p><em>Use the <code>debug</code> log level - Example 1</em></p>
-<pre><code class="bash">rexray volume -l debug
+<pre><code class="bash">rexray volume -l debug ls
 </code></pre>
 
 <p><em>Use the <code>debug</code> log level - Example 2</em></p>
-<pre><code class="bash">env REXRAY_LOGLEVEL=debug rexray volume
+<pre><code class="bash">env REXRAY_LOGLEVEL=debug rexray volume ls
+</code></pre>
+
+<h4 id="verbose-mode">Verbose mode<a class="headerlink" href="#verbose-mode" title="Permanent link">&para;</a></h4>
+<p>To enable the most verbose logging, use the following configuration snippet:</p>
+<pre><code class="yaml">rexray:
+  logLevel:        debug
+libstorage:
+  logging:
+    level:         debug
+    httpRequests:  true
+    httpResponses: true
+</code></pre>
+
+<p>The following command line example is the equivalent to the above configuration
+example:</p>
+<pre><code class="bash">$ REXRAY_DEBUG=true \
+  LIBSTORAGE_LOGGING_HTTPREQUESTS=true \
+  LIBSTORAGE_LOGGING_HTTPRESPONSES=true \
+  rexray ...
 </code></pre></div>
         </div>
 

@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/">
         <link rel="shortcut icon" href="favicon.png">
         
 
@@ -16,6 +16,7 @@
         <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="./css/highlight.css">
         <link href="./css/base.css" rel="stylesheet">
+        <link href="./css/emccode.css" rel="stylesheet">
         <link href="./css/emccode-font.css" rel="stylesheet">
         <link href="./css/hX.css" rel="stylesheet">
 
@@ -91,7 +92,19 @@
                         </li>
                     
                         <li >
+                            <a href="user-guide/docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                        <li >
                             <a href="user-guide/applications/">Applications</a>
+                        </li>
+                    
+                        <li >
+                            <a href="user-guide/demo/">Demo</a>
+                        </li>
+                    
+                        <li >
+                            <a href="user-guide/troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -127,7 +140,25 @@
                     
                     
                         <li >
+                            <a href="user-guide/docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
                             <a href="user-guide/applications/">Applications</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="user-guide/demo/">Demo</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="user-guide/troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     
@@ -246,7 +277,7 @@
                 </li>
                 
                 <li>
-                    <a href="https://github.com/emccode/rexray.git">
+                    <a href="https://github.com/codedellemc/rexray.git">
                         
                             <i class="fa fa-github"></i>
                         
@@ -269,7 +300,7 @@
     
         <li class="main active"><a href="#rex-ray">REX-Ray</a></li>
         
-            <li><a href="#overview">Overview</a>
+            <li><a href="#supported-technologies">Supported Technologies</a>
             
                 <ul class="nav nav-stacked">
                 
@@ -281,7 +312,11 @@
                 -->
                 </li>
                 
-                <li><a href="#container-platform-support">Container Platform Support</a><!--
+                <li><a href="#container-runtime-support">Container Runtime Support</a><!--
+                -->
+                </li>
+                
+                <li><a href="#container-orchestration-support">Container Orchestration Support</a><!--
                 -->
                 </li>
                 
@@ -289,37 +324,23 @@
             
             </li>
         
-            <li><a href="#getting-started">Getting Started</a>
+            <li><a href="#quick-start">Quick Start</a>
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#installing-rex-ray">Installing REX-Ray</a><!--
+                <li><a href="#install">Install</a><!--
                 -->
                 </li>
                 
-                <li><a href="#configuring-rex-ray">Configuring REX-Ray</a><!--
+                <li><a href="#configure">Configure</a><!--
                 -->
                 </li>
                 
-                <li><a href="#start-rex-ray-as-a-service">Start REX-Ray as a Service</a><!--
+                <li><a href="#start-as-a-service">Start as a Service</a><!--
                 -->
                 </li>
                 
-                <li><a href="#hello-rex-ray">Hello REX-Ray</a><!--
-                
-                <ul class="nav nav-stacked">
-                    
-                    <li><a href="#start-rex-ray-vagrant-environment">Start REX-Ray Vagrant Environment</a></li>
-                    
-                    <li><a href="#node-0">Node 0</a></li>
-                    
-                    <li><a href="#node-1">Node 1</a></li>
-                    
-                    <li><a href="#cleaning-up">Cleaning Up</a></li>
-                    
-                    <li><a href="#congratulations">Congratulations</a></li>
-                    
-                </ul>
+                <li><a href="#demo">Demo</a><!--
                 -->
                 </li>
                 
@@ -348,46 +369,37 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="rex-ray">REX-Ray</h1>
+<h1 id="rex-ray">REX-Ray<a class="headerlink" href="#rex-ray" title="Permanent link">&para;</a></h1>
 <p>Openly serious about storage</p>
 <hr />
-<p>REX-Ray delivers persistent storage access for container runtimes, such as
-Docker and Mesos, and provides an easy interface for enabling advanced storage
-functionality across common storage, virtualization and cloud platforms. For
-example, here's how to list the volumes for a VirtualBox VM running Linux with
-REX-Ray:</p>
-<pre><code class="sh">$ rexray volume --service virtualbox
-- attachments:
-  - instanceID:
-      id: e71578b0-1bfb-4fa5-bcd5-4ae982fd4a9b
-      driver: virtualbox
-    status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-    volumeID: 1b819454-a280-4cff-aff5-141f4e8fd154
-  name: libStorage.vmdk
-  size: 64
-  status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-  id: 1b819454-a280-4cff-aff5-141f4e8fd154
-  type: &quot;&quot;
-</code></pre>
-
-<h2 id="overview">Overview</h2>
-<p>REX-Ray is a storage orchestration tool that provides a set of common commands
-for managing multiple storage platforms. Built on top of the
-<a href="http://libstorage.readthedocs.io/en/stable">libStorage</a> framework, REX-Ray
-enables persistent storage for container runtimes such as Docker and
-Mesos.</p>
+<p>REX-Ray is an open source, storage management solution designed to support
+container runtimes such as Docker and Mesos. REX-Ray enables stateful
+applications, such as databases, to persist and maintain its data after the life
+cycle of the container has ended. Built-in high availability enables
+orchestrators such as <a href="https://docs.docker.com/engine/swarm/">Docker Swarm</a>,
+<a href="http://kubernetes.io/">Kubernetes</a>, and <a href="http://mesos.apache.org/">Mesos
+Frameworks</a> like
+<a href="https://mesosphere.github.io/marathon/">Marathon</a> to automatically orchestrate
+storage tasks between hosts in a cluster.</p>
+<p>Built on top of the <a href="http://libstorage.readthedocs.io/en/stable">libStorage</a>
+framework, REX-Ray's simplified architecture consists of a single binary and
+runs as a stateless service on every host using a configuration file to
+orchestrate multiple storage platforms.</p>
+<p><img alt="REX-Ray Architecture" src="./img/rexray-slide.gif" /></p>
 <div class="admonition note">
 <p class="admonition-title">note</p>
-<p>The initial REX-Ray 0.4.x release omits support for several,
-previously verified storage platforms. These providers will be
-reintroduced incrementally, beginning with 0.4.1. If an absent driver
-prevents the use of REX-Ray, please continue to use 0.3.3 until such time
-the storage platform is introduced in REX-Ray 0.4.x. Instructions on how
-to <a href="user-guide/installation/#rex-ray-033">install</a> and
-<a href="http://rexray.readthedocs.io/en/v0.3.3">configure</a> REX-Ray 0.3.3 are both
-available.</p>
+<p>The current REX-Ray release omits support for several, previously verified
+storage platforms. These providers will be reintroduced incrementally,
+beginning with 0.4.1. If an absent driver prevents the use of REX-Ray,
+please continue to use 0.3.3 until such time the storage platform is re-
+introduced as a part of the
+<a href="http://libstorage.readthedocs.io/en/stable">libStorage</a> framework.
+Instructions on how to <a href="user-guide/installation/#rex-ray-033">install</a>
+and <a href="http://rexray.readthedocs.io/en/v0.3.3">configure</a> REX-Ray 0.3.3 are
+both available.</p>
 </div>
-<h3 id="storage-provider-support">Storage Provider Support</h3>
+<h2 id="supported-technologies">Supported Technologies<a class="headerlink" href="#supported-technologies" title="Permanent link">&para;</a></h2>
+<h3 id="storage-provider-support">Storage Provider Support<a class="headerlink" href="#storage-provider-support" title="Permanent link">&para;</a></h3>
 <p>The following storage providers and platforms are supported by REX-Ray.</p>
 <table>
 <thead>
@@ -398,48 +410,40 @@ available.</p>
 </thead>
 <tbody>
 <tr>
-<td>EMC</td>
-<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#scaleio">ScaleIO</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#isilon">Isilon</a></td>
+<td>Amazon EC2</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs">EBS</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs">EFS</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-s3fs">S3FS</a></td>
 </tr>
 <tr>
-<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox">Oracle VirtualBox</a></td>
-<td>Virtual Media</td>
+<td>Ceph</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#ceph-rbd">RBD</a></td>
+</tr>
+<tr>
+<td>Dell EMC</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-scaleio">ScaleIO</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-isilon">Isilon</a></td>
+</tr>
+<tr>
+<td>DigitalOcean</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#do-block-storage">Block Storage</a></td>
+</tr>
+<tr>
+<td>FittedCloud</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ebs-optimizer">EBS Optimizer</a></td>
+</tr>
+<tr>
+<td>Google</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk">GCE Persistent Disk</a></td>
+</tr>
+<tr>
+<td>Microsoft</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud">Azure Unmanaged Disk</a></td>
+</tr>
+<tr>
+<td>VirtualBox</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox">Virtual Media</a></td>
 </tr>
 </tbody>
 </table>
-<p>Support for the following storage providers will be reintroduced in upcoming
-releases:</p>
-<table>
-<thead>
-<tr>
-<th>Provider</th>
-<th>Storage Platform(s)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="user-guide/storage-providers/#coming-soon">Amazon EC2</a></td>
-<td>EBS</td>
-</tr>
-<tr>
-<td><a href="user-guide/storage-providers/#coming-soon">Google Compute Engine</a></td>
-<td>Disk</td>
-</tr>
-<tr>
-<td><a href="user-guide/storage-providers/#coming-soon">Open Stack</a></td>
-<td>Cinder</td>
-</tr>
-<tr>
-<td><a href="user-guide/storage-providers/#coming-soon">Rackspace</a></td>
-<td>Cinder</td>
-</tr>
-<tr>
-<td>EMC</td>
-<td><a href="user-guide/storage-providers/#coming-soon">XtremIO</a>, <a href="user-guide/storage-providers/#coming-soon">VMAX</a></td>
-</tr>
-</tbody>
-</table>
-<h3 id="operating-system-support">Operating System Support</h3>
+<h3 id="operating-system-support">Operating System Support<a class="headerlink" href="#operating-system-support" title="Permanent link">&para;</a></h3>
 <p>The following operating systems (OS) are supported by REX-Ray:</p>
 <table>
 <thead>
@@ -492,7 +496,7 @@ releases:</p>
 </tr>
 </tbody>
 </table>
-<h3 id="container-platform-support">Container Platform Support</h3>
+<h3 id="container-runtime-support">Container Runtime Support<a class="headerlink" href="#container-runtime-support" title="Permanent link">&para;</a></h3>
 <p>REX-Ray currently supports the following container platforms:</p>
 <table>
 <thead>
@@ -516,25 +520,47 @@ releases:</p>
 </tr>
 </tbody>
 </table>
-<h2 id="getting-started">Getting Started</h2>
-<p>This section will help in getting REX-Ray up and running quickly.</p>
-<h3 id="installing-rex-ray">Installing REX-Ray</h3>
-<p>The following command will download the most recent, stable build of REX-Ray
-and install it to <code>/usr/bin/rexray</code> on Linux systems. REX-Ray will be
-registered as either a SystemD or SystemV service depending upon the OS.</p>
+<h3 id="container-orchestration-support">Container Orchestration Support<a class="headerlink" href="#container-orchestration-support" title="Permanent link">&para;</a></h3>
+<p>REX-Ray currently supports the following container orchestrators:</p>
+<table>
+<thead>
+<tr>
+<th>Orchestrator</th>
+<th>Container Runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker Swarm</td>
+<td>Docker</td>
+</tr>
+<tr>
+<td>Kubernetes</td>
+<td>Docker</td>
+</tr>
+<tr>
+<td>Marathon</td>
+<td>Docker, Mesos Containerizer</td>
+</tr>
+</tbody>
+</table>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<h3 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h3>
+<p>The following command will download the most recent and stable build of REX-Ray
+and install to <code>/usr/bin/rexray</code> on Linux systems. REX-Ray will be registered
+as either a SystemD or SystemV service depending upon the OS.</p>
 <pre><code class="sh">$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
 </code></pre>
 
-<p>Refer to the User Guide's
-<a href="./user-guide/installation/#installation">installation topic</a> for instructions
-on building REX-Ray from source, installing specific versions, and more.</p>
-<h3 id="configuring-rex-ray">Configuring REX-Ray</h3>
+<h3 id="configure">Configure<a class="headerlink" href="#configure" title="Permanent link">&para;</a></h3>
 <p>REX-Ray requires a configuration file for storing details used to communicate
-with storage providers. This can include authentication credentials and
-driver-specific configuration options. Refer to the libStorage Storage Providers
-<a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/">documentation</a>
-for sample configurations of all supported storage platforms. Additionally, look
-at <a href="user-guide/config/#configuration-properties">core properties</a> &amp;
+with storage providers. This can include authentication credentials and driver-
+specific configuration options. Use the <a href="http://rexrayconfig.codedellemc.com/">REX-Ray Configuration
+Generator</a> or refer to the libStorage
+Storage Providers <a href="http://libstorage.readthedocs.io/en/stable
+/user-guide/storage-providers/">documentation</a> for sample configurations of all supported
+storage platforms. Additionally, look at
+<a href="user-guide/config/#configuration-properties">core properties</a> &amp;
 <a href="user-guide/config/#logging-configuration">logging</a> for advanced
 configurations.</p>
 <p>Create a configuration file on the host at <code>/etc/rexray/config.yml</code>. Here is a
@@ -543,175 +569,54 @@ simple example for using Oracle VirtualBox:</p>
   service: virtualbox
 </code></pre>
 
-<p>Refer to the
-<a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox">VirtualBox documentation</a>
-for additional VirtualBox configuration options.</p>
+<p>Refer to the <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-
+providers/#virtualbox">VirtualBox
+documentation</a> for additional VirtualBox configuration options.</p>
+<p>Start the VirtualBox SOAP API service using:</p>
+<pre><code class="sh">$ vboxwebsrv -H 0.0.0.0 -v
+</code></pre>
+
 <p>From here, REX-Ray can now be used as a command line tool. View the commands
 available:</p>
 <pre><code class="sh">$ rexray --help
 </code></pre>
 
-<p>To verify the configuration file, use REX-Ray to list the volumes:</p>
-<pre><code class="sh">$ rexray volume
-- attachments:
-  - instanceID:
-      id: e71578b0-1bfb-4fa5-bcd5-4ae982fd4a9b
-      driver: virtualbox
-    status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-    volumeID: 1b819454-a280-4cff-aff5-141f4e8fd154
-  name: libStorage.vmdk
-  size: 64
-  status: /Users/akutz/VirtualBox/libStorage/libStorage.vmdk
-  id: 1b819454-a280-4cff-aff5-141f4e8fd154
-  type: &quot;&quot;
+<p>To verify the configuration file is working, use REX-Ray to list the volumes:</p>
+<pre><code class="sh">$ rexray volume ls
+ID                                    Name             Status    Size
+1b819454-a280-4cff-aff5-141f4e8fd154  libStorage.vmdk  attached  16
 </code></pre>
 
-<p>If there is an error, use the <code>-l debug</code> flag and consult
-<a href="./#getting-help">debugging instructions</a>.</p>
-<h3 id="start-rex-ray-as-a-service">Start REX-Ray as a Service</h3>
+<p>If there is an error, use the <code>-l debug</code> flag and consult <a href="./#getting-help">debugging
+instructions</a>.</p>
+<h3 id="start-as-a-service">Start as a Service<a class="headerlink" href="#start-as-a-service" title="Permanent link">&para;</a></h3>
 <p>Container platforms rely on REX-Ray to be running as a service to function
-properly. For instance, Docker communicates to the REX-Ray Volume Driver via
-a UNIX socket file.</p>
+properly. For instance, Docker communicates to the REX-Ray Volume Driver via a
+UNIX socket file.</p>
 <pre><code class="sh">$ rexray service start
 </code></pre>
 
-<h3 id="hello-rex-ray">Hello REX-Ray</h3>
-<p>In the grand tradition of technical documentation, the first true end-to-end
-example of REX-Ray is called <code>Hello REX-Ray</code>. It showcases a two-node
-deployment with the first node configured as a REX-Ray/libStorage server and
-the second node as merely a client. Both nodes have Docker (1.11+) installed
-and configured to leverage REX-Ray for persistent storage.</p>
-<p>The below example does have a few requirements:</p>
-<ul>
-<li>VirtualBox 5.0+</li>
-<li>Vagrant 1.8+</li>
-<li>Ruby 2.0+</li>
-</ul>
-<h4 id="start-rex-ray-vagrant-environment">Start REX-Ray Vagrant Environment</h4>
-<p>Before bringing the Vagrant environment online, please ensure it is
-accomplished in a clean directory:</p>
-<pre><code class="sh">$ cd $(mktemp -d)
-</code></pre>
-
-<p>Inside the newly created, temporary directory, download the REX-Ray
-<a href="https://github.com/emccode/rexray/blob/master/Vagrantfile">Vagrantfile</a>:</p>
-<pre><code class="sh">$ curl -fsSLO https://raw.githubusercontent.com/emccode/rexray/master/Vagrantfile
-</code></pre>
-
-<p>Now it is time to bring the REX-Ray environment online:</p>
-<div class="admonition note">
-<p class="admonition-title">note</p>
-<p>The next step could potentially open up the system on which the command
-is executed to security vulnerabilities. The Vagrantfile brings the
-VirtualBox web service online if it is not already running. However,
-in the name of simplicity the Vagrantfile also disables the web server's
-authentication module. Please do not disable authentication for the
-VirtualBox web server if this example is being executed on an open network
-or without some type of firewall in place.</p>
-</div>
-<pre><code class="sh">$ vagrant up
-</code></pre>
-
-<p>The above command should result in output similar to
-<a href="https://gist.github.com/akutz/13fc3b2237ea2c295a25c2e367e6bd8f">this Gist</a>.</p>
-<p>Once the command has been completed successfully there will be two VMs online
-named <code>node0</code> and <code>node1</code>. Both nodes are running Docker and REX-Ray with
-<code>node0</code> configured to act as a libStorage server.</p>
-<p>Now that the environment is online it is time to showcase Docker leveraging
-REX-Ray to create persistent storage as well as illustrating REX-Ray's
-distributed deployment capabilities.</p>
-<h4 id="node-0">Node 0</h4>
-<p>First, SSH into <code>node0</code></p>
-<pre><code class="sh">$ vagrant ssh node0
-</code></pre>
-
-<p>From <code>node0</code> use Docker with REX-Ray to create a new volume named
-<code>hellopersistence</code>:</p>
-<pre><code class="sh">vagrant@node0:~$ docker volume create --driver rexray --opt size=1 \
-                 --name hellopersistence
-</code></pre>
-
-<p>After the volume is created, mount it to the host and container using the
-<code>--volume-driver</code> and <code>-v</code> flag in the <code>docker run</code> command:</p>
-<pre><code class="sh">vagrant@node0:~$ docker run -tid --volume-driver=rexray \
-                 -v hellopersistence:/mystore \
-                 --name temp01 busybox
-</code></pre>
-
-<p>Create a new file named <code>myfile</code> on the file system backed by the persistent
-volume using <code>docker exec</code>:</p>
-<pre><code class="sh">vagrant@node0:~$ docker exec temp01 touch /mystore/myfile
-</code></pre>
-
-<p>Verify the file was successfully created by listing the contents of the
-persistent volume:</p>
-<pre><code class="sh">vagrant@node0:~$ docker exec temp01 ls /mystore
-</code></pre>
-
-<p>Remove the container that was used to write the data to the persistent volume:</p>
-<pre><code class="sh">vagrant@node0:~$ docker rm -f temp01
-</code></pre>
-
-<p>Finally, exit the SSH session to <code>node0</code>:</p>
-<pre><code class="sh">vagrant@node0:~$ exit
-</code></pre>
-
-<h4 id="node-1">Node 1</h4>
-<p>It's time to connect to <code>node1</code> and use the volume <code>hellopersistence</code> that was
-created in the previous section from <code>node0</code>.</p>
-<div class="admonition note">
-<p class="admonition-title">note</p>
-<p>While <code>node1</code> runs both the Docker and REX-Ray services like <code>node0</code>, the
-REX-Ray service on <code>node1</code> in no way understands or is configured for the
-VirtualBox storage driver. All interactions with the VirtualBox web service
-occurs via <code>node0</code>'s libStorage server with which <code>node1</code> communicates.</p>
-</div>
-<p>Use the vagrant command to SSH into <code>node1</code>:</p>
-<pre><code class="sh">$ vagrant ssh node1
-</code></pre>
-
-<p>Next, create a new container that mounts the existing volume,
-<code>hellopersistence</code>:</p>
-<pre><code class="sh">vagrant@node1:~$ docker run -tid --volume-driver=rexray \
-                 -v hellopersistence:/mystore \
-                 --name temp01 busybox
-</code></pre>
-
-<p>The next command validates the file <code>myfile</code> created from <code>node0</code> in the
-previous section has persisted inside the volume across machines:</p>
-<pre><code class="sh">vagrant@node1:~$ docker exec temp01 ls /mystore
-</code></pre>
-
-<p>Finally, exit the SSH session to <code>node1</code>:</p>
-<pre><code class="sh">vagrant@node1:~$ exit
-</code></pre>
-
-<h4 id="cleaning-up">Cleaning Up</h4>
-<p>Be sure to kill the VirtualBox web server with a quick <code>killall vboxwebsrv</code> and
-to tear down the Vagrant environment with <code>vagrant destroy</code>. Omitting these
-commands will leave the web service and REX-Ray Vagrant nodes online and
-consume additional system resources.</p>
-<h4 id="congratulations">Congratulations</h4>
-<p>REX-Ray has been used to provide persistence for stateless containers! Examples
-using MongoDB, Postgres, and more with persistent storage can be found at
-<a href="user-guide/applications/">Application Examples</a>.</p>
-<h2 id="getting-help">Getting Help</h2>
+<h3 id="demo">Demo<a class="headerlink" href="#demo" title="Permanent link">&para;</a></h3>
+<p>View the <a href="./user-guide/demo/">Vagrant Demo</a> as well as visit the <a href="https://github.com/codedellemc/labs">{code}
+Labs</a> for more information on ways to
+setup REX-Ray and run different types of applications such as Postgres and
+Minecraft.</p>
+<h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
 <p>Having issues? No worries, let's figure it out together.</p>
-<h3 id="debug">Debug</h3>
+<h3 id="debug">Debug<a class="headerlink" href="#debug" title="Permanent link">&para;</a></h3>
 <p>The <code>-l debug</code> flag can be appended to any command in order to get verbose
 output. The following command will list all of the volumes visible to REX-Ray
 with debug logging enabled:</p>
-<pre><code>$ rexray volume -l debug
+<pre><code>$ rexray volume -l debug ls
 </code></pre>
 
 <p>For an example of the full output from the above command, please refer to this
 <a href="https://gist.github.com/akutz/df2afe2dc43f75b67b8977f398095ed7">Gist</a>.</p>
-<h3 id="github-and-slack">GitHub and Slack</h3>
-<p>If a little extra help is needed, please don't hesitate to use
-<a href="https://github.com/emccode/rexray/issues">GitHub issues</a> or join the active
-conversation on the
-<a href="http://community.emccode.com/">EMC {code} Community Slack Team</a> in
-the #project-rexray channel</p></div>
+<h3 id="github-and-slack">GitHub and Slack<a class="headerlink" href="#github-and-slack" title="Permanent link">&para;</a></h3>
+<p>If a little extra help is needed, please don't hesitate to use <a href="https://github.com/codedellemc/rexray/issues">GitHub
+issues</a> or join the active
+conversation on the <a href="http://community.codedellemc.com/">{code} by Dell EMC Community Slack
+Team</a> in the #project-rexray channel</p></div>
         </div>
 
         <script src="./js/jquery-1.10.2.min.js"></script>

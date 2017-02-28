@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/dev-guide/project-guidelines/">
-        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/dev-guide/project-guidelines/">
+        <link rel="shortcut icon" href="favicon.png">
         
 
 	<title>Project Guidelines - REX-Ray</title>
@@ -16,6 +16,7 @@
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../css/emccode.css" rel="stylesheet">
         <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/hX.css" rel="stylesheet">
 
@@ -91,7 +92,19 @@
                         </li>
                     
                         <li >
+                            <a href="../../user-guide/docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                        <li >
                             <a href="../../user-guide/applications/">Applications</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../user-guide/demo/">Demo</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../user-guide/troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -127,7 +140,25 @@
                     
                     
                         <li >
+                            <a href="../../user-guide/docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
                             <a href="../../user-guide/applications/">Applications</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/demo/">Demo</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     
@@ -235,7 +266,7 @@
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li >
-                    <a rel="next" href="../../user-guide/applications/">
+                    <a rel="next" href="../../user-guide/troubleshooting/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
@@ -246,7 +277,7 @@
                 </li>
                 
                 <li>
-                    <a href="https://github.com/emccode/rexray.git">
+                    <a href="https://github.com/codedellemc/rexray.git">
                         
                             <i class="fa fa-github"></i>
                         
@@ -306,17 +337,17 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="project-guidelines">Project Guidelines</h1>
+<h1 id="project-guidelines">Project Guidelines<a class="headerlink" href="#project-guidelines" title="Permanent link">&para;</a></h1>
 <p>These are important.</p>
 <hr />
 <p>People contributing code to this project must adhere to the following rules.
 These standards are in place to keep code clean, consistent, and stable.</p>
-<h2 id="documentation">Documentation</h2>
+<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
 <p>There are two types of documentation: source and markdown.</p>
-<h3 id="source-code">Source Code</h3>
+<h3 id="source-code">Source Code<a class="headerlink" href="#source-code" title="Permanent link">&para;</a></h3>
 <p>All source code should be documented in accordance with the
 <a href="http://blog.golang.org/godoc-documenting-go-code">Go's documentation rules</a>.</p>
-<h3 id="markdown">Markdown</h3>
+<h3 id="markdown">Markdown<a class="headerlink" href="#markdown" title="Permanent link">&para;</a></h3>
 <p>When creating or modifying the project's <code>README.md</code> file or any of the
 documentation in the <code>.docs</code> directory, please keep the following rules in
 mind:</p>
@@ -338,7 +369,7 @@ Markdown file extension:</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="../../user-guide/config/#basic-configuration">../user-guide/config.md#basic-configuration</a></p>
 <p>Now the link will work regardless from where it's viewed.</p>
-<h2 id="style-syntax">Style &amp; Syntax</h2>
+<h2 id="style-syntax">Style &amp; Syntax<a class="headerlink" href="#style-syntax" title="Permanent link">&para;</a></h2>
 <p>All source files should be processed by the following tools prior to being
 committed. Any errors or warnings produced by the tools should be corrected
 before the source is committed.</p>
@@ -386,7 +417,7 @@ make fmt 1&gt; /dev/null
 the commit message dialog. The script will invoke the <code>Makefile</code>'s <code>fmt</code>
 target, formatting the sources. If the command returns a non-zero exit code,
 the commit operation will abort with the error.</p>
-<h2 id="code-coverage">Code Coverage</h2>
+<h2 id="code-coverage">Code Coverage<a class="headerlink" href="#code-coverage" title="Permanent link">&para;</a></h2>
 <p>All new work submitted to the project should have associated tests where
 applicable. If there is ever a question of whether or not a test is applicable
 then the answer is likely yes.</p>
@@ -399,10 +430,10 @@ such time that testing is added or enhanced to compensate.</p>
 coverage. On the command line, from the project's root directory, execute the
 following:</p>
 <pre><code class="sh">$ .build/test.sh
-ok      github.com/emccode/rexray/rexray/cli    0.039s  coverage: 33.6% of statements
-ok      github.com/emccode/rexray/test  0.080s  coverage: 94.0% of statements in github.com/emccode/rexray, github.com/emccode/rexray/core
+ok      github.com/codedellemc/rexray/rexray/cli    0.039s  coverage: 33.6% of statements
+ok      github.com/codedellemc/rexray/test  0.080s  coverage: 94.0% of statements in github.com/codedellemc/rexray, github.com/codedellemc/rexray/core
 ...
-ok      github.com/emccode/rexray/util  0.024s  coverage: 100.0% of statements
+ok      github.com/codedellemc/rexray/util  0.024s  coverage: 100.0% of statements
 [0]akutz@pax:rexray$
 </code></pre>
 
@@ -411,7 +442,7 @@ the project's <a href="../travis-ci.org/emccode/rexray">automated build system</
 difference is when executed locally the results are not submitted to Coveralls.
 Still, using the <code>test.sh</code> file one can easily determine if a package's coverage
 has decreased and if additional testing is necessary.</p>
-<h2 id="commit-messages">Commit Messages</h2>
+<h2 id="commit-messages">Commit Messages<a class="headerlink" href="#commit-messages" title="Permanent link">&para;</a></h2>
 <p>Commit messages should follow the guide <a href="https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message">5 Useful Tips For a Better Commit
 Message</a>.
 The two primary rules to which to adhere are:</p>
@@ -484,7 +515,7 @@ The user can specify either '--format=yml|yaml|json' or
 structured data is marshaled prior to being emitted to the console.
 </code></pre>
 
-<h2 id="submitting-changes">Submitting Changes</h2>
+<h2 id="submitting-changes">Submitting Changes<a class="headerlink" href="#submitting-changes" title="Permanent link">&para;</a></h2>
 <p>All developers are required to follow the
 <a href="https://guides.github.com/introduction/flow/">GitHub Flow model</a> when
 proposing new features or even submitting fixes.</p>

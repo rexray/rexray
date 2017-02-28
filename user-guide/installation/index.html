@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/user-guide/installation/">
-        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/installation/">
+        <link rel="shortcut icon" href="favicon.png">
         
 
 	<title>Installation - REX-Ray</title>
@@ -16,6 +16,7 @@
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../css/emccode.css" rel="stylesheet">
         <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/hX.css" rel="stylesheet">
 
@@ -91,7 +92,19 @@
                         </li>
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -127,7 +140,25 @@
                     
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     
@@ -246,7 +277,7 @@
                 </li>
                 
                 <li>
-                    <a href="https://github.com/emccode/rexray.git">
+                    <a href="https://github.com/codedellemc/rexray.git">
                         
                             <i class="fa fa-github"></i>
                         
@@ -282,16 +313,24 @@
                 </li>
                 
                 <li><a href="#install-a-pre-built-binary">Install a pre-built binary</a><!--
-                
-                <ul class="nav nav-stacked">
-                    
-                    <li><a href="#rex-ray-033">REX-Ray 0.3.3</a></li>
-                    
-                </ul>
                 -->
                 </li>
                 
                 <li><a href="#build-and-install-from-source">Build and install from source</a><!--
+                -->
+                </li>
+                
+                <li><a href="#uninstall">Uninstall</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#rpm">RPM</a></li>
+                    
+                    <li><a href="#deb">DEB</a></li>
+                    
+                    <li><a href="#default">Default</a></li>
+                    
+                </ul>
                 -->
                 </li>
                 
@@ -332,10 +371,10 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="installation">Installation</h1>
+<h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
 <p>Getting the bits, bit by bit</p>
 <hr />
-<h2 id="overview">Overview</h2>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>There are several different methods available for installing REX-Ray. It
 is written in Go, so there are typically no dependencies that must be installed
 alongside its single binary file. The manual methods can be extremely simple
@@ -344,7 +383,7 @@ steps individually. Following the manual installs, <a href="../config/">configur
 must take place.</p>
 <p>Great examples of automation tools, such as <code>Ansible</code> and <code>Puppet</code>, are also
 provided. These approaches automate the entire configuration process.</p>
-<h2 id="manual-installs">Manual Installs</h2>
+<h2 id="manual-installs">Manual Installs<a class="headerlink" href="#manual-installs" title="Permanent link">&para;</a></h2>
 <p>Manual installations are in contrast to batch, automated installations.</p>
 <p>Make sure that before installing REX-Ray that you have uninstalled any previous
 versions. A <code>rexray uninstall</code> can assist with this where appropriate.</p>
@@ -353,7 +392,7 @@ through commands like <code>rexray volume</code>. Noticeably different from this
 REX-Ray integrate with Container Engines such as Docker. This requires that
 you run <code>rexray start</code> or relevant service start command like
 <code>systemctl start rexray</code>.</p>
-<h3 id="install-via-curl">Install via curl</h3>
+<h3 id="install-via-curl">Install via curl<a class="headerlink" href="#install-via-curl" title="Permanent link">&para;</a></h3>
 <p>The following command will download the most recent, stable build of REX-Ray
 and install it to <code>/usr/bin/rexray</code> or <code>/opt/bin/rexray</code>. On Linux systems
 REX-Ray will also be registered as either a SystemD or SystemV service.</p>
@@ -362,20 +401,9 @@ specify <code>stable</code>, see the additional version names below that are als
 <pre><code class="shell">curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable
 </code></pre>
 
-<h3 id="install-a-pre-built-binary">Install a pre-built binary</h3>
+<h3 id="install-a-pre-built-binary">Install a pre-built binary<a class="headerlink" href="#install-a-pre-built-binary" title="Permanent link">&para;</a></h3>
 <p>There are a handful of necessary manual steps to properly install REX-Ray
 from pre-built binaries.</p>
-<h4 id="rex-ray-033">REX-Ray 0.3.3</h4>
-<div class="admonition note">
-<p class="admonition-title">note</p>
-<p>The initial REX-Ray 0.4.x release omits support for several,
-previously verified storage platforms. These providers will be
-reintroduced incrementally, beginning with 0.4.1. If an absent driver
-prevents the use of REX-Ray, please continue to use 0.3.3 until such time
-the storage platform is introduced in REX-Ray 0.4.x. The following command
-can be used to explicitly install REX-Ray 0.3.3:</p>
-<p><code>curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.3.3</code></p>
-</div>
 <ol>
 <li>
 <p>Download the proper binary. There are also pre-built binaries available for
@@ -410,54 +438,43 @@ should be where REX-Ray is moved, but this path is not required.</p>
 <li>Install as a service with <code>rexray install</code>. This will register itself
 with SystemD or SystemV for proper initialization.</li>
 </ol>
-<h3 id="build-and-install-from-source">Build and install from source</h3>
-<p>It is also easy to build REX-Ray from source.</p>
-<div class="admonition note">
-<p class="admonition-title">note</p>
-<p>REX-Ray requires at least Go 1.6.0. The REX-Ray developers use Go 1.6.2,
-and that is what REX-Ray's Travis-CI build uses as well. The build
-reference for REX-Ray is available in the
-<a href="../../dev-guide/build-reference/">Developer's Guide</a>.</p>
-</div>
-<pre><code class="sh"># go get the rexray repo using the -d flag to enable &quot;download only&quot; mode
-go get -d github.com/emccode/rexray
-
-# change directories into the freshly-cloned repo
-cd $GOPATH/src/github.com/emccode/rexray
-
-# get and build REX-Ray's dependencies and then build and install REX-Ray
-make deps &amp;&amp; make
+<h3 id="build-and-install-from-source">Build and install from source<a class="headerlink" href="#build-and-install-from-source" title="Permanent link">&para;</a></h3>
+<p>It is also easy to build REX-Ray from source using Docker:</p>
+<pre><code>$ git clone https://github.com/codedellemc/rexray &amp;&amp; make -C rexray
 </code></pre>
 
-<p>Once REX-Ray is built and installed it will be available at
-<code>$GOPATH/bin/rexray</code>:</p>
-<pre><code class="sh">$ $GOPATH/bin/rexray version
-REX-Ray
--------
-Binary: /home/akutz/go/bin/rexray
-SemVer: 0.4.0-rc4+10+dirty
-OsArch: Linux-x86_64
-Branch: release/0.4.0-rc4
-Commit: 063a0794ac19af439c3ab5a01f2e6f5a4f4f85ae
-Formed: Tue, 14 Jun 2016 14:23:15 CDT
-
-libStorage
-----------
-SemVer: 0.1.3
-OsArch: Linux-x86_64
-Branch: v0.1.3
-Commit: 182a626937677a081b89651598ee2eac839308e7
-Formed: Tue, 14 Jun 2016 14:21:25 CDT
+<p>For building REX-Ray without Docker or to review the various build options
+please see the <a href="../../dev-guide/build-reference/">Build Reference</a>.</p>
+<h3 id="uninstall">Uninstall<a class="headerlink" href="#uninstall" title="Permanent link">&para;</a></h3>
+<p>Depending on how it was installed, REX-Ray can be installed one of a few ways:</p>
+<h4 id="rpm">RPM<a class="headerlink" href="#rpm" title="Permanent link">&para;</a></h4>
+<p>If REX-Ray was installed on a system that uses the RPM package management
+system, such as Redhat, CentOS, the following command can be used to uninstall
+REX-Ray:</p>
+<pre><code class="sh">$ sudo rpm -e rexray
 </code></pre>
 
-<h2 id="automated-installs">Automated Installs</h2>
+<h4 id="deb">DEB<a class="headerlink" href="#deb" title="Permanent link">&para;</a></h4>
+<p>If REX-Ray was installed on a system that uses the DEB package management
+system, such as Debian, Ubuntu, the following command can be used to uninstall
+REX-Ray:</p>
+<pre><code class="sh">$ sudo dpkg --remove rexray
+</code></pre>
+
+<h4 id="default">Default<a class="headerlink" href="#default" title="Permanent link">&para;</a></h4>
+<p>No matter how REX-Ray was installed, the following command will always attempt
+to perform an uninstallation using the OS-recommended method:</p>
+<pre><code class="sh">$ sudo rexray uninstall
+</code></pre>
+
+<h2 id="automated-installs">Automated Installs<a class="headerlink" href="#automated-installs" title="Permanent link">&para;</a></h2>
 <p>Because REX-Ray is simple to install using the <code>curl</code> script, installation
 using configuration management tools is relatively easy as well. However,
 there are a few areas that may prove to be tricky, such as writing the
 configuration file.</p>
 <p>This section provides examples of automated installations using common
 configuration management and orchestration tools.</p>
-<h3 id="ansible">Ansible</h3>
+<h3 id="ansible">Ansible<a class="headerlink" href="#ansible" title="Permanent link">&para;</a></h3>
 <p>With Ansible, installing the latest REX-Ray binaries can be accomplished by
 including the <code>emccode.rexray</code> role from Ansible Galaxy.  The role accepts
 all the necessary variables to properly fill out your <code>config.yml</code> file.</p>
@@ -478,7 +495,7 @@ all the necessary variables to properly fill out your <code>config.yml</code> fi
 <pre><code class="sh">$ ansible-playbook -i &lt;inventory&gt; playbook.yml
 </code></pre>
 
-<h3 id="aws-cloudformation">AWS CloudFormation</h3>
+<h3 id="aws-cloudformation">AWS CloudFormation<a class="headerlink" href="#aws-cloudformation" title="Permanent link">&para;</a></h3>
 <p>With CloudFormation, the installation of the latest Docker and REX-Ray binaries
 can be passed to the orchestrator using the 'UserData' property in a
 CloudFormation template. While the payload could also be provided as raw user
@@ -521,7 +538,7 @@ data via the AWS GUI, it would not sustain scalable automation.</p>
 }
 </code></pre>
 
-<h3 id="docker-machine-virtualbox">Docker Machine (VirtualBox)</h3>
+<h3 id="docker-machine-virtualbox">Docker Machine (VirtualBox)<a class="headerlink" href="#docker-machine-virtualbox" title="Permanent link">&para;</a></h3>
 <p>SSH can be used to remotely deploy REX-Ray to a Docker Machine. While the
 following example used VirtualBox as the underlying storage platform, the
 provided <code>config.yml</code> file <em>could</em> be modified to use any of the supported
@@ -564,7 +581,7 @@ local path VirtualBox uses to store its virtual media disk files.</p>
 </code></pre>
 </li>
 </ol>
-<h3 id="openstack-heat">OpenStack Heat</h3>
+<h3 id="openstack-heat">OpenStack Heat<a class="headerlink" href="#openstack-heat" title="Permanent link">&para;</a></h3>
 <p>Using OpenStack Heat, in the HOT template format (yaml):</p>
 <pre><code class="yaml">resources:
   my_server:
@@ -587,12 +604,12 @@ local path VirtualBox uses to store its virtual media disk files.</p>
             dummy: &quot;&quot;
 </code></pre>
 
-<h3 id="vagrant">Vagrant</h3>
+<h3 id="vagrant">Vagrant<a class="headerlink" href="#vagrant" title="Permanent link">&para;</a></h3>
 <p>Using Vagrant is a great option to deploy pre-configured REX-Ray nodes,
 including Docker, using the VirtualBox driver. All volume requests are handled
 using VirtualBox's Virtual Media.</p>
 <p>A Vagrant environment and instructions using it are provided
-<a href="https://github.com/emccode/vagrant/tree/master/rexray">here</a>.</p></div>
+<a href="https://github.com/codedellemc/vagrant/tree/master/rexray">here</a>.</p></div>
         </div>
 
         <script src="../../js/jquery-1.10.2.min.js"></script>

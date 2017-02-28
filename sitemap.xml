@@ -3,8 +3,8 @@
 
     
     <url>
-     <loc>https://github.com/emccode/rexray/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,54 +12,50 @@
     
         
     <url>
-     <loc>https://github.com/emccode/rexray/user-guide/installation/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/user-guide/installation/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/user-guide/config/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/user-guide/config/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/user-guide/storage-providers/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/user-guide/storage-providers/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/user-guide/schedulers/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/user-guide/schedulers/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/user-guide/applications/</loc>
-     <lastmod>2016-09-07</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-        
-    
-
-    
-        
-    <url>
-     <loc>https://github.com/emccode/rexray/dev-guide/project-guidelines/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/user-guide/docker-plugins/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/dev-guide/build-reference/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/user-guide/applications/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/dev-guide/release-process/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/user-guide/demo/</loc>
+     <lastmod>2017-02-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>https://github.com/codedellemc/rexray/user-guide/troubleshooting/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -68,20 +64,42 @@
     
         
     <url>
-     <loc>https://github.com/emccode/rexray/about/contributing/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/dev-guide/project-guidelines/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/about/license/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/dev-guide/build-reference/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>https://github.com/emccode/rexray/about/release-notes/</loc>
-     <lastmod>2016-09-07</lastmod>
+     <loc>https://github.com/codedellemc/rexray/dev-guide/release-process/</loc>
+     <lastmod>2017-02-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>https://github.com/codedellemc/rexray/about/contributing/</loc>
+     <lastmod>2017-02-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>https://github.com/codedellemc/rexray/about/license/</loc>
+     <lastmod>2017-02-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>https://github.com/codedellemc/rexray/about/release-notes/</loc>
+     <lastmod>2017-02-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         

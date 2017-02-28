@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/dev-guide/build-reference/">
-        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/dev-guide/build-reference/">
+        <link rel="shortcut icon" href="favicon.png">
         
 
 	<title>Build Reference - REX-Ray</title>
@@ -16,6 +16,7 @@
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../css/emccode.css" rel="stylesheet">
         <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/hX.css" rel="stylesheet">
 
@@ -91,7 +92,19 @@
                         </li>
                     
                         <li >
+                            <a href="../../user-guide/docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                        <li >
                             <a href="../../user-guide/applications/">Applications</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../user-guide/demo/">Demo</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../user-guide/troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -127,7 +140,25 @@
                     
                     
                         <li >
+                            <a href="../../user-guide/docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
                             <a href="../../user-guide/applications/">Applications</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/demo/">Demo</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../../user-guide/troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     
@@ -246,7 +277,7 @@
                 </li>
                 
                 <li>
-                    <a href="https://github.com/emccode/rexray.git">
+                    <a href="https://github.com/codedellemc/rexray.git">
                         
                             <i class="fa fa-github"></i>
                         
@@ -269,31 +300,19 @@
     
         <li class="main active"><a href="#build-reference">Build Reference</a></li>
         
-            <li><a href="#build-requirements">Build Requirements</a>
-            
-            </li>
-        
-            <li><a href="#cross-compilation">Cross-Compilation</a>
-            
-            </li>
-        
-            <li><a href="#build-binary">Build Binary</a>
+            <li><a href="#basic-builds">Basic Builds</a>
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#build-dependencies">Build Dependencies</a><!--
+                <li><a href="#basic-build-requirements">Basic Build Requirements</a><!--
                 -->
                 </li>
                 
-                <li><a href="#basic-build">Basic Build</a><!--
+                <li><a href="#basic-build-targets">Basic Build Targets</a><!--
                 -->
                 </li>
                 
-                <li><a href="#binary-size">Binary Size</a><!--
-                -->
-                </li>
-                
-                <li><a href="#build-all">Build All</a><!--
+                <li><a href="#basic-build-options">Basic Build Options</a><!--
                 -->
                 </li>
                 
@@ -301,19 +320,19 @@
             
             </li>
         
-            <li><a href="#build-packages">Build Packages</a>
+            <li><a href="#advanced-builds">Advanced Builds</a>
             
                 <ul class="nav nav-stacked">
                 
-                <li><a href="#build-tarballs">Build Tarballs</a><!--
+                <li><a href="#advanced-build-requirements">Advanced Build Requirements</a><!--
                 -->
                 </li>
                 
-                <li><a href="#build-rpms">Build RPMs</a><!--
+                <li><a href="#advanced-build-targets">Advanced Build Targets</a><!--
                 -->
                 </li>
                 
-                <li><a href="#build-debs">Build DEBs</a><!--
+                <li><a href="#advanced-build-options">Advanced Build Options</a><!--
                 -->
                 </li>
                 
@@ -330,12 +349,124 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="build-reference">Build Reference</h1>
+<h1 id="build-reference">Build Reference<a class="headerlink" href="#build-reference" title="Permanent link">&para;</a></h1>
 <p>How to build REX-Ray</p>
 <hr />
-<h2 id="build-requirements">Build Requirements</h2>
+<h2 id="basic-builds">Basic Builds<a class="headerlink" href="#basic-builds" title="Permanent link">&para;</a></h2>
+<p>The following one-line command is the quickest, simplest, and most
+deterministic approach to building REX-Ray:</p>
+<pre><code class="bash">$ git clone https://github.com/codedellemc/rexray &amp;&amp; make -C rexray
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>The above <code>make</code> command defaults to the <code>docker-build</code> target only if
+Docker is detected and running on a host, otherwise the <code>build</code> target is
+used. For more information about the <code>build</code> target, please see the
+<a href="#advanced-builds">Advanced Builds</a> section.</p>
+</div>
+<h3 id="basic-build-requirements">Basic Build Requirements<a class="headerlink" href="#basic-build-requirements" title="Permanent link">&para;</a></h3>
+<p>Building REX-Ray with Docker has the following requirements:</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operating System</td>
+<td>Linux, OS X</td>
+</tr>
+<tr>
+<td><a href="https://www.docker.com/">Docker</a></td>
+<td>&gt;=1.11</td>
+</tr>
+<tr>
+<td><a href="https://www.gnu.org/software/make/">GNU Make</a></td>
+<td>&gt;=3.80</td>
+</tr>
+<tr>
+<td><a href="https://git-scm.com/">Git</a></td>
+<td>&gt;= 1.7</td>
+</tr>
+</tbody>
+</table>
+<p>OS X ships with a very old version of GNU Make, and a package manager like
+<a href="http://brew.sh/">Homebrew</a> can be used to install the required version.</p>
+<h3 id="basic-build-targets">Basic Build Targets<a class="headerlink" href="#basic-build-targets" title="Permanent link">&para;</a></h3>
+<p>The following targets are available when building REX-Ray with Docker:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docker-build</code></td>
+<td>Builds REX-Ray inside a Docker container.</td>
+</tr>
+<tr>
+<td><code>docker-test</code></td>
+<td>Executes all of the REX-Ray tests inside the container.</td>
+</tr>
+<tr>
+<td><code>docker-clean</code></td>
+<td>This target stops and removes the default container used for REX-Ray builds. The name of the default container is <code>build-rexray</code>.</td>
+</tr>
+<tr>
+<td><code>docker-clobber</code></td>
+<td>This target stops and removes all Docker containers that have a name that matches the name of the configured container prefix (default prefix is <code>build-rexray</code>).</td>
+</tr>
+<tr>
+<td><code>docker-list</code></td>
+<td>Lists all Docker containers that have a name that matches the name of the configured prefix (default prefix is <code>build-rexray</code>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="basic-build-options">Basic Build Options<a class="headerlink" href="#basic-build-options" title="Permanent link">&para;</a></h3>
+<p>The following options (via environment variables) can be used to influence
+how REX-Ray is built with Docker:</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DRIVERS</code></td>
+<td>This variable can be set to a space-delimited list of driver names in order to indicate which storage platforms to support. For example, the command <code>$ DRIVERS="ebs scaleio" make docker-build</code> would build REX-Ray for only the EBS and ScaleIO storage platforms.</td>
+</tr>
+<tr>
+<td><code>DBUILD_ONCE</code></td>
+<td>When set to <code>1</code>, this environment variable instructs the Makefile to create a temporary, one-time use container for the subsequent build. The container is removed upon a successful build. If the build fails the container is not removed. This is because Makefile error logic is lacking. However, <code>make docker-clobber</code> can be used to easily clean up these containers. The containers will follow a given pattern using the container prefix (<code>build-rexray</code> is the default prefix value). The one-time containers use <code>PREFIX-EPOCH</code>. For example, <code>build-rexray-1474691232</code>.</td>
+</tr>
+<tr>
+<td><code>DGOOS</code></td>
+<td>This sets the OS target for which to build the REX-Ray binaries. Valid values are <code>linux</code> and <code>darwin</code>. If omitted the host OS value returned from <code>uname -s</code> is used instead.</td>
+</tr>
+<tr>
+<td><code>DLOCAL_IMPORTS</code></td>
+<td>Specify a list of space-delimited import paths that will be copied from the host OS's <code>GOPATH</code> into the container build's vendor area, overriding the dependency code that would normally be fetched by Glide.<br/><br/>For example, the project's <code>glide.yaml</code> file might specify to build REX-Ray with libStorage v0.2.1. However, the following command will build REX-Ray using the libStorage sources on the host OS at <code>$GOPATH/src/github.com/codedellemc/libstorage</code>:<br/><br/><pre lang="bash">$ DLOCAL_IMPORTS=github.com/codedellemc/libstorage make docker-build</pre>Using local sources can sometimes present a problem due to missing dependencies. Please see the next environment variable for instructions on how to overcome this issue.</td>
+</tr>
+<tr>
+<td><code>DGLIDE_YAML</code></td>
+<td>Specify a file that will be used for the container build in place of the standard <code>glide.yaml</code> file.<br/><br/>This is necessary for occasions when sources injected into the build via the <code>DLOCAL_IMPORTS</code> variable import packages that are not imported by the package specified in the project's standard <code>glide.yaml</code> file.<br/><br/>For example, if <code>glide.yaml</code> specifies that REX-Ray depends upon AWS SDK v1.2.2, but <code>DLOCAL_IMPORTS</code> specifies the value <code>github.com/aws/aws-sdk-go</code> and the AWS SDK source code on the host includes a new dependency not present in the v1.2.2 version, Glide will not fetch the new dependency when doing the container build.<br/><br/>So it may be necessary to use <code>DGLIDE_YAML</code> to provide a superset of the project's standard <code>glide.yaml</code> file which also includes the dependencies necessary to build the packages specified in <code>DLOCAL_IMPORTS</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="advanced-builds">Advanced Builds<a class="headerlink" href="#advanced-builds" title="Permanent link">&para;</a></h2>
+<p>While building REX-Ray with Docker is simple, it ultimately relies on the
+same <code>Makefile</code> included in the REX-Ray repository and so it's entirely
+possible (and often desirable) to build REX-Ray directly.</p>
+<h3 id="advanced-build-requirements">Advanced Build Requirements<a class="headerlink" href="#advanced-build-requirements" title="Permanent link">&para;</a></h3>
 <p>This project has very few build requirements, but there are still one or two
-items of which to be aware. Also, please note that these are the requirements to
+items of which to be aware. Also, please note that this are the requirements to
 <em>build</em> REX-Ray, not run it.</p>
 <table>
 <thead>
@@ -357,222 +488,90 @@ items of which to be aware. Also, please note that these are the requirements to
 <td><a href="https://www.gnu.org/software/make/">GNU Make</a></td>
 <td>&gt;=3.80</td>
 </tr>
+<tr>
+<td><a href="https://glide.sh/">Glide</a></td>
+<td>&gt;=0.10</td>
+</tr>
+<tr>
+<td><a href="https://developer.apple.com/library/ios/technotes/tn2339/_index.html">X-Code Command Line Tools (OS X only)</a></td>
+<td>&gt;= OS X 10.9</td>
+</tr>
+<tr>
+<td>Linux Kernel Headers (Linux only)</td>
+<td>&gt;=Linux Kernel 3.13</td>
+</tr>
+<tr>
+<td><a href="https://gcc.gnu.org/">GNU C Compiler</a> (Linux only)</td>
+<td>&gt;= 4.8</td>
+</tr>
+<tr>
+<td><a href="https://www.perl.org/">Perl</a></td>
+<td>&gt;= 5.0</td>
+</tr>
+<tr>
+<td><a href="https://git-scm.com/">Git</a></td>
+<td>&gt;= 1.7</td>
+</tr>
 </tbody>
 </table>
 <p>OS X ships with a very old version of GNU Make, and a package manager like
 <a href="http://brew.sh/">Homebrew</a> can be used to install the required version.</p>
-<h2 id="cross-compilation">Cross-Compilation</h2>
-<p>This project's <a href="https://github.com/emccode/rexray/blob/master/Makefile"><code>Makefile</code></a>
-is configured by default to build for a Linux x86_64 target, but
-cross-compilation <em>is</em> supported. Therefore the build environment should be
-configured to support cross-compilation. Please take a minute to read
-this <a href="http://dave.cheney.net/2015/08/22/cross-compilation-with-go-1-5">blog post</a>
-regarding cross-compilation with Go &gt;=1.5.</p>
-<h2 id="build-binary">Build Binary</h2>
-<p>Building from source is pretty simple as all steps, including fetching
-dependencies (as well as fetching the tool that fetches dependencies), are
-configured as part of the included <code>Makefile</code>.</p>
-<h3 id="build-dependencies">Build Dependencies</h3>
-<p>The <code>make deps</code> command should be executed prior to any other targets in order
-to ensure the necessary dependencies are available.</p>
-<pre><code class="sh">$ make deps
-target: deps
-  ...installing glide...SUCCESS!
-  ...glide up...[WARN] Only resolving dependencies for the current OS/Arch
-[INFO] Downloading dependencies. Please wait...
-[INFO] Fetching updates for github.com/Sirupsen/logrus.
-[INFO] Fetching updates for golang.org/x/net.
-[INFO] Fetching updates for github.com/spf13/cobra.
-[INFO] Fetching updates for github.com/akutz/gofig.
-[INFO] Fetching updates for github.com/emccode/libstorage.
-[INFO] Fetching updates for gopkg.in/yaml.v1.
-[INFO] Fetching updates for gopkg.in/yaml.v2.
-[INFO] Fetching updates for google.golang.org/api.
-[INFO] Fetching updates for github.com/go-yaml/yaml.
-[INFO] Fetching updates for github.com/akutz/gotil.
-[INFO] Fetching updates for github.com/spf13/pflag.
-[INFO] Fetching updates for github.com/akutz/golf.
-[INFO] Fetching updates for github.com/akutz/goof.
-[INFO] Setting version for github.com/akutz/golf to v0.1.1.
-[INFO] Setting version for gopkg.in/yaml.v1 to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
-[INFO] Setting version for github.com/go-yaml/yaml to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
-[INFO] Setting version for github.com/spf13/cobra to 363816bb13ce1710460c2345017fd35593cbf5ed.
-[INFO] Setting version for google.golang.org/api to fd081149e482b10c55262756934088ffe3197ea3.
-[INFO] Setting version for github.com/akutz/goof to v0.1.0.
-[INFO] Setting version for github.com/akutz/gofig to v0.1.4.
-[INFO] Setting version for github.com/spf13/pflag to b084184666e02084b8ccb9b704bf0d79c466eb1d.
-[INFO] Setting version for github.com/Sirupsen/logrus to feature/logrus-aware-types.
-[INFO] Setting version for gopkg.in/yaml.v2 to b4a9f8c4b84c6c4256d669c649837f1441e4b050.
-[INFO] Setting version for github.com/akutz/gotil to v0.1.0.
-[INFO] Setting version for github.com/emccode/libstorage to v0.1.3.
-[INFO] Resolving imports
-[INFO] Fetching github.com/spf13/viper into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/spf13/viper to support/rexray.
-[INFO] Fetching github.com/kardianos/osext into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/kardianos/osext to master.
-[INFO] Fetching github.com/gorilla/context into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/gorilla/mux into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/gorilla/handlers into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/cpuguy83/go-md2man/md2man into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/inconshreveable/mousetrap into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/BurntSushi/toml into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/kr/pretty into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/magiconair/properties into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/mitchellh/mapstructure into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/spf13/cast into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/spf13/jwalterweatherman into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching gopkg.in/fsnotify.v1 into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/emccode/goisilon into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/emccode/goisilon to f9b53f0aaadb12a26b134830142fc537f492cb13.
-[INFO] Fetching github.com/emccode/goscaleio into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/emccode/goscaleio to 53ea76f52205380ab52b9c1f4ad89321c286bb95.
-[INFO] Fetching github.com/appropriate/go-virtualboxclient/vboxwebsrv into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/appropriate/go-virtualboxclient to e0978ab2ed407095400a69d5933958dd260058cd.
-[INFO] Fetching github.com/russross/blackfriday into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/kr/text into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching golang.org/x/sys/unix into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/cesanta/ucl into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/cesanta/validate-json/schema into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/shurcooL/sanitized_anchor_name into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/asaskevich/govalidator into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Fetching github.com/jteeuwen/go-bindata into /Users/akutz/Projects/go/src/github.com/emccode/rexray/vendor
-[INFO] Setting version for github.com/jteeuwen/go-bindata to feature/md5checksum.
-[INFO] Downloading dependencies. Please wait...
-[INFO] Setting references for remaining imports
-[INFO] Versions did not change. Skipping glide.lock update.
-[INFO] Project relies on 38 dependencies.
-SUCCESS!
-  ...go get...SUCCESS!
-cd vendor/github.com/emccode/libstorage &amp;&amp; make api/api_generated.go &amp;&amp; cd -
-echo generating api/api_generated.go
-generating api/api_generated.go
-/Users/akutz/Projects/go/src/github.com/emccode/rexray
-cd vendor/github.com/emccode/libstorage &amp;&amp; make api/server/executors/executors_generated.go &amp;&amp; cd -
-GOOS=darwin GOARCH=amd64 go install ./api/types
-GOOS=darwin GOARCH=amd64 go install ./api/context
-GOOS=darwin GOARCH=amd64 go install ./api/utils
-GOOS=darwin GOARCH=amd64 go install ./api/registry
-GOOS=darwin GOARCH=amd64 go install ./api/utils/config
-GOOS=darwin GOARCH=amd64 go install ./imports/config
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/isilon
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/isilon/executor
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/scaleio
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/scaleio/executor
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vbox
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vbox/executor
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vfs
-GOOS=darwin GOARCH=amd64 go install ./drivers/storage/vfs/executor
-GOOS=darwin GOARCH=amd64 go install ./imports/executors
-GOOS=darwin GOARCH=amd64 go install ./cli/lsx
-GOOS=darwin GOARCH=amd64 go install ./cli/lsx/lsx-darwin
-/Users/akutz/Projects/go/bin/go-bindata -md5checksum -pkg executors -prefix api/server/executors/bin -o api/server/executors/executors_generated.go api/server/executors/bin/...
-/Users/akutz/Projects/go/src/github.com/emccode/rexray
-</code></pre>
-
-<h3 id="basic-build">Basic Build</h3>
-<p>The most basic build can be achieved by simply typing <code>make</code> from the project's
-root directory. For what it's worth, executing <code>make</code> sans arguments is the
-same as executing <code>make install</code> for this project's <code>Makefile</code>.</p>
-<pre><code class="sh">$ make
-SemVer: 0.4.0-rc4+10+dirty
-RpmVer: 0.4.0+rc4+10+dirty
-Branch: release/0.4.0-rc4
-Commit: d2f0283c7fed29ad0a142a6a51624828893f5db5
-Formed: Wed, 15 Jun 2016 16:53:44 CDT
-
-target: fmt
-  ...formatting rexray...SUCCESS!
-target: install
-  ...installing rexray Darwin-x86_64...SUCCESS!
-
-The REX-Ray binary is 40MB and located at:
-
-  /Users/akutz/Projects/go/bin/rexray
-</code></pre>
-
-<h3 id="binary-size">Binary Size</h3>
-<p>Please note that the large size of the binary is due to the Isilon
-storage adapter's dependency on the
-<a href="https://github.com/vmware/govmomi">VMware VMOMI library for Go</a>. The types
-definition source in that package compiles to a 45MB, uncompressed archive.
-Efforts are being made to figure out an alternative to this dependency in order
-to reduce the binary size, even if it means creating VMware SOAP messages from
-scratch.</p>
-<h3 id="build-all">Build All</h3>
-<p>In order to build all versions of the binary type the following:</p>
-<pre><code class="sh">$ make build-all
-SemVer: 0.4.0-rc4+10
-RpmVer: 0.4.0+rc4+10
-Branch: release/0.4.0-rc4
-Commit: d2f0283c7fed29ad0a142a6a51624828893f5db5
-Formed: Wed, 15 Jun 2016 16:42:33 CDT
-
-target: fmt
-  ...formatting rexray...SUCCESS!
-target: build
-  ...building rexray Linux-x86_64...SUCCESS!
-
-The REX-Ray binary is 40MB and located at:
-
-  .build/bin/Linux-x86_64/rexray
-</code></pre>
-
-<h2 id="build-packages">Build Packages</h2>
-<p>The <code>Makefile</code> also includes targets that assist in the creation of
-distributable packages using the produced artifact.</p>
-<h3 id="build-tarballs">Build Tarballs</h3>
-<p>The <code>Makefile</code>'s <code>build</code> and <code>build-all</code> targets will not only build the binary
-in place, but it will also compress the binary as a tarball so it's ready for
-deployment. For example, after the <code>make build-all</code> above, this is the contents
-of the directory <code>.build/deploy</code>:</p>
-<pre><code class="sh">$ ls .build/deploy
-latest/
-Linux-x86_64/
-</code></pre>
-
-<p>Looking inside the directory <code>.build/deploy/Linux-x86_64</code> reveals:</p>
-<pre><code class="sh">$ ls .build/deploy/Linux-x86_64/
-rexray-Linux-x86_64-0.4.0-rc4+10.tar.gz
-</code></pre>
-
-<h3 id="build-rpms">Build RPMs</h3>
-<p>The <code>Makefile</code>'s <code>rpm-all</code> target will package the binary as
-architecture-specific RPMs when executed on a system that supports the RPM
-development environment:</p>
-<pre><code class="sh">$ make rpm-all
-target: rpm
-  ...building rpm x86_64...SUCCESS!
-
-The REX-Ray RPM is 11MB and located at:
-
-  .build/deploy/Linux-x86_64/rexray-0.4.0+rc4+10-1.x86_64.rpm
-</code></pre>
-
-<h3 id="build-debs">Build DEBs</h3>
-<p>The <code>Makefile</code>'s <code>deb-all</code> target will package the binary as
-architecture-specific DEBs when executed on a system that supports the Alien
-RPM-to-DEB conversion tools:</p>
-<pre><code class="sh">$ make deb-all
-target: deb
-  ...building deb x86_64...SUCCESS!
-
-The REX-Ray DEB is 9MB and located at:
-
-  .build/deploy/Linux-x86_64/rexray_0.4.0+rc4+10-1_amd64.deb
-</code></pre>
-
-<h2 id="version-file">Version File</h2>
+<p>It's also possible to use GCC as the Cgo compiler for OS X or to use Clang on
+Linux, but by default Clang is used on OS X and GCC on Linux.</p>
+<h3 id="advanced-build-targets">Advanced Build Targets<a class="headerlink" href="#advanced-build-targets" title="Permanent link">&para;</a></h3>
+<p>The following targets are available when building REX-Ray directly:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>build</code></td>
+<td>Builds REX-Ray.</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>Executes all of the REX-Ray tests.</td>
+</tr>
+<tr>
+<td><code>clean</code></td>
+<td>This target removes all of the source file markers.</td>
+</tr>
+<tr>
+<td><code>clobber</code></td>
+<td>This is the same as <code>clean</code> but also removes any produced artifacts.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="advanced-build-options">Advanced Build Options<a class="headerlink" href="#advanced-build-options" title="Permanent link">&para;</a></h3>
+<p>The following options (via environment variables) can be used to influence
+how REX-Ray is built:</p>
+<table>
+<thead>
+<tr>
+<th>Environment Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DRIVERS</code></td>
+<td>This variable can be set to a space-delimited list of driver names in order to indicate which storage platforms to support. For example, the command <code>$ DRIVERS="ebs scaleio" make build</code> would build REX-Ray for only the EBS and ScaleIO storage platforms.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="version-file">Version File<a class="headerlink" href="#version-file" title="Permanent link">&para;</a></h2>
 <p>There is a file at the root of the project named <code>VERSION</code>. The file contains
 a single line with the <em>target</em> version of the project in the file. The version
 follows the format:</p>
 <p><code>(?&lt;major&gt;\d+)\.(?&lt;minor&gt;\d+)\.(?&lt;patch&gt;\d+)(-rc\d+)?</code></p>
-<p>For example, during active development of version <code>0.4.0</code> the file would
-contain the version <code>0.4.0</code>. When it's time to create <code>0.4.0</code>'s first
-release candidate the version in the file will be changed to <code>0.4.0-rc1</code>. And
-when it's time to release <code>0.4.0</code> the version is changed back to <code>0.4.0</code>.</p>
-<p>Please note that we've discussed making the actively developed version the
-targeted version with a <code>-dev</code> suffix, but trying this resulted in confusion
-for the RPM and DEB package managers when using <code>unstable</code> releases.</p>
+<p>For example, during active development of version <code>0.1.0</code> the file would
+contain the version <code>0.1.0</code>. When it's time to create <code>0.1.0</code>'s first
+release candidate the version in the file will be changed to <code>0.1.0-rc1</code>. And
+when it's time to release <code>0.1.0</code> the version is changed back to <code>0.1.0</code>.</p>
 <p>So what's the point of the file if it's basically duplicating the utility of a
 tag? Well, the <code>VERSION</code> file in fact has two purposes:</p>
 <ol>

@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/user-guide/storage-providers/">
-        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/storage-providers/">
+        <link rel="shortcut icon" href="favicon.png">
         
 
 	<title>Storage Providers - REX-Ray</title>
@@ -16,6 +16,7 @@
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../css/emccode.css" rel="stylesheet">
         <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/hX.css" rel="stylesheet">
 
@@ -91,7 +92,19 @@
                         </li>
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -127,7 +140,25 @@
                     
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     
@@ -246,7 +277,7 @@
                 </li>
                 
                 <li>
-                    <a href="https://github.com/emccode/rexray.git">
+                    <a href="https://github.com/codedellemc/rexray.git">
                         
                             <i class="fa fa-github"></i>
                         
@@ -277,32 +308,18 @@
             
             </li>
         
-            <li><a href="#coming-soon">Coming Soon</a>
-            
-            </li>
-        
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="storage-providers">Storage Providers</h1>
+<h1 id="storage-providers">Storage Providers<a class="headerlink" href="#storage-providers" title="Permanent link">&para;</a></h1>
 <p>Connecting storage and platforms...</p>
 <hr />
-<h2 id="overview">Overview</h2>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>The list of storage providers supported by REX-Ray now mirrors the validated
 storage platform table from the libStorage project.</p>
-<div class="admonition note">
-<p class="admonition-title">note</p>
-<p>The initial REX-Ray 0.4.x release omits support for several,
-previously verified storage platforms. These providers will be
-reintroduced incrementally, beginning with 0.4.1. If an absent driver
-prevents the use of REX-Ray, please continue to use 0.3.3 until such time
-the storage platform is introduced in REX-Ray 0.4.x. Instructions on how
-to install REX-Ray 0.3.3 may be found
-<a href="../installation/#rex-ray-033">here</a>.</p>
-</div>
-<h2 id="supported-providers">Supported Providers</h2>
+<h2 id="supported-providers">Supported Providers<a class="headerlink" href="#supported-providers" title="Permanent link">&para;</a></h2>
 <p>The following storage providers and platforms are supported by REX-Ray.</p>
 <table>
 <thead>
@@ -313,45 +330,36 @@ to install REX-Ray 0.3.3 may be found
 </thead>
 <tbody>
 <tr>
-<td>EMC</td>
-<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#scaleio">ScaleIO</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#isilon">Isilon</a></td>
-</tr>
-<tr>
-<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox">Oracle VirtualBox</a></td>
-<td>Virtual Media</td>
-</tr>
-</tbody>
-</table>
-<h2 id="coming-soon">Coming Soon</h2>
-<p>Support for the following storage providers will be reintroduced in upcoming
-releases:</p>
-<table>
-<thead>
-<tr>
-<th>Provider</th>
-<th>Storage Platform(s)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
 <td>Amazon EC2</td>
-<td>EBS</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs">EBS</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs">EFS</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-s3fs">S3FS</a></td>
 </tr>
 <tr>
-<td>Google Compute Engine (GCE)</td>
-<td>Disk</td>
+<td>Ceph</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#ceph-rbd">RBD</a></td>
 </tr>
 <tr>
-<td>Open Stack</td>
-<td>Cinder</td>
+<td>Dell EMC</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-scaleio">ScaleIO</a>, <a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-isilon">Isilon</a></td>
 </tr>
 <tr>
-<td>Rackspace</td>
-<td>Cinder</td>
+<td>DigitalOcean</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#do-block-storage">Block Storage</a></td>
 </tr>
 <tr>
-<td>EMC</td>
-<td>XtremIO, VMAX</td>
+<td>FittedCloud</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ebs-optimizer">EBS Optimizer</a></td>
+</tr>
+<tr>
+<td>Google</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk">GCE Persistent Disk</a></td>
+</tr>
+<tr>
+<td>Microsoft</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud">Azure Unmanaged Disk</a></td>
+</tr>
+<tr>
+<td>VirtualBox</td>
+<td><a href="http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox">Virtual Media</a></td>
 </tr>
 </tbody>
 </table></div>

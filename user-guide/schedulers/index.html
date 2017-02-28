@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/emccode/rexray/user-guide/schedulers/">
-        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/schedulers/">
+        <link rel="shortcut icon" href="favicon.png">
         
 
 	<title>Schedulers - REX-Ray</title>
@@ -16,6 +16,7 @@
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../css/emccode.css" rel="stylesheet">
         <link href="../../css/emccode-font.css" rel="stylesheet">
         <link href="../../css/hX.css" rel="stylesheet">
 
@@ -91,7 +92,19 @@
                         </li>
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -127,7 +140,25 @@
                     
                     
                         <li >
+                            <a href="../docker-plugins/">Docker Plug-ins</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
                             <a href="../applications/">Applications</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../demo/">Demo</a>
+                        </li>
+                    
+                    
+                    
+                        <li >
+                            <a href="../troubleshooting/">Troubleshooting</a>
                         </li>
                     
                     
@@ -240,13 +271,13 @@
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../applications/">
+                    <a rel="prev" href="../docker-plugins/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
                 
                 <li>
-                    <a href="https://github.com/emccode/rexray.git">
+                    <a href="https://github.com/codedellemc/rexray.git">
                         
                             <i class="fa fa-github"></i>
                         
@@ -305,6 +336,34 @@
             
             </li>
         
+            <li><a href="#kubernetes">Kubernetes</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#pre-requisites">Pre-Requisites</a><!--
+                -->
+                </li>
+                
+                <li><a href="#installation">Installation</a><!--
+                -->
+                </li>
+                
+                <li><a href="#pods-and-persistent-volumes">Pods and Persistent Volumes</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#pod-with-rex-ray-volume">Pod with REX-Ray volume</a></li>
+                    
+                    <li><a href="#rex-ray-persistentvolume">REX-Ray PersistentVolume</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                </ul>
+            
+            </li>
+        
             <li><a href="#mesos">Mesos</a>
             
                 <ul class="nav nav-stacked">
@@ -326,16 +385,16 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="schedulers">Schedulers</h1>
+<h1 id="schedulers">Schedulers<a class="headerlink" href="#schedulers" title="Permanent link">&para;</a></h1>
 <p>Scheduling storage one resource at a time...</p>
 <hr />
-<h2 id="overview">Overview</h2>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>This page reviews the scheduling systems supported by REX-Ray.</p>
-<h2 id="docker">Docker</h2>
+<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
 <p>The majority of the documentation for the Docker integration driver has been
 <a href="http://libstorage.readthedocs.io/en/stable/user-guide/schedulers/#docker">relocated</a>
 to the libStorage project.</p>
-<h3 id="external-access">External Access</h3>
+<h3 id="external-access">External Access<a class="headerlink" href="#external-access" title="Permanent link">&para;</a></h3>
 <p>By default, REX-Ray's embedded Docker Volume Plug-in endpoint handles
 requests from the local Docker service via a UNIX socket. Doing so
 restricts the endpoint to the localhost, increasing network security by removing
@@ -356,15 +415,15 @@ will not know about the Volume Plug-in endpoint as there is no longer a UNIX
 socket file in the directory the Docker service continually scans.</p>
 <p>On the local system, and in fact on all systems where the Docker service needs
 to know about this externally accessible Volume Plug-in endpoint, a spec file
-must be created at <code>/etc/docker/plugins/rexray.spec</code>. Inside this file simply
+must be created at <code>/etc/docker/plug-ins/rexray.spec</code>. Inside this file simply
 include a single line with the network address of the endpoint. For example:</p>
 <pre><code class="bash">tcp://192.168.56.20:7981
 </code></pre>
 
-<p>With a spec file located at <code>/etc/docker/plugins/rexray.spec</code> that contains
+<p>With a spec file located at <code>/etc/docker/plug-ins/rexray.spec</code> that contains
 the above contents, Docker instances will query the Volume Plug-in endpoint at
 <code>tcp://192.168.56.20:7981</code> when volume requests are received.</p>
-<h3 id="volume-management">Volume Management</h3>
+<h3 id="volume-management">Volume Management<a class="headerlink" href="#volume-management" title="Permanent link">&para;</a></h3>
 <p>The <code>volume</code> sub-command for Docker 1.12+ should look similar to the following:</p>
 <pre><code class="sh">$ docker volume
 
@@ -379,7 +438,7 @@ Commands:
   rm                       Remove a volume
 </code></pre>
 
-<h4 id="list-volumes">List Volumes</h4>
+<h4 id="list-volumes">List Volumes<a class="headerlink" href="#list-volumes" title="Permanent link">&para;</a></h4>
 <p>The list command reviews a list of available volumes that have been discovered
 via Docker Volume Plug-in endpoints such as REX-Ray. Each volume name is
 expected to be unique. Thus volume names must also be unique across all
@@ -394,7 +453,7 @@ scaleio             Volume-001
 virtualbox          vbox1
 </code></pre>
 
-<h4 id="inspect-volume">Inspect Volume</h4>
+<h4 id="inspect-volume">Inspect Volume<a class="headerlink" href="#inspect-volume" title="Permanent link">&para;</a></h4>
 <p>The inspect command can be used to retrieve details about a volume related to
 both Docker and the underlying storage platform. The fields listed under
 <code>Status</code> are all generated by REX-Ray, including <code>Size in GB</code>, <code>Volume Type</code>,
@@ -426,7 +485,7 @@ configured with REX-Ray.</p>
 ]
 </code></pre>
 
-<h4 id="create-volume">Create Volume</h4>
+<h4 id="create-volume">Create Volume<a class="headerlink" href="#create-volume" title="Permanent link">&para;</a></h4>
 <p>Docker's <code>volume create</code> command enables the creation of new volumes on the
 underlying storage platform. Newly created volumes are available immediately
 to be attached and mounted. The <code>volume create</code> command also supports the CLI
@@ -475,17 +534,184 @@ vbox2
 </tr>
 </tbody>
 </table>
-<h4 id="remove-volume">Remove Volume</h4>
+<h4 id="remove-volume">Remove Volume<a class="headerlink" href="#remove-volume" title="Permanent link">&para;</a></h4>
 <p>A volume may be removed once it is no longer in use by a container, running or
 otherwise. The process of removing a container actually causes the volume to
 be removed if that is the last container to leverage said volume:</p>
 <pre><code class="sh">$ docker volume rm vbox2
 </code></pre>
 
-<h3 id="containers-with-volumes">Containers with Volumes</h3>
+<h3 id="containers-with-volumes">Containers with Volumes<a class="headerlink" href="#containers-with-volumes" title="Permanent link">&para;</a></h3>
 <p>Please review the <a href="../applications/">Applications</a> section for information on
 configuring popular applications with persistent storage via Docker and REX-Ray.</p>
-<h2 id="mesos">Mesos</h2>
+<h2 id="kubernetes">Kubernetes<a class="headerlink" href="#kubernetes" title="Permanent link">&para;</a></h2>
+<p>REX-Ray can be integrated with <a href="https://kubernetes.io/">Kubernetes</a> allowing
+pods to consume data stored on volumes that are orchestrated by REX-Ray. Using
+Kubernetes' <a href="https://kubernetes.io/docs/user-guide/volumes/#flexvolume">FlexVolume</a>
+plug-in, REX-Ray can provide uniform access to storage operatations such as attach,
+mount, detach, and unmount for any configured storage provider.  REX-Ray provides an
+adapter script called <code>FlexRex</code> which integrates with the FlexVolume to interact
+with the backing storage system.</p>
+<h3 id="pre-requisites">Pre-Requisites<a class="headerlink" href="#pre-requisites" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://kubernetes.io/">Kubernetes</a> 1.5 or higher</li>
+<li>REX-Ray 0.7 or higher</li>
+<li><a href="https://stedolan.github.io/jq/">jq binary</a></li>
+</ul>
+<h3 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h3>
+<p>It is assumed that you have a Kubernetes cluster at your disposal. On each
+Kubernetes node (running the kubelet), do the followings:</p>
+<ul>
+<li>Install and configure the REX-Ray binary as prescribed in the
+<a href="../installation/"><em>Installation</em></a> section.  </li>
+<li>Next, validate the REX-Ray installation by running <code>rexray volume ls</code>
+as shown in the the following:</li>
+</ul>
+<pre><code># rexray volume ls
+ID                Name   Status     Size
+925def7200000006  vol01  available  32
+925def7100000005  vol02  available  32
+</code></pre>
+
+<p>If there is no issue, you should see an output, similar to above, which shows
+a list of previously created volumes. If instead you get an error,<br />
+ensure that REX-Ray is properly configured for the intended storage system.</p>
+<p>Next, using the REX-Ray binary,  install the <code>FlexRex</code> adapter script on the node
+as shown below.  </p>
+<pre><code># rexray flexrex install
+</code></pre>
+
+<p>This should produce the following output showing that the FlexRex script is
+installed successfully:</p>
+<pre><code>Path                                                                        Installed  Modified
+/usr/libexec/kubernetes/kubelet-plug-ins/volume/exec/rexray~flexrex/flexrex  true       false
+</code></pre>
+
+<p>The path shown above is the default location where the FlexVolume plug-in will
+expect to find its integration code.  If you are not using the default location
+with FlexVolume, you can install the  <code>FlexRex</code> in an arbitrary location using:</p>
+<pre><code># rexray flexrex install --path /opt/plug-ins/rexray~flexrex/flexrex
+</code></pre>
+
+<p>Next, restart the kublet process on the node:</p>
+<pre><code># systemctl restart kubelet
+</code></pre>
+
+<p>You can validate that the FlexRex script has been started successfully by searching
+the kubelet log for an entry similar to the following:</p>
+<pre><code>I0208 10:56:57.412207    5348 plug-ins.go:350] Loaded volume plug-in &quot;rexray/flexrex&quot;
+</code></pre>
+
+<h3 id="pods-and-persistent-volumes">Pods and Persistent Volumes<a class="headerlink" href="#pods-and-persistent-volumes" title="Permanent link">&para;</a></h3>
+<p>You can now deploy pods and persistent volumes that use storage systems orchestrated
+by REX-Ray.  It is worth pointing out that the Kubernetes FlexVolme plug-in can only
+attach volumes that already exist in the storge system.  Any volume that is to be used
+by a Kubernetes resource must be listed in a <code>rexray volume ls</code> command.</p>
+<h4 id="pod-with-rex-ray-volume">Pod with REX-Ray volume<a class="headerlink" href="#pod-with-rex-ray-volume" title="Permanent link">&para;</a></h4>
+<p>The following YAML file shows the definition of a pod that uses FlexRex to attach a volume
+to be used by the pod.</p>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-0
+spec:
+  containers:
+  - image: gcr.io/google_containers/test-webserver
+    name: pod-0
+    volumeMounts:
+    - mountPath: /test-pd
+      name: vol-0
+  volumes:
+  - name: vol-0
+    flexVolume:
+      driver: rexray/flexrex
+      fsType: ext4
+      options:
+        volumeID: test-vol-1
+        forceAttach: &quot;true&quot;
+        forceAttachDelay: &quot;15&quot;
+</code></pre>
+
+<p>Notice in the section under <code>flexVolume</code> the name of the driver attribute
+<code>driver: rexray/flexrex</code>. This is used by the FlexVolume plug-in to launch REX-Ray.
+Additional options can be provided in the <code>options:</code> as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Desription</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>volumeID</td>
+<td>Reference name of the volume in REX-Ray</td>
+</tr>
+<tr>
+<td>forceAttach</td>
+<td>When true ensures the volume is availble before attahing (optinal, defaults to false)</td>
+</tr>
+<tr>
+<td>forceAttachDelay</td>
+<td>Total amount of time (in sec) to attempt attachment with 5 sec interval between tries (optional)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="rex-ray-persistentvolume">REX-Ray PersistentVolume<a class="headerlink" href="#rex-ray-persistentvolume" title="Permanent link">&para;</a></h4>
+<p>The next example shows a YAML definition of Persistent Volume (PV) managed
+by REX-Ray.</p>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: vol01
+spec:
+  capacity:
+    storage: 32Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  flexVolume:
+    driver: rexray/flexrex
+    fsType: xfs
+    options:
+      volumeID: redis01
+      forceAttach: &quot;true&quot;
+      forceAttachDelay: &quot;15&quot;
+</code></pre>
+
+<p>The next YAML shows a <code>Persistent Volume Claim</code> (PVC) that carves out <code>10Gi</code> out of
+the PV defined above.</p>
+<pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vol01
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+</code></pre>
+
+<p>The claim can then be used by a pod in a YAML definition as shown below:</p>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+spec:
+  containers:
+  - image: gcr.io/google_containers/test-webserver
+    name: pod-1
+    volumeMounts:
+    - mountPath: /test-pd
+      name: vol01
+  volumes:
+  - name: vol01
+    persistentVolumeClaim:
+      claimName: vol01
+</code></pre>
+
+<h2 id="mesos">Mesos<a class="headerlink" href="#mesos" title="Permanent link">&para;</a></h2>
 <p>In Mesos the frameworks are responsible for receiving requests from
 consumers and then proceeding to schedule and manage tasks. While some
 frameworks, like Marathon, are open to run any workload for sustained periods
@@ -505,7 +731,7 @@ two deployment configurations:</p>
 <p>Mesos Containerizer with Marathon</p>
 </li>
 </ol>
-<h3 id="docker-containerizer-with-marathon">Docker Containerizer with Marathon</h3>
+<h3 id="docker-containerizer-with-marathon">Docker Containerizer with Marathon<a class="headerlink" href="#docker-containerizer-with-marathon" title="Permanent link">&para;</a></h3>
 <p>When the framework leverages the Docker containerizer, Docker and REX-Ray
 should both already be configured and working. The following example shows
 how to use Marathon in order to bring an application online with external
@@ -536,10 +762,10 @@ volumes:</p>
 }
 </code></pre>
 
-<h3 id="mesos-containerizer-with-marathon">Mesos Containerizer with Marathon</h3>
+<h3 id="mesos-containerizer-with-marathon">Mesos Containerizer with Marathon<a class="headerlink" href="#mesos-containerizer-with-marathon" title="Permanent link">&para;</a></h3>
 <p>Mesos 0.23+ includes modules that enable extensibility for different
-portions of the architecture. The <a href="https://github.com/emccode/dvdcli">dvdcli</a> and
-<a href="https://github.com/emccode/mesos-module-dvdi">mesos-module-dvdi</a> projects are
+portions of the architecture. The <a href="https://github.com/codedellemc/dvdcli">dvdcli</a> and
+<a href="https://github.com/codedellemc/mesos-module-dvdi">mesos-module-dvdi</a> projects are
 required to enable external volume support with the native containerizer.</p>
 <p>The next example is similar to the one above, except in this instance the
 native containerizer is preferred and volume requests are handled by the

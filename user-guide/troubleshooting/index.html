@@ -6,11 +6,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/applications/">
+        <link rel="canonical" href="https://github.com/codedellemc/rexray/user-guide/troubleshooting/">
         <link rel="shortcut icon" href="favicon.png">
         
 
-	<title>Applications - REX-Ray</title>
+	<title>Troubleshooting - REX-Ray</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -95,16 +95,16 @@
                             <a href="../docker-plugins/">Docker Plug-ins</a>
                         </li>
                     
-                        <li class="active">
-                            <a href="./">Applications</a>
+                        <li >
+                            <a href="../applications/">Applications</a>
                         </li>
                     
                         <li >
                             <a href="../demo/">Demo</a>
                         </li>
                     
-                        <li >
-                            <a href="../troubleshooting/">Troubleshooting</a>
+                        <li class="active">
+                            <a href="./">Troubleshooting</a>
                         </li>
                     
                     </ul>
@@ -145,8 +145,8 @@
                     
                     
                     
-                        <li class="active">
-                            <a href="./">Applications</a>
+                        <li >
+                            <a href="../applications/">Applications</a>
                         </li>
                     
                     
@@ -157,8 +157,8 @@
                     
                     
                     
-                        <li >
-                            <a href="../troubleshooting/">Troubleshooting</a>
+                        <li class="active">
+                            <a href="./">Troubleshooting</a>
                         </li>
                     
                     
@@ -266,12 +266,12 @@
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li >
-                    <a rel="next" href="../docker-plugins/">
+                    <a rel="next" href="../demo/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../demo/">
+                    <a rel="prev" href="../../dev-guide/project-guidelines/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -298,17 +298,61 @@
             <div class="col-md-3"><div id="sidenav" class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#applications">Applications</a></li>
+        <li class="main active"><a href="#troubleshooting">Troubleshooting</a></li>
         
-            <li><a href="#getting-started">Getting Started</a>
+            <li><a href="#solving-problems">Solving problems</a>
+            
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#is-rex-ray-running">Is REX-Ray running?</a><!--
+                -->
+                </li>
+                
+                <li><a href="#is-rex-ray-listening">Is REX-Ray listening?</a><!--
+                -->
+                </li>
+                
+                <li><a href="#is-rex-ray-talking">Is REX-Ray talking?</a><!--
+                -->
+                </li>
+                
+                </ul>
             
             </li>
         
-            <li><a href="#instructions">Instructions</a>
+            <li><a href="#common-errors">Common Errors</a>
             
-            </li>
-        
-            <li><a href="#popular-applications">Popular Applications</a>
+                <ul class="nav nav-stacked">
+                
+                <li><a href="#starting-rex-ray">Starting REX-Ray</a><!--
+                -->
+                </li>
+                
+                <li><a href="#omitted-service-flag">Omitted service flag</a><!--
+                -->
+                </li>
+                
+                <li><a href="#missing-rex-ray-config-file">Missing REX-Ray config file</a><!--
+                -->
+                </li>
+                
+                <li><a href="#invalid-provider-credentials">Invalid provider credentials</a><!--
+                -->
+                </li>
+                
+                <li><a href="#omitted-service-definition">Omitted service definition</a><!--
+                
+                <ul class="nav nav-stacked">
+                    
+                    <li><a href="#console">Console</a></li>
+                    
+                    <li><a href="#service-log">Service Log</a></li>
+                    
+                </ul>
+                -->
+                </li>
+                
+                </ul>
             
             </li>
         
@@ -317,76 +361,114 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="applications">Applications<a class="headerlink" href="#applications" title="Permanent link">&para;</a></h1>
-<p>Persistence for applications in containers.</p>
+<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
+<p>It's not doing what I expected...</p>
 <hr />
-<h2 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
-<p>This tutorial will serve as a generic guide for taking Docker images found on
-<a href="http://hub.docker.com">Docker Hub</a> and utilizing persistent external storage
-via REX-Ray. This should provide guidance for certain applications, but also
-generically so you can add persistence properly to other applications.</p>
-<h2 id="instructions">Instructions<a class="headerlink" href="#instructions" title="Permanent link">&para;</a></h2>
-<p>The following are a set of instructions for investigating an existing container
-image to determine how to properly apply persistence.</p>
-<p>The first step is to determine which application you are looking to deploy, then
-proceed to its <a href="http://hub.docker.com">Docker Hub</a> page. In this example, we
-will be using <a href="https://hub.docker.com/_/postgres/">PostgreSQL on Docker Hub</a>.</p>
-<p>Most application vendors will post their Dockerfile on the main page for that
-given image. Many of them will also make them available by version minimally via
-a download or via Github. Continuing with our PostgreSQL example, we will use
-the <a href="https://github.com/docker-library/postgres/blob/ed23320582f4ec5b0e5e35c99d98966dacbc6ed8/9.3/Dockerfile">Dockerfile for version 9.3</a>
-since it happens to be the default version provided with Ubuntu 14.04.</p>
-<p>Properly written Dockerfiles will include the proper information that separates
-persistent information from the container image and deployed container. This is
-visible when the author of the <code>Dockerfile</code> includes a <code>VOLUME</code> statement to
-define where stateful information should be held.</p>
-<p>Open the <code>Dockerfile</code> and do a search for <code>VOLUME</code> and take note of the
-volumes that will be created for this image. Then we can use REX-Ray or
-<code>Docker</code> to create the external persistent volume for this image. In the
-PostgreSQL 9.3 example, there is a single volume in the Dockerfile:</p>
-<pre><code>VOLUME /var/lib/postgresql/data
+<h2 id="solving-problems">Solving problems<a class="headerlink" href="#solving-problems" title="Permanent link">&para;</a></h2>
+<p>This section details the usual places and methods to look and use when
+investigating a problem.</p>
+<h3 id="is-rex-ray-running">Is REX-Ray running?<a class="headerlink" href="#is-rex-ray-running" title="Permanent link">&para;</a></h3>
+<p>Confirm REX-Ray is running with the following command:</p>
+<pre><code class="shell">$ sudo rexray service status
+
+Active: active (running) since Sun 2017-02-12 02:19:16 UTC; 1 day 16h ago
 </code></pre>
 
-<p>The single path or paths listed refer to the volumes that should be attached
-when running the container. Following this you can create a volume and attach
-it to a container with the <code>-v</code> flag.</p>
-<ul>
-<li><a href="https://hub.docker.com/_/postgres/">PostgreSQL</a>  </li>
-</ul>
-<pre><code>$ docker volume create --driver=rexray --name=postgresql --opt=size=&lt;sizeInGB&gt;
-$ docker run -d -e POSTGRES_PASSWORD=mysecretpassword --volume-driver=rexray \
-    -v data:/var/lib/postgresql/data postgres
+<h3 id="is-rex-ray-listening">Is REX-Ray listening?<a class="headerlink" href="#is-rex-ray-listening" title="Permanent link">&para;</a></h3>
+<p>Confirm REX-Ray is listening on a UNIX socket with the following command:</p>
+<pre><code class="shell">$ sudo lsof -noPU -a -c rexray
+COMMAND  PID USER   FD   TYPE             DEVICE OFFSET  NODE NAME
+rexray  3228 root    5u  unix 0xffff8800cc6eb800    0t0 38218 /var/run/libstorage/277666194.sock
+rexray  3228 root    7u  unix 0xffff880117792000    0t0 34741 socket
+rexray  3228 root    8u  unix 0xffff880117792400    0t0 38221 /var/run/libstorage/277666194.sock
+rexray  3228 root    9u  unix 0xffff8800cc6e8c00    0t0 38226 /run/docker/plugins/rexray.sock
 </code></pre>
 
-<h2 id="popular-applications">Popular Applications<a class="headerlink" href="#popular-applications" title="Permanent link">&para;</a></h2>
-<p>External persistent storage can be applied to any number of applications
-including but not limited the following examples.</p>
-<ul>
-<li><a href="https://hub.docker.com/_/cassandra/">Cassandra</a></li>
-<li>
-<p><a href="https://hub.docker.com/_/postgres/">PostgreSQL</a></p>
-<pre><code>$ docker volume create --driver=rexray --name=postgresql --opt=size=&lt;sizeInGB&gt;
-$ docker run -d -e POSTGRES_PASSWORD=mysecretpassword --volume-driver=rexray \
-    -v data:/var/lib/postgresql/data postgres
+<p>Confirm REX-Ray is listening on a TCP port with the following command:</p>
+<pre><code class="shell">$ sudo lsof -noP -i -sTCP:LISTEN -a -c rexray
+COMMAND  PID USER   FD   TYPE DEVICE OFFSET NODE NAME
+rexray  3400 root    4u  IPv4  38868    0t0  TCP 127.0.0.1:5002 (LISTEN)
 </code></pre>
-</li>
-<li>
-<p><a href="https://hub.docker.com/_/mariadb/">MariaDB</a></p>
-</li>
-<li>
-<p><a href="https://hub.docker.com/_/mongo/">MongoDB</a></p>
-<pre><code>$ docker volume create --driver=rexray --name=mongodb --opt=size=&lt;sizeInGB&gt;
-$ docker run -d --volume-driver=rexray -v mongodb:/data/db mongo
+
+<h3 id="is-rex-ray-talking">Is REX-Ray talking?<a class="headerlink" href="#is-rex-ray-talking" title="Permanent link">&para;</a></h3>
+<p>After confirming that the service is listening as expected, you can use <code>curl</code>
+to actually invoke the libStorage REST API. This example shows doing it using
+localhost but in a client server topology deployment you can also invoke it
+from your client nodes (using the server’s external IP) to confirm that there
+are no routing or firewall issues. This example uses http, but if you have
+installed certificates, you should use https instead. This particular
+invocation of the REST API lists the services (storage provider classes)
+that are available to clients.</p>
+<pre><code class="shell">$ curl http://127.0.0.1:5002/services
 </code></pre>
-</li>
-<li>
-<p><a href="https://hub.docker.com/_/mysql/">MySQL</a></p>
-</li>
-<li><a href="https://hub.docker.com/_/redis/">Redis</a><pre><code>$ docker volume create --driver=rexray --name=redis --opt=size=&lt;sizeInGB&gt;
-$ docker run -d --volume-driver=rexray -v redis:/data redis
+
+<pre><code class="json">{
+  &quot;ebs&quot;: {
+    &quot;name&quot;: &quot;ebs&quot;,
+    &quot;driver&quot;: {
+      &quot;name&quot;: &quot;ebs&quot;,
+      &quot;type&quot;: &quot;block&quot;,
+      &quot;nextDevice&quot;: {
+        &quot;ignore&quot;: false,
+        &quot;prefix&quot;: &quot;xvd&quot;,
+        &quot;pattern&quot;: &quot;[f-p]&quot;
+      }
+    }
+  }
+}
 </code></pre>
-</li>
-</ul></div>
+
+<h2 id="common-errors">Common Errors<a class="headerlink" href="#common-errors" title="Permanent link">&para;</a></h2>
+<p>This section reviews common errors encountered when using REX-Ray.</p>
+<div class="admonition note">
+<p class="admonition-title">note</p>
+<p>General note: When running on a public cloud provider the error messages in
+the log resulting from calls to a cloud provider API are repeated from the
+cloud provider’s API. Sometimes these are not intuitive. For example a bad
+credential might result in an error message related to a non-existent
+object. Performing a google search in the context of your cloud provider,
+rather than REX-Ray can sometimes prove to be helpful.</p>
+</div>
+<h3 id="starting-rex-ray">Starting REX-Ray<a class="headerlink" href="#starting-rex-ray" title="Permanent link">&para;</a></h3>
+<p>This error occurs when attempting to start REX-Ray service as a normal account,
+rather than root or with <code>sudo</code>:</p>
+<pre><code class="shell">$ rexray service start
+Failed to start rexray.service: Interactive authentication required.
+</code></pre>
+
+<h3 id="omitted-service-flag">Omitted service flag<a class="headerlink" href="#omitted-service-flag" title="Permanent link">&para;</a></h3>
+<p>This error occurs when there are multiple services configured and the service
+specification is omitted from the command line:</p>
+<pre><code class="shell">$ rexray volume ls
+FATA[0000] http error                                    status=404
+</code></pre>
+
+<h3 id="missing-rex-ray-config-file">Missing REX-Ray config file<a class="headerlink" href="#missing-rex-ray-config-file" title="Permanent link">&para;</a></h3>
+<p>This error can occur when the REX-Ray configuration file is in the incorrect
+location or one does not exist at all:</p>
+<pre><code class="shell">$ rexray volume ls
+ERRO[0000] error starting libStorage server              error.configKey=libstorage.server.services error.obj=&lt;nil&gt; time=1486771348853`
+</code></pre>
+
+<h3 id="invalid-provider-credentials">Invalid provider credentials<a class="headerlink" href="#invalid-provider-credentials" title="Permanent link">&para;</a></h3>
+<p>This error occurs when invalid credentials are provided for the storage
+provider. The example below uses the EBS storage provider:</p>
+<pre><code class="shell">time=&quot;2017-02-10T22:34:44Z&quot; level=error msg=&quot;error getting volume&quot; host=&quot;tcp://127.0.0.1:7979&quot; inner=&quot;AuthFailure: AWS was not able to validate the provided access credentials\n\tstatus code: 401, request id: ea6587a90-f29d-4f14-99da-6a7ec7cb05c1&quot; instanceID=&quot;ebs=i-0213cc11c4ade43fb,availabilityZone=us-west-2a&amp;region=us-west-2&quot; route=volumesForService server=dew-lady-tw service=ebs storageDriver=ebs task=0 time=1486766084055 tls=false txCR=1486726083 txID=05a5e1fd-094f-40ec-63f6-448d26ddde4f
+</code></pre>
+
+<h3 id="omitted-service-definition">Omitted service definition<a class="headerlink" href="#omitted-service-definition" title="Permanent link">&para;</a></h3>
+<p>This error occurs when the configuration file omits a service definition or
+one is named erroneously:</p>
+<h4 id="console">Console<a class="headerlink" href="#console" title="Permanent link">&para;</a></h4>
+<pre><code class="shell">ERRO[0000] error starting libStorage server              error.obj=&lt;nil&gt; error.configKey=libstorage.server.services time=1486772035132
+</code></pre>
+
+<h4 id="service-log">Service Log<a class="headerlink" href="#service-log" title="Permanent link">&para;</a></h4>
+<pre><code class="shell">time=&quot;2017-02-11T00:13:25Z&quot; level=error msg=&quot;error starting libStorage server&quot; error.configKey=libstorage.server.services error.obj=&lt;nil&gt; time=1486772005732
+time=&quot;2017-02-11T00:13:25Z&quot; level=error msg=&quot;default module(s) failed to initialize&quot; error.obj=&lt;nil&gt; error.configKey=libstorage.server.services time=1486772005732
+time=&quot;2017-02-11T00:13:25Z&quot; level=error msg=&quot;daemon failed to initialize&quot; error.configKey=libstorage.server.services error.obj=&lt;nil&gt; time=1486772005732
+time=&quot;2017-02-11T00:13:25Z&quot; level=error msg=&quot;error starting rex-ray&quot; error.obj=&lt;nil&gt; error.configKey=libstorage.server.services time=1486772005732
+</code></pre></div>
         </div>
 
         <script src="../../js/jquery-1.10.2.min.js"></script>

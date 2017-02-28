@@ -19,8 +19,11 @@ When creating or modifying the project's `README.md` file or any of the
 documentation in the `.docs` directory, please keep the following rules in
 mind:
 
-1. All links to internal resources should be relative.
-2. All links to markdown files should include the file extension.
+1. All markdown should be limited to a width of 80 characters. This makes
+the document easier to read in text editors. GitHub and ReadTheDocs still
+produces the proper result when parsing the markdown.
+2. All links to internal resources should be relative.
+3. All links to markdown files should include the file extension.
 
 For example, the below link points to the anchor `basic-configuration` on the
 `Configuration` page:

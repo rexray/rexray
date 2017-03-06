@@ -90,6 +90,9 @@ const (
 	// ConfigTLSDisabled is a config key.
 	ConfigTLSDisabled = ConfigTLS + ".disabled"
 
+	// ConfigTLSInsecure is a config key.
+	ConfigTLSInsecure = ConfigTLS + ".insecure"
+
 	// ConfigTLSServerName is a config key.
 	ConfigTLSServerName = ConfigTLS + ".serverName"
 

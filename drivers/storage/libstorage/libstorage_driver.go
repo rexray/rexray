@@ -1,7 +1,11 @@
 package libstorage
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
+	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -36,6 +40,8 @@ func newDriver() types.StorageDriver {
 	return &driver{}
 }
 
+var errServerFingerprint = errors.New("invalid server fingerprint")
+
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	logFields := log.Fields{}
 
@@ -49,7 +55,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	}
 
 	tlsConfig, err := utils.ParseTLSConfig(
-		config, logFields, "libstorage.client")
+		d.ctx, config, logFields, types.ConfigClient)
 	if err != nil {
 		return err
 	}
@@ -69,7 +75,40 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 			if tlsConfig == nil {
 				return net.Dial(proto, lAddr)
 			}
-			return tls.Dial(proto, lAddr, tlsConfig)
+
+			conn, err := tls.Dial(proto, lAddr, &tlsConfig.Config)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(tlsConfig.PeerFingerprint) > 0 {
+				peerCerts := conn.ConnectionState().PeerCertificates
+				matchedFingerprint := false
+				expectedFP := hex.EncodeToString(tlsConfig.PeerFingerprint)
+				for _, cert := range peerCerts {
+					h := sha256.New()
+					h.Write(cert.Raw)
+					certFP := h.Sum(nil)
+					actualFP := hex.EncodeToString(certFP)
+					ctx.WithFields(log.Fields{
+						"actualFingerprint":   actualFP,
+						"expectedFingerprint": expectedFP,
+					}).Debug("comparing tls fingerprints")
+					if bytes.EqualFold(tlsConfig.PeerFingerprint, certFP) {
+						matchedFingerprint = true
+						ctx.WithFields(log.Fields{
+							"actualFingerprint":   actualFP,
+							"expectedFingerprint": expectedFP,
+						}).Debug("matched tls fingerprints")
+						break
+					}
+				}
+				if !matchedFingerprint {
+					return nil, errServerFingerprint
+				}
+			}
+
+			return conn, nil
 		},
 		DisableKeepAlives: disableKeepAlive,
 	}

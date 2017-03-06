@@ -109,16 +109,11 @@ encrypt communications between client and server.
 libstorage:
   host: tcp://127.0.0.1:7979
   client:
-    tls:
-      certFile: $HOME/.libstorage/libstorage-client.crt
-      keyFile: $HOME/.libstorage/libstorage-client.key
-      trustedCertsFile: $HOME/.libstorage/trusted-certs.crt
+    tls: true
   server:
     tls:
       certFile: /etc/libstorage/libstorage-server.crt
       keyFile: /etc/libstorage/libstorage-server.key
-      trustedCertsFile: /etc/libstorage/trusted-certs.crt
-      clientCertRequired: true
     services:
       virtualbox:
         driver: virtualbox
@@ -129,10 +124,11 @@ libstorage:
           controllerName: SATA
 ```
 
-Please note that in the above example the property `libstorage.client` has been
-introduced. This property is always present, even if not explicitly specified.
-It exists to override `libStorage` properties for the client only, such as TLS
-settings, logging, etc.
+!!! note "note"
+    Please note that in the above example the property `libstorage.client` has
+    been introduced. This property is always present, even if not explicitly
+    specified. It exists to override `libStorage` properties for the client
+    only, such as TLS settings, logging, etc.
 
 ### UNIX Socket
 For the security conscious, there is no safer way to run a client/server setup
@@ -305,6 +301,155 @@ and a more verbose, `info` log level for just the server.
 ## Advanced Configuration
 The following sections detail every last aspect of how `libStorage` works and can
 be configured.
+
+### TLS Configuration
+This section reviews the several supported TLS configuration options.
+
+#### Insecure TLS
+The following example illustrates how to configure the libStorage client to
+skip validation of a provided server-side certificate:
+
+```yaml
+libstorage:
+  host: tcp://127.0.0.1:7979
+  client:
+    tls: insecure
+  server:
+    tls:
+      certFile: /etc/libstorage/libstorage-server.crt
+      keyFile: /etc/libstorage/libstorage-server.key
+    services:
+      virtualbox:
+        driver: virtualbox
+        virtualbox:
+          endpoint:       http://10.0.2.2:18083
+          tls:            false
+          volumePath:     $HOME/VirtualBox/Volumes
+          controllerName: SATA
+```
+
+!!! note "note"
+    The above example instructs the client-side TLS configuration to operate in
+    _insecure_ mode. This means the client is not attempting to verify the
+    certificate provided by the server. This is a security risk and should not
+    ever be used in production.
+
+#### Server Cert Fingerprint
+While TLS should never be configured as insecure in production, a compromise
+between no TLS and insecure TLS is specifying a server certificate's SHA256
+fingerprint.
+
+For example, the following command can be used to print google.com's SHA256
+fingerprint:
+
+```bash
+$ openssl s_client -connect google.com:443  </dev/null | \
+  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | \
+  openssl x509 -noout -fingerprint -sha256
+```
+
+The above command will produce output similar to the following:
+
+```bash
+depth=2 /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+verify error:num=20:unable to get local issuer certificate
+verify return:0
+DONE
+SHA256 Fingerprint=15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:99
+```
+
+Using the above output, it's possible to configure a libStorage client to
+communicate to a remote, libStorage API endpoint using TLS if, and only if,
+the fingerprint of remote endpoint's certificate matches the one the client
+expects. The following configuration achieves just that:
+
+```yaml
+libstorage:
+  host: tcp://127.0.0.1:7979
+  client:
+    tls: "sha256:15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:99"
+  server:
+    tls:
+      certFile: /etc/libstorage/libstorage-server.crt
+      keyFile: /etc/libstorage/libstorage-server.key
+    services:
+      virtualbox:
+        driver: virtualbox
+        virtualbox:
+          endpoint:       http://10.0.2.2:18083
+          tls:            false
+          volumePath:     $HOME/VirtualBox/Volumes
+          controllerName: SATA
+```
+
+With `DEBUG` level logging enabled, the libStorage client logs reflect the
+matched fingerprint:
+
+```bash
+DEBU[0000] comparing tls fingerprints                    actualFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 expectedFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 service=virtualbox storageDriver=libstorage time=1488821773182
+DEBU[0000] matched tls fingerprints                      actualFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 expectedFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 service=virtualbox storageDriver=libstorage time=1488821773182
+```
+
+#### Trusted Certs File
+This TLS configuration example describes how to instruct the libStorage client
+to validate the provided server-side certificate using a custom trusted CA file.
+This avoids the perils of insecure TLS while still enabling a privately signed
+or snake-oil server-side certificate.
+
+```yaml
+libstorage:
+  host: tcp://127.0.0.1:7979
+  client:
+    tls:
+      trustedCertsFile: $HOME/.libstorage/trusted-certs.crt
+  server:
+    tls:
+      certFile: /etc/libstorage/libstorage-server.crt
+      keyFile: /etc/libstorage/libstorage-server.key
+    services:
+      virtualbox:
+        driver: virtualbox
+        virtualbox:
+          endpoint:       http://10.0.2.2:18083
+          tls:            false
+          volumePath:     $HOME/VirtualBox/Volumes
+          controllerName: SATA
+```
+
+#### Require Client-Side Certs
+The final TLS example explains how to configure the libStorage server to
+to require certificates from clients. This configuration enables the use of
+client-side certificates as a means of authorization.
+
+```yaml
+libstorage:
+  host: tcp://127.0.0.1:7979
+  client:
+    tls:
+      certFile: $HOME/.libstorage/libstorage-client.crt
+      keyFile: $HOME/.libstorage/libstorage-client.key
+      trustedCertsFile: $HOME/.libstorage/trusted-certs.crt
+  server:
+    tls:
+      certFile: /etc/libstorage/libstorage-server.crt
+      keyFile: /etc/libstorage/libstorage-server.key
+      trustedCertsFile: /etc/libstorage/trusted-certs.crt
+      clientCertRequired: true
+    services:
+      virtualbox:
+        driver: virtualbox
+        virtualbox:
+          endpoint:       http://10.0.2.2:18083
+          tls:            false
+          volumePath:     $HOME/VirtualBox/Volumes
+          controllerName: SATA
+```
+
+A typical scenario that employs the above example would also involve the
+server certificate to have a dual purpose as an intermediate signing authority
+that has signed the allowed client certificates. Or at the very least the
+server certificate would be signed by the same intermediate CA that is used
+to sign the client-side certs.
 
 ### Embedded Configuration
 If `libStorage` is embedded into another application, such as

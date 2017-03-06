@@ -138,7 +138,7 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 
 	logFields := log.Fields{}
 	logConfig, err := utils.ParseLoggingConfig(
-		config, logFields, "libstorage.server")
+		config, logFields, types.ConfigServer)
 	if err != nil {
 		return nil, err
 	}

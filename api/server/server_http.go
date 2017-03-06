@@ -125,7 +125,12 @@ func (s *server) initEndpoints(ctx types.Context) error {
 		}
 
 		tlsConfig, err :=
-			utils.ParseTLSConfig(s.config.Scope(endpoint), logFields, endpoint)
+			utils.ParseTLSConfig(
+				s.ctx,
+				s.config.Scope(endpoint),
+				logFields,
+				types.ConfigServer,
+				endpoint)
 		if err != nil {
 			return err
 		}
@@ -227,7 +232,7 @@ func (s *server) createMux(ctx types.Context) *mux.Router {
 }
 
 func (s *server) newHTTPServer(
-	proto, laddr string, tlsConfig *tls.Config) (*HTTPServer, error) {
+	proto, laddr string, tlsConfig *types.TLSConfig) (*HTTPServer, error) {
 
 	var (
 		l   net.Listener
@@ -235,7 +240,7 @@ func (s *server) newHTTPServer(
 	)
 
 	if tlsConfig != nil {
-		l, err = tls.Listen(proto, laddr, tlsConfig)
+		l, err = tls.Listen(proto, laddr, &tlsConfig.Config)
 	} else {
 		l, err = net.Listen(proto, laddr)
 	}

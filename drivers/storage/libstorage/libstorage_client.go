@@ -2,7 +2,6 @@ package libstorage
 
 import (
 	"crypto/md5"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -90,7 +89,7 @@ func (c *client) dial(ctx types.Context) error {
 	return nil
 }
 
-func getHost(proto, lAddr string, tlsConfig *tls.Config) string {
+func getHost(proto, lAddr string, tlsConfig *types.TLSConfig) string {
 	if tlsConfig != nil && tlsConfig.ServerName != "" {
 		return tlsConfig.ServerName
 	} else if proto == "unix" {

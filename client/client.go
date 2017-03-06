@@ -48,7 +48,7 @@ func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 
 	logFields := log.Fields{}
 	logConfig, err := utils.ParseLoggingConfig(
-		config, logFields, "libstorage.client")
+		config, logFields, types.ConfigClient)
 	if err != nil {
 		return nil, err
 	}

@@ -1062,6 +1062,20 @@ is suggested.
 
 VirtualBox 5.0.10+ must be used.
 
+!!! note
+    For a VirtualBox VM to work successfully, the following three points are of
+    the utmost importance:
+
+    1. The SATA controller should be named `SATA`.
+    2. The SATA controller's port count must allow for additional
+    connections.
+    3. The MAC address must not match that of any other VirtualBox VM's
+    MAC addresses or the MAC address of the host.
+
+    The REX-Ray `Vagrantfile` has
+    [a section](https://github.com/codedellemc/rexray/blob/master/Vagrantfile#L166-L179)
+    that automatically configures these options.
+
 ### Configuration
 The following is an example configuration of the VirtualBox driver.  
 The `localMachineNameOrId` parameter is for development use where you force

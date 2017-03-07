@@ -9,6 +9,8 @@ import:
     ref:     5ccb023bc27df288a957c5e994cd44fd19619465
   - package: github.com/spf13/viper
     ref:     651d9d916abc3c3d6a91a12549495caba5edffd2
+  - package: github.com/akutz/golf
+    version: v0.1.2
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
@@ -18,8 +20,6 @@ import:
     version: v0.1.0
   - package: github.com/akutz/goof
     version: v0.1.0
-  - package: github.com/akutz/golf
-    version: v0.1.1
   - package: github.com/codedellemc/gournal
     version: v0.3.0
   - package: github.com/cesanta/validate-json

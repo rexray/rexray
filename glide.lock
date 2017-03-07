@@ -1,5 +1,5 @@
-hash: 0db888931b861820351b5b3ec5b8032d46c82cda970e0b17d5bc57707f521a41
-updated: 2017-02-21T11:37:14.639521721-06:00
+hash: fd8ed25337840b1d024f112d5dcfe413295ade4c55e950d95190d6234e7c987b
+updated: 2017-03-07T13:59:47.39664623-06:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -11,7 +11,7 @@ imports:
   subpackages:
   - types
 - name: github.com/akutz/golf
-  version: e26bdd995cb746e431d42ea303ebe7622389d29f
+  version: 296de562c59e98534dc2d7b49f6ba310e3edb69d
 - name: github.com/akutz/goof
   version: ea06624ca980bae80c1b615b8417723436d235ab
 - name: github.com/akutz/gotil

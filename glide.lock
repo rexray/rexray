@@ -1,5 +1,5 @@
-hash: 2f1b14e343815d8915b57d9018558d3bf45d5a54bb1c15f88ff5dd6fa29f9bed
-updated: 2017-02-24T20:26:42.455848439-06:00
+hash: 7735b6454541326f6f3baf6c972ae8246eea651c365711321f3c9d176d2c19ae
+updated: 2017-03-07T10:52:04.656649049-06:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -11,7 +11,7 @@ imports:
   subpackages:
   - types
 - name: github.com/akutz/golf
-  version: e26bdd995cb746e431d42ea303ebe7622389d29f
+  version: 296de562c59e98534dc2d7b49f6ba310e3edb69d
   subpackages:
   - logrus
 - name: github.com/akutz/goof

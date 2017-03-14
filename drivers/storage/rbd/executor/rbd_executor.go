@@ -76,7 +76,7 @@ func (d *driver) LocalDevices(
 	ctx types.Context,
 	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
 
-	devMap, err := utils.GetMappedRBDs()
+	devMap, err := utils.GetMappedRBDs(ctx)
 	if err != nil {
 		return nil, err
 	}

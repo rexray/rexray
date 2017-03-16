@@ -86,6 +86,11 @@ const diskIDPath = "/dev/disk/by-id"
 
 func getLocalVolumeMap() (map[string]string, error) {
 	volMap := map[string]string{}
+
+	if !gotil.FileExists(diskIDPath) {
+		// the diskIDPath does not exist -- therefore no vols
+		return volMap, nil
+	}
 	files, err := ioutil.ReadDir(diskIDPath)
 	if err != nil {
 		return nil, err

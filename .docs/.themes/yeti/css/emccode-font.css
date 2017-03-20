@@ -26,7 +26,7 @@
 }
 
 .icon-emccode-logo:after {
-    content: " EMC{code}";
+    content: " {code} by Dell EMC";
 }
 
 .icon-libstorage-logo:before {

@@ -202,6 +202,7 @@ func (m *mod) buildMux() *http.ServeMux {
 		if vtype == nil {
 			vtype = store.GetStringPtr("volumetype")
 		}
+		encrypted := store.GetBoolPtr("encrypted")
 		_, err := m.lsc.Integration().Create(
 			m.ctx,
 			pr.Name,
@@ -210,6 +211,7 @@ func (m *mod) buildMux() *http.ServeMux {
 				IOPS:             store.GetInt64Ptr("iops"),
 				Size:             store.GetInt64Ptr("size"),
 				Type:             vtype,
+				Encrypted:        encrypted,
 				Opts:             store,
 			})
 

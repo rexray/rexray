@@ -499,6 +499,54 @@ func TestVolumeCreate(t *testing.T) {
 		assertVolDir(t, config, reply.ID, true)
 		assert.Equal(t, availabilityZone, reply.AvailabilityZone)
 		assert.Equal(t, iops, reply.IOPS)
+		assert.False(t, reply.Encrypted)
+		assert.Equal(t, volumeName, reply.Name)
+		assert.Equal(t, size, reply.Size)
+		assert.Equal(t, volType, reply.Type)
+		assert.Equal(t, "2", reply.Fields["priority"])
+		assert.Equal(t, "root@example.com", reply.Fields["owner"])
+	}
+
+	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+}
+
+func TestVolumeCreateParseRequestOpts(t *testing.T) {
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		config.Set(types.ConfigServerParseRequestOpts, true)
+
+		volumeName := "Volume 003"
+		availabilityZone := "US"
+		iops := int64(1000)
+		size := int64(10240)
+		volType := "myType"
+
+		opts := map[string]interface{}{
+			"priority":  2,
+			"owner":     "root@example.com",
+			"encrypted": true,
+		}
+
+		request := &types.VolumeCreateRequest{
+			Name:             volumeName,
+			AvailabilityZone: &availabilityZone,
+			IOPS:             &iops,
+			Size:             &size,
+			Type:             &volType,
+			Opts:             opts,
+		}
+
+		reply, err := client.API().VolumeCreate(nil, vfs.Name, request)
+		assert.NoError(t, err)
+		if err != nil {
+			t.FailNow()
+		}
+		assert.NotNil(t, reply)
+
+		assertVolDir(t, config, reply.ID, true)
+		assert.Equal(t, availabilityZone, reply.AvailabilityZone)
+		assert.Equal(t, iops, reply.IOPS)
+		assert.True(t, reply.Encrypted)
 		assert.Equal(t, volumeName, reply.Name)
 		assert.Equal(t, size, reply.Size)
 		assert.Equal(t, volType, reply.Type)

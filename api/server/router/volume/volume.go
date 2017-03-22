@@ -92,7 +92,7 @@ func (r *router) initRoutes() {
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeMapSchema,
 				func() interface{} { return &types.VolumeDetachRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("detach"),
 
 		// create a new volume
@@ -106,7 +106,7 @@ func (r *router) initRoutes() {
 				schema.VolumeCreateRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} { return &types.VolumeCreateRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		),
 
 		// create a new volume using an existing volume as the baseline
@@ -120,7 +120,7 @@ func (r *router) initRoutes() {
 				schema.VolumeCopyRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} { return &types.VolumeCopyRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("copy"),
 
 		// snapshot an existing volume
@@ -134,7 +134,7 @@ func (r *router) initRoutes() {
 				schema.VolumeSnapshotRequestSchema,
 				schema.SnapshotSchema,
 				func() interface{} { return &types.VolumeSnapshotRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("snapshot"),
 
 		// attach an existing volume
@@ -148,7 +148,7 @@ func (r *router) initRoutes() {
 				schema.VolumeAttachRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} { return &types.VolumeAttachRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("attach"),
 
 		// detach all volumes for all services
@@ -160,7 +160,7 @@ func (r *router) initRoutes() {
 				schema.VolumeDetachRequestSchema,
 				schema.ServiceVolumeMapSchema,
 				func() interface{} { return &types.VolumeDetachRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("detach"),
 
 		// detach an individual volume
@@ -174,7 +174,7 @@ func (r *router) initRoutes() {
 				schema.VolumeDetachRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} { return &types.VolumeDetachRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("detach"),
 
 		// DELETE

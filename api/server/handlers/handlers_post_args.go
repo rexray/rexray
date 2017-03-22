@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	//log "github.com/Sirupsen/logrus"
+	gofig "github.com/akutz/gofig/types"
 
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
@@ -16,12 +16,13 @@ import (
 // object's fields and additional options
 type postArgsHandler struct {
 	handler types.APIFunc
+	config  gofig.Config
 }
 
 // NewPostArgsHandler returns a new filter for injecting the store with the
 // POST object's fields and additional options.
-func NewPostArgsHandler() types.Middleware {
-	return &postArgsHandler{}
+func NewPostArgsHandler(config gofig.Config) types.Middleware {
+	return &postArgsHandler{config: config}
 }
 
 func (h *postArgsHandler) Name() string {
@@ -29,7 +30,7 @@ func (h *postArgsHandler) Name() string {
 }
 
 func (h *postArgsHandler) Handler(m types.APIFunc) types.APIFunc {
-	return (&postArgsHandler{m}).Handle
+	return (&postArgsHandler{m, h.config}).Handle
 }
 
 // Handle is the type's Handler function.
@@ -59,6 +60,21 @@ func (h *postArgsHandler) Handle(
 		default:
 			// add it to the store
 			store.Set(getFieldName(ft), fv)
+		}
+	}
+
+	if h.config.GetBool(types.ConfigServerParseRequestOpts) {
+		ctx.Debug("parsing req opts enabled")
+		if store.IsSet("opts") {
+			ctx.Debug("parsing req opts: is set")
+			if opts, ok := store.Get("opts").(types.Store); ok {
+				ctx.Debug("parsing req opts: valid type")
+				for _, k := range opts.Keys() {
+					store.Set(k, opts.Get(k))
+					ctx.WithField("optsKey", k).Debug(
+						"parsing req opts: set key")
+				}
+			}
 		}
 	}
 

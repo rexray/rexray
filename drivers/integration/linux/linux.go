@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"fmt"
-	"strconv"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -453,14 +452,14 @@ func (d *driver) Create(
 	optsNew := &types.VolumeCreateOpts{}
 	az := d.availabilityZone()
 	optsNew.AvailabilityZone = &az
-	i, _ := strconv.Atoi(d.size())
-	size := int64(i)
+	size := d.size()
 	optsNew.Size = &size
 	volumeType := d.volumeType()
 	optsNew.Type = &volumeType
-	io, _ := strconv.Atoi(d.iops())
-	IOPS := int64(io)
-	optsNew.IOPS = &IOPS
+	iops := d.iops()
+	optsNew.IOPS = &iops
+	optsNew.Encrypted = opts.Encrypted
+	optsNew.EncryptionKey = opts.EncryptionKey
 
 	if opts.Opts.IsSet("availabilityZone") {
 		az = opts.Opts.GetString("availabilityZone")
@@ -475,7 +474,7 @@ func (d *driver) Create(
 		volumeType = opts.Opts.GetString("type")
 	}
 	if opts.Opts.IsSet("iops") {
-		IOPS = opts.Opts.GetInt64("iops")
+		iops = opts.Opts.GetInt64("iops")
 	}
 
 	optsNew.Opts = opts.Opts
@@ -485,7 +484,9 @@ func (d *driver) Create(
 		"availabilityZone": az,
 		"size":             size,
 		"volumeType":       volumeType,
-		"IOPS":             IOPS,
+		"IOPS":             iops,
+		"encrypted":        optsNew.Encrypted,
+		"encryptionKey":    optsNew.EncryptionKey,
 		"opts":             opts}).Info("creating volume")
 
 	client := context.MustClient(ctx)
@@ -562,12 +563,12 @@ func (d *driver) volumeType() string {
 	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultType)
 }
 
-func (d *driver) iops() string {
-	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultIOPS)
+func (d *driver) iops() int64 {
+	return int64(d.config.GetInt(types.ConfigIgVolOpsCreateDefaultIOPS))
 }
 
-func (d *driver) size() string {
-	return d.config.GetString(types.ConfigIgVolOpsCreateDefaultSize)
+func (d *driver) size() int64 {
+	return int64(d.config.GetInt(types.ConfigIgVolOpsCreateDefaultSize))
 }
 
 func (d *driver) availabilityZone() string {

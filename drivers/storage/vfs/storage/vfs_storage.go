@@ -207,6 +207,32 @@ func (d *driver) VolumeCreate(
 	name string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
+	fields := map[string]interface{}{"name": name}
+	if opts != nil {
+		if opts.AvailabilityZone != nil {
+			fields["availabilityZone"] = *opts.AvailabilityZone
+		}
+		if opts.Encrypted != nil {
+			fields["encrypted"] = *opts.Encrypted
+		}
+		if opts.EncryptionKey != nil {
+			fields["encryptionKey"] = *opts.EncryptionKey
+		}
+		if opts.IOPS != nil {
+			fields["iops"] = *opts.IOPS
+		}
+		if opts.Size != nil {
+			fields["size"] = *opts.Size
+		}
+		if opts.Type != nil {
+			fields["type"] = *opts.Type
+		}
+		//if opts.Opts != nil {
+		//	fields["opts"] = opts.Opts
+		//}
+	}
+	ctx.WithFields(fields).Debug("creating volume")
+
 	context.MustSession(ctx)
 
 	v := &types.Volume{
@@ -226,6 +252,9 @@ func (d *driver) VolumeCreate(
 	}
 	if opts.Type != nil {
 		v.Type = *opts.Type
+	}
+	if opts.Encrypted != nil {
+		v.Encrypted = *opts.Encrypted
 	}
 	if customFields := opts.Opts.GetStore("opts"); customFields != nil {
 		for _, k := range customFields.Keys() {

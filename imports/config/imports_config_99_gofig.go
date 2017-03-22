@@ -81,6 +81,7 @@ func init() {
 	rk(gofig.Bool, false, "", types.ConfigEmbedded)
 	rk(gofig.String, "1m", "", types.ConfigServerTasksExeTimeout)
 	rk(gofig.String, "0s", "", types.ConfigServerTasksLogTimeout)
+	rk(gofig.Bool, false, "", types.ConfigServerParseRequestOpts)
 
 	gofigCore.Register(r)
 }

@@ -921,3 +921,60 @@ libstorage:
         mount:
           rootPath: /data
 ```
+
+### REST Configuration
+This section reviews advanced HTTP REST configuration options:
+
+#### Parse POST Options
+Normally an incoming POST request with an `opts` field does not copy the
+key/value pairs in the `opts` map into the fields that match the request's
+schema. For example, take a look at the following request:
+
+```json
+{
+    "name": "newVolume",
+    "iops": 0,
+    "size": 5,
+    "type": "block",
+    "opts": {
+        "encrypted": true,
+    }
+}
+```
+
+The above request is used for creating a new volume, and it appears that the
+intention is to create the volume as encrypted. However, the `encrypted` field
+is part of the free-form `opts` piece of the request. The `opts` map is for
+data that is not yet part of the official libStorage API and schema. Certain
+drivers may parse data out of the `opts` field, but it *is* driver specific.
+The libStorage server does not normally attempt to parse this field's keys
+and match it to the request's fields. A proper request would look like this:
+
+```json
+{
+    "name":      "newVolume",
+    "iops":      0,
+    "size":      5,
+    "type":      "block",
+    "encrypted": true,
+}
+```
+
+In order to make things a little easier on clients, a server can be configured
+to treat the first JSON request as equal to the second. This feature is disabled
+by default due to the possibility of side-effects. For example, a value in the
+`opts` map could unintentionally overwrite the intended value if both keys are
+the same.
+
+To enable this feature, the libStorage server's configuration should set the
+`libstorage.server.parseRequestOpts` property to true. An example YAML snippet
+with this property enabled resembles the following:
+
+```yaml
+libstorage:
+  server:
+    parseRequestOpts: true
+```
+
+With the above property set to `true`, values in a request's `opts` map will be
+copied to the corresponding key in the request proper.

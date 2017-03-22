@@ -81,7 +81,7 @@ func (r *router) initRoutes() {
 				schema.VolumeCreateRequestSchema,
 				schema.VolumeSchema,
 				func() interface{} { return &types.VolumeCreateRequest{} }),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("create"),
 
 		// copy snapshot
@@ -97,7 +97,7 @@ func (r *router) initRoutes() {
 				func() interface{} {
 					return &types.SnapshotCopyRequest{}
 				}),
-			handlers.NewPostArgsHandler(),
+			handlers.NewPostArgsHandler(r.config),
 		).Queries("copy"),
 
 		// DELETE

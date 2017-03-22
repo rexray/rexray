@@ -75,6 +75,9 @@ const (
 	// ConfigEndpoints is a config key.
 	ConfigEndpoints = ConfigServer + ".endpoints"
 
+	// ConfigServerParseRequestOpts is a config key.
+	ConfigServerParseRequestOpts = ConfigServer + ".parseRequestOpts"
+
 	// ConfigExecutorPath is a config key.
 	ConfigExecutorPath = ConfigRoot + ".executor.path"
 

@@ -23,6 +23,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/gcepd"
 	"github.com/codedellemc/libstorage/drivers/storage/gcepd/utils"
 
@@ -303,7 +304,7 @@ func (d *driver) VolumeInspect(
 			"Unable to get disk from GCE API", err)
 	}
 	if gceDisk == nil {
-		return nil, goof.New("No Volume Found")
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	gceDisks := []*compute.Disk{gceDisk}
@@ -473,7 +474,7 @@ func (d *driver) VolumeAttach(
 		return nil, "", err
 	}
 	if gceDisk == nil {
-		return nil, "", goof.New("Volume not found")
+		return nil, "", apiUtils.NewNotFoundError(volumeID)
 	}
 
 	if len(gceDisk.Users) > 0 {
@@ -529,7 +530,7 @@ func (d *driver) VolumeDetach(
 		return nil, err
 	}
 	if gceDisk == nil {
-		return nil, goof.New("Volume not found")
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	if len(gceDisk.Users) == 0 {

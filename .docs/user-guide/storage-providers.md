@@ -1004,6 +1004,10 @@ the driver name.
   going to Subscriptions->Your `subscriptionID`->Access Control (IAM). From
   there, add your app registration as a user, which you will have to search for
   by name. Grant the role of "Owner".
+* You should carefully check that your VM is compatible with the storage account you want 
+  to use. For example, if you need Azure Premium storage your machine should be 
+  of a compatible size (e.g. DS_V2, FS). For more details see the available VM 
+  [sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/virtual-machines-windows-sizes).  
 
 #### Examples
 Below is a full `config.yml` that works with Azure UD

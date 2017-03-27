@@ -69,8 +69,8 @@ func (c *CLI) initOtherCmds() {
 }
 
 func (c *CLI) initOtherFlags() {
-	cobra.HelpFlagShorthand = "?"
-	cobra.HelpFlagUsageFormatString = "Help for %s"
+	c.c.PersistentFlags().BoolP("help", "?", false,
+		"Help about the current command")
 
 	c.c.PersistentFlags().StringVarP(&c.cfgFile, "config", "c", "",
 		"The path to a custom REX-Ray configuration file")

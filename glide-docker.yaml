@@ -24,11 +24,9 @@ import:
     version: v0.1.0
 
   - package: github.com/spf13/pflag
-    ref:     b084184666e02084b8ccb9b704bf0d79c466eb1d
-    repo:    https://github.com/spf13/pflag
+    ref:     d16db1e50e33dff1b6cdf37596cef36742128670
   - package: github.com/spf13/cobra
-    ref:     363816bb13ce1710460c2345017fd35593cbf5ed
-    repo:    https://github.com/akutz/cobra
+    ref:     7be4beda01ec05d0b93d80b3facd2b6f44080d94
   - package: golang.org/x/net
     repo:    https://github.com/golang/net
 

@@ -1,5 +1,5 @@
-hash: 7735b6454541326f6f3baf6c972ae8246eea651c365711321f3c9d176d2c19ae
-updated: 2017-03-07T10:52:04.656649049-06:00
+hash: 35113c02c0fb913e440780ba5e0590ef88ba132a21c3f895beb77869d3cf862b
+updated: 2017-03-28T14:21:50.729273278-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -98,7 +98,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: 35c7b6d96d5f17aa0c0379924615ae22c1ad3d45
+  version: 09b3df4425ca4a46382403ecab5b1fad032a279d
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api

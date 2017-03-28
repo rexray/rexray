@@ -5,12 +5,15 @@ import:
 ##                           Framework Dependencies                           ##
 ################################################################################
 
+  - package: github.com/akutz/golf
+    version: v0.1.2
+
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/codedellemc/libstorage
-    version: v0.5.1 # libstorage-version
+    version: v0.5.2 # libstorage-version
     repo:    https://github.com/codedellemc/libstorage # libstorage-repo
 
   - package: github.com/akutz/gofig
@@ -19,8 +22,6 @@ import:
     version: v0.1.0
   - package: github.com/akutz/goof
     version: v0.1.0
-  - package: github.com/akutz/golf
-    version: v0.1.1
 
   - package: github.com/spf13/pflag
     ref:     b084184666e02084b8ccb9b704bf0d79c466eb1d

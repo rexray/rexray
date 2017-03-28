@@ -3,6 +3,23 @@
 Release early, release often
 
 ---
+## Version 0.5.2 (2017/03/28)
+This is a minor release with some bug fixes, enhancements, and simplified
+support for TLS.
+
+### New Features
+* TLS Support ([#447](https://github.com/codedellemc/libstorage/issues/447))
+
+### Bug Fixes
+* Handle varying `rbd` output format ([#451](https://github.com/codedellemc/libstorage/issues/451))
+* Fix ScaleIO missing `/dev/disk/by-id` ([#466](https://github.com/codedellemc/libstorage/issues/466))
+* Fix Linux integration driver's encryption omission ([#481](https://github.com/codedellemc/libstorage/issues/481))
+* Document `Volume.AttachmentState` ([#483](https://github.com/codedellemc/libstorage/issues/483))
+
+### Enhancements
+* Embedded API documentation ([#487](https://github.com/codedellemc/libstorage/issues/487))
+* Update organization text ([#472](https://github.com/codedellemc/libstorage/issues/472))
+
 ## Version 0.5.1 (2017/02/24)
 This is a minor release to ensure Go1.6 compatibility.
 

@@ -40,6 +40,19 @@ specify `stable`, see the additional version names below that are also valid.
 curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable
 ```
 
+### Install a specific version
+You can install a particular version like this:
+
+```sh
+$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.7.0
+```
+
+The version shows during an install, but to see it again later:
+
+```sh
+$ rexray version
+```
+
 ### Install a pre-built binary
 There are a handful of necessary manual steps to properly install REX-Ray
 from pre-built binaries.

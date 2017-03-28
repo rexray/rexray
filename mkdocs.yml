@@ -23,6 +23,7 @@ pages:
     - Project Guidelines: dev-guide/project-guidelines.md
     - Build Reference: dev-guide/build-reference.md
     - Release Process: dev-guide/release-process.md
+- API: api.md
 - About:
     - Contributing: about/contributing.md
     - License: about/license.md

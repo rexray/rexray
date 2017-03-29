@@ -20,6 +20,7 @@ const (
 	rbdDefaultOrder = 22
 	bytesPerGiB     = 1024 * 1024 * 1024
 	validNameRX     = `[0-9A-Za-z_\-]+`
+	minSizeGiB      = 1
 )
 
 var (
@@ -145,7 +146,6 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	fields := map[string]interface{}{
 		"driverName": d.Name(),
 		"volumeName": volumeName,
-		"opts.size":  *opts.Size,
 	}
 
 	ctx.WithFields(fields).Debug("creating volume")
@@ -169,6 +169,17 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 
 	features := []*string{&featureLayering}
 
+	if opts.Size == nil {
+		size := int64(minSizeGiB)
+		opts.Size = &size
+	}
+
+	fields["opts.Size"] = *opts.Size
+	if *opts.Size < minSizeGiB {
+		fields["minSize"] = minSizeGiB
+		return nil, goof.WithFields(fields, "volume size too small")
+	}
+
 	err = utils.RBDCreate(
 		ctx,
 		pool,
@@ -178,7 +189,8 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 		features,
 	)
 	if err != nil {
-		return nil, goof.WithError("Failed to create new volume", err)
+		return nil, goof.WithFieldsE(fields,
+			"Failed to create new volume", err)
 	}
 
 	volumeID := utils.GetVolumeID(pool, imageName)

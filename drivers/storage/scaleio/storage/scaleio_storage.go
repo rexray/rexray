@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	cc = 31
+	cc         = 31
+	minSizeGiB = 1
 )
 
 type driver struct {
@@ -365,11 +366,21 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	if opts.Type != nil {
 		volume.Type = *opts.Type
 	}
-	if opts.Size != nil {
-		volume.Size = *opts.Size
-	}
 	if opts.IOPS != nil {
 		volume.IOPS = *opts.IOPS
+	}
+
+	if opts.Size == nil {
+		volume.Size = int64(minSizeGiB)
+	} else {
+		volume.Size = *opts.Size
+	}
+
+	fields["size"] = volume.Size
+
+	if volume.Size < minSizeGiB {
+		fields["minSize"] = minSizeGiB
+		return nil, goof.WithFields(fields, "volume size too small")
 	}
 
 	vol, err := d.createVolume(ctx, volumeName, volume)

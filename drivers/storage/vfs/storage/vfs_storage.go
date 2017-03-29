@@ -18,6 +18,10 @@ import (
 	"github.com/codedellemc/libstorage/drivers/storage/vfs"
 )
 
+const (
+	minSizeGiB = 1
+)
+
 type driver struct {
 	ctx    types.Context
 	config gofig.Config
@@ -221,9 +225,11 @@ func (d *driver) VolumeCreate(
 		if opts.IOPS != nil {
 			fields["iops"] = *opts.IOPS
 		}
-		if opts.Size != nil {
-			fields["size"] = *opts.Size
+		if opts.Size == nil {
+			size := int64(minSizeGiB)
+			opts.Size = &size
 		}
+		fields["size"] = *opts.Size
 		if opts.Type != nil {
 			fields["type"] = *opts.Type
 		}
@@ -247,9 +253,8 @@ func (d *driver) VolumeCreate(
 	if opts.IOPS != nil {
 		v.IOPS = *opts.IOPS
 	}
-	if opts.Size != nil {
-		v.Size = *opts.Size
-	}
+	v.Size = *opts.Size
+
 	if opts.Type != nil {
 		v.Type = *opts.Type
 	}

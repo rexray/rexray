@@ -28,6 +28,22 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.8.2 (2017/03/28)
+This is a minor release with some bug fixes, enhancements, and simplified
+support for TLS.
+
+### New Features
+* TLS Support ([#447](https://github.com/codedellemc/libstorage/issues/447))
+
+### Bug Fixes
+* Handle varying `rbd` output format ([#451](https://github.com/codedellemc/libstorage/issues/451))
+* Fix ScaleIO missing `/dev/disk/by-id` ([#466](https://github.com/codedellemc/libstorage/issues/466))
+* Fix Linux integration driver's encryption omission ([#481](https://github.com/codedellemc/libstorage/issues/481))
+* Document `Volume.AttachmentState` ([#483](https://github.com/codedellemc/libstorage/issues/483))
+
+### Enhancements
+* Update organization text ([#774](https://github.com/codedellemc/rexray/issues/774))
+
 ## Version 0.8.1 (2017/02/24)
 This is a minor release that reintroduces support for Go1.6 via
 libStorage 0.5.1.

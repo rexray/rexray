@@ -38,6 +38,13 @@ func NewMissingInstanceIDError(service string) error {
 	}
 }
 
+// NewMissingLocalDevicesError returns a new ErrMissingLocalDevices error.
+func NewMissingLocalDevicesError(service string) error {
+	return &types.ErrMissingLocalDevices{
+		Goof: goof.WithField("service", service, "missing local devices"),
+	}
+}
+
 // NewStoreKeyErr returns a new ErrStoreKey error.
 func NewStoreKeyErr(key string) error {
 	return &types.ErrStoreKey{

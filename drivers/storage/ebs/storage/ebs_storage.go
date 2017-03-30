@@ -25,6 +25,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/ebs"
 	ebsUtils "github.com/codedellemc/libstorage/drivers/storage/ebs/utils"
 )
@@ -271,7 +272,7 @@ func (d *driver) VolumeInspect(
 		return nil, goof.WithError("error getting volume", err)
 	}
 	if len(ec2vols) == 0 {
-		return nil, errNoVolReturned
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 	vols, convErr := d.toTypesVolume(ctx, ec2vols, opts.Attachments)
 	if convErr != nil {

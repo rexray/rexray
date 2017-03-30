@@ -25,6 +25,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/efs"
 )
 
@@ -349,14 +350,15 @@ func (d *driver) VolumeInspect(
 	}
 
 	if len(resp.FileSystems) == 0 {
-		return nil, types.ErrNotFound{}
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	fileSystem := resp.FileSystems[0]
 
 	// Only volumes in "available" state
 	if *fileSystem.LifeCycleState != awsefs.LifeCycleStateAvailable {
-		return nil, nil
+		return nil, goof.WithField("volumeID", volumeID,
+			"Volume not available")
 	}
 
 	// Name is optional via tag so make sure it exists

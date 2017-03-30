@@ -274,7 +274,7 @@ func (d *driver) VolumeInspect(
 		return nil, goof.WithError("error getting volume", err)
 	}
 	if len(ec2vols) == 0 {
-		return nil, errNoVolReturned
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 	vols, convErr := d.toTypesVolume(ctx, ec2vols, opts.Attachments)
 	if convErr != nil {

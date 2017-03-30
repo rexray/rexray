@@ -29,6 +29,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/azureud"
 	"github.com/codedellemc/libstorage/drivers/storage/azureud/utils"
 )
@@ -439,6 +440,9 @@ func (d *driver) VolumeAttach(
 	volume, err := d.getVolume(ctx, volumeID,
 		types.VolumeAttachmentsRequested)
 	if err != nil {
+		if _, ok := err.(*types.ErrNotFound); ok {
+			return nil, "", err
+		}
 		return nil, "", goof.WithFieldsE(fields,
 			"failed to get volume for attach", err)
 	}
@@ -498,6 +502,9 @@ func (d *driver) VolumeDetach(
 	volume, err := d.getVolume(ctx, volumeID,
 		types.VolumeAttachmentsRequested)
 	if err != nil {
+		if _, ok := err.(*types.ErrNotFound); ok {
+			return nil, err
+		}
 		return nil, goof.WithFieldsE(fields,
 			"failed to get volume", err)
 	}
@@ -769,7 +776,7 @@ func (d *driver) getVolume(
 		return nil, goof.WithError("error listing blobs", err)
 	}
 	if len(list.Blobs) == 0 {
-		return nil, goof.New("volume not found")
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 	if len(list.Blobs) > 1 {
 		return nil, goof.New("multiple volumes found")

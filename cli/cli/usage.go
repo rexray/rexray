@@ -161,7 +161,7 @@ Aliases:
 Examples:
 {{.Example | rtrim}}{{end}}{{ if .HasAvailableSubCommands}}
 
-Available Commands: {{range cmds $cmd}}{{if (not .IsHelpCommand)}}
+Available Commands: {{range cmds $cmd}}{{if (not .IsAdditionalHelpTopicCommand)}}
   {{rpad .Name .NamePadding }} {{.Short | rtrim}}{{end}}{{end}}{{end}}{{$lf := lf $cmd}}{{if hf $lf}}
 
 Flags:
@@ -174,7 +174,7 @@ Global Flags:
 {{$fs.FlagUsages | rtrim}}
 {{end}}{{end}}{{if .HasHelpSubCommands}}
 
-Additional help topics: {{range .Commands}}{{if .IsHelpCommand}}
+Additional help topics: {{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
   {{rpad .CommandPath .CommandPathPadding}} {{.Short | rtrim}}{{end}}}{{end}}{{end}}{{if .HasSubCommands}}
 
 Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}

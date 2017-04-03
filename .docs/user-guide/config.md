@@ -285,6 +285,95 @@ libStorage Storage Drivers page has information about the configuration details
 of [each driver](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers),
 including [VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox).
 
+### TLS Configuration ###
+REX-Ray supports several ways of configuring TLS for secure connection between
+a REX-Ray client and a process running REX-Ray as a service.  This section 
+discusses how to configure REX-Ray using the followings:
+
+* YAML files
+* Environmental variables
+* `rexray` command arguments
+
+**Note:** TLS configuration assumes that you are using REX-Ray as a client and server. See
+the section on [Service Mode](./#service-mode) for detail on how to run REX-Ray this way.
+
+Before you get started, you will need at your disposal a keypair (certificate
+and private key) for the server and a separate keypair for the client both signed by 
+a CA.  You can use tools such as [OpenSSL](https://www.openssl.org) or Cloud 
+Flare's CFSSL [CFSSL](https://cfssl.org/) to generate self-signed certificates for your
+setup.
+
+#### Secured transport with TLS ####
+This section shows how to setup both client and server for secured communication between
+them.  
+
+##### Server configuration #####
+```
+rexray:
+  modules:
+    default-docker:
+      disabled: true
+libstorage:
+  embedded: true
+  client:
+    type: controller
+  server:
+    endpoints:
+      public:
+        address: tcp://:7979
+    tls:
+      certFile: /etc/rexray/certs/server.pem
+      keyFile:  /etc/rexray/certs/server-key.pem
+    services:
+      virtualbox:
+        driver: virtualbox
+virtualbox:
+  volumePath: $HOME/VirtualBox/Volumes
+```
+
+##### Client configuration #####
+We also will use a small YAML configuration file for the client to avoid unnecessary typing:
+
+```
+libstorage:
+  embedded: false
+  host:    tcp://localhost:7979
+  service: virtualbox
+  client:
+    tls: true
+```
+
+When we use the REX-Ray client to connect to the server. It will fail as shown below:
+```
+# rexray volume -c ./rexray-config.yaml ls
+  Get http://localhost:7979/services: x509: certificate signed by unknown authority
+...
+```
+
+The error is telling us that REX-Ray attempted to validate the server certificate and
+that failed.  At this point we can tell REX-Ray to ignore that verification step, which
+would make the setup no longer secure as shown below.  This should only be done in a
+non-production environment.
+```
+libstorage:
+...
+  client:
+    tls: insecure
+```
+
+The proper way to setup the REX-Ray client for a secure connection is to provide the CA
+certificate, which contains signed certificate for the server, as shown in the following config:
+```
+libstorage:
+  embedded: false
+  host:    tcp://localhost:7979
+  service: virtualbox
+  client:
+    tls:
+      trustedCertsFile: /etc/rexray/certs/ca.pem
+```
+
+
 ### Logging
 The `-l|--logLevel` option or `rexray.logLevel` configuration key can be set
 to any of the following values to increase or decrease the verbosity of the

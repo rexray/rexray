@@ -184,7 +184,7 @@ func (s *globalTaskService) taskTrack(ctx types.Context) *task {
 }
 
 // TaskExecute enqueues a task for execution.
-func (s *globalTaskService) TaskExecute(
+func (s *globalTaskService) TaskEnqueue(
 	ctx types.Context,
 	run types.TaskRunFunc,
 	schema []byte) *types.Task {

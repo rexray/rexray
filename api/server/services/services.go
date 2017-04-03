@@ -173,12 +173,12 @@ func TaskTrack(ctx types.Context) *types.Task {
 	return getTaskService(ctx).TaskTrack(ctx)
 }
 
-// TaskExecute enqueues a task for execution.
-func TaskExecute(
+// TaskEnqueue enqueues a task for execution.
+func TaskEnqueue(
 	ctx types.Context,
 	run types.TaskRunFunc,
 	schema []byte) *types.Task {
-	return getTaskService(ctx).TaskExecute(ctx, run, schema)
+	return getTaskService(ctx).TaskEnqueue(ctx, run, schema)
 }
 
 // TaskInspect returns the task with the specified ID.

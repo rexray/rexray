@@ -31,8 +31,8 @@ type StorageService interface {
 	// Driver returns the service's StorageDriver.
 	Driver() StorageDriver
 
-	// TaskExecute enqueues a task for execution.
-	TaskExecute(
+	// TaskEnqueue enqueues a task for execution.
+	TaskEnqueue(
 		ctx Context,
 		run StorageTaskRunFunc,
 		schema []byte) *Task
@@ -49,8 +49,8 @@ type TaskTrackingService interface {
 	// TaskTrack creates a new, trackable task.
 	TaskTrack(ctx Context) *Task
 
-	// TaskExecute enqueues a task for execution.
-	TaskExecute(
+	// TaskEnqueue enqueues a task for execution.
+	TaskEnqueue(
 		ctx Context,
 		run TaskRunFunc,
 		schema []byte) *Task
@@ -77,8 +77,8 @@ type TaskTrackingService interface {
 type TaskExecutionService interface {
 	Service
 
-	// TaskExecute enqueues a task for execution.
-	TaskExecute(
+	// TaskEnqueue enqueues a task for execution.
+	TaskEnqueue(
 		ctx Context,
 		run TaskRunFunc,
 		schema []byte) *Task

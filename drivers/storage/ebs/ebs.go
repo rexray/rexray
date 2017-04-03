@@ -17,6 +17,16 @@ const (
 	// NameAWS is the provider's old AWS name.
 	NameAWS = "aws"
 
+	defaultStatusMaxAttempts = 10
+	defaultStatusInitDelay   = "100ms"
+
+	/* This is hard deadline when waiting for the volume status to change to
+	a desired state. At minimum is has to be more than the expontential
+	backoff of sum 100*2^x, x=0 to 9 == 102s3ms, but should also account for
+	RTT of API requests, and how many API requests would be made to
+	exhaust retries */
+	defaultStatusTimeout = "2m"
+
 	// TagDelimiter separates tags from volume or snapshot names
 	TagDelimiter = "/"
 
@@ -62,6 +72,18 @@ const (
 	// If a KmsKeyID is specified, all volumes will be created with their
 	// Encrypted flag set to true.
 	KmsKeyID = "kmsKeyID"
+
+	// ConfigStatusMaxAttempts is the key for the maximum number of times
+	// a volume status will be queried when waiting for an action to finish
+	ConfigStatusMaxAttempts = Name + ".statusMaxAttempts"
+
+	// ConfigStatusInitDelay is the key for the initial time duration
+	// for exponential backoff
+	ConfigStatusInitDelay = Name + ".statusInitialDelay"
+
+	// ConfigStatusTimeout is the key for the time duration for a timeout
+	// on how long to wait for a desired volume status to appears
+	ConfigStatusTimeout = Name + ".statusTimeout"
 )
 
 func init() {
@@ -73,6 +95,12 @@ func init() {
 	r.Key(gofig.Int, "", DefaultMaxRetries, "", Name+"."+MaxRetries)
 	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", Name+"."+Tag)
 	r.Key(gofig.String, "", "", "", Name+"."+KmsKeyID)
+	r.Key(gofig.Int, "", defaultStatusMaxAttempts, "Max Status Attempts",
+		ConfigStatusMaxAttempts)
+	r.Key(gofig.String, "", defaultStatusInitDelay, "Status Initial Delay",
+		ConfigStatusInitDelay)
+	r.Key(gofig.String, "", defaultStatusTimeout, "Status Timeout",
+		ConfigStatusTimeout)
 
 	r.Key(gofig.String, "", "", "", NameEC2+"."+AccessKey)
 	r.Key(gofig.String, "", "", "", NameEC2+"."+SecretKey)

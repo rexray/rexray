@@ -86,7 +86,3 @@ func (d *driver) LocalDevices(
 func (d *driver) Supported(ctx types.Context, opts types.Store) (bool, error) {
 	return doUtils.IsDroplet(ctx)
 }
-
-func (d *driver) token() string {
-	return d.config.GetString(do.ConfigDOToken)
-}

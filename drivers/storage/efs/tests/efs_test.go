@@ -198,7 +198,7 @@ func TestVolumeCreateRemove(t *testing.T) {
 func volumeRemove(t *testing.T, client types.Client, volumeID string) {
 	log.WithField("volumeID", volumeID).Info("removing volume")
 	err := client.API().VolumeRemove(
-		nil, efs.Name, volumeID)
+		nil, efs.Name, volumeID, false)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed volumeRemove")

@@ -44,6 +44,9 @@ type driver struct {
 	accessKey           string
 	secGroups           []string
 	disableSessionCache bool
+	maxAttempts         int
+	statusDelay         int64
+	statusTimeout       time.Duration
 }
 
 func init() {
@@ -90,6 +93,25 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	maxRetries := d.getMaxRetries()
 	d.maxRetries = &maxRetries
 	fields["maxRetries"] = maxRetries
+
+	d.maxAttempts = d.config.GetInt(efs.ConfigStatusMaxAttempts)
+	fields["maxStatusAttempts"] = d.maxAttempts
+
+	statusDelayStr := d.config.GetString(efs.ConfigStatusInitDelay)
+	statusDelay, err := time.ParseDuration(statusDelayStr)
+	if err != nil {
+		return err
+	}
+	d.statusDelay = statusDelay.Nanoseconds()
+	fields["statusDelay"] = fmt.Sprintf(
+		"%v", time.Duration(d.statusDelay)*time.Nanosecond)
+
+	statusTimeoutStr := d.config.GetString(efs.ConfigStatusTimeout)
+	d.statusTimeout, err = time.ParseDuration(statusTimeoutStr)
+	if err != nil {
+		return err
+	}
+	fields["statusTimeout"] = d.statusTimeout
 
 	ctx.WithFields(fields).Info("storage driver initialized")
 	return nil
@@ -443,26 +465,44 @@ func (d *driver) VolumeCreate(
 		return nil, err
 	}
 
-	// Wait until FS is in "available" state
-	for {
-		state, err := d.getFileSystemLifeCycleState(
-			svc, *fileSystem.FileSystemId)
-		if err == nil {
-			if state != awsefs.LifeCycleStateCreating {
-				break
+	f := func() (interface{}, error) {
+		duration := d.statusDelay
+		for i := 1; i <= d.maxAttempts; i++ {
+			state, err := d.getFileSystemLifeCycleState(
+				svc, *fileSystem.FileSystemId)
+			if err != nil {
+				return nil, goof.WithFieldE(
+					"filesystemid",
+					*fileSystem.FileSystemId,
+					"failed to retreive EFS state",
+					err)
+			}
+			if state == awsefs.LifeCycleStateAvailable {
+				return nil, nil
 			}
 			ctx.WithFields(log.Fields{
 				"state":        state,
 				"filesystemid": *fileSystem.FileSystemId,
-			}).Info("EFS not ready")
-		} else {
-			ctx.WithFields(log.Fields{
-				"error":        err,
-				"filesystemid": *fileSystem.FileSystemId,
-			}).Error("failed to retrieve EFS state")
+			}).Debug("EFS not ready")
+
+			time.Sleep(time.Duration(duration) * time.Nanosecond)
+			duration = int64(2) * duration
 		}
-		// Wait for 2 seconds
-		<-time.After(2 * time.Second)
+		return nil, goof.WithField("maxAttempts", d.maxAttempts,
+			"Status attempts exhausted")
+	}
+
+	// Wait until FS is in "available" state
+	_, ok, err := apiUtils.WaitFor(f, d.statusTimeout)
+	if !ok {
+		return nil, goof.WithFields(goof.Fields{
+			"filesystemid":  *fileSystem.FileSystemId,
+			"statusTimeout": d.statusTimeout},
+			"Timeout occured waiting for filesystem status")
+	}
+	if err != nil {
+		return nil, goof.WithFieldE("filesystemid", *fileSystem.FileSystemId,
+			"Error while waiting for storage action to finish", err)
 	}
 
 	return d.VolumeInspect(ctx, *fileSystem.FileSystemId,
@@ -500,25 +540,41 @@ func (d *driver) VolumeRemove(
 	// FileSystem can be deleted only after all mountpoints are deleted (
 	// just in "deleting" life cycle state). Here code will wait until all
 	// mountpoints are deleted.
-	for {
-		resp, err := svc.DescribeMountTargets(
-			&awsefs.DescribeMountTargetsInput{
-				FileSystemId: aws.String(volumeID),
-			})
-		if err != nil {
-			return err
-		}
+	f := func() (interface{}, error) {
+		duration := d.statusDelay
+		for i := 1; i <= d.maxAttempts; i++ {
+			resp, err := svc.DescribeMountTargets(
+				&awsefs.DescribeMountTargetsInput{
+					FileSystemId: aws.String(volumeID),
+				})
+			if err != nil {
+				return nil, err
+			}
 
-		if len(resp.MountTargets) == 0 {
-			break
-		} else {
+			if len(resp.MountTargets) == 0 {
+				return nil, nil
+			}
 			ctx.WithFields(log.Fields{
 				"mounttargets": resp.MountTargets,
 				"filesystemid": volumeID,
-			}).Info("waiting for MountTargets deletion")
-		}
+			}).Debug("waiting for MountTargets deletion")
 
-		<-time.After(2 * time.Second)
+			time.Sleep(time.Duration(duration) * time.Nanosecond)
+			duration = int64(2) * duration
+		}
+		return nil, goof.WithField("maxAttempts", d.maxAttempts,
+			"Status attempts exhausted")
+	}
+	_, ok, err := apiUtils.WaitFor(f, d.statusTimeout)
+	if !ok {
+		return goof.WithFields(goof.Fields{
+			"filesystemid":  volumeID,
+			"statusTimeout": d.statusTimeout},
+			"Timeout occured waiting for MountTargets deletion")
+	}
+	if err != nil {
+		return goof.WithFieldE("filesystemid", volumeID,
+			"Error while waiting for MountTargets deletion", err)
 	}
 
 	// Remove FileSystem
@@ -530,28 +586,42 @@ func (d *driver) VolumeRemove(
 		return err
 	}
 
-	for {
-		ctx.WithFields(log.Fields{
-			"filesystemid": volumeID,
-		}).Info("waiting for FileSystem deletion")
+	f = func() (interface{}, error) {
+		duration := d.statusDelay
+		for i := 1; i <= d.maxAttempts; i++ {
+			ctx.WithFields(log.Fields{
+				"filesystemid": volumeID,
+			}).Info("waiting for FileSystem deletion")
 
-		_, err := svc.DescribeFileSystems(
-			&awsefs.DescribeFileSystemsInput{
-				FileSystemId: aws.String(volumeID),
-			})
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "FileSystemNotFound" {
-					break
-				} else {
-					return err
+			_, err := svc.DescribeFileSystems(
+				&awsefs.DescribeFileSystemsInput{
+					FileSystemId: aws.String(volumeID),
+				})
+			if err != nil {
+				if awsErr, ok := err.(awserr.Error); ok {
+					if awsErr.Code() == "FileSystemNotFound" {
+						return nil, nil
+					}
+					return nil, err
 				}
-			} else {
-				return err
+				return nil, err
 			}
+			time.Sleep(time.Duration(duration) * time.Nanosecond)
+			duration = int64(2) * duration
 		}
-
-		<-time.After(2 * time.Second)
+		return nil, goof.WithField("maxAttempts", d.maxAttempts,
+			"Status attempts exhausted")
+	}
+	_, ok, err = apiUtils.WaitFor(f, d.statusTimeout)
+	if !ok {
+		return goof.WithFields(goof.Fields{
+			"filesystemid":  volumeID,
+			"statusTimeout": d.statusTimeout},
+			"Timeout occured waiting for FileSystem deletion")
+	}
+	if err != nil {
+		return goof.WithFieldE("filesystemid", volumeID,
+			"Error while waiting for FileSystem deletion", err)
 	}
 
 	return nil

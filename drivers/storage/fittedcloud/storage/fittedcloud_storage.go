@@ -45,14 +45,17 @@ const (
 )
 
 type driver struct {
-	name       string
-	config     gofig.Config
-	region     *string
-	endpoint   *string
-	maxRetries *int
-	accessKey  string
-	kmsKeyID   string
-	fcTag      string
+	name          string
+	config        gofig.Config
+	region        *string
+	endpoint      *string
+	maxRetries    *int
+	accessKey     string
+	kmsKeyID      string
+	fcTag         string
+	maxAttempts   int
+	statusDelay   int64
+	statusTimeout time.Duration
 }
 
 func init() {
@@ -81,7 +84,22 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	d.maxRetries = &maxRetries
 	d.kmsKeyID = d.getKmsKeyID()
 
-	_, err := fcagent.IsRunning()
+	d.maxAttempts = d.config.GetInt(fittedcloud.ConfigStatusMaxAttempts)
+
+	statusDelayStr := d.config.GetString(fittedcloud.ConfigStatusInitDelay)
+	statusDelay, err := time.ParseDuration(statusDelayStr)
+	if err != nil {
+		return err
+	}
+	d.statusDelay = statusDelay.Nanoseconds()
+
+	statusTimeoutStr := d.config.GetString(fittedcloud.ConfigStatusTimeout)
+	d.statusTimeout, err = time.ParseDuration(statusTimeoutStr)
+	if err != nil {
+		return err
+	}
+
+	_, err = fcagent.IsRunning()
 	if err != nil {
 		log.Error("error FittedCloud Agent is not running, ", err)
 		return goof.WithError("error FittedCloud Agent is not running", err)
@@ -513,7 +531,7 @@ func (d *driver) VolumeAttach(
 		if err != nil {
 			return nil, "", goof.WithError("error waiting for volume attach", err)
 		}
-		nextDevice, err = fcUtils.NextDevice(ctx, apiUtils.NewStore())
+		nextDevice, _ = fcUtils.NextDevice(ctx, apiUtils.NewStore())
 	}
 
 	// Check if successful attach
@@ -913,40 +931,55 @@ func (d *driver) waitVolumeComplete(
 		return errMissingVolID
 	}
 
-	var (
-		loop     = true
-		attached = awsec2.VolumeAttachmentStateAttached
-	)
-
-	for loop {
-		// update volume
-		volumes, err := d.getVolume(ctx, volumeID, "")
-		if err != nil {
-			return goof.WithError("error getting volume", err)
-		}
-
-		// check retrieved volume
-		switch action {
-		case waitVolumeCreate:
-			if *volumes[0].State == awsec2.VolumeStateAvailable {
-				loop = false
+	f := func() (interface{}, error) {
+		attached := awsec2.VolumeAttachmentStateAttached
+		duration := d.statusDelay
+		for i := 1; i <= d.maxAttempts; i++ {
+			// update volume
+			volumes, err := d.getVolume(ctx, volumeID, "")
+			if err != nil {
+				return nil, goof.WithFieldE("volumeID",
+					volumeID, "error getting volume", err)
 			}
-		case waitVolumeDetach:
-			if len(volumes[0].Attachments) == 0 {
-				loop = false
-			}
-		case waitVolumeAttach:
-			if len(volumes[0].Attachments) == 1 &&
-				*volumes[0].Attachments[0].State == attached {
-				loop = false
-			}
-		}
 
-		if loop {
-			time.Sleep(1 * time.Second)
+			// check retrieved volume
+			switch action {
+			case waitVolumeCreate:
+				if *volumes[0].State == awsec2.VolumeStateAvailable {
+					return nil, nil
+				}
+			case waitVolumeDetach:
+				if len(volumes[0].Attachments) == 0 {
+					return nil, nil
+				}
+			case waitVolumeAttach:
+				if len(volumes[0].Attachments) == 1 &&
+					*volumes[0].Attachments[0].State == attached {
+					return nil, nil
+				}
+			}
+
+			ctx.WithField("action", action).Debug(
+				"still waiting for action",
+			)
+			time.Sleep(time.Duration(duration) * time.Nanosecond)
+			duration = int64(2) * duration
 		}
+		return nil, goof.WithField("maxAttempts", d.maxAttempts,
+			"Status attempts exhausted")
 	}
 
+	_, ok, err := apiUtils.WaitFor(f, d.statusTimeout)
+	if !ok {
+		return goof.WithFields(goof.Fields{
+			"volumeID":      volumeID,
+			"statusTimeout": d.statusTimeout},
+			"Timeout occured waiting for storage action")
+	}
+	if err != nil {
+		return goof.WithFieldE("volumeID", volumeID,
+			"Error while waiting for storage action to finish", err)
+	}
 	return nil
 }
 

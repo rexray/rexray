@@ -1078,12 +1078,40 @@ test:
 test-debug:
 	LIBSTORAGE_DEBUG=true $(MAKE) test
 
-test-rbd:
-	DRIVERS=rbd $(MAKE) deps
-	DRIVERS=rbd $(MAKE) ./drivers/storage/rbd/tests/rbd.test
+test-azureud:
+	DRIVERS=azureud $(MAKE) deps
+	DRIVERS=azureud $(MAKE) ./drivers/storage/azureud/tests/azureud.test
 
-test-rbd-clean:
-	DRIVERS=rbd $(MAKE) clean
+test-azureud-clean:
+	DRIVERS=azureud $(MAKE) clean
+
+test-dobs:
+	DRIVERS=dobs $(MAKE) deps
+	DRIVERS=dobs $(MAKE) ./drivers/storage/dobs/tests/dobs.test
+
+test-dobs-clean:
+	DRIVERS=dobs $(MAKE) clean
+
+test-ebs:
+	DRIVERS=ebs $(MAKE) deps
+	DRIVERS=ebs $(MAKE) ./drivers/storage/ebs/tests/ebs.test
+
+test-ebs-clean:
+	DRIVERS=ebs $(MAKE) clean
+
+test-efs:
+	DRIVERS=efs $(MAKE) deps
+	DRIVERS=efs $(MAKE) ./drivers/storage/efs/tests/efs.test
+
+test-efs-clean:
+	DRIVERS=efs $(MAKE) clean
+
+test-fittedcloud:
+	DRIVERS=fittedcloud $(MAKE) deps
+	DRIVERS=fittedcloud $(MAKE) ./drivers/storage/fittedcloud/tests/fittedcloud.test
+
+test-fittedcloud-clean:
+	DRIVERS=fittedcloud $(MAKE) clean
 
 test-gcepd:
 	DRIVERS=gcepd $(MAKE) deps
@@ -1092,19 +1120,13 @@ test-gcepd:
 test-gcepd-clean:
 	DRIVERS=gcepd $(MAKE) clean
 
-test-digitalocean:
-	DRIVERS=digitalocean $(MAKE) deps
-	DRIVERS=digitalocean $(MAKE) ./drivers/storage/digitalocean/tests/digitalocean.test
+test-rbd:
+	DRIVERS=rbd $(MAKE) deps
+	DRIVERS=rbd $(MAKE) ./drivers/storage/rbd/tests/rbd.test
 
-test-digitalocean-clean:
-	DRIVERS=digitalocean $(MAKE) clean
+test-rbd-clean:
+	DRIVERS=rbd $(MAKE) clean
 
-test-azureud:
-	DRIVERS=azureud $(MAKE) deps
-	DRIVERS=azureud $(MAKE) ./drivers/storage/azureud/tests/azureud.test
-
-test-azureud-clean:
-	DRIVERS=azureud $(MAKE) clean
 
 test-vfs:
 	DRIVERS=vfs $(MAKE) ./drivers/storage/vfs/tests/vfs.test

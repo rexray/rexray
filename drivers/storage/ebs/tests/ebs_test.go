@@ -105,7 +105,7 @@ func TestInstanceID(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Get Instance ID metadata from executor
-	iid, err := ebsUtils.InstanceID(ctx)
+	iid, err := ebsUtils.InstanceID(ctx, ebs.Name)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Fatal(err)
@@ -149,7 +149,7 @@ func TestInstanceIDEC2(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Get Instance ID metadata from executor
-	iid, err := ebsUtils.InstanceID(ctx)
+	iid, err := ebsUtils.InstanceID(ctx, ebs.NameEC2)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Fatal(err)
@@ -166,9 +166,9 @@ func TestInstanceIDEC2(t *testing.T) {
 
 	// test resulting InstanceID
 	apitests.Run(
-		t, "ec2", nil,
+		t, ebs.NameEC2, nil,
 		(&apitests.InstanceIDTest{
-			Driver:   "ec2",
+			Driver:   ebs.NameEC2,
 			Expected: iid,
 		}).Test)
 
@@ -193,11 +193,11 @@ func TestServices(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len(reply), 1)
 
-		_, ok := reply["ec2"]
+		_, ok := reply[ebs.NameEC2]
 		assert.True(t, ok)
 	}
 	apitests.Run(t, ebs.Name, configYAMLec2, tf)
-	apitests.Run(t, "ec2", configYAMLec2, tf2)
+	apitests.Run(t, ebs.NameEC2, configYAMLec2, tf2)
 }
 
 // Test volume functionality from storage driver
@@ -207,10 +207,11 @@ func TestVolumeAttach(t *testing.T) {
 	}
 	var vol *types.Volume
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		vol = volumeCreate(t, client, volumeName, config.GetString("ec2.tag"))
+		vol = volumeCreate(t, client, volumeName,
+			config.GetString("ec2.tag"))
 		_ = volumeAttach(t, client, vol.ID)
 		_ = volumeInspectAttached(t, client, vol.ID)
-		_ = volumeInspectDetachedFail(t, client, vol.ID)
+		_ = volumeInspectAvailableFail(t, client, vol.ID)
 		_ = volumeDetach(t, client, vol.ID)
 		_ = volumeInspectDetached(t, client, vol.ID)
 		volumeRemove(t, client, vol.ID)
@@ -225,11 +226,12 @@ func TestVolumeCreateRemove(t *testing.T) {
 	}
 
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		vol := volumeCreate(t, client, volumeName, config.GetString("ec2.tag"))
+		vol := volumeCreate(t, client, volumeName,
+			config.GetString("ec2.tag"))
 		volumeRemove(t, client, vol.ID)
 	}
-	//apitests.Run(t, ebs.Name, configYAMLec2, tf)
-	apitests.Run(t, "ebs", configYAMLec2, tf)
+	apitests.Run(t, ebs.Name, configYAMLec2, tf)
+	//apitests.Run(t, "ebs", configYAMLec2, tf)
 }
 
 // Test volume functionality from storage driver
@@ -239,11 +241,12 @@ func TestEncryptedVolumeCreateRemove(t *testing.T) {
 	}
 
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		vol := volumeCreateEncrypted(t, client, volumeName, config.GetString("ec2.tag"))
+		vol := volumeCreateEncrypted(t, client, volumeName,
+			config.GetString("ec2.tag"))
 		volumeRemove(t, client, vol.ID)
 	}
-	//apitests.Run(t, ebs.Name, configYAMLec2, tf)
-	apitests.Run(t, "ebs", configYAMLec2, tf)
+	apitests.Run(t, ebs.Name, configYAMLec2, tf)
+	//apitests.Run(t, "ebs", configYAMLec2, tf)
 }
 
 // Test volume functionality from storage driver
@@ -253,11 +256,15 @@ func TestVolumes(t *testing.T) {
 	}
 
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
-		_ = volumeCreate(t, client, volumeName, config.GetString("ec2.tag"))
-		_ = volumeCreate(t, client, volumeName2, config.GetString("ec2.tag"))
+		_ = volumeCreate(t, client, volumeName,
+			config.GetString("ec2.tag"))
+		_ = volumeCreate(t, client, volumeName2,
+			config.GetString("ec2.tag"))
 
-		vol1 := volumeByName(t, client, volumeName, config.GetString("ec2.tag"))
-		vol2 := volumeByName(t, client, volumeName2, config.GetString("ec2.tag"))
+		vol1 := volumeByName(t, client, volumeName,
+			config.GetString("ec2.tag"))
+		vol2 := volumeByName(t, client, volumeName2,
+			config.GetString("ec2.tag"))
 
 		volumeRemove(t, client, vol1.ID)
 		volumeRemove(t, client, vol2.ID)
@@ -270,7 +277,11 @@ func TestVolumes(t *testing.T) {
 ///////////////////////////////////////////////////////////////////////
 // Test volume creation specifying size and volume name
 func volumeCreate(
-	t *testing.T, client types.Client, volumeName, tag string) *types.Volume {
+	t *testing.T,
+	client types.Client,
+	volumeName,
+	tag string) *types.Volume {
+
 	log.WithField("volumeName", volumeName).Info("creating volume")
 	// Prepare request for storage driver call to create volume
 	size := int64(1)
@@ -287,7 +298,8 @@ func volumeCreate(
 	}
 
 	// Send request and retrieve created libStorage types.Volume
-	reply, err := client.API().VolumeCreate(nil, ebs.Name, volumeCreateRequest)
+	reply, err := client.API().VolumeCreate(
+		nil, ebs.Name, volumeCreateRequest)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -307,8 +319,12 @@ func volumeCreate(
 
 // Test volume creation specifying size, volume name, and encryption
 func volumeCreateEncrypted(
-	t *testing.T, client types.Client, volumeName, tag string) *types.Volume {
-	log.WithField("volumeName", volumeName).Info("creating encrypted volume")
+	t *testing.T,
+	client types.Client,
+	volumeName,
+	tag string) *types.Volume {
+	log.WithField("volumeName", volumeName).Info(
+		"creating encrypted volume")
 	// Prepare request for storage driver call to create volume
 	size := int64(2)
 	encrypted := true
@@ -326,7 +342,8 @@ func volumeCreateEncrypted(
 	}
 
 	// Send request and retrieve created libStorage types.Volume
-	reply, err := client.API().VolumeCreate(nil, ebs.Name, volumeCreateRequest)
+	reply, err := client.API().VolumeCreate(
+		nil, ebs.Name, volumeCreateRequest)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -345,13 +362,18 @@ func volumeCreateEncrypted(
 	return reply
 }
 
-// Test volume retrieval by volume name using Volumes, which retrieves all volumes
-// from the storage driver without filtering, and filters the volumes externally.
+// Test volume retrieval by volume name using Volumes, which retrieves all
+// volumes from the storage driver without filtering, and filters the volumes
+// externally.
 func volumeByName(
-	t *testing.T, client types.Client, volumeName, tag string) *types.Volume {
+	t *testing.T,
+	client types.Client,
+	volumeName,
+	tag string) *types.Volume {
+
 	log.WithField("volumeName", volumeName).Info("get volume by ebs.Name")
 	// Retrieve all volumes
-	vols, err := client.API().Volumes(nil, 0)
+	vols, err := client.API().Volumes(nil, types.VolAttFalse)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -379,10 +401,14 @@ func volumeByName(
 // externally. Contrast with volumeInspect, which directly retrieves matching
 // volumes from the storage driver.
 func volumeByID(
-	t *testing.T, client types.Client, volumeID string) *types.Volume {
-	log.WithField("volumeID", volumeID).Info("get volume by ebs.Name using ID")
+	t *testing.T,
+	client types.Client,
+	volumeID string) *types.Volume {
+
+	log.WithField("volumeID", volumeID).Info(
+		"get volume by ebs.Name using ID")
 	// Retrieve all volumes
-	vols, err := client.API().Volumes(nil, 0)
+	vols, err := client.API().Volumes(nil, types.VolAttFalse)
 	assert.NoError(t, err)
 	if err != nil {
 		t.FailNow()
@@ -405,7 +431,7 @@ func volumeByID(
 func volumeRemove(t *testing.T, client types.Client, volumeID string) {
 	log.WithField("volumeID", volumeID).Info("removing volume")
 	err := client.API().VolumeRemove(
-		nil, ebs.Name, volumeID)
+		nil, ebs.Name, volumeID, false)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -419,7 +445,8 @@ func volumeAttach(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("attaching volume")
 	// Get next device name from executor
-	nextDevice, err := client.Executor().NextDevice(context.Background().WithValue(context.ServiceKey, ebs.Name),
+	nextDevice, err := client.Executor().NextDevice(
+		context.Background().WithValue(context.ServiceKey, ebs.Name),
 		utils.NewStore())
 	assert.NoError(t, err)
 	if err != nil {
@@ -450,7 +477,8 @@ func volumeAttach(
 func volumeInspect(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, 0)
+	reply, err := client.API().VolumeInspect(
+		nil, ebs.Name, volumeID, types.VolAttFalse)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -485,7 +513,7 @@ func volumeInspectDetached(
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
 	reply, err := client.API().VolumeInspect(
 		nil, ebs.Name, volumeID,
-		types.VolAttReqTrue)
+		types.VolAttReq)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -494,26 +522,21 @@ func volumeInspectDetached(
 	}
 	apitests.LogAsJSON(reply, t)
 	assert.Len(t, reply.Attachments, 0)
-	apitests.LogAsJSON(reply, t)
 	return reply
 }
 
-// Test if volume is attached, but VolumeInspect is called with the attachments
-// flag set to false, then its Attachments field should still be populated.
-// However, its Attachments' DeviceName field should not be populated.
-func volumeInspectDetachedFail(
+// Test if volume is attached, but VolumeInspect is called to only request
+// unattached volumes.
+func volumeInspectAvailableFail(
 	t *testing.T, client types.Client, volumeID string) *types.Volume {
 
 	log.WithField("volumeID", volumeID).Info("inspecting volume")
-	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID, 0)
-	assert.NoError(t, err)
+	reply, err := client.API().VolumeInspect(nil, ebs.Name, volumeID,
+		types.VolAttReqOnlyUnattachedVols)
+	assert.Error(t, err)
+	assert.Equal(t, "resource not found", err.Error())
 
-	if err != nil {
-		t.Error("failed volumeInspectDetachedFail")
-		t.FailNow()
-	}
 	apitests.LogAsJSON(reply, t)
-	assert.Len(t, reply.Attachments, 1)
 	return reply
 }
 

@@ -49,7 +49,7 @@ func (r *router) snapshots(
 			return objMap, nil
 		}
 
-		task := service.TaskExecute(ctx, run, schema.SnapshotMapSchema)
+		task := service.TaskEnqueue(ctx, run, schema.SnapshotMapSchema)
 		taskIDs = append(taskIDs, task.ID)
 		tasks[service.Name()] = task
 	}
@@ -79,7 +79,7 @@ func (r *router) snapshots(
 		r.config,
 		w,
 		store,
-		services.TaskExecute(ctx, run, schema.ServiceSnapshotMapSchema),
+		services.TaskEnqueue(ctx, run, schema.ServiceSnapshotMapSchema),
 		http.StatusOK)
 }
 
@@ -113,7 +113,7 @@ func (r *router) snapshotsForService(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.SnapshotMapSchema),
+		service.TaskEnqueue(ctx, run, schema.SnapshotMapSchema),
 		http.StatusOK)
 }
 
@@ -140,7 +140,7 @@ func (r *router) snapshotInspect(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		service.TaskEnqueue(ctx, run, schema.SnapshotSchema),
 		http.StatusOK)
 }
 
@@ -167,7 +167,7 @@ func (r *router) snapshotRemove(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, nil),
+		service.TaskEnqueue(ctx, run, nil),
 		http.StatusResetContent)
 }
 
@@ -217,7 +217,7 @@ func (r *router) volumeCreate(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		service.TaskEnqueue(ctx, run, schema.VolumeSchema),
 		http.StatusCreated)
 }
 
@@ -246,6 +246,6 @@ func (r *router) snapshotCopy(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		service.TaskEnqueue(ctx, run, schema.SnapshotSchema),
 		http.StatusCreated)
 }

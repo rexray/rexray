@@ -97,7 +97,7 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	doVolumes, _, err := d.client.Storage.ListVolumes(nil)
+	doVolumes, _, err := d.client.Storage.ListVolumes(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (d *driver) VolumeInspect(
 	volumeID string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
-	doVolume, _, err := d.client.Storage.GetVolume(volumeID)
+	doVolume, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (d *driver) VolumeCreate(
 		SizeGigaBytes: *opts.Size,
 	}
 
-	volume, _, err := d.client.Storage.CreateVolume(volumeReq)
+	volume, _, err := d.client.Storage.CreateVolume(ctx, volumeReq)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (d *driver) VolumeRemove(
 	volumeID string,
 	opts *types.VolumeRemoveOpts) error {
 
-	volume, _, err := d.client.Storage.GetVolume(volumeID)
+	volume, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return err
 	}
@@ -194,13 +194,13 @@ func (d *driver) VolumeRemove(
 			return goof.New("volume currently attached")
 		}
 
-		err = d.volumeDetach(volumeID)
+		err = d.volumeDetach(ctx, volume)
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = d.client.Storage.DeleteVolume(volumeID)
+	_, err = d.client.Storage.DeleteVolume(ctx, volumeID)
 	if err != nil {
 		return err
 	}
@@ -208,16 +208,21 @@ func (d *driver) VolumeRemove(
 	return nil
 }
 
-func (d *driver) volumeDetach(volumeID string) error {
+func (d *driver) volumeDetach(
+	ctx types.Context,
+	volume *godo.Volume) error {
 
-	action, _, err := d.client.StorageActions.Detach(volumeID)
-	if err != nil {
-		return err
-	}
+	for _, dropletID := range volume.DropletIDs {
+		action, _, err := d.client.StorageActions.DetachByDropletID(
+			ctx, volume.ID, dropletID)
+		if err != nil {
+			return err
+		}
 
-	err = d.waitForAction(volumeID, action)
-	if err != nil {
-		return err
+		err = d.waitForAction(ctx, volume.ID, action)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -225,7 +230,7 @@ func (d *driver) volumeDetach(volumeID string) error {
 func (d *driver) VolumeAttach(
 	ctx types.Context, volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
-	vol, _, err := d.client.Storage.GetVolume(volumeID)
+	vol, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return nil, "", goof.WithError("error retrieving volume", err)
 	}
@@ -235,7 +240,7 @@ func (d *driver) VolumeAttach(
 			return nil, "", goof.New("volume already attached")
 		}
 
-		err = d.volumeDetach(volumeID)
+		err = d.volumeDetach(ctx, vol)
 		if err != nil {
 			return nil, "", err
 		}
@@ -247,12 +252,13 @@ func (d *driver) VolumeAttach(
 		return nil, "", err
 	}
 
-	action, _, err := d.client.StorageActions.Attach(volumeID, dropletIDI)
+	action, _, err := d.client.StorageActions.Attach(
+		ctx, volumeID, dropletIDI)
 	if err != nil {
 		return nil, "", err
 	}
 
-	err = d.waitForAction(volumeID, action)
+	err = d.waitForAction(ctx, volumeID, action)
 	if err != nil {
 		return nil, "", err
 	}
@@ -271,7 +277,7 @@ func (d *driver) VolumeAttach(
 func (d *driver) VolumeDetach(
 	ctx types.Context, volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
-	vol, _, err := d.client.Storage.GetVolume(volumeID)
+	vol, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return nil, goof.WithError("error getting volume", err)
 	}
@@ -280,7 +286,7 @@ func (d *driver) VolumeDetach(
 		return nil, goof.WithError("volume already detached", err)
 	}
 
-	err = d.volumeDetach(volumeID)
+	err = d.volumeDetach(ctx, vol)
 	if err != nil {
 		return nil, err
 	}
@@ -387,13 +393,17 @@ func (d *driver) toTypesVolume(
 	return vol, nil
 }
 
-func (d *driver) waitForAction(volumeID string, action *godo.Action) error {
+func (d *driver) waitForAction(
+	ctx types.Context,
+	volumeID string,
+	action *godo.Action) error {
 	// TODO expose these ints as options
 	for i := 0; i < 10; i++ {
 		duration := i * 15
 		time.Sleep(time.Duration(duration) * time.Millisecond)
 
-		action, _, err := d.client.StorageActions.Get(volumeID, action.ID)
+		action, _, err := d.client.StorageActions.Get(
+			ctx, volumeID, action.ID)
 		if err != nil {
 			return err
 		}

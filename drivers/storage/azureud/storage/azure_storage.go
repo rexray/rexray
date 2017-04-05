@@ -46,6 +46,8 @@ const (
 
 	// Default new disk size
 	defaultNewDiskSizeGB int32 = 128
+
+	minSizeGiB = 1
 )
 
 type driver struct {
@@ -347,14 +349,14 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	}
 
 	size := int64(defaultNewDiskSizeGB)
-	if opts.Size != nil && *opts.Size != 0 {
+	if opts.Size != nil && *opts.Size >= minSizeGiB {
 		size = *opts.Size
 	}
 	size *= size1GB
 
 	fields := map[string]interface{}{
-		"volumeName":    volumeName,
-		"size_in_bytes": size,
+		"volumeName":  volumeName,
+		"sizeInBytes": size,
 	}
 
 	blobClient := mustSession(ctx).blobClient

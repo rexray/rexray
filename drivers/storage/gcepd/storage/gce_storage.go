@@ -358,6 +358,18 @@ func (d *driver) VolumeCreate(
 			"Volume name does not meet GCE naming requirements")
 	}
 
+	if opts.Size == nil {
+		size := int64(minDiskSizeGB)
+		opts.Size = &size
+	}
+
+	fields["size"] = *opts.Size
+
+	if *opts.Size < minDiskSizeGB {
+		fields["minSize"] = minDiskSizeGB
+		return nil, goof.WithFields(fields, "volume size too small")
+	}
+
 	ctx.WithFields(fields).Debug("creating volume")
 
 	// Check if volume with same name exists
@@ -831,10 +843,6 @@ func (d *driver) createVolume(
 	ctx types.Context,
 	volumeName *string,
 	opts *types.VolumeCreateOpts) error {
-
-	if opts.Size == nil || *opts.Size < minDiskSizeGB {
-		return goof.Newf("Minimum disk size is %d GB", minDiskSizeGB)
-	}
 
 	diskType := d.defaultDiskType
 	if opts.Type != nil && *opts.Type != "" {

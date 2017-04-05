@@ -19,6 +19,10 @@ import (
 	doUtils "github.com/codedellemc/libstorage/drivers/storage/dobs/utils"
 )
 
+const (
+	minSizeGiB = 1
+)
+
 type driver struct {
 	name   string
 	config gofig.Config
@@ -136,6 +140,10 @@ func (d *driver) VolumeCreate(
 	name string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
+	fields := map[string]interface{}{
+		"volumeName": name,
+	}
+
 	if opts.AvailabilityZone == nil || *opts.AvailabilityZone == "" {
 		instance, err := d.InstanceInspect(ctx, nil)
 		if err != nil {
@@ -143,6 +151,19 @@ func (d *driver) VolumeCreate(
 		}
 		opts.AvailabilityZone = &instance.Region
 	}
+
+	if opts.Size == nil {
+		size := int64(minSizeGiB)
+		opts.Size = &size
+	}
+
+	fields["size"] = *opts.Size
+
+	if *opts.Size < minSizeGiB {
+		fields["minSize"] = minSizeGiB
+		return nil, goof.WithFields(fields, "volume size too small")
+	}
+
 	volumeReq := &godo.VolumeCreateRequest{
 		Region:        *opts.AvailabilityZone,
 		Name:          name,

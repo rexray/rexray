@@ -37,6 +37,8 @@ const (
 	waitVolumeAttach = "attach"
 	// waitVolumeDetach signifies to wait for volume detachment to complete
 	waitVolumeDetach = "detach"
+
+	minSizeGiB = 1
 )
 
 type driver struct {
@@ -294,7 +296,19 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 		"opts":       opts,
 	}
 
-	log.WithFields(fields).Debug("creating volume")
+	ctx.WithFields(fields).Debug("creating volume")
+
+	if opts.Size == nil {
+		size := int64(minSizeGiB)
+		opts.Size = &size
+	}
+
+	fields["size"] = *opts.Size
+
+	if *opts.Size < minSizeGiB {
+		fields["minSize"] = minSizeGiB
+		return nil, goof.WithFields(fields, "volume size too small")
+	}
 
 	// Check if volume with same name exists
 	ec2vols, err := d.getVolume(ctx, "", volumeName)

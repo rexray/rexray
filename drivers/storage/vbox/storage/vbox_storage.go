@@ -21,6 +21,10 @@ import (
 	"github.com/codedellemc/libstorage/drivers/storage/vbox"
 )
 
+const (
+	minSizeGiB = 1
+)
+
 // Driver represents a vbox driver implementation of StorageDriver
 type driver struct {
 	sync.Mutex
@@ -225,14 +229,21 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 		return nil, err
 	}
 
-	if opts.Size == nil {
-		return nil, goof.New("missing volume size")
-	}
-
 	fields := map[string]interface{}{
 		"provider":   vbox.Name,
 		"volumeName": volumeName,
-		"size":       *opts.Size,
+	}
+
+	if opts.Size == nil {
+		size := int64(minSizeGiB)
+		opts.Size = &size
+	}
+
+	fields["size"] = *opts.Size
+
+	if *opts.Size < minSizeGiB {
+		fields["minSize"] = minSizeGiB
+		return nil, goof.WithFields(fields, "volume size too small")
 	}
 
 	size := *opts.Size * 1024 * 1024 * 1024

@@ -17,6 +17,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/vbox"
 )
 
@@ -163,7 +164,7 @@ func (d *driver) getVolumeMapping(ctx types.Context) ([]*types.Volume, error) {
 		return nil, err
 	}
 
-	if err := m.Refresh(); err != nil {
+	if err = m.Refresh(); err != nil {
 		return nil, err
 	}
 	defer m.Release()
@@ -336,14 +337,14 @@ func (d *driver) VolumeAttach(
 	}
 
 	if len(volumes) == 0 {
-		return nil, "", goof.New("no volume found")
+		return nil, "", apiUtils.NewNotFoundError(volumeID)
 	}
 
 	if len(volumes[0].Attachments) > 0 && !opts.Force {
 		return nil, "", goof.New("volume already attached to a host")
 	}
 	if opts.Force {
-		if _, err := d.VolumeDetach(ctx, volumeID, nil); err != nil {
+		if _, err = d.VolumeDetach(ctx, volumeID, nil); err != nil {
 			return nil, "", err
 		}
 	}
@@ -393,7 +394,7 @@ func (d *driver) VolumeDetach(
 	}
 
 	if len(volumes) == 0 {
-		return nil, goof.New("no volume returned")
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	// TODO: Check if volumes[[0].Attachments > 0?
@@ -474,7 +475,7 @@ func (d *driver) VolumeInspect(
 		return nil, err
 	}
 	if len(vols) == 0 {
-		return nil, goof.New("no volumes returned")
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 	return vols[0], nil
 }
@@ -674,7 +675,7 @@ func (d *driver) attachVolume(
 		return err
 	}
 
-	if err := m.Refresh(); err != nil {
+	if err = m.Refresh(); err != nil {
 		return err
 	}
 	defer m.Release()
@@ -708,7 +709,7 @@ func (d *driver) detachVolume(
 		return err
 	}
 
-	if err := m.Refresh(); err != nil {
+	if err = m.Refresh(); err != nil {
 		return err
 	}
 	defer m.Release()

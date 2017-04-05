@@ -16,6 +16,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/isilon"
 )
 
@@ -245,7 +246,7 @@ func (d *driver) VolumeInspect(
 	}
 
 	if vols == nil {
-		return nil, nil
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	return vols[0], nil
@@ -349,9 +350,6 @@ func (d *driver) VolumeAttach(
 	if err != nil {
 		return nil, "", err
 	}
-	if vol == nil {
-		return nil, "", goof.New("no volumes returned")
-	}
 
 	exportID, err := d.client.ExportVolume(ctx, volumeID)
 	if err != nil {
@@ -423,14 +421,10 @@ func (d *driver) VolumeDetach(
 	d.Lock()
 	defer d.Unlock()
 
-	vol, err := d.VolumeInspect(ctx, volumeID,
+	_, err := d.VolumeInspect(ctx, volumeID,
 		&types.VolumeInspectOpts{Attachments: 0})
 	if err != nil {
 		return nil, err
-	}
-
-	if vol == nil {
-		return nil, goof.New("no volumes returned")
 	}
 
 	instanceID, err := d.InstanceInspect(ctx, nil)

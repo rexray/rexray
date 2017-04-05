@@ -52,6 +52,9 @@ func getStatus(err error) int {
 		return http.StatusUnauthorized
 	case *types.ErrNotFound:
 		return http.StatusNotFound
+	case *types.ErrMissingInstanceID,
+		*types.ErrMissingLocalDevices:
+		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError
 	}

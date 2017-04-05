@@ -19,7 +19,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 
 	"github.com/codedellemc/libstorage/drivers/storage/s3fs"
 	s3fsUtils "github.com/codedellemc/libstorage/drivers/storage/s3fs/utils"
@@ -474,9 +474,7 @@ func (d *driver) VolumeAttach(
 
 	vol, err := d.getVolume(ctx, volumeID, types.VolAttReq)
 	if err != nil {
-		return nil, "", goof.WithFieldE(
-			"volumeID", volumeID,
-			"volume is not in bucket list", err)
+		return nil, "", err
 	}
 	return vol, "", nil
 }
@@ -489,9 +487,7 @@ func (d *driver) VolumeDetach(
 
 	vol, err := d.getVolume(ctx, volumeID, types.VolAttReq)
 	if err != nil {
-		return nil, goof.WithFieldE(
-			"volumeID", volumeID,
-			"volume is not in bucket list", err)
+		return nil, err
 	}
 	return vol, nil
 }
@@ -591,7 +587,7 @@ func (d *driver) getVolume(
 	svc, _ := d.getService(ctx, "")
 	req, _ := svc.HeadBucketRequest(&awss3.HeadBucketInput{Bucket: &volumeID})
 	if err := req.Send(); err != nil && req.HTTPResponse.StatusCode != 301 {
-		return nil, utils.NewNotFoundError(volumeID)
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 	return d.toTypeVolume(ctx, volumeID, attachments), nil
 }
@@ -604,7 +600,7 @@ func (d *driver) getServiceForBucket(
 	res, err := svc.GetBucketLocation(
 		&awss3.GetBucketLocationInput{Bucket: &bucket})
 	if err != nil {
-		return nil, utils.NewNotFoundError(bucket)
+		return nil, apiUtils.NewNotFoundError(bucket)
 	}
 	var region string
 	if res.LocationConstraint != nil {

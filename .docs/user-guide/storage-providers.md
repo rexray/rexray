@@ -668,11 +668,6 @@ The DigitalOcean Block Storage (DOBS) driver registers a driver named `dobs`
 with the libStorage service registry and is used to attach and mount
 DigitalOcean block storage devices to DigitalOcean instances.
 
-!!! note
-    The DigitalOcean Block Storage driver currently only supports operating in
-    _local only_ mode where the libStorage server must be running on the same
-    host as the client.
-
 #### Requirements
 The DigitalOcean block storage driver has the following requirements:
 

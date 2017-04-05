@@ -15,6 +15,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/rackspace"
 
 	"github.com/rackspace/gophercloud"
@@ -158,7 +159,7 @@ func (d *driver) VolumeInspect(
 	}
 
 	if vols == nil {
-		return nil, nil
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 	return vols[0], nil
 }

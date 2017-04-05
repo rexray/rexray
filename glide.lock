@@ -1,5 +1,5 @@
-hash: fd8ed25337840b1d024f112d5dcfe413295ade4c55e950d95190d6234e7c987b
-updated: 2017-03-07T13:59:47.39664623-06:00
+hash: d42aeb89a7a5bb8b89e13316bfe077714a881c64c2812dda9594911cc1fc52ae
+updated: 2017-03-30T14:41:16.162274849-07:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -102,7 +102,7 @@ imports:
 - name: github.com/dgrijalva/jwt-go
   version: 2268707a8f0843315e2004ee4f1d021dc08baedf
 - name: github.com/digitalocean/godo
-  version: 2ff8a02a86cd6918b384a5000ceebe886844fbce
+  version: 84099941ba2381607e1b05ffd4822781af86675e
 - name: github.com/fsnotify/fsnotify
   version: a904159b9206978bb6d53fcc7a769e5cd726c737
 - name: github.com/go-ini/ini

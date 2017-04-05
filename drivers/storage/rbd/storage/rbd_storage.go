@@ -11,6 +11,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/rbd"
 	"github.com/codedellemc/libstorage/drivers/storage/rbd/utils"
 )
@@ -115,7 +116,7 @@ func (d *driver) VolumeInspect(
 
 	// no volume returned
 	if info == nil {
-		return nil, nil
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	/* GetRBDInfo returns more details about an image than what we get back
@@ -257,6 +258,9 @@ func (d *driver) VolumeAttach(
 			Attachments: types.VolAttReq,
 		})
 	if err != nil {
+		if _, ok := err.(*types.ErrNotFound); ok {
+			return nil, "", err
+		}
 		return nil, "", goof.WithError("error getting volume", err)
 	}
 

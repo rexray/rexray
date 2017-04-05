@@ -16,6 +16,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/scaleio"
 )
 
@@ -271,7 +272,7 @@ func (d *driver) VolumeInspect(
 	}
 
 	if len(volumes) == 0 {
-		return nil, nil
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	mapStoragePoolName, err := d.getStoragePoolIDs()
@@ -484,7 +485,7 @@ func (d *driver) VolumeAttach(
 			Attachments: types.VolAttReqTrue,
 		})
 	if err != nil {
-		return nil, "", goof.WithError("error getting volume", err)
+		return nil, "", err
 	}
 
 	if len(vol.Attachments) > 0 && !opts.Force {
@@ -492,7 +493,7 @@ func (d *driver) VolumeAttach(
 	}
 
 	if len(vol.Attachments) > 0 && opts.Force {
-		if _, err := d.VolumeDetach(ctx, volumeID,
+		if _, err = d.VolumeDetach(ctx, volumeID,
 			&types.VolumeDetachOpts{Force: opts.Force}); err != nil {
 			return nil, "", err
 		}
@@ -512,7 +513,7 @@ func (d *driver) VolumeAttach(
 			Opts:        opts.Opts,
 		})
 	if err != nil {
-		return nil, "", goof.WithError("error getting volume", err)
+		return nil, "", err
 	}
 
 	return attachedVol, attachedVol.ID, nil
@@ -531,7 +532,7 @@ func (d *driver) VolumeDetach(
 	}
 
 	if len(volumes) == 0 {
-		return nil, goof.New("no volumes returned")
+		return nil, apiUtils.NewNotFoundError(volumeID)
 	}
 
 	targetVolume := sio.NewVolume(d.client)
@@ -549,7 +550,7 @@ func (d *driver) VolumeDetach(
 		unmapVolumeSdcParam.SdcID = iid.ID
 	}
 
-	if err := targetVolume.UnmapVolumeSdc(unmapVolumeSdcParam); err != nil {
+	if err = targetVolume.UnmapVolumeSdc(unmapVolumeSdcParam); err != nil {
 		return nil, err
 	}
 

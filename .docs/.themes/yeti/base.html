@@ -47,13 +47,19 @@
 
     </head>
 
-    <body>
+    <body {% if page_title == "API" %}class="body-api"{% endif %}>
 
         {% include "nav.html" %}
+        {% if page_title == "API" %}
+        <!-- import the apiary embed js -->
+        <script src="https://api.apiary.io/seeds/embed.js"></script>
+        {{ content }}
+        {% else %}
         <div class="container {% if not page_title %}index{% endif %}">
             <div class="col-md-3">{% include "toc.html" %}</div>
             <div class="col-md-9" role="main">{% include "content.html" %}</div>
         </div>
+        {% endif %}
 
         <script src="{{ base_url }}/js/jquery-1.10.2.min.js"></script>
         <script src="{{ base_url }}/js/bootstrap-3.0.3.min.js"></script>
@@ -64,6 +70,7 @@
         <script src="{{ path }}"></script>
         {%- endfor %}
         -->
+
     </body>
 
 </html>

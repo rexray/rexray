@@ -18,3 +18,7 @@ a.headerlink.hiddenanchor {
     padding:     0 !important;
     margin:      0 !important;
 }
+
+body.body-api {
+    padding-top: 45px;
+}

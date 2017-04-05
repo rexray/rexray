@@ -69,7 +69,7 @@ func (s *storageService) Driver() types.StorageDriver {
 	return s.driver
 }
 
-func (s *storageService) TaskExecute(
+func (s *storageService) TaskEnqueue(
 	ctx types.Context,
 	run types.StorageTaskRunFunc,
 	schema []byte) *types.Task {

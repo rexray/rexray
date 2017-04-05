@@ -3,12 +3,9 @@
 package storage
 
 import (
-	"fmt"
-	"path/filepath"
 	"strconv"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
@@ -40,11 +37,14 @@ func (d *driver) Name() string {
 	return do.Name
 }
 
-func (d *driver) Init(ctx types.Context, config gofig.Config) error {
+func (d *driver) Init(
+	ctx types.Context,
+	config gofig.Config) error {
+
 	d.config = config
 	token := d.config.GetString(do.ConfigDOToken)
 
-	fields := log.Fields{
+	fields := map[string]interface{}{
 		"token": token,
 	}
 
@@ -62,7 +62,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	}
 	d.client = client
 
-	log.WithFields(fields).Info("storage driver initialized")
+	ctx.WithFields(fields).Info("storage driver initialized")
 
 	return nil
 }
@@ -76,11 +76,14 @@ func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
 // https://www.digitalocean.com/community/tutorials/how-to-use-block-storage-on-digitalocean#preparing-volumes-for-use-in-linux
 func (d *driver) NextDeviceInfo(
 	ctx types.Context) (*types.NextDeviceInfo, error) {
+
 	return nil, nil
 }
 
 func (d *driver) InstanceInspect(
-	ctx types.Context, opts types.Store) (*types.Instance, error) {
+	ctx types.Context,
+	opts types.Store) (*types.Instance, error) {
+
 	iid := context.MustInstanceID(ctx)
 	return &types.Instance{
 		InstanceID:   iid,
@@ -91,33 +94,48 @@ func (d *driver) InstanceInspect(
 }
 
 func (d *driver) Volumes(
-	ctx types.Context, opts *types.VolumesOpts) ([]*types.Volume, error) {
-	doVolumes, _, err := d.client.Storage.ListVolumes(nil)
+	ctx types.Context,
+	opts *types.VolumesOpts) ([]*types.Volume, error) {
+
+	doVolumes, _, err := d.client.Storage.ListVolumes(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	var volumes []*types.Volume
 	for _, vol := range doVolumes {
-		volumes = append(volumes, d.toTypesVolume(ctx, &vol, opts.Attachments))
+		volume, err := d.toTypesVolume(ctx, &vol, opts.Attachments)
+		if err != nil {
+			return nil, goof.New("error converting to types.Volume")
+		}
+		volumes = append(volumes, volume)
 	}
 
 	return volumes, nil
 }
 
 func (d *driver) VolumeInspect(
-	ctx types.Context, volumeID string, opts *types.VolumeInspectOpts) (*types.Volume, error) {
-	doVolume, _, err := d.client.Storage.GetVolume(volumeID)
+	ctx types.Context,
+	volumeID string,
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
+
+	doVolume, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return nil, err
 	}
 
-	volume := d.toTypesVolume(ctx, doVolume, opts.Attachments)
+	volume, err := d.toTypesVolume(ctx, doVolume, opts.Attachments)
+	if err != nil {
+		return nil, goof.New("error converting to types.Volume")
+	}
 	return volume, nil
 }
 
 func (d *driver) VolumeCreate(
-	ctx types.Context, name string, opts *types.VolumeCreateOpts) (*types.Volume, error) {
+	ctx types.Context,
+	name string,
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
+
 	if opts.AvailabilityZone == nil || *opts.AvailabilityZone == "" {
 		instance, err := d.InstanceInspect(ctx, nil)
 		if err != nil {
@@ -131,14 +149,16 @@ func (d *driver) VolumeCreate(
 		SizeGigaBytes: *opts.Size,
 	}
 
-	volume, _, err := d.client.Storage.CreateVolume(volumeReq)
+	volume, _, err := d.client.Storage.CreateVolume(ctx, volumeReq)
 	if err != nil {
 		return nil, err
 	}
 
-	return d.VolumeInspect(ctx, volume.ID, &types.VolumeInspectOpts{
-		Attachments: types.VolAttReqTrue,
-	})
+	return d.VolumeInspect(ctx, volume.ID,
+		&types.VolumeInspectOpts{
+			Attachments: types.VolAttReqTrue,
+		},
+	)
 }
 
 func (d *driver) VolumeCreateFromSnapshot(
@@ -163,23 +183,24 @@ func (d *driver) VolumeRemove(
 	ctx types.Context,
 	volumeID string,
 	opts *types.VolumeRemoveOpts) error {
-	volume, _, err := d.client.Storage.GetVolume(volumeID)
+
+	volume, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return err
 	}
 
 	if len(volume.DropletIDs) > 0 {
 		if !opts.Force {
-			return goof.New("volume already attached")
+			return goof.New("volume currently attached")
 		}
 
-		err := d.volumeDetach(volumeID)
+		err = d.volumeDetach(ctx, volume)
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = d.client.Storage.DeleteVolume(volumeID)
+	_, err = d.client.Storage.DeleteVolume(ctx, volumeID)
 	if err != nil {
 		return err
 	}
@@ -187,15 +208,21 @@ func (d *driver) VolumeRemove(
 	return nil
 }
 
-func (d *driver) volumeDetach(volumeID string) error {
-	action, _, err := d.client.StorageActions.Detach(volumeID)
-	if err != nil {
-		return err
-	}
+func (d *driver) volumeDetach(
+	ctx types.Context,
+	volume *godo.Volume) error {
 
-	err = d.waitForAction(volumeID, action)
-	if err != nil {
-		return err
+	for _, dropletID := range volume.DropletIDs {
+		action, _, err := d.client.StorageActions.DetachByDropletID(
+			ctx, volume.ID, dropletID)
+		if err != nil {
+			return err
+		}
+
+		err = d.waitForAction(ctx, volume.ID, action)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -203,7 +230,7 @@ func (d *driver) volumeDetach(volumeID string) error {
 func (d *driver) VolumeAttach(
 	ctx types.Context, volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
-	vol, _, err := d.client.Storage.GetVolume(volumeID)
+	vol, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return nil, "", goof.WithError("error retrieving volume", err)
 	}
@@ -213,7 +240,7 @@ func (d *driver) VolumeAttach(
 			return nil, "", goof.New("volume already attached")
 		}
 
-		err = d.volumeDetach(volumeID)
+		err = d.volumeDetach(ctx, vol)
 		if err != nil {
 			return nil, "", err
 		}
@@ -225,18 +252,21 @@ func (d *driver) VolumeAttach(
 		return nil, "", err
 	}
 
-	action, _, err := d.client.StorageActions.Attach(volumeID, dropletIDI)
+	action, _, err := d.client.StorageActions.Attach(
+		ctx, volumeID, dropletIDI)
 	if err != nil {
 		return nil, "", err
 	}
 
-	err = d.waitForAction(volumeID, action)
+	err = d.waitForAction(ctx, volumeID, action)
 	if err != nil {
 		return nil, "", err
 	}
 
-	attachedVol, err := d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{
-		Attachments: types.VolAttReqTrue})
+	attachedVol, err := d.VolumeInspect(ctx, volumeID,
+		&types.VolumeInspectOpts{
+			Attachments: types.VolAttReqTrue},
+	)
 	if err != nil {
 		return nil, "", goof.WithError("error retrieving volume", err)
 	}
@@ -247,7 +277,7 @@ func (d *driver) VolumeAttach(
 func (d *driver) VolumeDetach(
 	ctx types.Context, volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
-	vol, _, err := d.client.Storage.GetVolume(volumeID)
+	vol, _, err := d.client.Storage.GetVolume(ctx, volumeID)
 	if err != nil {
 		return nil, goof.WithError("error getting volume", err)
 	}
@@ -256,19 +286,22 @@ func (d *driver) VolumeDetach(
 		return nil, goof.WithError("volume already detached", err)
 	}
 
-	err = d.volumeDetach(volumeID)
+	err = d.volumeDetach(ctx, vol)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx.Info("detached volume", volumeID)
+	ctx.WithField("volumeID", volumeID).Info("detached volume")
 
-	detachedVol, err := d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{
-		Attachments: types.VolAttReqTrue,
-		Opts:        opts.Opts,
-	})
+	detachedVol, err := d.VolumeInspect(ctx, volumeID,
+		&types.VolumeInspectOpts{
+			Attachments: types.VolAttReqTrue,
+			Opts:        opts.Opts,
+		},
+	)
 	if err != nil {
-		return nil, goof.WithError("error getting volume information", err)
+		return nil, goof.WithError("error getting volume information",
+			err)
 	}
 
 	return detachedVol, nil
@@ -301,33 +334,25 @@ func mustInstanceIDID(ctx types.Context) *string {
 }
 
 func (d *driver) toTypesVolume(
-	ctx types.Context, volume *godo.Volume,
-	attachments types.VolumeAttachmentsTypes) *types.Volume {
-	// Collect attachment info for the volume
-	var atts []*types.VolumeAttachment
-	if attachments.Requested() {
-		for _, id := range volume.DropletIDs {
-			attachment := &types.VolumeAttachment{
-				VolumeID: volume.ID,
-				InstanceID: &types.InstanceID{
-					ID:     strconv.Itoa(id),
-					Driver: d.Name(),
-				},
-			}
+	ctx types.Context,
+	volume *godo.Volume,
+	attachments types.VolumeAttachmentsTypes) (*types.Volume, error) {
 
-			if attachments.Devices() {
-				attachment.DeviceName, _ = filepath.EvalSymlinks(
-					fmt.Sprintf(
-						"%s/%s", "/dev/disk/by-id",
-						do.VolumePrefix+volume.Name))
-			}
-			atts = append(atts, attachment)
+	var (
+		ld    *types.LocalDevices
+		ldOK  bool
+		iidID string
+	)
+
+	if attachments.Devices() {
+		// Get local devices map from context
+		if ld, ldOK = context.LocalDevices(ctx); !ldOK {
+			return nil, goof.New(
+				"error getting local devices from context")
 		}
-	}
 
-	status := "attached"
-	if len(atts) < 1 {
-		status = "detached"
+		// We require the InstanceID to match the VM
+		iidID = context.MustInstanceID(ctx).ID
 	}
 
 	vol := &types.Volume{
@@ -336,20 +361,49 @@ func (d *driver) toTypesVolume(
 		Encrypted:        false,
 		Size:             volume.SizeGigaBytes,
 		AvailabilityZone: volume.Region.Slug,
-		Attachments:      atts,
-		Status:           status,
 	}
 
-	return vol
+	// Collect attachment info for the volume
+	if attachments.Requested() {
+		var atts []*types.VolumeAttachment
+		for _, id := range volume.DropletIDs {
+			strDropletID := strconv.Itoa(id)
+			attachment := &types.VolumeAttachment{
+				VolumeID: volume.ID,
+				InstanceID: &types.InstanceID{
+					ID:     strDropletID,
+					Driver: d.Name(),
+				},
+			}
+
+			if attachments.Devices() {
+				if strDropletID == iidID {
+					if dev, ok := ld.DeviceMap[vol.Name]; ok {
+						attachment.DeviceName = dev
+					}
+				}
+			}
+			atts = append(atts, attachment)
+		}
+		if len(atts) > 0 {
+			vol.Attachments = atts
+		}
+	}
+
+	return vol, nil
 }
 
-func (d *driver) waitForAction(volumeID string, action *godo.Action) error {
+func (d *driver) waitForAction(
+	ctx types.Context,
+	volumeID string,
+	action *godo.Action) error {
 	// TODO expose these ints as options
 	for i := 0; i < 10; i++ {
 		duration := i * 15
 		time.Sleep(time.Duration(duration) * time.Millisecond)
 
-		action, _, err := d.client.StorageActions.Get(volumeID, action.ID)
+		action, _, err := d.client.StorageActions.Get(
+			ctx, volumeID, action.ID)
 		if err != nil {
 			return err
 		}

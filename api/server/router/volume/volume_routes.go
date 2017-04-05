@@ -57,7 +57,7 @@ func (r *router) volumes(
 			return getFilteredVolumes(ctx, req, store, svc, opts, filter)
 		}
 
-		task := service.TaskExecute(ctx, run, schema.VolumeMapSchema)
+		task := service.TaskEnqueue(ctx, run, schema.VolumeMapSchema)
 		taskIDs = append(taskIDs, task.ID)
 		tasks[service.Name()] = task
 	}
@@ -87,7 +87,7 @@ func (r *router) volumes(
 		r.config,
 		w,
 		store,
-		services.TaskExecute(ctx, run, schema.ServiceVolumeMapSchema),
+		services.TaskEnqueue(ctx, run, schema.ServiceVolumeMapSchema),
 		http.StatusOK)
 }
 
@@ -124,7 +124,7 @@ func (r *router) volumesForService(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeMapSchema),
+		service.TaskEnqueue(ctx, run, schema.VolumeMapSchema),
 		http.StatusOK)
 }
 
@@ -373,7 +373,7 @@ func (r *router) volumeInspect(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		service.TaskEnqueue(ctx, run, schema.VolumeSchema),
 		http.StatusOK)
 }
 
@@ -427,7 +427,7 @@ func (r *router) volumeCreate(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		service.TaskEnqueue(ctx, run, schema.VolumeSchema),
 		http.StatusCreated)
 }
 
@@ -474,7 +474,7 @@ func (r *router) volumeCopy(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeSchema),
+		service.TaskEnqueue(ctx, run, schema.VolumeSchema),
 		http.StatusCreated)
 }
 
@@ -502,7 +502,7 @@ func (r *router) volumeSnapshot(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.SnapshotSchema),
+		service.TaskEnqueue(ctx, run, schema.SnapshotSchema),
 		http.StatusCreated)
 }
 
@@ -559,7 +559,7 @@ func (r *router) volumeAttach(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeAttachResponseSchema),
+		service.TaskEnqueue(ctx, run, schema.VolumeAttachResponseSchema),
 		http.StatusOK)
 }
 
@@ -616,7 +616,7 @@ func (r *router) volumeDetach(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, nil),
+		service.TaskEnqueue(ctx, run, nil),
 		http.StatusResetContent)
 }
 
@@ -708,7 +708,7 @@ func (r *router) volumeDetachAll(
 			return nil, nil
 		}
 
-		task := service.TaskExecute(ctx, run, nil)
+		task := service.TaskEnqueue(ctx, run, nil)
 		taskIDs = append(taskIDs, task.ID)
 		tasks[service.Name()] = task
 	}
@@ -728,7 +728,7 @@ func (r *router) volumeDetachAll(
 		r.config,
 		w,
 		store,
-		services.TaskExecute(ctx, run, schema.ServiceVolumeMapSchema),
+		services.TaskEnqueue(ctx, run, schema.ServiceVolumeMapSchema),
 		http.StatusResetContent)
 }
 
@@ -801,7 +801,7 @@ func (r *router) volumeDetachAllForService(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, schema.VolumeMapSchema),
+		service.TaskEnqueue(ctx, run, schema.VolumeMapSchema),
 		http.StatusResetContent)
 }
 
@@ -831,7 +831,7 @@ func (r *router) volumeRemove(
 		r.config,
 		w,
 		store,
-		service.TaskExecute(ctx, run, nil),
+		service.TaskEnqueue(ctx, run, nil),
 		http.StatusNoContent)
 }
 

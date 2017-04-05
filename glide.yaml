@@ -6,9 +6,7 @@ import:
 ################################################################################
 
   - package: github.com/spf13/pflag
-    ref:     5ccb023bc27df288a957c5e994cd44fd19619465
-  - package: github.com/spf13/viper
-    ref:     651d9d916abc3c3d6a91a12549495caba5edffd2
+    ref:     d16db1e50e33dff1b6cdf37596cef36742128670
   - package: github.com/akutz/golf
     version: v0.1.2
   - package: github.com/Sirupsen/logrus

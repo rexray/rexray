@@ -16,7 +16,6 @@ import (
 	"github.com/codedellemc/libstorage/api/types"
 
 	do "github.com/codedellemc/libstorage/drivers/storage/dobs"
-	doUtils "github.com/codedellemc/libstorage/drivers/storage/dobs/utils"
 )
 
 const (
@@ -60,7 +59,7 @@ func (d *driver) Init(
 
 	fields["region"] = d.config.GetString(do.ConfigDORegion)
 
-	client, err := doUtils.Client(token)
+	client, err := Client(token)
 	if err != nil {
 		return err
 	}

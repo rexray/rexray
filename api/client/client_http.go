@@ -21,7 +21,15 @@ const (
 	transactionHeaderKey headerKey = iota
 	instanceIDHeaderKey
 	localDevicesHeaderKey
+	authTokenHeaderKey
 )
+
+func init() {
+	context.RegisterCustomKey(transactionHeaderKey, context.CustomHeaderKey)
+	context.RegisterCustomKey(instanceIDHeaderKey, context.CustomHeaderKey)
+	context.RegisterCustomKey(localDevicesHeaderKey, context.CustomHeaderKey)
+	context.RegisterCustomKey(authTokenHeaderKey, context.CustomHeaderKey)
+}
 
 func (k headerKey) String() string {
 	switch k {
@@ -31,6 +39,8 @@ func (k headerKey) String() string {
 		return types.InstanceIDHeader
 	case localDevicesHeaderKey:
 		return types.LocalDevicesHeader
+	case authTokenHeaderKey:
+		return types.AuthorizationHeader
 	}
 	panic("invalid header key")
 }
@@ -91,6 +101,13 @@ func (c *client) httpDo(
 			}
 			ctx = ctx.WithValue(localDevicesHeaderKey, ldsess)
 		}
+	}
+
+	if tok, ok := ctx.Value(context.EncodedAuthTokenKey).(string); ok {
+		ctx.WithField("secTok", tok).Debug("got auth token in httpDo")
+		ctx = ctx.WithValue(
+			authTokenHeaderKey,
+			fmt.Sprintf("Bearer %s", tok))
 	}
 
 	for key := range context.CustomHeaderKeys() {

@@ -168,6 +168,56 @@ Please see [this section](#def-instance-id) for more information.
 The `Libstorage-Servername` header is returned with every response for
 clients that use it for logging purposes.
 
+## Security
+The libStorage API is primarily hosted via HTTP-REST and therefore
+an HTTP proxy such as [NGINX](https://www.nginx.com) can be leveraged
+to provide security features such as authentication and authorization.
+
+In the absence of an HTTP proxy, software that implements the
+libStorage API should also support
+[JSON Web Tokens (JWT)](https://jwt.io/) to restrict access to
+API resources.
+
+The payload of the libStorage API's JWT follows the below format:
+
+```
+{
+  "exp": 1493592581,
+  "iat": 1491000581,
+  "nbf": 1491000581,
+  "sub": "akutz",
+}
+```
+
+The above payload's claims (fields) are:
+
+Name | Description
+-----|------------
+`exp` | The time at which the token expires. A value of `0` means the token does not expire.
+`iat` | The time at which the token was issued.
+`nbf` | The time at which the token becomes valid.
+`sub` | The principal for whom the token is intended.
+
+All of the above time values are specified as UTC epochs in seconds.
+
+A client transmits the JWT as a
+[_Bearer_](https://tools.ietf.org/html/rfc6750#section-2.1)
+token in the HTTP `Authorization` header. For example:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+```
+
+If the provided token is invalid then the libStorage server should return an
+HTTP status of 401, _Unauthorized_.
+
+Implementations of the libStorage API should support restricting access via
+JWTs both globally and per configured service.
+
+If a `GET /volumes` request is issued and the provided token lacks access to
+one of the services, a 401 `Unauthorized` status will be returned instead of a
+partial dataset.
+
 # Group Root
 
 # Root Resource [/]

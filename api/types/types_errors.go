@@ -51,3 +51,34 @@ type ErrBatchProcess struct{ goof.Goof }
 // ErrBadFilter occurs when a bad filter is supplied via the filter query
 // string.
 type ErrBadFilter struct{ goof.Goof }
+
+// ErrMissingStorageService occurs when the storage service is expected in
+// the provided context but is not there.
+var ErrMissingStorageService = goof.New("missing storage service")
+
+// ErrSecTokInvalid occurs when a security token is invalid.
+type ErrSecTokInvalid struct {
+	// InvalidToken is a flag that indicates whether or not the token was able
+	// to be parsed at all.
+	InvalidToken bool `json:"invalidToken"`
+
+	// InvalidSig is a flag that indicates whether or not the security token
+	// has a valid signature.
+	InvalidSig bool `json:"invalidSig"`
+
+	// MissingClaim is empty if all claims are missing or set to the name
+	// of the first, detected, missing claim.
+	MissingClaim string `json:"claim"`
+
+	// Denied is a flag that indicates whether or not the security token
+	// was denied access.
+	Denied bool
+
+	// InnerError is the inner error that caused this one.
+	InnerError error `json:"innerError,omitempty"`
+}
+
+// Error returns the error string.
+func (e *ErrSecTokInvalid) Error() string {
+	return "invalid security token"
+}

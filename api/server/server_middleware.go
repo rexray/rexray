@@ -9,16 +9,15 @@ import (
 func (s *server) initGlobalMiddleware() {
 
 	s.addGlobalMiddleware(handlers.NewQueryParamsHandler())
-
 	if s.logHTTPEnabled {
 		s.addGlobalMiddleware(handlers.NewLoggingHandler(
 			s.stdOut,
 			s.logHTTPRequests,
 			s.logHTTPResponses))
 	}
-
 	s.addGlobalMiddleware(handlers.NewTransactionHandler())
 	s.addGlobalMiddleware(handlers.NewErrorHandler())
+	s.addGlobalMiddleware(handlers.NewAuthGlobalHandler(s.authConfig))
 	s.addGlobalMiddleware(
 		handlers.NewInstanceIDHandler(services.StorageServices(s.ctx)))
 	s.addGlobalMiddleware(handlers.NewLocalDevicesHandler())

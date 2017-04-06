@@ -36,9 +36,15 @@ const (
 	// SessionKey is the key for the storage driver's session.
 	SessionKey
 
+	// EncodedAuthTokenKey is the key for an encoded authentication token.
+	EncodedAuthTokenKey
+
 	// keyLoggable is the minimum value from which the succeeding keys should
 	// be checked when logging.
 	keyLoggable
+
+	// AuthTokenKey is a context key.
+	AuthTokenKey
 
 	// ClientKey is a context key.
 	ClientKey
@@ -93,6 +99,7 @@ func (k Key) String() string {
 
 var (
 	keyNames = map[Key]string{
+		AuthTokenKey:      "token",
 		TaskKey:           "task",
 		InstanceIDKey:     "instanceID",
 		ProfileKey:        "profile",

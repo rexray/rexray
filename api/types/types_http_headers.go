@@ -18,4 +18,8 @@ const (
 	// for the first time. This header is provided with every response sent
 	// from the server.
 	ServerNameHeader = "Libstorage-Servername"
+
+	// AuthorizationHeader is the HTTP header that contains the Authorization
+	// information.
+	AuthorizationHeader = "Authorization"
 )

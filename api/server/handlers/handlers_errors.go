@@ -47,8 +47,12 @@ func (h *errorHandler) Handle(
 }
 
 func getStatus(err error) int {
+	if err == types.ErrMissingStorageService {
+		return http.StatusInternalServerError
+	}
 	switch err.(type) {
-	case *types.ErrBadAdminToken:
+	case *types.ErrBadAdminToken,
+		*types.ErrSecTokInvalid:
 		return http.StatusUnauthorized
 	case *types.ErrNotFound:
 		return http.StatusNotFound

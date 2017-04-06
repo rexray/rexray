@@ -451,6 +451,204 @@ that has signed the allowed client certificates. Or at the very least the
 server certificate would be signed by the same intermediate CA that is used
 to sign the client-side certs.
 
+### Authentication
+In addition to TLS, the libStorage API includes support for
+[JSON Web Tokens](https://jwt.io) (JWT) in order to provide authentication
+and authorization.
+
+A JWT is transmitted along with an API call in the standard HTTP `Authorization`
+header as an OAuth 2.0 [Bearer](https://tools.ietf.org/html/rfc6750) token. For
+example:
+
+```
+GET /volumes
+
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+```
+
+The above token is split into three discreet parts:
+
+`HEADER`.`PAYLOAD`.`SIGNATURE`
+
+The decoded header is:
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+
+The decoded payload is:
+```json
+{
+  "exp": 1522688550,
+  "iat": 1491238950,
+  "nbf": 1491238950,
+  "sub": "akutz"
+}
+```
+
+The signature is the result of signing the concatenation of the header and
+signature after Base64 encoding them both.
+
+#### Global Configuration
+It's possible to provision access to the libStorage API both globally and per
+service. For example, the below configuration restricts all access to the
+libStorage API to the bearer token from above:
+
+```yaml
+libstorage:
+  server:
+    auth:
+      key: MySuperSecretSigningKey
+      alg: HS256
+      allow:
+      - akutz
+```
+
+The above configuration snippet defines a new property,
+`libstorage.server.auth` which contains the following child properties:
+`key`, `alg`, `allow`, `deny`, and `disabled`.
+
+The property `libstorage.server.auth.key` is the secret key used to verify
+the signatures of the tokens included in API calls. If the property's value
+is a valid file path then the contents of the file are used as the key. The
+value of `libstorage.server.auth.alg` specifies the cryptographic algorithm
+used to sign and verify the tokens. It has a default value of `HS256`. Valid
+algorithms include:
+
+Algorithm | Strength | Config Value
+----------|----------|-------------
+[ECDSA](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm) | 256 | `ES256`
+ | 384 | `ES384`
+ | 512 | `ES512`
+[HMAC](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code) | 256 | `HS256`
+ | 384 | `HS384`
+ | 512 | `HS512`
+[RSA-PSS](http://www.emc.com/emc-plus/rsa-labs/historical/raising-standard-rsa-signatures-rsa-pss.htm) | 256 | `PS256`
+ | 384 | `PS384`
+ | 512 | `PS512`
+[RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) | 256 | `RS256`
+ | 384 | `RS384`
+ | 512 | `RS512`
+
+Both the properties `libstorage.server.auth.allow` and
+`libstorage.server.auth.deny` are arrays of strings.
+
+The values can be either the subject of the token, the entire, encoded JWT, or
+the format `tag:encodedJWT`. The prefix `tag:` can be any piece of text in
+order to provide a friendly means of identifying the encoded JWT.
+
+The `allow` property indicates which tokens are valid and the `deny` property
+is a way to explicitly revoke access.
+
+!!! note "note"
+
+    Please be aware that by virtue of defining the property
+    `libstorage.server.auth.allow`, access to the server is restricted to
+    requests with valid tokens only and anonymous access is no longer allowed.
+
+There may be occasions when it is necessary to temporarily disable token-based
+access restrictions. It's possible to do this without removing the token
+configuration by setting the property `libstorage.server.auth.disabled`
+to a boolean true value:
+
+```yaml
+libstorage:
+  server:
+    auth:
+      disabled: true
+      key:      MySuperSecretSigningKey
+      allow:
+      - akutz
+```
+
+#### Service Configuration
+The previous section described how to restrict access at the global level.
+This section reviews service-level token configurations.
+
+```yaml
+libstorage:
+  server:
+    services:
+      ebs-00:
+        driver: ebs
+        auth:
+          key: MySuperSecretSigningKey
+          allow:
+          - akutz
+      ebs-01:
+        driver: ebs
+```
+
+The above configuration defines a token configuration for the service `ebs-00`
+but **not** the service `ebs-01`. That means that API calls to the resource
+`/volumes/ebs-00` require a valid token whereas API calls to the resource
+`/volumes/ebs-01` do not.
+
+!!! note "note"
+
+    If an API call without a token is submitted that acts on multiple
+    resources and one or more of those resources is configured for token-based
+    access then the call  will result in an HTTP status of 401 *Unauthorized*.
+
+#### Global vs. Service
+It is also possible to configure both global token-based access at the same
+time as service token-based access. However, there are some important details
+of which to be aware when doing so.
+
+1. When combining global and service token configurations, only the global
+token key is respected. Otherwise tokens would always be invalid either at
+the global or service scope since a token is signed by a single key.
+
+2. The global `allow` list grants access globally but can be overridden by
+including a token in a service's `deny` list.
+
+3. The global `deny` list restricts access globally and cannot be overridden
+by including a token in a service's `allow` list. For example, consider the
+following configuration snippet:
+
+        libstorage:
+          server:
+            auth:
+              key:   MySuperSecretSigningKey
+              allow:
+              - akutz
+              deny:
+              - cduchesne
+            services:
+              ebs-00:
+                driver: ebs
+                auth:
+                  allow:
+                  - cduchesne
+
+    The above example defines a global deny list. That means that even though
+    the service `ebs-00` includes `cduchesne` in its own allow list, requests
+    to service `ebs-00` with `cduchesne`'s bearer token are denied because
+    that token is denied globally.
+
+#### Client Config
+Up until now the discussion surrounding security tokens has been centered on
+server-side configuration. However, the libStorage client can also be
+configured to send tokens as part of its standard API call workflow. For
+example:
+
+```
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+```
+
+The above client-side configuration snippet defines the property
+`libstorage.client.auth.token`, the JWT used for outgoing HTTP calls as
+the bearer token.
+
+The value of the `libstorage.client.auth.token` property can also be a valid
+file path. The contents of the file will be read from disk and treated as the
+encoded token string.
+
 ### Embedded Configuration
 If `libStorage` is embedded into another application, such as
 [`REX-Ray`](https://github.com/codedellemc/rexray), then that application may

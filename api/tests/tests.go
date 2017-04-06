@@ -109,7 +109,22 @@ func Run(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, driverName, config, false, false, tests...)
+	run(t, types.IntegrationClient, nil,
+		driverName, config, false, false, tests...)
+}
+
+// RunWithOnClientError executes the provided tests in a new test harness with
+// the specified on client error delegate. Each test is executed against a new
+// server instance.
+func RunWithOnClientError(
+	t *testing.T,
+	onClientError func(error),
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(t, types.IntegrationClient, onClientError,
+		driverName, config, false, false, tests...)
 }
 
 // RunWithClientType executes the provided tests in a new test harness with
@@ -122,7 +137,7 @@ func RunWithClientType(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, clientType, driverName, config, false, false, tests...)
+	run(t, clientType, nil, driverName, config, false, false, tests...)
 }
 
 // RunGroup executes the provided tests in a new test harness. All tests are
@@ -133,7 +148,8 @@ func RunGroup(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, driverName, config, false, true, tests...)
+	run(t, types.IntegrationClient, nil,
+		driverName, config, false, true, tests...)
 }
 
 // RunGroupWithClientType executes the provided tests in a new test harness
@@ -146,7 +162,7 @@ func RunGroupWithClientType(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, clientType, driverName, config, false, true, tests...)
+	run(t, clientType, nil, driverName, config, false, true, tests...)
 }
 
 // Debug is the same as Run except with additional logging.
@@ -156,7 +172,8 @@ func Debug(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, driverName, config, true, false, tests...)
+	run(t, types.IntegrationClient, nil,
+		driverName, config, true, false, tests...)
 }
 
 // DebugGroup is the same as RunGroup except with additional logging.
@@ -166,12 +183,15 @@ func DebugGroup(
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, driverName, config, true, true, tests...)
+	run(
+		t, types.IntegrationClient, nil,
+		driverName, config, true, true, tests...)
 }
 
 func run(
 	t *testing.T,
 	clientType types.ClientType,
+	onNewClientError func(err error),
 	driver string,
 	configBuf []byte,
 	debug, group bool,
@@ -183,12 +203,14 @@ func run(
 		debug, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG"))
 	}
 
-	th.run(t, clientType, driver, configBuf, debug, group, tests...)
+	th.run(t, clientType, onNewClientError,
+		driver, configBuf, debug, group, tests...)
 }
 
 func (th *testHarness) run(
 	t *testing.T,
 	clientType types.ClientType,
+	onNewClientError func(error),
 	driver string,
 	configBuf []byte,
 	debug, group bool,
@@ -231,21 +253,24 @@ func (th *testHarness) run(
 				th.servers = append(th.servers, server)
 
 				c, err := client.New(nil, config)
-				assert.NoError(t, err)
-				assert.NotNil(t, c)
-				if err != nil || c == nil {
-					t.Fatalf("err=%v, client=%v", err, c)
-				}
-
-				for _, test := range tests {
-					test(config, c, t)
-
-					if t.Failed() && printConfigOnFail {
-						cj, err := config.ToJSON()
-						if err != nil {
-							t.Fatal(err)
+				if err != nil {
+					if onNewClientError != nil {
+						onNewClientError(err)
+					} else {
+						t.Fatal(err)
+					}
+				} else if !assert.NotNil(t, c) {
+					t.FailNow()
+				} else {
+					for _, test := range tests {
+						test(config, c, t)
+						if t.Failed() && printConfigOnFail {
+							cj, err := config.ToJSON()
+							if err != nil {
+								t.Fatal(err)
+							}
+							fmt.Printf("client.config=%s\n", cj)
 						}
-						fmt.Printf("client.config=%s\n", cj)
 					}
 				}
 			}(x, config)
@@ -278,16 +303,16 @@ func (th *testHarness) run(
 
 					c, err := client.New(nil, config)
 					if err != nil {
-						t.Fatal(err)
+						if onNewClientError != nil {
+							onNewClientError(err)
+						} else {
+							t.Fatal(err)
+						}
+					} else if !assert.NotNil(t, c) {
+						t.FailNow()
+					} else {
+						test(config, c, t)
 					}
-					assert.NoError(t, err)
-					assert.NotNil(t, c)
-
-					if c == nil {
-						panic(fmt.Sprintf("err=%v, client=%v", err, c))
-					}
-
-					test(config, c, t)
 
 					if t.Failed() && printConfigOnFail {
 						cj, err := config.ToJSON()

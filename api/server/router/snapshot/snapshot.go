@@ -43,6 +43,7 @@ func (r *router) initRoutes() {
 			"snapshots",
 			"/snapshots",
 			r.snapshots,
+			handlers.NewAuthAllSvcsHandler(),
 			handlers.NewSchemaValidator(
 				nil, schema.ServiceSnapshotMapSchema, nil),
 		),
@@ -53,6 +54,7 @@ func (r *router) initRoutes() {
 			"/snapshots/{service}",
 			r.snapshotsForService,
 			handlers.NewServiceValidator(),
+			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				nil, schema.SnapshotMapSchema, nil),
@@ -64,6 +66,7 @@ func (r *router) initRoutes() {
 			"/snapshots/{service}/{snapshotID}",
 			r.snapshotInspect,
 			handlers.NewServiceValidator(),
+			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(nil, schema.SnapshotSchema, nil),
 		),
@@ -76,6 +79,7 @@ func (r *router) initRoutes() {
 			"/snapshots/{service}/{snapshotID}",
 			r.volumeCreate,
 			handlers.NewServiceValidator(),
+			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.VolumeCreateRequestSchema,
@@ -90,6 +94,7 @@ func (r *router) initRoutes() {
 			"/snapshots/{service}/{snapshotID}",
 			r.snapshotCopy,
 			handlers.NewServiceValidator(),
+			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
 				schema.SnapshotCopyRequestSchema,
@@ -106,6 +111,7 @@ func (r *router) initRoutes() {
 			"/snapshots/{service}/{snapshotID}",
 			r.snapshotRemove,
 			handlers.NewServiceValidator(),
+			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 		),
 	}

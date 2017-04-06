@@ -129,4 +129,28 @@ const (
 
 	// ConfigServerTasksLogTimeout is a config key.
 	ConfigServerTasksLogTimeout = ConfigServerTasks + ".logTimeout"
+
+	// ConfigClientAuth is a config key.
+	ConfigClientAuth = ConfigClient + ".auth"
+
+	// ConfigClientAuthToken is a config key.
+	ConfigClientAuthToken = ConfigClientAuth + ".token"
+
+	// ConfigServerAuth is a config key.
+	ConfigServerAuth = ConfigServer + ".auth"
+
+	// ConfigServerAuthKey is a config key.
+	ConfigServerAuthKey = ConfigServerAuth + ".key"
+
+	// ConfigServerAuthAlg is a config key.
+	ConfigServerAuthAlg = ConfigServerAuth + ".alg"
+
+	// ConfigServerAuthAllow is a config key.
+	ConfigServerAuthAllow = ConfigServerAuth + ".allow"
+
+	// ConfigServerAuthDeny is a config key.
+	ConfigServerAuthDeny = ConfigServerAuth + ".deny"
+
+	// ConfigServerAuthDisabled is a config key.
+	ConfigServerAuthDisabled = ConfigServerAuth + ".disabled"
 )

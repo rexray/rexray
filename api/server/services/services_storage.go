@@ -1,18 +1,22 @@
 package services
 
 import (
+	"fmt"
+
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 )
 
 type storageService struct {
 	name          string
 	driver        types.StorageDriver
 	config        gofig.Config
+	authConfig    *types.AuthConfig
 	taskExecQueue chan *task
 }
 
@@ -29,6 +33,19 @@ func (s *storageService) Init(ctx types.Context, config gofig.Config) error {
 			execTask(t)
 		}
 	}()
+
+	authFields := map[string]interface{}{}
+	authConfig, err := utils.ParseAuthConfig(
+		ctx, config, authFields,
+		fmt.Sprintf("libstorage.server.services.%s", s.name))
+	if err != nil {
+		return err
+	}
+	s.authConfig = authConfig
+	if s.authConfig != nil {
+		ctx.WithFields(authFields).Info("configured service auth")
+	}
+
 	return nil
 }
 
@@ -63,6 +80,10 @@ func (s *storageService) initStorageDriver(ctx types.Context) error {
 
 func (s *storageService) Config() gofig.Config {
 	return s.config
+}
+
+func (s *storageService) AuthConfig() *types.AuthConfig {
+	return s.authConfig
 }
 
 func (s *storageService) Driver() types.StorageDriver {

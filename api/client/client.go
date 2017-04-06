@@ -3,15 +3,8 @@ package client
 import (
 	"net/http"
 
-	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/types"
 )
-
-func init() {
-	context.RegisterCustomKey(transactionHeaderKey, context.CustomHeaderKey)
-	context.RegisterCustomKey(instanceIDHeaderKey, context.CustomHeaderKey)
-	context.RegisterCustomKey(localDevicesHeaderKey, context.CustomHeaderKey)
-}
 
 // Client is the libStorage API client.
 type client struct {

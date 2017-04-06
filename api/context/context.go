@@ -293,6 +293,21 @@ func MustSession(ctx context.Context) interface{} {
 	return v
 }
 
+// AuthToken returns the context's security token. This value is valid on
+// both the client and the server.
+func AuthToken(ctx context.Context) (*types.AuthToken, bool) {
+	if v, ok := ctx.Value(AuthTokenKey).(*types.AuthToken); ok {
+		return v, ok
+	}
+	return nil, false
+}
+
+// MustAuthToken returns the context's security token and panics if it does
+// not exist and/or cannot be type cast.
+func MustAuthToken(ctx context.Context) *types.AuthToken {
+	return ctx.Value(AuthTokenKey).(*types.AuthToken)
+}
+
 // InstanceID returns the context's InstanceID. This value is valid on both
 // the client and the server.
 func InstanceID(ctx context.Context) (*types.InstanceID, bool) {

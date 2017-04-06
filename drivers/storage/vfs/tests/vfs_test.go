@@ -73,12 +73,29 @@ func TestServices(t *testing.T) {
 	apitests.Run(t, vfs.Name, newTestConfig(t), testServicesFunc)
 }
 
+func TestServicesWithAuthToken(t *testing.T) {
+	const cy = `
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+  server:
+    auth:
+      key: key
+      allow:
+      - akutz
+`
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	apitests.Run(t, vfs.Name, buf.Bytes(), testServicesFunc)
+}
+
 func TestServicesWithControllerClient(t *testing.T) {
 	apitests.RunWithClientType(
 		t, types.ControllerClient, vfs.Name, newTestConfig(t), testServicesFunc)
 }
 
-func TestServiceInpspect(t *testing.T) {
+func TestServiceInspect(t *testing.T) {
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		reply, err := client.API().ServiceInspect(nil, vfs.Name)
@@ -88,6 +105,223 @@ func TestServiceInpspect(t *testing.T) {
 		assert.True(t, reply.Driver.NextDevice.Ignore)
 	}
 	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+}
+
+func TestServiceInspectWithAuthToken(t *testing.T) {
+	const cy = `
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+  server:
+    auth:
+      key: key
+      allow:
+      - akutz
+`
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		reply, err := client.API().ServiceInspect(nil, vfs.Name)
+		assert.NoError(t, err)
+		assert.Equal(t, vfs.Name, reply.Name)
+		assert.Equal(t, vfs.Name, reply.Driver.Name)
+		assert.True(t, reply.Driver.NextDevice.Ignore)
+	}
+	apitests.Run(t, vfs.Name, buf.Bytes(), tf)
+}
+
+func TestServiceInspectWithAuthTokenInFile(t *testing.T) {
+
+	tfile, err := ioutil.TempFile("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	fmt.Fprint(tfile, `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8`)
+	if !assert.NoError(t, tfile.Close()) {
+		t.FailNow()
+	}
+
+	defer func() { os.RemoveAll(tfile.Name()) }()
+
+	cy := fmt.Sprintf(`
+libstorage:
+  client:
+    auth:
+      token: %s
+  server:
+    auth:
+      key: key
+      allow:
+      - akutz
+`, tfile.Name())
+
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+
+		reply, err := client.API().ServiceInspect(nil, vfs.Name)
+		assert.NoError(t, err)
+		assert.Equal(t, vfs.Name, reply.Name)
+		assert.Equal(t, vfs.Name, reply.Driver.Name)
+		assert.True(t, reply.Driver.NextDevice.Ignore)
+	}
+	apitests.Run(t, vfs.Name, buf.Bytes(), tf)
+}
+
+func TestServiceInspectWithAuthTokenDeniedForService(t *testing.T) {
+	const cy = `
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+  server:
+    auth:
+      key: key
+      allow:
+      - akutz
+    services:
+      vfs:
+        auth:
+          deny:
+          - akutz
+`
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		// do nothing
+	}
+	oce := func(err error) {
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+	}
+	apitests.RunWithOnClientError(t, oce, vfs.Name, buf.Bytes(), tf)
+}
+
+func TestServiceInspectWithAuthTokenInvalidToken(t *testing.T) {
+	const cy = `
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ8.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+  server:
+    auth:
+      key: key
+      allow:
+      - akutz
+`
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		// do nothing
+	}
+	oce := func(err error) {
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+	}
+	apitests.RunWithOnClientError(t, oce, vfs.Name, buf.Bytes(), tf)
+}
+
+func TestServicesListWithAuthToken(t *testing.T) {
+	const cy = `
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+  server:
+    services:
+      vfs:
+        auth:
+          key: key
+          allow:
+          - akutz
+      vfs-01:
+        driver: vfs
+        auth:
+          key: key
+          allow:
+          - akutz
+`
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		svcs, err := client.API().Services(context.Background())
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		if !assert.Len(t, svcs, 2) {
+			t.FailNow()
+		}
+	}
+	apitests.Run(t, vfs.Name, buf.Bytes(), tf)
+}
+
+func TestServicesListWithAuthTokenAllowInJWTFormat(t *testing.T) {
+	const cy = `
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+  server:
+    services:
+      vfs:
+        auth:
+          key: key
+          allow:
+          - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+      vfs-01:
+        driver: vfs
+        auth:
+          key: key
+          allow:
+          - akutz:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+`
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		svcs, err := client.API().Services(context.Background())
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		if !assert.Len(t, svcs, 2) {
+			t.FailNow()
+		}
+	}
+	apitests.Run(t, vfs.Name, buf.Bytes(), tf)
+}
+
+func TestServicesListWithInvalidAuthToken(t *testing.T) {
+	const cy = `
+libstorage:
+  client:
+    auth:
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8
+  server:
+    auth:
+      key: key
+      allow:
+      - akutz
+    services:
+      vfs-01:
+        driver: vfs
+        auth:
+          deny:
+          - akutz
+`
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintln(buf, cy)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		// do nothing
+	}
+	oce := func(err error) {
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+	}
+	apitests.RunWithOnClientError(t, oce, vfs.Name, buf.Bytes(), tf)
 }
 
 func TestExecutors(t *testing.T) {

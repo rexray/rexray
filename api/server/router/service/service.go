@@ -40,6 +40,7 @@ func (r *router) initRoutes() {
 			"services",
 			"/services",
 			r.servicesList,
+			handlers.NewAuthAllSvcsHandler(),
 			handlers.NewSchemaValidator(nil, schema.ServiceInfoMapSchema, nil)),
 
 		httputils.NewGetRoute(
@@ -47,6 +48,7 @@ func (r *router) initRoutes() {
 			"/services/{service}",
 			r.serviceInspect,
 			handlers.NewServiceValidator(),
+			handlers.NewAuthSvcHandler(),
 			handlers.NewSchemaValidator(nil, schema.ServiceInfoSchema, nil)),
 	}
 }

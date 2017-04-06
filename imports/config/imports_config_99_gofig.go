@@ -83,5 +83,15 @@ func init() {
 	rk(gofig.String, "0s", "", types.ConfigServerTasksLogTimeout)
 	rk(gofig.Bool, false, "", types.ConfigServerParseRequestOpts)
 
+	// auth config - client
+	rk(gofig.String, "", "", types.ConfigClientAuthToken)
+
+	// auth config - server
+	rk(gofig.String, "", "", types.ConfigServerAuthKey)
+	rk(gofig.String, "HS256", "", types.ConfigServerAuthAlg)
+	rk(gofig.String, "", "", types.ConfigServerAuthAllow)
+	rk(gofig.String, "", "", types.ConfigServerAuthDeny)
+	rk(gofig.Bool, false, "", types.ConfigServerAuthDisabled)
+
 	gofigCore.Register(r)
 }

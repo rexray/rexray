@@ -1106,6 +1106,9 @@ test-azureud:
 test-azureud-clean:
 	DRIVERS=azureud $(MAKE) clean
 
+test-vfs:
+	DRIVERS=vfs $(MAKE) ./drivers/storage/vfs/tests/vfs.test
+
 clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)

@@ -36,6 +36,9 @@ type StorageService interface {
 		ctx Context,
 		run StorageTaskRunFunc,
 		schema []byte) *Task
+
+	// AuthConfig returns the storage service's authentication configuration.
+	AuthConfig() *AuthConfig
 }
 
 // TaskTrackingService a service for tracking tasks.

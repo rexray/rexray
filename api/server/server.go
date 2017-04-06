@@ -41,6 +41,7 @@ type server struct {
 	ctx          types.Context
 	addrs        []string
 	config       gofig.Config
+	authConfig   *types.AuthConfig
 	servers      []*HTTPServer
 	closeSignal  chan int
 	closedSignal chan int
@@ -146,6 +147,17 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 	// always update the server context's log level
 	context.SetLogLevel(s.ctx, logConfig.Level)
 	s.ctx.WithFields(logFields).Info("configured logging")
+
+	authFields := log.Fields{}
+	authConfig, err := utils.ParseAuthConfig(
+		s.ctx, config, authFields, types.ConfigServer)
+	if err != nil {
+		return nil, err
+	}
+	s.authConfig = authConfig
+	if s.authConfig != nil {
+		s.ctx.WithFields(authFields).Info("configured global auth")
+	}
 
 	s.ctx.Info("initializing server")
 

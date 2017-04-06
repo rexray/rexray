@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"errors"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"time"
@@ -49,6 +50,23 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.ctx = ctx.WithValue(context.HostKey, addr)
 	d.ctx.Debug("got configured host address")
 
+	if tok := config.GetString(types.ConfigClientAuthToken); len(tok) > 0 {
+		if gotil.FileExists(tok) {
+			d.ctx.WithField("tokenFilePath", tok).Debug(
+				"reading client token file")
+			buf, err := ioutil.ReadFile(tok)
+			if err != nil {
+				d.ctx.WithField("tokenFilePath", tok).WithError(err).Error(
+					"error reading client token file")
+				return err
+			}
+			tok = string(buf)
+		}
+		d.ctx = d.ctx.WithValue(context.EncodedAuthTokenKey, tok)
+		d.ctx.WithField("encodedToken", tok).Debug("got configured auth token")
+		logFields["encodedToken"] = tok
+	}
+
 	proto, lAddr, err := gotil.ParseAddress(addr)
 	if err != nil {
 		return err
@@ -90,13 +108,13 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 					h.Write(cert.Raw)
 					certFP := h.Sum(nil)
 					actualFP := hex.EncodeToString(certFP)
-					ctx.WithFields(log.Fields{
+					d.ctx.WithFields(log.Fields{
 						"actualFingerprint":   actualFP,
 						"expectedFingerprint": expectedFP,
 					}).Debug("comparing tls fingerprints")
 					if bytes.EqualFold(tlsConfig.PeerFingerprint, certFP) {
 						matchedFingerprint = true
-						ctx.WithFields(log.Fields{
+						d.ctx.WithFields(log.Fields{
 							"actualFingerprint":   actualFP,
 							"expectedFingerprint": expectedFP,
 						}).Debug("matched tls fingerprints")
@@ -126,7 +144,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 	d.client = client{
 		APIClient:    apiClient,
-		ctx:          ctx,
+		ctx:          d.ctx,
 		config:       config,
 		clientType:   cliType,
 		serviceCache: &lss{Store: utils.NewStore()},
@@ -151,7 +169,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 	d.ctx.WithFields(logFields).Info("created libStorage client")
 
-	if err := d.dial(ctx); err != nil {
+	if err := d.dial(d.ctx); err != nil {
 		return err
 	}
 

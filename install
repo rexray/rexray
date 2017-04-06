@@ -62,7 +62,7 @@ sudo() {
 }
 
 is_coreos() {
-    grep DISTRIB_ID=CoreOS /etc/lsb-release 2> /dev/null
+    grep DISTRIB_ID /etc/lsb-release 2> /dev/null | grep CoreOS 2> /dev/null
 }
 
 list() {

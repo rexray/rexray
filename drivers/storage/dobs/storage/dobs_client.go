@@ -1,6 +1,6 @@
 // +build !libstorage_storage_driver libstorage_storage_driver_dobs
 
-package utils
+package storage
 
 import (
 	"github.com/codedellemc/libstorage/api"

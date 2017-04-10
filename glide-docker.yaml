@@ -29,6 +29,8 @@ import:
     ref:     7be4beda01ec05d0b93d80b3facd2b6f44080d94
   - package: golang.org/x/net
     repo:    https://github.com/golang/net
+  - package: github.com/SermoDigital/jose
+    version: 1.1
 
 
 ################################################################################

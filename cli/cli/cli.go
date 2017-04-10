@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
@@ -42,6 +43,10 @@ type CLI struct {
 
 	envCmd     *cobra.Command
 	versionCmd *cobra.Command
+
+	tokenCmd       *cobra.Command
+	tokenNewCmd    *cobra.Command
+	tokenDecodeCmd *cobra.Command
 
 	installCmd   *cobra.Command
 	uninstallCmd *cobra.Command
@@ -96,7 +101,11 @@ type CLI struct {
 	flexRexUninstallCmd *cobra.Command
 	flexRexStatusCmd    *cobra.Command
 
+	verify                  bool
+	key                     string
+	alg                     string
 	attach                  bool
+	expires                 time.Duration
 	amount                  bool
 	quiet                   bool
 	dryRun                  bool

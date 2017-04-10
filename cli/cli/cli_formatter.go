@@ -132,6 +132,10 @@ func (c *CLI) fmtOutput(w io.Writer, templateName string, o interface{}) error {
 			if templName == "" {
 				templName = templateNamePrintStringSlice
 			}
+		case []*authToken:
+			if templName == "" {
+				templName = templateNamePrintAuthTokenFields
+			}
 		default:
 			if templName == "" {
 				templName = templateNamePrintObject
@@ -263,6 +267,7 @@ const (
 	templateNamePrintServiceFields           = "printServiceFields"
 	templateNamePrintMountFields             = "printMountFields"
 	templateNamePrintScriptFields            = "printScriptFields"
+	templateNamePrintAuthTokenFields         = "printAuthTokenFields"
 )
 
 type templateMetadata struct {
@@ -368,6 +373,15 @@ var defaultTemplates = map[string]*templateMetadata{
 			"Modified",
 		},
 		sortBy: "Path",
+	},
+	templateNamePrintAuthTokenFields: &templateMetadata{
+		fields: []string{
+			"Subject",
+			"IssuedAt",
+			"NotBefore",
+			"Expires",
+		},
+		sortBy: "Subject",
 	},
 }
 

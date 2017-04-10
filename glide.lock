@@ -1,5 +1,5 @@
-hash: 2f83cdcffda2c664b856d5d79927eb548124f57574f8ccf3e675338d8a459e1c
-updated: 2017-03-29T11:30:02.898046438-07:00
+hash: 035ac3146da4fb90f50566c86031bc1004170d0a27e7adea3c3c4ca2b8fcda83
+updated: 2017-04-10T15:57:04.178825122-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -222,7 +222,7 @@ imports:
   version: 1dd44b25b79c4d9060e582e90798e4d72537818c
   repo: https://github.com/akutz/go-bindata
 - name: github.com/kardianos/osext
-  version: 9b883c5eb462dd5cb1b0a7a104fe86bc6b9bd391
+  version: 9d302b58e975387d0b4d9be876622c86cefe64be
   repo: https://github.com/kardianos/osext.git
   vcs: git
 - name: github.com/kr/fs
@@ -244,6 +244,12 @@ imports:
   repo: https://github.com/codenrhoden/go-vhd
   subpackages:
   - vhd
+- name: github.com/SermoDigital/jose
+  version: f6df55f235c24f236d11dbcf665249a59ac2021f
+  subpackages:
+  - crypto
+  - jws
+  - jwt
 - name: github.com/Sirupsen/logrus
   version: 5f376aa629ac60c3215cc368e674bd996093a01a
   repo: https://github.com/akutz/logrus

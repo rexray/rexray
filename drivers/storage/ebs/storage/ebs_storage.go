@@ -306,46 +306,34 @@ func (d *driver) VolumeInspect(
 // VolumeCreate creates a new volume.
 func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
-	// Initialize for logging
-	fields := map[string]interface{}{
-		"driverName": d.Name(),
-		"volumeName": volumeName,
-		"opts":       opts,
-	}
-
-	ctx.WithFields(fields).Debug("creating volume")
 
 	if opts.Size == nil {
 		size := int64(minSizeGiB)
 		opts.Size = &size
 	}
 
-	fields["size"] = *opts.Size
-
 	if *opts.Size < minSizeGiB {
-		fields["minSize"] = minSizeGiB
-		return nil, goof.WithFields(fields, "volume size too small")
+		return nil, goof.New("volume size too small")
 	}
 
 	// Check if volume with same name exists
 	ec2vols, err := d.getVolume(ctx, "", volumeName)
 	if err != nil {
-		return nil, goof.WithFieldsE(fields, "error getting volume", err)
+		return nil, goof.WithError("error getting volume", err)
 	}
 	volumes, convErr := d.toTypesVolume(ctx, ec2vols, 0)
 	if convErr != nil {
-		return nil, goof.WithFieldsE(
-			fields, "error converting to types.Volume", convErr)
+		return nil, goof.WithError("error converting to types.Volume", convErr)
 	}
 
 	if len(volumes) > 0 {
-		return nil, goof.WithFields(fields, "volume name already exists")
+		return nil, goof.New("volume name already exists")
 	}
 
 	// Pass libStorage types.Volume to helper function which calls EC2 API
 	vol, err := d.createVolume(ctx, volumeName, "", opts)
 	if err != nil {
-		return nil, goof.WithFieldsE(fields, "error creating volume", err)
+		return nil, err
 	}
 	// Return the volume created
 	return d.VolumeInspect(ctx, *vol.VolumeId, &types.VolumeInspectOpts{

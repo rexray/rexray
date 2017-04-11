@@ -389,26 +389,51 @@ func (r *router) volumeCreate(
 		ctx types.Context,
 		svc types.StorageService) (interface{}, error) {
 
-		v, err := svc.Driver().VolumeCreate(
-			ctx,
-			store.GetString("name"),
-			&types.VolumeCreateOpts{
-				AvailabilityZone: store.GetStringPtr("availabilityZone"),
-				IOPS:             store.GetInt64Ptr("iops"),
-				Size:             store.GetInt64Ptr("size"),
-				Type:             store.GetStringPtr("type"),
-				Encrypted:        store.GetBoolPtr("encrypted"),
-				EncryptionKey:    store.GetStringPtr("encryptionKey"),
-				Opts:             store,
-			})
+		volumeName := store.GetString("name")
+		opts := &types.VolumeCreateOpts{
+			AvailabilityZone: store.GetStringPtr("availabilityZone"),
+			IOPS:             store.GetInt64Ptr("iops"),
+			Size:             store.GetInt64Ptr("size"),
+			Type:             store.GetStringPtr("type"),
+			Encrypted:        store.GetBoolPtr("encrypted"),
+			EncryptionKey:    store.GetStringPtr("encryptionKey"),
+			Opts:             store,
+		}
+		fields := map[string]interface{}{
+			"volumeName": store.GetString("name"),
+		}
+		if opts.AvailabilityZone != nil {
+			fields["availabilityZone"] = &opts.AvailabilityZone
+		}
+		if opts.Encrypted != nil {
+			fields["encrypted"] = &opts.Encrypted
+		}
+		if opts.EncryptionKey != nil {
+			fields["encryptionKey"] = &opts.EncryptionKey
+		}
+		if opts.IOPS != nil {
+			fields["iops"] = &opts.IOPS
+		}
+		if opts.Size != nil {
+			fields["size"] = &opts.Size
+		}
+		if opts.Type != nil {
+			fields["type"] = &opts.Type
+		}
+		ctx.WithFields(fields).Debug("creating volume")
 
+		v, err := svc.Driver().VolumeCreate(ctx, volumeName, opts)
 		if err != nil {
+			ctx.WithFields(fields).WithError(err).Error("error creating volume")
 			return nil, err
 		}
+		ctx.WithFields(fields).Debug("success creating volume")
 
 		if OnVolume != nil {
 			ok, err := OnVolume(ctx, req, store, v)
 			if err != nil {
+				ctx.WithFields(fields).WithError(err).Error(
+					"error calling onvolume handler")
 				return nil, err
 			}
 			if !ok {
@@ -419,6 +444,7 @@ func (r *router) volumeCreate(
 		if v.AttachmentState == 0 {
 			v.AttachmentState = types.VolumeAvailable
 		}
+
 		return v, nil
 	}
 

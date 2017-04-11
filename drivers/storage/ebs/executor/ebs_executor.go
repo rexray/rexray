@@ -65,7 +65,7 @@ func (d *driver) Supported(
 func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
-	return ebsUtils.InstanceID(ctx)
+	return ebsUtils.InstanceID(ctx, d.Name())
 }
 
 var errNoAvaiDevice = goof.New("no available device")

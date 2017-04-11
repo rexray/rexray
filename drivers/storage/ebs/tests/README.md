@@ -12,7 +12,7 @@ to EBS. In order to execute the tests either compile the test binary locally or
 on the instance. From the root of the libStorage project execute the following:
 
 ```bash
-make deps && make ./drivers/storage/ebs/tests/ebs.test
+make test-ebs
 ```
 
 Once the test binary is compiled, if it was built locally, copy it to the EC2

@@ -11,6 +11,7 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/drivers/storage/efs"
@@ -56,7 +57,7 @@ func (d *driver) Supported(
 
 // InstanceID returns the local instance ID for the test
 func InstanceID() (*types.InstanceID, error) {
-	return newDriver().InstanceID(nil, nil)
+	return newDriver().InstanceID(context.Background(), nil)
 }
 
 // InstanceID returns the aws instance configuration

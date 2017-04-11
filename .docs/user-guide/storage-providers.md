@@ -49,7 +49,11 @@ ebs:
   accessKey:      XXXXXXXXXX
   secretKey:      XXXXXXXXXX
   region:         us-east-1
+  maxRetries:     10
   kmsKeyID:       arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef
+  statusMaxAttempts:  10
+  statusInitialDelay: 100ms
+  statusTimeout:      2m
 ```
 
 ##### Configuration Notes
@@ -61,8 +65,20 @@ access credentials, like environment variables or instance profile IAM permissio
 See official AWS documentation for list of supported regions.
 <!-- - `tag` is used to partition multiple services within single AWS account and is
 used as prefix for EBS names in format `[tagprefix]/volumeName`. -->
+- `maxRetries` is the number of retries that will be made for failed operations
+  by the AWS SDK.
 - If the `kmsKeyID` field is specified it will be used as the encryption key for
 all volumes that are created with a truthy encryption request field.
+- `statusMaxAttempts` is the number of times the status of a volume will be
+  queried before giving up when waiting on a status change
+- `statusInitialDelay` specifies a time duration used to wait when polling
+  volume status. This duration is used in exponential backoff, such that the
+  first wait will be for this duration, the second for 2x, the third for 4x,
+  etc. The units of the duration must be given (e.g. "100ms" or "1s").
+- `statusTimeout` is a maximum length of time that polling for volume status can
+  occur. This serves as a backstop against a stuck request of malfunctioning API
+  that never returns.
+
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
@@ -153,6 +169,9 @@ efs:
   region:              us-east-1
   tag:                 test
   disableSessionCache: false
+  statusMaxAttempts:  6
+  statusInitialDelay: 1s
+  statusTimeout:      2m
 ```
 
 ##### Configuration Notes
@@ -169,6 +188,16 @@ used as prefix for EFS names in format `[tagprefix]/volumeName`.
 - `disableSessionCache` is a flag that can be used to disable the session cache.
 If the session cache is disabled then a new AWS connection is established with
 every API call.
+- `statusMaxAttempts` is the number of times the status of a volume will be
+  queried before giving up when waiting on a status change
+- `statusInitialDelay` specifies a time duration used to wait when polling
+  volume status. This duration is used in exponential backoff, such that the
+  first wait will be for this duration, the second for 2x, the third for 4x,
+  etc. The units of the duration must be given (e.g. "100ms" or "1s").
+- `statusTimeout` is a maximum length of time that polling for volume status can
+  occur. This serves as a backstop against a stuck request of malfunctioning API
+  that never returns.
+
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
@@ -675,21 +704,55 @@ The DigitalOcean block storage driver has the following requirements:
 * Valid DigitalOcean [access token](https://goo.gl/iKoAec)
 
 #### Configuration
-The following example illustrates a minimal configuration for the DigitalOcean
+The following is an example with all possible fields configured. For a running
+example see the `Examples` section.
 block storage driver:
 
 ```yaml
 dobs:
   token:  123456
   region: nyc1
+  statusMaxAttempts: 10
+  statusInitialDelay: 100ms
+  statusTimeout: 2m
 ```
 
+##### Configuration notes
+- The `token` contains your DigitalOcean [access token](https://goo.gl/iKoAec)
+- `region` specifies the DigitalOcean region where volumes should be created
+- `statusMaxAttempts` is the number of times the status of a volume will be
+  queried before giving up when waiting on a status change
+- `statusInitialDelay` specifies a time duration used to wait when polling
+  volume status. This duration is used in exponential backoff, such that the
+  first wait will be for this duration, the second for 2x, the third for 4x,
+  etc. The units of the duration must be given (e.g. "100ms" or "1s").
+- `statusTimeout` is a maximum length of time that polling for volume status can
+  occur. This serves as a backstop against a stuck request of malfunctioning API
+  that never returns.
+
 !!! note
+    The DigitalOcean service currently only supports block storage volumes in
+    specific regions. Make sure to use a [suuported region](https://www.digitalocean.com/community/tutorials/how-to-use-block-storage-on-digitalocean#what-is-digitalocean-block-storage).
+
     The standard environment variable for the DigitalOcean access token is
     `DIGITALOCEAN_ACCESS_TOKEN`. However, the environment variable mapped to
     this driver's `dobs.token` property is `DOBS_TOKEN`. This choice was made
     to ensure that the driver must be explicitly configured for access instead
     of detecting a default token that may not be intended for the driver.
+
+#### Examples
+Below is a full `config.yml` that works with DOBS
+
+```yaml
+libstorage:
+  server:
+    services:
+      dobs:
+        driver: dobs
+        dobs:
+          token: 123456
+          region: nyc1
+```
 
 ## FittedCloud
 Another example of the great community shared by the libStorage project, the
@@ -758,6 +821,9 @@ ebs:
   accessKey:      XXXXXXXXXX
   secretKey:      XXXXXXXXXX
   kmsKeyID:       abcd1234-a123-456a-a12b-a123b4cd56ef
+  statusMaxAttempts:  10
+  statusInitialDelay: 100ms
+  statusTimeout:      2m
 ```
 
 ##### Configuration Notes
@@ -770,6 +836,15 @@ ways of providing access credentials, like environment variables or instance
 profile IAM permissions.
 - If the `kmsKeyID` field is specified it will be used as the encryption key for
 all volumes that are created with a truthy encryption request field.
+- `statusMaxAttempts` is the number of times the status of a volume will be
+  queried before giving up when waiting on a status change
+- `statusInitialDelay` specifies a time duration used to wait when polling
+  volume status. This duration is used in exponential backoff, such that the
+  first wait will be for this duration, the second for 2x, the third for 4x,
+  etc. The units of the duration must be given (e.g. "100ms" or "1s").
+- `statusTimeout` is a maximum length of time that polling for volume status can
+  occur. This serves as a backstop against a stuck request of malfunctioning API
+  that never returns.
 
 <a class="headerlink hiddenanchor" name="fittedcloud-examples"></a>
 
@@ -821,6 +896,9 @@ gcepd:
   zone: us-west1-b
   defaultDiskType: pd-ssd
   tag: rexray
+  statusMaxAttempts:  10
+  statusInitialDelay: 100ms
+  statusTimeout:      2m
 ```
 
 ##### Configuration Notes
@@ -849,6 +927,15 @@ gcepd:
   "expose" previously created disks to the `GCEPD` driver, you can edit the
   labels on the existing disk to have a key of `libstoragetag` and a value
   matching that given in `tag`.
+* `statusMaxAttempts` is the number of times the status of a volume will be
+  queried before giving up when waiting on a status change
+* `statusInitialDelay` specifies a time duration used to wait when polling
+  volume status. This duration is used in exponential backoff, such that the
+  first wait will be for this duration, the second for 2x, the third for 4x,
+  etc. The units of the duration must be given (e.g. "100ms" or "1s").
+* `statusTimeout` is a maximum length of time that polling for volume status can
+  occur. This serves as a backstop against a stuck request of malfunctioning API
+  that never returns.
 
 #### Runtime behavior
 * The GCEPD driver enforces the GCE requirements for disk sizing and naming.
@@ -999,9 +1086,9 @@ the driver name.
   going to Subscriptions->Your `subscriptionID`->Access Control (IAM). From
   there, add your app registration as a user, which you will have to search for
   by name. Grant the role of "Owner".
-* You should carefully check that your VM is compatible with the storage account you want 
-  to use. For example, if you need Azure Premium storage your machine should be 
-  of a compatible size (e.g. DS_V2, FS). For more details see the available VM 
+* You should carefully check that your VM is compatible with the storage account you want
+  to use. For example, if you need Azure Premium storage your machine should be
+  of a compatible size (e.g. DS_V2, FS). For more details see the available VM
   [sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/virtual-machines-windows-sizes).  
 
 #### Examples

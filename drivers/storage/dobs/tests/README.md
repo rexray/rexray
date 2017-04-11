@@ -1,4 +1,4 @@
-# Testing the DigitalOcean triver
+# Testing the DigitalOcean Block Storage (DOBS) Driver
 
 The tests for the DigitalOcean driver assume that you have access to a
 DigitalOcean account that has a token that with read/write access. There are
@@ -32,18 +32,29 @@ Once you have your environment set up, you can build and copy the tests to your 
 
 Running the build comamand:
 ```
-GOOS=linux GOARCH=amd64 BUILD_TAGS="gofig pflag libstorage_integration_docker libstorage_storage_driver libstorage_storage_executor libstorage_storage_driver_digitalocean libstorage_storage_executor_digitalocean" make build-tests
+GOOS=linux make test-dobs
 ```
-will create a `digitalocean.test` in the tests directory. You can scp that to
-your droplet and then run the tests. You will also need to configure libstorage
-to use the digitalocean driver by setting the following fields in
-`/etc/libstorage/config.yaml`:
+will create a `dobs.test` in the tests directory. You can scp that to
+your droplet and then run the tests. You will also need to configure libStorage
+to use the dobs driver by exportiing the required config parameters:
+
+```bash
+export DOBS_TOKEN=<your API token>
+export DOBS_REGION=<region you are testing in>
 
 ```
-digitalocean:
-  token: $YOUR_API_KEY
-  # You can use other regions here
-  region: sfo2
+
+The tests may now be executed with the following command:
+
+```bash
+./dobs.test
+```
+
+An exit code of `0` means the tests completed successfully. If there are errors
+then it may be useful to run the tests once more with increased logging:
+
+```bash
+LIBSTORAGE_LOGGING_LEVEL=debug ./dobs.test -test.v
 ```
 
 #### Deleting an environment

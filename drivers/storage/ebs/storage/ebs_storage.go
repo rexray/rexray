@@ -42,19 +42,20 @@ const (
 )
 
 type driver struct {
-	name       string
-	config     gofig.Config
-	region     *string
-	endpoint   *string
-	maxRetries *int
-	accessKey  string
-	kmsKeyID   string
+	name          string
+	config        gofig.Config
+	region        *string
+	endpoint      *string
+	maxRetries    *int
+	accessKey     string
+	kmsKeyID      string
+	maxAttempts   int
+	statusDelay   int64
+	statusTimeout time.Duration
 }
 
 func init() {
 	registry.RegisterStorageDriver(ebs.Name, newDriver)
-	// Backwards compatibility for ec2 driver
-	registry.RegisterStorageDriver(ebs.NameEC2, newEC2Driver)
 	// Backwards compatibility for ec2 driver
 	registry.RegisterStorageDriver(ebs.NameEC2, newEC2Driver)
 }
@@ -86,6 +87,22 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	maxRetries := d.getMaxRetries()
 	d.maxRetries = &maxRetries
 	d.kmsKeyID = d.getKmsKeyID()
+
+	d.maxAttempts = d.config.GetInt(ebs.ConfigStatusMaxAttempts)
+
+	statusDelayStr := d.config.GetString(ebs.ConfigStatusInitDelay)
+	statusDelay, err := time.ParseDuration(statusDelayStr)
+	if err != nil {
+		return err
+	}
+	d.statusDelay = statusDelay.Nanoseconds()
+
+	statusTimeoutStr := d.config.GetString(ebs.ConfigStatusTimeout)
+	d.statusTimeout, err = time.ParseDuration(statusTimeoutStr)
+	if err != nil {
+		return err
+	}
+
 	log.Info("storage driver initialized")
 	return nil
 }
@@ -1114,7 +1131,7 @@ func (d *driver) createVolume(
 	}
 
 	// Fill in Availability Zone if needed
-	d.createVolumeEnsureAvailabilityZone(opts.AvailabilityZone, &server)
+	d.createVolumeEnsureAvailabilityZone(opts, &server)
 
 	options := &awsec2.CreateVolumeInput{
 		Size:             opts.Size,
@@ -1165,9 +1182,10 @@ func (d *driver) createVolume(
 
 // Make sure Availability Zone is non-empty and valid
 func (d *driver) createVolumeEnsureAvailabilityZone(
-	availabilityZone *string, server *awsec2.Instance) {
-	if *availabilityZone == "" {
-		*availabilityZone = *server.Placement.AvailabilityZone
+	opts *types.VolumeCreateOpts, server *awsec2.Instance) {
+
+	if opts.AvailabilityZone == nil || *opts.AvailabilityZone == "" {
+		opts.AvailabilityZone = server.Placement.AvailabilityZone
 	}
 }
 
@@ -1225,40 +1243,55 @@ func (d *driver) waitVolumeComplete(
 		return errMissingVolID
 	}
 
-	var (
-		loop     = true
-		attached = awsec2.VolumeAttachmentStateAttached
-	)
-
-	for loop {
-		// update volume
-		volumes, err := d.getVolume(ctx, volumeID, "")
-		if err != nil {
-			return goof.WithError("error getting volume", err)
-		}
-
-		// check retrieved volume
-		switch action {
-		case waitVolumeCreate:
-			if *volumes[0].State == awsec2.VolumeStateAvailable {
-				loop = false
+	f := func() (interface{}, error) {
+		attached := awsec2.VolumeAttachmentStateAttached
+		duration := d.statusDelay
+		for i := 1; i <= d.maxAttempts; i++ {
+			// update volume
+			volumes, err := d.getVolume(ctx, volumeID, "")
+			if err != nil {
+				return nil, goof.WithFieldE("volumeID",
+					volumeID, "error getting volume", err)
 			}
-		case waitVolumeDetach:
-			if len(volumes[0].Attachments) == 0 {
-				loop = false
-			}
-		case waitVolumeAttach:
-			if len(volumes[0].Attachments) == 1 &&
-				*volumes[0].Attachments[0].State == attached {
-				loop = false
-			}
-		}
 
-		if loop {
-			time.Sleep(1 * time.Second)
+			// check retrieved volume
+			switch action {
+			case waitVolumeCreate:
+				if *volumes[0].State == awsec2.VolumeStateAvailable {
+					return nil, nil
+				}
+			case waitVolumeDetach:
+				if len(volumes[0].Attachments) == 0 {
+					return nil, nil
+				}
+			case waitVolumeAttach:
+				if len(volumes[0].Attachments) == 1 &&
+					*volumes[0].Attachments[0].State == attached {
+					return nil, nil
+				}
+			}
+
+			ctx.WithField("action", action).Debug(
+				"still waiting for action",
+			)
+			time.Sleep(time.Duration(duration) * time.Nanosecond)
+			duration = int64(2) * duration
 		}
+		return nil, goof.WithField("maxAttempts", d.maxAttempts,
+			"Status attempts exhausted")
 	}
 
+	_, ok, err := apiUtils.WaitFor(f, d.statusTimeout)
+	if !ok {
+		return goof.WithFields(goof.Fields{
+			"volumeID":      volumeID,
+			"statusTimeout": d.statusTimeout},
+			"Timeout occured waiting for storage action")
+	}
+	if err != nil {
+		return goof.WithFieldE("volumeID", volumeID,
+			"Error while waiting for storage action to finish", err)
+	}
 	return nil
 }
 

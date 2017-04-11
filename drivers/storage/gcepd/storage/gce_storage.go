@@ -55,6 +55,9 @@ type driver struct {
 	tag             string
 	tokenSource     oauth2.TokenSource
 	svcAccount      string
+	maxAttempts     int
+	statusDelay     int64
+	statusTimeout   time.Duration
 }
 
 func init() {
@@ -73,7 +76,7 @@ func (d *driver) Name() string {
 func (d *driver) Init(context types.Context, config gofig.Config) error {
 	d.config = config
 
-	d.keyFile = d.config.GetString("gcepd.keyfile")
+	d.keyFile = d.config.GetString(gcepd.ConfigKeyfile)
 	if d.keyFile != "" {
 		if !gotil.FileExists(d.keyFile) {
 			return goof.Newf("keyfile at %s does not exist", d.keyFile)
@@ -102,12 +105,12 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 		context.Info("Will authenticate using app default credentials")
 	}
 
-	d.zone = d.config.GetString("gcepd.zone")
+	d.zone = d.config.GetString(gcepd.ConfigZone)
 	if d.zone != "" {
 		context.Infof("All access is restricted to zone: %s", d.zone)
 	}
 
-	d.defaultDiskType = config.GetString("gcepd.defaultDiskType")
+	d.defaultDiskType = config.GetString(gcepd.ConfigDefaultDiskType)
 
 	switch d.defaultDiskType {
 	case gcepd.DiskTypeSSD, gcepd.DiskTypeStandard:
@@ -119,9 +122,24 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 			"Invalid GCE disk type: %s", d.defaultDiskType)
 	}
 
-	d.tag = config.GetString("gcepd.tag")
+	d.tag = config.GetString(gcepd.ConfigTag)
 	if d.tag != "" && !tagRegex.MatchString(d.tag) {
 		return goof.New("Invalid GCE tag format")
+	}
+
+	d.maxAttempts = d.config.GetInt(gcepd.ConfigStatusMaxAttempts)
+
+	statusDelayStr := d.config.GetString(gcepd.ConfigStatusInitDelay)
+	statusDelay, err := time.ParseDuration(statusDelayStr)
+	if err != nil {
+		return err
+	}
+	d.statusDelay = statusDelay.Nanoseconds()
+
+	statusTimeoutStr := d.config.GetString(gcepd.ConfigStatusTimeout)
+	d.statusTimeout, err = time.ParseDuration(statusTimeoutStr)
+	if err != nil {
+		return err
 	}
 
 	context.Info("storage driver initialized")
@@ -904,28 +922,48 @@ func (d *driver) waitUntilOperationIsFinished(
 	operation *compute.Operation) error {
 
 	opName := operation.Name
-OpLoop:
-	for {
-		time.Sleep(100 * time.Millisecond)
-		op, err := mustSession(ctx).ZoneOperations.Get(
-			*d.projectID, *zone, opName).Do()
-		if err != nil {
-			return err
-		}
+	f := func() (interface{}, error) {
+		duration := d.statusDelay
+		for i := 1; i <= d.maxAttempts; i++ {
 
-		switch op.Status {
-		case "PENDING", "RUNNING":
-			continue
-		case "DONE":
-			if op.Error != nil {
-				bytea, _ := op.Error.MarshalJSON()
-				return goof.New(string(bytea))
+			op, err := mustSession(ctx).ZoneOperations.Get(
+				*d.projectID, *zone, opName).Do()
+			if err != nil {
+				return nil, err
 			}
-			break OpLoop
-		default:
-			return goof.Newf("Unknown status %q: %+v",
-				op.Status, op)
+
+			switch op.Status {
+			case "PENDING", "RUNNING":
+				ctx.WithField("status", op.Status).Debug(
+					"still waiting for operation",
+				)
+				time.Sleep(time.Duration(duration) *
+					time.Nanosecond)
+				duration = int64(2) * duration
+			case "DONE":
+				if op.Error != nil {
+					bytea, _ := op.Error.MarshalJSON()
+					return nil, goof.New(string(bytea))
+				}
+				return nil, nil
+			default:
+				return nil, goof.Newf("Unknown status %q: %+v",
+					op.Status, op)
+			}
 		}
+		return nil, goof.WithField("maxAttempts", d.maxAttempts,
+			"Status attempts exhausted")
+	}
+
+	_, ok, err := apiUtils.WaitFor(f, d.statusTimeout)
+	if !ok {
+		return goof.WithFields(goof.Fields{
+			"statusTimeout": d.statusTimeout},
+			"Timeout occured waiting for storage action")
+	}
+	if err != nil {
+		return goof.WithError(
+			"Error while waiting for storage action to finish", err)
 	}
 	return nil
 }

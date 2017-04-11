@@ -68,8 +68,8 @@ func TestConfig(t *testing.T) {
 	}
 
 	tfDO := func(config gofig.Config, client types.Client, t *testing.T) {
-		assert.NotEqual(t, config.GetString(do.ConfigDORegion), "")
-		assert.NotEqual(t, config.GetString(do.ConfigDOToken), "")
+		assert.NotEqual(t, config.GetString(do.ConfigRegion), "")
+		assert.NotEqual(t, config.GetString(do.ConfigToken), "")
 	}
 
 	apitests.Run(t, do.Name, configYAML, tfDO)

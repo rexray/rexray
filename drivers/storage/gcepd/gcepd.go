@@ -11,6 +11,16 @@ const (
 	// Name is the provider's name.
 	Name = "gcepd"
 
+	defaultStatusMaxAttempts = 10
+	defaultStatusInitDelay   = "100ms"
+
+	/* This is hard deadline when waiting for the volume status to change to
+	a desired state. At minimum is has to be more than the expontential
+	backoff of sum 100*2^x, x=0 to 9 == 102s3ms, but should also account for
+	RTT of API requests, and how many API requests would be made to
+	exhaust retries */
+	defaultStatusTimeout = "2m"
+
 	// InstanceIDFieldProjectID is the key to retrieve the ProjectID value
 	// from the InstanceID Field map.
 	InstanceIDFieldProjectID = "projectID"
@@ -27,6 +37,30 @@ const (
 
 	// DefaultDiskType indicates what type of disk to create by default
 	DefaultDiskType = DiskTypeSSD
+
+	// ConfigKeyfile is the key for the service account JSON credential file
+	ConfigKeyfile = Name + ".keyfile"
+
+	// ConfigZone is the key for the availability zone
+	ConfigZone = Name + ".zone"
+
+	// ConfigDefaultDiskType is the key for the default disk type to use
+	ConfigDefaultDiskType = Name + ".defaultDiskType"
+
+	// ConfigTag is the key for the tag to apply to and filter disks
+	ConfigTag = Name + ".tag"
+
+	// ConfigStatusMaxAttempts is the key for the maximum number of times
+	// a volume status will be queried when waiting for an action to finish
+	ConfigStatusMaxAttempts = Name + ".statusMaxAttempts"
+
+	// ConfigStatusInitDelay is the key for the initial time duration
+	// for exponential backoff
+	ConfigStatusInitDelay = Name + ".statusInitialDelay"
+
+	// ConfigStatusTimeout is the key for the time duration for a timeout
+	// on how long to wait for a desired volume status to appears
+	ConfigStatusTimeout = Name + ".statusTimeout"
 )
 
 func init() {
@@ -40,6 +74,12 @@ func init() {
 		"gcepd.defaultDiskType")
 	r.Key(gofig.String, "", "", "Tag to apply and filter disks",
 		"gcepd.tag")
+	r.Key(gofig.Int, "", defaultStatusMaxAttempts, "Max Status Attempts",
+		ConfigStatusMaxAttempts)
+	r.Key(gofig.String, "", defaultStatusInitDelay, "Status Initial Delay",
+		ConfigStatusInitDelay)
+	r.Key(gofig.String, "", defaultStatusTimeout, "Status Timeout",
+		ConfigStatusTimeout)
 
 	gofigCore.Register(r)
 }

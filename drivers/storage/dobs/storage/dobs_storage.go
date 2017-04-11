@@ -3,6 +3,7 @@
 package storage
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	apiUtils "github.com/codedellemc/libstorage/api/utils"
 
 	do "github.com/codedellemc/libstorage/drivers/storage/dobs"
 )
@@ -23,9 +25,12 @@ const (
 )
 
 type driver struct {
-	name   string
-	config gofig.Config
-	client *godo.Client
+	name          string
+	config        gofig.Config
+	client        *godo.Client
+	maxAttempts   int
+	statusDelay   int64
+	statusTimeout time.Duration
 }
 
 func init() {
@@ -45,10 +50,28 @@ func (d *driver) Init(
 	config gofig.Config) error {
 
 	d.config = config
-	token := d.config.GetString(do.ConfigDOToken)
+	token := d.config.GetString(do.ConfigToken)
+	d.maxAttempts = d.config.GetInt(do.ConfigStatusMaxAttempts)
+
+	statusDelayStr := d.config.GetString(do.ConfigStatusInitDelay)
+	statusDelay, err := time.ParseDuration(statusDelayStr)
+	if err != nil {
+		return err
+	}
+	d.statusDelay = statusDelay.Nanoseconds()
+
+	statusTimeoutStr := d.config.GetString(do.ConfigStatusTimeout)
+	d.statusTimeout, err = time.ParseDuration(statusTimeoutStr)
+	if err != nil {
+		return err
+	}
 
 	fields := map[string]interface{}{
-		"token": token,
+		"maxStatusAttempts": d.maxAttempts,
+		"statusDelay": fmt.Sprintf(
+			"%v", time.Duration(d.statusDelay)*time.Nanosecond),
+		"statusTimeout": d.statusTimeout,
+		"region":        d.config.GetString(do.ConfigRegion),
 	}
 
 	if token == "" {
@@ -56,8 +79,6 @@ func (d *driver) Init(
 	} else {
 		fields["token"] = "******"
 	}
-
-	fields["region"] = d.config.GetString(do.ConfigDORegion)
 
 	client, err := Client(token)
 	if err != nil {
@@ -417,20 +438,38 @@ func (d *driver) waitForAction(
 	ctx types.Context,
 	volumeID string,
 	action *godo.Action) error {
-	// TODO expose these ints as options
-	for i := 0; i < 10; i++ {
-		duration := i * 15
-		time.Sleep(time.Duration(duration) * time.Millisecond)
 
-		action, _, err := d.client.StorageActions.Get(
-			ctx, volumeID, action.ID)
-		if err != nil {
-			return err
+	f := func() (interface{}, error) {
+		duration := d.statusDelay
+		for i := 1; i <= d.maxAttempts; i++ {
+			action, _, err := d.client.StorageActions.Get(
+				ctx, volumeID, action.ID)
+			if err != nil {
+				return nil, err
+			}
+			if action.Status == godo.ActionCompleted {
+				return nil, nil
+			}
+			ctx.WithField("status", action.Status).Debug(
+				"still waiting for action",
+			)
+			time.Sleep(time.Duration(duration) * time.Nanosecond)
+			duration = int64(2) * duration
 		}
-		if action.Status == godo.ActionCompleted {
-			break
-		}
+		return nil, goof.WithField("maxAttempts", d.maxAttempts,
+			"Status attempts exhausted")
 	}
 
+	_, ok, err := apiUtils.WaitFor(f, d.statusTimeout)
+	if !ok {
+		return goof.WithFields(goof.Fields{
+			"volumeID":      volumeID,
+			"statusTimeout": d.statusTimeout},
+			"Timeout occured waiting for storage action")
+	}
+	if err != nil {
+		return goof.WithFieldE("volumeID", volumeID,
+			"Error while waiting for storage action to finish", err)
+	}
 	return nil
 }

@@ -11,6 +11,16 @@ const (
 	// Name is the provider's name.
 	Name = "efs"
 
+	defaultStatusMaxAttempts = 6
+	defaultStatusInitDelay   = "1s"
+
+	/* This is hard deadline when waiting for the volume status to change to
+	a desired state. At minimum is has to be more than the expontential
+	backoff of sum 1*2^x, x=0 to 5 == 63s, but should also account for
+	RTT of API requests, and how many API requests would be made to
+	exhaust retries */
+	defaultStatusTimeout = "2m"
+
 	// TagDelimiter separates tags from volume or snapshot names
 	TagDelimiter = "/"
 
@@ -55,6 +65,10 @@ const (
 
 	// DisableSessionCache is a key constant.
 	DisableSessionCache = "disableSessionCache"
+
+	statusMaxAttempts  = "statusMaxAttempts"
+	statusInitialDelay = "statusInitialDelay"
+	statusTimeout      = "statusTimeout"
 )
 
 const (
@@ -87,19 +101,39 @@ const (
 
 	// ConfigEFSDisableSessionCache is a config key.
 	ConfigEFSDisableSessionCache = ConfigEFS + "." + DisableSessionCache
+
+	// ConfigStatusMaxAttempts is the key for the maximum number of times
+	// a volume status will be queried when waiting for an action to finish
+	ConfigStatusMaxAttempts = ConfigEFS + "." + statusMaxAttempts
+
+	// ConfigStatusInitDelay is the key for the initial time duration
+	// for exponential backoff
+	ConfigStatusInitDelay = ConfigEFS + "." + statusInitialDelay
+
+	// ConfigStatusTimeout is the key for the time duration for a timeout
+	// on how long to wait for a desired volume status to appears
+	ConfigStatusTimeout = ConfigEFS + "." + statusTimeout
 )
 
 func init() {
 	r := gofigCore.NewRegistration("EFS")
 	r.Key(gofig.String, "", "", "AWS access key", ConfigEFSAccessKey)
 	r.Key(gofig.String, "", "", "AWS secret key", ConfigEFSSecretKey)
-	r.Key(gofig.String, "", "", "List of security groups", ConfigEFSSecGroups)
+	r.Key(gofig.String, "", "", "List of security groups",
+		ConfigEFSSecGroups)
 	r.Key(gofig.String, "", "", "AWS region", ConfigEFSRegion)
 	r.Key(gofig.String, "", "", "AWS EFS endpoint", ConfigEFSEndpoint)
 	r.Key(gofig.String, "", `elasticfilesystem.%s.amazonaws.com`,
 		"AWS EFS endpoint format", ConfigEFSEndpointFormat)
 	r.Key(gofig.String, "", "", "Tag prefix for EFS naming", ConfigEFSTag)
 	r.Key(gofig.Bool, "", false,
-		"A flag that disables the session cache", ConfigEFSDisableSessionCache)
+		"A flag that disables the session cache",
+		ConfigEFSDisableSessionCache)
+	r.Key(gofig.Int, "", defaultStatusMaxAttempts, "Max Status Attempts",
+		ConfigStatusMaxAttempts)
+	r.Key(gofig.String, "", defaultStatusInitDelay, "Status Initial Delay",
+		ConfigStatusInitDelay)
+	r.Key(gofig.String, "", defaultStatusTimeout, "Status Timeout",
+		ConfigStatusTimeout)
 	gofigCore.Register(r)
 }

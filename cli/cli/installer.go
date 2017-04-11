@@ -328,6 +328,9 @@ KillMode=process
 
 [Install]
 WantedBy=docker.service
+Wants=scini.service
+Before=docker.service
+After=scini.service
 `
 
 func createInitFile() {
@@ -365,6 +368,8 @@ const initScriptTemplate = `### BEGIN INIT INFO
 # Provides:          {{.BinFileName}}
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
+# Should-Start:      scini
+# X-Start-Before:    docker
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start daemon at boot time

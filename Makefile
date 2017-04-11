@@ -787,9 +787,17 @@ endif
 
 $$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
 ifeq (,$$(BUILD_TAGS))
+ifeq (1,$(COVERAGE_ENABLED))
 	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
 else
+	go test -c -o $$@ $1
+endif
+else
+ifeq (1,$(COVERAGE_ENABLED))
 	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -tags "$$(BUILD_TAGS)" -c -o $$@ $1
+else
+	go test -tags "$$(BUILD_TAGS)" -c -o $$@ $1
+endif
 endif
 
 $$(PKG_TA_$1)-clean:
@@ -798,7 +806,11 @@ GO_PHONY += $$(PKG_TA_$1)-clean
 GO_CLEAN += $$(PKG_TA_$1)-clean
 
 $$(PKG_TC_$1): $$(PKG_TA_$1)
+ifeq (1,$(COVERAGE_ENABLED))
 	$$(PKG_TA_$1) -test.coverprofile $$@ $$(GO_TEST_FLAGS)
+else
+	$$(PKG_TA_$1) $$(GO_TEST_FLAGS) && touch $$@
+endif
 TEST_PROFILES += $$(PKG_TC_$1)
 
 $$(PKG_TC_$1)-clean:

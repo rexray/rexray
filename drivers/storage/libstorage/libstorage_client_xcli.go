@@ -469,10 +469,17 @@ func (c *client) runExecutor(
 		case types.LSXExitCodeTimedOut:
 			return nil, types.ErrTimedOut
 		}
+		stderr := string(exitError.Stderr)
+		ctx.WithFields(log.Fields{
+			"cmd":    lsxBin,
+			"args":   args,
+			"stderr": stderr,
+		}).Error("error from executor cli")
 		return nil, goof.WithFieldsE(
 			map[string]interface{}{
-				"lsx":  lsxBin,
-				"args": args,
+				"lsx":    lsxBin,
+				"args":   args,
+				"stderr": stderr,
 			},
 			"error executing xcli",
 			err)

@@ -155,7 +155,11 @@ func GetInstanceID(
 func getCephMonIPs() ([]net.IP, error) {
 	out, err := exec.Command("ceph-conf", "--lookup", "mon_host").Output()
 	if err != nil {
-		return nil, goof.WithError("Unable to get Ceph monitors", err)
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			return nil, goof.WithField("stderr", string(exiterr.Stderr),
+				"unable to get Ceph monitors")
+		}
+		return nil, goof.WithError("unable to get Ceph monitors", err)
 	}
 
 	monStrings := strings.Split(strings.TrimSpace(string(out)), ",")

@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/akutz/goof"
+
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	apitypes "github.com/codedellemc/libstorage/api/types"
@@ -270,8 +272,16 @@ func Run() {
 		if strings.EqualFold(err.Error(), apitypes.ErrNotImplemented.Error()) {
 			exitCode = apitypes.LSXExitCodeNotImplemented
 		}
+		var errStr string
+		switch e := err.(type) {
+		case goof.Goof:
+			e.IncludeFieldsInError(true)
+			errStr = e.Error()
+		default:
+			errStr = e.Error()
+		}
 		fmt.Fprintf(os.Stderr,
-			"error: error getting %s: %v\n", op, err)
+			"error: error getting %s: %v\n", op, errStr)
 		os.Exit(exitCode)
 	}
 

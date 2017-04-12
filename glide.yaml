@@ -9,14 +9,14 @@ import:
     ref:     d16db1e50e33dff1b6cdf37596cef36742128670
   - package: github.com/akutz/golf
     version: v0.1.2
+  - package: github.com/akutz/goof
+    version: v0.1.1
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
   - package: github.com/akutz/gofig
     version: v0.1.6
   - package: github.com/akutz/gotil
-    version: v0.1.0
-  - package: github.com/akutz/goof
     version: v0.1.0
   - package: github.com/codedellemc/gournal
     version: v0.3.0

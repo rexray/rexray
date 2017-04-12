@@ -3,6 +3,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -415,6 +416,17 @@ func (d *driver) VolumeAttach(
 	ctx types.Context,
 	volumeID string,
 	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
+
+	switch os.Getenv("VFS_STDLIB_GOOF_ERR") {
+	case "1":
+		return nil, "", goof.WithFieldE(
+			"path", "/tmp", "this error has an inner error",
+			goof.New("a bug squashing expedition all died"))
+	case "2":
+		return nil, "", goof.WithFieldE(
+			"path", "/tmp", "this error has an inner error",
+			errors.New("a bug squashing expedition all died"))
+	}
 
 	context.MustSession(ctx)
 

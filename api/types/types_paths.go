@@ -15,6 +15,69 @@ import (
 	"github.com/akutz/gotil"
 )
 
+var (
+	libstorageHome = os.Getenv("LIBSTORAGE_HOME")
+	fileKeyCache   = map[fileKey]string{}
+	homeLock       = &sync.Mutex{}
+	thisExeDir     string
+	thisExeName    string
+	thisExeAbsPath string
+	slashRX        = regexp.MustCompile(`^((?:/)|(?:[a-zA-Z]\:\\?))?$`)
+
+	etcEnvVarPath string
+	libEnvVarPath string
+	logEnvVarPath string
+	runEnvVarPath string
+	tlsEnvVarPath string
+	lsxEnvVarPath string
+)
+
+func init() {
+
+	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
+
+	if libstorageHome == "" {
+		libstorageHome = "/"
+	}
+
+	// if not root and home is /, change home to user's home dir
+	if libstorageHome == "/" && os.Geteuid() != 0 {
+		libstorageHome = path.Join(gotil.HomeDir(), ".libstorage")
+	}
+
+	if v := os.Getenv("LIBSTORAGE_PATHS_ETC"); v != "" && gotil.FileExists(v) {
+		etcEnvVarPath = v
+	}
+	if v := os.Getenv("LIBSTORAGE_PATHS_LIB"); v != "" && gotil.FileExists(v) {
+		libEnvVarPath = v
+	}
+	if v := os.Getenv("LIBSTORAGE_PATHS_LOG"); v != "" && gotil.FileExists(v) {
+		logEnvVarPath = v
+	}
+	if v := os.Getenv("LIBSTORAGE_PATHS_RUN"); v != "" && gotil.FileExists(v) {
+		runEnvVarPath = v
+	}
+	if v := os.Getenv("LIBSTORAGE_PATHS_TLS"); v != "" && gotil.FileExists(v) {
+		tlsEnvVarPath = v
+	}
+	if v := os.Getenv("LIBSTORAGE_PATHS_LSX"); v != "" && gotil.FileExists(v) {
+		lsxEnvVarPath = v
+	}
+
+	for i := Home; i < maxFileKey; i++ {
+		if i.isFileKeyMarker() {
+			continue
+		}
+
+		// this initialized the value
+		_ = i.String()
+
+		if Debug {
+			log.WithField(i.key(), i.String()).Info("libStorage path")
+		}
+	}
+}
+
 type fileKey int
 
 const (
@@ -24,17 +87,20 @@ const (
 
 	minDirKey
 
-	// Etc is the application etc directory.
+	// Etc is the application's etc directory.
 	Etc
 
-	// Lib is the application lib directory.
+	// Lib is the application's lib directory.
 	Lib
 
-	// Log is the application log directory.
+	// Log is the application's log directory.
 	Log
 
-	// Run is the application run directory.
+	// Run is the application's run directory.
 	Run
+
+	// TLS is the application's tls directory.
+	TLS
 
 	maxDirKey
 
@@ -96,10 +162,14 @@ func (k fileKey) Format(f fmt.State, c rune) {
 }
 
 func (k fileKey) parent() fileKey {
-	if k < maxDirKey {
+	switch k {
+	case TLS:
+		return Etc
+	case LSX:
+		return Lib
+	default:
 		return Home
 	}
-	return Lib
 }
 
 func (k fileKey) perms() os.FileMode {
@@ -121,33 +191,76 @@ func (k fileKey) key() string {
 		return "log"
 	case Run:
 		return "run"
+	case TLS:
+		return "tls"
 	case LSX:
 		return "lsx"
 	}
 	return ""
 }
 
+func isLibstorageHomeSet() bool {
+	return libstorageHome != "/"
+}
+
 func (k fileKey) defaultVal() string {
+	if v, ok := k.isEnvVarSet(); ok {
+		return v
+	}
 	switch k {
 	case Home:
 		return libstorageHome
 	case Etc:
+		if isLibstorageHomeSet() {
+			return "/etc"
+		}
 		return "/etc/libstorage"
 	case Lib:
+		if isLibstorageHomeSet() {
+			return "/var/lib"
+		}
 		return "/var/lib/libstorage"
 	case Log:
+		if isLibstorageHomeSet() {
+			return "/var/log"
+		}
 		return "/var/log/libstorage"
 	case Run:
+		if isLibstorageHomeSet() {
+			return "/var/run"
+		}
 		return "/var/run/libstorage"
+	case TLS:
+		return "tls"
 	case LSX:
 		switch runtime.GOOS {
-		case "linux", "darwin":
-			return fmt.Sprintf("lsx-%s", runtime.GOOS)
 		case "windows":
 			return "lsx-windows.exe"
+		default:
+			return fmt.Sprintf("lsx-%s", runtime.GOOS)
 		}
 	}
 	return ""
+}
+
+func (k fileKey) isEnvVarSet() (string, bool) {
+	switch k {
+	case Home:
+		return libstorageHome, isLibstorageHomeSet()
+	case Etc:
+		return etcEnvVarPath, etcEnvVarPath != ""
+	case Lib:
+		return libEnvVarPath, libEnvVarPath != ""
+	case Log:
+		return logEnvVarPath, logEnvVarPath != ""
+	case Run:
+		return runEnvVarPath, runEnvVarPath != ""
+	case TLS:
+		return tlsEnvVarPath, tlsEnvVarPath != ""
+	case LSX:
+		return lsxEnvVarPath, lsxEnvVarPath != ""
+	}
+	return "", false
 }
 
 func (k fileKey) get() string {
@@ -157,7 +270,9 @@ func (k fileKey) get() string {
 	if k == Home {
 		return libstorageHome
 	}
-
+	if v, ok := k.isEnvVarSet(); ok {
+		return v
+	}
 	if p, ok := fileKeyCache[k.parent()]; ok {
 		return path.Join(p, k.defaultVal())
 	}
@@ -236,43 +351,6 @@ func (k fileKey) init() {
 	}
 
 	checkPerms(k, true)
-}
-
-var (
-	libstorageHome = os.Getenv("LIBSTORAGE_HOME")
-	fileKeyCache   = map[fileKey]string{}
-	homeLock       = &sync.Mutex{}
-	thisExeDir     string
-	thisExeName    string
-	thisExeAbsPath string
-	slashRX        = regexp.MustCompile(`^((?:/)|(?:[a-zA-Z]\:\\?))?$`)
-)
-
-func initPaths() {
-
-	thisExeDir, thisExeName, thisExeAbsPath = gotil.GetThisPathParts()
-
-	if libstorageHome == "" {
-		libstorageHome = "/"
-	}
-
-	// if not root and home is /, change home to user's home dir
-	if os.Geteuid() != 0 && libstorageHome == "/" {
-		libstorageHome = path.Join(gotil.HomeDir(), ".libstorage")
-	}
-
-	for i := Home; i < maxFileKey; i++ {
-		if i.isFileKeyMarker() {
-			continue
-		}
-
-		// this initialized the value
-		_ = i.String()
-
-		if Debug {
-			log.WithField(i.key(), i.String()).Info("libStorage path")
-		}
-	}
 }
 
 func checkPerms(k fileKey, mustPerm bool) bool {

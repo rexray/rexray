@@ -959,6 +959,80 @@ func TestVolumeAttach(t *testing.T) {
 	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
 }
 
+func TestVolumeAttachGoofErr(t *testing.T) {
+	os.Setenv("VFS_STDLIB_GOOF_ERR", "1")
+	defer os.Setenv("VFS_STDLIB_GOOF_ERR", "")
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		nextDevice, err := client.Executor().NextDevice(
+			context.Background().WithValue(context.ServiceKey, vfs.Name),
+			utils.NewStore())
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		_, _, err = client.API().VolumeAttach(
+			nil, vfs.Name, "vfs-002",
+			&types.VolumeAttachRequest{
+				NextDeviceName: &nextDevice,
+			})
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+
+		buf, err := json.Marshal(err)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		if !assert.Equal(t,
+			`{"message":"this error has an inner error",`+
+				`"status":500,"error":{"inner":"a bug squashing `+
+				`expedition all died","path":"/tmp"}}`, string(buf)) {
+			t.FailNow()
+		}
+	}
+
+	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+}
+
+func TestVolumeAttachStdlibErr(t *testing.T) {
+	os.Setenv("VFS_STDLIB_GOOF_ERR", "2")
+	defer os.Setenv("VFS_STDLIB_GOOF_ERR", "")
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		nextDevice, err := client.Executor().NextDevice(
+			context.Background().WithValue(context.ServiceKey, vfs.Name),
+			utils.NewStore())
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		_, _, err = client.API().VolumeAttach(
+			nil, vfs.Name, "vfs-002",
+			&types.VolumeAttachRequest{
+				NextDeviceName: &nextDevice,
+			})
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+
+		buf, err := json.Marshal(err)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		if !assert.Equal(t,
+			`{"message":"this error has an inner error",`+
+				`"status":500,"error":{"inner":"a bug squashing `+
+				`expedition all died","path":"/tmp"}}`, string(buf)) {
+			t.FailNow()
+		}
+	}
+
+	apitests.Run(t, vfs.Name, newTestConfig(t), tf)
+}
+
 func TestVolumeAttachWithControllerClient(t *testing.T) {
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 

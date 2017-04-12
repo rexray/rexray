@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
 
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/server/httputils"
 	"github.com/codedellemc/libstorage/api/types"
 )
@@ -39,9 +42,20 @@ func (h *errorHandler) Handle(
 		return nil
 	}
 
-	ctx.Error(err)
+	gerr := goof.Newe(err)
+	ctx.WithError(gerr).Error("error: api call failed")
 
-	httpErr := goof.NewHTTPError(err, getStatus(err))
+	httpErr := goof.NewHTTPError(gerr, getStatus(err))
+	if isLogAPICallErrJSON(ctx) {
+		buf, err := json.Marshal(httpErr)
+		if err != nil {
+			ctx.WithError(err).Error(
+				"error marshalling api call err to json")
+		} else {
+			ctx.WithField("apiErr", string(buf)).Debug("api call error json")
+		}
+	}
+
 	httputils.WriteJSON(w, httpErr.Status(), httpErr)
 	return nil
 }
@@ -62,4 +76,14 @@ func getStatus(err error) int {
 	default:
 		return http.StatusInternalServerError
 	}
+}
+
+func isLogAPICallErrJSON(ctx types.Context) bool {
+	if types.Debug {
+		return true
+	}
+	if lvl, ok := context.GetLogLevel(ctx); ok && lvl == log.DebugLevel {
+		return true
+	}
+	return false
 }

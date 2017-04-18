@@ -102,7 +102,7 @@ storage platform.
 * Ceph/RBD storage platform ([#347](https://github.com/codedellemc/libstorage/pull/347))
 
 ### Bug Fixes
-* Prevent unnecessary removal of directory by FlexRex ([#699](https://github.com/codedellemc/rexray/pull/699))
+* Prevent unnecessary removal of directory by FlexREX ([#699](https://github.com/codedellemc/rexray/pull/699))
 * Update `volume attach` to check for `--force` flag ([#696](https://github.com/codedellemc/rexray/pull/696))
 * Fix installer to correctly parse new Bintray HTML ([#687](https://github.com/codedellemc/rexray/pull/687))
 

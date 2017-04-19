@@ -1,11 +1,7 @@
 package libstorage
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"crypto/tls"
-	"encoding/hex"
-	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -40,8 +36,6 @@ type driver struct {
 func newDriver() types.StorageDriver {
 	return &driver{}
 }
-
-var errServerFingerprint = errors.New("invalid server fingerprint")
 
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	logFields := log.Fields{}
@@ -91,7 +85,12 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	httpTransport := &http.Transport{
 		Dial: func(string, string) (net.Conn, error) {
 			if tlsConfig == nil {
-				return net.Dial(proto, lAddr)
+				conn, err := net.Dial(proto, lAddr)
+				if err != nil {
+					return nil, err
+				}
+				d.ctx.Debug("successful connection")
+				return conn, nil
 			}
 
 			conn, err := tls.Dial(proto, lAddr, &tlsConfig.Config)
@@ -99,31 +98,28 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 				return nil, err
 			}
 
-			if len(tlsConfig.PeerFingerprint) > 0 {
-				peerCerts := conn.ConnectionState().PeerCertificates
-				matchedFingerprint := false
-				expectedFP := hex.EncodeToString(tlsConfig.PeerFingerprint)
-				for _, cert := range peerCerts {
-					h := sha256.New()
-					h.Write(cert.Raw)
-					certFP := h.Sum(nil)
-					actualFP := hex.EncodeToString(certFP)
-					d.ctx.WithFields(log.Fields{
-						"actualFingerprint":   actualFP,
-						"expectedFingerprint": expectedFP,
-					}).Debug("comparing tls fingerprints")
-					if bytes.EqualFold(tlsConfig.PeerFingerprint, certFP) {
-						matchedFingerprint = true
-						d.ctx.WithFields(log.Fields{
-							"actualFingerprint":   actualFP,
-							"expectedFingerprint": expectedFP,
-						}).Debug("matched tls fingerprints")
-						break
-					}
-				}
-				if !matchedFingerprint {
-					return nil, errServerFingerprint
-				}
+			if !tlsConfig.VerifyPeers {
+				d.ctx.Debug("successful tls connection; not verifying peers")
+				return conn, nil
+			}
+
+			if err := verifyKnownHost(
+				d.ctx,
+				conn.ConnectionState().PeerCertificates,
+				tlsConfig.KnownHost); err != nil {
+
+				d.ctx.WithError(err).Error("error matching peer fingerprint")
+				return nil, err
+			}
+
+			if err := verifyKnownHostFiles(
+				d.ctx,
+				conn.ConnectionState().PeerCertificates,
+				tlsConfig.UsrKnownHosts,
+				tlsConfig.SysKnownHosts); err != nil {
+
+				d.ctx.WithError(err).Error("error matching known host")
+				return nil, err
 			}
 
 			return conn, nil
@@ -146,6 +142,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		APIClient:    apiClient,
 		ctx:          d.ctx,
 		config:       config,
+		tlsConfig:    tlsConfig,
 		clientType:   cliType,
 		serviceCache: &lss{Store: utils.NewStore()},
 	}

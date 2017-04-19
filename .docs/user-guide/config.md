@@ -302,8 +302,64 @@ and a more verbose, `info` log level for just the server.
 The following sections detail every last aspect of how `libStorage` works and can
 be configured.
 
+### Data Directories
+The first time libStorage is executed it will create several directories if
+they do not already exist:
+
+* `/etc/libstorage`
+* `/etc/libstorage/tls`
+* `/var/lib/libstorage`
+* `/var/log/libstorage`
+* `/var/run/libstorage`
+
+The above directories will contain configuration files, logs, PID files, and
+mounted volumes.
+
+The location of these directories can be influenced in two ways. The first way
+is via the environment variable `LIBSTORAGE_HOME`. When `LIBSTORAGE_HOME` is
+defined, the normal, final token of the above paths is removed. Thus when
+`LIBSTORAGE_HOME` is defined as `/opt/libstorage` the
+above directory paths would be:
+
+* `/opt/libstorage/etc`
+* `/opt/libstorage/etc/tls`
+* `/opt/libstorage/var/lib`
+* `/opt/libstorage/var/log`
+* `/opt/libstorage/var/run`
+
+It's also possible to override any one of the above directory paths manually
+using the following environment variables:
+
+* `LIBSTORAGE_HOME_ETC`
+* `LIBSTORAGE_HOME_ETC_TLS`
+* `LIBSTORAGE_HOME_LIB`
+* `LIBSTORAGE_HOME_LOG`
+* `LIBSTORAGE_HOME_RUN`
+
+Thus if `LIBSTORAGE_HOME` was set to `/opt/libstorage` and
+`LIBSTORAGE_HOME_ETC` was set to `/etc/libstorage` the above paths would be:
+
+* `/etc/libstorage`
+* `/etc/libstorage/tls`
+* `/opt/libstorage/var/lib`
+* `/opt/libstorage/var/log`
+* `/opt/libstorage/var/run`
+
 ### TLS Configuration
-This section reviews the several supported TLS configuration options.
+This section reviews the several supported TLS configuration options. The table
+below lists the default locations of the TLS-related files.
+
+Directory | File | Property | Description
+----------|-----|-----------|------------
+`$LIBSTORAGE_HOME_ETC_TLS` | `libstorage.crt` | `libstorage.tls.crtFile` | The public key.
+| `libstorage.key` | `libstorage.tls.keyFile` | The private key.
+| `cacerts` | `libstorage.tls.trustedCertsFile` | The trusted key ring.
+| `known_hosts` | `libstorage.tls.knownHosts` | The system known hosts file.
+
+If libStorage detects any of the above files, the detected files are loaded
+when necessary and without any explicit configuration. However, if a file's
+related configuration property is set explicitly to some other, non-default
+value, the default file will not be loaded even if it is present.
 
 #### Insecure TLS
 The following example illustrates how to configure the libStorage client to
@@ -334,61 +390,119 @@ libstorage:
     certificate provided by the server. This is a security risk and should not
     ever be used in production.
 
-#### Server Cert Fingerprint
-While TLS should never be configured as insecure in production, a compromise
-between no TLS and insecure TLS is specifying a server certificate's SHA256
-fingerprint.
+#### Peer Verification
+While TLS should never be configured as insecure in production, there is a
+compromise that enables an encrypted connection while still providing some
+measure of verification of the remote endpoint's identity -- peer verification.
 
-For example, the following command can be used to print google.com's SHA256
-fingerprint:
+When peer verification mode is enabled, TLS is implicitly configured to operate
+as insecure in order to disable server-side certificate verification. This
+enables an encrypted transport while delegating the authenticity of the
+server's identity to the peer verification process.
+
+The first step to configuring peer verification is to obtain the information
+about the peer used to identify it. First, obtain the peer's certificate and
+store it locally. This step can be omitted if the remote peer's certificate
+is already available locally.
 
 ```bash
-$ openssl s_client -connect google.com:443  </dev/null | \
-  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | \
-  openssl x509 -noout -fingerprint -sha256
+$ openssl s_client -connect google.com:443 2>/dev/null </dev/null | \
+  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > my.crt
 ```
 
-The above command will produce output similar to the following:
+Once the remote certificate is available locally it can be used to generate
+its identifying information:
 
 ```bash
-depth=2 /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
-verify error:num=20:unable to get local issuer certificate
-verify return:0
-DONE
-SHA256 Fingerprint=15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:99
+$ echo $(cat my.crt | openssl x509 -noout -subject | \
+  awk 'BEGIN { FS = "/" }; { print $NF }' | \
+  cut -c4-) sha256 $(cat my.crt | \
+  openssl x509 -noout -fingerprint -sha256 | cut -c20-)
 ```
 
-Using the above output, it's possible to configure a libStorage client to
-communicate to a remote, libStorage API endpoint using TLS if, and only if,
-the fingerprint of remote endpoint's certificate matches the one the client
-expects. The following configuration achieves just that:
+The above command should emit something similar to the following:
+
+```bash
+*.google.com sha256 14:8F:93:BE:EA:AB:68:CE:C8:03:0D:0B:0D:54:C3:59:4C:18:55:5D:2D:7E:4E:8C:68:9E:D4:59:33:3C:68:96
+```
+
+The above output is a _known hosts_ entry.
+
+!!! note "note"
+    It is also possible to collapse the entire series of above steps into a
+    single command:
+
+    <pre>
+    <code lang="bash">$ openssl s_client -connect google.com:443 2>/dev/null </dev/null | \
+      sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > my.crt && \
+      echo $(cat my.crt | openssl x509 -noout -subject | \
+      awk 'BEGIN { FS = "/" }; { print $NF }' | \
+      cut -c4-) sha256 $(cat my.crt | \
+      openssl x509 -noout -fingerprint -sha256 | cut -c20-) && \
+      rm -f my.crt</code></pre>
+
+##### Simple Peer Verification
+With the remote peer's identifying information in hand it is possible to
+enable peer verification on the client by setting the property
+`libstorage.tls` to the remote peer's identifier string:
 
 ```yaml
 libstorage:
-  host: tcp://127.0.0.1:7979
   client:
-    tls: "sha256:15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:99"
-  server:
-    tls:
-      certFile: /etc/libstorage/libstorage-server.crt
-      keyFile: /etc/libstorage/libstorage-server.key
-    services:
-      virtualbox:
-        driver: virtualbox
-        virtualbox:
-          endpoint:       http://10.0.2.2:18083
-          tls:            false
-          volumePath:     $HOME/VirtualBox/Volumes
-          controllerName: SATA
+    tls: *.google.com sha256 14:8F:93:BE:EA:AB:68:CE:C8:03:0D:0B:0D:54:C3:59:4C:18:55:5D:2D:7E:4E:8C:68:9E:D4:59:33:3C:68:96
 ```
 
-With `DEBUG` level logging enabled, the libStorage client logs reflect the
-matched fingerprint:
+The above approach does result in the client attempting a TLS connection to
+the configured, remote host. However, the peer verification will only be
+valid for a single peer.
+
+##### Advanced Peer Verification
+While simple peer verification works for a single, remote host, sometimes it
+is necessary to enable peer verification for multiple remote hosts. This
+configuration requires a _known hosts_ file.
+
+For people that use SSH the concept of a known hosts file should feel familiar.
+In fact, libStorage copies the format of SSH's known hosts file entirely. The
+file adheres to a line-delimited format:
 
 ```bash
-DEBU[0000] comparing tls fingerprints                    actualFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 expectedFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 service=virtualbox storageDriver=libstorage time=1488821773182
-DEBU[0000] matched tls fingerprints                      actualFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 expectedFingerprint=159277be6c90d3fb59299c51a7db5c1655bdb99ee77ec19b30c37499215f0899 service=virtualbox storageDriver=libstorage time=1488821773182
+ls-svr-01 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6A
+ls-svr-02 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6C
+ls-svr-03 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6D
 ```
+
+The known hosts file can be specified via the property
+`libstorage.tls.knownHosts`. This is the _system_ known hosts file. If this
+property is not explicitly configured then libStorage checks for the file
+`$LIBSTORAGE_HOME_ETC_TLS/known_hosts`. libStorage also looks for the _user_
+known hosts file at `$HOME/.libstorage/known_hosts`.
+
+Thus if a known hosts file is present at either of the default system or
+user locations, it's possible to take advantage of them with a configuration
+similar to the following:
+
+```yaml
+libstorage:
+  client:
+    tls: verifyPeers
+```
+
+The above configuration snippet indicates that TLS is enabled with peer
+verification. Because no known hosts file is specified the default paths are
+checked for any known host files. To enable peer verification with a custom
+system known hosts file the following configuration can be used:
+
+```yaml
+libstorage:
+  client:
+    tls:
+      verifyPeers: true
+      knownHosts:  /tmp/known_hosts
+```
+
+The above configuration snippet indicates that TLS is enabled and set to
+peer verification mode and that the system known hosts file is located at
+`/tmp/known_hosts`.
 
 #### Trusted Certs File
 This TLS configuration example describes how to instruct the libStorage client
@@ -655,21 +769,6 @@ If `libStorage` is embedded into another application, such as
 manage its own configuration and supply the embedded `libStorage` instance
 directly with a configuration object. In this scenario, the `libStorage`
 configuration files are ignored in deference to the embedding application.
-
-### Data Directories
-The first time `libStorage` is executed it will create several directories if
-they do not already exist:
-
-* `/etc/libstorage`
-* `/var/log/libstorage`
-* `/var/run/libstorage`
-* `/var/lib/libstorage`
-
-The above directories will contain configuration files, logs, PID files, and
-mounted volumes. However, the location of these directories can also be
-influenced with the environment variable `LIBSTORAGE_HOME`. All of the above
-data directories will be placed in their same paths, but prefixed by the path
-specified via `LIBSTORAGE_HOME`, if `LIBSTORAGE_HOME` is in fact specified.
 
 ### Configuration Methods
 There are three ways to configure `libStorage`:

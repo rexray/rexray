@@ -82,3 +82,36 @@ type ErrSecTokInvalid struct {
 func (e *ErrSecTokInvalid) Error() string {
 	return "invalid security token"
 }
+
+// ErrKnownHost occurs when the client's TLS dialer encounters a problem
+// verifying the remote peer's certificate against a list of known host
+// signatures.
+type ErrKnownHost struct {
+	// PeerHost is the remote peer's host name.
+	PeerHost string
+
+	// PeerAlg is algorithm used to calculate the remote peer's fingerprint.
+	PeerAlg string
+
+	// PeerFingerprint is the remote peer's fingerprint.
+	PeerFingerprint []byte
+}
+
+func (e *ErrKnownHost) Error() string {
+	return "error verifying the remote peer is a known host"
+}
+
+// GetPeerHost returns the value of PeerHost.
+func (e *ErrKnownHost) GetPeerHost() string {
+	return e.PeerHost
+}
+
+// GetPeerAlg returns the value of PeerAlg.
+func (e *ErrKnownHost) GetPeerAlg() string {
+	return e.PeerAlg
+}
+
+// GetPeerFingerprint returns the value of PeerFingerprint.
+func (e *ErrKnownHost) GetPeerFingerprint() []byte {
+	return e.PeerFingerprint
+}

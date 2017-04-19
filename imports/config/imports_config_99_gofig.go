@@ -83,6 +83,32 @@ func init() {
 	rk(gofig.String, "0s", "", types.ConfigServerTasksLogTimeout)
 	rk(gofig.Bool, false, "", types.ConfigServerParseRequestOpts)
 
+	// tls config
+	rk(
+		gofig.String,
+		types.DefaultTLSCertFile.Path(),
+		"",
+		types.ConfigTLSCertFile)
+	rk(
+		gofig.String,
+		types.DefaultTLSKeyFile.Path(),
+		"",
+		types.ConfigTLSKeyFile)
+	rk(
+		gofig.String,
+		types.DefaultTLSTrustedRootsFile.Path(),
+		"",
+		types.ConfigTLSTrustedCertsFile)
+	rk(
+		gofig.String,
+		types.DefaultTLSKnownHosts.Path(),
+		"",
+		types.ConfigTLSKnownHosts)
+	rk(gofig.String, "", "", types.ConfigTLSServerName)
+	rk(gofig.Bool, false, "", types.ConfigTLSDisabled)
+	rk(gofig.Bool, false, "", types.ConfigTLSInsecure)
+	rk(gofig.Bool, false, "", types.ConfigTLSClientCertRequired)
+
 	// auth config - client
 	rk(gofig.String, "", "", types.ConfigClientAuthToken)
 

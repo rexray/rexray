@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"runtime"
 	"strconv"
 	"sync"
@@ -34,8 +35,13 @@ var (
 	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
 	// lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
 
-	tcpTest        bool
-	tcpTLSTest, _  = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_TCP_TLS"))
+	tcpTest bool
+
+	tcpTLSTest, _ = strconv.ParseBool(
+		os.Getenv("LIBSTORAGE_TEST_TCP_TLS"))
+	tcpTLSPeersTest, _ = strconv.ParseBool(
+		os.Getenv("LIBSTORAGE_TEST_TCP_TLS_PEERS"))
+
 	sockTest, _    = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_SOCK"))
 	sockTLSTest, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_SOCK_TLS"))
 
@@ -59,13 +65,15 @@ func init() {
 }
 
 var (
-	tlsPath = fmt.Sprintf(
-		"%s/src/github.com/codedellemc/libstorage/.tls", os.Getenv("GOPATH"))
-	serverCrt    = fmt.Sprintf("%s/libstorage-server.crt", tlsPath)
-	serverKey    = fmt.Sprintf("%s/libstorage-server.key", tlsPath)
-	clientCrt    = fmt.Sprintf("%s/libstorage-client.crt", tlsPath)
-	clientKey    = fmt.Sprintf("%s/libstorage-client.key", tlsPath)
-	trustedCerts = fmt.Sprintf("%s/libstorage-ca.crt", tlsPath)
+	tlsPath = path.Join(
+		os.Getenv("GOPATH"),
+		"/src/github.com/codedellemc/libstorage/.tls")
+	serverCrt    = path.Join(tlsPath, "libstorage-server.crt")
+	serverKey    = path.Join(tlsPath, "libstorage-server.key")
+	clientCrt    = path.Join(tlsPath, "libstorage-client.crt")
+	clientKey    = path.Join(tlsPath, "libstorage-client.key")
+	trustedCerts = path.Join(tlsPath, "libstorage-ca.crt")
+	knownHosts   = path.Join(tlsPath, "known_hosts")
 )
 
 var (
@@ -236,6 +244,7 @@ func (th *testHarness) run(
 
 			wg.Add(1)
 			go func(x int, config gofig.Config) {
+
 				defer wg.Done()
 				server, errs, err := apiserver.Serve(nil, config)
 				if err != nil {
@@ -253,12 +262,10 @@ func (th *testHarness) run(
 				th.servers = append(th.servers, server)
 
 				c, err := client.New(nil, config)
-				if err != nil {
-					if onNewClientError != nil {
-						onNewClientError(err)
-					} else {
-						t.Fatal(err)
-					}
+				if onNewClientError != nil {
+					onNewClientError(err)
+				} else if err != nil {
+					t.Fatal(err)
 				} else if !assert.NotNil(t, c) {
 					t.FailNow()
 				} else {
@@ -295,19 +302,19 @@ func (th *testHarness) run(
 						err := <-errs
 						if err != nil {
 							th.closeServers(t)
-							t.Fatalf("server (%s) error: %v", configNames[x], err)
+							t.Fatalf(
+								"server (%s) error: %v",
+								configNames[x], err)
 						}
 					}()
 
 					th.servers = append(th.servers, server)
 
 					c, err := client.New(nil, config)
-					if err != nil {
-						if onNewClientError != nil {
-							onNewClientError(err)
-						} else {
-							t.Fatal(err)
-						}
+					if onNewClientError != nil {
+						onNewClientError(err)
+					} else if err != nil {
+						t.Fatal(err)
 					} else if !assert.NotNil(t, c) {
 						t.FailNow()
 					} else {
@@ -404,19 +411,39 @@ func getTestConfigs(
 
 	if tcpTest {
 		configNames[len(configNames)] = "tcp"
-		configs = append(configs, config.Scope("libstorage.tests.tcp"))
+		configs = append(configs, config.Scope(
+			"libstorage.tests.tcp").Scope(
+			"testing"))
 	}
 	if tcpTLSTest {
 		configNames[len(configNames)] = "tcpTLS"
-		configs = append(configs, config.Scope("libstorage.tests.tcpTLS"))
+		configs = append(configs, config.Scope(
+			"libstorage.tests.tcpTLS").Scope(
+			"test"))
+	}
+	if tcpTLSPeersTest {
+		configNames[len(configNames)] = "tcpTLSPeers"
+		configs = append(configs, config.Scope(
+			"libstorage.tests.tcpTLSPeers").Scope(
+			"test"))
 	}
 	if sockTest {
 		configNames[len(configNames)] = "unix"
-		configs = append(configs, config.Scope("libstorage.tests.unix"))
+		configs = append(configs, config.Scope(
+			"libstorage.tests.unix").Scope(
+			"test"))
 	}
 	if sockTLSTest {
 		configNames[len(configNames)] = "unixTLS"
-		configs = append(configs, config.Scope("libstorage.tests.unixTLS"))
+		configs = append(configs, config.Scope(
+			"libstorage.tests.unixTLS").Scope(
+			"test"))
+	}
+	if sockTLSTest {
+		configNames[len(configNames)] = "unixTLS"
+		configs = append(configs, config.Scope(
+			"libstorage.tests.unixTLSPeers").Scope(
+			"test"))
 	}
 
 	return configNames, configs
@@ -439,7 +466,13 @@ func initTestConfigs(config map[string]interface{}) {
 	unixHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
 	unixTLSHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
 
-	clientTLSConfig := func() map[string]interface{} {
+	clientTLSConfig := func(peers bool) map[string]interface{} {
+		if peers {
+			return map[string]interface{}{
+				"verifyPeers": true,
+				"knownHosts":  knownHosts,
+			}
+		}
 		return map[string]interface{}{
 			"serverName":       "libstorage-server",
 			"certFile":         clientCrt,
@@ -448,13 +481,13 @@ func initTestConfigs(config map[string]interface{}) {
 		}
 	}
 
-	serverTLSConfig := func() map[string]interface{} {
+	serverTLSConfig := func(clientCertRequired bool) map[string]interface{} {
 		return map[string]interface{}{
 			"serverName":         "libstorage-server",
 			"certFile":           serverCrt,
 			"keyFile":            serverKey,
 			"trustedCertsFile":   trustedCerts,
-			"clientCertRequired": true,
+			"clientCertRequired": clientCertRequired,
 		}
 	}
 
@@ -480,12 +513,29 @@ func initTestConfigs(config map[string]interface{}) {
 					"endpoints": map[string]interface{}{
 						"localhost": map[string]interface{}{
 							"address": tcpTLSHost,
-							"tls":     serverTLSConfig(),
+							"tls":     serverTLSConfig(true),
 						},
 					},
 				},
 				"client": map[string]interface{}{
-					"tls": clientTLSConfig(),
+					"tls": clientTLSConfig(false),
+				},
+			},
+		},
+
+		"tcpTLSPeers": map[string]interface{}{
+			"libstorage": map[string]interface{}{
+				"host": tcpTLSHost,
+				"server": map[string]interface{}{
+					"endpoints": map[string]interface{}{
+						"localhost": map[string]interface{}{
+							"address": tcpTLSHost,
+							"tls":     serverTLSConfig(false),
+						},
+					},
+				},
+				"client": map[string]interface{}{
+					"tls": clientTLSConfig(true),
 				},
 			},
 		},
@@ -510,12 +560,12 @@ func initTestConfigs(config map[string]interface{}) {
 					"endpoints": map[string]interface{}{
 						"localhost": map[string]interface{}{
 							"address": unixTLSHost,
-							"tls":     serverTLSConfig(),
+							"tls":     serverTLSConfig(true),
 						},
 					},
 				},
 				"client": map[string]interface{}{
-					"tls": clientTLSConfig(),
+					"tls": clientTLSConfig(false),
 				},
 			},
 		},

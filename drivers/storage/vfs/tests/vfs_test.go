@@ -5,9 +5,11 @@ package vfs
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -52,6 +54,146 @@ func TestClient(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, iid)
 		})
+}
+
+func TestClientKnownHostInvalidSig(t *testing.T) {
+	tcpTLSPeersTest, _ := strconv.ParseBool(
+		os.Getenv("LIBSTORAGE_TEST_TCP_TLS_PEERS"))
+	if !tcpTLSPeersTest {
+		t.SkipNow()
+	}
+
+	tfile, err := ioutil.TempFile("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	const (
+		host        = "libstorage-server"
+		alg         = "sha256"
+		fingerprint = `52:C7:5D:00:1B:E7:33:66:14:3C:47:07:77:59:9C:` +
+			`94:F1:EA:76:00:41:B1:9D:71:0B:80:05:1F:F7:2D:6B:6B`
+		knownHostEntry  = host + " " + alg + " " + fingerprint
+		knownHostConfig = `
+test:
+  libstorage:
+    client:
+      tls:
+        knownHosts: %s
+`
+	)
+
+	fmt.Fprint(tfile, knownHostEntry)
+	if !assert.NoError(t, tfile.Close()) {
+		t.FailNow()
+	}
+	defer func() { os.RemoveAll(tfile.Name()) }()
+
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintf(buf, knownHostConfig, tfile.Name())
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		// do nothing
+	}
+
+	oce := func(err error) {
+		t.Log(err)
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+		if !assert.IsType(t, &url.Error{}, err) {
+			t.FailNow()
+		}
+		uerr := err.(*url.Error)
+		if !assert.IsType(t, &types.ErrKnownHost{}, uerr.Err) {
+			t.FailNow()
+		}
+		terr := uerr.Err.(*types.ErrKnownHost)
+		if !assert.Equal(t, host, terr.PeerHost) {
+			t.FailNow()
+		}
+		if !assert.Equal(t, alg, terr.PeerAlg) {
+			t.FailNow()
+		}
+		if !assert.False(t,
+			strings.EqualFold(
+				strings.Replace(fingerprint, ":", "", -1),
+				hex.EncodeToString(terr.PeerFingerprint))) {
+			t.FailNow()
+		}
+	}
+
+	apitests.RunWithOnClientError(t, oce, vfs.Name, buf.Bytes(), tf)
+}
+
+func TestClientKnownHostInvalidHost(t *testing.T) {
+	tcpTLSPeersTest, _ := strconv.ParseBool(
+		os.Getenv("LIBSTORAGE_TEST_TCP_TLS_PEERS"))
+	if !tcpTLSPeersTest {
+		t.SkipNow()
+	}
+
+	tfile, err := ioutil.TempFile("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	const (
+		host        = "libstorage-server2"
+		alg         = "sha256"
+		fingerprint = `52:C7:5D:00:1B:E7:33:66:14:3C:47:07:77:59:9C:` +
+			`94:F1:EA:76:00:41:B1:9D:71:0B:80:05:1F:F7:2D:6B:69`
+		knownHostEntry  = host + " " + alg + " " + fingerprint
+		knownHostConfig = `
+test:
+  libstorage:
+    client:
+      tls:
+        knownHosts: %s
+`
+	)
+
+	fmt.Fprint(tfile, knownHostEntry)
+	if !assert.NoError(t, tfile.Close()) {
+		t.FailNow()
+	}
+	defer func() { os.RemoveAll(tfile.Name()) }()
+
+	buf := bytes.NewBuffer(newTestConfig(t))
+	fmt.Fprintf(buf, knownHostConfig, tfile.Name())
+
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		// do nothing
+	}
+
+	oce := func(err error) {
+		t.Log(err)
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+		if !assert.IsType(t, &url.Error{}, err) {
+			t.FailNow()
+		}
+		uerr := err.(*url.Error)
+		if !assert.IsType(t, &types.ErrKnownHost{}, uerr.Err) {
+			t.FailNow()
+		}
+		terr := uerr.Err.(*types.ErrKnownHost)
+		if !assert.Equal(t, alg, terr.PeerAlg) {
+			t.FailNow()
+		}
+		if !assert.True(t,
+			strings.EqualFold(
+				strings.Replace(fingerprint, ":", "", -1),
+				hex.EncodeToString(terr.PeerFingerprint))) {
+			t.FailNow()
+		}
+		if !assert.NotEqual(t, host, terr.PeerHost) {
+			t.FailNow()
+		}
+	}
+
+	apitests.RunWithOnClientError(t, oce, vfs.Name, buf.Bytes(), tf)
 }
 
 func TestRoot(t *testing.T) {

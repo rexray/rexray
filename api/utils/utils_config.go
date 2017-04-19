@@ -23,11 +23,17 @@ func isSetPrefix(
 	for _, r := range roots {
 		rk := strings.Replace(key, prefix, fmt.Sprintf("%s.", r), 1)
 		if config.IsSet(rk) {
+			/*if types.Debug {
+				fmt.Printf("isSet %s=true\n", rk)
+			}*/
 			return true
 		}
 	}
 
 	if config.IsSet(key) {
+		/*if types.Debug {
+			fmt.Printf("isSet %s=true\n", key)
+		}*/
 		return true
 	}
 
@@ -52,12 +58,18 @@ func getStringPrefix(
 	for _, r := range roots {
 		rk := strings.Replace(key, prefix, fmt.Sprintf("%s.", r), 1)
 		if val = config.GetString(rk); val != "" {
+			/*if types.Debug {
+				fmt.Printf("getString %s=%s\n", rk, val)
+			}*/
 			return val
 		}
 	}
 
 	val = config.GetString(key)
 	if val != "" {
+		/*if types.Debug {
+			fmt.Printf("getString %s=%s\n", key, val)
+		}*/
 		return val
 	}
 

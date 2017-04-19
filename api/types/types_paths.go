@@ -45,22 +45,23 @@ func init() {
 		libstorageHome = path.Join(gotil.HomeDir(), ".libstorage")
 	}
 
-	if v := os.Getenv("LIBSTORAGE_PATHS_ETC"); v != "" && gotil.FileExists(v) {
+	if v := os.Getenv("LIBSTORAGE_HOME_ETC"); v != "" && gotil.FileExists(v) {
 		etcEnvVarPath = v
 	}
-	if v := os.Getenv("LIBSTORAGE_PATHS_LIB"); v != "" && gotil.FileExists(v) {
+	if v := os.Getenv("LIBSTORAGE_HOME_LIB"); v != "" && gotil.FileExists(v) {
 		libEnvVarPath = v
 	}
-	if v := os.Getenv("LIBSTORAGE_PATHS_LOG"); v != "" && gotil.FileExists(v) {
+	if v := os.Getenv("LIBSTORAGE_HOME_LOG"); v != "" && gotil.FileExists(v) {
 		logEnvVarPath = v
 	}
-	if v := os.Getenv("LIBSTORAGE_PATHS_RUN"); v != "" && gotil.FileExists(v) {
+	if v := os.Getenv("LIBSTORAGE_HOME_RUN"); v != "" && gotil.FileExists(v) {
 		runEnvVarPath = v
 	}
-	if v := os.Getenv("LIBSTORAGE_PATHS_TLS"); v != "" && gotil.FileExists(v) {
+	if v := os.Getenv(
+		"LIBSTORAGE_HOME_ETC_TLS"); v != "" && gotil.FileExists(v) {
 		tlsEnvVarPath = v
 	}
-	if v := os.Getenv("LIBSTORAGE_PATHS_LSX"); v != "" && gotil.FileExists(v) {
+	if v := os.Getenv("LIBSTORAGE_HOME_LSX"); v != "" && gotil.FileExists(v) {
 		lsxEnvVarPath = v
 	}
 
@@ -108,6 +109,22 @@ const (
 
 	// LSX is the path to the libStorage executor.
 	LSX
+
+	// DefaultTLSCertFile is the default path to the TLS cert file,
+	// libstorage.crt.
+	DefaultTLSCertFile
+
+	// DefaultTLSKeyFile is the default path to the TLS key file,
+	// libstorage.key.
+	DefaultTLSKeyFile
+
+	// DefaultTLSTrustedRootsFile is the default path to the TLS trusted roots
+	// file, cacerts.
+	DefaultTLSTrustedRootsFile
+
+	// DefaultTLSKnownHosts is the default path to the TLS known hosts file,
+	// known_hosts file.
+	DefaultTLSKnownHosts
 
 	maxFileKey
 )
@@ -167,6 +184,10 @@ func (k fileKey) parent() fileKey {
 		return Etc
 	case LSX:
 		return Lib
+	case DefaultTLSCertFile,
+		DefaultTLSKeyFile,
+		DefaultTLSTrustedRootsFile:
+		return TLS
 	default:
 		return Home
 	}
@@ -195,6 +216,14 @@ func (k fileKey) key() string {
 		return "tls"
 	case LSX:
 		return "lsx"
+	case DefaultTLSCertFile:
+		return "crt"
+	case DefaultTLSKeyFile:
+		return "key"
+	case DefaultTLSTrustedRootsFile:
+		return "tca"
+	case DefaultTLSKnownHosts:
+		return "hst"
 	}
 	return ""
 }
@@ -239,6 +268,14 @@ func (k fileKey) defaultVal() string {
 		default:
 			return fmt.Sprintf("lsx-%s", runtime.GOOS)
 		}
+	case DefaultTLSCertFile:
+		return "libstorage.crt"
+	case DefaultTLSKeyFile:
+		return "libstorage.key"
+	case DefaultTLSTrustedRootsFile:
+		return "cacerts"
+	case DefaultTLSKnownHosts:
+		return "known_hosts"
 	}
 	return ""
 }

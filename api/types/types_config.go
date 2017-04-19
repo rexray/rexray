@@ -99,6 +99,12 @@ const (
 	// ConfigTLSServerName is a config key.
 	ConfigTLSServerName = ConfigTLS + ".serverName"
 
+	// ConfigTLSKnownHosts is a config key.
+	ConfigTLSKnownHosts = ConfigTLS + ".knownHosts"
+
+	// ConfigTLSVerifyPeers is a config key.
+	ConfigTLSVerifyPeers = ConfigTLS + ".verifyPeers"
+
 	// ConfigTLSClientCertRequired is a config key.
 	ConfigTLSClientCertRequired = ConfigTLS + ".clientCertRequired"
 

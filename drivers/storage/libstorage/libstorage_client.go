@@ -21,6 +21,7 @@ type client struct {
 	types.APIClient
 	ctx             types.Context
 	config          gofig.Config
+	tlsConfig       *types.TLSConfig
 	clientType      types.ClientType
 	lsxCache        *lss
 	serviceCache    *lss

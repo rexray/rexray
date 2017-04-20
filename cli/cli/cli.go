@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -149,6 +150,9 @@ type CLI struct {
 	encryptionKey           string
 	idempotent              bool
 	scriptPath              string
+	serverCertFile          string
+	serverKeyFile           string
+	serverCAFile            string
 }
 
 const (
@@ -364,6 +368,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 			c.ctx.WithField("cmd", cmd.Name()).Debug(
 				"creating libStorage client")
 			c.r, err = util.NewClient(c.ctx, c.config)
+			err = c.handleKnownHostsError(err)
 		}
 
 		if err != nil {
@@ -450,6 +455,49 @@ func (c *CLI) rrService() string {
 
 func (c *CLI) logLevel() string {
 	return c.config.GetString("rexray.logLevel")
+}
+
+// handles the known_hosts error,
+// if error is ErrKnownHosts, stop execution to prevent unstable state
+func (c *CLI) handleKnownHostsError(err error) error {
+	if err != nil {
+		urlErr, ok := err.(*url.Error)
+		if !ok {
+			return err
+		}
+		hostErr, ok := urlErr.Err.(*apitypes.ErrKnownHost)
+		if !ok {
+			return err
+		}
+
+		pathConfig := context.MustPathConfig(c.ctx)
+		knownHostPath := pathConfig.UserDefaultTLSKnownHosts
+		if !util.AssertTrustedHost(
+			c.ctx,
+			hostErr.PeerHost,
+			hostErr.PeerAlg,
+			hostErr.PeerFingerprint) {
+			fmt.Println("Aborting request, remote host not trusted.\n")
+			os.Exit(1)
+		}
+
+		if addHostErr := util.AddKnownHost(
+			c.ctx,
+			knownHostPath,
+			hostErr.PeerHost,
+			hostErr.PeerAlg,
+			hostErr.PeerFingerprint,
+		); addHostErr == nil {
+			fmt.Printf("Permanently added host %s to known_hosts file %s\n",
+				hostErr.PeerHost, knownHostPath)
+			fmt.Println("It is safe to retry your last rexray command.\n")
+		} else {
+			fmt.Println("Failed to add entry to known_hosts file: ", addHostErr)
+		}
+
+		os.Exit(1) // do not continue
+	}
+	return err
 }
 
 func store() apitypes.Store {

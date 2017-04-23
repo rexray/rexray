@@ -15,6 +15,7 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/types"
 )
 
@@ -57,6 +58,8 @@ func ParseTLSConfig(
 	roots ...string) (tlsConfig *types.TLSConfig, tlsErr error) {
 
 	ctx.Debug("parsing tls config")
+
+	pathConfig := context.MustPathConfig(ctx)
 
 	f := func(k string, v interface{}) {
 		if fields == nil {
@@ -103,7 +106,7 @@ func ParseTLSConfig(
 			// file? It's not possible to use os.SameFile as the files may not
 			// yet exist
 			isDefKH := strings.EqualFold(
-				khFile, types.DefaultTLSKnownHosts.Path())
+				khFile, pathConfig.DefaultTLSKnownHosts)
 
 			if !gotil.FileExists(khFile) {
 				if !isDefKH {
@@ -135,7 +138,7 @@ func ParseTLSConfig(
 			// is the key file the same as the default cacerts file? It's not
 			// possible to use os.SameFile as the files may not yet exist
 			isDefCA := strings.EqualFold(
-				caCerts, types.DefaultTLSTrustedRootsFile.Path())
+				caCerts, pathConfig.DefaultTLSTrustedRootsFile)
 
 			if !gotil.FileExists(caCerts) {
 				if !isDefCA {
@@ -185,7 +188,7 @@ func ParseTLSConfig(
 			// is the key file the same as the default key file? It's not
 			// possible to use os.SameFile as the files may not yet exist
 			isDefKF := strings.EqualFold(
-				keyFile, types.DefaultTLSKeyFile.Path())
+				keyFile, pathConfig.DefaultTLSKeyFile)
 
 			if !gotil.FileExists(keyFile) {
 				if !isDefKF {
@@ -202,7 +205,7 @@ func ParseTLSConfig(
 			// is the key file the same as the default cert file? It's not
 			// possible to use os.SameFile as the files may not yet exist
 			isDefCF := strings.EqualFold(
-				crtFile, types.DefaultTLSCertFile.Path())
+				crtFile, pathConfig.DefaultTLSCertFile)
 
 			if !gotil.FileExists(crtFile) {
 				if !isDefCF {

@@ -38,8 +38,10 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
+	apictx "github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/server"
 	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/client"
 )
 
@@ -50,8 +52,15 @@ import (
 // a config instance with the correct properties to specify service
 // information for a libStorage server.
 func New(
-	ctx context.Context,
+	goCtx context.Context,
 	config gofig.Config) (types.Client, types.Server, <-chan error, error) {
+
+	ctx := apictx.New(goCtx)
+
+	if _, ok := apictx.PathConfig(ctx); !ok {
+		pathConfig := utils.NewPathConfig(ctx, "", "")
+		ctx = ctx.WithValue(apictx.PathConfigKey, pathConfig)
+	}
 
 	s, errs, err := server.Serve(ctx, config)
 	if err != nil {

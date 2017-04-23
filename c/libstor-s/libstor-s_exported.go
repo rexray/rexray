@@ -8,7 +8,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/server"
+	"github.com/codedellemc/libstorage/api/utils"
 	apicfg "github.com/codedellemc/libstorage/api/utils/config"
 )
 
@@ -59,7 +62,11 @@ func serve(
 		"args": args,
 	}).Info("serving")
 
-	config, err := apicfg.NewConfig()
+	ctx := context.Background()
+	ctx = ctx.WithValue(context.PathConfigKey, utils.NewPathConfig(ctx, "", ""))
+	registry.ProcessRegisteredConfigs(ctx)
+
+	config, err := apicfg.NewConfig(ctx)
 	if err != nil {
 		return C.CString(err.Error())
 	}
@@ -68,7 +75,7 @@ func serve(
 		os.Setenv("LIBSTORAGE_HOST", szHost)
 	}
 
-	_, errs, err := server.Serve(nil, config)
+	_, errs, err := server.Serve(ctx, config)
 	if err != nil {
 		return C.CString(err.Error())
 	}

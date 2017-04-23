@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 
 	log "github.com/Sirupsen/logrus"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
+	"github.com/akutz/gotil"
 
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/types"
@@ -22,11 +24,13 @@ type client struct {
 	ctx             types.Context
 	config          gofig.Config
 	tlsConfig       *types.TLSConfig
+	pathConfig      *types.PathConfig
 	clientType      types.ClientType
 	lsxCache        *lss
 	serviceCache    *lss
 	supportedCache  *lss
 	instanceIDCache types.Store
+	lsxMutexPath    string
 }
 
 var errExecutorNotSupported = errors.New("executor not supported")
@@ -36,8 +40,6 @@ func (c *client) isController() bool {
 }
 
 func (c *client) dial(ctx types.Context) error {
-
-	ctx.WithField("path", lsxMutex).Info("lsx lock file path")
 
 	svcInfos, err := c.Services(ctx)
 	if err != nil {
@@ -117,9 +119,9 @@ func (c *client) updateExecutor(ctx types.Context) error {
 
 	ctx.Debug("updating executor")
 
-	lsxi := c.lsxCache.GetExecutorInfo(types.LSX.Name())
+	lsxi := c.lsxCache.GetExecutorInfo(path.Base(c.pathConfig.LSX))
 	if lsxi == nil {
-		return goof.WithField("lsx", types.LSX, "unknown executor")
+		return goof.WithField("lsx", c.pathConfig.LSX, "unknown executor")
 	}
 
 	ctx.Debug("waiting on executor lock")
@@ -133,7 +135,7 @@ func (c *client) updateExecutor(ctx types.Context) error {
 		}
 	}()
 
-	if !types.LSX.Exists() {
+	if !gotil.FileExists(c.pathConfig.LSX) {
 		ctx.Debug("executor does not exist, download executor")
 		return c.downloadExecutor(ctx)
 	}
@@ -165,7 +167,7 @@ func (c *client) getExecutorChecksum(ctx types.Context) (string, error) {
 
 	ctx.Debug("getting executor checksum")
 
-	f, err := os.Open(types.LSX.String())
+	f, err := os.Open(c.pathConfig.LSX)
 	if err != nil {
 		return "", err
 	}
@@ -201,7 +203,7 @@ func (c *client) downloadExecutor(ctx types.Context) error {
 	ctx.Debug("downloading executor")
 
 	f, err := os.OpenFile(
-		types.LSX.String(),
+		c.pathConfig.LSX,
 		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
 		0755)
 	if err != nil {
@@ -210,7 +212,7 @@ func (c *client) downloadExecutor(ctx types.Context) error {
 
 	defer f.Close()
 
-	rdr, err := c.APIClient.ExecutorGet(ctx, types.LSX.Name())
+	rdr, err := c.APIClient.ExecutorGet(ctx, path.Base(c.pathConfig.LSX))
 	if err != nil {
 		return err
 	}

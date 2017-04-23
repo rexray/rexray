@@ -103,7 +103,7 @@ func (s *server) initEndpoints(ctx types.Context) error {
 
 		case types.UnixEndpoint:
 
-			laddr = fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+			laddr = fmt.Sprintf("unix://%s", utils.GetTempSockFile(ctx))
 			s.ctx.WithField("endpoint", endpoint).Info(
 				"initializing auto unix endpoint")
 

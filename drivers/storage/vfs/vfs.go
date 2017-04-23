@@ -5,9 +5,10 @@ package vfs
 import (
 	"path"
 
-	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 )
 
@@ -17,10 +18,16 @@ const (
 )
 
 func init() {
-	defaultRootDir := types.Lib.Join("vfs")
-	r := gofigCore.NewRegistration("VFS")
-	r.Key(gofig.String, "", defaultRootDir, "", "vfs.root")
-	gofigCore.Register(r)
+	registry.RegisterConfigReg(
+		"VFS",
+		func(ctx types.Context, r gofig.ConfigRegistration) {
+			r.Key(
+				gofig.String,
+				"",
+				path.Join(context.MustPathConfig(ctx).Lib, "vfs"),
+				"",
+				"vfs.root")
+		})
 }
 
 // RootDir returns the path to the VFS root directory.

@@ -30,6 +30,10 @@ var cmdRx = regexp.MustCompile(
 // Run runs the executor CLI.
 func Run() {
 
+	ctx := context.Background()
+	ctx = ctx.WithValue(context.PathConfigKey, utils.NewPathConfig(ctx, "", ""))
+	registry.ProcessRegisteredConfigs(ctx)
+
 	args := os.Args
 	if len(args) < 3 {
 		printUsageAndExit()
@@ -43,14 +47,13 @@ func Run() {
 
 	driverName := strings.ToLower(d.Name())
 
-	config, err := apiconfig.NewConfig()
+	config, err := apiconfig.NewConfig(ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	apiconfig.UpdateLogLevel(config)
-	ctx := context.Background()
 
 	if err := d.Init(ctx, config); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)

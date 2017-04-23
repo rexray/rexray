@@ -9,6 +9,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
+
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 )
 
@@ -22,102 +25,112 @@ func init() {
 	gofigCore.LogSecureKey = false
 	gofigCore.LogFlattenEnvVars = false
 
-	logLevelSz := os.Getenv("LIBSTORAGE_LOGGING_LEVEL")
-	logLevel, err := log.ParseLevel(logLevelSz)
-	if err != nil {
-		logLevel = log.WarnLevel
-	}
-	log.SetLevel(logLevel)
+	registry.RegisterConfigReg(
+		"libStorage",
+		func(ctx types.Context, r gofig.ConfigRegistration) {
 
-	r := gofigCore.NewRegistration("libStorage")
+			pathConfig := context.MustPathConfig(ctx)
 
-	rk := func(
-		keyType gofig.ConfigKeyTypes,
-		defaultVal interface{},
-		description string,
-		keyVal types.ConfigKey,
-		args ...interface{}) {
+			var lvl log.Level
+			if types.Debug {
+				lvl = log.DebugLevel
+			} else {
+				ll, err := log.ParseLevel(os.Getenv("LIBSTORAGE_LOGGING_LEVEL"))
+				if err != nil {
+					ll = log.WarnLevel
+				}
+				lvl = ll
+			}
 
-		if args == nil {
-			args = []interface{}{keyVal}
-		} else {
-			args = append([]interface{}{keyVal}, args...)
-		}
+			rk := func(
+				keyType gofig.ConfigKeyTypes,
+				defaultVal interface{},
+				description string,
+				keyVal types.ConfigKey,
+				args ...interface{}) {
 
-		r.Key(keyType, "", defaultVal, description, args...)
-	}
+				if args == nil {
+					args = []interface{}{keyVal}
+				} else {
+					args = append([]interface{}{keyVal}, args...)
+				}
+				r.Key(keyType, "", defaultVal, description, args...)
+			}
 
-	defaultAEM := types.UnixEndpoint.String()
-	defaultStorageDriver := types.LibStorageDriverName
-	defaultLogLevel := logLevel.String()
-	defaultClientType := types.IntegrationClient.String()
+			defaultAEM := types.UnixEndpoint.String()
+			defaultStorageDriver := types.LibStorageDriverName
+			defaultLogLevel := lvl.String()
+			defaultClientType := types.IntegrationClient.String()
 
-	rk(gofig.String, "", "", types.ConfigHost)
-	rk(gofig.String, "", "", types.ConfigService)
-	rk(gofig.String, defaultAEM, "", types.ConfigServerAutoEndpointMode)
-	rk(gofig.String, runtime.GOOS, "", types.ConfigOSDriver)
-	rk(gofig.String, defaultStorageDriver, "", types.ConfigStorageDriver)
-	rk(gofig.String, defaultIntDriver, "", types.ConfigIntegrationDriver)
-	rk(gofig.String, defaultClientType, "", types.ConfigClientType)
-	rk(gofig.String, defaultLogLevel, "", types.ConfigLogLevel)
-	rk(gofig.String, "", logStdoutDesc, types.ConfigLogStderr)
-	rk(gofig.String, "", logStderrDesc, types.ConfigLogStdout)
-	rk(gofig.Bool, false, "", types.ConfigLogHTTPRequests)
-	rk(gofig.Bool, false, "", types.ConfigLogHTTPResponses)
-	rk(gofig.Bool, false, "", types.ConfigHTTPDisableKeepAlive)
-	rk(gofig.Int, 300, "", types.ConfigHTTPWriteTimeout)
-	rk(gofig.Int, 300, "", types.ConfigHTTPReadTimeout)
-	rk(gofig.String, types.LSX.String(), "", types.ConfigExecutorPath)
-	rk(gofig.Bool, false, "", types.ConfigExecutorNoDownload)
-	rk(gofig.Bool, false, "", types.ConfigIgVolOpsMountPreempt)
-	rk(gofig.Bool, false, "", types.ConfigIgVolOpsCreateDisable)
-	rk(gofig.Bool, false, "", types.ConfigIgVolOpsRemoveDisable)
-	rk(gofig.Bool, false, "", types.ConfigIgVolOpsUnmountIgnoreUsed)
-	rk(gofig.Bool, true, "", types.ConfigIgVolOpsPathCacheEnabled)
-	rk(gofig.Bool, true, "", types.ConfigIgVolOpsPathCacheAsync)
-	rk(gofig.String, "30m", "", types.ConfigClientCacheInstanceID)
-	rk(gofig.String, "30s", "", types.ConfigDeviceAttachTimeout)
-	rk(gofig.Int, 0, "", types.ConfigDeviceScanType)
-	rk(gofig.Bool, false, "", types.ConfigEmbedded)
-	rk(gofig.String, "1m", "", types.ConfigServerTasksExeTimeout)
-	rk(gofig.String, "0s", "", types.ConfigServerTasksLogTimeout)
-	rk(gofig.Bool, false, "", types.ConfigServerParseRequestOpts)
+			rk(gofig.String, "", "", types.ConfigHost)
+			rk(gofig.String, "", "", types.ConfigService)
+			rk(gofig.String, defaultAEM, "", types.ConfigServerAutoEndpointMode)
+			rk(gofig.String, runtime.GOOS, "", types.ConfigOSDriver)
+			rk(gofig.String, defaultStorageDriver, "",
+				types.ConfigStorageDriver)
+			rk(gofig.String, defaultIntDriver, "",
+				types.ConfigIntegrationDriver)
+			rk(gofig.String, defaultClientType, "", types.ConfigClientType)
+			rk(gofig.String, defaultLogLevel, "", types.ConfigLogLevel)
+			rk(gofig.String, "", logStdoutDesc, types.ConfigLogStderr)
+			rk(gofig.String, "", logStderrDesc, types.ConfigLogStdout)
+			rk(gofig.Bool, false, "", types.ConfigLogHTTPRequests)
+			rk(gofig.Bool, false, "", types.ConfigLogHTTPResponses)
+			rk(gofig.Bool, false, "", types.ConfigHTTPDisableKeepAlive)
+			rk(gofig.Int, 300, "", types.ConfigHTTPWriteTimeout)
+			rk(gofig.Int, 300, "", types.ConfigHTTPReadTimeout)
 
-	// tls config
-	rk(
-		gofig.String,
-		types.DefaultTLSCertFile.Path(),
-		"",
-		types.ConfigTLSCertFile)
-	rk(
-		gofig.String,
-		types.DefaultTLSKeyFile.Path(),
-		"",
-		types.ConfigTLSKeyFile)
-	rk(
-		gofig.String,
-		types.DefaultTLSTrustedRootsFile.Path(),
-		"",
-		types.ConfigTLSTrustedCertsFile)
-	rk(
-		gofig.String,
-		types.DefaultTLSKnownHosts.Path(),
-		"",
-		types.ConfigTLSKnownHosts)
-	rk(gofig.String, "", "", types.ConfigTLSServerName)
-	rk(gofig.Bool, false, "", types.ConfigTLSDisabled)
-	rk(gofig.Bool, false, "", types.ConfigTLSInsecure)
-	rk(gofig.Bool, false, "", types.ConfigTLSClientCertRequired)
+			rk(gofig.String, pathConfig.LSX, "", types.ConfigExecutorPath)
 
-	// auth config - client
-	rk(gofig.String, "", "", types.ConfigClientAuthToken)
+			rk(gofig.Bool, false, "", types.ConfigExecutorNoDownload)
+			rk(gofig.Bool, false, "", types.ConfigIgVolOpsMountPreempt)
+			rk(gofig.Bool, false, "", types.ConfigIgVolOpsCreateDisable)
+			rk(gofig.Bool, false, "", types.ConfigIgVolOpsRemoveDisable)
+			rk(gofig.Bool, false, "", types.ConfigIgVolOpsUnmountIgnoreUsed)
+			rk(gofig.Bool, true, "", types.ConfigIgVolOpsPathCacheEnabled)
+			rk(gofig.Bool, true, "", types.ConfigIgVolOpsPathCacheAsync)
+			rk(gofig.String, "30m", "", types.ConfigClientCacheInstanceID)
+			rk(gofig.String, "30s", "", types.ConfigDeviceAttachTimeout)
+			rk(gofig.Int, 0, "", types.ConfigDeviceScanType)
+			rk(gofig.Bool, false, "", types.ConfigEmbedded)
+			rk(gofig.String, "1m", "", types.ConfigServerTasksExeTimeout)
+			rk(gofig.String, "0s", "", types.ConfigServerTasksLogTimeout)
+			rk(gofig.Bool, false, "", types.ConfigServerParseRequestOpts)
 
-	// auth config - server
-	rk(gofig.String, "", "", types.ConfigServerAuthKey)
-	rk(gofig.String, "HS256", "", types.ConfigServerAuthAlg)
-	rk(gofig.String, "", "", types.ConfigServerAuthAllow)
-	rk(gofig.String, "", "", types.ConfigServerAuthDeny)
-	rk(gofig.Bool, false, "", types.ConfigServerAuthDisabled)
+			// tls config
+			rk(
+				gofig.String,
+				pathConfig.DefaultTLSCertFile,
+				"",
+				types.ConfigTLSCertFile)
+			rk(
+				gofig.String,
+				pathConfig.DefaultTLSKeyFile,
+				"",
+				types.ConfigTLSKeyFile)
+			rk(
+				gofig.String,
+				pathConfig.DefaultTLSTrustedRootsFile,
+				"",
+				types.ConfigTLSTrustedCertsFile)
+			rk(
+				gofig.String,
+				pathConfig.DefaultTLSKnownHosts,
+				"",
+				types.ConfigTLSKnownHosts)
+			rk(gofig.String, "", "", types.ConfigTLSServerName)
+			rk(gofig.Bool, false, "", types.ConfigTLSDisabled)
+			rk(gofig.Bool, false, "", types.ConfigTLSInsecure)
+			rk(gofig.Bool, false, "", types.ConfigTLSClientCertRequired)
 
-	gofigCore.Register(r)
+			// auth config - client
+			rk(gofig.String, "", "", types.ConfigClientAuthToken)
+
+			// auth config - server
+			rk(gofig.String, "", "", types.ConfigServerAuthKey)
+			rk(gofig.String, "HS256", "", types.ConfigServerAuthAlg)
+			rk(gofig.String, "", "", types.ConfigServerAuthAllow)
+			rk(gofig.String, "", "", types.ConfigServerAuthDeny)
+			rk(gofig.Bool, false, "", types.ConfigServerAuthDisabled)
+		})
 }

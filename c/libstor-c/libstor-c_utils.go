@@ -12,7 +12,10 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/client"
 )
 
@@ -91,7 +94,13 @@ func newWithConfig(configPath string) (types.Client, error) {
 	if err := config.ReadConfigFile(configPath); err != nil {
 		return nil, err
 	}
-	return client.New(nil, config)
+	ctx := context.Background()
+	if _, ok := context.PathConfig(ctx); !ok {
+		pathConfig := utils.NewPathConfig(ctx, "", "")
+		ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
+		registry.ProcessRegisteredConfigs(ctx)
+	}
+	return client.New(ctx, config)
 }
 
 func getClient(clientID C.h) (types.Client, error) {

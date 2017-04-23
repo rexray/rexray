@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/codedellemc/libstorage/api"
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/server/services"
-	"github.com/codedellemc/libstorage/api/types"
 )
 
 var (
@@ -44,14 +44,19 @@ func (s *server) PrintServerStartupHeader(w io.Writer) {
 	}
 
 	var (
-		n    int
-		v    = api.Version
-		b    = &bytes.Buffer{}
-		bar  = strings.Repeat("#", 80)
-		barl = fmt.Sprintf("##%s##", strings.Repeat(" ", 76))
-		now  = time.Now().UTC().Format(dateFormat)
-		vts  = v.BuildTimestamp.Format(time.RFC1123)
+		n          int
+		v          = api.Version
+		b          = &bytes.Buffer{}
+		bar        = strings.Repeat("#", 80)
+		barl       = fmt.Sprintf("##%s##", strings.Repeat(" ", 76))
+		now        = time.Now().UTC().Format(dateFormat)
+		vts        = v.BuildTimestamp.Format(time.RFC1123)
+		pathConfig = context.MustPathConfig(s.ctx)
 	)
+
+	if pathConfig == nil {
+		panic("pathConfig is nil")
+	}
 
 	fmt.Fprint(b, serverStartupLogo)
 	fmt.Fprintln(b, bar)
@@ -89,16 +94,22 @@ func (s *server) PrintServerStartupHeader(w io.Writer) {
 
 	fmt.Fprintln(b, barl)
 
-	n, _ = fmt.Fprintf(b, "##        etc:      %s", types.Etc)
+	n, _ = fmt.Fprintf(b, "##        etc:      %s", pathConfig.Etc)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##        lib:      %s", types.Lib)
+	n, _ = fmt.Fprintf(b, "##        tls:      %s", pathConfig.TLS)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##        log:      %s", types.Log)
+	n, _ = fmt.Fprintf(b, "##        lib:      %s", pathConfig.Lib)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##        run:      %s", types.Run)
+	n, _ = fmt.Fprintf(b, "##        log:      %s", pathConfig.Log)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##        run:      %s", pathConfig.Run)
+	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
+	fmt.Fprintln(b, "##")
+	n, _ = fmt.Fprintf(b, "##        lsx:      %s", pathConfig.LSX)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
 

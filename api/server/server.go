@@ -19,6 +19,7 @@ import (
 	glogrus "github.com/codedellemc/gournal/logrus"
 
 	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/server/services"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
@@ -110,7 +111,7 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 
 	if config == nil {
 		var err error
-		if config, err = apicnfg.NewConfig(); err != nil {
+		if config, err = apicnfg.NewConfig(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -198,7 +199,19 @@ func Serve(
 	goCtx gocontext.Context,
 	config gofig.Config) (types.Server, <-chan error, error) {
 
-	s, err := newServer(goCtx, config)
+	if goCtx == nil {
+		goCtx = context.Background()
+	}
+
+	ctx := context.New(goCtx)
+
+	if _, ok := context.PathConfig(ctx); !ok {
+		pathConfig := utils.NewPathConfig(ctx, "", "")
+		ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
+		registry.ProcessRegisteredConfigs(ctx)
+	}
+
+	s, err := newServer(ctx, config)
 	if err != nil {
 		return nil, nil, err
 	}

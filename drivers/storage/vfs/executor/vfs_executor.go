@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"sync"
@@ -57,6 +58,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.rootDir = vfs.RootDir(config)
 	d.devFilePath = vfs.DeviceFilePath(config)
 	if !gotil.FileExists(d.devFilePath) {
+		os.MkdirAll(path.Dir(d.devFilePath), 0755)
 		err := ioutil.WriteFile(d.devFilePath, initialDeviceFile, 0644)
 		if err != nil {
 			return err

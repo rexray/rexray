@@ -1,5 +1,11 @@
 package types
 
+import gofig "github.com/akutz/gofig/types"
+
+// NewConfigReg is given to the registry to register a new configuration
+// registration request.
+type NewConfigReg func(ctx Context, reg gofig.ConfigRegistration)
+
 // ConfigKey is a configuration key.
 type ConfigKey string
 

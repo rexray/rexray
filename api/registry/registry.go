@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/libstorage/api/types"
@@ -27,9 +28,24 @@ var (
 	intDriverCtors    = map[string]types.NewIntegrationDriver{}
 	intDriverCtorsRWL = &sync.RWMutex{}
 
+	cfgRegs    = []*cregW{}
+	cfgRegsRWL = &sync.RWMutex{}
+
 	routers    = []types.Router{}
 	routersRWL = &sync.RWMutex{}
 )
+
+type cregW struct {
+	name string
+	creg types.NewConfigReg
+}
+
+// RegisterConfigReg registers a new configuration registration request.
+func RegisterConfigReg(name string, f types.NewConfigReg) {
+	cfgRegsRWL.Lock()
+	defer cfgRegsRWL.Unlock()
+	cfgRegs = append(cfgRegs, &cregW{name, f})
+}
 
 // RegisterRouter registers a Router.
 func RegisterRouter(router types.Router) {
@@ -178,6 +194,23 @@ func NewIntegrationDriver(name string) (types.IntegrationDriver, error) {
 	}
 
 	return NewIntegrationDriverManager(ctor()), nil
+}
+
+// ConfigRegs returns a channel on which all registered configuration
+// registrations are returned.
+func ConfigRegs(ctx types.Context) <-chan gofig.ConfigRegistration {
+	c := make(chan gofig.ConfigRegistration)
+	go func() {
+		cfgRegsRWL.RLock()
+		defer cfgRegsRWL.RUnlock()
+		for _, cr := range cfgRegs {
+			r := NewConfigReg(cr.name)
+			cr.creg(ctx, r)
+			c <- r
+		}
+		close(c)
+	}()
+	return c
 }
 
 // StorageExecutors returns a channel on which new instances of all registered

@@ -49,7 +49,10 @@ type instanceIdentityDoc struct {
 }
 
 // InstanceID returns the instance ID for the local host.
-func InstanceID(ctx types.Context, driverName string) (*types.InstanceID, error) {
+func InstanceID(
+	ctx types.Context,
+	driverName string) (*types.InstanceID, error) {
+
 	req, err := http.NewRequest(http.MethodGet, iidURL, nil)
 	if err != nil {
 		return nil, err

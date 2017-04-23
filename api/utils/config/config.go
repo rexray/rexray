@@ -8,17 +8,22 @@ import (
 	gofig "github.com/akutz/gofig/types"
 
 	"github.com/akutz/gotil"
+
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
 )
 
 // NewConfig returns a new configuration instance.
-func NewConfig() (gofig.Config, error) {
+func NewConfig(ctx types.Context) (gofig.Config, error) {
+
+	pathConfig := context.MustPathConfig(ctx)
+
 	config := registry.NewConfig()
 
-	etcYML := types.Etc.Join("config.yml")
-	etcYAML := types.Etc.Join("config.yaml")
+	etcYML := path.Join(pathConfig.Etc, "config.yml")
+	etcYAML := path.Join(pathConfig.Etc, "config.yaml")
 
 	userHomeDir := gotil.HomeDir()
 	usrYML := path.Join(userHomeDir, "config.yml")

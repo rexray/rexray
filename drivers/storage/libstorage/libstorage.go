@@ -10,10 +10,6 @@ const (
 	Name = types.LibStorageDriverName
 )
 
-var (
-	lsxMutex = types.Run.Join("lsx.lock")
-)
-
 func init() {
 	registry.RegisterStorageDriver(Name, newDriver)
 }

@@ -112,12 +112,13 @@ type testHarness struct {
 // Run executes the provided tests in a new test harness. Each test is
 // executed against a new server instance.
 func Run(
+	ctx types.Context,
 	t *testing.T,
 	driverName string,
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, nil,
+	run(ctx, t, types.IntegrationClient, nil,
 		driverName, config, false, false, tests...)
 }
 
@@ -125,13 +126,14 @@ func Run(
 // the specified on client error delegate. Each test is executed against a new
 // server instance.
 func RunWithOnClientError(
+	ctx types.Context,
 	t *testing.T,
 	onClientError func(error),
 	driverName string,
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, onClientError,
+	run(ctx, t, types.IntegrationClient, onClientError,
 		driverName, config, false, false, tests...)
 }
 
@@ -139,24 +141,26 @@ func RunWithOnClientError(
 // the specified client type. Each test is executed against a new server
 // instance.
 func RunWithClientType(
+	ctx types.Context,
 	t *testing.T,
 	clientType types.ClientType,
 	driverName string,
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, clientType, nil, driverName, config, false, false, tests...)
+	run(ctx, t, clientType, nil, driverName, config, false, false, tests...)
 }
 
 // RunGroup executes the provided tests in a new test harness. All tests are
 // executed against the same server instance.
 func RunGroup(
+	ctx types.Context,
 	t *testing.T,
 	driverName string,
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, nil,
+	run(ctx, t, types.IntegrationClient, nil,
 		driverName, config, false, true, tests...)
 }
 
@@ -164,39 +168,43 @@ func RunGroup(
 // with the specified client type. All tests are executed against the same
 // server instance.
 func RunGroupWithClientType(
+	ctx types.Context,
 	t *testing.T,
 	clientType types.ClientType,
 	driverName string,
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, clientType, nil, driverName, config, false, true, tests...)
+	run(ctx, t, clientType, nil, driverName, config, false, true, tests...)
 }
 
 // Debug is the same as Run except with additional logging.
 func Debug(
+	ctx types.Context,
 	t *testing.T,
 	driverName string,
 	config []byte,
 	tests ...APITestFunc) {
 
-	run(t, types.IntegrationClient, nil,
+	run(ctx, t, types.IntegrationClient, nil,
 		driverName, config, true, false, tests...)
 }
 
 // DebugGroup is the same as RunGroup except with additional logging.
 func DebugGroup(
+	ctx types.Context,
 	t *testing.T,
 	driverName string,
 	config []byte,
 	tests ...APITestFunc) {
 
 	run(
-		t, types.IntegrationClient, nil,
+		ctx, t, types.IntegrationClient, nil,
 		driverName, config, true, true, tests...)
 }
 
 func run(
+	ctx types.Context,
 	t *testing.T,
 	clientType types.ClientType,
 	onNewClientError func(err error),
@@ -211,11 +219,12 @@ func run(
 		debug, _ = strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG"))
 	}
 
-	th.run(t, clientType, onNewClientError,
+	th.run(ctx, t, clientType, onNewClientError,
 		driver, configBuf, debug, group, tests...)
 }
 
 func (th *testHarness) run(
+	ctx types.Context,
 	t *testing.T,
 	clientType types.ClientType,
 	onNewClientError func(error),
@@ -238,7 +247,7 @@ func (th *testHarness) run(
 
 	if group {
 		config := getTestConfig(t, clientType, configBuf, debug)
-		configNames, configs := getTestConfigs(t, driver, config)
+		configNames, configs := getTestConfigs(ctx, t, driver, config)
 
 		for x, config := range configs {
 
@@ -246,7 +255,7 @@ func (th *testHarness) run(
 			go func(x int, config gofig.Config) {
 
 				defer wg.Done()
-				server, errs, err := apiserver.Serve(nil, config)
+				server, errs, err := apiserver.Serve(ctx, config)
 				if err != nil {
 					th.closeServers(t)
 					t.Fatal(err)
@@ -261,7 +270,7 @@ func (th *testHarness) run(
 
 				th.servers = append(th.servers, server)
 
-				c, err := client.New(nil, config)
+				c, err := client.New(ctx, config)
 				if onNewClientError != nil {
 					onNewClientError(err)
 				} else if err != nil {
@@ -285,7 +294,7 @@ func (th *testHarness) run(
 	} else {
 		for _, test := range tests {
 			config := getTestConfig(t, clientType, configBuf, debug)
-			configNames, configs := getTestConfigs(t, driver, config)
+			configNames, configs := getTestConfigs(ctx, t, driver, config)
 
 			for x, config := range configs {
 
@@ -293,7 +302,7 @@ func (th *testHarness) run(
 				go func(test APITestFunc, x int, config gofig.Config) {
 
 					defer wg.Done()
-					server, errs, err := apiserver.Serve(nil, config)
+					server, errs, err := apiserver.Serve(ctx, config)
 					if err != nil {
 						th.closeServers(t)
 						t.Fatal(err)
@@ -310,7 +319,7 @@ func (th *testHarness) run(
 
 					th.servers = append(th.servers, server)
 
-					c, err := client.New(nil, config)
+					c, err := client.New(ctx, config)
 					if onNewClientError != nil {
 						onNewClientError(err)
 					} else if err != nil {
@@ -378,6 +387,7 @@ func getTestConfig(
 }
 
 func getTestConfigs(
+	ctx types.Context,
 	t *testing.T,
 	driver string,
 	config gofig.Config) (map[int]string, []gofig.Config) {
@@ -396,7 +406,7 @@ func getTestConfigs(
 		},
 	}
 
-	initTestConfigs(libstorageConfigMap)
+	initTestConfigs(ctx, libstorageConfigMap)
 
 	libstorageConfig := map[string]interface{}{
 		"libstorage": libstorageConfigMap,
@@ -460,11 +470,11 @@ func (th *testHarness) closeServers(t *testing.T) {
 	}
 }
 
-func initTestConfigs(config map[string]interface{}) {
+func initTestConfigs(ctx types.Context, config map[string]interface{}) {
 	tcpHost := fmt.Sprintf("tcp://127.0.0.1:%d", gotil.RandomTCPPort())
 	tcpTLSHost := fmt.Sprintf("tcp://127.0.0.1:%d", gotil.RandomTCPPort())
-	unixHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
-	unixTLSHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile())
+	unixHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile(ctx))
+	unixTLSHost := fmt.Sprintf("unix://%s", utils.GetTempSockFile(ctx))
 
 	clientTLSConfig := func(peers bool) map[string]interface{} {
 		if peers {

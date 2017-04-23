@@ -17,8 +17,11 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/codedellemc/libstorage/api"
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/server"
 	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 	apiconfig "github.com/codedellemc/libstorage/api/utils/config"
 
 	// load the drivers
@@ -110,7 +113,11 @@ func Run() {
 		os.Exit(0)
 	}
 
-	cfg, err := apiconfig.NewConfig()
+	ctx := context.Background()
+	ctx = ctx.WithValue(context.PathConfigKey, utils.NewPathConfig(ctx, "", ""))
+	registry.ProcessRegisteredConfigs(ctx)
+
+	cfg, err := apiconfig.NewConfig(ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)
@@ -170,7 +177,7 @@ func Run() {
 
 	server.CloseOnAbort()
 
-	_, errs, err := server.Serve(nil, config)
+	_, errs, err := server.Serve(ctx, config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)

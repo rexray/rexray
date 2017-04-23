@@ -444,7 +444,7 @@ func (c *client) runExecutor(
 		}
 	}()
 
-	lsxBin := types.LSX.String()
+	lsxBin := c.pathConfig.LSX
 	cmd := exec.Command(lsxBin, args...)
 	cmd.Env = os.Environ()
 
@@ -496,7 +496,7 @@ func (c *client) lsxMutexWait() error {
 	}
 
 	for {
-		f, err := os.OpenFile(lsxMutex, os.O_CREATE|os.O_EXCL, 0644)
+		f, err := os.OpenFile(c.lsxMutexPath, os.O_CREATE|os.O_EXCL, 0644)
 		if err != nil {
 			time.Sleep(time.Millisecond * 500)
 			continue
@@ -510,5 +510,5 @@ func (c *client) lsxMutexSignal() error {
 		return utils.NewUnsupportedForClientTypeError(
 			c.clientType, "lsxMutexSignal")
 	}
-	return os.RemoveAll(lsxMutex)
+	return os.RemoveAll(c.lsxMutexPath)
 }

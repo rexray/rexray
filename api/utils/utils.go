@@ -7,7 +7,10 @@ import (
 	"reflect"
 	"time"
 
+	// load the golf package
 	_ "github.com/akutz/golf"
+
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/types"
 )
 
@@ -27,8 +30,9 @@ func GetTypePkgPathAndName(i interface{}) string {
 }
 
 // GetTempSockFile returns a new sock file in a temp space.
-func GetTempSockFile() string {
-	f, err := ioutil.TempFile(types.Run.String(), "")
+func GetTempSockFile(ctx types.Context) string {
+
+	f, err := ioutil.TempFile(context.MustPathConfig(ctx).Run, "")
 	if err != nil {
 		panic(err)
 	}

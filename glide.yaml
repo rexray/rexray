@@ -107,3 +107,7 @@ import:
 ################################################################################
 
   - package: github.com/stretchr/testify
+  - package: github.com/onsi/ginkgo
+    version: v1.3.1
+  - package: github.com/onsi/gomega
+    version: v1.1.0

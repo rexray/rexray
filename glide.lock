@@ -1,5 +1,5 @@
-hash: e5d4944f91d05d237d92b6adc8d7c102bff25279b4d67622df1cbdec005b79c9
-updated: 2017-04-12T00:23:04.017156239-05:00
+hash: 6b3161a1086d56cfb657e5b47370ed70cce0aa592d1b095cb885c3e4763f1eb5
+updated: 2017-04-20T15:53:52.320351451-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -147,6 +147,40 @@ imports:
   version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/mitchellh/mapstructure
   version: f3009df150dadf309fdee4a54ed65c124afad715
+- name: github.com/onsi/ginkgo
+  version: 77a8c1e5c40d6bb6c5eb4dd4bdce9763564f6298
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/spec_iterator
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - reporters/stenographer/support/go-colorable
+  - reporters/stenographer/support/go-isatty
+  - types
+- name: github.com/onsi/gomega
+  version: 334b8f472b3af5d541c5642701c1e29e2126f486
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/oraclematcher
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml

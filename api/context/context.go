@@ -19,6 +19,7 @@ type lsc struct {
 	req             *http.Request
 	right           context.Context
 	logger          *log.Logger
+	pathConfig      *types.PathConfig
 	loggerInherited bool
 }
 
@@ -48,6 +49,17 @@ func newContext(
 	if logger == nil {
 		logger = log.StandardLogger()
 	}
+	if types.Debug {
+		logger.Level = log.DebugLevel
+	}
+
+	// forward the pathConfig reference
+	var pathConfig *types.PathConfig
+	if key == PathConfigKey {
+		pathConfig = val.(*types.PathConfig)
+	} else if ctx, ok := parent.(*lsc); ok {
+		pathConfig = ctx.pathConfig
+	}
 
 	return &lsc{
 		Context:         parent,
@@ -56,6 +68,7 @@ func newContext(
 		req:             req,
 		right:           right,
 		logger:          logger,
+		pathConfig:      pathConfig,
 		loggerInherited: true,
 	}
 }
@@ -166,8 +179,12 @@ func Value(ctx context.Context, key interface{}) interface{} {
 
 func (ctx *lsc) Value(key interface{}) interface{} {
 
-	if key == LoggerKey {
+	if key == LoggerKey && ctx.logger != nil {
 		return ctx.logger
+	}
+
+	if key == PathConfigKey && ctx.pathConfig != nil {
+		return ctx.pathConfig
 	}
 
 	if customKeyID, ok := isCustomKey(key); ok {
@@ -291,6 +308,21 @@ func MustSession(ctx context.Context) interface{} {
 		panic("missing session")
 	}
 	return v
+}
+
+// PathConfig returns the context's path config. This value is valid on
+// both the client and the server.
+func PathConfig(ctx context.Context) (*types.PathConfig, bool) {
+	if v, ok := ctx.Value(PathConfigKey).(*types.PathConfig); ok {
+		return v, ok
+	}
+	return nil, false
+}
+
+// MustPathConfig returns the context's path config and panics if it does
+// not exist and/or cannot be type cast.
+func MustPathConfig(ctx context.Context) *types.PathConfig {
+	return ctx.Value(PathConfigKey).(*types.PathConfig)
 }
 
 // AuthToken returns the context's security token. This value is valid on

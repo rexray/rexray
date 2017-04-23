@@ -13,6 +13,9 @@ type Key int
 const (
 	_ Key = -1 - iota
 
+	// PathConfigKey is a context key.
+	PathConfigKey
+
 	// LoggerKey is a context key.
 	LoggerKey
 

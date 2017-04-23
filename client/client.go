@@ -28,9 +28,21 @@ type client struct {
 // New returns a new libStorage client.
 func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 
+	if goCtx == nil {
+		goCtx = context.Background()
+	}
+
+	ctx := context.New(goCtx)
+
+	if _, ok := context.PathConfig(ctx); !ok {
+		pathConfig := utils.NewPathConfig(ctx, "", "")
+		ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
+		registry.ProcessRegisteredConfigs(ctx)
+	}
+
 	if config == nil {
 		var err error
-		if config, err = apicnfg.NewConfig(); err != nil {
+		if config, err = apicnfg.NewConfig(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -43,7 +55,7 @@ func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 		err error
 	)
 
-	c = &client{ctx: context.New(goCtx), config: config}
+	c = &client{ctx: ctx, config: config}
 	c.ctx = c.ctx.WithValue(context.ClientKey, c)
 
 	logFields := log.Fields{}

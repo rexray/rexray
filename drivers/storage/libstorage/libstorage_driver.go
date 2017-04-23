@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"path"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -138,12 +139,19 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	logFields["logRequests"] = logReq
 	logFields["logResponses"] = logRes
 
+	pathConfig := context.MustPathConfig(d.ctx)
+
+	lsxMutexPath := path.Join(pathConfig.Run, "lsx.lock")
+	logFields["lsxMutexPath"] = lsxMutexPath
+
 	d.client = client{
 		APIClient:    apiClient,
 		ctx:          d.ctx,
 		config:       config,
 		tlsConfig:    tlsConfig,
+		pathConfig:   pathConfig,
 		clientType:   cliType,
+		lsxMutexPath: lsxMutexPath,
 		serviceCache: &lss{Store: utils.NewStore()},
 	}
 

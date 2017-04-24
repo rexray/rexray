@@ -59,6 +59,10 @@ func ParseTLSConfig(
 
 	ctx.Debug("parsing tls config")
 
+	// disabled is a flag that indicates whether or not TLS was
+	// explicitly disabled
+	var disabled bool
+
 	pathConfig := context.MustPathConfig(ctx)
 
 	f := func(k string, v interface{}) {
@@ -75,7 +79,8 @@ func ParseTLSConfig(
 	// locations and thus there is no reason not to use them if they are
 	// placed in their known locations
 	defer func() {
-		if tlsConfig == nil {
+		if tlsConfig == nil && disabled {
+			ctx.Info("tls not configured & explicitly disabled")
 			return
 		}
 
@@ -86,10 +91,18 @@ func ParseTLSConfig(
 			}
 		}()
 
+		newTLS := func() {
+			if tlsConfig != nil {
+				return
+			}
+			tlsConfig = &types.TLSConfig{Config: tls.Config{}}
+		}
+
 		// always check for the user's known_hosts file
 		func() {
 			khFile := path.Join(gotil.HomeDir(), ".libstorage", "known_hosts")
 			if gotil.FileExists(khFile) {
+				newTLS()
 				tlsConfig.UsrKnownHosts = khFile
 				tlsConfig.VerifyPeers = true
 			}
@@ -116,8 +129,8 @@ func ParseTLSConfig(
 				return nil
 			}
 
+			newTLS()
 			f(types.ConfigTLSKnownHosts, khFile)
-
 			tlsConfig.SysKnownHosts = khFile
 			tlsConfig.VerifyPeers = true
 
@@ -148,6 +161,7 @@ func ParseTLSConfig(
 				return nil
 			}
 
+			newTLS()
 			f(types.ConfigTLSTrustedCertsFile, caCerts)
 
 			buf, err := func() ([]byte, error) {
@@ -198,6 +212,7 @@ func ParseTLSConfig(
 				return nil
 			}
 
+			newTLS()
 			f(types.ConfigTLSKeyFile, keyFile)
 
 			crtFile := getString(config, types.ConfigTLSCertFile, roots...)
@@ -234,6 +249,7 @@ func ParseTLSConfig(
 	if ok := getBool(config, types.ConfigTLSDisabled, roots...); ok {
 		f(types.ConfigTLSDisabled, true)
 		ctx.WithField(types.ConfigTLSDisabled, false).Info("tls disabled")
+		disabled = true
 		return nil, nil
 	}
 
@@ -245,6 +261,14 @@ func ParseTLSConfig(
 	}
 
 	if v := getString(config, types.ConfigTLS, roots...); v != "" {
+		// check to see if TLS is disabled
+		if strings.EqualFold(v, "false") {
+			f(types.ConfigTLS, "false")
+			ctx.WithField(types.ConfigTLS, "false").Info("tls disabled")
+			disabled = true
+			return nil, nil
+		}
+
 		// check to see if TLS is enabled with insecure
 		if strings.EqualFold(v, "insecure") {
 			f(types.ConfigTLS, "insecure")
@@ -282,6 +306,7 @@ func ParseTLSConfig(
 
 	// tls is enabled; figure out its configuration
 	tlsConfig = &types.TLSConfig{Config: tls.Config{}}
+	ctx.Info("tls config created")
 
 	if getBool(config, types.ConfigTLSInsecure, roots...) {
 		tlsConfig.InsecureSkipVerify = true

@@ -47,9 +47,23 @@ var (
 
 	printConfigOnFail, _ = strconv.ParseBool(os.Getenv(
 		"LIBSTORAGE_TEST_PRINT_CONFIG_ON_FAIL"))
+
+	tlsPath = path.Join(
+		os.Getenv("GOPATH"),
+		"/src/github.com/codedellemc/libstorage/.tls")
+	serverCrt    = path.Join(tlsPath, "libstorage-server.crt")
+	serverKey    = path.Join(tlsPath, "libstorage-server.key")
+	clientCrt    = path.Join(tlsPath, "libstorage-client.crt")
+	clientKey    = path.Join(tlsPath, "libstorage-client.key")
+	trustedCerts = path.Join(tlsPath, "libstorage-ca.crt")
+	knownHosts   = path.Join(tlsPath, "known_hosts")
 )
 
 func init() {
+	if tcpTLSTest || tcpTLSPeersTest || sockTLSTest {
+		os.Setenv("LIBSTORAGE_HOME_ETC_TLS", tlsPath)
+	}
+
 	goof.IncludeFieldsInFormat = true
 	if runtime.GOOS == "windows" {
 		lsxbin = "lsx-windows.exe"
@@ -63,18 +77,6 @@ func init() {
 		tcpTest = true
 	}
 }
-
-var (
-	tlsPath = path.Join(
-		os.Getenv("GOPATH"),
-		"/src/github.com/codedellemc/libstorage/.tls")
-	serverCrt    = path.Join(tlsPath, "libstorage-server.crt")
-	serverKey    = path.Join(tlsPath, "libstorage-server.key")
-	clientCrt    = path.Join(tlsPath, "libstorage-client.crt")
-	clientKey    = path.Join(tlsPath, "libstorage-client.key")
-	trustedCerts = path.Join(tlsPath, "libstorage-ca.crt")
-	knownHosts   = path.Join(tlsPath, "known_hosts")
-)
 
 var (
 	debugConfig = []byte(`
@@ -484,19 +486,19 @@ func initTestConfigs(ctx types.Context, config map[string]interface{}) {
 			}
 		}
 		return map[string]interface{}{
-			"serverName":       "libstorage-server",
-			"certFile":         clientCrt,
-			"keyFile":          clientKey,
-			"trustedCertsFile": trustedCerts,
+			"serverName": "libstorage-server",
+			"certFile":   clientCrt,
+			"keyFile":    clientKey,
+			//"trustedCertsFile": trustedCerts,
 		}
 	}
 
 	serverTLSConfig := func(clientCertRequired bool) map[string]interface{} {
 		return map[string]interface{}{
-			"serverName":         "libstorage-server",
-			"certFile":           serverCrt,
-			"keyFile":            serverKey,
-			"trustedCertsFile":   trustedCerts,
+			"serverName": "libstorage-server",
+			//"certFile":           serverCrt,
+			//"keyFile":            serverKey,
+			//"trustedCertsFile":   trustedCerts,
 			"clientCertRequired": clientCertRequired,
 		}
 	}
@@ -505,6 +507,7 @@ func initTestConfigs(ctx types.Context, config map[string]interface{}) {
 
 		"tcp": map[string]interface{}{
 			"libstorage": map[string]interface{}{
+				"tls":  false,
 				"host": tcpHost,
 				"server": map[string]interface{}{
 					"endpoints": map[string]interface{}{
@@ -552,6 +555,7 @@ func initTestConfigs(ctx types.Context, config map[string]interface{}) {
 
 		"unix": map[string]interface{}{
 			"libstorage": map[string]interface{}{
+				"tls":  false,
 				"host": unixHost,
 				"server": map[string]interface{}{
 					"endpoints": map[string]interface{}{

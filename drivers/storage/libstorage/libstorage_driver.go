@@ -104,26 +104,36 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 				return conn, nil
 			}
 
-			if err := verifyKnownHost(
+			peerCerts := conn.ConnectionState().PeerCertificates
+
+			if ok, err := verifyKnownHost(
 				d.ctx,
-				conn.ConnectionState().PeerCertificates,
-				tlsConfig.KnownHost); err != nil {
+				peerCerts,
+				tlsConfig.KnownHost); ok {
+
+				return conn, nil
+
+			} else if err != nil {
 
 				d.ctx.WithError(err).Error("error matching peer fingerprint")
 				return nil, err
 			}
 
-			if err := verifyKnownHostFiles(
+			if ok, err := verifyKnownHostFiles(
 				d.ctx,
-				conn.ConnectionState().PeerCertificates,
+				peerCerts,
 				tlsConfig.UsrKnownHosts,
-				tlsConfig.SysKnownHosts); err != nil {
+				tlsConfig.SysKnownHosts); ok {
 
-				d.ctx.WithError(err).Error("error matching known host")
+				return conn, nil
+
+			} else if err != nil {
+
+				d.ctx.WithError(err).Error("error matching peer fingerprint")
 				return nil, err
 			}
 
-			return conn, nil
+			return nil, newErrKnownHost(peerCerts)
 		},
 		DisableKeepAlives: disableKeepAlive,
 	}

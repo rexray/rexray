@@ -19,10 +19,10 @@ var errServerFingerprint = errors.New("invalid server fingerprint")
 func verifyKnownHost(
 	ctx types.Context,
 	peerCerts []*x509.Certificate,
-	knownHost *types.TLSKnownHost) error {
+	knownHost *types.TLSKnownHost) (bool, error) {
 
 	if knownHost == nil {
-		return nil
+		return false, nil
 	}
 
 	expectedFP := hex.EncodeToString(knownHost.Fingerprint)
@@ -45,29 +45,29 @@ func verifyKnownHost(
 				"actualHost":          cert.Subject.CommonName,
 				"expectedHost":        knownHost.Host,
 			}).Debug("matched tls known host information")
-			return nil
+			return true, nil
 		}
 	}
-	return errServerFingerprint
+	return false, newErrKnownHost(peerCerts)
 }
 
 func verifyKnownHostFiles(
 	ctx types.Context,
 	peerCerts []*x509.Certificate,
 	usrKnownHostsFilePath,
-	sysKnownHostsFilePath string) error {
+	sysKnownHostsFilePath string) (bool, error) {
 
 	if len(usrKnownHostsFilePath) == 0 && len(sysKnownHostsFilePath) == 0 {
-		return nil
+		return false, nil
 	}
 
 	if len(usrKnownHostsFilePath) > 0 {
-		err := verifyKnownHostsFile(ctx, peerCerts, usrKnownHostsFilePath)
-		if err == nil {
-			return nil
+		ok, err := verifyKnownHostsFile(ctx, peerCerts, usrKnownHostsFilePath)
+		if ok {
+			return true, nil
 		}
 		if _, ok := err.(*types.ErrKnownHost); !ok {
-			return err
+			return false, err
 		}
 	}
 
@@ -75,19 +75,19 @@ func verifyKnownHostFiles(
 		return verifyKnownHostsFile(ctx, peerCerts, sysKnownHostsFilePath)
 	}
 
-	return newErrKnownHost(peerCerts)
+	return false, newErrKnownHost(peerCerts)
 }
 
 func verifyKnownHostsFile(
 	ctx types.Context,
 	peerCerts []*x509.Certificate,
-	knownHostsFilePath string) error {
+	knownHostsFilePath string) (bool, error) {
 
 	r, err := os.Open(knownHostsFilePath)
 	if err != nil {
 		ctx.WithField("path", knownHostsFilePath).Error(
 			"error opening known_hosts file")
-		return err
+		return false, err
 	}
 	defer r.Close()
 
@@ -104,7 +104,7 @@ func verifyKnownHostsFile(
 		if err != nil {
 			ctx.WithField("path", knownHostsFilePath).Error(
 				"error scanning known_hosts file")
-			return err
+			return false, err
 		}
 		if kh == nil {
 			continue
@@ -129,12 +129,12 @@ func verifyKnownHostsFile(
 					"actualHost":          cert.Subject.CommonName,
 					"expectedHost":        kh.Host,
 				}).Debug("matched tls known host information")
-				return nil
+				return true, nil
 			}
 		}
 	}
 
-	return newErrKnownHost(peerCerts)
+	return false, newErrKnownHost(peerCerts)
 }
 
 func newErrKnownHost(peerCerts []*x509.Certificate) error {

@@ -11,7 +11,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/rexray/cli/cli"
 	"github.com/codedellemc/rexray/core"
 
@@ -31,6 +33,11 @@ func Run() {
 		ctx          = context.Background()
 		exit         sync.Once
 	)
+
+	ctx = ctx.WithValue(
+		context.PathConfigKey,
+		utils.NewPathConfig(ctx, "", ""))
+	registry.ProcessRegisteredConfigs(ctx)
 
 	onExit := func() {
 		if traceProfile != nil {

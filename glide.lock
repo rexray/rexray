@@ -1,5 +1,5 @@
-hash: 51775a5904bfdac26bd9f3d806ec5738b2cebae559fb398759640d7355b583b3
-updated: 2017-04-25T12:51:19.190518019-05:00
+hash: f03101744b49400e3b7b98393f38557978019fab08cc0b3d9e2af979e56671bd
+updated: 2017-04-25T12:54:17.435453239-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -98,7 +98,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: 09b3df4425ca4a46382403ecab5b1fad032a279d
+  version: e752e4ca6ae3a8314c07b4a40d354cfce95c48bf
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -106,6 +106,7 @@ imports:
   - api/context
   - api/registry
   - api/server
+  - api/server/auth
   - api/server/executors
   - api/server/handlers
   - api/server/httputils
@@ -181,7 +182,7 @@ imports:
 - name: github.com/dgrijalva/jwt-go
   version: 2268707a8f0843315e2004ee4f1d021dc08baedf
 - name: github.com/digitalocean/godo
-  version: 2ff8a02a86cd6918b384a5000ceebe886844fbce
+  version: 84099941ba2381607e1b05ffd4822781af86675e
 - name: github.com/fsnotify/fsnotify
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/go-ini/ini

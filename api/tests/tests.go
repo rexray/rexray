@@ -21,6 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/libstorage/api/registry"
 	apiserver "github.com/codedellemc/libstorage/api/server"
 	"github.com/codedellemc/libstorage/api/server/executors"
 	"github.com/codedellemc/libstorage/api/types"
@@ -114,6 +116,18 @@ type testHarness struct {
 // Run executes the provided tests in a new test harness. Each test is
 // executed against a new server instance.
 func Run(
+	t *testing.T,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(nil, t, types.IntegrationClient, nil,
+		driverName, config, false, false, tests...)
+}
+
+// RunWithContext executes the provided tests in a new test harness. Each test
+// is executed against a new server instance.
+func RunWithContext(
 	ctx types.Context,
 	t *testing.T,
 	driverName string,
@@ -128,6 +142,20 @@ func Run(
 // the specified on client error delegate. Each test is executed against a new
 // server instance.
 func RunWithOnClientError(
+	t *testing.T,
+	onClientError func(error),
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(nil, t, types.IntegrationClient, onClientError,
+		driverName, config, false, false, tests...)
+}
+
+// RunWithContextOnClientError executes the provided tests in a new test harness
+// with the specified on client error delegate. Each test is executed against a
+// new server instance.
+func RunWithContextOnClientError(
 	ctx types.Context,
 	t *testing.T,
 	onClientError func(error),
@@ -143,6 +171,19 @@ func RunWithOnClientError(
 // the specified client type. Each test is executed against a new server
 // instance.
 func RunWithClientType(
+	t *testing.T,
+	clientType types.ClientType,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(nil, t, clientType, nil, driverName, config, false, false, tests...)
+}
+
+// RunWithContextClientType executes the provided tests in a new test harness
+// with the specified client type. Each test is executed against a new server
+// instance.
+func RunWithContextClientType(
 	ctx types.Context,
 	t *testing.T,
 	clientType types.ClientType,
@@ -156,6 +197,18 @@ func RunWithClientType(
 // RunGroup executes the provided tests in a new test harness. All tests are
 // executed against the same server instance.
 func RunGroup(
+	t *testing.T,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(nil, t, types.IntegrationClient, nil,
+		driverName, config, false, true, tests...)
+}
+
+// RunGroupWithContext executes the provided tests in a new test harness. All
+// tests are executed against the same server instance.
+func RunGroupWithContext(
 	ctx types.Context,
 	t *testing.T,
 	driverName string,
@@ -170,6 +223,19 @@ func RunGroup(
 // with the specified client type. All tests are executed against the same
 // server instance.
 func RunGroupWithClientType(
+	t *testing.T,
+	clientType types.ClientType,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(nil, t, clientType, nil, driverName, config, false, true, tests...)
+}
+
+// RunGroupWithContextClientType executes the provided tests in a new test
+// harness with the specified client type. All tests are executed against the
+// same server instance.
+func RunGroupWithContextClientType(
 	ctx types.Context,
 	t *testing.T,
 	clientType types.ClientType,
@@ -182,6 +248,17 @@ func RunGroupWithClientType(
 
 // Debug is the same as Run except with additional logging.
 func Debug(
+	t *testing.T,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(nil, t, types.IntegrationClient, nil,
+		driverName, config, true, false, tests...)
+}
+
+// DebugWithContext is the same as Run except with additional logging.
+func DebugWithContext(
 	ctx types.Context,
 	t *testing.T,
 	driverName string,
@@ -194,6 +271,18 @@ func Debug(
 
 // DebugGroup is the same as RunGroup except with additional logging.
 func DebugGroup(
+	t *testing.T,
+	driverName string,
+	config []byte,
+	tests ...APITestFunc) {
+
+	run(
+		nil, t, types.IntegrationClient, nil,
+		driverName, config, true, true, tests...)
+}
+
+// DebugGroupWithContext is the same as RunGroup except with additional logging.
+func DebugGroupWithContext(
 	ctx types.Context,
 	t *testing.T,
 	driverName string,
@@ -225,6 +314,8 @@ func run(
 		driver, configBuf, debug, group, tests...)
 }
 
+var once sync.Once
+
 func (th *testHarness) run(
 	ctx types.Context,
 	t *testing.T,
@@ -234,6 +325,17 @@ func (th *testHarness) run(
 	configBuf []byte,
 	debug, group bool,
 	tests ...APITestFunc) {
+
+	if ctx == nil {
+		ctx = context.Background()
+		if _, ok := context.PathConfig(ctx); !ok {
+			once.Do(func() {
+				pathConfig := utils.NewPathConfig(ctx, "", "")
+				ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
+				registry.ProcessRegisteredConfigs(ctx)
+			})
+		}
+	}
 
 	if !testing.Verbose() {
 		buf := &bytes.Buffer{}

@@ -329,9 +329,9 @@ func (th *testHarness) run(
 	if ctx == nil {
 		ctx = context.Background()
 		if _, ok := context.PathConfig(ctx); !ok {
+			pathConfig := utils.NewPathConfig(ctx, "", "")
+			ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
 			once.Do(func() {
-				pathConfig := utils.NewPathConfig(ctx, "", "")
-				ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
 				registry.ProcessRegisteredConfigs(ctx)
 			})
 		}

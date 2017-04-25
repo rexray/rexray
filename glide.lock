@@ -1,5 +1,5 @@
-hash: 035ac3146da4fb90f50566c86031bc1004170d0a27e7adea3c3c4ca2b8fcda83
-updated: 2017-04-10T15:57:04.178825122-05:00
+hash: 51775a5904bfdac26bd9f3d806ec5738b2cebae559fb398759640d7355b583b3
+updated: 2017-04-25T12:51:19.190518019-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -15,7 +15,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/akutz/goof
-  version: ea06624ca980bae80c1b615b8417723436d235ab
+  version: 72efb1916248a881f8d39e20b9709696c5eda708
 - name: github.com/akutz/gotil
   version: 6fa2e80bd3ac40f15788cfc3d12ebba49a0add92
 - name: github.com/appropriate/go-virtualboxclient

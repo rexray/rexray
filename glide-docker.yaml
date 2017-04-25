@@ -7,6 +7,8 @@ import:
 
   - package: github.com/akutz/golf
     version: v0.1.2
+  - package: github.com/akutz/goof
+    version: v0.1.1
 
   - package: github.com/Sirupsen/logrus
     ref:     feature/logrus-aware-types
@@ -19,8 +21,6 @@ import:
   - package: github.com/akutz/gofig
     version: v0.1.6
   - package: github.com/akutz/gotil
-    version: v0.1.0
-  - package: github.com/akutz/goof
     version: v0.1.0
 
   - package: github.com/spf13/pflag

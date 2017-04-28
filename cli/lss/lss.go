@@ -65,14 +65,14 @@ func Run() {
 
 	if flagVersion != nil && *flagVersion {
 		_, _, thisExeAbsPath := gotil.GetThisPathParts()
-		fmt.Fprintf(os.Stdout, "Binary: %s\n", thisExeAbsPath)
-		fmt.Fprint(os.Stdout, api.Version.String())
+		fmt.Fprintf(apitypes.Stdout, "Binary: %s\n", thisExeAbsPath)
+		fmt.Fprint(apitypes.Stdout, api.Version.String())
 		os.Exit(0)
 	}
 
 	if flagEnv != nil && *flagEnv {
 		for _, v := range os.Environ() {
-			fmt.Fprintf(os.Stdout, "%s\n", v)
+			fmt.Fprintf(apitypes.Stdout, "%s\n", v)
 		}
 		os.Exit(0)
 	}
@@ -83,29 +83,29 @@ func Run() {
 		config = gofigCore.New()
 
 		if err := config.ReadConfigFile(*flagConfig); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 			os.Exit(1)
 		}
 
 		if flagPrintConfig != nil && *flagPrintConfig {
 			jstr, err := config.ToJSON()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+				fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 				os.Exit(1)
 			}
-			fmt.Fprintln(os.Stdout, jstr)
+			fmt.Fprintln(apitypes.Stdout, jstr)
 			os.Exit(0)
 		}
 
 		s, errs, err := server.Serve(nil, config)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 			os.Exit(1)
 		}
 
 		err = <-errs
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 			os.Exit(1)
 		}
 
@@ -119,7 +119,7 @@ func Run() {
 
 	cfg, err := apiconfig.NewConfig(ctx)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+		fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)
 	}
 
@@ -152,10 +152,10 @@ func Run() {
 	if flagPrintConfig != nil && *flagPrintConfig {
 		jstr, err := config.ToJSON()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+			fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 			os.Exit(1)
 		}
-		fmt.Fprintln(os.Stdout, jstr)
+		fmt.Fprintln(apitypes.Stdout, jstr)
 		os.Exit(0)
 	}
 
@@ -171,7 +171,7 @@ func Run() {
 		fmt.Fprintf(buf, "      %s:\n        driver: %s\n", sn, dn)
 	}
 	if err := config.ReadConfig(buf); err != nil {
-		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+		fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)
 	}
 
@@ -179,7 +179,7 @@ func Run() {
 
 	_, errs, err := server.Serve(ctx, config)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: error: %v\n", os.Args[0], err)
+		fmt.Fprintf(apitypes.Stderr, "%s: error: %v\n", os.Args[0], err)
 		os.Exit(1)
 	}
 
@@ -188,25 +188,25 @@ func Run() {
 
 func printUsage() {
 	firstLine := fmt.Sprintf("usage: %s", os.Args[0])
-	fmt.Fprintf(os.Stderr, "%s\n", firstLine)
+	fmt.Fprintf(apitypes.Stderr, "%s\n", firstLine)
 	padFmt := fmt.Sprintf("%%%ds\n", len(firstLine))
-	fmt.Fprintf(os.Stderr, padFmt, "-c,--config <configFilePath> [--printConfig]")
-	fmt.Fprintf(os.Stderr, padFmt, "--version")
-	fmt.Fprintf(os.Stderr, padFmt, "--env")
-	fmt.Fprintf(os.Stderr, padFmt, "[-options] <driver>[:<service>] [<driver>[:<service>]...]")
-	fmt.Fprintf(os.Stderr, "\n")
+	fmt.Fprintf(apitypes.Stderr, padFmt, "-c,--config <configFilePath> [--printConfig]")
+	fmt.Fprintf(apitypes.Stderr, padFmt, "--version")
+	fmt.Fprintf(apitypes.Stderr, padFmt, "--env")
+	fmt.Fprintf(apitypes.Stderr, padFmt, "[-options] <driver>[:<service>] [<driver>[:<service>]...]")
+	fmt.Fprintf(apitypes.Stderr, "\n")
 
-	fmt.Fprintln(os.Stderr, cliFlags.FlagUsages())
-	fmt.Fprintln(os.Stderr, hostUsage)
-	fmt.Fprintln(os.Stderr, logUsage)
-	fmt.Fprintf(os.Stderr, driversUsage, os.Args[0])
+	fmt.Fprintln(apitypes.Stderr, cliFlags.FlagUsages())
+	fmt.Fprintln(apitypes.Stderr, hostUsage)
+	fmt.Fprintln(apitypes.Stderr, logUsage)
+	fmt.Fprintf(apitypes.Stderr, driversUsage, os.Args[0])
 
 	if flagVerbose != nil && *flagVerbose {
 		for fsn, fs := range config.FlagSets() {
-			fmt.Fprintln(os.Stderr, fsn)
-			fmt.Fprintln(os.Stderr, fs.FlagUsages())
+			fmt.Fprintln(apitypes.Stderr, fsn)
+			fmt.Fprintln(apitypes.Stderr, fs.FlagUsages())
 		}
-		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(apitypes.Stderr)
 	}
 
 	os.Exit(1)

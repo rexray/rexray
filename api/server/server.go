@@ -130,7 +130,7 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 	if logger, ok := s.ctx.Value(context.LoggerKey).(*log.Logger); ok {
 		s.PrintServerStartupHeader(logger.Out)
 	} else {
-		s.PrintServerStartupHeader(os.Stdout)
+		s.PrintServerStartupHeader(types.Stdout)
 	}
 
 	if lvl, err := log.ParseLevel(
@@ -176,8 +176,8 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 		s.logHTTPEnabled = true
 		s.logHTTPRequests = logConfig.HTTPRequests
 		s.logHTTPResponses = logConfig.HTTPResponses
-		s.stdOut = getLogIO(logConfig.Stdout, types.ConfigLogStdout)
-		s.stdErr = getLogIO(logConfig.Stderr, types.ConfigLogStderr)
+		s.stdOut = getLogIO(s.ctx, logConfig.Stdout, types.ConfigLogStdout)
+		s.stdErr = getLogIO(s.ctx, logConfig.Stderr, types.ConfigLogStderr)
 	}
 
 	s.initGlobalMiddleware()
@@ -257,7 +257,7 @@ func Serve(
 	if logger, ok := s.ctx.Value(context.LoggerKey).(*log.Logger); ok {
 		s.PrintServerStartupFooter(logger.Out)
 	} else {
-		s.PrintServerStartupFooter(os.Stdout)
+		s.PrintServerStartupFooter(types.Stdout)
 	}
 
 	return s, errs, nil

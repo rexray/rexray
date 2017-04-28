@@ -41,7 +41,7 @@ func Run() {
 
 	d, err := registry.NewStorageExecutor(args[1])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		fmt.Fprintf(apitypes.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -49,14 +49,14 @@ func Run() {
 
 	config, err := apiconfig.NewConfig(ctx)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		fmt.Fprintf(apitypes.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	apiconfig.UpdateLogLevel(config)
 
 	if err := d.Init(ctx, config); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		fmt.Fprintf(apitypes.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -283,33 +283,33 @@ func Run() {
 		default:
 			errStr = e.Error()
 		}
-		fmt.Fprintf(os.Stderr,
+		fmt.Fprintf(apitypes.Stderr,
 			"error: error getting %s: %v\n", op, errStr)
 		os.Exit(exitCode)
 	}
 
 	switch tr := result.(type) {
 	case bool:
-		fmt.Fprintf(os.Stdout, "%v", result)
+		fmt.Fprintf(apitypes.Stdout, "%v", result)
 	case string:
-		fmt.Fprintln(os.Stdout, result)
+		fmt.Fprintln(apitypes.Stdout, result)
 	case encoding.TextMarshaler:
 		buf, err := tr.MarshalText()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: error encoding %s: %v\n", op, err)
+			fmt.Fprintf(apitypes.Stderr, "error: error encoding %s: %v\n", op, err)
 			os.Exit(1)
 		}
-		os.Stdout.Write(buf)
+		apitypes.Stdout.Write(buf)
 	default:
 		buf, err := json.Marshal(result)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: error encoding %s: %v\n", op, err)
+			fmt.Fprintf(apitypes.Stderr, "error: error encoding %s: %v\n", op, err)
 			os.Exit(1)
 		}
 		if isNullBuf(buf) {
-			os.Stdout.Write(emptyJSONBuff)
+			apitypes.Stdout.Write(emptyJSONBuff)
 		} else {
-			os.Stdout.Write(buf)
+			apitypes.Stdout.Write(buf)
 		}
 	}
 
@@ -344,7 +344,7 @@ func executorNames() <-chan string {
 
 func printUsage() {
 	buf := &bytes.Buffer{}
-	w := io.MultiWriter(buf, os.Stderr)
+	w := io.MultiWriter(buf, apitypes.Stderr)
 
 	fmt.Fprintf(w, "usage: ")
 	lpad1 := buf.Len()

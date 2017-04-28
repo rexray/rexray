@@ -3,8 +3,9 @@ package context
 import (
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
+
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // Key is the type used as a context key.
@@ -164,6 +165,13 @@ func isCustomKeyWithLockOpts(key interface{}, lock bool) (int, bool) {
 // RegisterCustomKey registers a custom key with the context package.
 func RegisterCustomKey(key interface{}, mask CustomKeyTypes) error {
 
+	return RegisterCustomKeyWithContext(nil, key, mask)
+}
+
+// RegisterCustomKeyWithContext registers a custom key with the context package.
+func RegisterCustomKeyWithContext(
+	ctx types.Context, key interface{}, mask CustomKeyTypes) error {
+
 	customKeysRWL.Lock()
 	defer customKeysRWL.Unlock()
 
@@ -179,11 +187,13 @@ func RegisterCustomKey(key interface{}, mask CustomKeyTypes) error {
 
 	customKeys[newCustomKey.externalID] = newCustomKey
 
-	log.WithFields(log.Fields{
-		"internalID": newCustomKey.internalID,
-		"externalID": newCustomKey.externalID,
-		"keyBitmask": newCustomKey.keyBitmask,
-	}).Info("registered custom context key")
+	if ctx != nil {
+		ctx.WithFields(map[string]interface{}{
+			"internalID": newCustomKey.internalID,
+			"externalID": newCustomKey.externalID,
+			"keyBitmask": newCustomKey.keyBitmask,
+		}).Info("registered custom context key")
+	}
 
 	return nil
 }

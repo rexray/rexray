@@ -153,7 +153,7 @@ func (s *server) initRouters() error {
 	for r := range registry.Routers() {
 		r.Init(s.config)
 		s.addRouter(r)
-		log.WithFields(log.Fields{
+		s.ctx.WithFields(log.Fields{
 			"router":      r.Name(),
 			"len(routes)": len(r.Routes()),
 		}).Info("initialized router")
@@ -294,21 +294,27 @@ func (s *HTTPServer) Context() types.Context {
 	return s.ctx
 }
 
-func getLogIO(path, propName string) io.WriteCloser {
+func getLogIO(ctx types.Context, path, propName string) io.WriteCloser {
 
 	if path != "" {
 		logio, err := os.OpenFile(
 			path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			log.Error(err)
+			ctx.WithError(err).Error("error opening log file")
 		}
-		log.WithFields(log.Fields{
+		ctx.WithFields(log.Fields{
 			"logType": propName,
 			"logPath": path,
 		}).Debug("using log file")
 		return logio
 	}
-	return log.StandardLogger().Writer()
+	if logger, ok := ctx.Value(context.LoggerKey).(*log.Logger); ok {
+		return logger.Writer()
+	}
+	if propName == types.ConfigLogStdout {
+		return &writeCloser{types.Stdout}
+	}
+	return &writeCloser{types.Stderr}
 }
 
 type httpServerErrLogger struct {
@@ -318,4 +324,16 @@ type httpServerErrLogger struct {
 func (l *httpServerErrLogger) Write(p []byte) (n int, err error) {
 	l.logger.Error(string(p))
 	return len(p), nil
+}
+
+type writeCloser struct {
+	writer io.Writer
+}
+
+func (wc *writeCloser) Write(p []byte) (n int, err error) {
+	return wc.writer.Write(p)
+}
+
+func (wc *writeCloser) Close() error {
+	return nil
 }

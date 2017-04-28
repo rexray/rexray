@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -47,10 +48,22 @@ func newContext(
 		logger = ctx.logger
 	}
 	if logger == nil {
-		logger = log.StandardLogger()
-	}
-	if types.Debug {
-		logger.Level = log.DebugLevel
+		var lvl log.Level
+		if types.Debug {
+			lvl = log.DebugLevel
+		} else {
+			ll, err := log.ParseLevel(os.Getenv("LIBSTORAGE_LOGGING_LEVEL"))
+			if err != nil {
+				ll = log.WarnLevel
+			}
+			lvl = ll
+		}
+		logger = &log.Logger{
+			Formatter: log.StandardLogger().Formatter,
+			Hooks:     log.StandardLogger().Hooks,
+			Level:     lvl,
+			Out:       types.Stdout,
+		}
 	}
 
 	// forward the pathConfig reference

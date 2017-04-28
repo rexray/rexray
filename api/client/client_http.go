@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"sync"
 
 	"github.com/akutz/goof"
 	"golang.org/x/net/context/ctxhttp"
@@ -24,12 +25,9 @@ const (
 	authTokenHeaderKey
 )
 
-func init() {
-	context.RegisterCustomKey(transactionHeaderKey, context.CustomHeaderKey)
-	context.RegisterCustomKey(instanceIDHeaderKey, context.CustomHeaderKey)
-	context.RegisterCustomKey(localDevicesHeaderKey, context.CustomHeaderKey)
-	context.RegisterCustomKey(authTokenHeaderKey, context.CustomHeaderKey)
-}
+var (
+	registerCustomKeyOnce sync.Once
+)
 
 func (k headerKey) String() string {
 	switch k {
@@ -49,6 +47,17 @@ func (c *client) httpDo(
 	ctx types.Context,
 	method, path string,
 	payload, reply interface{}) (*http.Response, error) {
+
+	registerCustomKeyOnce.Do(func() {
+		context.RegisterCustomKeyWithContext(
+			ctx, transactionHeaderKey, context.CustomHeaderKey)
+		context.RegisterCustomKeyWithContext(
+			ctx, instanceIDHeaderKey, context.CustomHeaderKey)
+		context.RegisterCustomKeyWithContext(
+			ctx, localDevicesHeaderKey, context.CustomHeaderKey)
+		context.RegisterCustomKeyWithContext(
+			ctx, authTokenHeaderKey, context.CustomHeaderKey)
+	})
 
 	reqBody, err := encPayload(payload)
 	if err != nil {

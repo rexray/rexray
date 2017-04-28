@@ -6,7 +6,6 @@
 *.a
 *.d
 *.out
-got
 libstorage.paw
 .site/
 site/

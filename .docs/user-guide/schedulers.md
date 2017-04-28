@@ -159,15 +159,16 @@ configuring popular applications with persistent storage via Docker and REX-Ray.
 REX-Ray can be integrated with [Kubernetes](https://kubernetes.io/) allowing
 pods to consume data stored on volumes that are orchestrated by REX-Ray. Using
 Kubernetes' [FlexVolume](https://kubernetes.io/docs/user-guide/volumes/#flexvolume)
-plug-in, REX-Ray can provide uniform access to storage operatations such as attach,
+plug-in, REX-Ray can provide uniform access to storage operations such as attach,
 mount, detach, and unmount for any configured storage provider.  REX-Ray provides an
-adapter script called `FlexRex` which integrates with the FlexVolume to interact
+adapter script called `FlexREX` which integrates with the FlexVolume to interact
 with the backing storage system.
 
 ### Pre-Requisites
 - [Kubernetes](https://kubernetes.io/) 1.5 or higher
 - REX-Ray 0.7 or higher
 - [jq binary](https://stedolan.github.io/jq/)
+- Kubernetes kubelets must be running with `enable-controller-attach-detach` disabled
 
 ### Installation
 It is assumed that you have a Kubernetes cluster at your disposal. On each
@@ -189,14 +190,14 @@ If there is no issue, you should see an output, similar to above, which shows
 a list of previously created volumes. If instead you get an error,  
 ensure that REX-Ray is properly configured for the intended storage system.
 
-Next, using the REX-Ray binary,  install the `FlexRex` adapter script on the node
+Next, using the REX-Ray binary,  install the `FlexREX` adapter script on the node
 as shown below.  
 
 ```
 # rexray flexrex install
 ```
 
-This should produce the following output showing that the FlexRex script is
+This should produce the following output showing that the FlexREX script is
 installed successfully:
 
 ```
@@ -206,19 +207,23 @@ Path                                                                        Inst
 
 The path shown above is the default location where the FlexVolume plug-in will
 expect to find its integration code.  If you are not using the default location
-with FlexVolume, you can install the  `FlexRex` in an arbitrary location using:
+with FlexVolume, you can install the  `FlexREX` in an arbitrary location using:
 
 ```
 # rexray flexrex install --path /opt/plug-ins/rexray~flexrex/flexrex
 ```
 
-Next, restart the kublet process on the node:
+!!! note
+    FlexREX requires that the `enable-controller-attach-detach` flag for the
+    kubelet is set to False.
+
+Next, restart the kubelet process on the node:
 
 ```
 # systemctl restart kubelet
 ```
 
-You can validate that the FlexRex script has been started successfully by searching
+You can validate that the `FlexREX` script has been started successfully by searching
 the kubelet log for an entry similar to the following:
 
 ```
@@ -227,12 +232,12 @@ I0208 10:56:57.412207    5348 plug-ins.go:350] Loaded volume plug-in "rexray/fle
 
 ### Pods and Persistent Volumes
 You can now deploy pods and persistent volumes that use storage systems orchestrated
-by REX-Ray.  It is worth pointing out that the Kubernetes FlexVolme plug-in can only
-attach volumes that already exist in the storge system.  Any volume that is to be used
+by REX-Ray.  It is worth pointing out that the Kubernetes FlexVolume plug-in can only
+attach volumes that already exist in the storage system.  Any volume that is to be used
 by a Kubernetes resource must be listed in a `rexray volume ls` command.
 
 #### Pod with REX-Ray volume
-The following YAML file shows the definition of a pod that uses FlexRex to attach a volume
+The following YAML file shows the definition of a pod that uses `FlexREX` to attach a volume
 to be used by the pod.
 
 ```
@@ -263,8 +268,8 @@ Additional options can be provided in the `options:` as follows:
 
 Option|Desription
 ------|----------
-volumeID|Reference name of the volume in REX-Ray
-forceAttach|When true ensures the volume is availble before attahing (optinal, defaults to false)
+volumeID|Reference name of the volume in REX-Ray (Required)
+forceAttach|When true ensures the volume is available before attaching (optional, defaults to false)
 forceAttachDelay|Total amount of time (in sec) to attempt attachment with 5 sec interval between tries (optional)
 
 #### REX-Ray PersistentVolume

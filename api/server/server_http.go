@@ -335,5 +335,8 @@ func (wc *writeCloser) Write(p []byte) (n int, err error) {
 }
 
 func (wc *writeCloser) Close() error {
+	if c, ok := wc.writer.(io.Closer); ok {
+		return c.Close()
+	}
 	return nil
 }

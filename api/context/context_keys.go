@@ -187,8 +187,8 @@ func RegisterCustomKeyWithContext(
 
 	customKeys[newCustomKey.externalID] = newCustomKey
 
-	if ctx != nil {
-		ctx.WithFields(map[string]interface{}{
+	if ctx, ok := ctx.(*lsc); ok && ctx.logger != nil {
+		ctx.logger.WithFields(map[string]interface{}{
 			"internalID": newCustomKey.internalID,
 			"externalID": newCustomKey.externalID,
 			"keyBitmask": newCustomKey.keyBitmask,

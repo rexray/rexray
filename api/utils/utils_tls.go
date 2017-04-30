@@ -100,6 +100,7 @@ func ParseTLSConfig(
 		if strings.EqualFold(v, "insecure") {
 			f(types.ConfigTLS, "insecure")
 			newTLS(types.ConfigTLS, "insecure")
+			tlsConfig.InsecureSkipVerify = true
 
 			// check to see if TLS is enabled with peers
 		} else if strings.EqualFold(v, "verifyPeers") {
@@ -147,7 +148,6 @@ func ParseTLSConfig(
 		newTLS(types.ConfigTLSClientCertRequired, true)
 		f(types.ConfigTLSClientCertRequired, true)
 		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
-		f(types.ConfigTLSClientCertRequired, true)
 	}
 
 	if v := getString(config, types.ConfigTLSServerName, roots...); v != "" {
@@ -182,6 +182,7 @@ func ParseTLSConfig(
 		f(types.ConfigTLSKnownHosts, khFile)
 		tlsConfig.SysKnownHosts = khFile
 		tlsConfig.VerifyPeers = true
+		tlsConfig.InsecureSkipVerify = true
 
 		return nil
 	}(); err != nil {

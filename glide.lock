@@ -1,5 +1,5 @@
-hash: 6b3161a1086d56cfb657e5b47370ed70cce0aa592d1b095cb885c3e4763f1eb5
-updated: 2017-04-20T15:53:52.320351451-05:00
+hash: ba9fdd955e93fa94a03410e2db04a1b6622757d493eac59bc28608019abc8612
+updated: 2017-04-29T23:55:01.060129102-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -139,8 +139,6 @@ imports:
   repo: https://github.com/akutz/go-bindata
 - name: github.com/kardianos/osext
   version: 9d302b58e975387d0b4d9be876622c86cefe64be
-  repo: https://github.com/kardianos/osext.git
-  vcs: git
 - name: github.com/kr/fs
   version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/magiconair/properties
@@ -244,7 +242,6 @@ imports:
 - name: golang.org/x/crypto
   version: 453249f01cfeb54c3d549ddb75ff152ca243f9d8
   repo: https://github.com/golang/crypto.git
-  vcs: git
   subpackages:
   - curve25519
   - ed25519
@@ -277,9 +274,7 @@ imports:
 - name: golang.org/x/text
   version: 85c29909967d7f171f821e7a42e7b7af76fb9598
   repo: https://github.com/golang/text.git
-  vcs: git
   subpackages:
-  - .
   - transform
   - unicode/norm
 - name: google.golang.org/api

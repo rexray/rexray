@@ -14,8 +14,6 @@ import (
 // NewPathConfig returns a new path configuration object.
 func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 
-	pathConfig := &types.PathConfig{}
-
 	if token == "" {
 		if v := os.Getenv("LIBSTORAGE_APPTOKEN"); v != "" {
 			token = v
@@ -23,6 +21,13 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 			token = "libstorage"
 		}
 	}
+
+	pathConfig := &types.PathConfig{
+		Token:    token,
+		UserHome: path.Join(gotil.HomeDir(), fmt.Sprintf(".%s", token)),
+	}
+	pathConfig.UserDefaultTLSKnownHosts = path.Join(
+		pathConfig.UserHome, "known_hosts")
 
 	var (
 		ucTok            = strings.ToUpper(token)

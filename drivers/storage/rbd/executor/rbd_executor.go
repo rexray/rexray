@@ -13,6 +13,7 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
+	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/drivers/storage/rbd"
@@ -56,7 +57,8 @@ func (d *driver) Supported(
 		return false, nil
 	}
 
-	if err := exec.Command("modprobe", "rbd").Run(); err != nil {
+	cmd := exec.Command("modprobe", "rbd")
+	if _, _, err := utils.RunCommand(ctx, cmd); err != nil {
 		return false, nil
 	}
 
@@ -94,13 +96,15 @@ func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 
-	return GetInstanceID(nil, nil)
+	return GetInstanceID(ctx, nil, nil)
 }
 
 // GetInstanceID returns the instance ID object
 func GetInstanceID(
+	ctx types.Context,
 	monIPs []net.IP,
 	localIntfs []net.Addr) (*types.InstanceID, error) {
+
 	/* Ceph doesn't have only one unique identifier per client, it can have
 	   several. With the way the RBD driver is used, we will see multiple
 	   identifiers used, and therefore returning any of those identifiers
@@ -112,15 +116,19 @@ func GetInstanceID(
 	   segment so we grab the IP from the default route.
 	*/
 
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	var err error
 	if nil == monIPs {
-		monIPs, err = getCephMonIPs()
+		monIPs, err = getCephMonIPs(ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if len(monIPs) == 0 {
-		return nil, goof.New("No Ceph Monitors found")
+		return nil, goof.New("no ceph monitors found")
 	}
 
 	if nil == localIntfs {
@@ -143,7 +151,7 @@ func GetInstanceID(
 	}
 
 	// No luck finding L2 match, check for default/static route to monitor
-	localIP, err := getSrcIP(monIPs[0].String())
+	localIP, err := getSrcIP(ctx, monIPs[0].String())
 	if err != nil {
 		return nil, err
 	}
@@ -152,14 +160,12 @@ func GetInstanceID(
 	return iid, nil
 }
 
-func getCephMonIPs() ([]net.IP, error) {
-	out, err := exec.Command("ceph-conf", "--lookup", "mon_host").Output()
+func getCephMonIPs(ctx types.Context) ([]net.IP, error) {
+
+	cmd := exec.Command("ceph-conf", "--lookup", "mon_host")
+	out, _, err := utils.RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			return nil, goof.WithField("stderr", string(exiterr.Stderr),
-				"unable to get Ceph monitors")
-		}
-		return nil, goof.WithError("unable to get Ceph monitors", err)
+		return nil, goof.WithError("unable to get ceph monitors", err)
 	}
 
 	monStrings := strings.Split(strings.TrimSpace(string(out)), ",")
@@ -172,11 +178,14 @@ func getCephMonIPs() ([]net.IP, error) {
 	return monIps, nil
 }
 
-func getSrcIP(destIP string) (string, error) {
-	out, err := exec.Command(
-		"ip", "-oneline", "route", "get", destIP).Output()
+func getSrcIP(
+	ctx types.Context,
+	destIP string) (string, error) {
+
+	cmd := exec.Command("ip", "-oneline", "route", "get", destIP)
+	out, _, err := utils.RunCommand(ctx, cmd)
 	if err != nil {
-		return "", goof.WithError("Unable get IP routes", err)
+		return "", goof.WithError("unable get ip routes", err)
 	}
 
 	byteReader := bytes.NewReader(out)
@@ -192,5 +201,5 @@ func getSrcIP(destIP string) (string, error) {
 		}
 		return scanner.Text(), nil
 	}
-	return "", goof.New("Unable to parse ip output")
+	return "", goof.New("unable to parse ip output")
 }

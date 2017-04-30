@@ -62,7 +62,7 @@ func TestInstanceID(t *testing.T) {
 		t.SkipNow()
 	}
 
-	iid, err := rbdx.GetInstanceID(nil, nil)
+	iid, err := rbdx.GetInstanceID(nil, nil, nil)
 	assert.NoError(t, err)
 	if err != nil {
 		t.Error("failed TestInstanceID")
@@ -143,7 +143,8 @@ func TestInstanceIDSimulatedIPs(t *testing.T) {
 	}
 
 	for _, test := range testIPs {
-		iid, err := rbdx.GetInstanceID(test.monIPs, test.interfaces)
+		iid, err := rbdx.GetInstanceID(
+			nil, test.monIPs, test.interfaces)
 
 		assert.NoError(t, err)
 		if err != nil {

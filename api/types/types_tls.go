@@ -1,6 +1,9 @@
 package types
 
-import "crypto/tls"
+import (
+	"crypto/tls"
+	"fmt"
+)
 
 // TLSConfig is a custom TLS configuration that includes the concept of a
 // peer certificate's fingerprint.
@@ -33,4 +36,9 @@ type TLSKnownHost struct {
 
 	// Fingerprint is known host's certificate's fingerprint.
 	Fingerprint []byte
+}
+
+// String returns a known_hosts string.
+func (kh *TLSKnownHost) String() string {
+	return fmt.Sprintf("%s %s %x", kh.Host, kh.Alg, kh.Fingerprint)
 }

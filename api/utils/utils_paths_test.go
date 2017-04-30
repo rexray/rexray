@@ -17,6 +17,7 @@ import (
 
 var _ = Describe("Paths", func() {
 	var homeDir string
+	var userHome = gotil.HomeDir()
 
 	BeforeSuite(func() {
 		homeDir = gotil.HomeDir()
@@ -97,6 +98,14 @@ var _ = Describe("Paths", func() {
 					Ω(pathConfig.DefaultTLSKnownHosts).To(Σ(
 						homeDir, ".libstorage", "etc", "tls", "known_hosts"))
 				})
+			It("usr home should be $HOME", func() {
+				Ω(pathConfig.UserHome).To(Σ(userHome, ".libstorage"))
+			})
+			It("usr known_hosts should be $HOME/.libstorage/known_hosts",
+				func() {
+					Ω(pathConfig.UserDefaultTLSKnownHosts).To(
+						Σ(userHome, ".libstorage", "known_hosts"))
+				})
 		})
 
 		Context("With home", func() {
@@ -159,6 +168,14 @@ var _ = Describe("Paths", func() {
 					Ω(pathConfig.DefaultTLSKnownHosts).To(Σ(
 						tmpDir, "etc", "tls", "known_hosts"))
 				})
+			It("usr home should be $HOME", func() {
+				Ω(pathConfig.UserHome).To(Σ(userHome, ".libstorage"))
+			})
+			It("usr known_hosts should be $HOME/.libstorage/known_hosts",
+				func() {
+					Ω(pathConfig.UserDefaultTLSKnownHosts).To(
+						Σ(userHome, ".libstorage", "known_hosts"))
+				})
 		})
 
 		Context("With token", func() {
@@ -220,6 +237,14 @@ var _ = Describe("Paths", func() {
 				func() {
 					Ω(pathConfig.DefaultTLSKnownHosts).To(Σ(
 						homeDir, ".rexray", "etc", "tls", "known_hosts"))
+				})
+			It("usr home should be $HOME", func() {
+				Ω(pathConfig.UserHome).To(Σ(userHome, ".rexray"))
+			})
+			It("usr known_hosts should be $HOME/.rexray/known_hosts",
+				func() {
+					Ω(pathConfig.UserDefaultTLSKnownHosts).To(
+						Σ(userHome, ".rexray", "known_hosts"))
 				})
 		})
 
@@ -285,6 +310,14 @@ var _ = Describe("Paths", func() {
 					Ω(pathConfig.DefaultTLSKnownHosts).To(Σ(
 						tmpDir, "known_hosts"))
 				})
+			It("usr home should be $HOME", func() {
+				Ω(pathConfig.UserHome).To(Σ(userHome, ".rexray"))
+			})
+			It("usr known_hosts should be $HOME/.rexray/known_hosts",
+				func() {
+					Ω(pathConfig.UserDefaultTLSKnownHosts).To(
+						Σ(userHome, ".rexray", "known_hosts"))
+				})
 		})
 
 		Context("With token & TOKEN_HOME", func() {
@@ -349,6 +382,14 @@ var _ = Describe("Paths", func() {
 					Ω(pathConfig.DefaultTLSKnownHosts).To(Σ(
 						tmpDir, "etc", "tls", "known_hosts"))
 				})
+			It("usr home should be $HOME", func() {
+				Ω(pathConfig.UserHome).To(Σ(userHome, ".rexray"))
+			})
+			It("usr known_hosts should be $HOME/.rexray/known_hosts",
+				func() {
+					Ω(pathConfig.UserDefaultTLSKnownHosts).To(
+						Σ(userHome, ".rexray", "known_hosts"))
+				})
 		})
 
 		Context("With LIBSTORAGE_HOME and LIBSTORAGE_HOME_LSX", func() {
@@ -407,6 +448,14 @@ var _ = Describe("Paths", func() {
 				func() {
 					Ω(pathConfig.DefaultTLSKnownHosts).To(Σ(
 						tmpDir, "etc", "tls", "known_hosts"))
+				})
+			It("usr home should be $HOME", func() {
+				Ω(pathConfig.UserHome).To(Σ(userHome, ".libstorage"))
+			})
+			It("usr known_hosts should be $HOME/.libstorage/known_hosts",
+				func() {
+					Ω(pathConfig.UserDefaultTLSKnownHosts).To(
+						Σ(userHome, ".libstorage", "known_hosts"))
 				})
 		})
 	})

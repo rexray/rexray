@@ -3,7 +3,10 @@ package types
 // PathConfig contains the path configuration for the application.
 type PathConfig struct {
 
-	// Home is the path to the root data directory.
+	// Token is the app token.
+	Token string
+
+	// Home is the path to the system, root, data directory.
 	Home string
 
 	// Etc is the path to the etc directory.
@@ -36,4 +39,11 @@ type PathConfig struct {
 
 	// DefaultTLSKnownHosts is the default path to the TLS known hosts file.
 	DefaultTLSKnownHosts string
+
+	// UserHome is the path to the user, root, data directory.
+	UserHome string
+
+	// UserDefaultTLSKnownHosts is the default path to the user, TLS known
+	// hosts file.
+	UserDefaultTLSKnownHosts string
 }

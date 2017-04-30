@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"io/ioutil"
 	"os"
-	"path"
 	"regexp"
 	"strings"
 
@@ -59,10 +58,6 @@ func ParseTLSConfig(
 
 	ctx.Debug("parsing tls config")
 
-	// disabled is a flag that indicates whether or not TLS was
-	// explicitly disabled
-	var disabled bool
-
 	pathConfig := context.MustPathConfig(ctx)
 
 	f := func(k string, v interface{}) {
@@ -73,261 +68,220 @@ func ParseTLSConfig(
 		ctx.WithField(k, v).Debug("tls field set")
 	}
 
-	// defer the parsing of the cert, key, and cacerts files so that no
-	// matter how tls is configured these files might be loaded. This behavior
-	// is to accomodate the fact that the files can be placed in default
-	// locations and thus there is no reason not to use them if they are
-	// placed in their known locations
-	defer func() {
-		if tlsConfig == nil && disabled {
-			ctx.Info("tls not configured & explicitly disabled")
+	newTLS := func(k string, v interface{}) {
+		if tlsConfig != nil {
 			return
 		}
-
-		defer func() {
-			if tlsErr != nil {
-				tlsConfig = nil
-				ctx.Error(tlsErr)
-			}
-		}()
-
-		newTLS := func() {
-			if tlsConfig != nil {
-				return
-			}
-			tlsConfig = &types.TLSConfig{Config: tls.Config{}}
-		}
-
-		// always check for the user's known_hosts file
-		func() {
-			khFile := path.Join(gotil.HomeDir(), ".libstorage", "known_hosts")
-			if gotil.FileExists(khFile) {
-				newTLS()
-				tlsConfig.UsrKnownHosts = khFile
-				tlsConfig.VerifyPeers = true
-			}
-		}()
-
-		// always check for the system's known_hosts file
-		if tlsErr = func() error {
-			if !isSet(config, types.ConfigTLSKnownHosts, roots...) {
-				return nil
-			}
-			khFile := getString(config, types.ConfigTLSKnownHosts, roots...)
-
-			// is the known_hosts file the same as the default known_hosts
-			// file? It's not possible to use os.SameFile as the files may not
-			// yet exist
-			isDefKH := strings.EqualFold(
-				khFile, pathConfig.DefaultTLSKnownHosts)
-
-			if !gotil.FileExists(khFile) {
-				if !isDefKH {
-					return goof.WithField(
-						"path", khFile, "invalid known_hosts file")
-				}
-				return nil
-			}
-
-			newTLS()
-			f(types.ConfigTLSKnownHosts, khFile)
-			tlsConfig.SysKnownHosts = khFile
-			tlsConfig.VerifyPeers = true
-
-			return nil
-		}(); tlsErr != nil {
-			return
-		}
-
-		// always check for the cacerts file
-		if tlsErr = func() error {
-			if !isSet(config, types.ConfigTLSTrustedCertsFile, roots...) {
-				return nil
-			}
-
-			caCerts := getString(
-				config, types.ConfigTLSTrustedCertsFile, roots...)
-
-			// is the key file the same as the default cacerts file? It's not
-			// possible to use os.SameFile as the files may not yet exist
-			isDefCA := strings.EqualFold(
-				caCerts, pathConfig.DefaultTLSTrustedRootsFile)
-
-			if !gotil.FileExists(caCerts) {
-				if !isDefCA {
-					return goof.WithField(
-						"path", caCerts, "invalid cacerts file")
-				}
-				return nil
-			}
-
-			newTLS()
-			f(types.ConfigTLSTrustedCertsFile, caCerts)
-
-			buf, err := func() ([]byte, error) {
-				f, err := os.Open(caCerts)
-				if err != nil {
-					return nil, goof.WithFieldE(
-						"path", caCerts, "error opening cacerts file", err)
-				}
-				defer f.Close()
-				buf, err := ioutil.ReadAll(f)
-				if err != nil {
-					return nil, goof.WithFieldE(
-						"path", caCerts, "error reading cacerts file", err)
-				}
-				return buf, nil
-			}()
-			if err != nil {
-				return err
-			}
-
-			certPool := x509.NewCertPool()
-			certPool.AppendCertsFromPEM(buf)
-			tlsConfig.RootCAs = certPool
-			tlsConfig.ClientCAs = certPool
-
-			return nil
-		}(); tlsErr != nil {
-			return
-		}
-
-		// always check for the cert and key files
-		tlsErr = func() error {
-			if !isSet(config, types.ConfigTLSKeyFile, roots...) {
-				return nil
-			}
-			keyFile := getString(config, types.ConfigTLSKeyFile, roots...)
-
-			// is the key file the same as the default key file? It's not
-			// possible to use os.SameFile as the files may not yet exist
-			isDefKF := strings.EqualFold(
-				keyFile, pathConfig.DefaultTLSKeyFile)
-
-			if !gotil.FileExists(keyFile) {
-				if !isDefKF {
-					return goof.WithField(
-						"path", keyFile, "invalid key file")
-				}
-				return nil
-			}
-
-			newTLS()
-			f(types.ConfigTLSKeyFile, keyFile)
-
-			crtFile := getString(config, types.ConfigTLSCertFile, roots...)
-
-			// is the key file the same as the default cert file? It's not
-			// possible to use os.SameFile as the files may not yet exist
-			isDefCF := strings.EqualFold(
-				crtFile, pathConfig.DefaultTLSCertFile)
-
-			if !gotil.FileExists(crtFile) {
-				if !isDefCF {
-					return goof.WithField(
-						"path", crtFile, "invalid crt file")
-				}
-				return nil
-			}
-
-			f(types.ConfigTLSCertFile, crtFile)
-			cer, err := tls.LoadX509KeyPair(crtFile, keyFile)
-			if err != nil {
-				return goof.WithError("error loading x509 pair", err)
-			}
-			tlsConfig.Certificates = []tls.Certificate{cer}
-			return nil
-		}()
-	}()
-
-	if !isSet(config, types.ConfigTLS, roots...) {
-		ctx.Info("tls not configured")
-		return nil, nil
+		ctx.WithField(k, v).Info("tls enabled")
+		tlsConfig = &types.TLSConfig{Config: tls.Config{}}
 	}
 
 	// check to see if TLS is disabled
 	if ok := getBool(config, types.ConfigTLSDisabled, roots...); ok {
 		f(types.ConfigTLSDisabled, true)
 		ctx.WithField(types.ConfigTLSDisabled, false).Info("tls disabled")
-		disabled = true
 		return nil, nil
 	}
 
 	// check to see if TLS is enabled with a simple truthy value
 	if ok := getBool(config, types.ConfigTLS, roots...); ok {
 		f(types.ConfigTLS, true)
-		ctx.WithField(types.ConfigTLS, true).Info("tls enabled")
-		return &types.TLSConfig{Config: tls.Config{}}, nil
-	}
+		newTLS(types.ConfigTLS, true)
 
-	if v := getString(config, types.ConfigTLS, roots...); v != "" {
+	} else if v := getString(config, types.ConfigTLS, roots...); v != "" {
 		// check to see if TLS is disabled
 		if strings.EqualFold(v, "false") {
 			f(types.ConfigTLS, "false")
 			ctx.WithField(types.ConfigTLS, "false").Info("tls disabled")
-			disabled = true
 			return nil, nil
 		}
 
 		// check to see if TLS is enabled with insecure
 		if strings.EqualFold(v, "insecure") {
 			f(types.ConfigTLS, "insecure")
-			ctx.WithField(types.ConfigTLS, "insecure").Info("tls enabled")
-			return &types.TLSConfig{
-				Config: tls.Config{InsecureSkipVerify: true},
-			}, nil
-		}
+			newTLS(types.ConfigTLS, "insecure")
 
-		// check to see if TLS is enabled with peers
-		if strings.EqualFold(v, "verifyPeers") {
+			// check to see if TLS is enabled with peers
+		} else if strings.EqualFold(v, "verifyPeers") {
 			f(types.ConfigTLS, "verifyPeers")
-			ctx.WithField(types.ConfigTLS, "verifyPeers").Info("tls enabled")
-			return &types.TLSConfig{
-				Config:      tls.Config{InsecureSkipVerify: true},
-				VerifyPeers: true,
-			}, nil
-		}
+			newTLS(types.ConfigTLS, "verifyPeers")
+			tlsConfig.InsecureSkipVerify = true
+			tlsConfig.VerifyPeers = true
 
-		// check to see if TLS is enabled with an expected sha256 fingerprint
-		kh, err := ParseKnownHost(ctx, v)
-		if err != nil {
+			// check to see if TLS is enabled with an expected sha256
+			// fingerprint
+		} else if kh, err := ParseKnownHost(ctx, v); err != nil {
 			ctx.Error(err)
 			return nil, err
-		}
-		if kh != nil {
-			ctx.WithField(types.ConfigTLS, v).Info("tls enabled")
-			return &types.TLSConfig{
-				Config:      tls.Config{InsecureSkipVerify: true},
-				VerifyPeers: true,
-				KnownHost:   kh,
-			}, nil
+		} else if kh != nil {
+			f(types.ConfigTLS, kh.String())
+			newTLS(types.ConfigTLS, kh.String())
+			tlsConfig.InsecureSkipVerify = true
+			tlsConfig.VerifyPeers = true
+			tlsConfig.KnownHost = kh
 		}
 	}
 
-	// tls is enabled; figure out its configuration
-	tlsConfig = &types.TLSConfig{Config: tls.Config{}}
-	ctx.Info("tls config created")
+	// always check for the user's known_hosts file
+	if gotil.FileExists(pathConfig.UserDefaultTLSKnownHosts) {
+		newTLS("usrKnownHosts", pathConfig.UserDefaultTLSKnownHosts)
+		f("usrKnownHosts", pathConfig.UserDefaultTLSKnownHosts)
+		tlsConfig.UsrKnownHosts = pathConfig.UserDefaultTLSKnownHosts
+		tlsConfig.VerifyPeers = true
+	}
 
 	if getBool(config, types.ConfigTLSInsecure, roots...) {
-		tlsConfig.InsecureSkipVerify = true
+		newTLS(types.ConfigTLSInsecure, true)
 		f(types.ConfigTLSInsecure, true)
+		tlsConfig.InsecureSkipVerify = true
 	}
 
 	if getBool(config, types.ConfigTLSVerifyPeers, roots...) {
+		newTLS(types.ConfigTLSVerifyPeers, true)
+		f(types.ConfigTLSVerifyPeers, true)
 		tlsConfig.VerifyPeers = true
 		tlsConfig.InsecureSkipVerify = true
-		f(types.ConfigTLSVerifyPeers, true)
 	}
 
-	if getBool(
-		config, types.ConfigTLSClientCertRequired, roots...) {
+	if getBool(config, types.ConfigTLSClientCertRequired, roots...) {
+		newTLS(types.ConfigTLSClientCertRequired, true)
+		f(types.ConfigTLSClientCertRequired, true)
 		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
 		f(types.ConfigTLSClientCertRequired, true)
 	}
 
 	if v := getString(config, types.ConfigTLSServerName, roots...); v != "" {
-		tlsConfig.ServerName = v
+		newTLS(types.ConfigTLSServerName, v)
 		f(types.ConfigTLSServerName, v)
+		tlsConfig.ServerName = v
+	}
+
+	// always check for the system's known_hosts file
+	if err := func() error {
+		if !isSet(config, types.ConfigTLSKnownHosts, roots...) {
+			return nil
+		}
+		khFile := getString(config, types.ConfigTLSKnownHosts, roots...)
+
+		// is the known_hosts file the same as the default known_hosts
+		// file? It's not possible to use os.SameFile as the files may not
+		// yet exist
+		isDefKH := strings.EqualFold(khFile, pathConfig.DefaultTLSKnownHosts)
+
+		if !gotil.FileExists(khFile) {
+			if !isDefKH {
+				return goof.WithFields(map[string]interface{}{
+					"path":        khFile,
+					"defaultPath": pathConfig.DefaultTLSKnownHosts,
+				}, "invalid known_hosts file")
+			}
+			return nil
+		}
+
+		newTLS(types.ConfigTLSKnownHosts, khFile)
+		f(types.ConfigTLSKnownHosts, khFile)
+		tlsConfig.SysKnownHosts = khFile
+		tlsConfig.VerifyPeers = true
+
+		return nil
+	}(); err != nil {
+		return nil, err
+	}
+
+	// always check for the cacerts file
+	if err := func() error {
+		if !isSet(config, types.ConfigTLSTrustedCertsFile, roots...) {
+			return nil
+		}
+
+		caCerts := getString(config, types.ConfigTLSTrustedCertsFile, roots...)
+
+		// is the key file the same as the default cacerts file? It's not
+		// possible to use os.SameFile as the files may not yet exist
+		isDefCA := strings.EqualFold(
+			caCerts, pathConfig.DefaultTLSTrustedRootsFile)
+
+		if !gotil.FileExists(caCerts) {
+			if !isDefCA {
+				return goof.WithField("path", caCerts, "invalid cacerts file")
+			}
+			return nil
+		}
+
+		buf, err := func() ([]byte, error) {
+			f, err := os.Open(caCerts)
+			if err != nil {
+				return nil, goof.WithFieldE(
+					"path", caCerts, "error opening cacerts file", err)
+			}
+			defer f.Close()
+			buf, err := ioutil.ReadAll(f)
+			if err != nil {
+				return nil, goof.WithFieldE(
+					"path", caCerts, "error reading cacerts file", err)
+			}
+			return buf, nil
+		}()
+		if err != nil {
+			return err
+		}
+
+		newTLS(types.ConfigTLSTrustedCertsFile, caCerts)
+		f(types.ConfigTLSTrustedCertsFile, caCerts)
+
+		certPool := x509.NewCertPool()
+		certPool.AppendCertsFromPEM(buf)
+		tlsConfig.RootCAs = certPool
+		tlsConfig.ClientCAs = certPool
+
+		return nil
+	}(); err != nil {
+		return nil, err
+	}
+
+	// always check for the cert and key files
+	if err := func() error {
+		if !isSet(config, types.ConfigTLSKeyFile, roots...) {
+			return nil
+		}
+		keyFile := getString(config, types.ConfigTLSKeyFile, roots...)
+
+		// is the key file the same as the default key file? It's not
+		// possible to use os.SameFile as the files may not yet exist
+		isDefKF := strings.EqualFold(keyFile, pathConfig.DefaultTLSKeyFile)
+
+		if !gotil.FileExists(keyFile) {
+			if !isDefKF {
+				return goof.WithField("path", keyFile, "invalid key file")
+			}
+			return nil
+		}
+
+		crtFile := getString(config, types.ConfigTLSCertFile, roots...)
+
+		// is the cert file the same as the default cert file? It's not
+		// possible to use os.SameFile as the files may not yet exist
+		isDefCF := strings.EqualFold(crtFile, pathConfig.DefaultTLSCertFile)
+
+		if !gotil.FileExists(crtFile) {
+			if !isDefCF {
+				return goof.WithField("path", crtFile, "invalid crt file")
+			}
+			return nil
+		}
+
+		newTLS(types.ConfigTLSKeyFile, keyFile)
+		f(types.ConfigTLSKeyFile, keyFile)
+		f(types.ConfigTLSCertFile, crtFile)
+
+		cer, err := tls.LoadX509KeyPair(crtFile, keyFile)
+		if err != nil {
+			return goof.WithError("error loading x509 pair", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{cer}
+		return nil
+	}(); err != nil {
+		return nil, err
 	}
 
 	return tlsConfig, nil

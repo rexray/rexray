@@ -1,5 +1,5 @@
-hash: ba9fdd955e93fa94a03410e2db04a1b6622757d493eac59bc28608019abc8612
-updated: 2017-04-29T23:55:01.060129102-05:00
+hash: 4a478c781ab4575cf582479cc0409ac554c46e462c840449bde59b2ecd90680f
+updated: 2017-04-30T00:14:49.483228771-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -7,7 +7,7 @@ imports:
   - compute/metadata
   - internal
 - name: github.com/akutz/gofig
-  version: 862741cad5edced279c57d1981e8e3e9fa54e8d5
+  version: 117fb6fcffde87e56f4c79b2a2ff74bae155de67
   subpackages:
   - types
 - name: github.com/akutz/golf

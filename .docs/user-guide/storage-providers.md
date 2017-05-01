@@ -1048,7 +1048,8 @@ azureud:
 * `storageAccessKey` is required, and is a valid access key associated with the
   `storageAccount`.
 * `clientID` is required, and is the UUID of your client, which was created as
-  an App Registration within your Azure active directory account.
+  an App Registration within your Azure active directory account. When creating
+  an App Registration, this ID is shown as the Application ID.
 * `clientSecret` is required if `certPath` is not provided instead. It is a
   valid access key associated with `clientID`, and is managed as part of the App
   Registration.
@@ -1078,6 +1079,9 @@ To activate the Azure UD driver please follow the instructions for
 the driver name.
 
 #### Troubleshooting
+* For help creating App Registrations, the steps in
+  [this guide](https://www.terraform.io/docs/providers/azurerm/index.html#creating-credentials)
+  cover creating a new Registration using the Azure portal and CLI.
 * After creating your app registration, you must go into the
   `Required Permissions` tab and grant access to "Windows Azure Service
   Management API". Choose the delegated permission for accessing as organization

@@ -62,7 +62,7 @@ func newContext(
 			Formatter: log.StandardLogger().Formatter,
 			Hooks:     log.StandardLogger().Hooks,
 			Level:     lvl,
-			Out:       types.Stdout,
+			Out:       types.Stderr,
 		}
 	}
 

@@ -128,6 +128,7 @@ func ParseTLSConfig(
 		newTLS("usrKnownHosts", pathConfig.UserDefaultTLSKnownHosts)
 		f("usrKnownHosts", pathConfig.UserDefaultTLSKnownHosts)
 		tlsConfig.UsrKnownHosts = pathConfig.UserDefaultTLSKnownHosts
+		tlsConfig.InsecureSkipVerify = true
 		tlsConfig.VerifyPeers = true
 	}
 

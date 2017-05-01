@@ -26,6 +26,8 @@ Storage volumes for EC2 instances.
 !!! note
     For backwards compatibility, the driver also registers a storage driver
     named `ec2`. The use of `ec2` in config files is deprecated but functional.
+    The `ec2` driver **will be removed in 0.7.0**, at which point all instances
+    of `ec2` in config files must use `ebs` instead.
 
 !!! note
     The EBS driver does not yet support snapshots or tags, as previously supported

@@ -130,7 +130,7 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 	if logger, ok := s.ctx.Value(context.LoggerKey).(*log.Logger); ok {
 		s.PrintServerStartupHeader(logger.Out)
 	} else {
-		s.PrintServerStartupHeader(types.Stdout)
+		s.PrintServerStartupHeader(types.Stderr)
 	}
 
 	if lvl, err := log.ParseLevel(
@@ -257,7 +257,7 @@ func Serve(
 	if logger, ok := s.ctx.Value(context.LoggerKey).(*log.Logger); ok {
 		s.PrintServerStartupFooter(logger.Out)
 	} else {
-		s.PrintServerStartupFooter(types.Stdout)
+		s.PrintServerStartupFooter(types.Stderr)
 	}
 
 	return s, errs, nil

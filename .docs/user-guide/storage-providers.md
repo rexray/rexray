@@ -28,8 +28,8 @@ Storage volumes for EC2 instances.
     named `ec2`. The use of `ec2` in config files is deprecated but functional.
 
 !!! note
-    The EBS driver does not yet support snapshots or tags, as previously supported
-    in Rex-Ray v0.3.3.
+    The EBS driver does not yet support snapshots or tags, as previously
+    supported in Rex-Ray v0.3.3.
 
 The EBS driver is made possible by the
 [official Amazon Go AWS SDK](https://github.com/aws/aws-sdk-go.git).
@@ -42,7 +42,7 @@ The EBS driver is made possible by the
 
 #### Configuration
 The following is an example with all possible fields configured.  For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#aws-ebs-examples) section.
 
 ```yaml
 ebs:
@@ -57,14 +57,15 @@ ebs:
 ```
 
 ##### Configuration Notes
-- The `accessKey` and `secretKey` configuration parameters are optional and should
-be used when explicit AWS credentials configuration needs to be provided. EBS driver
-uses official golang AWS SDK library and supports all other ways of providing
-access credentials, like environment variables or instance profile IAM permissions.
+- The `accessKey` and `secretKey` configuration parameters are optional and
+should be used when explicit AWS credentials configuration needs to be provided.
+EBS driver uses official golang AWS SDK library and supports all other ways of
+providing access credentials, like environment variables or instance profile IAM
+ permissions.
 - `region` represents AWS region where EBS volumes should be provisioned.
 See official AWS documentation for list of supported regions.
-<!-- - `tag` is used to partition multiple services within single AWS account and is
-used as prefix for EBS names in format `[tagprefix]/volumeName`. -->
+<!-- - `tag` is used to partition multiple services within single AWS account
+and is used as prefix for EBS names in format `[tagprefix]/volumeName`. -->
 - `maxRetries` is the number of retries that will be made for failed operations
   by the AWS SDK.
 - If the `kmsKeyID` field is specified it will be used as the encryption key for
@@ -92,9 +93,9 @@ volumes that have a specific `ec2 tag`. There is an optional `tag` key in
 for any new volumes or snapshots created. The objects will have a `ec2 tag`
 called `libstroageSet` with a value defined by the configurable `tag`.
 
-For example, if you had a set of hosts you can configure `libstorage` to tag them
-with `prod`, `testing` or `development` each with its own set of volumes and
-snapshots.
+For example, if you had a set of hosts you can configure `libstorage` to tag
+them with `prod`, `testing` or `development` each with its own set of volumes
+and snapshots.
 
 Volumes and snapshots that are accessed directly from `volumeID` can still be
 controlled regardless of the `tag`. -->
@@ -126,11 +127,16 @@ using `ebs` as the driver name.
     - `ec2:ModifyVolumeAttribute`,
     - `ec2:DescribeTags`
 
+<a class="headerlink hiddenanchor" name="aws-ebs-examples"></a>
+
 #### Examples
 Below is a working `config.yml` file that works with AWS EBS.
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: ebs
   server:
     services:
       ebs:
@@ -156,7 +162,7 @@ Systems.
 
 #### Configuration
 The following is an example with all possible fields configured.  For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#aws-efs-examples) section.
 
 ```yaml
 efs:
@@ -175,12 +181,13 @@ efs:
 ```
 
 ##### Configuration Notes
-- The `accessKey` and `secretKey` configuration parameters are optional and should
-be used when explicit AWS credentials configuration needs to be provided. EFS driver
-uses official golang AWS SDK library and supports all other ways of providing
-access credentials, like environment variables or instance profile IAM permissions.
-- `region` represents AWS region where EFS should be provisioned. See official AWS
-documentation for list of supported regions.
+- The `accessKey` and `secretKey` configuration parameters are optional and
+should be used when explicit AWS credentials configuration needs to be provided.
+EFS driver uses official golang AWS SDK library and supports all other ways of
+providing access credentials, like environment variables or instance profile IAM
+ permissions.
+- `region` represents AWS region where EFS should be provisioned. See official
+AWS documentation for list of supported regions.
 - `securityGroups` list of security groups attached to `MountPoint` instances.
 If no security groups are provided the default VPC security group is used.
 - `tag` is used to partition multiple services within single AWS account and is
@@ -213,13 +220,15 @@ good way to figure out if there are other instances in same subnet using
 `MountPoint` that is being detached. There is no charge for `MountPoint`
 so they are removed only once whole volume is deleted.
 
-By default all EFS instances are provisioned as `generalPurpose` performance mode.
-`maxIO` EFS type can be provisioned by providing `maxIO` flag as `volumetype`.
+By default all EFS instances are provisioned as `generalPurpose` performance
+mode. `maxIO` EFS type can be provisioned by providing `maxIO` flag as
+`volumetype`.
 
 Its possible to mount same volume to multiple container on a single EC2 instance
 as well as use single volume across multiple EC2 instances at the same time.
 
-**NOTE**: Each EFS FileSystem can be accessed only from single VPC at the time.
+!!! note
+    Each EFS FileSystem can be accessed only from single VPC at the time.
 
 #### Activating the Driver
 To activate the AWS EFS driver please follow the instructions for
@@ -241,11 +250,16 @@ using `efs` as the driver name.
     - `elasticfilesystem:DescribeFileSystems`
     - `elasticfilesystem:DescribeMountTargets`
 
+<a class="headerlink hiddenanchor" name="aws-efs-examples"></a>
+
 #### Examples
 Below is a working `config.yml` file that works with AWS EFS.
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: efs
   server:
     services:
       efs:
@@ -280,7 +294,7 @@ present on client nodes.
 
 #### Configuration
 The following is an example with all possible fields configured.  For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#aws-s3fs-examples) section.
 
 #### Server-Side Configuration
 ```yaml
@@ -351,11 +365,16 @@ To activate the AWS S3FS driver please follow the instructions for
 [activating storage drivers](./config.md#storage-drivers),
 using `s3fs` as the driver name.
 
+<a class="headerlink hiddenanchor" name="aws-s3fs-examples"></a>
+
 #### Examples
 Below is a working `config.yml` file that works with AWS S3FS.
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: s3fs
   server:
     services:
       s3fs:
@@ -385,7 +404,7 @@ cluster.
 
 #### Configuration
 The following is an example with all possible fields configured. For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#ceph-rbd-examples) section.
 
 ```yaml
 rbd:
@@ -431,12 +450,17 @@ driver name.
   ID, key, and monitors. All configuration must come from `ceph.conf`.
 * Check status of the ceph cluster with `ceph -s` command.
 
+<a class="headerlink hiddenanchor" name="ceph-rbd-examples"></a>
+
 #### Examples
 
 Below is a full `config.yml` that works with RBD
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: rbd
   server:
     services:
       rbd:
@@ -473,7 +497,9 @@ time. Quotas can also be used to ensure that a volume directory doesn't exceed
 a specified size.
 
 #### Configuration
-The following is an example configuration of the Isilon driver.
+The following is an example configuration of the Isilon driver. For a running
+example see the [Examples](./storage-providers.md#dell-emc-isilon-examples)
+section.
 
 ```yaml
 isilon:
@@ -519,11 +545,16 @@ To activate the Isilon driver please follow the instructions for
 [activating storage drivers](./config.md#storage-drivers),
 using `isilon` as the driver name.
 
+<a class="headerlink hiddenanchor" name="dell-emc-isilon-examples"></a>
+
 #### Examples
 Below is a full `config.yml` file that works with Isilon.
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: isilon
   server:
     services:
       isilon:
@@ -583,7 +614,8 @@ libStorage service registry and is used to connect and manage ScaleIO storage.
 
 #### Configuration
 The following is an example with all possible fields configured.  For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#dell-emc-scaleio-examples)
+section.
 
 ```yaml
 scaleio:
@@ -666,11 +698,16 @@ token in return.
 - Please review the gateway log at
 `/opt/emc/scaleio/gateway/logs/catalina.out` for errors.
 
+<a class="headerlink hiddenanchor" name="dell-emc-scaleio-examples"></a>
+
 #### Examples
 Below is a full `config.yml` file that works with ScaleIO.
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: scaelio
   server:
     services:
       scaleio:
@@ -705,8 +742,7 @@ The DigitalOcean block storage driver has the following requirements:
 
 #### Configuration
 The following is an example with all possible fields configured. For a running
-example see the `Examples` section.
-block storage driver:
+example see the [Examples](./storage-providers.md#dobs-examples) section.
 
 ```yaml
 dobs:
@@ -740,11 +776,16 @@ dobs:
     to ensure that the driver must be explicitly configured for access instead
     of detecting a default token that may not be intended for the driver.
 
+<a class="headerlink hiddenanchor" name="dobs-examples"></a>
+
 #### Examples
 Below is a full `config.yml` that works with DOBS
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: dobs
   server:
     services:
       dobs:
@@ -774,7 +815,7 @@ connect and manage thin-provisioned EBS volumes for EC2 instances.
 !!! note
     This version of the FittedCloud driver does not support co-existing with the
     ebs driver on the same host. As a result it also doesn't support optimizing
-    existing EBS volumes.	See the [Examples](#fittedcloud-examples) section
+    existing EBS volumes. See the [Examples](#fittedcloud-examples) section
     below for a running example.
 
 !!! note
@@ -814,7 +855,7 @@ Please refer to FittedCloud
 
 #### Configuration
 The following is an example with all possible fields configured.  For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#fittedcloud-examples) section.
 
 ```yaml
 ebs:
@@ -853,7 +894,13 @@ The following example illustrates how to configured the FittedCloud driver:
 
 ```yaml
 libstorage:
-  service:    fittedcloud
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: fittedcloud
+  server:
+    services:
+      fittedcloud:
+        driver: fittedcloud
 ebs:
   accessKey:  XXXXXXXXXX
   secretKey:  XXXXXXXXXX
@@ -888,7 +935,8 @@ mount Google Compute Engine (GCE) persistent disks with GCE machine instances.
 
 #### Configuration
 The following is an example with all possible fields configured. For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#gce-persistent-disk-examples)
+section.
 
 ```yaml
 gcepd:
@@ -965,11 +1013,16 @@ driver name.
   Account must have the appropriate permissions as described in
   `Configuration Notes`
 
+<a class="headerlink hiddenanchor" name="gce-persistent-disk-examples"></a>
+
 #### Examples
 Below is a full `config.yml` that works with GCE
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: gcepd
   server:
     services:
       gcepd:
@@ -993,8 +1046,8 @@ libstorage:
   details.
 * If running libStorage server in a mode where volume mounts will not be
   performed on the same host where libStorage server is running, it should be
-  possible to use a Service Account without the `Service Account Actor` role, but
-  this has not been tested. Note that if persistent disk mounts are to be
+  possible to use a Service Account without the `Service Account Actor` role,
+  but this has not been tested. Note that if persistent disk mounts are to be
   performed on *any* GCE instances that have a Service Account associated with
   the, the `Service Account Actor` role is required.
 
@@ -1021,7 +1074,7 @@ machines.
 
 #### Configuration
 The following is an example with all possible fields configured. For a running
-example see the `Examples` section.
+example see the [Examples](./storage-providers.md#azure-ud-examples) section.
 
 ```yaml
 azureud:
@@ -1086,16 +1139,21 @@ the driver name.
   going to Subscriptions->Your `subscriptionID`->Access Control (IAM). From
   there, add your app registration as a user, which you will have to search for
   by name. Grant the role of "Owner".
-* You should carefully check that your VM is compatible with the storage account you want
-  to use. For example, if you need Azure Premium storage your machine should be
-  of a compatible size (e.g. DS_V2, FS). For more details see the available VM
-  [sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/virtual-machines-windows-sizes).  
+* You should carefully check that your VM is compatible with the storage account
+  you want to use. For example, if you need Azure Premium storage your machine
+  should be of a compatible size (e.g. DS_V2, FS). For more details see the
+  available VM [sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/virtual-machines-windows-sizes).  
+
+<a class="headerlink hiddenanchor" name="azure-ud-examples"></a>
 
 #### Examples
 Below is a full `config.yml` that works with Azure UD
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: azureud
   server:
     tasks:
       exeTimeout: 120s
@@ -1193,6 +1251,9 @@ Below is a working `config.yml` file that works with VirtualBox.
 
 ```yaml
 libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: virtualbox
   server:
     services:
       virtualbox:

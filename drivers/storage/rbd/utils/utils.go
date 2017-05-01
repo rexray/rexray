@@ -61,24 +61,9 @@ type RBDInfo struct {
 func GetRadosPools(ctx types.Context) ([]*string, error) {
 
 	cmd := exec.Command(radosCmd, "lspools")
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  radosCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	out, err := cmd.Output()
+	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to get pools")
-			return nil,
-				goof.Newf("Unable to get pools: %s", stderr)
-		}
-		return nil, goof.WithError("Unable to get pools", err)
+		return nil, goof.WithError("unable to get pools", err)
 	}
 
 	var pools []string
@@ -94,28 +79,14 @@ func GetRadosPools(ctx types.Context) ([]*string, error) {
 }
 
 //GetRBDImages returns a slice of RBD image info
-func GetRBDImages(ctx types.Context, pool *string) ([]*RBDImage, error) {
+func GetRBDImages(
+	ctx types.Context,
+	pool *string) ([]*RBDImage, error) {
 
 	cmd := exec.Command(rbdCmd, "ls", "-p", *pool, "-l", formatOpt, jsonArg)
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	out, err := cmd.Output()
+	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to get rbd images")
-			return nil,
-				goof.Newf("Unable to get rbd images: %s",
-					stderr)
-		}
-		return nil, goof.WithError("Unable to get rbd images", err)
+		return nil, goof.WithError("unable to get rbd images", err)
 	}
 
 	var rbdList []*RBDImage
@@ -123,7 +94,7 @@ func GetRBDImages(ctx types.Context, pool *string) ([]*RBDImage, error) {
 	err = json.Unmarshal(out, &rbdList)
 	if err != nil {
 		return nil, goof.WithError(
-			"Unable to parse rbd ls", err)
+			"unable to parse rbd ls", err)
 	}
 
 	for _, info := range rbdList {
@@ -139,35 +110,17 @@ func GetRBDInfo(
 	pool *string,
 	name *string) (*RBDInfo, error) {
 
+	ignoreCode := 2
+
 	cmd := exec.Command(
 		rbdCmd, "info", "-p", *pool, *name, formatOpt, jsonArg)
-
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	out, err := cmd.Output()
-
+	out, status, err := RunCommand(ctx, cmd, ignoreCode)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				if status.ExitStatus() == 2 {
-					// image does not exist
-					return nil, nil
-				}
-			}
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to get rbd info")
-			return nil,
-				goof.Newf("Unable to get rbd info: %s",
-					stderr)
+		if status == ignoreCode {
+			// image does not exist
+			return nil, nil
 		}
-		return nil, goof.WithError("Unable to get rbd info", err)
+		return nil, goof.WithError("unable to get rbd info", err)
 	}
 
 	info := &RBDInfo{}
@@ -195,26 +148,9 @@ func GetMappedRBDs(ctx types.Context) (map[string]string, error) {
 
 	cmd := exec.Command(
 		rbdCmd, "showmapped", formatOpt, jsonArg)
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	out, err := cmd.Output()
-
+	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to get rbd map")
-			return nil,
-				goof.Newf("Unable to get RBD map: %s",
-					stderr)
-		}
-		return nil, goof.WithError("Unable to get RBD map", err)
+		return nil, goof.WithError("unable to get rbd map", err)
 	}
 
 	devMap := map[string]string{}
@@ -223,7 +159,7 @@ func GetMappedRBDs(ctx types.Context) (map[string]string, error) {
 	err = json.Unmarshal(out, &rbdMap)
 	if err != nil {
 		return nil, goof.WithError(
-			"Unable to parse rbd showmapped", err)
+			"unable to parse rbd showmapped", err)
 	}
 
 	for _, mapped := range rbdMap {
@@ -255,81 +191,39 @@ func RBDCreate(
 	}
 
 	cmd.Args = append(cmd.Args, *image)
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	err := cmd.Run()
-
+	_, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to create RBD")
-			return goof.Newf("Unable to create RBD: %s",
-				stderr)
-		}
-		return goof.WithError("Unable to create RBD", err)
+		return goof.WithError("unable to create rbd", err)
 	}
 
 	return nil
 }
 
 //RBDRemove deletes the RBD volume on the cluster
-func RBDRemove(ctx types.Context, pool *string, image *string) error {
+func RBDRemove(
+	ctx types.Context,
+	pool *string,
+	image *string) error {
+
 	cmd := exec.Command(rbdCmd, "rm", poolOpt, *pool, "--no-progress",
 		*image,
 	)
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	err := cmd.Run()
+	_, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to delete RBD")
-			return goof.Newf("Error deleting RBD: %s",
-				stderr)
-		}
-		return goof.WithError("Error deleting RBD", err)
+		return goof.WithError("unable to delete rbd", err)
 	}
-
 	return nil
 }
 
 //RBDMap attaches the given RBD image to the *local* host
-func RBDMap(ctx types.Context, pool, image *string) (string, error) {
+func RBDMap(
+	ctx types.Context,
+	pool, image *string) (string, error) {
 
 	cmd := exec.Command(rbdCmd, "map", poolOpt, *pool, *image)
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	out, err := cmd.Output()
+	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to map RBD")
-			return "",
-				goof.Newf("Unable to map RBD: %s",
-					stderr)
-		}
-		return "", goof.WithError("Unable to map RBD", err)
+		return "", goof.WithError("unable to map rbd", err)
 	}
 
 	return strings.TrimSpace(string(out)), nil
@@ -339,24 +233,9 @@ func RBDMap(ctx types.Context, pool, image *string) (string, error) {
 func RBDUnmap(ctx types.Context, device *string) error {
 
 	cmd := exec.Command(rbdCmd, "unmap", *device)
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	err := cmd.Run()
+	_, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to unmap RBD")
-			return goof.Newf("Unable to unmap RBD: %s",
-				stderr)
-		}
-		return goof.WithError("Unable to unmap RBD", err)
+		return goof.WithError("unable to unmap rbd", err)
 	}
 
 	return nil
@@ -370,24 +249,9 @@ func GetRBDStatus(
 	cmd := exec.Command(
 		rbdCmd, "status", poolOpt, *pool, *image, formatOpt, jsonArg,
 	)
-	ctx.WithFields(map[string]interface{}{
-		"cmd":  rbdCmd,
-		"args": cmd.Args,
-	}).Debug("running command")
-
-	out, err := cmd.Output()
+	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			stderr := string(exiterr.Stderr)
-			ctx.WithError(
-				exiterr,
-			).WithField(
-				"stderr", stderr,
-			).Error("Unable to get RBD status")
-			return nil, goof.Newf("Unable to get RBD status: %s",
-				stderr)
-		}
-		return nil, goof.WithError("Unable to get RBD status", err)
+		return nil, goof.WithError("unable to get rbd status", err)
 	}
 
 	watcherMap := map[string]interface{}{}
@@ -488,4 +352,56 @@ func hasPort(addr string) bool {
 		return ipv6wPortRX.MatchString(addr)
 	}
 	return strings.Contains(addr, ":")
+}
+
+// RunCommand run the given command, taking care of proper logging
+func RunCommand(
+	ctx types.Context,
+	cmd *exec.Cmd,
+	ignoreCodes ...int) ([]byte, int, error) {
+
+	ctx.WithField("args", cmd.Args).Debug("running command")
+
+	out, err := cmd.Output()
+	if err == nil {
+		return out, 0, nil
+	}
+
+	exitStatus := -1
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		stderr := string(exiterr.Stderr)
+		errRet := goof.Newf("Error running command: %s", stderr)
+		supMsg := "ignoring error due to matched return code"
+		fields := map[string]interface{}{
+			"args":   cmd.Args,
+			"stderr": stderr,
+		}
+
+		if ws, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+			exitStatus = ws.ExitStatus()
+			if len(ignoreCodes) > 0 {
+				for _, rc := range ignoreCodes {
+					if exitStatus == rc {
+						fields["exitcode"] = rc
+						ctx.WithFields(
+							fields).Debug(
+							supMsg,
+						)
+						return nil,
+							exitStatus,
+							errRet
+					}
+				}
+			}
+		}
+
+		ctx.WithError(
+			exiterr,
+		).WithFields(fields).Error("Error running command")
+
+		return nil,
+			exitStatus,
+			errRet
+	}
+	return nil, exitStatus, goof.Newe(err)
 }

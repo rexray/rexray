@@ -87,8 +87,9 @@ func (e *ErrSecTokInvalid) Error() string {
 // verifying the remote peer's certificate against a list of known host
 // signatures.
 type ErrKnownHost struct {
-	// PeerHost is the remote peer's host name.
-	PeerHost string
+	// HostName is the name of the host to which the connection was
+	// attempted.
+	HostName string
 
 	// PeerAlg is algorithm used to calculate the remote peer's fingerprint.
 	PeerAlg string
@@ -98,20 +99,28 @@ type ErrKnownHost struct {
 }
 
 func (e *ErrKnownHost) Error() string {
-	return "error verifying the remote peer is a known host"
+	return "known host verification failed"
 }
 
-// GetPeerHost returns the value of PeerHost.
-func (e *ErrKnownHost) GetPeerHost() string {
-	return e.PeerHost
+// ErrKnownHostConflict occurs when the client's TLS dialer encounters
+// an existing known host entry for the targeted host name but with a
+// different signature than the one being presented by the remote peer.
+type ErrKnownHostConflict struct {
+	// HostName is the name of the host to which the connection was
+	// attempted.
+	HostName string
+
+	// KnownHostName is the name of the known host with an associated
+	// fingerprint that matches that of the remote peer.
+	KnownHostName string
+
+	// PeerAlg is algorithm used to calculate the remote peer's fingerprint.
+	PeerAlg string
+
+	// PeerFingerprint is the remote peer's fingerprint.
+	PeerFingerprint []byte
 }
 
-// GetPeerAlg returns the value of PeerAlg.
-func (e *ErrKnownHost) GetPeerAlg() string {
-	return e.PeerAlg
-}
-
-// GetPeerFingerprint returns the value of PeerFingerprint.
-func (e *ErrKnownHost) GetPeerFingerprint() []byte {
-	return e.PeerFingerprint
+func (e *ErrKnownHostConflict) Error() string {
+	return "known host signature has changed"
 }

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -130,31 +131,6 @@ func ParseTLSConfig(
 		tlsConfig.UsrKnownHosts = pathConfig.UserDefaultTLSKnownHosts
 		tlsConfig.InsecureSkipVerify = true
 		tlsConfig.VerifyPeers = true
-	}
-
-	if getBool(config, types.ConfigTLSInsecure, roots...) {
-		newTLS(types.ConfigTLSInsecure, true)
-		f(types.ConfigTLSInsecure, true)
-		tlsConfig.InsecureSkipVerify = true
-	}
-
-	if getBool(config, types.ConfigTLSVerifyPeers, roots...) {
-		newTLS(types.ConfigTLSVerifyPeers, true)
-		f(types.ConfigTLSVerifyPeers, true)
-		tlsConfig.VerifyPeers = true
-		tlsConfig.InsecureSkipVerify = true
-	}
-
-	if getBool(config, types.ConfigTLSClientCertRequired, roots...) {
-		newTLS(types.ConfigTLSClientCertRequired, true)
-		f(types.ConfigTLSClientCertRequired, true)
-		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
-	}
-
-	if v := getString(config, types.ConfigTLSServerName, roots...); v != "" {
-		newTLS(types.ConfigTLSServerName, v)
-		f(types.ConfigTLSServerName, v)
-		tlsConfig.ServerName = v
 	}
 
 	// always check for the system's known_hosts file
@@ -284,6 +260,48 @@ func ParseTLSConfig(
 		return nil
 	}(); err != nil {
 		return nil, err
+	}
+
+	if v := getString(
+		config,
+		types.ConfigTLSInsecure, roots...); v != "" {
+
+		bv, _ := strconv.ParseBool(v)
+		newTLS(types.ConfigTLSInsecure, bv)
+		f(types.ConfigTLSInsecure, bv)
+		tlsConfig.InsecureSkipVerify = bv
+	}
+
+	if v := getString(
+		config,
+		types.ConfigTLSVerifyPeers, roots...); v != "" {
+
+		bv, _ := strconv.ParseBool(v)
+		newTLS(types.ConfigTLSVerifyPeers, bv)
+		f(types.ConfigTLSVerifyPeers, bv)
+		tlsConfig.VerifyPeers = bv
+		tlsConfig.InsecureSkipVerify = bv
+	}
+
+	if v := getString(
+		config,
+		types.ConfigTLSClientCertRequired, roots...); v != "" {
+
+		bv, _ := strconv.ParseBool(v)
+		newTLS(types.ConfigTLSClientCertRequired, bv)
+		f(types.ConfigTLSClientCertRequired, bv)
+		if bv {
+			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+		}
+	}
+
+	if v := getString(
+		config,
+		types.ConfigTLSServerName, roots...); v != "" {
+
+		newTLS(types.ConfigTLSServerName, v)
+		f(types.ConfigTLSServerName, v)
+		tlsConfig.ServerName = v
 	}
 
 	return tlsConfig, nil

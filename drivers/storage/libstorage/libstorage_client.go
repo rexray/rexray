@@ -92,12 +92,21 @@ func (c *client) dial(ctx types.Context) error {
 	return nil
 }
 
-func getHost(proto, lAddr string, tlsConfig *types.TLSConfig) string {
+func getHost(
+	ctx types.Context,
+	proto, lAddr string, tlsConfig *types.TLSConfig) string {
+
 	if tlsConfig != nil && tlsConfig.ServerName != "" {
+		ctx.WithField("getHost", tlsConfig.ServerName).Debug(
+			`getHost tlsConfig != nil && tlsConfig.ServerName != ""`)
 		return tlsConfig.ServerName
 	} else if proto == "unix" {
+		ctx.WithField("getHost", "libstorage-server").Debug(
+			`getHost proto == "unix"`)
 		return "libstorage-server"
 	} else {
+		ctx.WithField("getHost", lAddr).Debug(
+			`getHost lAddr`)
 		return lAddr
 	}
 }

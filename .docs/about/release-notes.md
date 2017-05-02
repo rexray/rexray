@@ -28,6 +28,30 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.9.0 (2017/05/03)
+This release introduces support for the Cinder storage driver and
+multiple security-related enhancements, including default-to-TLS for
+libStorage client/server communications, and service-scoped
+authentication!
+
+### New Features
+* Client Token Authentication [#475](https://github.com/codedellemc/libstorage/issues/475)
+* Cinder storage driver [#182](https://github.com/codedellemc/libstorage/issues/182)
+* Allow customization of default paths [#509](https://github.com/codedellemc/libstorage/pull/509)
+* TLS Known Hosts support [#510](https://github.com/codedellemc/libstorage/pull/510)
+
+### Bug Fixes
+* Return HTTP status 400 instead of 500 when attachment mask requires InstanceID or LocalDevices header and it is missing [#352](https://github.com/codedellemc/libstorage/issues/352)
+* Make sure all drivers return error if VolumeInspect doesn't find volume [#396](https://github.com/codedellemc/libstorage/issues/396)
+* Ensure all drivers reject size 0 volume creation [#459](https://github.com/codedellemc/libstorage/issues/459)
+* Prevent possible endless loops in drivers when underlying API does not respond [#480](https://github.com/codedellemc/libstorage/issues/480)
+* Standardize log levels across libStorage client and server [#521](https://github.com/codedellemc/libstorage/pull/521)
+
+### Enhancements
+* Digital Ocean Block Storage driver now supports client/server topology [#432](https://github.com/codedellemc/libstorage/issues/432)
+* Improve error reporting [#504](https://github.com/codedellemc/libstorage/pull/504), [#128](https://github.com/codedellemc/libstorage/issues/128)
+* Improve driver config examples [#531](https://github.com/codedellemc/libstorage/issues/531)
+
 ## Version 0.8.2 (2017/03/28)
 This is a minor release with some bug fixes, enhancements, and simplified
 support for TLS.

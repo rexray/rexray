@@ -5,6 +5,7 @@ package remote
 import (
 	// import to load
 	_ "github.com/codedellemc/libstorage/drivers/storage/azureud/storage"
+	_ "github.com/codedellemc/libstorage/drivers/storage/cinder/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/dobs/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/ebs/storage"
 	_ "github.com/codedellemc/libstorage/drivers/storage/efs/storage"

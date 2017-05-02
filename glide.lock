@@ -1,5 +1,5 @@
-hash: 88231e5eeb06fba6c2357cac76ec831f0f83177aee5838eafd7b76a94d4bb3aa
-updated: 2017-05-01T17:04:46.259941056-05:00
+hash: ad1f16c2be9f1cff325bebd259ed0d597920477fb886e08cf0d81bf762be5c7c
+updated: 2017-05-01T20:54:59.309297675-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -117,6 +117,21 @@ imports:
   - query
 - name: github.com/googleapis/gax-go
   version: da06d194a00e19ce00d9011a13931c3f6f6887c7
+- name: github.com/gophercloud/gophercloud
+  version: 9a5595b8ffe429439c63781cdc312c254e4ad990
+  subpackages:
+  - openstack
+  - openstack/blockstorage/extensions/volumeactions
+  - openstack/blockstorage/v1/snapshots
+  - openstack/blockstorage/v1/volumes
+  - openstack/blockstorage/v2/volumes
+  - openstack/compute/v2/extensions/volumeattach
+  - openstack/identity/v2/tenants
+  - openstack/identity/v2/tokens
+  - openstack/identity/v3/extensions/trusts
+  - openstack/identity/v3/tokens
+  - openstack/utils
+  - pagination
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux

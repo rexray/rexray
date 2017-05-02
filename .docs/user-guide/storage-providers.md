@@ -485,6 +485,61 @@ libstorage:
   attached to another node. Mounting and writing to such a volume could lead to
   data corruption.
 
+## Cinder
+The Cinder driver registers a storage driver named `cinder` with the
+`libStorage` driver manager and is used to connect and manage storage on
+Cinder-compatible instances, such as OpenStack.
+
+### Configuration
+The following is an example configuration of the OpenStack driver.
+
+```yaml
+cinder:
+  authURL:              https://domain.com/openstack
+  userID:               0
+  userName:             myusername
+  password:             mypassword
+  tenantID:             0
+  tenantName:           customer
+  domainID:             0
+  domainName:           corp
+  regionName:           USNW
+  availabilityZoneName: Gold
+```
+
+#### Configuration Notes
+- `regionName` is optional, it should be empty if you only have one region.
+- `availabilityZoneName` is optional, the volume will be created in the default
+availability zone if not specified.
+
+For information on the equivalent environment variable and CLI flag names
+please see the section on how non top-level configuration properties are
+[transformed](./config.md#configuration-properties).
+
+### Activating the Driver
+To activate the Cinder driver please follow the instructions for
+[activating storage drivers](./config.md#storage-drivers),
+using `cinder` as the driver name.
+
+### Examples
+Below is a full `config.yml` file that works with Cinder.
+
+```yaml
+libstorage:
+  # The libstorage.service property directs a libStorage client to direct its
+  # requests to the given service by default. It is not used by the server.
+  service: cinder
+  server:
+    services:
+      cinder:
+        driver: cinder
+cinder:
+  authUrl: https://keystoneHost:35357/v2.0/
+  username: username
+  password: password
+  tenantName: tenantName
+```
+
 ## Dell EMC
 libStorage includes support for several Dell EMC storage platforms.
 
@@ -1182,6 +1237,7 @@ libstorage:
 * Good resources for reading about disks in Azure are
   [here](https://docs.microsoft.com/en-us/azure/storage/storage-standard-storage)
   and [here](https://docs.microsoft.com/en-us/azure/storage/storage-about-disks-and-vhds-linux).
+
 
 ## VirtualBox
 The VirtualBox driver registers a storage driver named `virtualbox` with the

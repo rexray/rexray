@@ -5,6 +5,7 @@ package executors
 import (
 	// load the storage executors
 	_ "github.com/codedellemc/libstorage/drivers/storage/azureud/executor"
+	_ "github.com/codedellemc/libstorage/drivers/storage/cinder/executor"
 	_ "github.com/codedellemc/libstorage/drivers/storage/dobs/executor"
 	_ "github.com/codedellemc/libstorage/drivers/storage/ebs/executor"
 	_ "github.com/codedellemc/libstorage/drivers/storage/efs/executor"

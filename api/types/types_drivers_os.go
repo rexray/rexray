@@ -7,6 +7,7 @@ type NewOSDriver func() OSDriver
 type DeviceMountOpts struct {
 	MountOptions string
 	MountLabel   string
+	FsType       string
 	Opts         Store
 }
 

@@ -88,6 +88,10 @@ import:
     version: 96a0db67ea8209453cfa694bdf03de202d6dd8f8
     repo:    https://github.com/codenrhoden/go-vhd
 
+### Cinder
+  - package: github.com/gophercloud/gophercloud
+    ref:     9a5595b8ffe429439c63781cdc312c254e4ad990
+
 
 ################################################################################
 ##                             Build System Tools                             ##

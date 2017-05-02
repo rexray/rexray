@@ -1143,6 +1143,13 @@ test-rbd-clean:
 test-vfs:
 	DRIVERS=vfs $(MAKE) ./drivers/storage/vfs/tests/vfs.test
 
+test-cinder:
+	DRIVERS=cinder $(MAKE) deps
+	DRIVERS=cinder $(MAKE) ./drivers/storage/cinder/tests/cinder.test
+
+test-cinder-clean:
+	DRIVERS=cinder $(MAKE) clean
+
 clean: $(GO_CLEAN)
 
 clobber: clean $(GO_CLOBBER)

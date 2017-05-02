@@ -77,7 +77,7 @@ import:
 
 ### DigitalOcean
   - package: github.com/digitalocean/godo
-    version: v1.0.0
+    version: 83908b1ddd666d08a9b020c697b55ae3895be2fd
 
 ### Azure
   - package: github.com/Azure/azure-sdk-for-go

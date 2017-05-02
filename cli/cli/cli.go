@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -149,6 +150,9 @@ type CLI struct {
 	encryptionKey           string
 	idempotent              bool
 	scriptPath              string
+	serverCertFile          string
+	serverKeyFile           string
+	serverCAFile            string
 }
 
 const (
@@ -364,6 +368,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 			c.ctx.WithField("cmd", cmd.Name()).Debug(
 				"creating libStorage client")
 			c.r, err = util.NewClient(c.ctx, c.config)
+			err = c.handleKnownHostsError(err)
 		}
 
 		if err != nil {
@@ -452,6 +457,82 @@ func (c *CLI) logLevel() string {
 	return c.config.GetString("rexray.logLevel")
 }
 
+// handles the known_hosts error,
+// if error is ErrKnownHosts, stop execution to prevent unstable state
+func (c *CLI) handleKnownHostsError(err error) error {
+	if err == nil {
+		return nil
+	}
+	urlErr, ok := err.(*url.Error)
+	if !ok {
+		return err
+	}
+
+	var khErr *apitypes.ErrKnownHost
+	var khConflictErr *apitypes.ErrKnownHostConflict
+	switch err := urlErr.Err.(type) {
+	case *apitypes.ErrKnownHost:
+		khErr = err
+	case *apitypes.ErrKnownHostConflict:
+		khConflictErr = err
+	}
+
+	if khErr == nil && khConflictErr == nil {
+		return err
+	}
+
+	pathConfig := context.MustPathConfig(c.ctx)
+	knownHostPath := pathConfig.UserDefaultTLSKnownHosts
+
+	if khConflictErr != nil {
+		// it's an ErrKnownHostConflict
+		fmt.Fprintf(
+			os.Stderr,
+			hostKeyCheckFailedFormat,
+			khConflictErr.PeerFingerprint,
+			knownHostPath,
+			khConflictErr.KnownHostName)
+		os.Exit(1)
+	}
+
+	// it's an ErrKnownHost
+
+	if !util.AssertTrustedHost(
+		c.ctx,
+		khErr.HostName,
+		khErr.PeerAlg,
+		khErr.PeerFingerprint) {
+		fmt.Fprintln(
+			os.Stderr,
+			"Aborting request, remote host not trusted.")
+		os.Exit(1)
+	}
+
+	if err := util.AddKnownHost(
+		c.ctx,
+		knownHostPath,
+		khErr.HostName,
+		khErr.PeerAlg,
+		khErr.PeerFingerprint,
+	); err == nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"Permanently added host %s to known_hosts file %s\n",
+			khErr.HostName, knownHostPath)
+		fmt.Fprintln(
+			os.Stderr,
+			"It is safe to retry your last rexray command.")
+	} else {
+		fmt.Fprintf(
+			os.Stderr,
+			"Failed to add entry to known_hosts file: %v",
+			err)
+	}
+
+	os.Exit(1) // do not continue
+	return nil
+}
+
 func store() apitypes.Store {
 	return apiutils.NewStore()
 }
@@ -462,3 +543,18 @@ func checkOpPerms(op string) error {
 	//}
 	return nil
 }
+
+const hostKeyCheckFailedFormat = `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that the RSA host key has just been changed.
+The fingerprint for the RSA key sent by the remote host is
+%[1]x.
+Please contact your system administrator.
+Add correct host key in %[2]s to get rid of this message.
+Offending key in %[2]s
+RSA host key for %[3]s has changed and you have requested strict checking.
+Host key verification failed.
+`

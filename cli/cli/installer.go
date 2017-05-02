@@ -14,7 +14,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
-
 	"github.com/codedellemc/rexray/util"
 )
 

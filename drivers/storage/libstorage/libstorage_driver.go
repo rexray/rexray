@@ -68,10 +68,15 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
-	tlsConfig, err := utils.ParseTLSConfig(
-		d.ctx, config, logFields, types.ConfigClient)
-	if err != nil {
-		return err
+	var tlsConfig *types.TLSConfig
+
+	// disable TLS for UNIX sockets
+	if !strings.EqualFold(proto, "unix") {
+		tlsConfig, err = utils.ParseTLSConfig(
+			d.ctx, config, logFields, types.ConfigClient)
+		if err != nil {
+			return err
+		}
 	}
 
 	host := getHost(d.ctx, proto, lAddr, tlsConfig)
@@ -86,6 +91,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 	httpTransport := &http.Transport{
 		Dial: func(string, string) (net.Conn, error) {
+
 			if tlsConfig == nil {
 				conn, err := net.Dial(proto, lAddr)
 				if err != nil {

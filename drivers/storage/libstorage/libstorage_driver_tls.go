@@ -18,6 +18,7 @@ var errServerFingerprint = errors.New("invalid server fingerprint")
 
 func verifyKnownHost(
 	ctx types.Context,
+	host string,
 	peerCerts []*x509.Certificate,
 	knownHost *types.TLSKnownHost) (bool, error) {
 
@@ -25,34 +26,12 @@ func verifyKnownHost(
 		return false, nil
 	}
 
-	expectedFP := hex.EncodeToString(knownHost.Fingerprint)
-	for _, cert := range peerCerts {
-		h := sha256.New()
-		h.Write(cert.Raw)
-		certFP := h.Sum(nil)
-		actualFP := hex.EncodeToString(certFP)
-		ctx.WithFields(map[string]interface{}{
-			"actualFingerprint":   actualFP,
-			"expectedFingerprint": expectedFP,
-			"actualHost":          cert.Subject.CommonName,
-			"expectedHost":        knownHost.Host,
-		}).Debug("comparing tls known host information")
-		if bytes.EqualFold(knownHost.Fingerprint, certFP) &&
-			strings.EqualFold(knownHost.Host, cert.Subject.CommonName) {
-			ctx.WithFields(map[string]interface{}{
-				"actualFingerprint":   actualFP,
-				"expectedFingerprint": expectedFP,
-				"actualHost":          cert.Subject.CommonName,
-				"expectedHost":        knownHost.Host,
-			}).Debug("matched tls known host information")
-			return true, nil
-		}
-	}
-	return false, newErrKnownHost(peerCerts)
+	return verifyPeerCerts(ctx, host, knownHost, peerCerts)
 }
 
 func verifyKnownHostFiles(
 	ctx types.Context,
+	host string,
 	peerCerts []*x509.Certificate,
 	usrKnownHostsFilePath,
 	sysKnownHostsFilePath string) (bool, error) {
@@ -62,7 +41,8 @@ func verifyKnownHostFiles(
 	}
 
 	if len(usrKnownHostsFilePath) > 0 {
-		ok, err := verifyKnownHostsFile(ctx, peerCerts, usrKnownHostsFilePath)
+		ok, err := verifyKnownHostsFile(
+			ctx, host, peerCerts, usrKnownHostsFilePath)
 		if ok {
 			return true, nil
 		}
@@ -72,14 +52,16 @@ func verifyKnownHostFiles(
 	}
 
 	if len(sysKnownHostsFilePath) > 0 {
-		return verifyKnownHostsFile(ctx, peerCerts, sysKnownHostsFilePath)
+		return verifyKnownHostsFile(
+			ctx, host, peerCerts, sysKnownHostsFilePath)
 	}
 
-	return false, newErrKnownHost(peerCerts)
+	return false, newErrKnownHost(host, peerCerts)
 }
 
 func verifyKnownHostsFile(
 	ctx types.Context,
+	host string,
 	peerCerts []*x509.Certificate,
 	knownHostsFilePath string) (bool, error) {
 
@@ -109,42 +91,78 @@ func verifyKnownHostsFile(
 		if kh == nil {
 			continue
 		}
-		expectedFP := hex.EncodeToString(kh.Fingerprint)
-		for _, cert := range peerCerts {
-			h := sha256.New()
-			h.Write(cert.Raw)
-			certFP := h.Sum(nil)
-			actualFP := hex.EncodeToString(certFP)
-			ctx.WithFields(map[string]interface{}{
-				"actualFingerprint":   actualFP,
-				"expectedFingerprint": expectedFP,
-				"actualHost":          cert.Subject.CommonName,
-				"expectedHost":        kh.Host,
-			}).Debug("comparing tls known host information")
-			if bytes.EqualFold(kh.Fingerprint, certFP) &&
-				strings.EqualFold(kh.Host, cert.Subject.CommonName) {
-				ctx.WithFields(map[string]interface{}{
-					"actualFingerprint":   actualFP,
-					"expectedFingerprint": expectedFP,
-					"actualHost":          cert.Subject.CommonName,
-					"expectedHost":        kh.Host,
-				}).Debug("matched tls known host information")
-				return true, nil
-			}
+		ok, err := verifyPeerCerts(ctx, host, kh, peerCerts)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
 		}
 	}
 
-	return false, newErrKnownHost(peerCerts)
+	return false, newErrKnownHost(host, peerCerts)
 }
 
-func newErrKnownHost(peerCerts []*x509.Certificate) error {
-	err := &types.ErrKnownHost{}
+func verifyPeerCerts(
+	ctx types.Context,
+	host string,
+	knownHost *types.TLSKnownHost,
+	peerCerts []*x509.Certificate) (bool, error) {
+
+	szExpectedFP := hex.EncodeToString(knownHost.Fingerprint)
+
+	for _, cert := range peerCerts {
+		h := sha256.New()
+		h.Write(cert.Raw)
+		certFP := h.Sum(nil)
+
+		szActualFP := hex.EncodeToString(certFP)
+
+		logFields := map[string]interface{}{
+			"actualFingerprint":   szActualFP,
+			"expectedFingerprint": szExpectedFP,
+			"actualHost":          host,
+			"expectedHost":        knownHost.Host,
+		}
+
+		ctx.WithFields(logFields).Debug(
+			"comparing tls known host information")
+
+		// are the fingerprints equal?
+		if bytes.EqualFold(knownHost.Fingerprint, certFP) {
+
+			// if the targeted host equals the saved, known host name
+			// then this is a validated known host
+			if strings.EqualFold(host, knownHost.Host) {
+				ctx.WithFields(logFields).Debug(
+					"matched tls known host information")
+				return true, nil
+			}
+
+			// the targeted host does not equal the saved, known host
+			// name which has an associated signature that matches
+			// the remote, peer's signature. this means there is a
+			// possible mitm attack where a remote host has usurped
+			// another host's identity
+			ctx.WithFields(logFields).Error(
+				"known host conflict has occurred")
+
+			return false, newErrKnownHostConflict(host, knownHost)
+		}
+	}
+
+	return false, newErrKnownHost(host, peerCerts)
+}
+
+func newErrKnownHost(host string, peerCerts []*x509.Certificate) error {
+	err := &types.ErrKnownHost{
+		HostName: host,
+	}
 
 	if len(peerCerts) == 0 {
 		return err
 	}
 
-	err.PeerHost = peerCerts[0].Subject.CommonName
 	err.PeerAlg = "sha256"
 
 	h := sha256.New()
@@ -152,4 +170,16 @@ func newErrKnownHost(peerCerts []*x509.Certificate) error {
 	err.PeerFingerprint = h.Sum(nil)
 
 	return err
+}
+
+func newErrKnownHostConflict(
+	host string,
+	knownHost *types.TLSKnownHost) error {
+
+	return &types.ErrKnownHostConflict{
+		HostName:        host,
+		KnownHostName:   knownHost.Host,
+		PeerAlg:         knownHost.Alg,
+		PeerFingerprint: knownHost.Fingerprint,
+	}
 }

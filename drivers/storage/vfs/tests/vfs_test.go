@@ -123,7 +123,7 @@ test:
 			t.FailNow()
 		}
 		terr := uerr.Err.(*types.ErrKnownHost)
-		if !assert.Equal(t, host, terr.PeerHost) {
+		if !assert.Equal(t, "127.0.0.1", terr.HostName) {
 			t.FailNow()
 		}
 		if !assert.Equal(t, alg, terr.PeerAlg) {
@@ -141,7 +141,7 @@ test:
 		tCtx, t, oce, vfs.Name, buf.Bytes(), tf)
 }
 
-func TestClientKnownHostInvalidHost(t *testing.T) {
+func TestClientKnownHostConflict(t *testing.T) {
 	tcpTLSPeersTest, _ := strconv.ParseBool(
 		os.Getenv("LIBSTORAGE_TEST_TCP_TLS_PEERS"))
 	if !tcpTLSPeersTest {
@@ -190,10 +190,10 @@ test:
 			t.FailNow()
 		}
 		uerr := err.(*url.Error)
-		if !assert.IsType(t, &types.ErrKnownHost{}, uerr.Err) {
+		if !assert.IsType(t, &types.ErrKnownHostConflict{}, uerr.Err) {
 			t.FailNow()
 		}
-		terr := uerr.Err.(*types.ErrKnownHost)
+		terr := uerr.Err.(*types.ErrKnownHostConflict)
 		if !assert.Equal(t, alg, terr.PeerAlg) {
 			t.FailNow()
 		}
@@ -203,7 +203,10 @@ test:
 				hex.EncodeToString(terr.PeerFingerprint))) {
 			t.FailNow()
 		}
-		if !assert.NotEqual(t, host, terr.PeerHost) {
+		if !assert.Equal(t, "127.0.0.1", terr.HostName) {
+			t.FailNow()
+		}
+		if !assert.Equal(t, host, terr.KnownHostName) {
 			t.FailNow()
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -73,12 +74,12 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
-	host := getHost(proto, lAddr, tlsConfig)
+	host := getHost(d.ctx, proto, lAddr, tlsConfig)
 	lsxPath := config.GetString(types.ConfigExecutorPath)
 	cliType := types.ParseClientType(config.GetString(types.ConfigClientType))
 	disableKeepAlive := config.GetBool(types.ConfigHTTPDisableKeepAlive)
 
-	logFields["host"] = host
+	logFields["lAddr"] = host
 	logFields["lsxPath"] = lsxPath
 	logFields["clientType"] = cliType
 	logFields["disableKeepAlive"] = disableKeepAlive
@@ -104,10 +105,20 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 				return conn, nil
 			}
 
+			const errMatch = "error matching peer fingerprint"
+
+			// get the fqdn/IP of the endpoint to which the connection
+			// is being made in case an ErrKnownHost error occurs
+			hostSansPort := lAddr
+			if hostParts := strings.Split(lAddr, ":"); len(hostParts) > 1 {
+				hostSansPort = hostParts[0]
+			}
+
 			peerCerts := conn.ConnectionState().PeerCertificates
 
 			if ok, err := verifyKnownHost(
 				d.ctx,
+				hostSansPort,
 				peerCerts,
 				tlsConfig.KnownHost); ok {
 
@@ -115,12 +126,13 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 			} else if err != nil {
 
-				d.ctx.WithError(err).Error("error matching peer fingerprint")
+				d.ctx.WithError(err).Error(errMatch)
 				return nil, err
 			}
 
 			if ok, err := verifyKnownHostFiles(
 				d.ctx,
+				hostSansPort,
 				peerCerts,
 				tlsConfig.UsrKnownHosts,
 				tlsConfig.SysKnownHosts); ok {
@@ -129,11 +141,11 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 			} else if err != nil {
 
-				d.ctx.WithError(err).Error("error matching peer fingerprint")
+				d.ctx.WithError(err).Error(errMatch)
 				return nil, err
 			}
 
-			return nil, newErrKnownHost(peerCerts)
+			return nil, newErrKnownHost(hostSansPort, peerCerts)
 		},
 		DisableKeepAlives: disableKeepAlive,
 	}

@@ -2,14 +2,16 @@ package rexray
 
 import (
 	"net/http"
-	_ "net/http/pprof"
 	"os"
+	"path/filepath"
 	"runtime/pprof"
 	"runtime/trace"
 	"strconv"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/gotil"
+
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	apitypes "github.com/codedellemc/libstorage/api/types"
@@ -19,6 +21,9 @@ import (
 
 	// load REX-Ray
 	_ "github.com/codedellemc/rexray"
+
+	// load the profiler
+	_ "net/http/pprof"
 )
 
 // Run the CLI.
@@ -34,10 +39,12 @@ func Run() {
 		exit         sync.Once
 	)
 
+	pathConfig := utils.NewPathConfig(ctx, "", "")
 	ctx = ctx.WithValue(
-		context.PathConfigKey,
-		utils.NewPathConfig(ctx, "", ""))
+		context.PathConfigKey, pathConfig)
 	registry.ProcessRegisteredConfigs(ctx)
+
+	createUserKnownHostsFile(ctx, pathConfig)
 
 	onExit := func() {
 		if traceProfile != nil {
@@ -133,4 +140,24 @@ func enableDebugMode() {
 func setLogLevels(lvl log.Level) {
 	os.Setenv("REXRAY_LOGLEVEL", lvl.String())
 	os.Setenv("LIBSTORAGE_LOGGING_LEVEL", lvl.String())
+}
+
+func createUserKnownHostsFile(
+	ctx apitypes.Context,
+	pathConfig *apitypes.PathConfig) {
+
+	khPath := pathConfig.UserDefaultTLSKnownHosts
+
+	if gotil.FileExists(khPath) {
+		return
+	}
+
+	khDirPath := filepath.Dir(khPath)
+	os.MkdirAll(khDirPath, 0755)
+	khFile, err := os.Create(khPath)
+	if err != nil {
+		ctx.WithField("path", khPath).Fatal(
+			"failed to create known_hosts")
+	}
+	defer khFile.Close()
 }

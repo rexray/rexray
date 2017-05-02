@@ -15,6 +15,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
+	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
 	apiversion "github.com/codedellemc/libstorage/api"
@@ -448,9 +449,18 @@ func WaitUntilLibStorageStopped(ctx apitypes.Context, errs <-chan error) {
 	waitUntilLibStorageStopped(ctx, errs)
 }
 
+// ErrMissingService occurs when the client configuration is
+// missing the property "libstorage.service" either at the root
+// or as part of a module definition.
+var ErrMissingService = goof.New("client must specify service")
+
 // NewClient returns a new libStorage client.
 func NewClient(
 	ctx apitypes.Context, config gofig.Config) (apitypes.Client, error) {
+
+	if v := config.Get(apitypes.ConfigService); v == "" {
+		return nil, ErrMissingService
+	}
 	return newClient(ctx, config)
 }
 

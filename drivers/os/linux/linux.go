@@ -136,9 +136,13 @@ func (d *driver) Mount(
 		return nil
 	}
 
-	fsType, err := probeFsType(deviceName)
-	if err != nil {
-		return err
+	fsType := opts.FsType
+	if opts.FsType == "" {
+		var err error
+		fsType, err = probeFsType(deviceName)
+		if err != nil {
+			return err
+		}
 	}
 
 	options := formatMountLabel("", opts.MountLabel)

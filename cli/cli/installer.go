@@ -8,13 +8,17 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
 
 	log "github.com/Sirupsen/logrus"
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
-
+	"github.com/codedellemc/libstorage/api/context"
+	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/core"
 	"github.com/codedellemc/rexray/util"
 )
 
@@ -362,6 +366,41 @@ func createInitFile() {
 		f.WriteString(text)
 	}()
 	os.Chmod(util.InitFilePath, 0755)
+}
+
+func installSelfCert(ctx apitypes.Context, config gofig.Config) {
+	if core.BuildType != "client+agent+controller" &&
+		core.BuildType != "controller" {
+		fmt.Println("Not generating self-signed cert for binary of type ",
+			core.BuildType)
+		return
+	}
+	certPath := config.GetString(apitypes.ConfigTLSCertFile)
+	keyPath := config.GetString(apitypes.ConfigTLSKeyFile)
+	host := "127.0.0.1"
+
+	fmt.Println("Generating server self-signed certificate...")
+	if err := util.CreateSelfCert(ctx, certPath, keyPath, host); err != nil {
+		log.Fatalf("cert generation failed: %v\n", err)
+	}
+
+	// setup known_hosts file while we're at it
+	pathCfg := context.MustPathConfig(ctx)
+	khPath := pathCfg.UserDefaultTLSKnownHosts
+	khDir := filepath.Dir(khPath)
+	if !gotil.FileExists(khDir) {
+		if err := os.MkdirAll(khDir, 0755); err != nil {
+			log.Fatalf("failed to create dir %v", err)
+		}
+	}
+	khFile, err := os.Create(khPath)
+	if err != nil {
+		log.Fatalf("failed to setup knwon_hosts file: %v", err)
+	}
+	defer khFile.Close()
+
+	fmt.Printf("Created cert file %s, key %s, and known_hosts file %s\n\n",
+		certPath, keyPath, khPath)
 }
 
 const initScriptTemplate = `### BEGIN INIT INFO

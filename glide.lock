@@ -1,5 +1,5 @@
-hash: f03101744b49400e3b7b98393f38557978019fab08cc0b3d9e2af979e56671bd
-updated: 2017-04-25T12:54:17.435453239-05:00
+hash: 0f25be1d7ce40caf47d76958c73911ddfa80d2eaa0c3a483c6e70cad935b50b4
+updated: 2017-05-01T21:12:23.260913325-04:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -98,7 +98,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: e752e4ca6ae3a8314c07b4a40d354cfce95c48bf
+  version: 58c5f05c978076ecc41de30ed631f3bb5e6af06d
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -272,7 +272,8 @@ imports:
 - name: github.com/tent/http-link-go
   version: ac974c61c2f990f4115b119354b5e0b47550e888
 - name: golang.org/x/crypto
-  version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
+  version: 453249f01cfeb54c3d549ddb75ff152ca243f9d8
+  repo: https://github.com/golang/crypto.git
   subpackages:
   - curve25519
   - ed25519
@@ -304,7 +305,8 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: a8b38433e35b65ba247bb267317037dee1b70cea
+  version: 85c29909967d7f171f821e7a42e7b7af76fb9598
+  repo: https://github.com/golang/text.git
   subpackages:
   - transform
   - unicode/norm

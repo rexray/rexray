@@ -88,20 +88,29 @@ func CreateSelfCert(
 		BasicConstraintsValid: true,
 	}
 
+	tmpl.IPAddresses = append(tmpl.IPAddresses, net.ParseIP("127.0.0.1"))
+
 	if ip := net.ParseIP(host); ip != nil {
 		tmpl.IPAddresses = append(tmpl.IPAddresses, ip)
 	} else {
 		ips, err := net.LookupIP(host)
 		if err != nil {
-			log.WithFields(log.Fields{
+			ctx.WithFields(log.Fields{
 				"host": host,
-			}).Warn("failed to lookup IP for host: ", err)
-			log.WithField("host", host).Debug("fallback to 127.0.0.1")
-			ips = []net.IP{net.ParseIP("127.0.0.1")}
+			}).Debug("failed to lookup IP for host: ", err)
+		} else {
+			tmpl.IPAddresses = append(tmpl.IPAddresses, ips...)
 		}
-		tmpl.IPAddresses = append(tmpl.IPAddresses, ips...)
 		tmpl.DNSNames = append(tmpl.DNSNames, host)
 	}
+
+	ctx.WithFields(log.Fields{
+		"o":        tmpl.Subject.Organization[0],
+		"cn":       tmpl.Subject.CommonName,
+		"ca":       tmpl.IsCA,
+		"san_dns":  tmpl.DNSNames,
+		"san_ips:": tmpl.IPAddresses,
+	}).Debug("cert info")
 
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

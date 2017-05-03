@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	apitypes "github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/rexray/util"
@@ -19,12 +18,12 @@ func installSelfCert(ctx apitypes.Context, config gofig.Config) {
 
 	host, err := os.Hostname()
 	if err != nil {
-		log.Fatalf("failed to get hostname for cert")
+		ctx.Fatalf("failed to get hostname for cert")
 	}
 
 	fmt.Println("Generating server self-signed certificate...")
 	if err := util.CreateSelfCert(ctx, certPath, keyPath, host); err != nil {
-		log.Fatalf("cert generation failed: %v\n", err)
+		ctx.Fatalf("cert generation failed: %v\n", err)
 	}
 
 	fmt.Printf("Created cert file %s, key %s\n\n", certPath, keyPath)

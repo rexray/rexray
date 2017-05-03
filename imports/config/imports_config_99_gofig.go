@@ -84,6 +84,8 @@ func init() {
 
 			rk(gofig.Bool, false, "", types.ConfigExecutorNoDownload)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsMountPreempt)
+			rk(gofig.Int, 0, "", types.ConfigIgVolOpsMountRetryCount)
+			rk(gofig.String, "5s", "", types.ConfigIgVolOpsMountRetryWait)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsCreateDisable)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsRemoveDisable)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsUnmountIgnoreUsed)

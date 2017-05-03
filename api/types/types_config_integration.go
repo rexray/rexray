@@ -22,6 +22,12 @@ const (
 	//ConfigIgVolOpsMountRootPath is a config key.
 	ConfigIgVolOpsMountRootPath = ConfigIgVolOpsMount + ".rootPath"
 
+	//ConfigIgVolOpsMountRetryCount is a config key.
+	ConfigIgVolOpsMountRetryCount = ConfigIgVolOpsMount + ".retryCount"
+
+	//ConfigIgVolOpsMountRetryWait is a config key.
+	ConfigIgVolOpsMountRetryWait = ConfigIgVolOpsMount + ".retryWait"
+
 	//ConfigIgVolOpsUnmount is a config key.
 	ConfigIgVolOpsUnmount = ConfigIgVolOps + ".unmount"
 

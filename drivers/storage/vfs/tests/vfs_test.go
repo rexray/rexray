@@ -154,10 +154,10 @@ func TestClientKnownHostConflict(t *testing.T) {
 	}
 
 	const (
-		host        = "libstorage-server2"
+		host        = "127.0.0.1"
 		alg         = "sha256"
 		fingerprint = `52:C7:5D:00:1B:E7:33:66:14:3C:47:07:77:59:9C:` +
-			`94:F1:EA:76:00:41:B1:9D:71:0B:80:05:1F:F7:2D:6B:69`
+			`94:F1:EA:76:00:41:B1:9D:71:0B:80:05:1F:F7:2D:6B:6B`
 		knownHostEntry  = host + " " + alg + " " + fingerprint
 		knownHostConfig = `
 test:

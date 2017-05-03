@@ -84,6 +84,8 @@ func init() {
 
 			rk(gofig.Bool, false, "", types.ConfigExecutorNoDownload)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsMountPreempt)
+			rk(gofig.Int, 0, "", types.ConfigIgVolOpsMountRetryCount)
+			rk(gofig.String, "5s", "", types.ConfigIgVolOpsMountRetryWait)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsCreateDisable)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsRemoveDisable)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsUnmountIgnoreUsed)
@@ -119,9 +121,9 @@ func init() {
 				"",
 				types.ConfigTLSKnownHosts)
 			rk(gofig.String, "", "", types.ConfigTLSServerName)
-			rk(gofig.Bool, false, "", types.ConfigTLSDisabled)
-			rk(gofig.Bool, false, "", types.ConfigTLSInsecure)
-			rk(gofig.Bool, false, "", types.ConfigTLSClientCertRequired)
+			rk(gofig.String, "", "", types.ConfigTLSDisabled)
+			rk(gofig.String, "", "", types.ConfigTLSInsecure)
+			rk(gofig.String, "", "", types.ConfigTLSClientCertRequired)
 
 			// auth config - client
 			rk(gofig.String, "", "", types.ConfigClientAuthToken)

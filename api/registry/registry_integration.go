@@ -2,6 +2,7 @@ package registry
 
 import (
 	"sync"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
@@ -14,9 +15,11 @@ import (
 type idm struct {
 	types.IntegrationDriver
 	sync.RWMutex
-	ctx    types.Context
-	config gofig.Config
-	used   map[string]int
+	ctx        types.Context
+	config     gofig.Config
+	used       map[string]int
+	retryCount int
+	retryWait  time.Duration
 }
 
 // NewIntegrationDriverManager returns a new integration driver manager.
@@ -37,6 +40,14 @@ func (d *idm) Init(ctx types.Context, config gofig.Config) error {
 	d.ctx = ctx
 	d.config = config
 	d.used = map[string]int{}
+	d.retryCount = config.GetInt(types.ConfigIgVolOpsMountRetryCount)
+	if v := config.GetString(types.ConfigIgVolOpsMountRetryWait); v != "" {
+		var err error
+		d.retryWait, err = time.ParseDuration(v)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.initPathCache(ctx)
 
@@ -143,10 +154,22 @@ func (d *idm) Mount(
 		"opts":       opts}
 	ctx.WithFields(fields).Debug("mounting volume")
 
+	ctx = ctx.Join(d.ctx)
+
 	mp, vol, err := d.IntegrationDriver.Mount(
-		ctx.Join(d.ctx), volumeID, volumeName, opts)
+		ctx, volumeID, volumeName, opts)
 	if err != nil {
-		return "", nil, err
+		for x := 0; x < d.retryCount; x++ {
+			time.Sleep(d.retryWait)
+			mp, vol, err = d.IntegrationDriver.Mount(
+				ctx, volumeID, volumeName, opts)
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			return "", nil, err
+		}
 	}
 
 	// if the volume has attachments assign the new mount point to the

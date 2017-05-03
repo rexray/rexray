@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -124,15 +125,19 @@ func (s *server) initEndpoints(ctx types.Context) error {
 			"address":  laddr,
 		}
 
-		tlsConfig, err :=
-			utils.ParseTLSConfig(
-				s.ctx,
-				s.config.Scope(endpoint),
-				logFields,
-				types.ConfigServer,
-				endpoint)
-		if err != nil {
-			return err
+		var tlsConfig *types.TLSConfig
+
+		// disable TLS for UNIX sockets
+		if !strings.EqualFold(proto, "unix") {
+			if tlsConfig, err =
+				utils.ParseTLSConfig(
+					s.ctx,
+					s.config.Scope(endpoint),
+					logFields,
+					types.ConfigServer,
+					endpoint); err != nil {
+				return err
+			}
 		}
 
 		ctx.WithFields(logFields).Info("configured endpoint")

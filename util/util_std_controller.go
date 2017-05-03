@@ -132,7 +132,13 @@ func activateLibStorage(
 
 	if host == "" {
 		host = server.Addrs()[0]
-		ctx.WithField("host", host).Debug("got host from new server address")
+		ctx.WithField("specHost", host).Debug(
+			"got host from new server address server.Addrs()[0]")
+
+		host = parseSafeHost(ctx, host)
+
+		ctx.WithField("specHost", host).Debug(
+			"got host from new server address; updated")
 	}
 	ctx = setHost(ctx, config, host)
 

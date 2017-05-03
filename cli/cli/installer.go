@@ -14,7 +14,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
-
 	"github.com/codedellemc/rexray/util"
 )
 
@@ -318,7 +317,9 @@ func createUnitFile() {
 
 const unitFileTemplate = `[Unit]
 Description={{.BinFileName}}
+Wants=scini.service
 Before=docker.service
+After=scini.service
 
 [Service]
 EnvironmentFile={{.EnvFilePath}}
@@ -328,9 +329,6 @@ KillMode=process
 
 [Install]
 WantedBy=docker.service
-Wants=scini.service
-Before=docker.service
-After=scini.service
 `
 
 func createInitFile() {

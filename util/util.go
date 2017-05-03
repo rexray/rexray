@@ -15,6 +15,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
+	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
 	apiversion "github.com/codedellemc/libstorage/api"
@@ -342,6 +343,7 @@ func IsLocalServerActive(
 	if gotil.FileExists(specFile) {
 		if h, _ := ReadSpecFile(); h != "" {
 			host = h
+			host = parseSafeHost(ctx, host)
 			logHostSpec(ctx, host, "read spec file")
 			defer func() {
 				if running || !isLocal {
@@ -448,9 +450,18 @@ func WaitUntilLibStorageStopped(ctx apitypes.Context, errs <-chan error) {
 	waitUntilLibStorageStopped(ctx, errs)
 }
 
+// ErrMissingService occurs when the client configuration is
+// missing the property "libstorage.service" either at the root
+// or as part of a module definition.
+var ErrMissingService = goof.New("client must specify service")
+
 // NewClient returns a new libStorage client.
 func NewClient(
 	ctx apitypes.Context, config gofig.Config) (apitypes.Client, error) {
+
+	if v := config.Get(apitypes.ConfigService); v == "" {
+		return nil, ErrMissingService
+	}
 	return newClient(ctx, config)
 }
 
@@ -574,4 +585,32 @@ func ValidateConfig(path string) {
 		fmt.Fprintln(os.Stderr, "---END---")
 		os.Exit(1)
 	}
+}
+
+const tcp127 = "tcp://127.0.0.1"
+
+var rxParseSafeHost = regexp.MustCompile(`^tcp://(?:(?:0\.0\.0\.0)|\*)?:(\d+)$`)
+
+func parseSafeHost(ctx apitypes.Context, h string) string {
+	if h == "" || h == "0.0.0.0" || h == "*" {
+		ctx.WithFields(map[string]interface{}{
+			"preParse":  h,
+			"postParse": tcp127,
+		}).Debug(`parseSafeHost - h == "" || h == "0.0.0.0" || h == "*"`)
+		return tcp127
+	}
+	if m := rxParseSafeHost.FindStringSubmatch(h); len(m) > 0 {
+		sh := fmt.Sprintf("tcp://127.0.0.1:%s", m[1])
+		ctx.WithFields(map[string]interface{}{
+			"preParse":  h,
+			"postParse": sh,
+		}).Debug(`parseSafeHost - rxParseSafeHost.FindStringSubmatch(h)`)
+		return sh
+	}
+
+	ctx.WithFields(map[string]interface{}{
+		"preParse":  h,
+		"postParse": h,
+	}).Debug(`parseSafeHost - no change`)
+	return h
 }

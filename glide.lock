@@ -1,5 +1,5 @@
-hash: 035ac3146da4fb90f50566c86031bc1004170d0a27e7adea3c3c4ca2b8fcda83
-updated: 2017-04-10T15:57:04.178825122-05:00
+hash: 6938df327caad72d24274cdbf9fa3750acac04df8ef79712b46d276654eac901
+updated: 2017-05-03T16:17:11.584802513-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -15,7 +15,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/akutz/goof
-  version: ea06624ca980bae80c1b615b8417723436d235ab
+  version: 72efb1916248a881f8d39e20b9709696c5eda708
 - name: github.com/akutz/gotil
   version: 6fa2e80bd3ac40f15788cfc3d12ebba49a0add92
 - name: github.com/appropriate/go-virtualboxclient
@@ -98,7 +98,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: 09b3df4425ca4a46382403ecab5b1fad032a279d
+  version: fa055d6da595602715bdfd5541b4aa6d4dcbcbd9
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -106,6 +106,7 @@ imports:
   - api/context
   - api/registry
   - api/server
+  - api/server/auth
   - api/server/executors
   - api/server/handlers
   - api/server/httputils
@@ -130,6 +131,9 @@ imports:
   - drivers/storage/azureud/executor
   - drivers/storage/azureud/storage
   - drivers/storage/azureud/utils
+  - drivers/storage/cinder
+  - drivers/storage/cinder/executor
+  - drivers/storage/cinder/storage
   - drivers/storage/dobs
   - drivers/storage/dobs/executor
   - drivers/storage/dobs/storage
@@ -181,7 +185,9 @@ imports:
 - name: github.com/dgrijalva/jwt-go
   version: 2268707a8f0843315e2004ee4f1d021dc08baedf
 - name: github.com/digitalocean/godo
-  version: 2ff8a02a86cd6918b384a5000ceebe886844fbce
+  version: 83908b1ddd666d08a9b020c697b55ae3895be2fd
+  subpackages:
+  - context
 - name: github.com/fsnotify/fsnotify
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/go-ini/ini
@@ -199,6 +205,21 @@ imports:
   - query
 - name: github.com/googleapis/gax-go
   version: da06d194a00e19ce00d9011a13931c3f6f6887c7
+- name: github.com/gophercloud/gophercloud
+  version: 9a5595b8ffe429439c63781cdc312c254e4ad990
+  subpackages:
+  - openstack
+  - openstack/blockstorage/extensions/volumeactions
+  - openstack/blockstorage/v1/snapshots
+  - openstack/blockstorage/v1/volumes
+  - openstack/blockstorage/v2/volumes
+  - openstack/compute/v2/extensions/volumeattach
+  - openstack/identity/v2/tenants
+  - openstack/identity/v2/tokens
+  - openstack/identity/v3/extensions/trusts
+  - openstack/identity/v3/tokens
+  - openstack/utils
+  - pagination
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -271,7 +292,8 @@ imports:
 - name: github.com/tent/http-link-go
   version: ac974c61c2f990f4115b119354b5e0b47550e888
 - name: golang.org/x/crypto
-  version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
+  version: 453249f01cfeb54c3d549ddb75ff152ca243f9d8
+  repo: https://github.com/golang/crypto.git
   subpackages:
   - curve25519
   - ed25519
@@ -303,7 +325,8 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: a8b38433e35b65ba247bb267317037dee1b70cea
+  version: 85c29909967d7f171f821e7a42e7b7af76fb9598
+  repo: https://github.com/golang/text.git
   subpackages:
   - transform
   - unicode/norm

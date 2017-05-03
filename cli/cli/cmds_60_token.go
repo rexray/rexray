@@ -26,6 +26,9 @@ const (
 
 	rrTokExpEnv = "REXRAY_TOKEN_EXP"
 	rrTokExpKey = "rexray.token.exp"
+
+	// 8760 hours is 365 days
+	defaultTokenExp = time.Duration(8760 * time.Hour)
 )
 
 var (
@@ -199,6 +202,9 @@ func (c *CLI) tokenValidateExp() time.Duration {
 			}
 			return exp
 		}
+		c.ctx.WithField("exp", defaultTokenExp).Info(
+			"Using default token expiration duration")
+		exp = defaultTokenExp
 	}
 	return exp
 }

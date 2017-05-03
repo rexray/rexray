@@ -11,7 +11,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -180,10 +180,8 @@ func AssertTrustedHost(
 		algo, fingerprint[0:8], fingerprint[len(fingerprint)-2:])
 	fmt.Print("Do you want to save host to known_hosts file? (yes/no): ")
 	fmt.Scanf("%s", &trusted)
-	if strings.EqualFold(trusted, "yes") {
-		return true
-	}
-	return false
+	ok, _ := regexp.MatchString(`(?i)^y(es)?$`, trusted)
+	return ok
 }
 
 // AddKnownHost adds unknown host to know_hosts file

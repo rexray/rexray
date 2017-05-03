@@ -2,7 +2,8 @@ package util
 
 import (
 	"crypto/tls"
-	"log"
+	"crypto/x509"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,11 +16,17 @@ import (
 func TestCreateSelfCert(t *testing.T) {
 	certPath := "/tmp/libstorage/tls/file.crt"
 	keyPath := "/tmp/libstorage/tls/file.key"
-	host := "127.0.0.1"
-
-	err := CreateSelfCert(context.Background(), certPath, keyPath, host)
+	host, err := os.Hostname()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+
+	if err := CreateSelfCert(
+		context.Background(),
+		certPath,
+		keyPath,
+		host); err != nil {
+		t.Fatal(err)
 	}
 	defer func() {
 		os.Remove(certPath)
@@ -43,15 +50,24 @@ func TestCreateSelfCert(t *testing.T) {
 	}
 	s.StartTLS()
 
+	crtPEM, err := ioutil.ReadFile(certPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	certPool := x509.NewCertPool()
+	certPool.AppendCertsFromPEM(crtPEM)
+
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
+				InsecureSkipVerify: false,
+				RootCAs:            certPool,
 			},
 		},
 	}
 	if _, err := client.Get(s.URL); err != nil {
-		log.Println(err)
+		t.Fatal(err)
 	}
 
 }

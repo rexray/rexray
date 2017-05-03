@@ -76,19 +76,41 @@ func CreateSelfCert(
 			CommonName:   host,
 		},
 
-		IPAddresses: []net.IP{net.ParseIP(host)},
-		DNSNames:    []string{"localhost"},
-
 		NotBefore:          time.Now(),
 		NotAfter:           time.Now().AddDate(1, 0, 0),
 		SignatureAlgorithm: x509.SHA256WithRSA,
 
+		IsCA: true,
 		KeyUsage: x509.KeyUsageKeyEncipherment |
-			x509.KeyUsageDigitalSignature,
+			x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 	}
+
+	tmpl.IPAddresses = append(tmpl.IPAddresses, net.ParseIP("127.0.0.1"))
+
+	if ip := net.ParseIP(host); ip != nil {
+		tmpl.IPAddresses = append(tmpl.IPAddresses, ip)
+	} else {
+		ips, err := net.LookupIP(host)
+		if err != nil {
+			ctx.WithError(err).WithFields(log.Fields{
+				"host": host,
+			}).Debug("failed IP lookup for host")
+		} else {
+			tmpl.IPAddresses = append(tmpl.IPAddresses, ips...)
+		}
+		tmpl.DNSNames = append(tmpl.DNSNames, host)
+	}
+
+	ctx.WithFields(log.Fields{
+		"o":        tmpl.Subject.Organization[0],
+		"cn":       tmpl.Subject.CommonName,
+		"ca":       tmpl.IsCA,
+		"san_dns":  tmpl.DNSNames,
+		"san_ips:": tmpl.IPAddresses,
+	}).Debug("cert info")
 
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

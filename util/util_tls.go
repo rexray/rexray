@@ -31,13 +31,11 @@ func CreateSelfCert(
 	certPath, keyPath, host string) error {
 
 	// if files exist, ignore
-	_, cerErr := os.Stat(certPath)
-	_, keyErr := os.Stat(keyPath)
-	if cerErr == nil && keyErr == nil {
+	if gotil.FileExists(certPath) && gotil.FileExists(keyPath) {
 		ctx.WithFields(log.Fields{
 			"host":     host,
-			"certPath": certPath,
-			"certKey":  certPath,
+			"certFile": certPath,
+			"keyFile":  keyPath,
 		}).Debug("skipping self-cert creation, files exist")
 		return nil
 	}
@@ -48,8 +46,7 @@ func CreateSelfCert(
 		ctx.WithFields(log.Fields{
 			"host":     host,
 			"certRoot": certRoot,
-		}).Debug("created dir")
-
+		}).WithError(err).Error("error creating cert dir")
 		return err
 	}
 	if keyRoot != certRoot {
@@ -57,7 +54,7 @@ func CreateSelfCert(
 			ctx.WithFields(log.Fields{
 				"host":    host,
 				"keyRoot": keyRoot,
-			}).Debug("created dir")
+			}).WithError(err).Error("error creating key dir")
 			return err
 		}
 	}
@@ -82,7 +79,8 @@ func CreateSelfCert(
 
 		IsCA: true,
 		KeyUsage: x509.KeyUsageKeyEncipherment |
-			x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+			x509.KeyUsageDigitalSignature |
+			x509.KeyUsageCertSign,
 
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
@@ -142,7 +140,8 @@ func CreateSelfCert(
 
 	// gen key file
 	ctx.WithField("keyFile", keyPath).Debug("creating key file")
-	keyFile, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyFile, err := os.OpenFile(
+		keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
@@ -160,8 +159,8 @@ func CreateSelfCert(
 	}
 
 	ctx.WithFields(log.Fields{
-		"certPath": certPath,
-		"certKey":  certPath,
+		"certFile": certPath,
+		"keyFile":  keyPath,
 	}).Debug("self-cert files created")
 
 	return nil

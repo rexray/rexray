@@ -5,6 +5,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
@@ -15,7 +16,11 @@ import (
 func installSelfCert(ctx apitypes.Context, config gofig.Config) {
 	certPath := config.GetString(apitypes.ConfigTLSCertFile)
 	keyPath := config.GetString(apitypes.ConfigTLSKeyFile)
-	host := "127.0.0.1"
+
+	host, err := os.Hostname()
+	if err != nil {
+		log.Fatalf("failed to get hostname for cert")
+	}
 
 	fmt.Println("Generating server self-signed certificate...")
 	if err := util.CreateSelfCert(ctx, certPath, keyPath, host); err != nil {

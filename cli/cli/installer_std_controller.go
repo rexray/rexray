@@ -23,7 +23,7 @@ func installSelfCert(ctx apitypes.Context, config gofig.Config) {
 
 	fmt.Println("Generating server self-signed certificate...")
 	if err := util.CreateSelfCert(ctx, certPath, keyPath, host); err != nil {
-		ctx.Fatalf("cert generation failed: %v\n", err)
+		ctx.WithError(err).Fatal("cert generation failed")
 	}
 
 	fmt.Printf("Created cert file %s, key %s\n\n", certPath, keyPath)

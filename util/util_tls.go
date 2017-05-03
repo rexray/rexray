@@ -95,9 +95,9 @@ func CreateSelfCert(
 	} else {
 		ips, err := net.LookupIP(host)
 		if err != nil {
-			ctx.WithFields(log.Fields{
+			ctx.WithError(err).WithFields(log.Fields{
 				"host": host,
-			}).Debug("failed to lookup IP for host: ", err)
+			}).Debug("failed IP lookup for host")
 		} else {
 			tmpl.IPAddresses = append(tmpl.IPAddresses, ips...)
 		}

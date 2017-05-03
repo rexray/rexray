@@ -544,9 +544,9 @@ func checkOpPerms(op string) error {
 	return nil
 }
 
-const hostKeyCheckFailedFormat = `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+const hostKeyCheckFailedFormat = `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
 Someone could be eavesdropping on you right now (man-in-the-middle attack)!
 It is also possible that the RSA host key has just been changed.

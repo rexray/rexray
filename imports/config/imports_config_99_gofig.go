@@ -119,9 +119,9 @@ func init() {
 				"",
 				types.ConfigTLSKnownHosts)
 			rk(gofig.String, "", "", types.ConfigTLSServerName)
-			rk(gofig.Bool, false, "", types.ConfigTLSDisabled)
-			rk(gofig.Bool, false, "", types.ConfigTLSInsecure)
-			rk(gofig.Bool, false, "", types.ConfigTLSClientCertRequired)
+			rk(gofig.String, "", "", types.ConfigTLSDisabled)
+			rk(gofig.String, "", "", types.ConfigTLSInsecure)
+			rk(gofig.String, "", "", types.ConfigTLSClientCertRequired)
 
 			// auth config - client
 			rk(gofig.String, "", "", types.ConfigClientAuthToken)

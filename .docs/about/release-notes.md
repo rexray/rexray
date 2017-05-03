@@ -35,22 +35,28 @@ libStorage client/server communications, and service-scoped
 authentication!
 
 ### New Features
-* Client Token Authentication [#475](https://github.com/codedellemc/libstorage/issues/475)
-* Cinder storage driver [#182](https://github.com/codedellemc/libstorage/issues/182)
-* Allow customization of default paths [#509](https://github.com/codedellemc/libstorage/pull/509)
-* TLS Known Hosts support [#510](https://github.com/codedellemc/libstorage/pull/510)
+* Client Token Authentication ([#475](https://github.com/codedellemc/libstorage/issues/475))
+* Cinder storage driver ([#182](https://github.com/codedellemc/libstorage/issues/182))
+* Allow customization of default paths ([#509](https://github.com/codedellemc/libstorage/pull/509))
+* TLS Known Hosts support ([#510](https://github.com/codedellemc/libstorage/pull/510))
 
 ### Bug Fixes
-* Return HTTP status 400 instead of 500 when attachment mask requires InstanceID or LocalDevices header and it is missing [#352](https://github.com/codedellemc/libstorage/issues/352)
-* Make sure all drivers return error if VolumeInspect doesn't find volume [#396](https://github.com/codedellemc/libstorage/issues/396)
-* Ensure all drivers reject size 0 volume creation [#459](https://github.com/codedellemc/libstorage/issues/459)
-* Prevent possible endless loops in drivers when underlying API does not respond [#480](https://github.com/codedellemc/libstorage/issues/480)
-* Standardize log levels across libStorage client and server [#521](https://github.com/codedellemc/libstorage/pull/521)
+* Return HTTP status 400 instead of 500 when attachment mask requires InstanceID or LocalDevices header and it is missing ([#352](https://github.com/codedellemc/libstorage/issues/352))
+* Make sure all drivers return error if VolumeInspect doesn't find volume ([#396](https://github.com/codedellemc/libstorage/issues/396))
+* Ensure all drivers reject size 0 volume creation ([#459](https://github.com/codedellemc/libstorage/issues/459))
+* Prevent possible endless loops in drivers when underlying API does not respond ([#480](https://github.com/codedellemc/libstorage/issues/480))
+* Standardize log levels across libStorage client and server ([#521](https://github.com/codedellemc/libstorage/pull/521))
 
 ### Enhancements
-* Digital Ocean Block Storage driver now supports client/server topology [#432](https://github.com/codedellemc/libstorage/issues/432)
-* Improve error reporting [#504](https://github.com/codedellemc/libstorage/pull/504), [#128](https://github.com/codedellemc/libstorage/issues/128)
-* Improve driver config examples [#531](https://github.com/codedellemc/libstorage/issues/531)
+* Digital Ocean Block Storage driver now supports client/server topology ([#432](https://github.com/codedellemc/libstorage/issues/432))
+* Improve error reporting ([#504](https://github.com/codedellemc/libstorage/pull/504), [#128](https://github.com/codedellemc/libstorage/issues/128))
+* Improve driver config examples ([#531](https://github.com/codedellemc/libstorage/issues/531))
+
+### Thank You
+  Name | Blame  
+-------|------
+[Mathieu Velten](https://github.com/MatMaul) | Mr. Velten, as his people alert you to the fact that he insists on being addressed, is a dubious individual. It's apparent he's old money, but it's also not exactly clear from where his fortune originated. There are rumors in the back rooms of the shadiest gambling parlors of Monte Carlo that Mr. Velten was once an employee of an unnamed wing of a shadow government. A "cleaner" if you will. Maybe it was these experiences that make Mr. Velten so apt at slicing up Git commits. Is there really any difference between slicing up a full-grown man and hash series of changes? Mr. Velten is proof there isn't.
+[Joe Topjian](https://github.com/jtopjian) | Joe insisted that we omit this pithy attempt at showing gratitude, but we simply could not do that. Not when Mr. Velten insisted it would be in our best interest to include Joe. Is this okay Mr. Velten? Can our families come home now? We did what you asked. Joe is awesome. We like Joe. See? We're cooperating. Please Mr. Velten, just let them come home!
 
 ## Version 0.8.2 (2017/03/28)
 This is a minor release with some bug fixes, enhancements, and simplified

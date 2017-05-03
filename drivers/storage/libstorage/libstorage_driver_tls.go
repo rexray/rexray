@@ -26,7 +26,14 @@ func verifyKnownHost(
 		return false, nil
 	}
 
-	return verifyPeerCerts(ctx, host, knownHost, peerCerts)
+	ok, err := verifyPeerCerts(ctx, host, knownHost, peerCerts)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	return false, newErrKnownHost(host, peerCerts)
 }
 
 func verifyKnownHostFiles(
@@ -128,30 +135,31 @@ func verifyPeerCerts(
 		ctx.WithFields(logFields).Debug(
 			"comparing tls known host information")
 
-		// are the fingerprints equal?
-		if bytes.EqualFold(knownHost.Fingerprint, certFP) {
+		// does the targeted host equal the saved, known host name?
+		if strings.EqualFold(host, knownHost.Host) {
 
-			// if the targeted host equals the saved, known host name
-			// then this is a validated known host
-			if strings.EqualFold(host, knownHost.Host) {
+			// are the fingerprints equal? if so this is a validated,
+			// known host
+			if bytes.EqualFold(knownHost.Fingerprint, certFP) {
+
 				ctx.WithFields(logFields).Debug(
 					"matched tls known host information")
+
 				return true, nil
 			}
 
-			// the targeted host does not equal the saved, known host
-			// name which has an associated signature that matches
-			// the remote, peer's signature. this means there is a
-			// possible mitm attack where a remote host has usurped
-			// another host's identity
+			// the saved fingerprint does not equal the remote, peer
+			// fingerprint meaning there is a possible mitm attack
+			// where a remote host has usurped another host's identity
 			ctx.WithFields(logFields).Error(
 				"known host conflict has occurred")
 
 			return false, newErrKnownHostConflict(host, knownHost)
 		}
+
 	}
 
-	return false, newErrKnownHost(host, peerCerts)
+	return false, nil
 }
 
 func newErrKnownHost(host string, peerCerts []*x509.Certificate) error {

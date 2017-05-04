@@ -485,13 +485,20 @@ libstorage:
   attached to another node. Mounting and writing to such a volume could lead to
   data corruption.
 
-## Cinder
+## OpenStack
+
+Another welcome community contribution, libStorage includes support for
+OpenStack storage.
+
+### Cinder
 The Cinder driver registers a storage driver named `cinder` with the
 `libStorage` driver manager and is used to connect and manage storage on
-Cinder-compatible instances, such as OpenStack.
+Cinder-compatible instances.
 
-### Configuration
-The following is an example configuration of the OpenStack driver.
+#### Configuration
+The following is an example configuration with most fields populated for
+illustration. For a running example see the
+[Examples](./storage-providers.md#openstack-cinder-examples) section.
 
 ```yaml
 cinder:
@@ -507,7 +514,7 @@ cinder:
   availabilityZoneName: Gold
 ```
 
-#### Configuration Notes
+##### Configuration Notes
 - `regionName` is optional, it should be empty if you only have one region.
 - `availabilityZoneName` is optional, the volume will be created in the default
 availability zone if not specified.
@@ -516,12 +523,14 @@ For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
 [transformed](./config.md#configuration-properties).
 
-### Activating the Driver
+#### Activating the Driver
 To activate the Cinder driver please follow the instructions for
 [activating storage drivers](./config.md#storage-drivers),
 using `cinder` as the driver name.
 
-### Examples
+<a class="headerlink hiddenanchor" name="openstack-cinder-examples"></a>
+
+#### Examples
 Below is a full `config.yml` file that works with Cinder.
 
 ```yaml

@@ -1034,6 +1034,7 @@ remote storage systems. Currently the following storage drivers are supported:
 [Ceph RBD](./storage-providers.md#ceph-rbd) | rbd
 [GCE PD](./storage-providers.md#gce-persistent-disk) | gcepd
 [Azure UD](./storage-providers.md#azure-ud) | azureud
+[OpenStack Cinder](./storage-providers.md#cinder) | cinder
 
 The `libstorage.server.libstorage.storage.driver` property can be used to
 activate a storage drivers. That is not a typo; the `libstorage` key is repeated
@@ -1143,6 +1144,7 @@ AWS S3FS|No
 Ceph RBD|No
 GCE PD|Yes
 Azure UD|Yes
+OpenStack Cinder|Yes
 
 #### Ignore Used Count
 By default accounting takes place during operations that are performed

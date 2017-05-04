@@ -3,7 +3,6 @@ package libstorage
 import (
 	"io"
 
-	"github.com/codedellemc/libstorage/api/registry"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
 )
@@ -121,25 +120,9 @@ func (c *client) VolumeCreate(
 	}
 	ctx = ctxA
 
-	lsd, _ := registry.NewClientDriver(service)
-	if lsd != nil {
-		if err := lsd.Init(ctx, c.config); err != nil {
-			return nil, err
-		}
-
-		if err := lsd.VolumeCreateBefore(
-			&ctx, service, request); err != nil {
-			return nil, err
-		}
-	}
-
 	vol, err := c.APIClient.VolumeCreate(ctx, service, request)
 	if err != nil {
 		return nil, err
-	}
-
-	if lsd != nil {
-		lsd.VolumeCreateAfter(ctx, vol)
 	}
 
 	return vol, nil
@@ -152,26 +135,10 @@ func (c *client) VolumeCreateFromSnapshot(
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 
-	lsd, _ := registry.NewClientDriver(service)
-	if lsd != nil {
-		if err := lsd.Init(ctx, c.config); err != nil {
-			return nil, err
-		}
-
-		if err := lsd.VolumeCreateFromSnapshotBefore(
-			&ctx, service, snapshotID, request); err != nil {
-			return nil, err
-		}
-	}
-
 	vol, err := c.APIClient.VolumeCreateFromSnapshot(
 		ctx, service, snapshotID, request)
 	if err != nil {
 		return nil, err
-	}
-
-	if lsd != nil {
-		lsd.VolumeCreateFromSnapshotAfter(ctx, vol)
 	}
 
 	return vol, nil
@@ -184,25 +151,9 @@ func (c *client) VolumeCopy(
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 
-	lsd, _ := registry.NewClientDriver(service)
-	if lsd != nil {
-		if err := lsd.Init(ctx, c.config); err != nil {
-			return nil, err
-		}
-
-		if err := lsd.VolumeCopyBefore(
-			&ctx, service, volumeID, request); err != nil {
-			return nil, err
-		}
-	}
-
 	vol, err := c.APIClient.VolumeCopy(ctx, service, volumeID, request)
 	if err != nil {
 		return nil, err
-	}
-
-	if lsd != nil {
-		lsd.VolumeCopyAfter(ctx, vol)
 	}
 
 	return vol, nil
@@ -215,25 +166,9 @@ func (c *client) VolumeRemove(
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 
-	lsd, _ := registry.NewClientDriver(service)
-	if lsd != nil {
-		if err := lsd.Init(ctx, c.config); err != nil {
-			return err
-		}
-
-		if err := lsd.VolumeRemoveBefore(
-			&ctx, service, volumeID); err != nil {
-			return err
-		}
-	}
-
 	err := c.APIClient.VolumeRemove(ctx, service, volumeID, force)
 	if err != nil {
 		return err
-	}
-
-	if lsd != nil {
-		lsd.VolumeRemoveAfter(ctx, service, volumeID)
 	}
 
 	return nil

@@ -16,9 +16,6 @@ var (
 	storExecsCtors    = map[string]types.NewStorageExecutor{}
 	storExecsCtorsRWL = &sync.RWMutex{}
 
-	clientDriverCtors    = map[string]types.NewClientDriver{}
-	clientDriverCtorsRWL = &sync.RWMutex{}
-
 	storDriverCtors    = map[string]types.NewStorageDriver{}
 	storDriverCtorsRWL = &sync.RWMutex{}
 
@@ -61,14 +58,6 @@ func RegisterStorageExecutor(name string, ctor types.NewStorageExecutor) {
 	storExecsCtors[strings.ToLower(name)] = ctor
 }
 
-// RegisterClientDriver registers a ClientDriver.
-func RegisterClientDriver(
-	name string, ctor types.NewClientDriver) {
-	clientDriverCtorsRWL.Lock()
-	defer clientDriverCtorsRWL.Unlock()
-	clientDriverCtors[strings.ToLower(name)] = ctor
-}
-
 // RegisterStorageDriver registers a StorageDriver.
 func RegisterStorageDriver(
 	name string, ctor types.NewStorageDriver) {
@@ -106,27 +95,6 @@ func NewStorageExecutor(name string) (types.StorageExecutor, error) {
 
 	if !ok {
 		return nil, goof.WithField("executor", name, "invalid executor name")
-	}
-
-	return ctor(), nil
-}
-
-// NewClientDriver returns a new instance of the driver specified by
-// the driver name.
-func NewClientDriver(
-	name string) (types.ClientDriver, error) {
-
-	var ok bool
-	var ctor types.NewClientDriver
-
-	func() {
-		clientDriverCtorsRWL.RLock()
-		defer clientDriverCtorsRWL.RUnlock()
-		ctor, ok = clientDriverCtors[strings.ToLower(name)]
-	}()
-
-	if !ok {
-		return nil, goof.WithField("driver", name, "invalid driver name")
 	}
 
 	return ctor(), nil
@@ -221,21 +189,6 @@ func StorageExecutors() <-chan types.StorageExecutor {
 		storExecsCtorsRWL.RLock()
 		defer storExecsCtorsRWL.RUnlock()
 		for _, ctor := range storExecsCtors {
-			c <- ctor()
-		}
-		close(c)
-	}()
-	return c
-}
-
-// ClientDrivers returns a channel on which new instances of all
-// registered remote local drivers can be received.
-func ClientDrivers() <-chan types.ClientDriver {
-	c := make(chan types.ClientDriver)
-	go func() {
-		clientDriverCtorsRWL.RLock()
-		defer clientDriverCtorsRWL.RUnlock()
-		for _, ctor := range clientDriverCtors {
 			c <- ctor()
 		}
 		close(c)

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"time"
 
 	gofig "github.com/akutz/gofig/types"
@@ -272,6 +273,9 @@ func (d *driver) VolumeCreate(
 		return nil, err
 	}
 
+	volDir := path.Join(vfs.VolumesDirPath(d.config), v.ID)
+	os.MkdirAll(volDir, 0755)
+
 	return v, nil
 }
 
@@ -324,6 +328,9 @@ func (d *driver) VolumeCreateFromSnapshot(
 		return nil, err
 	}
 
+	volDir := path.Join(vfs.VolumesDirPath(d.config), v.ID)
+	os.MkdirAll(volDir, 0755)
+
 	return v, nil
 }
 
@@ -358,6 +365,9 @@ func (d *driver) VolumeCopy(
 	if err := d.writeVolume(newVol); err != nil {
 		return nil, err
 	}
+
+	volDir := path.Join(vfs.VolumesDirPath(d.config), newVol.ID)
+	os.MkdirAll(volDir, 0755)
 
 	return newVol, nil
 }
@@ -409,6 +419,9 @@ func (d *driver) VolumeRemove(
 		return utils.NewNotFoundError(volumeID)
 	}
 	os.Remove(volJSONPath)
+
+	volDir := path.Join(vfs.VolumesDirPath(d.config), volumeID)
+	os.RemoveAll(volDir)
 	return nil
 }
 

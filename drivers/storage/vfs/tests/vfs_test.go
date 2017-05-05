@@ -34,7 +34,6 @@ import (
 	// load the vfs driver packages
 
 	"github.com/codedellemc/libstorage/drivers/storage/vfs"
-	_ "github.com/codedellemc/libstorage/drivers/storage/vfs/client"
 	_ "github.com/codedellemc/libstorage/drivers/storage/vfs/storage"
 )
 

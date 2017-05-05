@@ -19,31 +19,41 @@ When creating or modifying the project's `README.md` file or any of the
 documentation in the `.docs` directory, please keep the following rules in
 mind:
 
-1. All markdown should be limited to a width of 80 characters. This makes
-the document easier to read in text editors. GitHub and ReadTheDocs still
-produces the proper result when parsing the markdown.
-2. All links to internal resources should be relative.
-3. All links to markdown files should include the file extension.
+1. All links to internal resources should be relative and if a link to
+another documentation resource, include the `.md` file extension. This
+is so links to internal resources are valid when followed from GitHub or
+ReadTheDocs.
 
-For example, the below link points to the anchor `basic-configuration` on the
-`Configuration` page:
+    For example, the following link points to the anchor
+    `basic-configuration` on the `Configuration` page:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-[/user-guide/config#basic-configuration](/user-guide/config#basic-configuration)
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    [/user-guide/config#basic-configuration](/user-guide/config#basic-configuration)
 
-However, when the above link is followed when viewing this page directly from
-the Github repository instead of the generated site documentation, the link
-will return a 404.
+    However, the above link will return a 404 when followed while viewing this
+    page via GitHub.
 
-While it's recommended that users view the generated site documentation instead
-of the source Markdown directly, we can still fix it so that the above link
-will work regardless. To fix the link, simply make it relative and add the
-Markdown file extension:
+    While it's recommended that users view the generated site documentation
+    instead of the source Markdown directly, it's possible to make the above
+    link work regardless. To fix the link, simply make it relative and add the
+    Markdown file extension:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-[../user-guide/config.md#basic-configuration](../user-guide/config.md#basic-configuration)
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    [../user-guide/config.md#basic-configuration](../user-guide/config.md#basic-configuration)
 
-Now the link will work regardless from where it's viewed.
+    Now the link will work regardless from where it's viewed.
+
+2. When creating or modifying the project documentation in the `.docs` directory
+please ensure that it's being reviewed with the
+[MkDocs](http://www.mkdocs.org/) tool. Once
+[installed](http://www.mkdocs.org/#installation) open a terminal window to
+the root of the project and execute the following:
+
+        $ mkdocs serve
+
+    The above command will serve the rendered documentation at
+    [http://localhost:8080](http://localhost:8080) and changes
+    made to the documentation are updated in real-time.
 
 ## Style & Syntax
 All source files should be processed by the
@@ -58,6 +68,12 @@ gometalinter every time a source file is saved.
 In lieu of using Atom as the IDE, the project's `Makefile` automatically
 executes the above tools as part of the build process and will fail the build
 if problems are discovered.
+
+## Line Length
+All source code and markdown should be limited to a width of 80 characters.
+This makes the file easier to read in text editors. For the markdown this
+will likely result in hard line breaks, but that's okay. GitHub and ReadTheDocs
+still produce the intended result when rendering the markdown.
 
 ## Code Coverage
 All new work submitted to the project should have associated tests where
@@ -151,6 +167,16 @@ All developers are required to follow the
 [GitHub Flow model](https://guides.github.com/introduction/flow/) when
 proposing new features or even submitting fixes.
 
+Please ensure that branch names are lowercase, hyphenated, and adhere
+to the following naming convention:
+
+Type | Pattern
+-----|--------
+feature, docs | `feature/lowercase-and-hyphentated`
+bugfix | `bugfix/lowercase-and-hyphentated`
+release | `release/vA.B.C`
+release candidate | `release/vA.B.C-rcD`
+
 Please note that although not explicitly stated in the referenced GitHub Flow
 model, all work should occur on a __fork__ of this project, not from within a
 branch of this project itself.
@@ -158,10 +184,10 @@ branch of this project itself.
 Pull requests submitted to this project should adhere to the following
 guidelines:
 
-  * Branches should be rebased off of the upstream master prior to being
-    opened as pull requests and again prior to merge. This is to ensure that
-    the build system accounts for any changes that may only be detected during
-    the build and test phase.
+  * Branches should be rebased off of the upstream master (or targeted
+    release branch) prior to being opened as pull requests and again prior
+    to merge. This is to ensure that the build system accounts for any changes
+    that may only be detected during the build and test phase.
 
   * Unless granted an exception a pull request should contain only a single
     commit. This is because features and patches should be atomic -- wholly

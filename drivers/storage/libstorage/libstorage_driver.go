@@ -68,15 +68,10 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
-	var tlsConfig *types.TLSConfig
-
-	// disable TLS for UNIX sockets
-	if !strings.EqualFold(proto, "unix") {
-		tlsConfig, err = utils.ParseTLSConfig(
-			d.ctx, config, logFields, types.ConfigClient)
-		if err != nil {
-			return err
-		}
+	tlsConfig, err := utils.ParseTLSConfig(
+		d.ctx, config, proto, logFields, types.ConfigClient)
+	if err != nil {
+		return err
 	}
 
 	host := getHost(d.ctx, proto, lAddr, tlsConfig)

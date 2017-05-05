@@ -361,6 +361,23 @@ when necessary and without any explicit configuration. However, if a file's
 related configuration property is set explicitly to some other, non-default
 value, the default file will not be loaded even if it is present.
 
+#### TLS and UNIX Sockets
+TLS is disabled by default when a server's endpoint or client-side host is
+configured for use with a UNIX socket. This is for two reasons:
+
+1. TLS isn't strictly necessary to provide transport security via a file-backed
+socket. The file's UNIX permissions take care of which users can read and/or
+write to the socket.
+2. The certificate verification step in a TLS negotiation is complicated when
+the endpoint to which the client is connecting is a file path, not a FQDN or
+IP address. This issue can be resolved by setting the property
+`libstorage.tls.serverName` on the client so that the value matches the
+server certificate's common name (CN) or one of its subject alternate names
+(SAN).
+
+To explicitly enable TLS for use with UNIX sockets, set the environment
+variable `LIBSTORAGE_TLS_SOCKITTOME` to a truthy value.
+
 #### Insecure TLS
 The following example illustrates how to configure the libStorage client to
 skip validation of a provided server-side certificate:

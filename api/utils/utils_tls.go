@@ -54,8 +54,18 @@ func ParseKnownHost(
 func ParseTLSConfig(
 	ctx types.Context,
 	config gofig.Config,
+	proto string,
 	fields log.Fields,
 	roots ...string) (tlsConfig *types.TLSConfig, tlsErr error) {
+
+	if strings.EqualFold(proto, "unix") {
+		enable, _ := strconv.ParseBool(
+			os.Getenv("LIBSTORAGE_TLS_SOCKITTOME"))
+		if !enable {
+			ctx.Debug("disabling tls for unix sockets")
+			return nil, nil
+		}
+	}
 
 	ctx.Debug("parsing tls config")
 

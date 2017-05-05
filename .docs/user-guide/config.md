@@ -349,12 +349,12 @@ Thus if `LIBSTORAGE_HOME` was set to `/opt/libstorage` and
 This section reviews the several supported TLS configuration options. The table
 below lists the default locations of the TLS-related files.
 
-Directory | File | Property | Description
-----------|-----|-----------|------------
-`$LIBSTORAGE_HOME_ETC_TLS` | `libstorage.crt` | `libstorage.tls.crtFile` | The public key.
-| `libstorage.key` | `libstorage.tls.keyFile` | The private key.
-| `cacerts` | `libstorage.tls.trustedCertsFile` | The trusted key ring.
-| `known_hosts` | `libstorage.tls.knownHosts` | The system known hosts file.
+| Directory | File | Property | Description |
+| ----------|-----|-----------|------------ |
+| `$LIBSTORAGE_HOME_ETC_TLS` | `libstorage.crt` | `libstorage.tls.crtFile` | The public key. |
+| | `libstorage.key` | `libstorage.tls.keyFile` | The private key. |
+| | `cacerts` | `libstorage.tls.trustedCertsFile` | The trusted key ring. |
+| | `known_hosts` | `libstorage.tls.knownHosts` | The system known hosts file. |
 
 If libStorage detects any of the above files, the detected files are loaded
 when necessary and without any explicit configuration. However, if a file's
@@ -406,120 +406,6 @@ libstorage:
     _insecure_ mode. This means the client is not attempting to verify the
     certificate provided by the server. This is a security risk and should not
     ever be used in production.
-
-#### Peer Verification
-While TLS should never be configured as insecure in production, there is a
-compromise that enables an encrypted connection while still providing some
-measure of verification of the remote endpoint's identity -- peer verification.
-
-When peer verification mode is enabled, TLS is implicitly configured to operate
-as insecure in order to disable server-side certificate verification. This
-enables an encrypted transport while delegating the authenticity of the
-server's identity to the peer verification process.
-
-The first step to configuring peer verification is to obtain the information
-about the peer used to identify it. First, obtain the peer's certificate and
-store it locally. This step can be omitted if the remote peer's certificate
-is already available locally.
-
-```bash
-$ openssl s_client -connect google.com:443 2>/dev/null </dev/null | \
-  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > my.crt
-```
-
-Once the remote certificate is available locally it can be used to generate
-its identifying information:
-
-```bash
-$ echo $(cat my.crt | openssl x509 -noout -subject | \
-  awk 'BEGIN { FS = "/" }; { print $NF }' | \
-  cut -c4-) sha256 $(cat my.crt | \
-  openssl x509 -noout -fingerprint -sha256 | cut -c20-)
-```
-
-The above command should emit something similar to the following:
-
-```bash
-*.google.com sha256 14:8F:93:BE:EA:AB:68:CE:C8:03:0D:0B:0D:54:C3:59:4C:18:55:5D:2D:7E:4E:8C:68:9E:D4:59:33:3C:68:96
-```
-
-The above output is a _known hosts_ entry.
-
-!!! note "note"
-    It is also possible to collapse the entire series of above steps into a
-    single command:
-
-    <pre>
-    <code lang="bash">$ openssl s_client -connect google.com:443 2>/dev/null </dev/null | \
-      sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > my.crt && \
-      echo $(cat my.crt | openssl x509 -noout -subject | \
-      awk 'BEGIN { FS = "/" }; { print $NF }' | \
-      cut -c4-) sha256 $(cat my.crt | \
-      openssl x509 -noout -fingerprint -sha256 | cut -c20-) && \
-      rm -f my.crt</code></pre>
-
-##### Simple Peer Verification
-With the remote peer's identifying information in hand it is possible to
-enable peer verification on the client by setting the property
-`libstorage.tls` to the remote peer's identifier string:
-
-```yaml
-libstorage:
-  client:
-    tls: *.google.com sha256 14:8F:93:BE:EA:AB:68:CE:C8:03:0D:0B:0D:54:C3:59:4C:18:55:5D:2D:7E:4E:8C:68:9E:D4:59:33:3C:68:96
-```
-
-The above approach does result in the client attempting a TLS connection to
-the configured, remote host. However, the peer verification will only be
-valid for a single peer.
-
-##### Advanced Peer Verification
-While simple peer verification works for a single, remote host, sometimes it
-is necessary to enable peer verification for multiple remote hosts. This
-configuration requires a _known hosts_ file.
-
-For people that use SSH the concept of a known hosts file should feel familiar.
-In fact, libStorage copies the format of SSH's known hosts file entirely. The
-file adheres to a line-delimited format:
-
-```bash
-ls-svr-01 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6A
-ls-svr-02 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6C
-ls-svr-03 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6D
-```
-
-The known hosts file can be specified via the property
-`libstorage.tls.knownHosts`. This is the _system_ known hosts file. If this
-property is not explicitly configured then libStorage checks for the file
-`$LIBSTORAGE_HOME_ETC_TLS/known_hosts`. libStorage also looks for the _user_
-known hosts file at `$HOME/.libstorage/known_hosts`.
-
-Thus if a known hosts file is present at either of the default system or
-user locations, it's possible to take advantage of them with a configuration
-similar to the following:
-
-```yaml
-libstorage:
-  client:
-    tls: verifyPeers
-```
-
-The above configuration snippet indicates that TLS is enabled with peer
-verification. Because no known hosts file is specified the default paths are
-checked for any known host files. To enable peer verification with a custom
-system known hosts file the following configuration can be used:
-
-```yaml
-libstorage:
-  client:
-    tls:
-      verifyPeers: true
-      knownHosts:  /tmp/known_hosts
-```
-
-The above configuration snippet indicates that TLS is enabled and set to
-peer verification mode and that the system known hosts file is located at
-`/tmp/known_hosts`.
 
 #### Trusted Certs File
 This TLS configuration example describes how to instruct the libStorage client
@@ -581,6 +467,154 @@ server certificate to have a dual purpose as an intermediate signing authority
 that has signed the allowed client certificates. Or at the very least the
 server certificate would be signed by the same intermediate CA that is used
 to sign the client-side certs.
+
+#### Peer Verification
+While TLS should never be configured as insecure in production, there is a
+compromise that enables an encrypted connection while still providing some
+measure of verification of the remote endpoint's identity -- peer verification.
+
+When peer verification mode is enabled, TLS is implicitly configured to operate
+as insecure in order to disable server-side certificate verification. This
+enables an encrypted transport while delegating the authenticity of the
+server's identity to the peer verification process.
+
+The first step to configuring peer verification is to obtain the information
+about the peer used to identify it. First, obtain the peer's certificate and
+store it locally. This step can be omitted if the remote peer's certificate
+is already available locally.
+
+Export the name of the host and port to verify:
+```bash
+$ export KNOWN_HOST=google.com
+$ export KNOWN_PORT=443
+```
+
+Connect to that host and save its certificate:
+
+```bash
+$ openssl s_client -connect ${KNOWN_HOST}:${KNOWN_PORT} 2>/dev/null </dev/null | \
+  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > ${KNOWN_HOST}.crt
+```
+
+Once the remote certificate is available locally it can be used to generate
+its identifying information:
+
+```bash
+$ printf "${KNOWN_HOST} sha256 %s\n" \
+  $(cat ${KNOWN_HOST}.crt | openssl x509 -noout -fingerprint -sha256 | cut -c20-)
+```
+
+The above command will emit the following:
+
+```bash
+google.com sha256 14:8F:93:BE:EA:AB:68:CE:C8:03:0D:0B:0D:54:C3:59:4C:18:55:5D:2D:7E:4E:8C:68:9E:D4:59:33:3C:68:96
+```
+
+The above output is a _known hosts_ entry.
+
+!!! note "note"
+    It is also possible to collapse the entire series of above steps into a
+    single command:
+
+    <pre>
+    <code lang="bash">$ if [ ! -n "${KNOWN_HOST+1}" ]; then \
+        KHH=1 && printf "Host? " && read -r KNOWN_HOST; fi; \
+      if [ ! -n "${KNOWN_PORT+1}" ]; then \
+        KHP=1 && printf "Port? " && read -r KNOWN_PORT; fi; \
+      KNOWN_HPRT=${KNOWN_HOST}:${KNOWN_PORT} && \
+      KNOWN_CERT=${KNOWN_HOST}.crt && \
+      openssl s_client -connect $KNOWN_HPRT 2>/dev/null &lt;/dev/null | \
+        sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > $KNOWN_CERT && \
+      printf "${KNOWN_HOST} sha256 %s\n" \
+        $(cat $KNOWN_CERT |
+        openssl x509 -noout -fingerprint -sha256 | cut -c20-) && \
+      rm -f $KNOWN_CERT && \
+      if [ "$KHH" = "1" ]; then unset KHH && unset KNOWN_HOST; fi; \
+      if [ "$KHP" = "1" ]; then unset KHP && unset KNOWN_PORT; fi</code></pre>
+
+      The above command will prompt a user to enter both the `Host` and `Port`
+      if the `KNOWN_HOST` and `KNOWN_PORT` environment variables are not
+      set to non-empty values.
+
+##### Simple Peer Verification
+With the remote peer's identifying information in hand it is possible to
+enable peer verification on the client by setting the property
+`libstorage.tls` to the remote peer's identifier string:
+
+```yaml
+libstorage:
+  client:
+    tls: google.com sha256 14:8F:93:BE:EA:AB:68:CE:C8:03:0D:0B:0D:54:C3:59:4C:18:55:5D:2D:7E:4E:8C:68:9E:D4:59:33:3C:68:96
+```
+
+The above approach does result in the client attempting a TLS connection to
+the configured, remote host. However, the peer verification will only be
+valid for a single peer.
+
+##### Advanced Peer Verification
+While simple peer verification works for a single, remote host, sometimes it
+is necessary to enable peer verification for multiple remote hosts. This
+configuration requires a _known hosts_ file.
+
+For people that use SSH the concept of a known hosts file should feel familiar.
+In fact, libStorage copies the format of SSH's known hosts file entirely. The
+file adheres to a line-delimited format:
+
+```bash
+ls-svr-01 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6A
+ls-svr-02 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6C
+ls-svr-03 sha256 15:92:77:BE:6C:90:D3:FB:59:29:9C:51:A7:DB:5C:16:55:BD:B9:9E:E7:7E:C1:9B:30:C3:74:99:21:5F:08:6D
+```
+
+The known hosts file can be specified via the property
+`libstorage.tls.knownHosts`. This is the _system_ known hosts file. If this
+property is not explicitly configured then libStorage checks for the file
+`$LIBSTORAGE_HOME_ETC_TLS/known_hosts`. libStorage also looks for the _user_
+known hosts file at `$HOME/.libstorage/known_hosts`.
+
+Thus if a known hosts file is present at either of the default system or
+user locations, it's possible to take advantage of them with a configuration
+similar to the following:
+
+```yaml
+libstorage:
+  client:
+    tls: verifyPeers
+```
+
+The above configuration snippet indicates that TLS is enabled with peer
+verification. Because no known hosts file is specified the default paths are
+checked for any known host files. To enable peer verification with a custom
+system known hosts file the following configuration can be used:
+
+```yaml
+libstorage:
+  client:
+    tls:
+      verifyPeers: true
+      knownHosts:  /tmp/known_hosts
+```
+
+The above configuration snippet indicates that TLS is enabled and set to
+peer verification mode and that the system known hosts file is located at
+`/tmp/known_hosts`.
+
+#### Known Host Conflict
+Most people that use SSH have seen an error that begins with the following
+text:
+
+```bash
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+```
+
+The above warning occurs when a remote host's fingerprint is not what
+is stored in the client's known hosts file for that host. libStorage
+behaves the exact same way. If the libStorage client is configured
+to verify a remote peer's identity and its fingerprint is not what
+is stored in the libStorage client's known hosts file, the connection
+will fail.
 
 ### Authentication
 In addition to TLS, the libStorage API includes support for

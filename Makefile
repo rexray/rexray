@@ -539,7 +539,6 @@ GO_DEPS += $(GOMETALINTER_TOOLS_D)
 
 GOMETALINTER_ARGS := --vendor \
 					 --fast \
-					 --tests \
 					 --cyclo-over=16 \
 					 --deadline=30s \
 					 --enable=gofmt \
@@ -552,9 +551,14 @@ GOMETALINTER_ARGS := --vendor \
 					 --exclude=_generated.go \
 					 --linter='gofmt:gofmt -l ./*.go:^(?P<path>[^\n]+)$''
 
+gometalinter-warn: GOMETALINTER_ARGS += --line-length=80
+gometalinter-warn: GOMETALINTER_ARGS += --severity=lll:warn
+gometalinter-warn: GOMETALINTER_ARGS += --tests
 gometalinter-warn: | $(GOMETALINTER_TOOLS_D) $(GLIDE)
-	-$(GOMETALINTER) $(GOMETALINTER_ARGS) $(shell $(GLIDE) nv)
+	$(GOMETALINTER) $(GOMETALINTER_ARGS) $(shell $(GLIDE) nv)
 
+gometalinter-error: GOMETALINTER_ARGS += --line-length=100
+gometalinter-error: GOMETALINTER_ARGS += --severity=lll:error
 gometalinter-error: | $(GOMETALINTER_TOOLS_D) $(GLIDE)
 	$(GOMETALINTER) $(GOMETALINTER_ARGS) --errors $(shell $(GLIDE) nv)
 

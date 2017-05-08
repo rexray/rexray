@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-GO_VERSION := 1.7.5
+GO_VERSION := 1.8.1
 
 # the name of the program being compiled. this word is in place of file names,
 # directory paths, etc. changing the value of PROG is no guarantee everything

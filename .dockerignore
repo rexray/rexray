@@ -1,0 +1,6 @@
+**/*.d
+**/*_generated.go
+**/*_generated_test.go
+.DS_Store
+.docker/plugins/*/rootfs/
+vendor/

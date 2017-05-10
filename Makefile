@@ -1,11 +1,21 @@
 SHELL := /bin/bash
-GO_VERSION := 1.8.1
 
 # the name of the program being compiled. this word is in place of file names,
 # directory paths, etc. changing the value of PROG is no guarantee everything
 # continues to function.
 PROG_ROOT := rexray
 PROG := $(PROG_ROOT)
+
+# the root import path. this may be override later, but it should still
+# have a sane default
+ROOT_IMPORT_PATH := github.com/codedellemc/rexray
+
+# if the GOPATH is set, assign it the first element
+GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
+
+ifneq (1,$(PORCELAIN))
+
+GO_VERSION := 1.8.1
 
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS := gofig pflag libstorage_integration_driver_linux
@@ -74,12 +84,14 @@ endif
 
 all:
 # if docker is running, then let's use docker to build it
-ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
+ifneq (,$(shell if [ ! "$$NODOCKER" = "1" ] && docker version &> /dev/null; then echo -; fi))
 	$(MAKE) docker-build
 else
 	$(MAKE) deps
 	$(MAKE) build
 endif
+
+endif # ifneq (1,$(PORCELAIN))
 
 # record the paths to these binaries, if they exist
 GO := $(strip $(shell which go 2> /dev/null))
@@ -273,8 +285,12 @@ PRINTF_VERSION_CMD += "$(V_BRANCH)" "$(V_SHA_LONG)" "$(V_BUILD_DATE)"
 version:
 	$(PRINTF_VERSION_CMD)
 
-.PHONY: version
+version-porcelain:
+	@echo $(V_SEMVER)
 
+.PHONY: version version-porcelain
+
+ifneq (1,$(PORCELAIN))
 
 ################################################################################
 ##                                  DOCKER                                    ##
@@ -359,7 +375,7 @@ endif
 
 docker-do-build: docker-init
 	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) NOSTAT=1 \
 		make -C $(DPATH) -j build
 
 build-docker: docker-build
@@ -402,7 +418,7 @@ docker-clean-controller:
 
 docker-info: docker-init
 	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) NOSTAT=1 \
 		make -C $(DPATH) info
 
 docker-info-client:
@@ -508,8 +524,7 @@ build-docker-plugin: $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT)
 $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
 										$(DOCKER_PLUGIN_DOCKERFILE_TGT) \
 										$(DOCKER_PLUGIN_ENTRYPOINT_TGT) \
-										$(DOCKER_PLUGIN_CONFIGFILE_TGT) \
-										| $(DOCKER_PLUGIN_REXRAYFILE_TGT)
+										$(DOCKER_PLUGIN_CONFIGFILE_TGT)
 	docker plugin rm $(DOCKER_PLUGIN_NAME) 2> /dev/null || true
 	sudo rm -fr $(@D)
 	docker build -t rootfsimage $(<D) && \
@@ -590,6 +605,7 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 ################################################################################
 
 GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
+GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
 ifneq (,$(TRAVIS_GO_VERSION))
@@ -810,7 +826,7 @@ $(GLIDE_YAML):
 $(GLIDE_LOCK)-clean:
 	rm -f $(GLIDE_LOCK)
 GO_PHONY += $(GLIDE_LOCK)-clean
-GO_CLOBBER += $(GLIDE_LOCK)-clean
+#GO_CLOBBER += $(GLIDE_LOCK)-clean
 endif
 
 ifeq (true,$(DEPEND_ON_GOBINDATA))
@@ -821,10 +837,7 @@ else
 GO_BINDATA_IMPORT_PATH := $(firstword $(subst /vendor/, ,$(ROOT_IMPORT_PATH)))/$(GO_BINDATA_IMPORT_PATH)
 endif
 
-ifneq (1,$(VENDORED))
 $(GO_BINDATA): $(GLIDE_LOCK_D)
-endif
-$(GO_BINDATA):
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
@@ -1072,7 +1085,7 @@ build-libstorage: $(LIBSTORAGE_API)
 endif
 
 clean-libstorage:
-	$(MAKE) -C $(LIBSTORAGE_DIR) clean
+	if [ -d $(LIBSTORAGE_DIR) ]; then $(MAKE) -C $(LIBSTORAGE_DIR) clean; fi
 GO_CLEAN += clean-libstorage
 GO_PHONY += clean-libstorage
 
@@ -1346,10 +1359,10 @@ ifeq (true,$($EMBED_SCRIPTS))
 endif
 
 build:
-	$(MAKE) build-libstorage
+	$(MAKE) -j build-libstorage
 	$(MAKE) build-generated
-	$(MAKE) build-$(PROG)
-ifneq (1,$(DOCKER))
+	$(MAKE) -j build-$(PROG)
+ifneq (1,$(NOSTAT))
 	$(MAKE) stat-prog
 endif
 
@@ -1412,8 +1425,35 @@ clean-agent:
 clean-controller:
 	REXRAY_BUILD_TYPE=controller $(MAKE) clean
 
-clobber: clean $(GO_CLOBBER)
-
-.PHONY: info clean clobber $(GO_PHONY)
+.PHONY: $(.PHONY) info clean $(GO_PHONY)
 
 endif # ifneq (,$(shell which go 2> /dev/null))
+
+endif # ifneq (1,$(PORCELAIN))
+
+clobber:
+	@if [ "$(GOPATH)" = "" ]; then exit 1; fi
+	rm -fr vendor
+	rm -f  $(GOPATH)/bin/$(PROG_ROOT) \
+       $(GOPATH)/bin/$(PROG_ROOT)-agent \
+       $(GOPATH)/bin/$(PROG_ROOT)-client \
+       $(GOPATH)/bin/$(PROG_ROOT)-controller \
+       $(GOPATH)/bin/*/$(PROG_ROOT) \
+       $(GOPATH)/bin/*/$(PROG_ROOT)-agent \
+       $(GOPATH)/bin/*/$(PROG_ROOT)-client \
+       $(GOPATH)/bin/*/$(PROG_ROOT)-controller \
+       $(GOPATH)/bin/lsx-* \
+       $(GOPATH)/bin/*/lsx-*
+	rm -fr $(GOPATH)/pkg/$(ROOT_IMPORT_PATH) \
+       $(GOPATH)/pkg/*/$(ROOT_IMPORT_PATH)
+ifneq (1,$(CLOBBER_NOCLEAN))
+	PORCELAIN=0 $(MAKE) clean
+endif
+	for f in $$(find . -name "*_generated.go" \
+       -or -name "*_generated_test.go" \
+       -or -name "*.d" \
+       -type f \
+       -not -path './.docker/*' \
+       2>&1 | grep -v 'Permission denied'); do echo $$f; rm -f $$f; done
+
+.PHONY: $(.PHONY) clobber

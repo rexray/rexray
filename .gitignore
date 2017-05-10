@@ -1,3 +1,6 @@
+.glide.yaml.tmp
+.ls.tar.gz
+.Dockerfile.tmp
 /sio-alpine.sh
 *.*-e
 .*-e

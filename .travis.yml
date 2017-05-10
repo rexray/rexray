@@ -39,8 +39,9 @@ before_install:
 
 script:
   - make gometalinter-all
-  - make -j build-libstorage
-  - GOOS=linux GOARCH=amd64 make -j build
+#  - make -j build-libstorage
+#  - GOOS=linux GOARCH=amd64 make -j build
+  - ./build.sh -x -b make
   - if [ "$REXRAY_BUILD_TYPE" = "" ]; then REXRAY_DEBUG=true $GOPATH/bin/rexray version; else REXRAY_DEBUG=true $GOPATH/bin/rexray-$REXRAY_BUILD_TYPE version; fi
   - make -j test
 

@@ -773,7 +773,7 @@ Below is a full `config.yml` file that works with ScaleIO.
 libstorage:
   # The libstorage.service property directs a libStorage client to direct its
   # requests to the given service by default. It is not used by the server.
-  service: scaelio
+  service: scaleio
   server:
     services:
       scaleio:

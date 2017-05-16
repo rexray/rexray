@@ -1,11 +1,21 @@
 SHELL := /bin/bash
-GO_VERSION := 1.7.5
 
 # the name of the program being compiled. this word is in place of file names,
 # directory paths, etc. changing the value of PROG is no guarantee everything
 # continues to function.
 PROG_ROOT := rexray
 PROG := $(PROG_ROOT)
+
+# the root import path. this may be override later, but it should still
+# have a sane default
+ROOT_IMPORT_PATH := github.com/codedellemc/rexray
+
+# if the GOPATH is set, assign it the first element
+GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
+
+ifneq (1,$(PORCELAIN))
+
+GO_VERSION := 1.8.1
 
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS := gofig pflag libstorage_integration_driver_linux
@@ -74,13 +84,213 @@ endif
 
 all:
 # if docker is running, then let's use docker to build it
-ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
+ifneq (,$(shell if [ ! "$$NODOCKER" = "1" ] && docker version &> /dev/null; then echo -; fi))
 	$(MAKE) docker-build
 else
 	$(MAKE) deps
 	$(MAKE) build
 endif
 
+endif # ifneq (1,$(PORCELAIN))
+
+# record the paths to these binaries, if they exist
+GO := $(strip $(shell which go 2> /dev/null))
+GIT := $(strip $(shell which git 2> /dev/null))
+
+
+################################################################################
+##                               CONSTANTS                                    ##
+################################################################################
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+ASTERIK := *
+LPAREN := (
+RPAREN := )
+COMMA := ,
+5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
+
+
+################################################################################
+##                               OS/ARCH INFO                                 ##
+################################################################################
+ifeq (,$(strip $(GOOS)$(GOARCH)))
+ifneq (,$(GO)) # if go exists
+GOOS_GOARCH := $(subst /, ,$(shell $(GO) version | awk '{print $$4}'))
+GOOS := $(word 1,$(GOOS_GOARCH))
+GOARCH := $(word 2,$(GOOS_GOARCH))
+else
+GOOS ?= $(shell uname -s | tr A-Z a-z)
+GOARCH ?= amd64
+endif
+endif
+
+ifeq ($(GOOS),windows)
+OS ?= Windows_NT
+endif
+ifeq ($(GOOS),linux)
+OS ?= Linux
+endif
+ifeq ($(GOOS),darwin)
+OS ?= Darwin
+endif
+ifeq ($(GOARCH),386)
+ARCH ?= i386
+endif
+ifeq ($(GOARCH),amd64)
+ARCH ?= x86_64
+endif
+
+export OS
+export ARCH
+
+
+################################################################################
+##                                  VERSION                                   ##
+################################################################################
+ifeq (,$(GIT)) # if git does not exist
+
+V_MAJOR := 0
+V_MINOR := 1
+V_PATCH := 0
+V_NOTES :=
+V_BUILD :=
+V_SHA_SHORT := 0123456
+V_DIRTY :=
+V_SHA_LONG := 0123456789ABCDEFGHIJKLMNOPQRSTUV
+TRAVIS_BRANCH := master
+
+else # if git does exit
+
+# parse a semver
+SEMVER_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z].+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
+PARSE_SEMVER = $(shell echo $(1) | perl -pe 's/$(SEMVER_PATT)/$(2)/gim')
+
+# describe the git information and create a parsing function for it
+GIT_DESCRIBE := $(shell $(GIT) describe --long --dirty)
+PARSE_GIT_DESCRIBE = $(call PARSE_SEMVER,$(GIT_DESCRIBE),$(1))
+
+# parse the version components from the git information
+V_MAJOR := $(call PARSE_GIT_DESCRIBE,$$1)
+V_MINOR := $(call PARSE_GIT_DESCRIBE,$$2)
+V_PATCH := $(call PARSE_GIT_DESCRIBE,$$3)
+V_NOTES := $(call PARSE_GIT_DESCRIBE,$$4)
+V_BUILD := $(call PARSE_GIT_DESCRIBE,$$5)
+V_SHA_SHORT := $(call PARSE_GIT_DESCRIBE,$$6)
+V_DIRTY := $(call PARSE_GIT_DESCRIBE,$$7)
+
+V_SHA_LONG := $(shell $(GIT) show HEAD -s --format=%H)
+
+# the branch name, possibly from travis-ci
+ifeq ($(origin TRAVIS_BRANCH), undefined)
+TRAVIS_BRANCH := $(shell $(GIT) branch | grep '*' | cut -c3-)
+else
+ifeq (,$(strip $(TRAVIS_BRANCH)))
+TRAVIS_BRANCH := $(shell $(GIT) branch | grep '*' | cut -c3-)
+endif
+endif # ifeq ($(origin TRAVIS_BRANCH), undefined)
+
+endif # if git does or does not exist
+
+
+ifneq (,$(shell which date 2> /dev/null)) # if date exists
+# the build date as an epoch
+V_EPOCH := $(shell date +%s)
+else
+V_EPOCH := 0
+endif # ifneq (,$(shell which date 2> /dev/null))
+
+ifneq (,$(shell which perl 2> /dev/null)) # if perl exists
+# the build date
+V_BUILD_DATE := $(shell perl -e 'use POSIX strftime; print strftime("%a, %d %b %Y %H:%M:%S %Z", localtime($(V_EPOCH)))')
+# the release date as required by bintray
+V_RELEASE_DATE := $(shell perl -e 'use POSIX strftime; print strftime("%Y-%m-%d", localtime($(V_EPOCH)))')
+else
+V_BUILD_DATE := Thu, 01 Jan 1970 00:00:00
+V_RELEASE_DATE := 1970-01-01
+endif # ifneq (,$(shell which perl 2> /dev/null))
+
+V_OS := $(OS)
+V_ARCH := $(ARCH)
+V_OS_ARCH := $(V_OS)-$(V_ARCH)
+
+TRAVIS_BRANCH := $(subst $(ASTERIK) ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached at ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(RPAREN),,$(TRAVIS_BRANCH))
+
+ifeq ($(origin TRAVIS_TAG), undefined)
+TRAVIS_TAG := $(TRAVIS_BRANCH)
+else
+
+ifeq ($(strip $(TRAVIS_TAG)),)
+TRAVIS_TAG := $(TRAVIS_BRANCH)
+endif
+
+endif # ifeq ($(origin TRAVIS_TAG), undefined)
+
+V_BRANCH := $(TRAVIS_TAG)
+
+# init the semver
+V_SEMVER := $(V_MAJOR).$(V_MINOR).$(V_PATCH)
+ifneq ($(V_NOTES),)
+V_SEMVER := $(V_SEMVER)-$(V_NOTES)
+endif
+
+# get the version file's version
+V_FILE := $(strip $(shell cat VERSION 2> /dev/null))
+
+# append the build number and dirty values to the semver if appropriate
+ifneq ($(V_BUILD),)
+ifneq ($(V_BUILD),0)
+
+# if the version file's version is different than the version parsed from the
+# git describe information then use the version file's version
+ifneq ($(V_SEMVER),$(V_FILE))
+
+ifneq (,$(strip $(PARSE_SEMVER))) # if the PARSE_SEMVER cmd is defined
+V_MAJOR := $(call PARSE_SEMVER,$(V_FILE),$$1)
+V_MINOR := $(call PARSE_SEMVER,$(V_FILE),$$2)
+V_PATCH := $(call PARSE_SEMVER,$(V_FILE),$$3)
+V_NOTES := $(call PARSE_SEMVER,$(V_FILE),$$4)
+else # if the PARSE_SEMVER cmd is NOT defined
+V_MAJOR := 0
+V_MINOR := 1
+V_PATCH := 0
+V_NOTES :=
+endif # ifneq (,$(strip $(PARSE_SEMVER)))
+
+V_SEMVER := $(V_MAJOR).$(V_MINOR).$(V_PATCH)
+
+ifneq ($(V_NOTES),)
+V_SEMVER := $(V_SEMVER)-$(V_NOTES)
+endif # ifneq ($(V_NOTES),)
+
+endif # ifneq ($(V_SEMVER),$(V_FILE))
+
+V_SEMVER := $(V_SEMVER)+$(V_BUILD)
+
+endif # ifneq ($(V_BUILD),0)
+endif # ifneq ($(V_BUILD),)
+
+ifeq ($(V_DIRTY),dirty)
+V_SEMVER := $(V_SEMVER)+$(V_DIRTY)
+endif
+
+# the rpm version cannot have any dashes
+V_RPM_SEMVER := $(subst -,+,$(V_SEMVER))
+
+PRINTF_VERSION_CMD += @printf "SemVer: %s\nBinary: %s\nBranch: %s\nCommit:
+PRINTF_VERSION_CMD += %s\nFormed: %s\n" "$(V_SEMVER)" "$(V_OS_ARCH)"
+PRINTF_VERSION_CMD += "$(V_BRANCH)" "$(V_SHA_LONG)" "$(V_BUILD_DATE)"
+
+version:
+	$(PRINTF_VERSION_CMD)
+
+version-porcelain:
+	@echo $(V_SEMVER)
+
+.PHONY: version version-porcelain
+
+ifneq (1,$(PORCELAIN))
 
 ################################################################################
 ##                                  DOCKER                                    ##
@@ -100,7 +310,16 @@ ifeq (1,$(DBUILD_ONCE))
 DNAME := $(DNAME)-$(shell date +%s)
 endif
 DPATH := /go/src/$(DPKG)
+
+ifneq (,$(GIT))
 DSRCS := $(shell git ls-files)
+else
+DSRCS := $(shell find . -type f -not \
+	-path './vendor/*' -not \
+	-path './.site/*' -not \
+	-path './.git/*')
+endif
+
 ifneq (,$(DGLIDE_YAML))
 DSRCS := $(filter-out glide.yaml,$(DSRCS))
 DSRCS := $(filter-out glide.lock,$(DSRCS))
@@ -126,8 +345,10 @@ DLOCAL_IMPORTS :=
 endif
 ifneq (,$(DLOCAL_IMPORTS))
 ifneq (,$(GOPATH))
-DLOCAL_IMPORTS_FILES := $(foreach I,$(DLOCAL_IMPORTS),$(addprefix $I/,$(shell git --git-dir=$(GOPATH)/src/$(I)/.git --work-tree=$(GOPATH)/src/$(I) ls-files)))
+ifneq (,$(GIT)) # if git exists
+DLOCAL_IMPORTS_FILES := $(foreach I,$(DLOCAL_IMPORTS),$(addprefix $I/,$(shell $(GIT) --git-dir=$(GOPATH)/src/$(I)/.git --work-tree=$(GOPATH)/src/$(I) ls-files)))
 DLOCAL_IMPORTS_FILES += $(foreach I,$(DLOCAL_IMPORTS),$I/.git)
+endif
 endif
 endif
 
@@ -154,9 +375,10 @@ endif
 
 docker-do-build: docker-init
 	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) NOSTAT=1 \
 		make -C $(DPATH) -j build
 
+build-docker: docker-build
 docker-build: docker-do-build
 	@docker cp $(DNAME):$(DPROG) $(PROG)
 	@bytes=$$(stat --format '%s' $(PROG) 2> /dev/null || \
@@ -196,7 +418,7 @@ docker-clean-controller:
 
 docker-info: docker-init
 	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
+		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) NOSTAT=1 \
 		make -C $(DPATH) info
 
 docker-info-client:
@@ -216,21 +438,137 @@ docker-clobber:
 docker-list:
 	-$(DTO_CLOBBER)
 
+
+################################################################################
+##                          DOCKER PLUGINS                                    ##
+################################################################################
+ifneq (,$(TRAVIS_BRANCH))
+DOCKER_REQ_BRANCH := $(TRAVIS_BRANCH)
+else
+
+ifneq (,$(GIT))
+DOCKER_REQ_BRANCH := $(shell $(GIT) branch | grep '*' | cut -c3-)
+else
+DOCKER_REQ_BRANCH := master
+endif
+
+endif
+
+DOCKER_REQ_VERSION := $(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)
+V_DOCKER_SEMVER := $(subst +,-,$(V_SEMVER))
+DOCKER_PLUGIN_DRIVERS := $(subst $(SPACE),-,$(DRIVERS))
+
+ifeq (undefined,$(origin DOCKER_PLUGIN_ROOT))
+DOCKER_PLUGIN_ROOT := $(PROG)
+endif
+DOCKER_PLUGIN_NAME := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):$(V_DOCKER_SEMVER)
+DOCKER_PLUGIN_NAME_UNSTABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):edge
+DOCKER_PLUGIN_NAME_STAGED := $(DOCKER_PLUGIN_NAME)
+DOCKER_PLUGIN_NAME_STABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):latest
+
+DOCKER_PLUGIN_BUILD_PATH := .docker/plugins/$(DOCKER_PLUGIN_DRIVERS)
+
+DOCKER_PLUGIN_DOCKERFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.Dockerfile
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_DOCKERFILE))))
+DOCKER_PLUGIN_DOCKERFILE := .docker/plugins/Dockerfile
+endif
+DOCKER_PLUGIN_DOCKERFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/Dockerfile
+$(DOCKER_PLUGIN_DOCKERFILE_TGT): $(DOCKER_PLUGIN_DOCKERFILE)
+	sed -e 's/$${VERSION}/$(V_SEMVER)/g' \
+	    -e 's/$${DRIVERS}/$(DRIVERS)/g' \
+	    $? > $@
+
+DOCKER_PLUGIN_ENTRYPOINT := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.sh
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_ENTRYPOINT))))
+DOCKER_PLUGIN_ENTRYPOINT := .docker/plugins/rexray.sh
+endif
+DOCKER_PLUGIN_ENTRYPOINT_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).sh
+$(DOCKER_PLUGIN_ENTRYPOINT_TGT): $(DOCKER_PLUGIN_ENTRYPOINT)
+	cp -f $? $@
+
+
+DOCKER_PLUGIN_CONFIGFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.yml
+DOCKER_PLUGIN_CONFIGFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).yml
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_CONFIGFILE))))
+DOCKER_PLUGIN_CONFIGFILE := .docker/plugins/rexray.yml
+SPACE6 := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
+SPACE8 := $(SPACE6)$(SPACE)$(SPACE)
+$(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
+	sed -e 's/$${DRIVERS}/$(firstword $(DRIVERS))/g' \
+	    $? > $@
+	for d in $(DRIVERS); do \
+	    echo "$(SPACE6)$$d:" >> $@; \
+	    echo "$(SPACE8)driver: $$d" >> $@; \
+	done
+else
+$(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
+	cp -f $? $@
+endif
+
+DOCKER_PLUGIN_REXRAYFILE ?= $(PROG)
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_REXRAYFILE))))
+DOCKER_PLUGIN_REXRAYFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.$(PROG)
+ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_REXRAYFILE))))
+DOCKER_PLUGIN_REXRAYFILE := $(GOPATH)/bin/$(PROG)
+endif
+endif
+DOCKER_PLUGIN_REXRAYFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG)
+$(DOCKER_PLUGIN_REXRAYFILE_TGT): $(DOCKER_PLUGIN_REXRAYFILE)
+	cp -f $? $@
+
+DOCKER_PLUGIN_CONFIGJSON_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/config.json
+
+DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/rootfs/$(PROG).sh
+docker-build-plugin: build-docker-plugin
+build-docker-plugin: $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT)
+$(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
+										$(DOCKER_PLUGIN_DOCKERFILE_TGT) \
+										$(DOCKER_PLUGIN_ENTRYPOINT_TGT) \
+										$(DOCKER_PLUGIN_CONFIGFILE_TGT) \
+										$(DOCKER_PLUGIN_REXRAYFILE_TGT)
+	docker plugin rm $(DOCKER_PLUGIN_NAME) 2> /dev/null || true
+	sudo rm -fr $(@D)
+	docker build -t rootfsimage $(<D) && \
+		id=$$(docker create rootfsimage true) && \
+		sudo mkdir -p $(@D) && \
+		sudo docker export "$$id" | sudo tar -x -C $(@D) && \
+		docker rm -vf "$$id" && \
+		docker rmi rootfsimage
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME) $(<D)
+	docker plugin ls
+
+push-docker-plugin:
+ifeq (1,$(DOCKER_PLUGIN_$(DOCKER_PLUGIN_DRIVERS)_NOPUSH))
+	echo "docker plugin push disabled"
+else
+	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
+ifeq (unstable,$(DOCKER_PLUGIN_TYPE))
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
+endif
+ifeq (staged,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME_STAGED)
+endif
+ifeq (stable,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
+	sudo docker plugin create $(DOCKER_PLUGIN_NAME_STABLE) $(DOCKER_PLUGIN_BUILD_PATH)
+	docker plugin push $(DOCKER_PLUGIN_NAME_STABLE)
+endif
+ifeq (,$(DOCKER_PLUGIN_TYPE))
+	docker plugin push $(DOCKER_PLUGIN_NAME)
+endif
+endif
+
+
 endif # ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 
 ################################################################################
-##                                 CONSTANTS                                  ##
+##                             GO CONSTANTS                                   ##
 ################################################################################
 ifneq (,$(shell which go 2> /dev/null)) # if go exists
-
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
-ASTERIK := *
-LPAREN := (
-RPAREN := )
-COMMA := ,
-5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
 
 # a list of the go 1.6 stdlib pacakges as grepped from https://golang.org/pkg/
 GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
@@ -268,6 +606,7 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 ################################################################################
 
 GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
+GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
 ifneq (,$(TRAVIS_GO_VERSION))
@@ -305,29 +644,6 @@ VENDORED := 0
 ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
 VENDORED := 1
 endif
-
-
-################################################################################
-##                               OS/ARCH INFO                                 ##
-################################################################################
-ifeq ($(GOOS),windows)
-	OS ?= Windows_NT
-endif
-ifeq ($(GOOS),linux)
-	OS ?= Linux
-endif
-ifeq ($(GOOS),darwin)
-	OS ?= Darwin
-endif
-ifeq ($(GOARCH),386)
-	ARCH ?= i386
-endif
-ifeq ($(GOARCH),amd64)
-	ARCH ?= x86_64
-endif
-
-export OS
-export ARCH
 
 
 ################################################################################
@@ -511,7 +827,7 @@ $(GLIDE_YAML):
 $(GLIDE_LOCK)-clean:
 	rm -f $(GLIDE_LOCK)
 GO_PHONY += $(GLIDE_LOCK)-clean
-GO_CLOBBER += $(GLIDE_LOCK)-clean
+#GO_CLOBBER += $(GLIDE_LOCK)-clean
 endif
 
 ifeq (true,$(DEPEND_ON_GOBINDATA))
@@ -522,10 +838,7 @@ else
 GO_BINDATA_IMPORT_PATH := $(firstword $(subst /vendor/, ,$(ROOT_IMPORT_PATH)))/$(GO_BINDATA_IMPORT_PATH)
 endif
 
-ifneq (1,$(VENDORED))
 $(GO_BINDATA): $(GLIDE_LOCK_D)
-endif
-$(GO_BINDATA):
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
@@ -580,100 +893,11 @@ endif
 
 
 ################################################################################
-##                                  VERSION                                   ##
+##                               GENERATED CORE SRC                            ##
 ################################################################################
-
-# parse a semver
-SEMVER_PATT := ^[^\d]*(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z].+?))?(?:-(\d+)-g(.+?)(?:-(dirty))?)?$$
-PARSE_SEMVER = $(shell echo $(1) | perl -pe 's/$(SEMVER_PATT)/$(2)/gim')
-
-# describe the git information and create a parsing function for it
-GIT_DESCRIBE := $(shell git describe --long --dirty)
-PARSE_GIT_DESCRIBE = $(call PARSE_SEMVER,$(GIT_DESCRIBE),$(1))
-
-# parse the version components from the git information
-V_MAJOR := $(call PARSE_GIT_DESCRIBE,$$1)
-V_MINOR := $(call PARSE_GIT_DESCRIBE,$$2)
-V_PATCH := $(call PARSE_GIT_DESCRIBE,$$3)
-V_NOTES := $(call PARSE_GIT_DESCRIBE,$$4)
-V_BUILD := $(call PARSE_GIT_DESCRIBE,$$5)
-V_SHA_SHORT := $(call PARSE_GIT_DESCRIBE,$$6)
-V_DIRTY := $(call PARSE_GIT_DESCRIBE,$$7)
-
-V_OS := $(OS)
-V_ARCH := $(ARCH)
-V_OS_ARCH := $(V_OS)-$(V_ARCH)
-
-# the long commit hash
-V_SHA_LONG := $(shell git show HEAD -s --format=%H)
-
-# the branch name, possibly from travis-ci
-ifeq ($(origin TRAVIS_BRANCH), undefined)
-	TRAVIS_BRANCH := $(shell git branch | grep '*')
-else
-ifeq (,$(strip $(TRAVIS_BRANCH)))
-	TRAVIS_BRANCH := $(shell git branch | grep '*')
-endif
-endif
-TRAVIS_BRANCH := $(subst $(ASTERIK) ,,$(TRAVIS_BRANCH))
-TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached at ,,$(TRAVIS_BRANCH))
-TRAVIS_BRANCH := $(subst $(RPAREN),,$(TRAVIS_BRANCH))
-
-ifeq ($(origin TRAVIS_TAG), undefined)
-	TRAVIS_TAG := $(TRAVIS_BRANCH)
-else
-	ifeq ($(strip $(TRAVIS_TAG)),)
-		TRAVIS_TAG := $(TRAVIS_BRANCH)
-	endif
-endif
-V_BRANCH := $(TRAVIS_TAG)
-
-# the build date as an epoch
-V_EPOCH := $(shell date +%s)
-
-# the build date
-V_BUILD_DATE := $(shell perl -e 'use POSIX strftime; print strftime("%a, %d %b %Y %H:%M:%S %Z", localtime($(V_EPOCH)))')
-
-# the release date as required by bintray
-V_RELEASE_DATE := $(shell perl -e 'use POSIX strftime; print strftime("%Y-%m-%d", localtime($(V_EPOCH)))')
-
-# init the semver
-V_SEMVER := $(V_MAJOR).$(V_MINOR).$(V_PATCH)
-ifneq ($(V_NOTES),)
-	V_SEMVER := $(V_SEMVER)-$(V_NOTES)
-endif
-
-# get the version file's version
-V_FILE := $(strip $(shell cat VERSION 2> /dev/null))
-
-# append the build number and dirty values to the semver if appropriate
-ifneq ($(V_BUILD),)
-	ifneq ($(V_BUILD),0)
-		# if the version file's version is different than the version parsed from the
-		# git describe information then use the version file's version
-		ifneq ($(V_SEMVER),$(V_FILE))
-			V_MAJOR := $(call PARSE_SEMVER,$(V_FILE),$$1)
-			V_MINOR := $(call PARSE_SEMVER,$(V_FILE),$$2)
-			V_PATCH := $(call PARSE_SEMVER,$(V_FILE),$$3)
-			V_NOTES := $(call PARSE_SEMVER,$(V_FILE),$$4)
-			V_SEMVER := $(V_MAJOR).$(V_MINOR).$(V_PATCH)
-			ifneq ($(V_NOTES),)
-				V_SEMVER := $(V_SEMVER)-$(V_NOTES)
-			endif
-		endif
-		V_SEMVER := $(V_SEMVER)+$(V_BUILD)
-	endif
-endif
-ifeq ($(V_DIRTY),dirty)
-	V_SEMVER := $(V_SEMVER)+$(V_DIRTY)
-endif
-
-# the rpm version cannot have any dashes
-V_RPM_SEMVER := $(subst -,+,$(V_SEMVER))
-
 GENERATED_BUILD_TYPE := client+agent+controller
 ifneq (,$(REXRAY_BUILD_TYPE))
-	GENERATED_BUILD_TYPE := $(REXRAY_BUILD_TYPE)
+GENERATED_BUILD_TYPE := $(REXRAY_BUILD_TYPE)
 endif
 
 define CORE_GENERATED_CONTENT
@@ -700,9 +924,6 @@ func init() {
 endef
 export CORE_GENERATED_CONTENT
 
-PRINTF_VERSION_CMD += @printf "SemVer: %s\nBinary: %s\nBranch: %s\nCommit:
-PRINTF_VERSION_CMD += %s\nFormed: %s\n" "$(V_SEMVER)" "$(V_OS_ARCH)"
-PRINTF_VERSION_CMD += "$(V_BRANCH)" "$(V_SHA_LONG)" "$(V_BUILD_DATE)"
 CORE_GENERATED_SRC := ./core/core_generated.go
 print-generated-core-src:
 	echo $(CORE_GENERATED_CONTENT)
@@ -717,11 +938,6 @@ GO_PHONY += $(CORE_GENERATED_SRC)-clean
 
 CORE_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/core.a
 $(CORE_A): $(CORE_GENERATED_SRC)
-
-version:
-	$(PRINTF_VERSION_CMD)
-
-GO_PHONY += version
 
 
 ################################################################################
@@ -870,7 +1086,7 @@ build-libstorage: $(LIBSTORAGE_API)
 endif
 
 clean-libstorage:
-	$(MAKE) -C $(LIBSTORAGE_DIR) clean
+	if [ -d $(LIBSTORAGE_DIR) ]; then $(MAKE) -C $(LIBSTORAGE_DIR) clean; fi
 GO_CLEAN += clean-libstorage
 GO_PHONY += clean-libstorage
 
@@ -1103,122 +1319,6 @@ GO_CLEAN += bintray-clean
 
 
 ################################################################################
-##                          DOCKER PLUGINS                                    ##
-################################################################################
-ifneq (,$(TRAVIS_BRANCH))
-DOCKER_REQ_BRANCH := $(TRAVIS_BRANCH)
-else
-DOCKER_REQ_BRANCH := $(shell git branch --list | grep "*" | awk '{print $$2}')
-endif
-DOCKER_REQ_VERSION := $(V_SEMVER).Branch.$(V_BRANCH).Sha.$(V_SHA_LONG)
-V_DOCKER_SEMVER := $(subst +,-,$(V_SEMVER))
-DOCKER_PLUGIN_DRIVERS := $(subst $(SPACE),-,$(DRIVERS))
-
-ifeq (undefined,$(origin DOCKER_PLUGIN_ROOT))
-DOCKER_PLUGIN_ROOT := $(PROG)
-endif
-DOCKER_PLUGIN_NAME := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):$(V_DOCKER_SEMVER)
-DOCKER_PLUGIN_NAME_UNSTABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):edge
-DOCKER_PLUGIN_NAME_STAGED := $(DOCKER_PLUGIN_NAME)
-DOCKER_PLUGIN_NAME_STABLE := $(DOCKER_PLUGIN_ROOT)/$(DOCKER_PLUGIN_DRIVERS):latest
-
-DOCKER_PLUGIN_BUILD_PATH := .docker/plugins/$(DOCKER_PLUGIN_DRIVERS)
-
-DOCKER_PLUGIN_DOCKERFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.Dockerfile
-ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_DOCKERFILE))))
-DOCKER_PLUGIN_DOCKERFILE := .docker/plugins/Dockerfile
-endif
-DOCKER_PLUGIN_DOCKERFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/Dockerfile
-$(DOCKER_PLUGIN_DOCKERFILE_TGT): $(DOCKER_PLUGIN_DOCKERFILE)
-	sed -e 's/$${VERSION}/$(V_SEMVER)/g' \
-	    -e 's/$${DRIVERS}/$(DRIVERS)/g' \
-	    $? > $@
-
-DOCKER_PLUGIN_ENTRYPOINT := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.sh
-ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_ENTRYPOINT))))
-DOCKER_PLUGIN_ENTRYPOINT := .docker/plugins/rexray.sh
-endif
-DOCKER_PLUGIN_ENTRYPOINT_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).sh
-$(DOCKER_PLUGIN_ENTRYPOINT_TGT): $(DOCKER_PLUGIN_ENTRYPOINT)
-	cp $? $@
-
-
-DOCKER_PLUGIN_CONFIGFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.yml
-DOCKER_PLUGIN_CONFIGFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).yml
-ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_CONFIGFILE))))
-DOCKER_PLUGIN_CONFIGFILE := .docker/plugins/rexray.yml
-SPACE6 := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
-SPACE8 := $(SPACE6)$(SPACE)$(SPACE)
-$(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
-	sed -e 's/$${DRIVERS}/$(firstword $(DRIVERS))/g' \
-	    $? > $@
-	for d in $(DRIVERS); do \
-	    echo "$(SPACE6)$$d:" >> $@; \
-	    echo "$(SPACE8)driver: $$d" >> $@; \
-	done
-else
-$(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
-	cp $? $@
-endif
-
-DOCKER_PLUGIN_REXRAYFILE := $(PROG)
-ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_REXRAYFILE))))
-DOCKER_PLUGIN_REXRAYFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.$(PROG)
-ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_REXRAYFILE))))
-DOCKER_PLUGIN_REXRAYFILE := $(GOPATH)/bin/$(PROG)
-endif
-endif
-DOCKER_PLUGIN_REXRAYFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG)
-$(DOCKER_PLUGIN_REXRAYFILE_TGT): $(DOCKER_PLUGIN_REXRAYFILE)
-	cp $? $@
-
-DOCKER_PLUGIN_CONFIGJSON_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/config.json
-
-DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/rootfs/$(PROG).sh
-build-docker-plugin: $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT)
-$(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
-										$(DOCKER_PLUGIN_DOCKERFILE_TGT) \
-										$(DOCKER_PLUGIN_ENTRYPOINT_TGT) \
-										$(DOCKER_PLUGIN_CONFIGFILE_TGT) \
-										| $(DOCKER_PLUGIN_REXRAYFILE_TGT)
-	docker plugin rm $(DOCKER_PLUGIN_NAME) 2> /dev/null || true
-	sudo rm -fr $(@D)
-	docker build -t rootfsimage $(<D) && \
-		id=$$(docker create rootfsimage true) && \
-		sudo mkdir -p $(@D) && \
-		sudo docker export "$$id" | sudo tar -x -C $(@D) && \
-		docker rm -vf "$$id" && \
-		docker rmi rootfsimage
-	sudo docker plugin create $(DOCKER_PLUGIN_NAME) $(<D)
-	docker plugin ls
-
-
-push-docker-plugin:
-ifeq (1,$(DOCKER_PLUGIN_$(DOCKER_PLUGIN_DRIVERS)_NOPUSH))
-	echo "docker plugin push disabled"
-else
-	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
-ifeq (unstable,$(DOCKER_PLUGIN_TYPE))
-	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
-	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
-endif
-ifeq (staged,$(DOCKER_PLUGIN_TYPE))
-	docker plugin push $(DOCKER_PLUGIN_NAME_STAGED)
-endif
-ifeq (stable,$(DOCKER_PLUGIN_TYPE))
-	docker plugin push $(DOCKER_PLUGIN_NAME)
-	sudo docker plugin create $(DOCKER_PLUGIN_NAME_UNSTABLE) $(DOCKER_PLUGIN_BUILD_PATH)
-	docker plugin push $(DOCKER_PLUGIN_NAME_UNSTABLE)
-	sudo docker plugin create $(DOCKER_PLUGIN_NAME_STABLE) $(DOCKER_PLUGIN_BUILD_PATH)
-	docker plugin push $(DOCKER_PLUGIN_NAME_STABLE)
-endif
-ifeq (,$(DOCKER_PLUGIN_TYPE))
-	docker plugin push $(DOCKER_PLUGIN_NAME)
-endif
-endif
-
-
-################################################################################
 ##                                PROG Markers                                ##
 ################################################################################
 PROG_$(GOOS)_$(GOARCH) := $(PROG)-$(GOOS)_$(GOARCH).d
@@ -1260,10 +1360,10 @@ ifeq (true,$($EMBED_SCRIPTS))
 endif
 
 build:
-	$(MAKE) build-libstorage
+	$(MAKE) -j build-libstorage
 	$(MAKE) build-generated
-	$(MAKE) build-$(PROG)
-ifneq (1,$(DOCKER))
+	$(MAKE) -j build-$(PROG)
+ifneq (1,$(NOSTAT))
 	$(MAKE) stat-prog
 endif
 
@@ -1326,8 +1426,35 @@ clean-agent:
 clean-controller:
 	REXRAY_BUILD_TYPE=controller $(MAKE) clean
 
-clobber: clean $(GO_CLOBBER)
-
-.PHONY: info clean clobber $(GO_PHONY)
+.PHONY: $(.PHONY) info clean $(GO_PHONY)
 
 endif # ifneq (,$(shell which go 2> /dev/null))
+
+endif # ifneq (1,$(PORCELAIN))
+
+clobber:
+	@if [ "$(GOPATH)" = "" ]; then exit 1; fi
+	rm -fr vendor
+	rm -f  $(GOPATH)/bin/$(PROG_ROOT) \
+       $(GOPATH)/bin/$(PROG_ROOT)-agent \
+       $(GOPATH)/bin/$(PROG_ROOT)-client \
+       $(GOPATH)/bin/$(PROG_ROOT)-controller \
+       $(GOPATH)/bin/*/$(PROG_ROOT) \
+       $(GOPATH)/bin/*/$(PROG_ROOT)-agent \
+       $(GOPATH)/bin/*/$(PROG_ROOT)-client \
+       $(GOPATH)/bin/*/$(PROG_ROOT)-controller \
+       $(GOPATH)/bin/lsx-* \
+       $(GOPATH)/bin/*/lsx-*
+	rm -fr $(GOPATH)/pkg/$(ROOT_IMPORT_PATH) \
+       $(GOPATH)/pkg/*/$(ROOT_IMPORT_PATH)
+ifneq (1,$(CLOBBER_NOCLEAN))
+	PORCELAIN=0 $(MAKE) clean
+endif
+	for f in $$(find . -name "*_generated.go" \
+       -or -name "*_generated_test.go" \
+       -or -name "*.d" \
+       -type f \
+       -not -path './.docker/*' \
+       2>&1 | grep -v 'Permission denied'); do echo $$f; rm -f $$f; done
+
+.PHONY: $(.PHONY) clobber

@@ -8,7 +8,7 @@ services:
 language: go
 
 go:
-  - 1.7.5
+  - 1.8.1
 
 env:
   - REXRAY_BUILD_TYPE=
@@ -17,6 +17,7 @@ env:
   - REXRAY_BUILD_TYPE=controller
   - REXRAY_BUILD_TYPE= DRIVERS=ebs
   - REXRAY_BUILD_TYPE= DRIVERS=efs
+  - REXRAY_BUILD_TYPE= DRIVERS=cinder
   - REXRAY_BUILD_TYPE= DRIVERS=gcepd
   - REXRAY_BUILD_TYPE= DRIVERS=isilon
   - REXRAY_BUILD_TYPE= DRIVERS=s3fs
@@ -39,19 +40,20 @@ before_install:
 
 script:
   - make gometalinter-all
-  - make -j build-libstorage
-  - GOOS=linux GOARCH=amd64 make -j build
+#  - make -j build-libstorage
+#  - GOOS=linux GOARCH=amd64 make -j build
+  - ./build.sh -x -b make
   - if [ "$REXRAY_BUILD_TYPE" = "" ]; then REXRAY_DEBUG=true $GOPATH/bin/rexray version; else REXRAY_DEBUG=true $GOPATH/bin/rexray-$REXRAY_BUILD_TYPE version; fi
   - make -j test
 
 after_success:
   - if [ "$DRIVERS" = "" ]; then make -j cover; fi
-  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make tgz; fi
-  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make rpm; fi
-  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make deb; fi
-  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make bintray; fi
-  - if [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make build-docker-plugin; fi
-  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then docker login -u $DOCKER_USER -p $DOCKER_PASS; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make tgz; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make rpm; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make deb; fi
+  - if [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make bintray; fi
+  - if [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make build-docker-plugin; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then docker login -u $DOCKER_USER -p $DOCKER_PASS; fi
   - ls -al
 
 deploy:
@@ -62,7 +64,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
   - provider: bintray
     file: bintray-staged.json
@@ -71,7 +73,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: bintray
     file: bintray-stable.json
@@ -80,28 +82,28 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: script
     script: ./make.sh push-docker-plugin unstable
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+      condition: $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
   - provider: script
     script: ./make.sh push-docker-plugin staged
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
   - provider: script
     script: ./make.sh push-docker-plugin stable
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_GO_VERSION = $COVERED_GO_VERSION && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+      condition: $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
 cache:
   apt: true

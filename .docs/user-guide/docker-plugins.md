@@ -278,6 +278,52 @@ Environment Variable | Description | Default | Required
 `GCEPD_TAG` | Only use volumes that are tagged with a label | |
 `GCEPD_ZONE` | GCE Availability Zone | |
 
+## Openstack
+REX-Ray ships with plug-ins for OPenstack as well.
+
+### Cinder volume
+The CINNDER plug-in can be installed with the following command:
+
+```bash
+$ docker plugin install rexray/cinder \
+  CINDER_AUTHURL=http://xxxx \
+  CINDER_USERNAME=rexray \
+  CINDER_PASSWORD=xxx \
+  CINDER_TENANTID=xxxxxxx
+```
+
+#### Requirements
+The CINDER plug-in requires that GCE compute instance has Read/Write Cloud API
+access to the Compute Engine and Storage services.
+
+#### Privileges
+The CINDER plug-in requires the following privileges:
+
+Type | Value
+-----|------
+network | `host`
+mount | `/dev`
+allow-all-devices | `true`
+capabilities | `CAP_SYS_ADMIN`
+
+#### Configuration
+The following environment variables can be used to configure the CINDER
+plug-in:
+
+Environment Variable | Description | Default | Required
+---------------------|-------------|---------|---------
+`CINDER_AUTHURL` | The keystone authentication API |  | true
+`CINDER_USERNAMEID` | Openstack userId for cinder access | |
+`CINDER_USERNAME` | Openstack username for cinder access | |
+`CINDER_PASSWORD` | Openstack user password for cinder access | |
+`CINDER_TOKENID` | Openstack tokenId for cinder access | |
+`CINDER_TENANTID` | Openstack tenantId | |
+`CINDER_TENANTNAME` | Openstack tenantId | |
+`CINDER_DOMAINID` | Openstack domainId to authenticate | |
+`CINDER_DOMAINNAME` | Openstack domainName to authenticate | |
+
+
+
 ## Examples
 This section reviews examples of how to use the REX-Ray Docker Volume plug-ins.
 For the purposes of the examples the EBS plug-in will be demonstrated, but
@@ -349,3 +395,4 @@ Validate the volume was deleted successfully by listing the volumes:
 $ docker volume ls
 DRIVER              VOLUME NAME
 ```
+

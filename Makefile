@@ -82,6 +82,9 @@ BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d) libstorage_s
 endif
 endif
 
+# remove leading and trailing whitespace from around the build tags
+BUILD_TAGS := $(strip $(BUILD_TAGS))
+
 all:
 # if docker is running, then let's use docker to build it
 ifneq (,$(shell if [ ! "$$NODOCKER" = "1" ] && docker version &> /dev/null; then echo -; fi))
@@ -113,35 +116,63 @@ COMMA := ,
 ################################################################################
 ##                               OS/ARCH INFO                                 ##
 ################################################################################
-ifeq (,$(strip $(GOOS)$(GOARCH)))
+GOOS := $(strip $(GOOS))
+GOARCH := $(strip $(GOARCH))
+
 ifneq (,$(GO)) # if go exists
 GOOS_GOARCH := $(subst /, ,$(shell $(GO) version | awk '{print $$4}'))
+ifeq (,$(GOOS))
 GOOS := $(word 1,$(GOOS_GOARCH))
+endif
+ifeq (,$(GOARCH))
 GOARCH := $(word 2,$(GOOS_GOARCH))
+endif
 else
-GOOS ?= $(shell uname -s | tr A-Z a-z)
-GOARCH ?= amd64
+ifeq (,$(GOOS))
+GOOS := $(shell uname -s | tr A-Z a-z)
+endif
+ifeq (,$(GOARCH))
+GOARCH := amd64
+endif
+endif
+GOOS_GOARCH := $(GOOS)_$(GOARCH)
+
+ifeq (,$(OS))
+ifeq ($(GOOS),windows)
+OS := Windows_NT
+endif
+ifeq ($(GOOS),linux)
+OS := Linux
+endif
+ifeq ($(GOOS),darwin)
+OS := Darwin
 endif
 endif
 
-ifeq ($(GOOS),windows)
-OS ?= Windows_NT
-endif
-ifeq ($(GOOS),linux)
-OS ?= Linux
-endif
-ifeq ($(GOOS),darwin)
-OS ?= Darwin
-endif
+ifeq (,$(ARCH))
 ifeq ($(GOARCH),386)
-ARCH ?= i386
+ARCH := i386
 endif
 ifeq ($(GOARCH),amd64)
-ARCH ?= x86_64
+ARCH := x86_64
+endif
+ifeq ($(GOARCH),arm)
+ARCH := ARM
+endif
+ifeq ($(GOARCH),arm64)
+ARCH := ARM64
+endif
 endif
 
 export OS
 export ARCH
+
+ifeq (darwin,$(GOOS))
+ifneq (amd64,$(GOARCH))
+$(info darwin builds are amd64 only)
+exit 1
+endif
+endif
 
 
 ################################################################################
@@ -303,7 +334,7 @@ DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
 DGOOS := $(DGOHOSTOS)
 endif
-DGOARCH := amd64
+DGOARCH ?= amd64
 DPRFX := build-rexray
 DNAME := build-$(PROG)
 ifeq (1,$(DBUILD_ONCE))
@@ -839,7 +870,7 @@ GO_BINDATA_IMPORT_PATH := $(firstword $(subst /vendor/, ,$(ROOT_IMPORT_PATH)))/$
 endif
 
 $(GO_BINDATA): $(GLIDE_LOCK_D)
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
+	GOOS="" GOARCH="" go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
 endif
@@ -851,13 +882,13 @@ ifneq (1,$(GOMETALINTER_DISABLED))
 GOMETALINTER := $(GOPATH)/bin/gometalinter
 
 $(GOMETALINTER): | $(GOMETALINTER_TOOLS)
-	go get -u github.com/alecthomas/gometalinter
+	GOOS="" GOARCH="" go get -u github.com/alecthomas/gometalinter
 gometalinter: $(GOMETALINTER)
 GO_DEPS += $(GOMETALINTER)
 
 GOMETALINTER_TOOLS_D := .gometalinter.tools.d
 $(GOMETALINTER_TOOLS_D): $(GOMETALINTER)
-	$(GOMETALINTER) --install --update && touch $@
+	GOOS="" GOARCH="" $(GOMETALINTER) --install --update && touch $@
 GO_DEPS += $(GOMETALINTER_TOOLS_D)
 
 GOMETALINTER_ARGS := --vendor \
@@ -1071,6 +1102,7 @@ LIBSTORAGE_DIR := vendor/github.com/codedellemc/libstorage
 LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
 ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
 LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
+LIBSTORAGE_LSX_BINDIR := $(LIBSTORAGE_DIR)/api/server/executors/bin
 $(LIBSTORAGE_API) $(LIBSTORAGE_LSX):
 else
 $(LIBSTORAGE_API):
@@ -1086,7 +1118,10 @@ build-libstorage: $(LIBSTORAGE_API)
 endif
 
 clean-libstorage:
-	if [ -d $(LIBSTORAGE_DIR) ]; then $(MAKE) -C $(LIBSTORAGE_DIR) clean; fi
+	if [ -f $(LIBSTORAGE_API) ]; then $(MAKE) -C $(LIBSTORAGE_DIR) clean; fi
+	rm -fr $(LIBSTORAGE_API) $(LIBSTORAGE_LSX) $(LIBSTORAGE_LSX_BINDIR)
+	find $(LIBSTORAGE_DIR) -name "*.d" -type f -delete
+
 GO_CLEAN += clean-libstorage
 GO_PHONY += clean-libstorage
 
@@ -1121,26 +1156,46 @@ endif
 ################################################################################
 ##                                   CLI                                      ##
 ################################################################################
-ifneq (,$(BUILD_TAGS))
-CLI := $(shell go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
-CLI_LINUX := $(shell GOOS=linux go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
-CLI_DARWIN := $(shell GOOS=darwin go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
-CLI_WINDOWS := $(shell GOOS=windows go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
-else
-CLI := $(shell go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
-CLI_LINUX := $(shell GOOS=linux go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
-CLI_DARWIN := $(shell GOOS=darwin go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
-CLI_WINDOWS := $(shell GOOS=windows go list -f '{{.Target}}' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_LINUX := $(shell GOOS=linux GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_LINUX_ARM := $(shell GOOS=linux GOARCH=arm go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_LINUX_ARM64 := $(shell GOOS=linux GOARCH=arm64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_DARWIN := $(shell GOOS=darwin GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+CLI_WINDOWS := $(shell GOOS=windows GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/$(PROG_ROOT)/$(PROG))
+
+ifeq (linux,$(GOOS))
+
+ifeq (amd64,$(GOARCH))
+CLI := $(CLI_LINUX)
 endif
 
+ifeq (arm,$(GOARCH))
+CLI := $(CLI_LINUX_ARM)
+endif
+
+ifeq (arm64,$(GOARCH))
+CLI := $(CLI_LINUX_ARM64)
+endif
+
+endif # ifeq (linux,$(GOOS))
+
+ifeq (darwin,$(GOOS))
+CLI := $(CLI_DARWIN)
+endif # ifeq (darwin,$(GOOS))
+
+ifeq (windows,$(GOOS))
+CLI := $(CLI_WINDOWS)
+endif # ifeq (windows,$(GOOS))
+
 build-cli-linux: $(CLI_LINUX)
+build-cli-linux-arm: $(CLI_LINUX_ARM)
+build-cli-linux-arm64: $(CLI_LINUX_ARM64)
 build-cli-darwin: $(CLI_DARWIN)
 build-cli-windows: $(CLI_WINDOWS)
 
 define CLI_RULES
-ifneq ($2,$$(GOOS))
+ifneq ($2_$3,$$(GOOS)_$$(GOARCH))
 $1:
-	GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
+	GOOS=$2 GOARCH=$3 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 GO_PHONY += $1-clean
@@ -1148,12 +1203,30 @@ GO_CLEAN += $1-clean
 endif
 
 ifeq (linux,$2)
+
+ifeq (amd64,$3)
 CLI_BINS += $1
+endif
+
+ifeq (arm,$3)
+ifeq (1,$$(BUILD_LINUX_ARM))
+CLI_BINS += $1
+endif
+endif
+
+ifeq (arm64,$3)
+ifeq (1,$$(BUILD_LINUX_ARM64))
+CLI_BINS += $1
+endif
+endif
+
 endif
 endef
 
-$(eval $(call CLI_RULES,$(CLI_LINUX),linux))
-$(eval $(call CLI_RULES,$(CLI_DARWIN),darwin))
+$(eval $(call CLI_RULES,$(CLI_LINUX),linux,amd64))
+$(eval $(call CLI_RULES,$(CLI_LINUX_ARM),linux,arm))
+$(eval $(call CLI_RULES,$(CLI_LINUX_ARM64),linux,arm64))
+$(eval $(call CLI_RULES,$(CLI_DARWIN),darwin,amd64))
 
 build-cli: $(CLI_BINS)
 
@@ -1359,8 +1432,14 @@ ifeq (true,$($EMBED_SCRIPTS))
 	$(MAKE) $(SCRIPTS_GENERATED_SRC)
 endif
 
+clean-build:
+	$(MAKE) clean-libstorage
+	$(MAKE) $(CORE_GENERATED_SRC)-clean
+	$(MAKE) $(SCRIPTS_GENERATED_SRC)-clean
+	$(MAKE) build
+
 build:
-	$(MAKE) -j build-libstorage
+	$(MAKE) build-libstorage
 	$(MAKE) build-generated
 	$(MAKE) -j build-$(PROG)
 ifneq (1,$(NOSTAT))

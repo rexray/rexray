@@ -10,7 +10,6 @@ WORKDIR @WORKDIR_RR@
 
 WORKDIR @WORKDIR_RR@
 RUN @BUILD_CMD@
-RUN /go/bin/$REXRAY version
 
 FROM alpine:3.5
 
@@ -18,7 +17,7 @@ LABEL build="@BUILD_TYPE@"
 LABEL drivers="@DRIVERS@"
 LABEL version="@SEMVER@"
 
-COPY --from=rexray@FNAME_SUFFIX@-builder /go/bin/$REXRAY /usr/bin/$REXRAY
+COPY --from=rexray@FNAME_SUFFIX@-builder /go/bin/@GOOS_GOARCH_DIR@$REXRAY /usr/bin/$REXRAY
 COPY @DOCKERFILE@ /Dockerfile
 
 RUN apk update

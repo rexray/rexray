@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+
 GO_VERSION := 1.8
 
 ifeq (undefined,$(origin BUILD_TAGS))
@@ -22,6 +23,7 @@ ifneq (,$(BUILD_TAGS))
 BUILD_TAGS := $(sort $(BUILD_TAGS))
 endif
 
+
 all:
 # if docker is running, then let's use docker to build it
 ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
@@ -30,6 +32,82 @@ else
 	$(MAKE) deps
 	$(MAKE) build
 endif
+
+# record the paths to these binaries, if they exist
+GO := $(strip $(shell which go 2> /dev/null))
+GIT := $(strip $(shell which git 2> /dev/null))
+
+
+################################################################################
+##                               CONSTANTS                                    ##
+################################################################################
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+ASTERIK := *
+LPAREN := (
+RPAREN := )
+COMMA := ,
+5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
+
+
+################################################################################
+##                               OS/ARCH INFO                                 ##
+################################################################################
+GOOS := $(strip $(GOOS))
+GOARCH := $(strip $(GOARCH))
+
+ifneq (,$(GO)) # if go exists
+
+GOOS_GOARCH := $(subst /, ,$(shell $(GO) version | awk '{print $$4}'))
+ifeq (,$(GOOS))
+GOOS := $(word 1,$(GOOS_GOARCH))
+endif
+ifeq (,$(GOARCH))
+GOARCH := $(word 2,$(GOOS_GOARCH))
+endif
+
+else
+
+ifeq (,$(GOOS))
+GOOS := $(shell uname -s | tr A-Z a-z)
+endif
+ifeq (,$(GOARCH))
+GOARCH := amd64
+endif
+endif
+
+GOOS_GOARCH := $(GOOS)_$(GOARCH)
+
+ifeq (,$(OS))
+ifeq ($(GOOS),windows)
+OS := Windows_NT
+endif
+ifeq ($(GOOS),linux)
+OS := Linux
+endif
+ifeq ($(GOOS),darwin)
+OS := Darwin
+endif
+endif
+
+ifeq (,$(ARCH))
+ifeq ($(GOARCH),386)
+ARCH := i386
+endif
+ifeq ($(GOARCH),amd64)
+ARCH := x86_64
+endif
+ifeq ($(GOARCH),arm)
+ARCH := ARM
+endif
+ifeq ($(GOARCH),arm64)
+ARCH := ARM64
+endif
+endif
+
+export OS
+export ARCH
+
 
 ################################################################################
 ##                                  DOCKER                                    ##
@@ -42,7 +120,7 @@ DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
 ifeq (undefined,$(origin DGOOS))
 DGOOS := $(DGOHOSTOS)
 endif
-DGOARCH := amd64
+DGOARCH ?= amd64
 DPRFX := build-libstorage
 DNAME := $(DPRFX)
 ifeq (1,$(DBUILD_ONCE))
@@ -147,15 +225,7 @@ endif # ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 ################################################################################
 ##                                 CONSTANTS                                  ##
 ################################################################################
-ifneq (,$(shell which go 2> /dev/null)) # if go exists
-
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
-ASTERIK := *
-LPAREN := (
-RPAREN := )
-COMMA := ,
-5S := $(SPACE)$(SPACE)$(SPACE)$(SPACE)$(SPACE)
+ifneq (,$(GO)) # if go exists
 
 
 # a list of the go 1.6 stdlib pacakges as grepped from https://golang.org/pkg/
@@ -194,6 +264,7 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 ################################################################################
 
 GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
+GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
 ifneq (,$(TRAVIS_GO_VERSION))
@@ -250,29 +321,6 @@ ifneq (,$(strip $(findstring vendor,$(ROOT_IMPORT_PATH))))
 VENDORED := 1
 ROOT_IMPORT_PATH_NV := $(shell echo $(ROOT_IMPORT_PATH) | sed 's/.*vendor\///g')
 endif
-
-
-################################################################################
-##                               OS/ARCH INFO                                 ##
-################################################################################
-ifeq ($(GOOS),windows)
-	OS ?= Windows_NT
-endif
-ifeq ($(GOOS),linux)
-	OS ?= Linux
-endif
-ifeq ($(GOOS),darwin)
-	OS ?= Darwin
-endif
-ifeq ($(GOARCH),386)
-	ARCH ?= i386
-endif
-ifeq ($(GOARCH),amd64)
-	ARCH ?= x86_64
-endif
-
-export OS
-export ARCH
 
 
 ################################################################################
@@ -512,7 +560,7 @@ ifneq (1,$(VENDORED))
 $(GO_BINDATA): $(GLIDE_LOCK_D)
 endif
 $(GO_BINDATA):
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go install $(GO_BINDATA_IMPORT_PATH)
+	GOOS="" GOARCH="" go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
 
@@ -528,13 +576,13 @@ ifneq (1,$(GOMETALINTER_DISABLED))
 GOMETALINTER := $(GOPATH)/bin/gometalinter
 
 $(GOMETALINTER): | $(GOMETALINTER_TOOLS)
-	go get -u github.com/alecthomas/gometalinter
+	GOOS="" GOARCH="" go get -u github.com/alecthomas/gometalinter
 gometalinter: $(GOMETALINTER)
 GO_DEPS += $(GOMETALINTER)
 
 GOMETALINTER_TOOLS_D := .gometalinter.tools.d
 $(GOMETALINTER_TOOLS_D): $(GOMETALINTER)
-	$(GOMETALINTER) --install --update && touch $@
+	GOOS="" GOARCH="" $(GOMETALINTER) --install --update && touch $@
 GO_DEPS += $(GOMETALINTER_TOOLS_D)
 
 GOMETALINTER_ARGS := --vendor \
@@ -854,23 +902,114 @@ $(LIBSTORAGE_SCHEMA_GENERATED): $(LIBSTORAGE_JSON)
 ################################################################################
 ##                                 EXECUTORS                                  ##
 ################################################################################
-EXECUTOR := $(shell go list -f '{{.Target}}' ./cli/lsx/lsx-$(GOOS))
-EXECUTOR_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
-EXECUTOR_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
-EXECUTOR_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/lsx/lsx-windows)
-build-executor-linux: $(EXECUTOR_LINUX)
-build-executor-darwin: $(EXECUTOR_DARWIN)
-build-executor-windows: $(EXECUTOR_WINDOWS)
+
+# handle which executors are embedded
+ifeq (,$(strip $(EMED_EXECUTORS)))
+
+ifeq (linux_amd64,$(GOOS)_$(GOARCH))
+EMBED_EXECUTOR_LINUX_AMD64 ?= 1
+endif
+ifeq (linux_arm,$(GOOS)_$(GOARCH))
+EMBED_EXECUTOR_LINUX_ARM ?= 1
+endif
+ifeq (linux_arm64,$(GOOS)_$(GOARCH))
+EMBED_EXECUTOR_LINUX_ARM64 ?= 1
+endif
+ifeq (darwin_amd64,$(GOOS)_$(GOARCH))
+EMBED_EXECUTOR_DARWIN_AMD64 ?= 1
+endif
+ifeq (windows_amd64,$(GOOS)_$(GOARCH))
+EMBED_EXECUTOR_WINDOWS_AMD64 ?= 1
+endif
+
+else
+
+EMBED_EXECUTOR_LINUX_AMD64 := 0
+EMBED_EXECUTOR_LINUX_ARM := 0
+EMBED_EXECUTOR_LINUX_ARM64 := 0
+EMBED_EXECUTOR_DARWIN_AMD64 := 0
+EMBED_EXECUTOR_WINDOWS_AMD64 := 0
+
+ifeq (linux_amd64,$(findstring linux_amd64,$(EMED_EXECUTORS)))
+EMBED_EXECUTOR_LINUX_AMD64 := 1
+endif
+ifeq (linux_arm,$(findstring linux_arm,$(EMED_EXECUTORS)))
+EMBED_EXECUTOR_LINUX_ARM := 1
+endif
+ifeq (linux_arm64,$(findstring linux_arm64,$(EMED_EXECUTORS)))
+EMBED_EXECUTOR_LINUX_ARM64 := 1
+endif
+ifeq (darwin_amd64,$(findstring darwin_amd64,$(EMED_EXECUTORS)))
+EMBED_EXECUTOR_DARWIN_AMD64 := 1
+endif
+ifeq (windows_amd64,$(findstring windows_amd64,$(EMED_EXECUTORS)))
+EMBED_EXECUTOR_WINDOWS_AMD64 := 1
+endif
+
+endif #ifneq (,$(strip $(EMED_EXECUTORS)))
+
+
+EXECUTOR_LINUX := $(shell env GOOS=linux GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
+EXECUTOR_LINUX_ARM := $(shell env GOOS=linux GOARCH=arm go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
+EXECUTOR_LINUX_ARM64 := $(shell env GOOS=linux GOARCH=arm64 go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
+EXECUTOR_DARWIN := $(shell env GOOS=darwin GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
+EXECUTOR_WINDOWS := $(shell env GOOS=windows GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-windows)
+
+EXECUTORS_BINDIR := ./api/server/executors/bin
+EXECUTOR_LINUX_EMBED := $(EXECUTORS_BINDIR)/lsx-linux
+EXECUTOR_LINUX_ARM_EMBED := $(EXECUTORS_BINDIR)/lsx-linux-arm
+EXECUTOR_LINUX_ARM64_EMBED := $(EXECUTORS_BINDIR)/lsx-linux-arm64
+EXECUTOR_DARWIN_EMBED := $(EXECUTORS_BINDIR)/lsx-darwin
+EXECUTOR_WINDOWS_EMBED := $(EXECUTORS_BINDIR)/lsx-windows.exe
+
+build-executor-linux: $(EXECUTOR_LINUX_EMBED)
+build-executor-linux-arm: $(EXECUTOR_LINUX_ARM_EMBED)
+build-executor-linux-arm64: $(EXECUTOR_LINUX_ARM64_EMBED)
+build-executor-darwin: $(EXECUTOR_DARWIN_EMBED)
+build-executor-windows: $(EXECUTOR_WINDOWS_EMBED)
+
+clean-executor-linux:
+	rm -f $(EXECUTOR_LINUX_EMBED)
+clean-executor-linux-arm:
+	rm -f $(EXECUTOR_LINUX_ARM_EMBED)
+
+clean-executor-linux-arm64:
+	rm -f $(EXECUTOR_LINUX_ARM64_EMBED)
+
+clean-executor-darwin:
+	rm -f $(EXECUTOR_DARWIN_EMBED)
+
+clean-executor-windows:
+	rm -f $(EXECUTOR_WINDOWS_EMBED)
 
 EXECUTORS_GENERATED := ./api/server/executors/executors_generated.go
 API_SERVER_EXECUTORS_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api/server/executors.a
 
 define EXECUTOR_RULES
-LSX_EMBEDDED_$2 := ./api/server/executors/bin/$$(notdir $1)
 
-ifneq ($2,$$(GOOS))
+LSX_EMBEDDED_$2_$3_FILENAME := $$(notdir $1)
+LSX_EMBEDDED_$2_$3 := $$(EXECUTORS_BINDIR)/$$(LSX_EMBEDDED_$2_$3_FILENAME)
+
+# add the GOARCH extension to the executor if the architecture is
+# anything other than amd64
+ifneq (amd64,$3)
+
+# for windows platforms it's necessary to slice the .exe off the
+# end of the executor filename and add the GOARCH before it
+ifeq (windows,$2)
+LSX_EMBEDDED_$2_$3_BASENAME := $$(basename $$(LSX_EMBEDDED_$2_$3_FILENAME))
+LSX_EMBEDDED_$2_$3_BASEDIR := $$(EXECUTORS_BINDIR)/$$(LSX_EMBEDDED_$2_$3_BASENAME)
+LSX_EMBEDDED_$2_$3 := $$(LSX_EMBEDDED_$2_$3_BASEDIR)-$3.exe
+
+# simply add -GOARCH suffix to non-windows platforms
+else
+LSX_EMBEDDED_$2_$3 := $$(LSX_EMBEDDED_$2_$3)-$3
+endif
+endif
+
+ifneq ($2_$3,$$(GOOS)_$$(GOARCH))
 $1:
-	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
+	BUILD_TAGS="$$(BUILD_TAGS)" GOOS="$2" GOARCH="$3" $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 	rm -f $(EXECUTORS_GENERATED)
@@ -878,21 +1017,44 @@ GO_PHONY += $1-clean
 GO_CLEAN += $1-clean
 endif
 
-$$(LSX_EMBEDDED_$2): $1
-	@mkdir -p $$(@D) && cp -f $$? $$@
+$$(LSX_EMBEDDED_$2_$3): $1
+	@mkdir -p $$(@D)
+	cp -f $$? $$@
 
 ifeq (linux,$2)
-EXECUTORS_EMBEDDED += $$(LSX_EMBEDDED_$2)
+
+ifeq (amd64,$3)
+ifeq (1,$$(EMBED_EXECUTOR_LINUX_AMD64))
+EXECUTORS_EMBEDDED += $$(EXECUTOR_LINUX_EMBED)
 endif
+endif
+
+ifeq (arm,$3)
+ifeq (1,$$(EMBED_EXECUTOR_LINUX_ARM))
+EXECUTORS_EMBEDDED += $$(EXECUTOR_LINUX_ARM_EMBED)
+endif
+endif # ifeq (arm,$$(GOARCH))
+
+ifeq (arm64,$3)
+ifeq (1,$$(EMBED_EXECUTOR_LINUX_ARM64))
+EXECUTORS_EMBEDDED += $$(EXECUTOR_LINUX_ARM64_EMBED)
+endif
+endif # ifeq (arm64,$$(GOARCH))
+
+endif # ifeq (linux,$2)
+
 ifeq (darwin,$2)
 ifeq (1,$$(EMBED_EXECUTOR_DARWIN))
-EXECUTORS_EMBEDDED += $$(LSX_EMBEDDED_$2)
+EXECUTORS_EMBEDDED += $$(EXECUTOR_DARWIN_EMBED)
 endif
-endif
+endif # ifeq (darwin,$2)
+
 endef
 
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux))
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux,amd64))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX_ARM),linux,arm))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX_ARM64),linux,arm64))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin,amd64))
 #$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
 
 $(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
@@ -991,31 +1153,76 @@ $(C_LIBSTOR_S_BIN):  $(C_LIBSTOR_TYPES_H) \
 ################################################################################
 ##                                  SERVERS                                   ##
 ################################################################################
-LSS_BIN := $(shell go list -f '{{.Target}}' ./cli/lss/lss-$(GOOS))
-LSS_ALL += $(LSS_BIN)
-LSS_LINUX := $(shell env GOOS=linux go list -f '{{.Target}}' ./cli/lss/lss-linux)
-LSS_DARWIN := $(shell env GOOS=darwin go list -f '{{.Target}}' ./cli/lss/lss-darwin)
-LSS_WINDOWS := $(shell env GOOS=windows go list -f '{{.Target}}' ./cli/lss/lss-windows)
+LSS_LINUX := $(shell GOOS=linux GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-linux)
+LSS_LINUX_ARM := $(shell GOOS=linux GOARCH=arm go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-linux)
+LSS_LINUX_ARM64 := $(shell GOOS=linux GOARCH=arm64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-linux)
+LSS_DARWIN := $(shell GOOS=darwin GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-darwin)
+LSS_WINDOWS := $(shell GOOS=windows GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-windows)
+
+ifeq (linux,$(GOOS))
+
+ifeq (amd64,$(GOARCH))
+LSS := $(LSS_LINUX)
+endif
+
+ifeq (arm,$(GOARCH))
+LSS := $(LSS_LINUX_ARM)
+endif
+
+ifeq (arm64,$(GOARCH))
+LSS := $(LSS_LINUX_ARM64)
+endif
+
+endif # ifeq (linux,$(GOOS))
+
+ifeq (darwin,$(GOOS))
+LSS := $(LSS_DARWIN)
+endif # ifeq (darwin,$(GOOS))
+
+ifeq (windows,$(GOOS))
+LSS := $(LSS_WINDOWS)
+endif # ifeq (windows,$(GOOS))
+
 build-lss-linux: $(LSS_LINUX)
+build-lss-linux-arm: $(LSS_LINUX_ARM)
+build-lss-linux-arm64: $(LSS_LINUX_ARM64)
 build-lss-darwin: $(LSS_DARWIN)
 build-lss-windows: $(LSS_WINDOWS)
 
 define LSS_RULES
-ifneq ($2,$$(GOOS))
+ifneq ($2_$3,$$(GOOS)_$$(GOARCH))
 $1:
-	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=amd64 $$(MAKE) $$@
+	BUILD_TAGS="$$(BUILD_TAGS)" GOOS=$2 GOARCH=$3 $$(MAKE) $$@
 $1-clean:
 	rm -f $1
 GO_PHONY += $1-clean
 GO_CLEAN += $1-clean
 endif
 
+ifeq (linux,$2)
+
+ifeq (amd64,$3)
 LSS_ALL += $1
+endif
+
+ifeq (arm,$3)
+ifeq (1,$$(BUILD_LSS_LINUX_ARM))
+LSS_ALL += $1
+endif
+endif
+
+ifeq (arm64,$3)
+ifeq (1,$$(BUILD_LSS_LINUX_ARM64))
+LSS_ALL += $1
+endif
+endif
+
+endif
 endef
 
-#$(eval $(call LSS_RULES,$(LSS_LINUX),linux))
-#$(eval $(call LSS_RULES,$(LSS_DARWIN),darwin))
-#$(eval $(call LSS_RULES,$(LSS_WINDOWS),windows))
+#$(eval $(call LSS_RULES,$(LSS_LINUX),linux,amd64))
+#$(eval $(call LSS_RULES,$(LSS_DARWIN),darwin,amd64))
+#$(eval $(call LSS_RULES,$(LSS_WINDOWS),windows,amd64))
 
 
 ################################################################################
@@ -1045,11 +1252,11 @@ endif
 
 .coverage.tools.d:
 ifeq (1,$(COVERAGE_ENABLED))
-	go get github.com/onsi/gomega \
+	GOOS="" GOARCH="" go get github.com/onsi/gomega \
            github.com/onsi/ginkgo \
            golang.org/x/tools/cmd/cover && touch $@
 else
-	go get golang.org/x/tools/cmd/cover && touch $@
+	GOOS="" GOARCH="" go get golang.org/x/tools/cmd/cover && touch $@
 endif
 GO_DEPS += .coverage.tools.d
 
@@ -1080,7 +1287,7 @@ build-client-nogofig:
 build:
 	$(MAKE) build-generated
 	$(MAKE) build-libstorage
-ifeq ($(GOOS),$(GOHOSTOS))
+ifeq ($(GOOS)_$(GOARCH),$(GOHOSTOS)_$(GOHOSTARCH))
 	$(MAKE) libstor-c libstor-s
 endif
 	$(MAKE) build-lss

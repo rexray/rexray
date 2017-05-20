@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -61,12 +62,21 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 	initPathConfigFieldWithEnvVar(ctx, envVarHomeLSX, &pathConfig.LSX)
 
 	var (
-		root = pathConfig.Home == "/"
-		lsx  = fmt.Sprintf("lsx-%s", runtime.GOOS)
+		lsxNameBuf = &bytes.Buffer{}
+		root       = pathConfig.Home == "/"
 	)
-	if runtime.GOOS == "windows" {
-		lsx = fmt.Sprintf("%s.exe", lsx)
+
+	fmt.Fprint(lsxNameBuf, "lsx-")
+	fmt.Fprint(lsxNameBuf, runtime.GOOS)
+	if runtime.GOARCH != "amd64" {
+		fmt.Fprint(lsxNameBuf, "-")
+		fmt.Fprint(lsxNameBuf, runtime.GOARCH)
 	}
+	if runtime.GOOS == "windows" {
+		fmt.Fprint(lsxNameBuf, ".exe")
+	}
+	lsx := lsxNameBuf.String()
+	ctx.WithField("lsx", lsx).Debug("lsx binary name")
 
 	initPathConfigFieldWithPath(
 		ctx, root, true, token, pathConfig.Home, "etc", &pathConfig.Etc)

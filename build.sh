@@ -9,6 +9,7 @@ ekho() {
 }
 usage() {
   ekho "usage: build.sh [-l loglevel] [-b builder] [-x] [-t type] [-d drivers]"
+  ekho "                [-a arch] [-e executors]"
   ekho "                [-u rr_uri] [-r rr_ref]"
   ekho "                [-s] | [-1 ls_uri] [-2 ls_ref]"
   ekho "                [-3] [FILE]"
@@ -16,6 +17,13 @@ usage() {
   ekho "       -l loglevel      Optional. Sets the program's log level. Possible"
   ekho "                        values include debug, info, warn, and error. The"
   ekho "                        default log level is error."
+  ekho
+  ekho "       -a arch          Optional. Sets the GOARCH environment variable."
+  ekho "                        Defaults to amd64."
+  ekho
+  ekho "       -e exeuctors     Optional. A quoted, space delimited list of the"
+  ekho "                        GOOS_GOARCH executors to embed. The default value"
+  ekho "                        is GOOS_GOARCH."
   ekho
   ekho "       -b builder       Optional. The builder used to build REX-Ray. Possible"
   ekho "                        values include docker, make & skip. The default value,"
@@ -342,7 +350,9 @@ get_semver() {
 
 create_dockerfile() {
   workdir_rr="/go/src/github.com/codedellemc/rexray/"
-  bsrc='NOSTAT=1 DRIVERS="'"${DRIVERS}"'" REXRAY_BUILD_TYPE='"${BTYPE}"' make'
+  bsrc='GOARCH="'"${GOARCH}"'" NOSTAT="1" DRIVERS="'"${DRIVERS}"'" '
+  bsrc="$bsrc"'EMED_EXECUTORS="'"${EMED_EXECUTORS}"'" '
+  bsrc="$bsrc"'REXRAY_BUILD_TYPE='"${BTYPE}"' make'
 
   lsd="${GOPATH}/src/github.com/codedellemc/libstorage"
   if [ "$LS_LOCAL" = "1" ] && [ -d "$lsd" ]; then
@@ -356,7 +366,7 @@ create_dockerfile() {
     workdir_ls="WORKDIR $ls_home"
 
     nl="$(printf '%b_' '\n')"
-    sed -e 's/.*# libstorage-version/    ref:     master/g' \
+    sed -e 's|.*# libstorage-version|    ref:     master|g' \
         -e 's|.*# libstorage-repo|    repo:    file://'"${ls_home}\\${nl%_}"'    vcs:     git|g' \
         glide.yaml > "$GLIDE_YAML_TMP"
     bsrc="cp -f $GLIDE_YAML_TMP glide.yaml \&\& $bsrc"
@@ -394,7 +404,15 @@ create_dockerfile() {
     bcmd="$bgit"' \&\& '"$bsrc"
   fi
 
+  if [ "$GOOS" != "" ] || [ "$GOARCH" != "" ]; then
+    if [ "$GOOS" != "linux" ] || [ "$GOARCH" != "amd64" ]; then
+      GOOS="${GOOS:-linux}"
+      GOOS_GOARCH_DIR="${GOOS}_${GOARCH}/"
+    fi
+  fi
+
   sed -e 's/@GO_VERSION@/'"$GO_VERSION"'/g' \
+    -e 's|@GOOS_GOARCH_DIR@|'"$GOOS_GOARCH_DIR"'/|g' \
     -e 's|@WORKDIR_RR@|'"$workdir_rr"'|g' \
     -e 's|@WORKDIR_LS@|'"$workdir_ls"'|g' \
     -e 's|@INIT_LS_SRCS_CMD@|'"$init_ls_srcs"'|g' \
@@ -440,16 +458,17 @@ build_make() {
       return 1
     fi
   fi
-  if ! NOSTAT="1" NODOCKER="1" DRIVERS="$DRIVERS" \
-       REXRAY_BUILD_TYPE="$BTYPE" make; then
+  if ! GOARCH="$GOARCH" NOSTAT="1" NODOCKER="1" \
+       EMBED_EXECUTORS="$EMBED_EXECUTORS" \
+       DRIVERS="$DRIVERS" REXRAY_BUILD_TYPE="$BTYPE" make; then
     ekho "error building with make"
     return 1
   fi
-  if [ ! -f "${GOPATH}/bin/${REAL_FNAME}" ]; then
-    ekho "error: build artifact missing: ${GOPATH}/bin/${REAL_FNAME}"
+  if [ ! -f "$REAL_FPATH" ]; then
+    ekho "error: build artifact missing: $REAL_FPATH"
     return 1
   fi
-  cp -f "${GOPATH}/bin/${REAL_FNAME}" "$FNAME"
+  cp -f "$REAL_FPATH" "$FNAME"
   return 0
 }
 
@@ -561,6 +580,9 @@ build_plugin() {
 # the builder
 BUILDER="docker"
 
+# the go architecture to build
+GOARCH="${GOARCH:-amd64}"
+
 # the build type
 BTYPE="${REXRAY_BUILD_TYPE:-}"
 
@@ -576,11 +598,19 @@ NOCLEAN=
 # do not keep the image used to build REX-Ray
 NOKEEP=
 
-while getopts ":l:b:t:d:xu:r:s1:2:3" opt; do
+while getopts ":l:a:e:b:t:d:xu:r:s1:2:3" opt; do
   case $opt in
   l)
     FLAG_L="1"
     DEBUG="$OPTARG"
+    ;;
+  a)
+    FLAG_A="1"
+    GOARCH="$OPTARG"
+    ;;
+  e)
+    FLAG_E="1"
+    EMED_EXECUTORS="$OPTARG"
     ;;
   b)
     FLAG_B="1"
@@ -753,11 +783,26 @@ else
   FNAME_SUFFIX="-${BTYPE}"
 fi
 
+if [ "$GOARCH" = "amd64" ]; then
+  REAL_FPATH="${GOPATH}/bin/${REAL_FNAME}"
+else
+  REAL_FPATH="${GOPATH}/bin/linux_${GOARCH}/${REAL_FNAME}"
+
+  # remove the Docker image since it's incompatible with
+  # the REX-Ray binary
+  NOKEEP="1"
+fi
+
+# indicate which executors to embed
+EMED_EXECUTORS="${EMED_EXECUTORS:-linux_$GOARCH}"
+
 if [ "$1" != "" ]; then
   FNAME="$1"
 fi
 
+debug "FLAG_A=$FLAG_A"
 debug "FLAG_B=$FLAG_B"
+debug "FLAG_E=$FLAG_E"
 debug "FLAG_T=$FLAG_T"
 debug "FLAG_D=$FLAG_D"
 debug "FLAG_X=$FLAG_X"
@@ -767,6 +812,8 @@ debug "FLAG_S=$FLAG_S"
 debug "FLAG_1=$FLAG_1"
 debug "FLAG_2=$FLAG_2"
 debug "FLAG_3=$FLAG_3"
+debug "GOARCH=$GOARCH"
+debug "EMED_EXECUTORS=$EMED_EXECUTORS"
 debug "NOCLEAN=$NOCLEAN"
 debug "NOKEEP=$NOKEEP"
 debug "BUILDER=$BUILDER"
@@ -780,6 +827,7 @@ debug "BPLUG=$BPLUG"
 debug "DRIVERS=$DRIVERS"
 debug "FNAME=$FNAME"
 debug "REAL_FNAME=$REAL_FNAME"
+debug "REAL_FPATH=$REAL_FPATH"
 debug "FNAME_SUFFIX=$FNAME_SUFFIX"
 
 SEMVER="${SEMVER:-$(get_semver "$BUILDER" "$RR_URI" "$RR_REF")}"
@@ -848,7 +896,7 @@ fi
 echo
 echo "successfully built REX-Ray!"
 echo
-if [ "$BUILDER" = "docker" ]; then
+if [ "$BUILDER" = "docker" ] && [ "$NOKEEP" = "" ]; then
 echo "  Docker image is...... ${DIMG_NAME}"
 fi
 echo "  REX-Ray binary is.... ./${FNAME}"

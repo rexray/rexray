@@ -150,29 +150,75 @@ endif
 endif
 
 ifeq (,$(ARCH))
+
 ifeq ($(GOARCH),386)
 ARCH := i386
-endif
+endif # ifeq ($(GOARCH),386)
+
 ifeq ($(GOARCH),amd64)
 ARCH := x86_64
-endif
+endif # ifeq ($(GOARCH),amd64)
+
 ifeq ($(GOARCH),arm)
-ARCH := ARM
-endif
+ifeq (,$(strip $(GOARM)))
+GOARM := 7
+endif # ifeq (,$(strip $(GOARM)))
+ARCH := ARMv$(GOARM)
+endif # ifeq ($(GOARCH),arm)
+
 ifeq ($(GOARCH),arm64)
-ARCH := ARM64
+ARCH := ARMv8
+endif # ifeq ($(GOARCH),arm64)
+
+endif # ifeq (,$(ARCH))
+
+
+# if GOARCH=arm & GOARM="" then figure out what
+# the correct GOARM version is and export it
+ifeq (arm,$(GOARCH))
+ifeq (,$(strip $(GOARM)))
+ifeq (ARMv5,$(ARCH))
+GOARM := 5
+endif # ifeq (ARMv5,$(ARCH))
+ifeq (ARMv6,$(ARCH))
+GOARM := 6
+endif # ifeq (ARMv6,$(ARCH))
+ifeq (ARMv7,$(ARCH))
+GOARM := 7
+endif # ifeq (ARMv7,$(ARCH))
+endif # ifeq (,$(strip $(GOARM)))
+export GOARM
+endif # ifeq (arm,$(GOARCH))
+
+
+# if GOARCH is arm64 then undefine & unexport GOARM
+ifeq (arm64,$(GOARCH))
+ifneq (undefined,$(origin GOARM))
+undefine GOARM
+unexport GOARM
 endif
-endif
+endif # ifeq ($(GOARCH),arm64)
+
+
+# ensure that GOARM is compatible with the GOOS &
+# GOARCH per https://github.com/golang/go/wiki/GoArm
+# when GOARCH=arm
+ifeq (arm,$(GOARCH))
+ifeq (darwin,$(GOOS))
+GOARM_ALLOWED := 7
+else
+GOARM_ALLOWED := 5 6 7
+endif # ifeq (darwin,$(GOOS))
+ifeq (,$(strip $(filter $(GOARM),$(GOARM_ALLOWED))))
+$(info incompatible GOARM version: $(GOARM))
+$(info allowed GOARM versions are: $(GOARM_ALLOWED))
+$(info plese see https://github.com/golang/go/wiki/GoArm)
+exit 1
+endif # ifeq (,$(strip $(filter $(GOARM),$(GOARM_ALLOWED))))
+endif # ifeq (arm,$(GOARCH))
 
 export OS
 export ARCH
-
-ifeq (darwin,$(GOOS))
-ifneq (amd64,$(GOARCH))
-$(info darwin builds are amd64 only)
-exit 1
-endif
-endif
 
 
 ################################################################################
@@ -246,6 +292,9 @@ V_OS_ARCH := $(V_OS)-$(V_ARCH)
 
 TRAVIS_BRANCH := $(subst $(ASTERIK) ,,$(TRAVIS_BRANCH))
 TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached at ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)detached at ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached from ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)detached from ,,$(TRAVIS_BRANCH))
 TRAVIS_BRANCH := $(subst $(RPAREN),,$(TRAVIS_BRANCH))
 
 ifeq ($(origin TRAVIS_TAG), undefined)
@@ -927,7 +976,7 @@ endif
 ##                               GENERATED CORE SRC                            ##
 ################################################################################
 GENERATED_BUILD_TYPE := client+agent+controller
-ifneq (,$(REXRAY_BUILD_TYPE))
+ifneq (,$(strip $(REXRAY_BUILD_TYPE)))
 GENERATED_BUILD_TYPE := $(REXRAY_BUILD_TYPE)
 endif
 
@@ -935,8 +984,6 @@ define CORE_GENERATED_CONTENT
 package core
 
 import (
-	"fmt"
-	"runtime"
 	"time"
 
 	apitypes "github.com/codedellemc/libstorage/api/types"
@@ -944,8 +991,7 @@ import (
 
 func init() {
 	Version = &apitypes.VersionInfo{}
-	Version.Arch = fmt.Sprintf(
-		"%s-%s", osString(runtime.GOOS), archString(runtime.GOARCH))
+	Version.Arch = "$(V_OS_ARCH)"
 	Version.Branch = "$(V_BRANCH)"
 	Version.BuildTimestamp = time.Unix($(V_EPOCH), 0)
 	Version.SemVer = "$(V_SEMVER)"
@@ -1237,12 +1283,17 @@ build-cli: $(CLI_BINS)
 info:
 	$(info Project Import Path.........$(ROOT_IMPORT_PATH))
 	$(info Project Name................$(ROOT_IMPORT_NAME))
-	$(info OS / Arch...................$(GOOS)_$(GOARCH))
+	$(info OS / Arch...................$(OS)_$(ARCH))
 	$(info Program.....................$(CLI))
-	$(info Build Type..................$(REXRAY_BUILD_TYPE))
+	$(info Build Type..................$(GENERATED_BUILD_TYPE))
 	$(info Build Tags..................$(BUILD_TAGS))
 	$(info Vendored....................$(VENDORED))
 	$(info GOPATH......................$(GOPATH))
+	$(info GOOS........................$(GOOS))
+	$(info GOARCH......................$(GOARCH))
+ifneq (,$(GOARM))
+	$(info GOARM.......................$(GOARM))
+endif
 	$(info GOHOSTOS....................$(GOHOSTOS))
 	$(info GOHOSTARCH..................$(GOHOSTARCH))
 	$(info GOVERSION...................$(GOVERSION))

@@ -57,7 +57,6 @@ GOOS := $(strip $(GOOS))
 GOARCH := $(strip $(GOARCH))
 
 ifneq (,$(GO)) # if go exists
-
 GOOS_GOARCH := $(subst /, ,$(shell $(GO) version | awk '{print $$4}'))
 ifeq (,$(GOOS))
 GOOS := $(word 1,$(GOOS_GOARCH))
@@ -65,9 +64,7 @@ endif
 ifeq (,$(GOARCH))
 GOARCH := $(word 2,$(GOOS_GOARCH))
 endif
-
 else
-
 ifeq (,$(GOOS))
 GOOS := $(shell uname -s | tr A-Z a-z)
 endif
@@ -75,7 +72,6 @@ ifeq (,$(GOARCH))
 GOARCH := amd64
 endif
 endif
-
 GOOS_GOARCH := $(GOOS)_$(GOARCH)
 
 ifeq (,$(OS))
@@ -91,19 +87,72 @@ endif
 endif
 
 ifeq (,$(ARCH))
+
 ifeq ($(GOARCH),386)
 ARCH := i386
-endif
+endif # ifeq ($(GOARCH),386)
+
 ifeq ($(GOARCH),amd64)
 ARCH := x86_64
-endif
+endif # ifeq ($(GOARCH),amd64)
+
 ifeq ($(GOARCH),arm)
-ARCH := ARM
-endif
+ifeq (,$(strip $(GOARM)))
+GOARM := 7
+endif # ifeq (,$(strip $(GOARM)))
+ARCH := ARMv$(GOARM)
+endif # ifeq ($(GOARCH),arm)
+
 ifeq ($(GOARCH),arm64)
-ARCH := ARM64
+ARCH := ARMv8
+endif # ifeq ($(GOARCH),arm64)
+
+endif # ifeq (,$(ARCH))
+
+
+# if GOARCH=arm & GOARM="" then figure out what
+# the correct GOARM version is and export it
+ifeq (arm,$(GOARCH))
+ifeq (,$(strip $(GOARM)))
+ifeq (ARMv5,$(ARCH))
+GOARM := 5
+endif # ifeq (ARMv5,$(ARCH))
+ifeq (ARMv6,$(ARCH))
+GOARM := 6
+endif # ifeq (ARMv6,$(ARCH))
+ifeq (ARMv7,$(ARCH))
+GOARM := 7
+endif # ifeq (ARMv7,$(ARCH))
+endif # ifeq (,$(strip $(GOARM)))
+export GOARM
+endif # ifeq (arm,$(GOARCH))
+
+
+# if GOARCH is arm64 then undefine & unexport GOARM
+ifeq (arm64,$(GOARCH))
+ifneq (undefined,$(origin GOARM))
+undefine GOARM
+unexport GOARM
 endif
-endif
+endif # ifeq ($(GOARCH),arm64)
+
+
+# ensure that GOARM is compatible with the GOOS &
+# GOARCH per https://github.com/golang/go/wiki/GoArm
+# when GOARCH=arm
+ifeq (arm,$(GOARCH))
+ifeq (darwin,$(GOOS))
+GOARM_ALLOWED := 7
+else
+GOARM_ALLOWED := 5 6 7
+endif # ifeq (darwin,$(GOOS))
+ifeq (,$(strip $(filter $(GOARM),$(GOARM_ALLOWED))))
+$(info incompatible GOARM version: $(GOARM))
+$(info allowed GOARM versions are: $(GOARM_ALLOWED))
+$(info plese see https://github.com/golang/go/wiki/GoArm)
+exit 1
+endif # ifeq (,$(strip $(filter $(GOARM),$(GOARM_ALLOWED))))
+endif # ifeq (arm,$(GOARCH))
 
 export OS
 export ARCH
@@ -453,10 +502,15 @@ ifeq (1,$(VENDORED))
 	$(info No Vendor Import Path.......$(ROOT_IMPORT_PATH_NV))
 endif
 	$(info Project Name................$(ROOT_IMPORT_NAME))
-	$(info OS / Arch...................$(GOOS)_$(GOARCH))
+	$(info OS / Arch...................$(OS)_$(ARCH))
 	$(info Build Tags..................$(BUILD_TAGS))
 	$(info Vendored....................$(VENDORED))
 	$(info GOPATH......................$(GOPATH))
+	$(info GOOS........................$(GOOS))
+	$(info GOARCH......................$(GOARCH))
+ifneq (,$(GOARM))
+	$(info GOARM.......................$(GOARM))
+endif
 	$(info GOHOSTOS....................$(GOHOSTOS))
 	$(info GOHOSTARCH..................$(GOHOSTARCH))
 	$(info GOVERSION...................$(GOVERSION))
@@ -675,6 +729,9 @@ endif
 endif
 TRAVIS_BRANCH := $(subst $(ASTERIK) ,,$(TRAVIS_BRANCH))
 TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached at ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)detached at ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)HEAD detached from ,,$(TRAVIS_BRANCH))
+TRAVIS_BRANCH := $(subst $(LPAREN)detached from ,,$(TRAVIS_BRANCH))
 TRAVIS_BRANCH := $(subst $(RPAREN),,$(TRAVIS_BRANCH))
 
 ifeq ($(origin TRAVIS_TAG), undefined)
@@ -918,6 +975,12 @@ endif
 ifeq (darwin_amd64,$(GOOS)_$(GOARCH))
 EMBED_EXECUTOR_DARWIN_AMD64 ?= 1
 endif
+ifeq (darwin_arm,$(GOOS)_$(GOARCH))
+EMBED_EXECUTOR_DARWIN_ARM ?= 1
+endif
+ifeq (darwin_arm64,$(GOOS)_$(GOARCH))
+EMBED_EXECUTOR_DARWIN_ARM64 ?= 1
+endif
 ifeq (windows_amd64,$(GOOS)_$(GOARCH))
 EMBED_EXECUTOR_WINDOWS_AMD64 ?= 1
 endif
@@ -928,21 +991,29 @@ EMBED_EXECUTOR_LINUX_AMD64 := 0
 EMBED_EXECUTOR_LINUX_ARM := 0
 EMBED_EXECUTOR_LINUX_ARM64 := 0
 EMBED_EXECUTOR_DARWIN_AMD64 := 0
+EMBED_EXECUTOR_DARWIN_ARM := 0
+EMBED_EXECUTOR_DARWIN_ARM64 := 0
 EMBED_EXECUTOR_WINDOWS_AMD64 := 0
 
-ifeq (linux_amd64,$(findstring linux_amd64,$(EMED_EXECUTORS)))
+ifeq (linux_amd64,$(filter linux_amd64,$(EMED_EXECUTORS)))
 EMBED_EXECUTOR_LINUX_AMD64 := 1
 endif
-ifeq (linux_arm,$(findstring linux_arm,$(EMED_EXECUTORS)))
+ifeq (linux_arm,$(filter linux_arm,$(EMED_EXECUTORS)))
 EMBED_EXECUTOR_LINUX_ARM := 1
 endif
-ifeq (linux_arm64,$(findstring linux_arm64,$(EMED_EXECUTORS)))
+ifeq (linux_arm64,$(filter linux_arm64,$(EMED_EXECUTORS)))
 EMBED_EXECUTOR_LINUX_ARM64 := 1
 endif
-ifeq (darwin_amd64,$(findstring darwin_amd64,$(EMED_EXECUTORS)))
+ifeq (darwin_amd64,$(filter darwin_amd64,$(EMED_EXECUTORS)))
 EMBED_EXECUTOR_DARWIN_AMD64 := 1
 endif
-ifeq (windows_amd64,$(findstring windows_amd64,$(EMED_EXECUTORS)))
+ifeq (darwin_arm,$(filter darwin_arm,$(EMED_EXECUTORS)))
+EMBED_EXECUTOR_DARWIN_ARM := 1
+endif
+ifeq (darwin_arm64,$(filter darwin_arm64,$(EMED_EXECUTORS)))
+EMBED_EXECUTOR_DARWIN_ARM64 := 1
+endif
+ifeq (windows_amd64,$(filter windows_amd64,$(EMED_EXECUTORS)))
 EMBED_EXECUTOR_WINDOWS_AMD64 := 1
 endif
 
@@ -953,6 +1024,8 @@ EXECUTOR_LINUX := $(shell env GOOS=linux GOARCH=amd64 go list -f '{{.Target}}' .
 EXECUTOR_LINUX_ARM := $(shell env GOOS=linux GOARCH=arm go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
 EXECUTOR_LINUX_ARM64 := $(shell env GOOS=linux GOARCH=arm64 go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
 EXECUTOR_DARWIN := $(shell env GOOS=darwin GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
+EXECUTOR_DARWIN_ARM := $(shell env GOOS=darwin GOARCH=arm go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
+EXECUTOR_DARWIN_ARM64 := $(shell env GOOS=darwin GOARCH=arm64 go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
 EXECUTOR_WINDOWS := $(shell env GOOS=windows GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-windows)
 
 EXECUTORS_BINDIR := ./api/server/executors/bin
@@ -960,24 +1033,31 @@ EXECUTOR_LINUX_EMBED := $(EXECUTORS_BINDIR)/lsx-linux
 EXECUTOR_LINUX_ARM_EMBED := $(EXECUTORS_BINDIR)/lsx-linux-arm
 EXECUTOR_LINUX_ARM64_EMBED := $(EXECUTORS_BINDIR)/lsx-linux-arm64
 EXECUTOR_DARWIN_EMBED := $(EXECUTORS_BINDIR)/lsx-darwin
+EXECUTOR_DARWIN_ARM_EMBED := $(EXECUTORS_BINDIR)/lsx-darwin-arm
+EXECUTOR_DARWIN_ARM64_EMBED := $(EXECUTORS_BINDIR)/lsx-darwin-arm64
 EXECUTOR_WINDOWS_EMBED := $(EXECUTORS_BINDIR)/lsx-windows.exe
 
 build-executor-linux: $(EXECUTOR_LINUX_EMBED)
 build-executor-linux-arm: $(EXECUTOR_LINUX_ARM_EMBED)
 build-executor-linux-arm64: $(EXECUTOR_LINUX_ARM64_EMBED)
 build-executor-darwin: $(EXECUTOR_DARWIN_EMBED)
+build-executor-darwin-arm: $(EXECUTOR_DARWIN_ARM_EMBED)
+build-executor-darwin-arm64: $(EXECUTOR_DARWIN_ARM64_EMBED)
 build-executor-windows: $(EXECUTOR_WINDOWS_EMBED)
 
 clean-executor-linux:
 	rm -f $(EXECUTOR_LINUX_EMBED)
 clean-executor-linux-arm:
 	rm -f $(EXECUTOR_LINUX_ARM_EMBED)
-
 clean-executor-linux-arm64:
 	rm -f $(EXECUTOR_LINUX_ARM64_EMBED)
 
 clean-executor-darwin:
 	rm -f $(EXECUTOR_DARWIN_EMBED)
+clean-executor-darwin-arm:
+	rm -f $(EXECUTOR_DARWIN_ARM_EMBED)
+clean-executor-darwin-arm64:
+	rm -f $(EXECUTOR_DARWIN_ARM64_EMBED)
 
 clean-executor-windows:
 	rm -f $(EXECUTOR_WINDOWS_EMBED)
@@ -1044,9 +1124,25 @@ endif # ifeq (arm64,$$(GOARCH))
 endif # ifeq (linux,$2)
 
 ifeq (darwin,$2)
-ifeq (1,$$(EMBED_EXECUTOR_DARWIN))
+
+ifeq (amd64,$3)
+ifeq (1,$$(EMBED_EXECUTOR_DARWIN_AMD64))
 EXECUTORS_EMBEDDED += $$(EXECUTOR_DARWIN_EMBED)
 endif
+endif
+
+ifeq (arm,$3)
+ifeq (1,$$(EMBED_EXECUTOR_DARWIN_ARM))
+EXECUTORS_EMBEDDED += $$(EXECUTOR_DARWIN_ARM_EMBED)
+endif
+endif # ifeq (arm,$$(GOARCH))
+
+ifeq (arm64,$3)
+ifeq (1,$$(EMBED_EXECUTOR_DARWIN_ARM64))
+EXECUTORS_EMBEDDED += $$(EXECUTOR_DARWIN_ARM64_EMBED)
+endif
+endif # ifeq (arm64,$$(GOARCH))
+
 endif # ifeq (darwin,$2)
 
 endef
@@ -1055,6 +1151,8 @@ $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux,amd64))
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX_ARM),linux,arm))
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX_ARM64),linux,arm64))
 $(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin,amd64))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN_ARM),darwin,arm))
+$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN_ARM64),darwin,arm64))
 #$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
 
 $(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
@@ -1157,26 +1255,32 @@ LSS_LINUX := $(shell GOOS=linux GOARCH=amd64 go list -f '{{.Target}}' -tags '$(B
 LSS_LINUX_ARM := $(shell GOOS=linux GOARCH=arm go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-linux)
 LSS_LINUX_ARM64 := $(shell GOOS=linux GOARCH=arm64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-linux)
 LSS_DARWIN := $(shell GOOS=darwin GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-darwin)
+LSS_DARWIN_ARM := $(shell GOOS=darwin GOARCH=arm go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-darwin)
+LSS_DARWIN_ARM64 := $(shell GOOS=darwin GOARCH=arm64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-darwin)
 LSS_WINDOWS := $(shell GOOS=windows GOARCH=amd64 go list -f '{{.Target}}' -tags '$(BUILD_TAGS)' ./cli/lss/lss-windows)
 
 ifeq (linux,$(GOOS))
-
 ifeq (amd64,$(GOARCH))
 LSS := $(LSS_LINUX)
 endif
-
 ifeq (arm,$(GOARCH))
 LSS := $(LSS_LINUX_ARM)
 endif
-
 ifeq (arm64,$(GOARCH))
 LSS := $(LSS_LINUX_ARM64)
 endif
-
 endif # ifeq (linux,$(GOOS))
 
 ifeq (darwin,$(GOOS))
+ifeq (amd64,$(GOARCH))
 LSS := $(LSS_DARWIN)
+endif
+ifeq (arm,$(GOARCH))
+LSS := $(LSS_DARWIN_ARM)
+endif
+ifeq (arm64,$(GOARCH))
+LSS := $(LSS_DARWIN_ARM64)
+endif
 endif # ifeq (darwin,$(GOOS))
 
 ifeq (windows,$(GOOS))
@@ -1187,6 +1291,8 @@ build-lss-linux: $(LSS_LINUX)
 build-lss-linux-arm: $(LSS_LINUX_ARM)
 build-lss-linux-arm64: $(LSS_LINUX_ARM64)
 build-lss-darwin: $(LSS_DARWIN)
+build-lss-darwin-arm: $(LSS_DARWIN_ARM)
+build-lss-darwin-arm64: $(LSS_DARWIN_ARM64)
 build-lss-windows: $(LSS_WINDOWS)
 
 define LSS_RULES
@@ -1221,7 +1327,11 @@ endif
 endef
 
 #$(eval $(call LSS_RULES,$(LSS_LINUX),linux,amd64))
+#$(eval $(call LSS_RULES,$(LSS_LINUX_ARM),linux,arm))
+#$(eval $(call LSS_RULES,$(LSS_LINUX_ARM64),linux,arm64))
 #$(eval $(call LSS_RULES,$(LSS_DARWIN),darwin,amd64))
+#$(eval $(call LSS_RULES,$(LSS_DARWIN_ARM),darwin,arm))
+#$(eval $(call LSS_RULES,$(LSS_DARWIN_ARM64),darwin,arm64))
 #$(eval $(call LSS_RULES,$(LSS_WINDOWS),windows,amd64))
 
 
@@ -1283,6 +1393,15 @@ build-generated:
 
 build-client-nogofig:
 	go build ./client
+
+
+clean-build:
+	rm -fr $(API_GENERATED_SRC) \
+	       $(EXECUTORS_BINDIR) \
+	       $(EXECUTORS_GENERATED) \
+	       $(GOPATH)/bin/lsx-* \
+	       $(GOPATH)/bin/*/lsx-*
+	$(MAKE) build
 
 build:
 	$(MAKE) build-generated

@@ -259,7 +259,9 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	vol, err := d.VolumeInspect(ctx, volumeName,
 		&types.VolumeInspectOpts{Attachments: types.VolAttReqTrue})
 	if err != nil {
-		return nil, err
+		if _, ok := err.(*types.ErrNotFound); !ok {
+			return nil, err
+		}
 	}
 
 	if vol != nil {

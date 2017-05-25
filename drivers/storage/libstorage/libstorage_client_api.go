@@ -108,6 +108,22 @@ func (c *client) VolumeInspect(
 	return c.APIClient.VolumeInspect(ctx, service, volumeID, attachments)
 }
 
+func (c *client) VolumeInspectByName(
+	ctx types.Context,
+	service, volumeName string,
+	attachments types.VolumeAttachmentsTypes) (*types.Volume, error) {
+
+	ctx = c.withInstanceID(c.requireCtx(ctx), service)
+	ctxA, err := c.withAllLocalDevices(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = ctxA
+
+	return c.APIClient.VolumeInspectByName(
+		ctx, service, volumeName, attachments)
+}
+
 func (c *client) VolumeCreate(
 	ctx types.Context,
 	service string,

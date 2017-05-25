@@ -375,3 +375,15 @@ type StorageDriverWithLogin interface {
 	Login(
 		ctx Context) (interface{}, error)
 }
+
+// StorageDriverVolInspectByName is a StorageDriver with a VolumeInspectByName
+// function
+type StorageDriverVolInspectByName interface {
+	StorageDriver
+
+	// VolumeInspectByName inspects a single volume by name.
+	VolumeInspectByName(
+		ctx Context,
+		volumeName string,
+		opts *VolumeInspectOpts) (*Volume, error)
+}

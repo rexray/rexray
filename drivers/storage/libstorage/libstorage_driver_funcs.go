@@ -102,6 +102,21 @@ func (d *driver) VolumeInspect(
 	return d.client.VolumeInspect(ctx, serviceName, volumeID, opts.Attachments)
 }
 
+func (d *driver) VolumeInspectByName(
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
+
+	ctx = d.requireCtx(ctx)
+	serviceName, ok := context.ServiceName(ctx)
+	if !ok {
+		return nil, goof.New("missing service name")
+	}
+
+	return d.client.VolumeInspectByName(
+		ctx, serviceName, volumeName, opts.Attachments)
+}
+
 func (d *driver) VolumeCreate(
 	ctx types.Context,
 	name string,

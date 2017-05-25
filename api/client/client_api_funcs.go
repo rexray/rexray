@@ -122,6 +122,21 @@ func (c *client) VolumeInspect(
 	return &reply, nil
 }
 
+func (c *client) VolumeInspectByName(
+	ctx types.Context,
+	service, volumeName string,
+	attachments types.VolumeAttachmentsTypes) (*types.Volume, error) {
+
+	reply := types.Volume{}
+	url := fmt.Sprintf(
+		"/volumes/%s/%s?attachments=%v?byName", service, volumeName,
+		attachments)
+	if _, err := c.httpGet(ctx, url, &reply); err != nil {
+		return nil, err
+	}
+	return &reply, nil
+}
+
 func (c *client) VolumeCreate(
 	ctx types.Context,
 	service string,

@@ -303,38 +303,58 @@ func (r *router) volumeInspect(
 			ctx types.Context,
 			svc types.StorageService) (interface{}, error) {
 
-			vols, err := svc.Driver().Volumes(
-				ctx,
-				&types.VolumesOpts{
-					Attachments: attachments,
-					Opts:        store,
-				})
-
-			if err != nil {
-				return nil, err
-			}
-
+			var (
+				vol *types.Volume
+				err error
+			)
 			volID := store.GetString("volumeID")
-			for _, v := range vols {
-				if strings.EqualFold(v.Name, volID) {
-					if !handleVolAttachments(ctx, nil, iid, v, attachments) {
-						return nil, utils.NewNotFoundError(volID)
-					}
-					if OnVolume != nil {
-						ok, err := OnVolume(ctx, req, store, v)
-						if err != nil {
-							return nil, err
-						}
-						if !ok {
-							return nil, utils.NewNotFoundError(volID)
-						}
-					}
 
-					return v, nil
+			if sd, ok := svc.Driver().(types.StorageDriverVolInspectByName); ok {
+				ctx.Debug("driver is StorageDriverVolInspectByName")
+				vol, err = sd.VolumeInspectByName(
+					ctx, volID, opts)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				ctx.Debug("driver is not StorageDriverVolInspectByName")
+				vols, err := svc.Driver().Volumes(
+					ctx,
+					&types.VolumesOpts{
+						Attachments: attachments,
+						Opts:        store,
+					})
+				if err != nil {
+					return nil, err
+				}
+				for _, v := range vols {
+					if strings.EqualFold(v.Name, volID) {
+						vol = v
+						break
+					}
 				}
 			}
 
-			return nil, utils.NewNotFoundError(volID)
+			if vol == nil {
+				return nil, utils.NewNotFoundError(volID)
+			}
+
+			if !handleVolAttachments(
+				ctx, nil, iid, vol, attachments) {
+				return nil, utils.NewNotFoundError(volID)
+			}
+			if OnVolume != nil {
+				ok, err := OnVolume(ctx, req, store, vol)
+				if err != nil {
+					return nil, err
+				}
+				if !ok {
+					return nil,
+						utils.NewNotFoundError(volID)
+				}
+			}
+
+			return vol, nil
 		}
 
 	} else {

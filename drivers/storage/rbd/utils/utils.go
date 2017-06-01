@@ -316,6 +316,7 @@ func ParseMonitorAddresses(addrs []string) ([]net.IP, error) {
 	)
 
 	for _, mon := range addrs {
+		mon = strings.TrimSpace(mon)
 		host = mon
 		if hasPort(mon) {
 			host, _, err = net.SplitHostPort(mon)

@@ -2,7 +2,6 @@ package linux
 
 import (
 	"os"
-	"strings"
 
 	"fmt"
 
@@ -74,6 +73,20 @@ func (d *driver) Name() string {
 	return providerName
 }
 
+func buildVolumeStatus(v *types.Volume, service string) map[string]interface{} {
+	vs := make(map[string]interface{})
+	vs["name"] = v.Name
+	vs["size"] = v.Size
+	vs["iops"] = v.IOPS
+	vs["type"] = v.Type
+	vs["availabilityZone"] = v.AvailabilityZone
+	vs["fields"] = v.Fields
+	vs["service"] = service
+	vs["server"] = service
+
+	return vs
+}
+
 // List returns all available volume mappings.
 func (d *driver) List(
 	ctx types.Context,
@@ -98,15 +111,7 @@ func (d *driver) List(
 
 	volMaps := []types.VolumeMapping{}
 	for _, v := range vols {
-		vs := make(map[string]interface{})
-		vs["name"] = v.Name
-		vs["size"] = v.Size
-		vs["iops"] = v.IOPS
-		vs["type"] = v.Type
-		vs["availabilityZone"] = v.AvailabilityZone
-		vs["fields"] = v.Fields
-		vs["service"] = serviceName
-		vs["server"] = serviceName
+		vs := buildVolumeStatus(v, serviceName)
 		volMaps = append(volMaps, &volumeMapping{
 			Name:             v.Name,
 			VolumeMountPoint: v.MountPoint(),
@@ -129,21 +134,28 @@ func (d *driver) Inspect(
 		"opts":       opts}
 	ctx.WithFields(fields).Info("inspecting volume")
 
-	objs, err := d.List(ctx, opts)
+	serviceName, serviceNameOK := context.ServiceName(ctx)
+	if !serviceNameOK {
+		return nil, goof.New("service name is missing")
+	}
+
+	vol, err := d.volumeInspectByName(
+		ctx,
+		volumeName,
+		opts.GetAttachments(),
+		opts,
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	var obj types.VolumeMapping
-	for _, o := range objs {
-		if strings.ToLower(volumeName) == strings.ToLower(o.VolumeName()) {
-			obj = o
-			break
-		}
-	}
-
-	if obj == nil {
+	if vol == nil {
 		return nil, utils.NewNotFoundError(volumeName)
+	}
+	vs := buildVolumeStatus(vol, serviceName)
+	obj := &volumeMapping{
+		Name:             vol.Name,
+		VolumeMountPoint: vol.MountPoint(),
+		VolumeStatus:     vs,
 	}
 
 	fields = log.Fields{

@@ -114,10 +114,16 @@ type APIClient interface {
 		service string,
 		attachments VolumeAttachmentsTypes) (VolumeMap, error)
 
-	// VolumeInspect gets information about a single volume.
+	// VolumeInspect gets information about a single volume by ID.
 	VolumeInspect(
 		ctx Context,
 		service, volumeID string,
+		attachments VolumeAttachmentsTypes) (*Volume, error)
+
+	// VolumeInspectByName gets information about a single volume by name.
+	VolumeInspectByName(
+		ctx Context,
+		service, volumeName string,
 		attachments VolumeAttachmentsTypes) (*Volume, error)
 
 	// VolumeCreate creates a single volume.

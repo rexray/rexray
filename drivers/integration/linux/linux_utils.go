@@ -34,6 +34,42 @@ func (d *driver) volumeInspectByID(
 	return vol, nil
 }
 
+func (d *driver) volumeInspectByName(
+	ctx types.Context,
+	volumeName string,
+	attachments types.VolumeAttachmentsTypes,
+	opts types.Store) (*types.Volume, error) {
+	client := context.MustClient(ctx)
+	if sd, ok := client.Storage().(types.StorageDriverVolInspectByName); ok {
+		vol, err := sd.VolumeInspectByName(
+			ctx,
+			volumeName,
+			&types.VolumeInspectOpts{
+				Attachments: attachments})
+		if err != nil {
+			return nil, err
+		}
+		return vol, nil
+	} else {
+		vols, err := client.Storage().Volumes(
+			ctx, &types.VolumesOpts{Attachments: 0})
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range vols {
+			if strings.EqualFold(volumeName, v.Name) {
+				vol, err := d.volumeInspectByID(
+					ctx, v.ID, attachments, opts)
+				if err != nil {
+					return nil, err
+				}
+				return vol, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
 func (d *driver) volumeInspectByIDOrName(
 	ctx types.Context,
 	volumeID, volumeName string,
@@ -44,30 +80,20 @@ func (d *driver) volumeInspectByIDOrName(
 		return nil, goof.New("specify either volumeID or volumeName")
 	}
 
-	client := context.MustClient(ctx)
+	var (
+		obj *types.Volume
+		err error
+	)
 
-	var obj *types.Volume
 	if volumeID != "" {
-		var err error
-		obj, err = d.volumeInspectByID(ctx, volumeID, attachments, opts)
-		if err != nil {
-			return nil, err
-		}
+		obj, err = d.volumeInspectByID(
+			ctx, volumeID, attachments, opts)
 	} else {
-		objs, err := client.Storage().Volumes(
-			ctx, &types.VolumesOpts{Attachments: 0})
-		if err != nil {
-			return nil, err
-		}
-		for _, o := range objs {
-			if strings.EqualFold(volumeName, o.Name) {
-				obj, err = d.volumeInspectByID(ctx, o.ID, attachments, opts)
-				if err != nil {
-					return nil, err
-				}
-				break
-			}
-		}
+		obj, err = d.volumeInspectByName(
+			ctx, volumeName, attachments, opts)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	if obj == nil {

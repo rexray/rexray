@@ -87,7 +87,7 @@ $ df -h /test
 ```
 
 ## Runtime - Docker Plugin
-Starting with Docker 1.13, Docker now supports a new plugin archtitecture in
+Starting with Docker 1.13, Docker now supports a new plugin architecture in
 which plugins can be installed as containers.
 
 ```bash

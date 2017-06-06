@@ -243,6 +243,44 @@ Environment Variable | Description | Default | Required
 `SCALEIO_THINORTHICK` | The provision mode `(Thin|Thick)Provisioned` | |
 `SCALEIO_VERSION` | The version of ScaleIO system | |
 
+## DigitalOcean
+REX-Ray ships with a plug-in for DigitalOcean to support their Block Storage service.
+
+### DigitalOcean Block Storage
+The DOBS plug-in can be installed with the following command:
+
+```bash
+$ docker plugin install rexray/dobs \
+  DOBS_REGION=sfo1
+  DOBS_TOKEN=0907868f343d86076f261958123638248ae2321434dd4f1b74773ddb9320de43
+```
+
+#### Requirements
+The DOBS plug-in requires that your DigitalOcean droplet is running in a region that
+supports block storage.
+
+#### Privileges
+The DOBS plug-in requires the following privileges:
+
+Type | Value
+-----|------
+network | `host`
+mount | `/dev`
+allow-all-devices | `true`
+capabilities | `CAP_SYS_ADMIN`
+
+#### Configuration
+The following environment variables can be used to configure the DOBS
+plug-in:
+
+Environment Variable | Description | Default | Required
+---------------------|-------------|---------|---------
+`DOBS_REGION` | The region where volumes should be created | | ✓
+`DOBS_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `100ms` |
+`DOBS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
+`DOBS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
+`DOBS_TOKEN` | Your DigitalOcean access token | | ✓
+
 ## Google
 REX-Ray ships with plug-ins for Google Compute Engine (GCE) as well.
 

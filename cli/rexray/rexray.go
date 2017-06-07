@@ -13,6 +13,7 @@ import (
 	"github.com/akutz/gotil"
 
 	"github.com/codedellemc/libstorage/api/context"
+	apimods "github.com/codedellemc/libstorage/api/mods"
 	"github.com/codedellemc/libstorage/api/registry"
 	apitypes "github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
@@ -45,6 +46,9 @@ func Run() {
 	registry.ProcessRegisteredConfigs(ctx)
 
 	createUserKnownHostsFile(ctx, pathConfig)
+
+	// load shared objects
+	apimods.LoadModules(ctx, pathConfig)
 
 	onExit := func() {
 		if traceProfile != nil {

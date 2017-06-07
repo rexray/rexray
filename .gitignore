@@ -1,3 +1,4 @@
+.gopath.tgz*
 /rexray-*
 .glide.yaml.tmp
 .ls.tar.gz

@@ -15,8 +15,8 @@ import:
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/codedellemc/libstorage
-    version: b79ec99a9a3d72b4a55811a99dd591de58e27908 # libstorage-version
-    repo:    https://github.com/codedellemc/libstorage # libstorage-repo
+    version: d965df8d6e1e7ed1d1ab5a9f8cd0917786586e8a # libstorage-version
+    repo:    https://github.com/akutz/libstorage # libstorage-repo
 
   - package: github.com/akutz/gofig
     version: v0.1.6

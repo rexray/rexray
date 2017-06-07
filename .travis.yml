@@ -1,9 +1,9 @@
 go_import_path: github.com/codedellemc/rexray
 
-sudo: required
+#sudo: required
 
-services:
-  - docker
+#services:
+#  - docker
 
 language: go
 
@@ -12,17 +12,17 @@ go:
 
 env:
   - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=amd64
-  - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=arm
-  - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=arm64
-  - REXRAY_BUILD_TYPE=client
-  - REXRAY_BUILD_TYPE=agent
-  - REXRAY_BUILD_TYPE=controller
-  - REXRAY_BUILD_TYPE= DRIVERS=ebs
-  - REXRAY_BUILD_TYPE= DRIVERS=efs
-  - REXRAY_BUILD_TYPE= DRIVERS=gcepd
-  - REXRAY_BUILD_TYPE= DRIVERS=isilon
-  - REXRAY_BUILD_TYPE= DRIVERS=s3fs
-  - REXRAY_BUILD_TYPE= DRIVERS=scaleio
+#  - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=arm
+#  - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=arm64
+#  - REXRAY_BUILD_TYPE=client
+#  - REXRAY_BUILD_TYPE=agent
+#  - REXRAY_BUILD_TYPE=controller
+#  - REXRAY_BUILD_TYPE= DRIVERS=ebs
+#  - REXRAY_BUILD_TYPE= DRIVERS=efs
+#  - REXRAY_BUILD_TYPE= DRIVERS=gcepd
+#  - REXRAY_BUILD_TYPE= DRIVERS=isilon
+#  - REXRAY_BUILD_TYPE= DRIVERS=s3fs
+#  - REXRAY_BUILD_TYPE= DRIVERS=scaleio
 
 before_install:
   - export GOARCH="${TRAVIS_GOARCH:-amd64}"
@@ -39,6 +39,17 @@ before_install:
   - if [ "$DRIVERS" = "" ]; then go get github.com/onsi/ginkgo; fi
   - if [ "$DRIVERS" = "" ]; then go get golang.org/x/tools/cmd/cover; fi
   - make deps
+  - PORCELAIN=1 make build-gopath-tarball && ls -al gopath*
+  - export PROJECT_NAME="rexray"
+  - export GOPATH_OLD="$GOPATH"
+  - export GOPATH="/tmp/go"
+  - mkdir -p "$GOPATH"/{bin,pkg,src}
+  - mv "$GOPATH_OLD"/bin/* "$GOPATH"/bin/
+  - export PATH="${GOPATH}/bin:${PATH}"
+  - mkdir -p "$GOPATH"/src/github.com/codedellemc
+  - rsync -ax vendor/ "$GOPATH"/src/ && rm -fr vendor
+  - cd .. && mv "$PROJECT_NAME" "$GOPATH"/src/github.com/codedellemc/
+  - cd "$GOPATH"/src/github.com/codedellemc/"$PROJECT_NAME"
   - make info
 
 script:

@@ -1,6 +1,10 @@
 FROM golang:@GO_VERSION@ as rexray@FNAME_SUFFIX@-builder
 
-ENV REXRAY=rexray@FNAME_SUFFIX@
+ENV REXRAY rexray@FNAME_SUFFIX@
+ENV GOPATH @DGOPATH@
+
+RUN mkdir -p @DGOPATH@/{pkg,src,bin}
+COPY fbf.sh /usr/local/bin
 
 WORKDIR @WORKDIR_RR@
 @COPY_RR_SRCS_CMD@
@@ -11,13 +15,19 @@ WORKDIR @WORKDIR_RR@
 WORKDIR @WORKDIR_RR@
 RUN @BUILD_CMD@
 
+WORKDIR ${GOPATH}
+RUN apt-get update && apt-get install -y --no-install-recommends file \
+	&& rm -rf /var/lib/apt/lists/*
+RUN file bin/@GOOS_GOARCH_DIR@rexray@FNAME_SUFFIX@
+RUN fbf.sh
+
 FROM alpine:3.5
 
 LABEL build="@BUILD_TYPE@"
 LABEL drivers="@DRIVERS@"
 LABEL version="@SEMVER@"
 
-COPY --from=rexray@FNAME_SUFFIX@-builder /go/bin/@GOOS_GOARCH_DIR@$REXRAY /usr/bin/$REXRAY
+COPY --from=rexray@FNAME_SUFFIX@-builder @DGOPATH@/bin/@GOOS_GOARCH_DIR@$REXRAY /usr/bin/$REXRAY
 COPY @DOCKERFILE@ /Dockerfile
 
 RUN apk update

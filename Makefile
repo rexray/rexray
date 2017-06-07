@@ -368,7 +368,31 @@ version:
 version-porcelain:
 	@echo $(V_SEMVER)
 
-.PHONY: version version-porcelain
+ifeq (darwin,$(shell uname -s | tr A-Z a-z))
+GOPATH_TGZ_XFORM := -s ',^./,src/,'
+else
+GOPATH_TGZ_XFORM := --xform 's,^./,src/,S'
+endif
+
+build-gopath-tarball:
+	@rm -f ".gopath.tgz.{sum,name}" "gopath-*.tar.gz"
+	@tgzsum="$$(tar \
+	  --exclude '.git' \
+	  --exclude 'vendor' \
+	  -cf - vendor | md5sum | cut -c1-7)" && \
+	  printf "%s" "$$tgzsum" > .gopath.tgz.sum
+	@echo "calculated vendor checksum: $$(cat .gopath.tgz.sum)"
+	@printf "gopath-%s-%s.tar.gz" \
+	  "$(V_SEMVER)" "$$(cat .gopath.tgz.sum)" > .gopath.tgz.name
+	tar \
+	  --exclude '.git' \
+	  --exclude 'vendor' \
+	  -czf "$$(cat .gopath.tgz.name)" \
+	  $(GOPATH_TGZ_XFORM) -C vendor .
+	@echo "created $$(cat .gopath.tgz.name)"
+	@rm -f ".gopath.tgz.{sum,name}"
+
+.PHONY: version version-porcelain build-gopath-tarball
 
 ifneq (1,$(PORCELAIN))
 
@@ -678,7 +702,7 @@ GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
 			 runtime/trace sort strconv strings sync sync/atomic syscall \
 			 testing testing/iotest testing/quick text text/scanner \
 			 text/tabwriter text/template text/template/parse time unicode \
-			 unicode/utf16 unicode/utf8 unsafe
+			 unicode/utf16 unicode/utf8 unsafe context plugin
 
 
 ################################################################################
@@ -1143,8 +1167,14 @@ endif
 ################################################################################
 ##                                LIBSTORAGE                                  ##
 ################################################################################
+export NODEPS := 1
+export BUILD_TAGS
 
 LIBSTORAGE_DIR := vendor/github.com/codedellemc/libstorage
+ifeq (,$(wildcard $(LIBSTORAGE_DIR)))
+LIBSTORAGE_DIR := $(GOPATH)/src/github.com/codedellemc/libstorage
+endif
+
 LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
 ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
 LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
@@ -1153,9 +1183,7 @@ $(LIBSTORAGE_API) $(LIBSTORAGE_LSX):
 else
 $(LIBSTORAGE_API):
 endif
-	cd $(LIBSTORAGE_DIR) && \
-		BUILD_TAGS="$(BUILD_TAGS)" $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && \
-		cd -
+	cd $(LIBSTORAGE_DIR) && $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && cd -
 ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
 $(LIBSTORAGE_LSX): | $(GO_BINDATA)
 build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
@@ -1556,7 +1584,9 @@ clean-agent:
 clean-controller:
 	REXRAY_BUILD_TYPE=controller $(MAKE) clean
 
-.PHONY: $(.PHONY) info clean $(GO_PHONY)
+GO_PHONY += build-gopath-tarball
+
+.PHONY: $(.PHONY) info clean build-gopath-tarball $(GO_PHONY)
 
 endif # ifneq (,$(shell which go 2> /dev/null))
 
@@ -1587,4 +1617,4 @@ endif
        -not -path './.docker/*' \
        2>&1 | grep -v 'Permission denied'); do echo $$f; rm -f $$f; done
 
-.PHONY: $(.PHONY) clobber
+.PHONY: $(.PHONY) build-gopath-tarball clobber

@@ -217,6 +217,11 @@ error() {
   log "4" "$@"
 }
 
+file_size_mb() {
+    echo $(($(stat --format '%s' "$1" 2> /dev/null || \
+      stat -f '%z' "$1" 2> /dev/null) / 1024 / 1024))
+}
+
 cleanup() {
   if [ "$DOCKER" = "1" ] && [ "$BUILDER" = "docker" ]; then
     debug "cleaning up docker build"
@@ -349,10 +354,12 @@ get_semver() {
 }
 
 create_dockerfile() {
-  workdir_rr="/go/src/github.com/codedellemc/rexray/"
+  dgopath="/tmp/go"
+  workdir_rr="${dgopath}/src/github.com/codedellemc/rexray/"
   bsrc='GOARCH="'"${GOARCH}"'" NOSTAT="1" DRIVERS="'"${DRIVERS}"'" '
   bsrc="$bsrc"'EMED_EXECUTORS="'"${EMED_EXECUTORS}"'" '
-  bsrc="$bsrc"'REXRAY_BUILD_TYPE='"${BTYPE}"' make'
+  bsrc="$bsrc"'REXRAY_BUILD_TYPE="'"${BTYPE}"'" '
+  bsrc="$bsrc"'GOPATH="'"${dgopath}"'" make'
 
   lsd="${GOPATH}/src/github.com/codedellemc/libstorage"
   if [ "$LS_LOCAL" = "1" ] && [ -d "$lsd" ]; then
@@ -362,7 +369,7 @@ create_dockerfile() {
       --exclude "*.test" \
       -C "$lsd" .
 
-    ls_home="/go/src/github.com/codedellemc/libstorage/"
+    ls_home="${dgopath}/src/github.com/codedellemc/libstorage/"
     workdir_ls="WORKDIR $ls_home"
 
     nl="$(printf '%b_' '\n')"
@@ -404,15 +411,15 @@ create_dockerfile() {
     bcmd="$bgit"' \&\& '"$bsrc"
   fi
 
-  if [ "$GOOS" != "" ] || [ "$GOARCH" != "" ]; then
-    if [ "$GOOS" != "linux" ] || [ "$GOARCH" != "amd64" ]; then
-      GOOS="${GOOS:-linux}"
-      GOOS_GOARCH_DIR="${GOOS}_${GOARCH}/"
-    fi
+  GOOS="${GOOS:-linux}"
+  GOARCH="${GOARCH:-amd64}"
+  if [ "${GOOS}_${GOARCH}" != "linux_amd64" ]; then
+    GOOS_GOARCH_DIR="${GOOS}_${GOARCH}/"
   fi
 
   sed -e 's/@GO_VERSION@/'"$GO_VERSION"'/g' \
-    -e 's|@GOOS_GOARCH_DIR@|'"$GOOS_GOARCH_DIR"'/|g' \
+    -e 's|@DGOPATH@|'"$dgopath"'|g' \
+    -e 's|@GOOS_GOARCH_DIR@|'"$GOOS_GOARCH_DIR"'|g' \
     -e 's|@WORKDIR_RR@|'"$workdir_rr"'|g' \
     -e 's|@WORKDIR_LS@|'"$workdir_ls"'|g' \
     -e 's|@INIT_LS_SRCS_CMD@|'"$init_ls_srcs"'|g' \
@@ -899,7 +906,7 @@ echo
 if [ "$BUILDER" = "docker" ] && [ "$NOKEEP" = "" ]; then
 echo "  Docker image is...... ${DIMG_NAME}"
 fi
-echo "  REX-Ray binary is.... ./${FNAME}"
+echo "  REX-Ray binary is.... ./${FNAME} ($(file_size_mb "${FNAME}")MB)"
 echo
 
 exit 0

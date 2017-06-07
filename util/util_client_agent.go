@@ -3,8 +3,6 @@
 package util
 
 import (
-	"errors"
-
 	gofig "github.com/akutz/gofig/types"
 
 	apitypes "github.com/codedellemc/libstorage/api/types"
@@ -24,7 +22,7 @@ func activateLibStorage(
 		}
 	}
 	if host == "" && !isRunning {
-		return ctx, config, nil, errors.New("libStorage host config missing")
+		return ctx, config, nil, ErrHostDetectionFailed
 	}
 	return ctx, config, nil, nil
 }

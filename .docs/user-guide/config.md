@@ -285,258 +285,41 @@ libStorage Storage Drivers page has information about the configuration details
 of [each driver](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers),
 including [VirtualBox](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox).
 
-### Default TLS ###
-REX-Ray can now use TLS between a client and controller libStorage processes by default.
-This means that as soon as you start REX-Ray, your will be using a secure connection. When 
-you install REX-Ray, it will create a self-signed certificate and private key for the server 
-by default.  Then the REX-Ray client uses peer verification to validate the fingerprint 
-of the certificate from the controller (server) process. The client then stores the fingerprint 
-into a `known_hosts` file for future connections.
+### Default TLS
+REX-Ray now uses TLS by default to secure libStorage client-to-controller
+communications.
 
-#### REX-Ray TLS files at install
-During installation, a self-signed certificate and private key files are generated and saved in
-`/etc/libstorage/tls` as shown in the following output:
+#### Server Certificates
+When REX-Ray is installed a self-signed certificate and private key are
+generated for use by the libStorage controller and saved as
+`/etc/libstorage/tls/libstorage.crt` and ` /etc/libstorage/tls/libstorage.key`.
 
-```
-Generating server self-signed certificate...
-Created cert file /etc/libstorage/tls/libstorage.crt, key /etc/libstorage/tls/libstorage.key
+#### Peer Verification
+Clients can use the fingerprint of the controller's certificate to validate
+the peer connection, similar to the way SSH works. In fact, peer fingerprints
+are stored in the file `$HOME/.libstorage/known_hosts` that has the same format
+as the SSH file `$HOME/.ssh/known_hosts`.
 
-REX-Ray is now installed. Before starting it please check http://github.com/codedellemc/rexray for instructions on how to configure it.
-```
-#### Accepting server fingerprint
-Unlike before, when a `rexray` command is issued, the REX-Ray client will automatically attempt
-to validate the controller's certificate fingerprint (unless configured otherwise).  The following
-YAML shows a simple configuration for REX-Ray. By default, this configuration will cause the
-REX-Ray client to use the certificates (generated earlier) to automatically enable TLS.
+When a REX-Ray client is executed it may now prompt a user to verify a
+remote peer. For example:
 
-```yaml
-libstorage:
-  embedded: true
-  server:
-    endpoints:
-      public:
-        address: tcp://:7979
-    services:
-      virtualbox:
-        driver: virtualbox
-virtualbox:
-  volumePath: $HOME/VirtualBox/Volumes
-```
-When a `rexray` command is attempted at the command-line, it prompts the user for
-confirmation to accept the fingerprint from the controller host prior to continuing 
-as hown below:
-
-```
-> sudo rexray device ls
+```bash
+$ rexray device ls
 Rejecting connection to unknown host 127.0.0.1.
 sha fingerprint presented: sha256:6389ca7c87f308e7/73c4.
 Do you want to save host to known_hosts file? (yes/no): yes
 
-Permanently added host 127.0.0.1 to known_hosts file /root/.libstorage/known_hosts
+Permanently added host 127.0.0.1 to known_hosts file $HOME/.libstorage/known_hosts
 It is safe to retry your last rexray command.
 ```
 
-Once the user accepts, the fingerprint is added to file `known_hosts` as shown:
-
-```
-sudo cat /root/.libstorage/known_hosts
-127.0.0.1 sha256 674ce5a4c932e98e057152cd62953af65a1aa10e02b3efd9b3b8237dc38cd2a0
-localhost sha256 674ce5a4c932e98e057152cd62953af65a1aa10e02b3efd9b3b8237dc38cd2a0
-```
-
-Note that the `known_hosts` file is stored under the `$HOME` directory for the
-userid that issued the `rexray` command.  Once the fingerprint is added, the user 
-can attempt the command again.
+Please note that the `known_hosts` file is stored in the `$HOME`
+directory for the account executing the REX-Ray process. Once the
+fingerprint has been added the command may be retried.
 
 #### Disabling Default TLS
-The default TLS behavior can be disabled using the REX-Ray configuration file as show
-below:
-
-```yaml
-libstorage:
-  embedded: true
-
-  client:
-    tls: false
-
-  server:
-    endpoints:
-      public:
-        address: tcp://:7979
-    services:
-      virtualbox:
-        driver: virtualbox
-virtualbox:
-  volumePath: $HOME/VirtualBox/Volumes
-```
-
-Property `libstorage.client.tls: false` in the previous configuration turns off the 
-default TLS certificate verification.
-
-### Advanced TLS Configuration ###
-This section shows how to fully configure REX-Ray for TLS.  Before you get started, 
-you will need at your disposal a keypair (certificate and private key) for the server 
-and (possibly) a separate keypair for the client both signed by  a common CA.  You 
-can use tools such as [OpenSSL](https://www.openssl.org) or 
-Cloud Flare's CFSSL [CFSSL](https://cfssl.org/)  to generate self-signed certificates 
-for your setup.
-
-#### TLS with Cert Fingerprints
-REX-Ray can be configured for TLS by setting up peer verification of the fingerprint for the
-server/controller's TLS certificate (similar to above). This approach is designed to keep 
-TLS configuration simple, but secure.  Rather than setup a full separate keypair 
-for the client, REX-Ray can simply extract the fingerprint from the known self-signed server 
-certificate as a `SHA-256`.  The following command shows how to get the fingerprint value
-from the server certificate:
-
-```
-openssl x509 -in /etc/rexray/certs/server.pem -fingerprint -sha256 -noout
-SHA256 Fingerprint=F5:F8:F5:0B:E8:22:5C:35:AF:...:10:48:57:8B:A8:1C:30:E3:47:D1:1C:F5:44:51:39
-```
-Next, we can configure a REX-Ray client to use the fingerprint value as follows:
-
-```yaml
-libstorage:
-  embedded: true
-  client:
-    tls: "sha256:F5:F8:F5:0B:E8:22:5C:35:...:57:8B:A8:1C:30:E3:47:D1:1C:F5:44:51:39"
-    
-  server:
-    endpoints:
-      public:
-        address: tcp://:7979
-    tls:
-      certFile: /etc/rexray/certs/server.pem
-      keyFile:  /etc/rexray/certs/server-key.pem
-    services:
-      virtualbox:
-        driver: virtualbox
-
-virtualbox:
-  volumePath: $HOME/VirtualBox/Volumes
-```
-Property `libstorage.client.tls` is overloaded with the fingerprint string value. Notice that `sha256:` 
-is prepended to the fingerprint.
-
-It should also be noted that, in the configuration above, the server process is configured with 
-properties `libstorage.server.tls.certFile` and  `libstorage.server.tls.keyFile` to specify the 
-certificate and private key files for the server respectively.
-
-The `rexray` process must have proper file permission to access the certificate and the key files
-specified in the configuration.
-
-#### TLS using known_hosts file
-As was stated earlier, the REX-Ray client supports the use of `known_hosts` file that allows the verification
-of TLS fingerprints of servers during outbound connection attemps by the client.  While a single fingerprint 
-can be configured (see above), you can specify a `known_hosts` file that the client can use to validate 
-incoming fingerprints from many server/controller processes.
-
-
-```yaml
-libstorage:
-  embedded: true
-  client:
-    tls:
-      knownHosts: /etc/rexray/known_hosts
-      verifyPeers: true
-  server:
-    endpoints:
-      public:
-        address: tcp://:7979
-    tls:
-      certFile: /etc/rexray/certs/server.pem
-      keyFile:  /etc/rexray/certs/server-key.pem
-    services:
-      virtualbox:
-        driver: virtualbox
-
-virtualbox:
-  volumePath: $HOME/VirtualBox/Volumes
-```
-
-The configuration above will cause the client to validate the server's certificate fingerprint against 
-fingerprints in the `known_hosts` file.  If the host fingerprint is unknown, the client will prompt you 
-to accept the fingerprint for future connection as shown in the output below:
-
-```
-> rexray device ls
-Rejecting connection to unknown host tcp://localhost:7979.
-SHA Fingerprint presented: sha256:6389ca7c87f308e7/73c4.
-Do you want to save host to known_hosts file? (yes/no): yes
-```
-
-The `known_hosts` file must be placed in a directory where the  `rexray` have proper permission 
-to access it.
-
-#### TLS server cert validation
-This section shows how to configure TLS so that a client process validates the certificate from 
-a server/controller.  The following sample configuration shows how this can be done:
-
-```yaml
-libstorage:
-  client:
-    tls:
-      trustedCertsFile: /etc/rexray/certs/ca.pem
-      
-  embedded: true
-  
-  server:
-    endpoints:
-      public:
-        address: tcp://:7979
-    tls:
-      certFile: /etc/rexray/certs/server.pem
-      keyFile:  /etc/rexray/certs/server-key.pem
-    services:
-      virtualbox:
-        driver: virtualbox
-        
-virtualbox:
-  volumePath: $HOME/VirtualBox/Volumes
-```
-
-The previous configuration YAML includes proerty `libstorage.client.tls.trustedCertsFile` which 
-sepecifies a CA file for the client. The CA specified for the client process will apply to any
-server process.  If the client can't verify the sever's cert with the CA, the connection will fail.
-
-The server is configured with properties `libstorage.tls.certFile` and
-`libstorage.tls.keyFile` to specify a server certificate and private key respectively.  This setup 
-ensures that only servers with signed certificates by the CA are allowed to interact with the client.
-
-Ensure that the trusted CA, the certificate, and key files are placed in locations where the `rexray` 
-process have permissions to access them.
-
-#### TLS client cert authentication
-A REX-Ray server process can be configured to require a properly signed certificate from 
-the connecting client.  This approach can be used as a way of authenticating client connections 
-coming to the server.
-
-As shown below, the client configuration must be updated to include client-side certificate 
-and key files using properties `libstorage.client.tls.certtFile` and `libstorage.client.tls.keyFile` 
-respectively.
-
-```yaml
-libstorage:
-client:
-    tls:
-      certFile: /etc/rexray/certs/client.pem
-      keyFile: /etc/rexray/certs/client-key.pem
-      trustedCertsFile: /etc/rexray/certs/ca.pem
-      
-  server:
-    endpoints:
-      public:
-        address: tcp://:7979
-    tls:
-      certFile: /etc/rexray/certs/server.pem
-      keyFile:  /etc/rexray/certs/server-key.pem
-      trustedCertsFile: /etc/rexray/certs/ca.pem
-      clientCertRequired: true
-...
-```
-The server configuration is updated as well with property `libstorage.server.tls.trustedCertsFile` 
-to specify the server's CA file.  Lastly, the configuration includes property `libstorage.server.tls.clientCertRequired` 
-to force validation of the client's certificate.
+The default TLS behavior can be disabled by setting
+`libstorage.client.tls` to `false`.
 
 ### Logging
 The `-l|--logLevel` option or `rexray.logLevel` configuration key can be set
@@ -841,6 +624,11 @@ rexray:
 libstorage:
   host: tcp://REXRAY_SERVER:7979
 ```
+
+### Advanced TLS Config
+Please refer to the libStorage
+[TLS documentation](http://libstorage.readthedocs.io/en/stable/user-guide/config/#tls-configuration)
+for more information on how to configure REX-Ray and TLS.
 
 ### libStorage Configuration
 REX-Ray embeds both the libStorage client as well as the libStorage server. For

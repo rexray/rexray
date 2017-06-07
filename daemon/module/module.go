@@ -144,9 +144,16 @@ func InitializeDefaultModules(
 	// enable path caching for the modules
 	config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, true)
 
+	// attempt to activate libStorage. if an ErrHostDetectionFailed
+	// error occurs then just log it as a warning since modules may
+	// define hosts directly
 	ctx, config, errs, err = util.ActivateLibStorage(ctx, config)
 	if err != nil {
-		return nil, err
+		if err.Error() == util.ErrHostDetectionFailed.Error() {
+			ctx.Warn(err)
+		} else {
+			return nil, err
+		}
 	}
 
 	modConfigs, err := getConfiguredModules(ctx, config)

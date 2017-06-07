@@ -3,6 +3,9 @@
 Release early, release often
 
 ---
+## Version 0.6.1 (2017/06/08)
+This is a bug fix release.
+
 ## Version 0.6.0 (2017/05/03)
 This release introduces support for the Cinder storage driver and
 multiple security-related enhancements, including default-to-TLS for

@@ -827,6 +827,21 @@ func TestVolumeInspect(t *testing.T) {
 	apitests.RunWithContext(tCtx, t, vfs.Name, tc, tf)
 }
 
+func TestVolumeInspectByName(t *testing.T) {
+	tc, _, vols, _ := newTestConfigAll(t)
+	tf := func(config gofig.Config, client types.Client, t *testing.T) {
+		reply, err := client.API().VolumeInspectByName(
+			nil, "vfs", "Volume 000", 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		vols[reply.ID].Attachments = nil
+		assert.NotNil(t, reply)
+		assert.EqualValues(t, vols[reply.ID], reply)
+	}
+	apitests.RunWithContext(tCtx, t, vfs.Name, tc, tf)
+}
+
 func TestVolumeInspectWithAttachments(t *testing.T) {
 	tc, _, vols, _ := newTestConfigAll(t)
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {

@@ -129,7 +129,7 @@ func (c *client) VolumeInspectByName(
 
 	reply := types.Volume{}
 	url := fmt.Sprintf(
-		"/volumes/%s/%s?attachments=%v?byName", service, volumeName,
+		"/volumes/%s/%s?attachments=%v&byName", service, volumeName,
 		attachments)
 	if _, err := c.httpGet(ctx, url, &reply); err != nil {
 		return nil, err

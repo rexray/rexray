@@ -253,7 +253,7 @@ The DOBS plug-in can be installed with the following command:
 
 ```bash
 $ docker plugin install rexray/dobs \
-  DOBS_REGION=sfo1
+  DOBS_REGION=sfo2 \
   DOBS_TOKEN=0907868f343d86076f261958123638248ae2321434dd4f1b74773ddb9320de43
 ```
 

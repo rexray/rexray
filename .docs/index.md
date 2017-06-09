@@ -18,79 +18,16 @@ framework, REX-Ray's simplified architecture consists of a single binary and
 runs as a stateless service on every host using a configuration file to
 orchestrate multiple storage platforms.
 
-![REX-Ray Architecture](./img/rexray-slide.gif)
-
-!!! note "note"
-
-    The current REX-Ray release omits support for several, previously verified
-    storage platforms. These providers will be reintroduced incrementally,
-    beginning with 0.4.1. If an absent driver prevents the use of REX-Ray,
-    please continue to use 0.3.3 until such time the storage platform is re-
-    introduced as a part of the
-    [libStorage](http://libstorage.readthedocs.io/en/stable) framework.
-    Instructions on how to [install](./user-guide/installation.md#rex-ray-033)
-    and [configure](http://rexray.readthedocs.io/en/v0.3.3) REX-Ray 0.3.3 are
-    both available.
-
-## Supported Technologies
-
-### Storage Provider Support
-The following storage providers and platforms are supported by REX-Ray.
-
-Provider              | Storage Platform(s)
-----------------------|--------------------
-Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs), [S3FS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-s3fs)
-Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#ceph-rbd)
-Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-isilon)
-DigitalOcean | [Block Storage](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#do-block-storage)
-FittedCloud | [EBS Optimizer](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ebs-optimizer)
-Google | [GCE Persistent Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk)
-Microsoft | [Azure Unmanaged Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud)
-OpenStack | [Cinder](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#cinder)
-VirtualBox | [Virtual Media](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox)
-
-### Operating System Support
-The following operating systems (OS) are supported by REX-Ray:
-
-OS             | Command Line | Service
----------------|--------------|-----------
-Ubuntu 12+     | Yes          | Yes
-Debian 6+      | Yes          | Yes
-RedHat         | Yes          | Yes
-CentOS 6+      | Yes          | Yes
-CoreOS         | Yes          | Yes
-TinyLinux (boot2docker)| Yes          | Yes
-OS X Yosemite+ | Yes          | No
-Windows        | No           | No
-
-### Container Runtime Support
-REX-Ray currently supports the following container platforms:
-
-Platform            | Use
-------------------|-------------------------
-Docker            | [Volume Driver Plugin](./user-guide/schedulers.md#docker)
-Mesos             | [Volume Driver Isolator module](./user-guide/schedulers.md#mesos)
-Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers.md#mesos)
-
-### Container Orchestration Support
-REX-Ray currently supports the following container orchestrators:
-
-Orchestrator      | Container Runtime
-------------------|-------------------------
-Docker Swarm      | Docker
-Kubernetes        | Docker
-Marathon          | Docker, Mesos Containerizer
-
-## Quick Start
-
-### Install
-The following command will download the most recent and stable build of REX-Ray
-and install to `/usr/bin/rexray` on Linux systems. REX-Ray will be registered
-as either a SystemD or SystemV service depending upon the OS.
+## Getting Started
+The following command will install the latest version of REX-Ray to
+`/usr/bin/rexray` on Linux systems:
 
 ```sh
 $ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
 ```
+
+Depending on the Linux distribution REX-Ray will be registered as
+either a SystemD or SystemV service.
 
 ### Configure
 REX-Ray requires a configuration file for storing details used to communicate
@@ -104,7 +41,8 @@ will satisfy the majority of use cases for REX-Ray.
 
 For more advanced and manual options, such as using multiple storage platforms,
 and sample configurations of all supported storage platforms, refer to the
-libStorage Storage Providers [documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/).
+libStorage Storage Providers
+[documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/).
 Additionally, look at [core properties](./user-guide/config.md#configuration-properties)
 and [logging](./user-guide/config.md#logging-configuration).
 
@@ -118,11 +56,12 @@ virtualbox:
   volumePath: $HOME/VirtualBox/Volumes
 ```
 
-Refer to the [VirtualBox
-documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox)
-for additional VirtualBox configuration options.
+Refer to the VirtualBox
+[documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox)
+for additional configuration options.
 
 Start the VirtualBox SOAP API service using:
+
 ```sh
 $ vboxwebsrv -H 0.0.0.0 -v
 ```
@@ -168,12 +107,64 @@ The `-l debug` flag can be appended to any command in order to get verbose
 output. The following command will list all of the volumes visible to REX-Ray
 with debug logging enabled:
 
-```
-$ rexray volume -l debug ls
+```sh
+$ rexray volume ls -l debug
 ```
 
 For an example of the full output from the above command, please refer to this
 [Gist](https://gist.github.com/akutz/df2afe2dc43f75b67b8977f398095ed7).
+
+### Supported Technologies
+This section lists the storage platforms, operating systems (OS), and
+container runtimes, and container orchestrators (CO) with which REX-Ray
+is compatible.
+
+#### Storage Provider Support
+The following storage providers and platforms are supported by REX-Ray.
+
+Provider              | Storage Platform(s)
+----------------------|--------------------
+Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs), [S3FS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-s3fs)
+Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#ceph-rbd)
+Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-isilon)
+DigitalOcean | [Block Storage](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#do-block-storage)
+FittedCloud | [EBS Optimizer](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ebs-optimizer)
+Google | [GCE Persistent Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk)
+Microsoft | [Azure Unmanaged Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud)
+OpenStack | [Cinder](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#cinder)
+VirtualBox | [Virtual Media](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox)
+
+#### Operating System Support
+The following operating systems (OS) are supported by REX-Ray:
+
+OS             | Command Line | Service
+---------------|--------------|-----------
+Ubuntu 12+     | Yes          | Yes
+Debian 6+      | Yes          | Yes
+RedHat         | Yes          | Yes
+CentOS 6+      | Yes          | Yes
+CoreOS         | Yes          | Yes
+TinyLinux (boot2docker)| Yes          | Yes
+OS X Yosemite+ | Yes          | No
+Windows        | No           | No
+
+#### Container Runtime Support
+REX-Ray currently supports the following container platforms:
+
+Platform            | Use
+------------------|-------------------------
+Docker            | [Volume Driver Plugin](./user-guide/schedulers.md#docker)
+Mesos             | [Volume Driver Isolator module](./user-guide/schedulers.md#mesos)
+Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers.md#mesos)
+
+#### Container Orchestration Support
+REX-Ray currently supports the following container orchestrators:
+
+Orchestrator      | Container Runtime
+------------------|-------------------------
+Docker Swarm      | Docker
+Kubernetes        | Docker
+Marathon          | Docker, Mesos Containerizer
 
 ### GitHub and Slack
 If a little extra help is needed, please don't hesitate to use [GitHub

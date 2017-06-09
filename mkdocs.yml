@@ -9,6 +9,11 @@ extra_css:
     - css/emccode.css
     - css/emccode-font.css
     - css/hX.css
+extra_javascript:
+    - js/jquery-1.10.2.min.js
+    - js/bootstrap-3.0.3.min.js
+    - js/base.js
+    - js/highlight.pack.js
 markdown_extensions:
     - admonition
     - toc:

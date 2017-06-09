@@ -33,24 +33,24 @@ The following command will download the most recent, stable build of REX-Ray
 and install it to `/usr/bin/rexray` or `/opt/bin/rexray`. On Linux systems
 REX-Ray will also be registered as either a SystemD or SystemV service.
 
-There is an optional flag to choose which version to install. Notice how we
-specify `stable`, see the additional version names below that are also valid.
-
-```shell
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable
+```bash
+$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable
 ```
 
 ### Install a specific version
-You can install a particular version like this:
+The following command will emit a list of the available REX-Ray packages:
+The curl command can also be used to install a specific version of REX-Ray:
 
-```sh
-$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.7.0
+```bash
+$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list
+curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list unstable
+curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list staged
+curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list stable
 ```
 
-The version shows during an install, but to see it again later:
-
-```sh
-$ rexray version
+To install the stable `0.9.1` release, use the following command:
+```bash
+$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.9.1
 ```
 
 ### Install a pre-built binary

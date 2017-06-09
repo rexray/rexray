@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -397,13 +398,16 @@ func IsLocalServerActive(
 	return "", false
 }
 
+// ErrHostDetectionFailed is returned when ActivateLibStorage is invoked
+// and the there is no host specified in the configuration file and
+// no existing host was detected locally.
+var ErrHostDetectionFailed = errors.New("host detection failed")
+
 // ActivateLibStorage activates libStorage and returns a possibly mutated
 // context.
 func ActivateLibStorage(
 	ctx apitypes.Context,
 	config gofig.Config) (apitypes.Context, gofig.Config, <-chan error, error) {
-
-	config = config.Scope("rexray")
 
 	// set the `libstorage.service` property to the value of
 	// `rexray.storageDrivers` if the former is not defined and the
@@ -466,12 +470,20 @@ func NewClient(
 }
 
 // NewConfig returns a new config object.
-func NewConfig(ctx apitypes.Context) gofig.Config {
+func NewConfig(ctx apitypes.Context) (config gofig.Config) {
+
+	defer func() {
+		if config != nil {
+			config = config.Scope("rexray")
+		}
+	}()
+
 	const cfgFileExt = "yml"
 
 	loadConfig := func(
 		allExists, usrExists, ignoreExists bool,
 		allPath, usrPath, name string) (gofig.Config, bool) {
+
 		fields := log.Fields{
 			"buildType":              core.BuildType,
 			"ignoreExists":           ignoreExists,

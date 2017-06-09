@@ -144,8 +144,10 @@ plug-in:
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `S3FS_ACCESSKEY` | The AWS access key | | ✓
+`S3FS_DISABLEPATHSTYLE` | Disables use of path style for bucket endpoints | `false` |
+`S3FS_OPTIONS` | Additional options to pass to S3FS | |
+`S3FS_REGION` | The AWS region | |
 `S3FS_SECRETKEY` | The AWS secret key | | ✓
-`S3S_REGION` | The AWS region | |
 
 ## Dell EMC
 REX-Ray includes plug-ins for several Dell EMC storage platforms.
@@ -243,6 +245,44 @@ Environment Variable | Description | Default | Required
 `SCALEIO_THINORTHICK` | The provision mode `(Thin|Thick)Provisioned` | |
 `SCALEIO_VERSION` | The version of ScaleIO system | |
 
+## DigitalOcean
+REX-Ray ships with a plug-in for DigitalOcean to support their Block Storage service.
+
+### DigitalOcean Block Storage
+The DOBS plug-in can be installed with the following command:
+
+```bash
+$ docker plugin install rexray/dobs \
+  DOBS_REGION=sfo2 \
+  DOBS_TOKEN=0907868f343d86076f261958123638248ae2321434dd4f1b74773ddb9320de43
+```
+
+#### Requirements
+The DOBS plug-in requires that your DigitalOcean droplet is running in a region that
+supports block storage.
+
+#### Privileges
+The DOBS plug-in requires the following privileges:
+
+Type | Value
+-----|------
+network | `host`
+mount | `/dev`
+allow-all-devices | `true`
+capabilities | `CAP_SYS_ADMIN`
+
+#### Configuration
+The following environment variables can be used to configure the DOBS
+plug-in:
+
+Environment Variable | Description | Default | Required
+---------------------|-------------|---------|---------
+`DOBS_REGION` | The region where volumes should be created | | ✓
+`DOBS_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `100ms` |
+`DOBS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
+`DOBS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
+`DOBS_TOKEN` | Your DigitalOcean access token | | ✓
+
 ## Google
 REX-Ray ships with plug-ins for Google Compute Engine (GCE) as well.
 
@@ -277,6 +317,51 @@ Environment Variable | Description | Default | Required
 `GCEPD_DEFAULTDISKTYPE` | The default disk type to consume | `pd-ssd` |
 `GCEPD_TAG` | Only use volumes that are tagged with a label | |
 `GCEPD_ZONE` | GCE Availability Zone | |
+
+## OpenStack
+REX-Ray ships with plug-ins for OpenStack as well.
+
+### Cinder volume
+The Cinder plug-in can be installed with the following command:
+
+```bash
+$ docker plugin install rexray/cinder \
+  CINDER_AUTHURL=http://xxxx \
+  CINDER_USERNAME=rexray \
+  CINDER_PASSWORD=xxx \
+  CINDER_TENANTID=xxxxxxx
+```
+
+#### Requirements
+The Cinder plug-in requires that GCE compute instance has Read/Write Cloud API
+access to the Compute Engine and Storage services.
+
+#### Privileges
+The Cinder plug-in requires the following privileges:
+
+Type | Value
+-----|------
+network | `host`
+mount | `/dev`
+allow-all-devices | `true`
+capabilities | `CAP_SYS_ADMIN`
+
+#### Configuration
+The following environment variables can be used to configure the Cinder
+plug-in:
+
+Environment Variable | Description | Default | Required
+---------------------|-------------|---------|---------
+`CINDER_AUTHURL` | The keystone authentication API |  | true
+`CINDER_USERNAMEID` | OpenStack userId for cinder access | |
+`CINDER_USERNAME` | OpenStack username for cinder access | |
+`CINDER_PASSWORD` | OpenStack user password for cinder access | |
+`CINDER_TOKENID` | OpenStack tokenId for cinder access | |
+`CINDER_TENANTID` | OpenStack tenantId | |
+`CINDER_TENANTNAME` | OpenStack tenantId | |
+`CINDER_DOMAINID` | OpenStack domainId to authenticate | |
+`CINDER_DOMAINNAME` | OpenStack domainName to authenticate | |
+
 
 ## Examples
 This section reviews examples of how to use the REX-Ray Docker Volume plug-ins.
@@ -349,3 +434,4 @@ Validate the volume was deleted successfully by listing the volumes:
 $ docker volume ls
 DRIVER              VOLUME NAME
 ```
+

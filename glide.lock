@@ -1,5 +1,5 @@
-hash: 6938df327caad72d24274cdbf9fa3750acac04df8ef79712b46d276654eac901
-updated: 2017-05-03T16:17:11.584802513-05:00
+hash: 8c75aad9b171c090f8e6b03e0601c37dfc03fa4d816b79838ff08f309ee53515
+updated: 2017-06-09T13:25:26.676953377-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -98,7 +98,7 @@ imports:
   subpackages:
   - logrus
 - name: github.com/codedellemc/libstorage
-  version: fa055d6da595602715bdfd5541b4aa6d4dcbcbd9
+  version: fd26f0ec72b077ffa7c82160fbd12a276e12c2ad
   repo: https://github.com/codedellemc/libstorage
   subpackages:
   - api
@@ -174,7 +174,6 @@ imports:
   - drivers/storage/vbox/executor
   - drivers/storage/vbox/storage
   - drivers/storage/vfs
-  - drivers/storage/vfs/client
   - drivers/storage/vfs/executor
   - drivers/storage/vfs/storage
   - imports/config
@@ -243,7 +242,7 @@ imports:
   version: 1dd44b25b79c4d9060e582e90798e4d72537818c
   repo: https://github.com/akutz/go-bindata
 - name: github.com/kardianos/osext
-  version: 9d302b58e975387d0b4d9be876622c86cefe64be
+  version: ae77be60afb1dcacde03767a8c37337fad28ac14
   repo: https://github.com/kardianos/osext.git
   vcs: git
 - name: github.com/kr/fs

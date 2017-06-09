@@ -32,6 +32,7 @@ DigitalOcean | [Block Storage](http://libstorage.readthedocs.io/en/stable/user-g
 FittedCloud | [EBS Optimizer](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ebs-optimizer)
 Google | [GCE Persistent Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk)
 Microsoft | [Azure Unmanaged Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud)
+OpenStack | [Cinder](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#cinder)
 VirtualBox | [Virtual Media](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox)
 
 
@@ -86,7 +87,7 @@ $ df -h /test
 ```
 
 ## Runtime - Docker Plugin
-Starting with Docker 1.13, Docker now supports a new plugin archtitecture in
+Starting with Docker 1.13, Docker now supports a new plugin architecture in
 which plugins can be installed as containers.
 
 ```bash

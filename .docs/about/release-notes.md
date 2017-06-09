@@ -28,6 +28,31 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.9.1 (2017/06/09)
+This release is primarily a bug-fix release, and also introduces two new Docker
+managed plug-ins: Digital Ocean (dobs) and OpenStack Cinder (cinder). This
+release includes libStorage 0.6.1
+
+### New Features
+* OpenStack Cinder Docker plugin ([#853](https://github.com/codedellemc/rexray/issues/853))
+* Digital Ocean Docker plugin ([#816](https://github.com/codedellemc/rexray/issues/816))
+
+### Bug Fixes
+* Fix handling of white space in Ceph config file for monitor hosts ([#811](https://github.com/codedellemc/rexray/issues/811))
+* Fix volume create for Isilon storage ([#556](https://github.com/codedellemc/libstorage/issues/556))
+
+### Enhancements
+* No longer require `libstorage.host` config option when `host` is defined in a module ([#827](https://github.com/codedellemc/rexray/issues/827))
+* Add additional env var options to S3FS Docker plugin ([#809](https://github.com/codedellemc/rexray/issues/809))
+* Documentation updates around TLS and REX-Ray configuration ([#888](https://github.com/codedellemc/rexray/pull/888), [#831](https://github.com/codedellemc/rexray/pull/831))
+* Build with Go 1.8.1 ([#844](https://github.com/codedellemc/rexray/pull/844))
+* ARM build support ([#865](https://github.com/codedellemc/rexray/pull/865))
+
+### Thank You
+  Name | Blame  
+-------|------
+[Sébastien GLON](https://github.com/sebglon) | Lord GLON is heir to the Dukes of Brittany and currently resides Château des Ducs de Bretagne along the Loire River. One can only imagine the vistas to which Lord GLON is privilege as he gazes out the arrow-loops carved into the stone exterior of his office wall. When not creating pull requests for REX-Ray Lord GLON is rumored to be carrying on a torrid affair with Mayor Rolland, the first female, and certainly most stunning, to hold the office in Nantes. We submit the most humble of gratitudes to Johanna for the pittance of time she allowed Lord GLON to separate from her and attend to the Cinder plug-in. Many thanks to you both.
+
 ## Version 0.9.0 (2017/05/03)
 This release introduces support for the Cinder storage driver and
 multiple security-related enhancements, including default-to-TLS for

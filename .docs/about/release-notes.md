@@ -3,8 +3,18 @@
 Release early, release often
 
 ---
-## Version 0.6.1 (2017/06/08)
-This is a bug fix release.
+## Version 0.6.1 (2017/06/09)
+This is a minor release that includes bug fixes for RBD and Isilon, and some
+minor enhancements.
+
+### Bug Fixes
+* Fix handling of white space in Ceph config file for monitor hosts ([#551](https://github.com/codedellemc/libstorage/issues/551))
+* Fix volume create for Isilon storage ([#556](https://github.com/codedellemc/libstorage/issues/556))
+
+### Enhancements
+* Introduce ability for storage driver to implement VolumeInspectByName ([#560](https://github.com/codedellemc/libstorage/issues/560))
+* Add ability to enable TLS over UNIX Sockets ([#546](https://github.com/codedellemc/libstorage/pull/546))
+* ARM build support ([#553](https://github.com/codedellemc/libstorage/pull/553))
 
 ## Version 0.6.0 (2017/05/03)
 This release introduces support for the Cinder storage driver and

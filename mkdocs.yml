@@ -3,11 +3,10 @@ site_url: https://github.com/codedellemc/libstorage
 repo_url: https://github.com/codedellemc/libstorage.git
 docs_dir: .docs
 site_dir: .site
-theme_dir: .docs/.themes/yeti
-site_favicon: favicon.ico
+theme_dir: .docs-themes/yeti
 extra_css:
-    - css/emccode.css
-    - css/emccode-font.css
+    - css/codedellemc.css
+    - css/codedellemc-font.css
     - css/hX.css
 markdown_extensions:
     - admonition

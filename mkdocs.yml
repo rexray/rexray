@@ -3,17 +3,12 @@ site_url: https://github.com/codedellemc/rexray
 repo_url: https://github.com/codedellemc/rexray.git
 docs_dir: .docs
 site_dir: .site
-theme_dir: .docs/.themes/yeti
+theme_dir: .docs-themes/yeti
 site_favicon: favicon.png
 extra_css:
-    - css/emccode.css
-    - css/emccode-font.css
+    - css/codedellemc.css
+    - css/codedellemc-font.css
     - css/hX.css
-extra_javascript:
-    - js/jquery-1.10.2.min.js
-    - js/bootstrap-3.0.3.min.js
-    - js/base.js
-    - js/highlight.pack.js
 markdown_extensions:
     - admonition
     - toc:

@@ -66,6 +66,19 @@
           "docker.volumedriver/1.0"
         ]
       },
+      "Linux": {
+        "AllowAllDevices": true,
+        "Capabilities": ["CAP_SYS_ADMIN"],
+        "Devices": null
+      },
+      "Mounts": [
+        {
+          "Source": "/dev",
+          "Destination": "/dev",
+          "Type": "bind",
+          "Options": ["rbind"]
+        }
+      ], 
       "Network": {
         "Type": "host"
       },

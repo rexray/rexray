@@ -23,6 +23,18 @@ func init() {
 	})
 }
 
+func (c *CLI) addOpts(s apitypes.Store) {
+	for _, o := range c.options {
+		op := strings.SplitN(o, "=", 2)
+		switch len(op) {
+		case 1:
+			s.Set(op[0], true)
+		case 2:
+			s.Set(op[0], op[1])
+		}
+	}
+}
+
 func (c *CLI) initVolumeCmds() {
 
 	c.volumeCmd = &cobra.Command{
@@ -112,6 +124,9 @@ func (c *CLI) initVolumeCmds() {
 					Opts:             store(),
 				}
 			)
+
+			// add the freeform options
+			c.addOpts(opts.Opts)
 
 			if c.encryptionKey != "" {
 				opts.EncryptionKey = &c.encryptionKey

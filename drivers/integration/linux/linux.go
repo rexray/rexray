@@ -536,6 +536,11 @@ func (d *driver) Remove(
 
 	client := context.MustClient(ctx)
 
+	// check to see if there is a config override for force remove
+	if !opts.Force {
+		opts.Force = d.volumeRemoveForce()
+	}
+
 	return client.Storage().VolumeRemove(ctx, vol.ID, opts)
 }
 
@@ -597,4 +602,8 @@ func (d *driver) mountDirPath() string {
 
 func (d *driver) volumeCreateImplicit() bool {
 	return d.config.GetBool(types.ConfigIgVolOpsCreateImplicit)
+}
+
+func (d *driver) volumeRemoveForce() bool {
+	return d.config.GetBool(types.ConfigIgVolOpsRemoveForce)
 }

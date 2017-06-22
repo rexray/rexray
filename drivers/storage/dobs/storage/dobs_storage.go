@@ -31,6 +31,7 @@ type driver struct {
 	maxAttempts   int
 	statusDelay   int64
 	statusTimeout time.Duration
+	defaultRegion *string
 }
 
 func init() {
@@ -71,7 +72,11 @@ func (d *driver) Init(
 		"statusDelay": fmt.Sprintf(
 			"%v", time.Duration(d.statusDelay)*time.Nanosecond),
 		"statusTimeout": d.statusTimeout,
-		"region":        d.config.GetString(do.ConfigRegion),
+	}
+
+	if region := d.config.GetString(do.ConfigRegion); region != "" {
+		d.defaultRegion = &region
+		fields["region"] = region
 	}
 
 	if token == "" {
@@ -155,6 +160,39 @@ func (d *driver) VolumeInspect(
 	return volume, nil
 }
 
+func (d *driver) VolumeInspectByName(
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
+
+	region := d.mustRegion(ctx)
+	if region == nil || *region == "" {
+		return nil, goof.New("No region provided or configured")
+	}
+	doVolumes, _, err := d.client.Storage.ListVolumes(
+		ctx,
+		&godo.ListVolumeParams{
+			Region: *region,
+			Name:   volumeName,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(doVolumes) == 0 {
+		return nil, apiUtils.NewNotFoundError(volumeName)
+	}
+	if len(doVolumes) > 1 {
+		return nil, goof.New("too many volumes returned")
+	}
+
+	volume, err := d.toTypesVolume(ctx, &doVolumes[0], opts.Attachments)
+	if err != nil {
+		return nil, goof.New("error converting to types.Volume")
+	}
+	return volume, nil
+}
+
 func (d *driver) VolumeCreate(
 	ctx types.Context,
 	name string,
@@ -165,12 +203,13 @@ func (d *driver) VolumeCreate(
 	}
 
 	if opts.AvailabilityZone == nil || *opts.AvailabilityZone == "" {
-		instance, err := d.InstanceInspect(ctx, nil)
-		if err != nil {
-			return nil, err
+		opts.AvailabilityZone = d.mustRegion(ctx)
+		if opts.AvailabilityZone == nil || *opts.AvailabilityZone == "" {
+			return nil, goof.WithFields(fields,
+				"No region for volume create")
 		}
-		opts.AvailabilityZone = &instance.Region
 	}
+	fields["region"] = *opts.AvailabilityZone
 
 	if opts.Size == nil {
 		size := int64(minSizeGiB)
@@ -192,6 +231,8 @@ func (d *driver) VolumeCreate(
 
 	volume, _, err := d.client.Storage.CreateVolume(ctx, volumeReq)
 	if err != nil {
+		ctx.WithFields(fields).WithError(err).Error(
+			"error returned from create volume")
 		return nil, err
 	}
 
@@ -472,4 +513,13 @@ func (d *driver) waitForAction(
 			"Error while waiting for storage action to finish", err)
 	}
 	return nil
+}
+
+func (d *driver) mustRegion(ctx types.Context) *string {
+	if iid, ok := context.InstanceID(ctx); ok {
+		if v, ok := iid.Fields[do.InstanceIDFieldRegion]; ok && v != "" {
+			return &v
+		}
+	}
+	return d.defaultRegion
 }

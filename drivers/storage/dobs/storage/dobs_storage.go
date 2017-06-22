@@ -5,6 +5,7 @@ package storage
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	gofig "github.com/akutz/gofig/types"
@@ -25,13 +26,14 @@ const (
 )
 
 type driver struct {
-	name          string
-	config        gofig.Config
-	client        *godo.Client
-	maxAttempts   int
-	statusDelay   int64
-	statusTimeout time.Duration
-	defaultRegion *string
+	name           string
+	config         gofig.Config
+	client         *godo.Client
+	maxAttempts    int
+	statusDelay    int64
+	statusTimeout  time.Duration
+	defaultRegion  *string
+	convUnderscore bool
 }
 
 func init() {
@@ -90,6 +92,8 @@ func (d *driver) Init(
 		return err
 	}
 	d.client = client
+
+	d.convUnderscore = d.config.GetBool(do.ConfigConvertUnderscores)
 
 	ctx.WithFields(fields).Info("storage driver initialized")
 
@@ -169,6 +173,9 @@ func (d *driver) VolumeInspectByName(
 	if region == nil || *region == "" {
 		return nil, goof.New("No region provided or configured")
 	}
+
+	volumeName = d.convUnderscores(volumeName)
+
 	doVolumes, _, err := d.client.Storage.ListVolumes(
 		ctx,
 		&godo.ListVolumeParams{
@@ -198,6 +205,7 @@ func (d *driver) VolumeCreate(
 	name string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 
+	name = d.convUnderscores(name)
 	fields := map[string]interface{}{
 		"volumeName": name,
 	}
@@ -522,4 +530,11 @@ func (d *driver) mustRegion(ctx types.Context) *string {
 		}
 	}
 	return d.defaultRegion
+}
+
+func (d *driver) convUnderscores(name string) string {
+	if d.convUnderscore {
+		name = strings.Replace(name, "_", "-", -1)
+	}
+	return name
 }

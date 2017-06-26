@@ -30,7 +30,7 @@ before_install:
   - export GOARCH="${TRAVIS_GOARCH:-amd64}"
   - go env
   - if [ "$DRIVERS" != "" ]; then sudo apt-get update; fi
-  - if [ "$DRIVERS" != "" ]; then sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-engine; fi
+  - if [ "$DRIVERS" != "" ]; then sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce; fi
   - if [ "$DRIVERS" != "" ]; then docker --version; fi
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
   - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'

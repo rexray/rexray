@@ -149,6 +149,42 @@ Environment Variable | Description | Default | Required
 `S3FS_REGION` | The AWS region | |
 `S3FS_SECRETKEY` | The AWS secret key | | ✓
 
+## Ceph
+REX-Ray has a plug-in for Ceph RADOS Block Devices (RBD)
+
+### RBD
+The RBD plug-in can be installed with the following command:
+
+```bash
+$ docker plugin install rexray/rbd \
+  RBD_DEFAULTPOOL=rbd
+```
+
+### Requirements
+The RBD plug-in requires that the host has a fully working environment for
+mapping Ceph RBDs, including having the RBD kernel module already loaded. The
+cluster configuration and authentication files must be present in `/etc/ceph`.
+
+#### Privileges
+The RBD plug-in requires the following privileges:
+
+Type | Value
+-----|------
+network | `host`
+mount | `/dev`, `/etc/ceph`
+allow-all-devices | `true`
+capabilities | `CAP_SYS_ADMIN`
+
+#### Configuration
+The following environment variables can be used to configure the RBD
+plug-in:
+
+Environment Variable | Description | Default | Required
+---------------------|-------------|---------|---------
+`REXRAY_FSTYPE` | The type of file system to use | `ext4`
+`REXRAY_LOGLEVEL` | The log level | `warn`
+`RBD_DEFAULTPOOL` | Default Ceph pool for volumes | `rbd`
+
 ## Dell EMC
 REX-Ray includes plug-ins for several Dell EMC storage platforms.
 
@@ -434,4 +470,3 @@ Validate the volume was deleted successfully by listing the volumes:
 $ docker volume ls
 DRIVER              VOLUME NAME
 ```
-

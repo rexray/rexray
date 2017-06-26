@@ -1,0 +1,78 @@
+{
+      "Args": {
+        "Description": "",
+        "Name": "",
+        "Settable": null,
+        "Value": null
+      },
+      "Description": "REX-Ray for Ceph RBD",
+      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/rbd",
+      "Entrypoint": [
+        "/rexray.sh", "rexray", "start", "-f", "--nopid"
+      ],
+      "Env": [
+        {
+          "Description": "",
+          "Name": "REXRAY_FSTYPE",
+          "Settable": [
+            "value"
+          ],
+          "Value": "ext4"
+        },
+        {
+          "Description": "",
+          "Name": "REXRAY_LOGLEVEL",
+          "Settable": [
+            "value"
+          ],
+          "Value": "warn"
+        },
+        {
+          "Description": "",
+          "Name": "RBD_DEFAULTPOOL",
+          "Settable": [
+            "value"
+          ],
+          "Value": "rbd"
+        },
+        {
+          "Description": "",
+          "Name": "RBD_TESTMODULE",
+          "Settable": [
+            "value"
+          ],
+          "Value": "false"
+        }
+      ],
+      "Interface": {
+        "Socket": "rexray.sock",
+        "Types": [
+          "docker.volumedriver/1.0"
+        ]
+      },
+      "Linux": {
+        "AllowAllDevices": true,
+        "Capabilities": ["CAP_SYS_ADMIN"],
+        "Devices": null
+      },
+      "Mounts": [
+        {
+          "Source": "/dev",
+          "Destination": "/dev",
+          "Type": "bind",
+          "Options": ["rbind"]
+        },
+        {
+          "Source": "/etc/ceph",
+          "Destination": "/etc/ceph",
+          "Type": "bind",
+          "Options": ["rbind"]
+        }
+      ],
+      "Network": {
+        "Type": "host"
+      },
+      "PropagatedMount": "/var/lib/libstorage/volumes",
+      "User": {},
+      "WorkDir": ""
+}

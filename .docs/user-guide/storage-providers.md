@@ -1034,6 +1034,7 @@ gcepd:
   statusMaxAttempts:  10
   statusInitialDelay: 100ms
   statusTimeout:      2m
+  convertUnderscores: false
 ```
 
 ##### Configuration Notes
@@ -1071,6 +1072,12 @@ gcepd:
 * `statusTimeout` is a maximum length of time that polling for volume status can
   occur. This serves as a backstop against a stuck request of malfunctioning API
   that never returns.
+* `convertUnderscores` is a boolean flag that controls whether the driver will
+  automatically convert underscores to dashes during a volume create request.
+  GCE does not allow underscores in the volume name, but some container
+  orchestrators (e.g. Docker Swarm) automatically prefix volume names
+  with a string containing a dash. This flag enables such requests to proceed,
+  but with the volume name modified.
 
 #### Runtime behavior
 * The GCEPD driver enforces the GCE requirements for disk sizing and naming.

@@ -58,6 +58,7 @@ type driver struct {
 	maxAttempts     int
 	statusDelay     int64
 	statusTimeout   time.Duration
+	convUnderscore  bool
 }
 
 func init() {
@@ -141,6 +142,8 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	if err != nil {
 		return err
 	}
+
+	d.convUnderscore = d.config.GetBool(gcepd.ConfigConvertUnderscores)
 
 	context.Info("storage driver initialized")
 	return nil
@@ -341,6 +344,8 @@ func (d *driver) VolumeInspectByName(
 	volumeName string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
+	volumeName = d.convUnderscores(volumeName)
+
 	// For GCE, name and ID are the same
 	return d.VolumeInspect(
 		ctx,
@@ -385,6 +390,8 @@ func (d *driver) VolumeCreate(
 
 	}
 
+	volumeName = d.convUnderscores(volumeName)
+	fields["volumeName"] = volumeName
 	if !utils.IsValidDiskName(&volumeName) {
 		return nil, goof.WithFields(fields,
 			"Volume name does not meet GCE naming requirements")
@@ -1070,6 +1077,13 @@ func (d *driver) detachVolume(
 	}
 
 	return asyncErr
+}
+
+func (d *driver) convUnderscores(name string) string {
+	if d.convUnderscore {
+		name = strings.Replace(name, "_", "-", -1)
+	}
+	return name
 }
 
 func getLabels(tag *string) map[string]string {

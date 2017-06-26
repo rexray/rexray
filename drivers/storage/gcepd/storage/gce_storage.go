@@ -300,7 +300,7 @@ func (d *driver) Volumes(
 	return vols, nil
 }
 
-// VolumeInspect inspects a single volume.
+// VolumeInspect inspects a single volume by ID.
 func (d *driver) VolumeInspect(
 	ctx types.Context,
 	volumeID string,
@@ -333,6 +333,20 @@ func (d *driver) VolumeInspect(
 	}
 
 	return vols[0], nil
+}
+
+// VolumeInspectByName inspects a single volume by name.
+func (d *driver) VolumeInspectByName(
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
+
+	// For GCE, name and ID are the same
+	return d.VolumeInspect(
+		ctx,
+		volumeName,
+		opts,
+	)
 }
 
 // VolumeCreate creates a new volume.

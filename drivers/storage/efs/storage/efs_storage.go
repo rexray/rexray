@@ -657,16 +657,42 @@ func (d *driver) VolumeAttach(
 	// No mount targets were found
 	if ma == nil {
 
+		var iSecGrpIDs []string
 		secGrpIDs := d.secGroups
 		if v, ok := iid.Fields[efs.InstanceIDFieldSecurityGroups]; ok {
-			iSecGrpIDs := strings.Split(v, ";")
-			ctx.WithField("secGrpIDs", iSecGrpIDs).Debug(
-				"using instance security group IDs")
-			secGrpIDs = iSecGrpIDs
+			iSecGrpIDs = strings.Split(v, ";")
+			if len(iSecGrpIDs) == 1 {
+				ctx.WithField("secGrpIDs", iSecGrpIDs).Debug(
+					"using instance security group IDs")
+				secGrpIDs = iSecGrpIDs
+			}
 		}
 
 		if len(secGrpIDs) == 0 {
 			return nil, "", errInvalidSecGroups
+		}
+
+		// make sure all of the request security groups
+		// are available on the instance
+		var missingSecGrpIDs []string
+		for _, csg := range secGrpIDs {
+			var found bool
+			for _, isg := range iSecGrpIDs {
+				if csg == isg {
+					found = true
+					break
+				}
+			}
+			if !found {
+				missingSecGrpIDs = append(missingSecGrpIDs, csg)
+			}
+		}
+
+		// log a warning if any of the server-side defined SGs
+		// are not present in the list sent by the client instance
+		if len(missingSecGrpIDs) > 0 {
+			log.WithField("missingStorageGroups", missingSecGrpIDs).Warn(
+				"configured sec grps not present on instance")
 		}
 
 		request := &awsefs.CreateMountTargetInput{

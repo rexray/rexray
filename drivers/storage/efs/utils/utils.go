@@ -93,7 +93,7 @@ func InstanceID(ctx types.Context) (*types.InstanceID, error) {
 		efs.InstanceIDFieldAvailabilityZone: iid.AvailabilityZone,
 	}
 
-	if len(secGroups) == 1 {
+	if len(secGroups) > 0 {
 		iidFields[efs.InstanceIDFieldSecurityGroups] = strings.Join(
 			secGroups, ";")
 	}

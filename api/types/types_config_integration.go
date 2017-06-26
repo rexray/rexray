@@ -78,4 +78,7 @@ const (
 
 	// ConfigIgVolOpsRemoveDisable is a config key.
 	ConfigIgVolOpsRemoveDisable = ConfigIgVolOpsRemove + ".disable"
+
+	// ConfigIgVolOpsRemoveForce is a config key.
+	ConfigIgVolOpsRemoveForce = ConfigIgVolOpsRemove + ".force"
 )

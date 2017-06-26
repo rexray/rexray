@@ -88,6 +88,7 @@ func init() {
 			rk(gofig.String, "5s", "", types.ConfigIgVolOpsMountRetryWait)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsCreateDisable)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsRemoveDisable)
+			rk(gofig.Bool, false, "", types.ConfigIgVolOpsRemoveForce)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsUnmountIgnoreUsed)
 			rk(gofig.Bool, true, "", types.ConfigIgVolOpsPathCacheEnabled)
 			rk(gofig.Bool, true, "", types.ConfigIgVolOpsPathCacheAsync)

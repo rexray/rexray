@@ -1138,6 +1138,13 @@ parameter|description
 `libstorage.integration.volume.operations.create.default.fsType`|Type of filesystem for new volumes (ext4/xfs)
 `libstorage.integration.volume.operations.create.default.availabilityZone`|Extensible parameter per storage driver
 
+The properties in the next table are the configurable parameters that affect
+the default values for volume remove requests.
+
+parameter|description
+---------|-----------
+`libstorage.integration.volume.operations.remove.force`|Force remove volumes
+
 #### Disable Create
 The disable create feature enables you to disallow any volume creation activity.
 Any requests will be returned in a successful manner, but the create will not
@@ -1164,6 +1171,19 @@ libstorage:
       operations:
         remove:
           disable: true
+```
+
+#### Force Remove
+The force remove feature enables the forced removal of a volume despite
+its current contents or state:
+
+```yaml
+libstorage:
+  integration:
+    volume:
+      operations:
+        remove:
+          force: true
 ```
 
 #### Preemption

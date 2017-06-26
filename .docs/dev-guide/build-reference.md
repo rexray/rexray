@@ -101,6 +101,30 @@ how REX-Ray is built:
 | --- | --- |
 | `DRIVERS` | This variable can be set to a space-delimited list of driver names in order to indicate which storage platforms to support. For example, the command `$ DRIVERS="ebs scaleio" make build` would build REX-Ray for only the EBS and ScaleIO storage platforms.
 
+## Build Docker Plug-ins
+This section describes how to build and create Docker plug-ins 
+and as such requires Docker. The `build.sh` command can be used 
+to build a Docker plug-in locally:
+
+```bash
+./build.sh -t plugin -d ebs
+```
+
+The `-t plugin` flag tells the command to build a Docker plug-in,
+and the `-d ebs` indicates the driver to include in the plug-in.
+
+!!! note "note"
+    If a plug-in definition does not already exist for the specified 
+    driver type then it will be created automatically. However, this
+    does not mean that a plug-in can be created for a driver that does
+    not already exist in libStorage. For example, `-d notreal` will 
+    fail because `notreal` is not a real driver.
+
+The above command will build the REX-Ray binary and include the specified
+driver, in this case `ebs`, and then create a Docker plug-in image with
+the new REX-Ray binary, similar to this 
+[gist](https://gist.github.com/akutz/2f62c5b55a8ba24171b1128fb822dc93#file-build-ebs-plugin-sh).
+
 ## Version File
 There is a file at the root of the project named `VERSION`. The file contains
 a single line with the *target* version of the project in the file. The version

@@ -48,7 +48,9 @@ usage() {
   ekho "                        This flag sets '-b make'."
   ekho
   ekho "       -t type          Optional. The type of REX-Ray binary to create."
-  ekho "                        Possible values include: agent, client, and controller"
+  ekho "                        Possible values include: agent, client, controller, and"
+  ekho "                        plugin."
+  ekho
   ekho "                        The default value is the same as omitting this flag and"
   ekho "                        argument altogether and will create a binary that"
   ekho "                        includes the agent, client, and controller."
@@ -405,8 +407,9 @@ create_dockerfile() {
   fi
 
   if [ "$GOOS" != "" ] || [ "$GOARCH" != "" ]; then
+    GOOS="${GOOS:-linux}"
+    GOARCH="${GOARCH:-amd64}"
     if [ "$GOOS" != "linux" ] || [ "$GOARCH" != "amd64" ]; then
-      GOOS="${GOOS:-linux}"
       GOOS_GOARCH_DIR="${GOOS}_${GOARCH}/"
     fi
   fi
@@ -763,6 +766,7 @@ if [ "$BTYPE" = "plugin" ]; then
   if [ "$DOCKER" != "1" ]; then
     ekho "error: the artifact used to create the plug-in can be built with "
     ekho "       make, but building the plug-in requires Docker"
+    exit 1
   fi
 
   FDRIVERS=$(echo "$DRIVERS" | tr ' ' '-' )

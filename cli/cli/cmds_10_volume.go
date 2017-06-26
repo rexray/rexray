@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/akutz/goof"
 	"github.com/spf13/cobra"
 
 	apitypes "github.com/codedellemc/libstorage/api/types"
@@ -577,6 +578,10 @@ func checkVolumeArgs(cmd *cobra.Command, args []string) {
 func (c *CLI) logVolumeLoopError(
 	processed interface{}, name, msg string, err error) {
 	logEntry := log.WithField("volume", name).WithError(err)
+	httpErr, ok := err.(goof.HTTPError)
+	if ok {
+		logEntry = logEntry.WithField("error.msg", httpErr.Error())
+	}
 	if c.continueOnError {
 		logEntry.Error(msg)
 	} else {

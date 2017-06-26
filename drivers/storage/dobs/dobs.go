@@ -11,8 +11,9 @@ const (
 	// Name is the name of the driver
 	Name = "dobs"
 
-	defaultStatusMaxAttempts = 10
-	defaultStatusInitDelay   = "100ms"
+	defaultStatusMaxAttempts  = 10
+	defaultStatusInitDelay    = "100ms"
+	defaultConvertUnderscores = false
 
 	/* This is hard deadline when waiting for the volume status to change to
 	a desired state. At minimum is has to be more than the expontential
@@ -54,6 +55,11 @@ const (
 	// ConfigStatusTimeout is the key for the time duration for a timeout
 	// on how long to wait for a desired volume status to appears
 	ConfigStatusTimeout = Name + ".statusTimeout"
+
+	// ConfigConvertUnderscores is the key for a boolean flag on whether
+	// incoming requests that have names with underscores should be
+	// converted to dashes to satisfy DO naming requirements
+	ConfigConvertUnderscores = Name + ".convertUnderscores"
 )
 
 func init() {
@@ -72,5 +78,7 @@ func registerConfig() {
 		ConfigStatusInitDelay)
 	r.Key(gofig.String, "", defaultStatusTimeout, "Status Timeout",
 		ConfigStatusTimeout)
+	r.Key(gofig.Bool, "", defaultConvertUnderscores,
+		"Convert Underscores", ConfigConvertUnderscores)
 	gofigCore.Register(r)
 }

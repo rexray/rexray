@@ -21,7 +21,8 @@ import (
 )
 
 type driver struct {
-	config gofig.Config
+	config     gofig.Config
+	doModprobe bool
 }
 
 func init() {
@@ -34,6 +35,7 @@ func newdriver() types.StorageExecutor {
 
 func (d *driver) Init(context types.Context, config gofig.Config) error {
 	d.config = config
+	d.doModprobe = config.GetBool(rbd.ConfigTestModule)
 	return nil
 }
 
@@ -57,9 +59,11 @@ func (d *driver) Supported(
 		return false, nil
 	}
 
-	cmd := exec.Command("modprobe", "rbd")
-	if _, _, err := utils.RunCommand(ctx, cmd); err != nil {
-		return false, nil
+	if d.doModprobe {
+		cmd := exec.Command("modprobe", "rbd")
+		if _, _, err := utils.RunCommand(ctx, cmd); err != nil {
+			return false, nil
+		}
 	}
 
 	return true, nil

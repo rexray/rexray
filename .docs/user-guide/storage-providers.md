@@ -411,6 +411,7 @@ example see the [Examples](./storage-providers.md#ceph-rbd-examples) section.
 ```yaml
 rbd:
   defaultPool: rbd
+  testModule: true
 ```
 
 ##### Configuration Notes
@@ -418,6 +419,10 @@ rbd:
 * The `defaultPool` parameter is optional, and defaults to "rbd". When set, all
   volume requests that do not reference a specific pool will use the
   `defaultPool` value as the destination storage pool.
+* The `testModule` parameter is optional, and defaults to "true". This setting
+  indicates whether the libStorage client should test if the `rbd` kernel module
+  is loaded, with the side-effect of loading it if is not already loaded. This
+  setting should be disabled when the driver is executing inside of a container.
 
 #### Runtime behavior
 

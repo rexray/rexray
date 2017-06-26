@@ -370,7 +370,7 @@ func (d *driver) SnapshotRemove(
 }
 
 func (d *driver) defaultPool() string {
-	return d.config.GetString("rbd.defaultPool")
+	return d.config.GetString(rbd.ConfigDefaultPool)
 }
 
 func (d *driver) toTypeVolumes(

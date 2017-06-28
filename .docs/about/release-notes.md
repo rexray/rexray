@@ -28,6 +28,21 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.9.2 (2017/06/28)
+This is a minor release that introduces a Docker managed plug-in for Ceph RBD,
+and fixes a regression with the S3FS Docker plug-in.
+
+### New Features
+* Ceph RBD Docker managed plug-in ([#898](https://github.com/codedellemc/rexray/pull/898))
+
+### Bug Fixes
+* Fix S3FS Docker plug-in permissions issue ([#891](https://github.com/codedellemc/rexray/issues/891))
+
+### Enhancements
+* [libStorage 0.6.2](https://github.com/codedellemc/libstorage/releases/tag/v0.6.2)
+* REX-Ray documentation has a new look, and is now searchable ([#889](https://github.com/codedellemc/rexray/pull/889))
+* Be more verbose on CLI about embedded errors from libStorage ([#899](https://github.com/codedellemc/rexray/pull/899))
+
 ## Version 0.9.1 (2017/06/09)
 This release is primarily a bug-fix release, and also introduces two new Docker
 managed plug-ins: Digital Ocean (dobs) and OpenStack Cinder (cinder). This

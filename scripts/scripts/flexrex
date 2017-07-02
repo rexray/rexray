@@ -251,7 +251,7 @@ detachvolume() {
 		exit 0
 	fi
 	getvolinfowithpath
-	VOLUME_PATH=$(echo "${REX_OUTPUT}" | jq -r '.path')
+	VOLUME_PATH=$(echo "${REX_OUTPUT}" | jq -r '.[0].Path')
 
 	detach
 }

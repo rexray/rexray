@@ -1,5 +1,5 @@
-hash: ea1ab676c21c3e32c51f0887d264d96aa99cd5c575203be77de57dd6ed73219b
-updated: 2017-06-28T14:16:02.965889576-05:00
+hash: 179d3e8c7caf6139ecdab7b1341aa64a857f0402afaeeb3b01c9af106b0ed169
+updated: 2017-07-05T12:35:54.689079911-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -193,11 +193,13 @@ imports:
   version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/go-yaml/yaml
   version: bc35f417f8a7664a73d46c9def2933417c03019f
-  repo: https://github.com/akutz/yaml.git
+  repo: https://github.com/akutz/yaml
 - name: github.com/golang/protobuf
-  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  version: 6a1fa9404c0aebf36c879bc50152edcc953910d2
+  repo: https://github.com/golang/protobuf
   subpackages:
   - proto
+  - ptypes/any
 - name: github.com/google/go-querystring
   version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
   subpackages:
@@ -301,7 +303,7 @@ imports:
   - pkcs12/internal/rc2
   - ssh
 - name: golang.org/x/net
-  version: b336a971b799939dd16ae9b1df8334cb8b977c4d
+  version: 570fa1c91359c1869590e9cedf3b53162a51a167
   repo: https://github.com/golang/net
   subpackages:
   - context
@@ -320,14 +322,17 @@ imports:
   - jws
   - jwt
 - name: golang.org/x/sys
-  version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+  version: 94b76065f2d2081d0fef24a6e67c571f51a6408a
+  repo: https://github.com/golang/sys
   subpackages:
   - unix
 - name: golang.org/x/text
   version: 85c29909967d7f171f821e7a42e7b7af76fb9598
   repo: https://github.com/golang/text.git
   subpackages:
+  - secure/bidirule
   - transform
+  - unicode/bidi
   - unicode/norm
 - name: google.golang.org/api
   version: d61af0b67e5c8213e8c260ac29a762487bad020d
@@ -349,23 +354,31 @@ imports:
   - internal/remote_api
   - internal/urlfetch
   - urlfetch
+- name: google.golang.org/genproto
+  version: aa2eb687b4d3e17154372564ad8d6bf11c3cf21f
+  subpackages:
+  - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: cbcceb2942a489498cf22b2f918536e819d33f0a
+  version: b15215fb911b24a5d61d57feec4233d610530464
+  repo: https://github.com/grpc/grpc-go
   subpackages:
   - codes
   - credentials
+  - grpclb/grpc_lb_v1
   - grpclog
   - internal
+  - keepalive
   - metadata
   - naming
   - peer
   - stats
+  - status
   - tap
   - transport
 - name: gopkg.in/yaml.v1
   version: bc35f417f8a7664a73d46c9def2933417c03019f
-  repo: https://github.com/akutz/yaml.git
+  repo: https://github.com/akutz/yaml
 - name: gopkg.in/yaml.v2
   version: bc35f417f8a7664a73d46c9def2933417c03019f
-  repo: https://github.com/akutz/yaml.git
+  repo: https://github.com/akutz/yaml
 testImports: []

@@ -22,7 +22,7 @@ GO_VERSION := $(shell grep -A 1 '^go:' .travis.yml | tail -n 1 | awk '{print $$2
 endif
 
 ifeq (undefined,$(origin BUILD_TAGS))
-BUILD_TAGS := gofig pflag libstorage_integration_driver_linux
+BUILD_TAGS := gofig pflag csi libstorage_integration_driver_linux
 endif
 
 ifeq (,$(findstring scripts_generated,$(BUILD_TAGS)))
@@ -54,6 +54,8 @@ BUILD_TAGS := $(filter-out libstorage_storage_driver,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_driver_%,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_executor,$(BUILD_TAGS))
 BUILD_TAGS := $(filter-out libstorage_storage_executor_%,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out libstorage_integration_driver_%,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out csi,$(BUILD_TAGS))
 endif
 
 ifneq (,$(findstring rexray_build_type_agent,$(BUILD_TAGS)))
@@ -75,6 +77,7 @@ REXRAY_BUILD_TYPE := controller
 EMBED_SCRIPTS := false
 EMBED_SCRIPTS_FLEXREX := false
 BUILD_TAGS := $(filter-out libstorage_integration_driver_%,$(BUILD_TAGS))
+BUILD_TAGS := $(filter-out csi,$(BUILD_TAGS))
 endif
 
 ifeq (true,$(BUILD_LIBSTORAGE_SERVER))

@@ -122,3 +122,4 @@ addons:
     - debhelper
     - dpkg
     - dpkg-dev
+    - fakeroot

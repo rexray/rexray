@@ -14,10 +14,6 @@ import:
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
 
-  - package: github.com/codedellemc/libstorage
-    version: v0.6.2 # libstorage-version
-    repo:    https://github.com/codedellemc/libstorage # libstorage-repo
-
   - package: github.com/akutz/gofig
     version: v0.1.6
   - package: github.com/akutz/gotil
@@ -27,10 +23,32 @@ import:
     ref:     d16db1e50e33dff1b6cdf37596cef36742128670
   - package: github.com/spf13/cobra
     ref:     7be4beda01ec05d0b93d80b3facd2b6f44080d94
-  - package: golang.org/x/net
-    repo:    https://github.com/golang/net
   - package: github.com/SermoDigital/jose
     version: 1.1
+
+
+################################################################################
+##                                   gRPC                                     ##
+################################################################################
+
+  - package: google.golang.org/grpc
+    version: v1.4.2
+    repo:    https://github.com/grpc/grpc-go
+  - package: github.com/golang/protobuf
+    version: 6a1fa9404c0aebf36c879bc50152edcc953910d2
+    repo:    https://github.com/golang/protobuf
+  
+
+################################################################################
+##                                  Golang X                                  ##
+################################################################################
+
+  - package: golang.org/x/net
+    version: 570fa1c91359c1869590e9cedf3b53162a51a167
+    repo:    https://github.com/golang/net
+  - package: golang.org/x/sys
+    version: 94b76065f2d2081d0fef24a6e67c571f51a6408a
+    repo:    https://github.com/golang/sys
 
 
 ################################################################################
@@ -39,13 +57,22 @@ import:
 
   - package: github.com/go-yaml/yaml
     ref:     feature/preserve-json-compat
-    repo:    https://github.com/akutz/yaml.git
+    repo:    https://github.com/akutz/yaml
   - package: gopkg.in/yaml.v1
     ref:     feature/preserve-json-compat
-    repo:    https://github.com/akutz/yaml.git
+    repo:    https://github.com/akutz/yaml
   - package: gopkg.in/yaml.v2
     ref:     feature/preserve-json-compat
-    repo:    https://github.com/akutz/yaml.git
+    repo:    https://github.com/akutz/yaml
+
+
+################################################################################
+##                                libStorage                                  ##
+################################################################################
+
+  - package: github.com/codedellemc/libstorage
+    version: v0.6.2 # libstorage-version
+    repo:    https://github.com/codedellemc/libstorage # libstorage-repo
 
 
 ################################################################################

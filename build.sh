@@ -117,7 +117,9 @@ usage() {
 }
 
 # the version of go to use
-GO_VERSION="1.8.1"
+GO_VERSION="${TRAVIS_GO_VERSION:-$(grep -A 1 '^go:' .travis.yml | \
+  tail -n 1 | \
+  awk '{print $2}')}"
 
 # the makeflags to use for make commands
 MAKEFLAGS=--no-print-directory

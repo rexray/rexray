@@ -15,7 +15,11 @@ GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
 
 ifneq (1,$(PORCELAIN))
 
-GO_VERSION := 1.8.1
+# define the go version to use
+GO_VERSION := $(TRAVIS_GO_VERSION)
+ifeq (,$(strip $(GO_VERSION)))
+GO_VERSION := $(shell grep -A 1 '^go:' .travis.yml | tail -n 1 | awk '{print $$2}')
+endif
 
 ifeq (undefined,$(origin BUILD_TAGS))
 BUILD_TAGS := gofig pflag libstorage_integration_driver_linux

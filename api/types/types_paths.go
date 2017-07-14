@@ -24,9 +24,6 @@ type PathConfig struct {
 	// TLS is the path to the tls directory.
 	TLS string
 
-	// LSX is the path to the executor.
-	LSX string
-
 	// DefaultTLSCertFile is the path to the default TLS cert file.
 	DefaultTLSCertFile string
 

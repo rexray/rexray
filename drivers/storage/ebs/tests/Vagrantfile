@@ -286,9 +286,7 @@ Vagrant.configure("2") do |config|
             "/glide.lock",
             "/lss-darwin", "/lss-linux",
             "/lsx-darwin", "/lsx-linux",
-            "/api/api_generated.go",
-            "/api/server/executors/bin/",
-            "/api/server/executors/executors_generated.go"]
+            "/api/api_generated.go"]
 
       # validate the copied sources
       node.vm.provision "shell" do |s|

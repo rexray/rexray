@@ -1,4 +1,4 @@
-// +build !libstorage_storage_executor libstorage_storage_executor_isilon
+// +build !libstorage_storage_driver libstorage_storage_driver_isilon
 
 package executor
 

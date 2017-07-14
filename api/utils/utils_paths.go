@@ -1,11 +1,9 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path"
-	"runtime"
 	"strings"
 
 	"github.com/akutz/gotil"
@@ -38,7 +36,6 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 		envVarHomeLib    = fmt.Sprintf("%s_HOME_LIB", ucTok)
 		envVarHomeLog    = fmt.Sprintf("%s_HOME_LOG", ucTok)
 		envVarHomeRun    = fmt.Sprintf("%s_HOME_RUN", ucTok)
-		envVarHomeLSX    = fmt.Sprintf("%s_HOME_LSX", ucTok)
 	)
 
 	// init the home dir
@@ -59,24 +56,8 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 	initPathConfigFieldWithEnvVar(ctx, envVarHomeLib, &pathConfig.Lib)
 	initPathConfigFieldWithEnvVar(ctx, envVarHomeLog, &pathConfig.Log)
 	initPathConfigFieldWithEnvVar(ctx, envVarHomeRun, &pathConfig.Run)
-	initPathConfigFieldWithEnvVar(ctx, envVarHomeLSX, &pathConfig.LSX)
 
-	var (
-		lsxNameBuf = &bytes.Buffer{}
-		root       = pathConfig.Home == "/"
-	)
-
-	fmt.Fprint(lsxNameBuf, "lsx-")
-	fmt.Fprint(lsxNameBuf, runtime.GOOS)
-	if runtime.GOARCH != "amd64" {
-		fmt.Fprint(lsxNameBuf, "-")
-		fmt.Fprint(lsxNameBuf, runtime.GOARCH)
-	}
-	if runtime.GOOS == "windows" {
-		fmt.Fprint(lsxNameBuf, ".exe")
-	}
-	lsx := lsxNameBuf.String()
-	ctx.WithField("lsx", lsx).Debug("lsx binary name")
+	root := pathConfig.Home == "/"
 
 	initPathConfigFieldWithPath(
 		ctx, root, true, token, pathConfig.Home, "etc", &pathConfig.Etc)
@@ -88,8 +69,6 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 		ctx, root, true, token, pathConfig.Home, "var/log", &pathConfig.Log)
 	initPathConfigFieldWithPath(
 		ctx, root, true, token, pathConfig.Home, "var/run", &pathConfig.Run)
-	initPathConfigFieldWithPath(
-		ctx, false, false, token, pathConfig.Lib, lsx, &pathConfig.LSX)
 	initPathConfigFieldWithPath(
 		ctx, false, false, token, pathConfig.TLS,
 		fmt.Sprintf("%s.crt", token), &pathConfig.DefaultTLSCertFile)

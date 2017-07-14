@@ -14,7 +14,6 @@ import (
 
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/server"
-	"github.com/codedellemc/libstorage/api/server/executors"
 	apitests "github.com/codedellemc/libstorage/api/tests"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
@@ -26,12 +25,7 @@ import (
 )
 
 var (
-	lsxbin string
-
-	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
-	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
-	//lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
-
+	
 	configYAML = []byte(`
 libstorage:
   driver: mock
@@ -577,24 +571,4 @@ func TestVolumeDetachAll(t *testing.T) {
 
 	}
 	apitests.Run(t, mock.Name, configYAML, tf)
-}
-
-func TestExecutors(t *testing.T) {
-	apitests.Run(t, mock.Name, configYAML, apitests.TestExecutors)
-}
-
-func TestExecutorHead(t *testing.T) {
-	apitests.RunGroup(
-		t, mock.Name, configYAML,
-		apitests.TestHeadExecutorLinux,
-		apitests.TestHeadExecutorDarwin)
-	//apitests.TestHeadExecutorWindows)
-}
-
-func TestExecutorGet(t *testing.T) {
-	apitests.RunGroup(
-		t, mock.Name, configYAML,
-		apitests.TestGetExecutorLinux,
-		apitests.TestGetExecutorDarwin)
-	//apitests.TestGetExecutorWindows)
 }

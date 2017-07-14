@@ -1,4 +1,4 @@
-// +build !libstorage_storage_executor libstorage_storage_executor_rbd
+// +build !libstorage_storage_driver libstorage_storage_driver_rbd
 
 package executor
 

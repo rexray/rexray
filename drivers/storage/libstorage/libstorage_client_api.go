@@ -1,8 +1,6 @@
 package libstorage
 
 import (
-	"io"
-
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
 )
@@ -318,48 +316,4 @@ func (c *client) SnapshotCopy(
 
 	ctx = c.withInstanceID(c.requireCtx(ctx), service)
 	return c.APIClient.SnapshotCopy(ctx, service, snapshotID, request)
-}
-
-func (c *client) Executors(
-	ctx types.Context) (map[string]*types.ExecutorInfo, error) {
-
-	if c.isController() {
-		return nil, utils.NewUnsupportedForClientTypeError(
-			c.clientType, "Executors")
-	}
-
-	ctx = c.requireCtx(ctx)
-	lsxInfo, err := c.APIClient.Executors(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for k, v := range lsxInfo {
-		c.lsxCache.Set(k, v)
-	}
-	return lsxInfo, nil
-}
-
-func (c *client) ExecutorHead(
-	ctx types.Context,
-	name string) (*types.ExecutorInfo, error) {
-
-	if c.isController() {
-		return nil, utils.NewUnsupportedForClientTypeError(
-			c.clientType, "ExecutorHead")
-	}
-
-	ctx = c.requireCtx(ctx)
-	return c.APIClient.ExecutorHead(ctx, name)
-}
-
-func (c *client) ExecutorGet(
-	ctx types.Context, name string) (io.ReadCloser, error) {
-
-	if c.isController() {
-		return nil, utils.NewUnsupportedForClientTypeError(
-			c.clientType, "ExecutorGet")
-	}
-
-	ctx = c.requireCtx(ctx)
-	return c.APIClient.ExecutorGet(ctx, name)
 }

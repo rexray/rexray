@@ -272,31 +272,6 @@ const (
         },
 
 
-        "executorInfo": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "The name of the executor."
-                },
-                "md5checksum": {
-                    "type": "string",
-                    "description": "The file's MD5 checksum. This can be used to determine if a local copy of the executor needs to be updated."
-                },
-                "size": {
-                    "type": "number",
-                    "description": "The size of the executor, in bytes."
-                },
-                "lastModified": {
-                    "type": "number",
-                    "description": "The time the executor was last modified as an epoch."
-                }
-            },
-            "required": [ "name", "md5checksum", "size", "lastModified" ],
-            "additionalProperties": false
-        },
-
-
         "nextDeviceInfo": {
             "type": "object",
             "properties": {
@@ -385,15 +360,6 @@ const (
             "type": "object",
             "patternProperties": {
                 "^.+$": { "$ref": "#/definitions/serviceInfo" }
-            },
-            "additionalProperties": false
-        },
-
-
-        "executorInfoMap": {
-            "type": "object",
-            "patternProperties": {
-                "^.+$": { "$ref": "#/definitions/executorInfo" }
             },
             "additionalProperties": false
         },

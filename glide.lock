@@ -1,5 +1,5 @@
-hash: 250fcf1151e48de75dd8df2373bfed14de723f0318ee0673b04d83a8bdb2a2de
-updated: 2017-05-02T09:48:00.725438134-07:00
+hash: bcdb624efefae9fa165abbe606b76e3f63a242a21a1dd86d2e59b3c1b435307a
+updated: 2017-07-13T11:36:08.015962419-05:00
 imports:
 - name: cloud.google.com/go
   version: e4de3dc4493f142c5833f3185e1182025a61f805
@@ -151,9 +151,6 @@ imports:
   - json/token
 - name: github.com/jmespath/go-jmespath
   version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
-- name: github.com/jteeuwen/go-bindata
-  version: 1dd44b25b79c4d9060e582e90798e4d72537818c
-  repo: https://github.com/akutz/go-bindata
 - name: github.com/kardianos/osext
   version: 9d302b58e975387d0b4d9be876622c86cefe64be
 - name: github.com/kr/fs

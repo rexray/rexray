@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/codedellemc/libstorage/api/server"
-	"github.com/codedellemc/libstorage/api/server/executors"
 	apitests "github.com/codedellemc/libstorage/api/tests"
 	"github.com/codedellemc/libstorage/api/types"
 
@@ -23,11 +22,6 @@ import (
 )
 
 var (
-	lsxbin string
-
-	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
-	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
-
 	configYAML = []byte(`
 isilon:
   endpoint: https://172.17.177.230:8080

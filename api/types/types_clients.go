@@ -1,7 +1,6 @@
 package types
 
 import (
-	"io"
 	"strings"
 )
 
@@ -204,17 +203,4 @@ type APIClient interface {
 		ctx Context,
 		service, snapshotID string,
 		request *SnapshotCopyRequest) (*Snapshot, error)
-
-	// Executors returns information about the executors.
-	Executors(
-		ctx Context) (map[string]*ExecutorInfo, error)
-
-	// ExecutorHead returns information about an executor.
-	ExecutorHead(
-		ctx Context,
-		name string) (*ExecutorInfo, error)
-
-	// ExecutorGet downloads an executor.
-	ExecutorGet(
-		ctx Context, name string) (io.ReadCloser, error)
 }

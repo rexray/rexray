@@ -21,10 +21,11 @@ func init() {
 	registry.RegisterConfigReg(
 		"VFS",
 		func(ctx types.Context, r gofig.ConfigRegistration) {
+			vfsRoot := path.Join(context.MustPathConfig(ctx).Lib, "vfs")
 			r.Key(
 				gofig.String,
 				"",
-				path.Join(context.MustPathConfig(ctx).Lib, "vfs"),
+				vfsRoot,
 				"",
 				"vfs.root")
 		})

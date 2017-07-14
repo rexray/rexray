@@ -13,13 +13,6 @@ func (s *lss) GetServiceInfo(service string) *types.ServiceInfo {
 	return nil
 }
 
-func (s *lss) GetExecutorInfo(lsx string) *types.ExecutorInfo {
-	if obj, ok := s.Get(lsx).(*types.ExecutorInfo); ok {
-		return obj
-	}
-	return nil
-}
-
 func (s *lss) GetInstanceID(service string) *types.InstanceID {
 	return s.Store.GetInstanceID(service)
 }

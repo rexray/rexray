@@ -8,15 +8,13 @@ BUILD_TAGS :=   gofig \
 				libstorage_integration_driver_linux
 ifneq (true,$(TRAVIS))
 BUILD_TAGS +=   libstorage_storage_driver \
-				libstorage_storage_driver_vfs \
-				libstorage_storage_executor \
-				libstorage_storage_executor_vfs
+				libstorage_storage_driver_vfs
 endif
 endif
 
 ifneq (,$(DRIVERS))
-BUILD_TAGS += libstorage_storage_driver libstorage_storage_executor
-BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d) libstorage_storage_executor_$(d))
+BUILD_TAGS += libstorage_storage_driver
+BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d))
 endif
 
 ifneq (,$(BUILD_TAGS))
@@ -184,11 +182,8 @@ DSRCS := $(filter-out glide.lock.d,$(DSRCS))
 endif
 DPROG1_NAME := lss-$(DGOOS)
 DPROG1_PATH := /go/bin/$(DPROG1_NAME)
-DPROG2_NAME := lsx-$(DGOOS)
-DPROG2_PATH := /go/bin/$(DPROG2_NAME)
 ifneq (linux,$(DGOOS))
 DPROG1_PATH := /go/bin/$(DGOOS)_$(DGOARCH)/$(DPROG1_NAME)
-DPROG2_PATH := /go/bin/$(DGOOS)_$(DGOARCH)/$(DPROG2_NAME)
 endif
 ifeq (darwin,$(DGOHOSTOS))
 DTARC := -
@@ -237,15 +232,10 @@ endif
 
 docker-build: docker-init
 	@docker cp $(DNAME):$(DPROG1_PATH) $(DPROG1_NAME)
-	@docker cp $(DNAME):$(DPROG2_PATH) $(DPROG2_NAME)
 	@bytes=$$(stat --format '%s' $(DPROG1_NAME) 2> /dev/null || \
 		stat -f '%z' $(DPROG1_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
 		printf "\nThe $(DPROG1_NAME) binary is $${mb}MB and located at: \n\n" && \
 		printf "  ./$(DPROG1_NAME)\n\n"
-	@bytes=$$(stat --format '%s' $(DPROG2_NAME) 2> /dev/null || \
-		stat -f '%z' $(DPROG2_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
-		printf "\nThe $(DPROG2_NAME) binary is $${mb}MB and located at: \n\n" && \
-		printf "  ./$(DPROG2_NAME)\n\n"
 ifeq (1,$(DBUILD_ONCE))
 	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
 endif
@@ -598,28 +588,6 @@ endif #ifneq (1,$(VENDORED))
 
 
 ################################################################################
-##                                GOBINDATA                                   ##
-################################################################################
-GO_BINDATA := $(GOPATH)/bin/go-bindata
-go-bindata: $(GO_BINDATA)
-
-GO_BINDATA_IMPORT_PATH := vendor/github.com/jteeuwen/go-bindata/go-bindata
-ifneq (1,$(VENDORED))
-GO_BINDATA_IMPORT_PATH := $(ROOT_IMPORT_PATH)/$(GO_BINDATA_IMPORT_PATH)
-else
-GO_BINDATA_IMPORT_PATH := $(firstword $(subst /vendor/, ,$(ROOT_IMPORT_PATH)))/$(GO_BINDATA_IMPORT_PATH)
-endif
-
-ifneq (1,$(VENDORED))
-$(GO_BINDATA): $(GLIDE_LOCK_D)
-endif
-$(GO_BINDATA):
-	GOOS="" GOARCH="" go install $(GO_BINDATA_IMPORT_PATH)
-	@touch $@
-GO_DEPS += $(GO_BINDATA)
-
-
-################################################################################
 ##                               GOMETALINTER                                 ##
 ################################################################################
 ifeq (1,$(PRE_GO15))
@@ -957,216 +925,6 @@ $(LIBSTORAGE_SCHEMA_GENERATED): $(LIBSTORAGE_JSON)
 
 
 ################################################################################
-##                                 EXECUTORS                                  ##
-################################################################################
-
-# handle which executors are embedded
-ifeq (,$(strip $(EMED_EXECUTORS)))
-
-ifeq (linux_amd64,$(GOOS)_$(GOARCH))
-EMBED_EXECUTOR_LINUX_AMD64 ?= 1
-endif
-ifeq (linux_arm,$(GOOS)_$(GOARCH))
-EMBED_EXECUTOR_LINUX_ARM ?= 1
-endif
-ifeq (linux_arm64,$(GOOS)_$(GOARCH))
-EMBED_EXECUTOR_LINUX_ARM64 ?= 1
-endif
-ifeq (darwin_amd64,$(GOOS)_$(GOARCH))
-EMBED_EXECUTOR_DARWIN_AMD64 ?= 1
-endif
-ifeq (darwin_arm,$(GOOS)_$(GOARCH))
-EMBED_EXECUTOR_DARWIN_ARM ?= 1
-endif
-ifeq (darwin_arm64,$(GOOS)_$(GOARCH))
-EMBED_EXECUTOR_DARWIN_ARM64 ?= 1
-endif
-ifeq (windows_amd64,$(GOOS)_$(GOARCH))
-EMBED_EXECUTOR_WINDOWS_AMD64 ?= 1
-endif
-
-else
-
-EMBED_EXECUTOR_LINUX_AMD64 := 0
-EMBED_EXECUTOR_LINUX_ARM := 0
-EMBED_EXECUTOR_LINUX_ARM64 := 0
-EMBED_EXECUTOR_DARWIN_AMD64 := 0
-EMBED_EXECUTOR_DARWIN_ARM := 0
-EMBED_EXECUTOR_DARWIN_ARM64 := 0
-EMBED_EXECUTOR_WINDOWS_AMD64 := 0
-
-ifeq (linux_amd64,$(filter linux_amd64,$(EMED_EXECUTORS)))
-EMBED_EXECUTOR_LINUX_AMD64 := 1
-endif
-ifeq (linux_arm,$(filter linux_arm,$(EMED_EXECUTORS)))
-EMBED_EXECUTOR_LINUX_ARM := 1
-endif
-ifeq (linux_arm64,$(filter linux_arm64,$(EMED_EXECUTORS)))
-EMBED_EXECUTOR_LINUX_ARM64 := 1
-endif
-ifeq (darwin_amd64,$(filter darwin_amd64,$(EMED_EXECUTORS)))
-EMBED_EXECUTOR_DARWIN_AMD64 := 1
-endif
-ifeq (darwin_arm,$(filter darwin_arm,$(EMED_EXECUTORS)))
-EMBED_EXECUTOR_DARWIN_ARM := 1
-endif
-ifeq (darwin_arm64,$(filter darwin_arm64,$(EMED_EXECUTORS)))
-EMBED_EXECUTOR_DARWIN_ARM64 := 1
-endif
-ifeq (windows_amd64,$(filter windows_amd64,$(EMED_EXECUTORS)))
-EMBED_EXECUTOR_WINDOWS_AMD64 := 1
-endif
-
-endif #ifneq (,$(strip $(EMED_EXECUTORS)))
-
-
-EXECUTOR_LINUX := $(shell env GOOS=linux GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
-EXECUTOR_LINUX_ARM := $(shell env GOOS=linux GOARCH=arm go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
-EXECUTOR_LINUX_ARM64 := $(shell env GOOS=linux GOARCH=arm64 go list -f '{{.Target}}' ./cli/lsx/lsx-linux)
-EXECUTOR_DARWIN := $(shell env GOOS=darwin GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
-EXECUTOR_DARWIN_ARM := $(shell env GOOS=darwin GOARCH=arm go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
-EXECUTOR_DARWIN_ARM64 := $(shell env GOOS=darwin GOARCH=arm64 go list -f '{{.Target}}' ./cli/lsx/lsx-darwin)
-EXECUTOR_WINDOWS := $(shell env GOOS=windows GOARCH=amd64 go list -f '{{.Target}}' ./cli/lsx/lsx-windows)
-
-EXECUTORS_BINDIR := ./api/server/executors/bin
-EXECUTOR_LINUX_EMBED := $(EXECUTORS_BINDIR)/lsx-linux
-EXECUTOR_LINUX_ARM_EMBED := $(EXECUTORS_BINDIR)/lsx-linux-arm
-EXECUTOR_LINUX_ARM64_EMBED := $(EXECUTORS_BINDIR)/lsx-linux-arm64
-EXECUTOR_DARWIN_EMBED := $(EXECUTORS_BINDIR)/lsx-darwin
-EXECUTOR_DARWIN_ARM_EMBED := $(EXECUTORS_BINDIR)/lsx-darwin-arm
-EXECUTOR_DARWIN_ARM64_EMBED := $(EXECUTORS_BINDIR)/lsx-darwin-arm64
-EXECUTOR_WINDOWS_EMBED := $(EXECUTORS_BINDIR)/lsx-windows.exe
-
-build-executor-linux: $(EXECUTOR_LINUX_EMBED)
-build-executor-linux-arm: $(EXECUTOR_LINUX_ARM_EMBED)
-build-executor-linux-arm64: $(EXECUTOR_LINUX_ARM64_EMBED)
-build-executor-darwin: $(EXECUTOR_DARWIN_EMBED)
-build-executor-darwin-arm: $(EXECUTOR_DARWIN_ARM_EMBED)
-build-executor-darwin-arm64: $(EXECUTOR_DARWIN_ARM64_EMBED)
-build-executor-windows: $(EXECUTOR_WINDOWS_EMBED)
-
-clean-executor-linux:
-	rm -f $(EXECUTOR_LINUX_EMBED)
-clean-executor-linux-arm:
-	rm -f $(EXECUTOR_LINUX_ARM_EMBED)
-clean-executor-linux-arm64:
-	rm -f $(EXECUTOR_LINUX_ARM64_EMBED)
-
-clean-executor-darwin:
-	rm -f $(EXECUTOR_DARWIN_EMBED)
-clean-executor-darwin-arm:
-	rm -f $(EXECUTOR_DARWIN_ARM_EMBED)
-clean-executor-darwin-arm64:
-	rm -f $(EXECUTOR_DARWIN_ARM64_EMBED)
-
-clean-executor-windows:
-	rm -f $(EXECUTOR_WINDOWS_EMBED)
-
-EXECUTORS_GENERATED := ./api/server/executors/executors_generated.go
-API_SERVER_EXECUTORS_A := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(ROOT_IMPORT_PATH)/api/server/executors.a
-
-define EXECUTOR_RULES
-
-LSX_EMBEDDED_$2_$3_FILENAME := $$(notdir $1)
-LSX_EMBEDDED_$2_$3 := $$(EXECUTORS_BINDIR)/$$(LSX_EMBEDDED_$2_$3_FILENAME)
-
-# add the GOARCH extension to the executor if the architecture is
-# anything other than amd64
-ifneq (amd64,$3)
-
-# for windows platforms it's necessary to slice the .exe off the
-# end of the executor filename and add the GOARCH before it
-ifeq (windows,$2)
-LSX_EMBEDDED_$2_$3_BASENAME := $$(basename $$(LSX_EMBEDDED_$2_$3_FILENAME))
-LSX_EMBEDDED_$2_$3_BASEDIR := $$(EXECUTORS_BINDIR)/$$(LSX_EMBEDDED_$2_$3_BASENAME)
-LSX_EMBEDDED_$2_$3 := $$(LSX_EMBEDDED_$2_$3_BASEDIR)-$3.exe
-
-# simply add -GOARCH suffix to non-windows platforms
-else
-LSX_EMBEDDED_$2_$3 := $$(LSX_EMBEDDED_$2_$3)-$3
-endif
-endif
-
-ifneq ($2_$3,$$(GOOS)_$$(GOARCH))
-$1:
-	BUILD_TAGS="$$(BUILD_TAGS)" GOOS="$2" GOARCH="$3" $$(MAKE) $$@
-$1-clean:
-	rm -f $1
-	rm -f $(EXECUTORS_GENERATED)
-GO_PHONY += $1-clean
-GO_CLEAN += $1-clean
-endif
-
-$$(LSX_EMBEDDED_$2_$3): $1
-	@mkdir -p $$(@D)
-	cp -f $$? $$@
-
-ifeq (linux,$2)
-
-ifeq (amd64,$3)
-ifeq (1,$$(EMBED_EXECUTOR_LINUX_AMD64))
-EXECUTORS_EMBEDDED += $$(EXECUTOR_LINUX_EMBED)
-endif
-endif
-
-ifeq (arm,$3)
-ifeq (1,$$(EMBED_EXECUTOR_LINUX_ARM))
-EXECUTORS_EMBEDDED += $$(EXECUTOR_LINUX_ARM_EMBED)
-endif
-endif # ifeq (arm,$$(GOARCH))
-
-ifeq (arm64,$3)
-ifeq (1,$$(EMBED_EXECUTOR_LINUX_ARM64))
-EXECUTORS_EMBEDDED += $$(EXECUTOR_LINUX_ARM64_EMBED)
-endif
-endif # ifeq (arm64,$$(GOARCH))
-
-endif # ifeq (linux,$2)
-
-ifeq (darwin,$2)
-
-ifeq (amd64,$3)
-ifeq (1,$$(EMBED_EXECUTOR_DARWIN_AMD64))
-EXECUTORS_EMBEDDED += $$(EXECUTOR_DARWIN_EMBED)
-endif
-endif
-
-ifeq (arm,$3)
-ifeq (1,$$(EMBED_EXECUTOR_DARWIN_ARM))
-EXECUTORS_EMBEDDED += $$(EXECUTOR_DARWIN_ARM_EMBED)
-endif
-endif # ifeq (arm,$$(GOARCH))
-
-ifeq (arm64,$3)
-ifeq (1,$$(EMBED_EXECUTOR_DARWIN_ARM64))
-EXECUTORS_EMBEDDED += $$(EXECUTOR_DARWIN_ARM64_EMBED)
-endif
-endif # ifeq (arm64,$$(GOARCH))
-
-endif # ifeq (darwin,$2)
-
-endef
-
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX),linux,amd64))
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX_ARM),linux,arm))
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_LINUX_ARM64),linux,arm64))
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN),darwin,amd64))
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN_ARM),darwin,arm))
-$(eval $(call EXECUTOR_RULES,$(EXECUTOR_DARWIN_ARM64),darwin,arm64))
-#$(eval $(call EXECUTOR_RULES,$(EXECUTOR_WINDOWS),windows))
-
-$(EXECUTORS_GENERATED): $(EXECUTORS_EMBEDDED)
-	$(GO_BINDATA) -md5checksum -pkg executors -prefix $(@D)/bin -o $@ $(@D)/bin/...
-
-$(EXECUTORS_GENERATED)-clean:
-	rm -fr $(dir $(EXECUTORS_GENERATED))/bin
-GO_PHONY += $(EXECUTORS_GENERATED)-clean
-GO_CLEAN += $(EXECUTORS_GENERATED)-clean
-
-$(API_SERVER_EXECUTORS_A): $(EXECUTORS_GENERATED)
-
-
-################################################################################
 ##                                    C                                       ##
 ################################################################################
 CC := gcc -Wall -pedantic -std=c99
@@ -1381,14 +1139,11 @@ deps: $(GO_DEPS)
 
 build-tests: $(GO_BUILD_TESTS)
 
-build-lsx: $(EXECUTORS_EMBEDDED)
-
 build-lss: $(LSS_ALL)
 
 build-libstorage: $(GO_BUILD)
 
 build-generated:
-	$(MAKE) build-lsx
 	$(MAKE) $(API_GENERATED_SRC)
 
 build-client-nogofig:
@@ -1396,11 +1151,7 @@ build-client-nogofig:
 
 
 clean-build:
-	rm -fr $(API_GENERATED_SRC) \
-	       $(EXECUTORS_BINDIR) \
-	       $(EXECUTORS_GENERATED) \
-	       $(GOPATH)/bin/lsx-* \
-	       $(GOPATH)/bin/*/lsx-*
+	rm -fr $(API_GENERATED_SRC)
 	$(MAKE) build
 
 build:

@@ -489,32 +489,6 @@ libstorage:
 		tCtx, t, oce, vfs.Name, buf.Bytes(), tf)
 }
 
-func TestExecutors(t *testing.T) {
-	apitests.RunWithContext(tCtx, t, vfs.Name, newTestConfig(t), apitests.TestExecutors)
-}
-
-func TestExecutorsWithControllerClient(t *testing.T) {
-	apitests.RunWithContextClientType(
-		tCtx, t, types.ControllerClient, vfs.Name, newTestConfig(t),
-		apitests.TestExecutorsWithControllerClient)
-}
-
-func TestExecutorHead(t *testing.T) {
-	apitests.RunGroupWithContext(
-		tCtx, t, vfs.Name, newTestConfig(t),
-		apitests.TestHeadExecutorLinux)
-	//apitests.TestHeadExecutorDarwin)
-	//apitests.TestHeadExecutorWindows)
-}
-
-func TestExecutorGet(t *testing.T) {
-	apitests.RunGroupWithContext(
-		tCtx, t, vfs.Name, newTestConfig(t),
-		apitests.TestGetExecutorLinux)
-	//	apitests.TestGetExecutorDarwin)
-	//apitests.TestGetExecutorWindows)
-}
-
 func TestStorageDriverVolumes(t *testing.T) {
 	apitests.RunWithContext(tCtx, t, vfs.Name, newTestConfig(t),
 		func(config gofig.Config, client types.Client, t *testing.T) {

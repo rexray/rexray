@@ -2,10 +2,7 @@ package client
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fmt"
-	"io"
-	"strconv"
 
 	"github.com/codedellemc/libstorage/api/types"
 )
@@ -322,50 +319,4 @@ func (c *client) SnapshotCopy(
 		return nil, err
 	}
 	return &reply, nil
-}
-
-func (c *client) Executors(
-	ctx types.Context) (map[string]*types.ExecutorInfo, error) {
-
-	reply := map[string]*types.ExecutorInfo{}
-	if _, err := c.httpGet(ctx, "/executors", &reply); err != nil {
-		return nil, err
-	}
-	return reply, nil
-}
-
-func (c *client) ExecutorHead(
-	ctx types.Context,
-	name string) (*types.ExecutorInfo, error) {
-
-	res, err := c.httpHead(ctx, fmt.Sprintf("/executors/%s", name))
-	if err != nil {
-		return nil, err
-	}
-
-	size, err := strconv.ParseInt(res.Header.Get("Content-Length"), 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	buf, err := base64.StdEncoding.DecodeString(res.Header.Get("Content-MD5"))
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ExecutorInfo{
-		Name:        name,
-		Size:        size,
-		MD5Checksum: fmt.Sprintf("%x", buf),
-	}, nil
-}
-
-func (c *client) ExecutorGet(
-	ctx types.Context, name string) (io.ReadCloser, error) {
-
-	res, err := c.httpGet(ctx, fmt.Sprintf("/executors/%s", name), nil)
-	if err != nil {
-		return nil, err
-	}
-	return res.Body, nil
 }

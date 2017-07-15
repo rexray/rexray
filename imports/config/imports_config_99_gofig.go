@@ -80,8 +80,6 @@ func init() {
 			rk(gofig.Int, 300, "", types.ConfigHTTPWriteTimeout)
 			rk(gofig.Int, 300, "", types.ConfigHTTPReadTimeout)
 
-			rk(gofig.String, pathConfig.LSX, "", types.ConfigExecutorPath)
-
 			rk(gofig.Bool, false, "", types.ConfigExecutorNoDownload)
 			rk(gofig.Bool, false, "", types.ConfigIgVolOpsMountPreempt)
 			rk(gofig.Int, 0, "", types.ConfigIgVolOpsMountRetryCount)

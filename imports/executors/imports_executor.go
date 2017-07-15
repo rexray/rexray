@@ -1,4 +1,4 @@
-// +build !libstorage_storage_executor
+// +build !libstorage_storage_driver
 
 package executors
 

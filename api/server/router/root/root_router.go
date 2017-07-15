@@ -26,7 +26,6 @@ func (r *router) root(
 	rootURL := fmt.Sprintf("%s://%s", proto, req.Host)
 
 	reply := []string{
-		fmt.Sprintf("%s/executors", rootURL),
 		fmt.Sprintf("%s/services", rootURL),
 		fmt.Sprintf("%s/snapshots", rootURL),
 		fmt.Sprintf("%s/tasks", rootURL),

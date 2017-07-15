@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"runtime"
 	"strconv"
 	"sync"
 	"testing"
@@ -24,19 +23,12 @@ import (
 	"github.com/codedellemc/libstorage/api/context"
 	"github.com/codedellemc/libstorage/api/registry"
 	apiserver "github.com/codedellemc/libstorage/api/server"
-	"github.com/codedellemc/libstorage/api/server/executors"
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/client"
 )
 
 var (
-	lsxbin string
-
-	lsxLinuxInfo, _  = executors.ExecutorInfoInspect("lsx-linux", false)
-	lsxDarwinInfo, _ = executors.ExecutorInfoInspect("lsx-darwin", false)
-	// lsxWindowsInfo, _ = executors.ExecutorInfoInspect("lsx-windows.exe", false)
-
 	tcpTest bool
 
 	tcpTLSTest, _ = strconv.ParseBool(
@@ -67,11 +59,6 @@ func init() {
 	}
 
 	goof.IncludeFieldsInFormat = true
-	if runtime.GOOS == "windows" {
-		lsxbin = "lsx-windows.exe"
-	} else {
-		lsxbin = fmt.Sprintf("lsx-%s", runtime.GOOS)
-	}
 
 	var err error
 	tcpTest, err = strconv.ParseBool(os.Getenv("LIBSTORAGE_TEST_TCP"))

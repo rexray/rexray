@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
 
 	"github.com/akutz/gotil"
 	"github.com/codedellemc/libstorage/api/context"
@@ -68,15 +67,6 @@ var _ = Describe("Paths", func() {
 			It("Run should be $HOME/.libstorage/var/run", func() {
 				Ω(pathConfig.Run).To(Σ(homeDir, ".libstorage", "var", "run"))
 			})
-			It(
-				fmt.Sprintf(
-					"LSX should be $HOME/.libstorage/var/lib/lsx-%s",
-					runtime.GOOS),
-				func() {
-					Ω(pathConfig.LSX).To(Σ(
-						homeDir, ".libstorage", "var", "lib",
-						fmt.Sprintf("lsx-%s", runtime.GOOS)))
-				})
 			It("tls crt should be $HOME/.libstorage/etc/tls/libstorage.crt",
 				func() {
 					Ω(pathConfig.DefaultTLSCertFile).To(Σ(
@@ -138,15 +128,6 @@ var _ = Describe("Paths", func() {
 			It("Run should be tmpDir/var/run", func() {
 				Ω(pathConfig.Run).To(Σ(tmpDir, "var", "run"))
 			})
-			It(
-				fmt.Sprintf(
-					"LSX should be tmpDir/var/lib/lsx-%s",
-					runtime.GOOS),
-				func() {
-					Ω(pathConfig.LSX).To(Σ(
-						tmpDir, "var", "lib",
-						fmt.Sprintf("lsx-%s", runtime.GOOS)))
-				})
 			It("tls crt should be tmpDir/etc/tls/libstorage.crt",
 				func() {
 					Ω(pathConfig.DefaultTLSCertFile).To(Σ(
@@ -208,15 +189,6 @@ var _ = Describe("Paths", func() {
 			It("Run should be $HOME/.rexray/var/run", func() {
 				Ω(pathConfig.Run).To(Σ(homeDir, ".rexray", "var", "run"))
 			})
-			It(
-				fmt.Sprintf(
-					"LSX should be $HOME/.rexray/var/lib/lsx-%s",
-					runtime.GOOS),
-				func() {
-					Ω(pathConfig.LSX).To(Σ(
-						homeDir, ".rexray", "var", "lib",
-						fmt.Sprintf("lsx-%s", runtime.GOOS)))
-				})
 			It("tls crt should be $HOME/.rexray/etc/tls/rexray.crt",
 				func() {
 					Ω(pathConfig.DefaultTLSCertFile).To(Σ(
@@ -281,15 +253,6 @@ var _ = Describe("Paths", func() {
 			It("Run should be $HOME/.rexray/var/run", func() {
 				Ω(pathConfig.Run).To(Σ(homeDir, ".rexray", "var", "run"))
 			})
-			It(
-				fmt.Sprintf(
-					"LSX should be $HOME/.rexray/var/lib/lsx-%s",
-					runtime.GOOS),
-				func() {
-					Ω(pathConfig.LSX).To(Σ(
-						homeDir, ".rexray", "var", "lib",
-						fmt.Sprintf("lsx-%s", runtime.GOOS)))
-				})
 			It("tls crt should be tmpDir/rexray.crt",
 				func() {
 					Ω(pathConfig.DefaultTLSCertFile).To(Σ(
@@ -353,15 +316,6 @@ var _ = Describe("Paths", func() {
 			It("Run should be tmpDir/var/run", func() {
 				Ω(pathConfig.Run).To(Σ(tmpDir, "var", "run"))
 			})
-			It(
-				fmt.Sprintf(
-					"LSX should be tmpDir/var/lib/lsx-%s",
-					runtime.GOOS),
-				func() {
-					Ω(pathConfig.LSX).To(Σ(
-						tmpDir, "var", "lib",
-						fmt.Sprintf("lsx-%s", runtime.GOOS)))
-				})
 			It("tls crt should be tmpDir/etc/tls/rexray.crt",
 				func() {
 					Ω(pathConfig.DefaultTLSCertFile).To(Σ(
@@ -392,19 +346,17 @@ var _ = Describe("Paths", func() {
 				})
 		})
 
-		Context("With LIBSTORAGE_HOME and LIBSTORAGE_HOME_LSX", func() {
+		Context("With LIBSTORAGE_HOME", func() {
 
 			var pathConfig *types.PathConfig
 
 			BeforeEach(func() {
 				Ω(tmpDir).ShouldNot(BeEmpty())
 				os.Setenv("LIBSTORAGE_HOME", tmpDir)
-				os.Setenv("LIBSTORAGE_HOME_LSX", "/bin/ls")
 				pathConfig = utils.NewPathConfig(context.Background(), "", "")
 			})
 			AfterEach(func() {
 				os.Setenv("LIBSTORAGE_HOME", "")
-				os.Setenv("LIBSTORAGE_HOME_LSX", "")
 				pathConfig = nil
 			})
 
@@ -425,9 +377,6 @@ var _ = Describe("Paths", func() {
 			})
 			It("Run should be tmpDir/var/run", func() {
 				Ω(pathConfig.Run).To(Σ(tmpDir, "var", "run"))
-			})
-			It("LSX should be /bin/ls", func() {
-				Ω(pathConfig.LSX).To(Σ("/bin", "ls"))
 			})
 			It("tls crt should be tmpDir/etc/tls/libstorage.crt",
 				func() {

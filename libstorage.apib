@@ -231,7 +231,6 @@ Gets a list of the API's top-level resources.
     + Body
 
             [
-                "/executors",
                 "/services",
                 "/volumes",
                 "/snapshots"
@@ -376,139 +375,6 @@ Internal server error
     + Schema
 
             { "$ref": "https://raw.githubusercontent.com/codedellemc/libstorage/master/libstorage.json#/definitions/internalServerError" }
-
-# Group Executors
-A collection of resources and actions related to libStorage's client-side
-executors.
-
-# Executors Collection [/executors]
-
-## Get [GET]
-Gets the executors collection.
-
-+ Response 200 (application/json)
-
-    + Body
-
-            {
-                "lsx-darwin": {
-                    "name": "lsx-darwin",
-                    "md5checksum": "6f491e62fe434adb15606bd0a2b6a938",
-                    "size": 11572748
-                },
-                "lsx-linux": {
-                    "name": "lsx-linux",
-                    "md5checksum": "52c108e3ef6b936e10148fa7c3882be8",
-                    "size": 11626296
-                },
-                "lsx-windows.exe": {
-                    "name": "lsx-windows.exe",
-                    "md5checksum": "2d5d2facad103b3cb53ebf1423e2ec3b",
-                    "size": 11495424
-                }
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/codedellemc/libstorage/master/libstorage.json#/definitions/executorInfoMap" }
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/codedellemc/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
-
-## Download [GET /executors/{executor}]
-Downloads an executor.
-
-+ Parameters
-
-    + executor: `lsx-windows.exe` (string, required)
-
-+ Response 200
-
-    + Headers
-
-            Accept-Ranges: bytes
-            Content-Length: 11495424
-            Content-Md5: LV0vrK0QOzy1Pr8UI+LsOw==
-            Content-Type: application/octet-stream
-            Last-Modified: Thu, 14 Apr 2016 20:54:17 CDT
-
-+ Response 401 (application/json)
-Unauthorized request
-
-    + Body
-
-            {
-                "type":      "unauthorizedRequest",
-                "httpStatus": 401,
-                "message":   "The requestor is unauthorized to access this resource"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/codedellemc/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
-
-+ Response 404 (application/json)
-The specified resource was not found
-
-    + Body
-
-            {
-                "type":      "resourceNotFound",
-                "httpStatus": 404,
-                "message":   "The requested resource was not found"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/codedellemc/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
-
-+ Response 500 (application/json)
-Internal server error
-
-    + Body
-
-            {
-                "type":      "internalServerError",
-                "httpStatus": 500,
-                "message":   "An internal server error occurred"
-            }
-
-    + Schema
-
-            { "$ref": "https://raw.githubusercontent.com/codedellemc/libstorage/master/libstorage.json#/definitions/internalServerError" }
-
-## Inspect [HEAD /executors/{executor}]
-Inspects an executor. This operation is functionally equivalent to downloading an executor, except the body is not returned, only the headers.
-
-+ Parameters
-
-    + executor: `lsx-windows.exe` (string, required)
-
-+ Response 200
-
-    + Headers
-
-            Accept-Ranges: bytes
-            Content-Length: 11495424
-            Content-Md5: LV0vrK0QOzy1Pr8UI+LsOw==
-            Content-Type: application/octet-stream
-            Last-Modified: Thu, 14 Apr 2016 20:54:17 CDT
-
-+ Response 401
-+ Response 404
-+ Response 500
 
 # Group Volumes
 A collection of resources and actions related to libStorage Volumes.
@@ -2373,7 +2239,6 @@ The DriverInfo object contains information about a registered driver.
 + name (string, required)
 + type (object, required)
 + nextDevice (NextDeviceInfo)
-+ executors (array[ExecutorInfo])
 
 ## NextDeviceInfo (object)
 NextDeviceInfo assists the libStorage client in determining the
@@ -2393,20 +2258,6 @@ request to the server.
 + ignore (boolean)
 + prefix (string)
 + pattern (string)
-
-## ExecutorInfo
-ExecutorInfo contains information about a client-side executor, such as
-its name and MD5 checksum.
-
-### Properties
-+ name (string, optional) - The file name of the executor.
-
-    The name include's the file name extension as well.
-
-+ md5Checksum (string, optional) - MD5Checksum is the MD5 checksum of the executor.
-
-    This can be used to determine if a local copy of the executor needs to be
-    updated.
 
 ## Volume (object, fixed)
 A single Volume object. A central part of the libStorage

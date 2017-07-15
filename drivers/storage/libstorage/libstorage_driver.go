@@ -2,11 +2,9 @@ package libstorage
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"path"
 	"strings"
 	"time"
 
@@ -165,11 +163,6 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 
 	pathConfig := context.MustPathConfig(d.ctx)
 
-	lsxBinName := path.Base(pathConfig.LSX)
-	lsxMutexName := fmt.Sprintf("%s.lock", lsxBinName)
-	lsxMutexPath := path.Join(pathConfig.Run, lsxMutexName)
-	logFields["lsxMutexPath"] = lsxMutexPath
-
 	d.client = client{
 		APIClient:    apiClient,
 		ctx:          d.ctx,
@@ -177,7 +170,6 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		tlsConfig:    tlsConfig,
 		pathConfig:   pathConfig,
 		clientType:   cliType,
-		lsxMutexPath: lsxMutexPath,
 		serviceCache: &lss{Store: utils.NewStore()},
 	}
 

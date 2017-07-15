@@ -11,12 +11,12 @@ os:
   - linux
 
 env:
-  - TRAVIS_GOARCH=amd64 BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
-  - TRAVIS_GOARCH=arm BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
-  - TRAVIS_GOARCH=arm64 BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
-  - VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
-  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
-  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+  - TRAVIS_GOARCH=amd64 BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
+  - TRAVIS_GOARCH=arm BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
+  - TRAVIS_GOARCH=arm64 BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
+  - VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
+  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
+  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
   - BUILD_TAGS="gofig pflag libstorage_integration_driver_linux"
   - BUILD_TAGS=""
 
@@ -28,23 +28,23 @@ matrix:
     - go: tip
   exclude:
     - go: 1.6.3
-      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: 1.6.3
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: 1.6.3
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: 1.7.5
-      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: 1.7.5
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: 1.7.5
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: tip
-      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: tip
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
     - go: tip
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs libstorage_storage_executor libstorage_storage_executor_vfs"
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
 
 before_install:
   - export GOARCH="${TRAVIS_GOARCH:-amd64}"

@@ -11,44 +11,6 @@ import (
 type DeviceScanType int
 
 const (
-	// LSXExitCodeNotImplemented is the exit code the executor binary uses to
-	// indicate a function is not implemented for a given storage driver on the
-	// current system.
-	LSXExitCodeNotImplemented = 2
-
-	// LSXExitCodeTimedOut is the exit code the executor binary uses to indicate
-	// a function timed out.
-	LSXExitCodeTimedOut = 255
-
-	// LSXCmdInstanceID is the command to execute to get the instance ID.
-	LSXCmdInstanceID = "instanceID"
-
-	// LSXCmdLocalDevices is the command to execute to get the local devices
-	// map.
-	LSXCmdLocalDevices = "localDevices"
-
-	// LSXCmdNextDevice is the command to execute to get the next device.
-	LSXCmdNextDevice = "nextDevice"
-
-	// LSXCmdWaitForDevice is the command to execute to wait until a device,
-	// identified by volume ID, is presented to the system.
-	LSXCmdWaitForDevice = "wait"
-
-	// LSXCmdSupported is the command to execute to find out if an executor
-	// is valid for a given platform on the current host.
-	LSXCmdSupported = "supported"
-
-	// LSXCmdMount is the command for mounting a device to a file system path.
-	LSXCmdMount = "mount"
-
-	// LSXCmdUmount is the command for unmounting mounted file systems.
-	LSXCmdUmount = "umount"
-
-	// LSXCmdMounts is the command for getting a list of mount info objects.
-	LSXCmdMounts = "mounts"
-)
-
-const (
 
 	// DeviceScanQuick performs a shallow, quick scan.
 	DeviceScanQuick DeviceScanType = iota

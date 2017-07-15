@@ -1,4 +1,4 @@
-// +build !libstorage_storage_executor libstorage_storage_executor_cinder
+// +build !libstorage_storage_driver libstorage_storage_driver_cinder
 
 package executor
 
@@ -10,8 +10,6 @@ import (
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
 	"github.com/codedellemc/libstorage/drivers/storage/cinder"
-	// the next import initializes and registers the OS drivers
-	_ "github.com/codedellemc/libstorage/imports/local"
 
 	"encoding/json"
 	"io/ioutil"

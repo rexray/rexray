@@ -32,9 +32,6 @@ type ServiceSnapshotMap map[string]SnapshotMap
 // ServicesMap is the response when getting one to many ServiceInfos.
 type ServicesMap map[string]*ServiceInfo
 
-// ExecutorsMap is the response when getting one to many ExecutorInfos.
-type ExecutorsMap map[string]*ExecutorInfo
-
 // Instance provides information about a storage object.
 type Instance struct {
 	// The ID of the instance to which the object is connected.
@@ -276,24 +273,6 @@ type VolumeDevice struct {
 
 	// Fields are additional properties that can be defined for this type.
 	Fields map[string]string `json:"fields,omitempty" yaml:",omitempty"`
-}
-
-// ExecutorInfo contains information about a client-side executor, such as
-// its name and MD5 checksum.
-type ExecutorInfo struct {
-
-	// Name is the name of the executor.
-	Name string `json:"name"`
-
-	// MD5Checksum is the MD5 checksum of the executor. This can be used to
-	// determine if a local copy of the executor needs to be updated.
-	MD5Checksum string `json:"md5checksum" yaml:"md5checksum"`
-
-	// Size is the size of the executor in bytes.
-	Size int64 `json:"size"`
-
-	// LastModified is the time the executor was last modified as an epoch.
-	LastModified int64 `json:"lastModified" yaml:"lastModified"`
 }
 
 // ServiceInfo is information about a service.

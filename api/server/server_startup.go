@@ -109,9 +109,6 @@ func (s *server) PrintServerStartupHeader(w io.Writer) {
 	n, _ = fmt.Fprintf(b, "##        run:      %s", pathConfig.Run)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##        lsx:      %s", pathConfig.LSX)
-	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
-	fmt.Fprintln(b, "##")
 
 	fmt.Fprintln(b, barl)
 

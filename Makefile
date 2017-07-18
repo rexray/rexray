@@ -1,6 +1,10 @@
 SHELL := /bin/bash
 
-GO_VERSION := 1.8
+# define the go version to use
+GO_VERSION := $(TRAVIS_GO_VERSION)
+ifeq (,$(strip $(GO_VERSION)))
+GO_VERSION := $(shell grep -A 1 '^go:' .travis.yml | tail -n 1 | awk '{print $$2}')
+endif
 
 # add DRIVERS to the list of Go build tags stored in BUILD_TAGS
 ifneq (,$(strip $(DRIVERS)))
@@ -11,7 +15,6 @@ endif
 ifneq (,$(strip $(BUILD_TAGS)))
 BUILD_TAGS := $(sort $(BUILD_TAGS))
 endif
-
 
 all:
 # if docker is running, then let's use docker to build it
@@ -297,11 +300,6 @@ GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
 GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
-ifneq (,$(TRAVIS_GO_VERSION))
-GOVERSION := $(TRAVIS_GO_VERSION)
-else
-GOVERSION := $(shell go version | awk '{print $$3}' | cut -c3-)
-endif
 
 ifeq ($(GO_VERSION),$(TRAVIS_GO_VERSION))
 ifeq (linux,$(TRAVIS_OS_NAME))
@@ -312,11 +310,11 @@ endif
 # explicitly enable vendoring for Go 1.5.x versions.
 GO15VENDOREXPERIMENT := 1
 
-ifneq (,$(strip $(findstring 1.3.,$(TRAVIS_GO_VERSION))))
+ifneq (,$(strip $(findstring 1.3.,$(GO_VERSION))))
 PRE_GO15 := 1
 endif
 
-ifneq (,$(strip $(findstring 1.4.,$(TRAVIS_GO_VERSION))))
+ifneq (,$(strip $(findstring 1.4.,$(GO_VERSION))))
 PRE_GO15 := 1
 endif
 
@@ -494,7 +492,7 @@ ifneq (,$(GOARM))
 endif
 	$(info GOHOSTOS....................$(GOHOSTOS))
 	$(info GOHOSTARCH..................$(GOHOSTARCH))
-	$(info GOVERSION...................$(GOVERSION))
+	$(info GOVERSION...................$(GO_VERSION))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\

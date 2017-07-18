@@ -1,5 +1,3 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_vfs
-
 package vfs
 
 import (
@@ -31,9 +29,9 @@ import (
 	"github.com/codedellemc/libstorage/api/types"
 	"github.com/codedellemc/libstorage/api/utils"
 
-	// load the vfs driver packages
-
 	"github.com/codedellemc/libstorage/drivers/storage/vfs"
+
+	// load the vfs driver packages
 	_ "github.com/codedellemc/libstorage/drivers/storage/vfs/storage"
 )
 

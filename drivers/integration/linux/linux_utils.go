@@ -50,23 +50,24 @@ func (d *driver) volumeInspectByName(
 			return nil, err
 		}
 		return vol, nil
-	} else {
-		vols, err := client.Storage().Volumes(
-			ctx, &types.VolumesOpts{Attachments: 0})
-		if err != nil {
-			return nil, err
-		}
-		for _, v := range vols {
-			if strings.EqualFold(volumeName, v.Name) {
-				vol, err := d.volumeInspectByID(
-					ctx, v.ID, attachments, opts)
-				if err != nil {
-					return nil, err
-				}
-				return vol, nil
+	}
+
+	vols, err := client.Storage().Volumes(
+		ctx, &types.VolumesOpts{Attachments: 0})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range vols {
+		if strings.EqualFold(volumeName, v.Name) {
+			vol, err := d.volumeInspectByID(
+				ctx, v.ID, attachments, opts)
+			if err != nil {
+				return nil, err
 			}
+			return vol, nil
 		}
 	}
+
 	return nil, nil
 }
 

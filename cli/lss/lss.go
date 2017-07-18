@@ -1,5 +1,3 @@
-// +build gofig pflag
-
 package lss
 
 import (
@@ -26,8 +24,7 @@ import (
 
 	// load the drivers
 	_ "github.com/codedellemc/libstorage/imports/config"
-	_ "github.com/codedellemc/libstorage/imports/remote"
-	_ "github.com/codedellemc/libstorage/imports/routers"
+	_ "github.com/codedellemc/libstorage/imports/storage"
 )
 
 var (

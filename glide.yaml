@@ -19,7 +19,7 @@ import:
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/akutz/gofig
-    version: v0.1.7
+    version: v0.1.8
 
   - package: github.com/akutz/gotil
     version: v0.1.0

@@ -1,11 +1,20 @@
 package registry
 
 import (
-	gofig "github.com/akutz/gofig/types"
+	"github.com/akutz/gofig"
+
+	"github.com/codedellemc/libstorage/api/types"
 )
 
 // NewConfig is a function that returns a new Config object.
-var NewConfig func() gofig.Config
+var NewConfig = gofig.New
 
 // NewConfigReg is a function that returns a new ConfigRegistration object.
-var NewConfigReg func(string) gofig.ConfigRegistration
+var NewConfigReg = gofig.NewRegistration
+
+// ProcessRegisteredConfigs processes the registered configuration requests.
+func ProcessRegisteredConfigs(ctx types.Context) {
+	for r := range ConfigRegs(ctx) {
+		gofig.Register(r)
+	}
+}

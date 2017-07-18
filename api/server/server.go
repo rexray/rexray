@@ -25,11 +25,13 @@ import (
 	"github.com/codedellemc/libstorage/api/utils"
 	apicnfg "github.com/codedellemc/libstorage/api/utils/config"
 
-	// imported to load routers
-	_ "github.com/codedellemc/libstorage/imports/routers"
-
-	// imported to load remote storage drivers
-	_ "github.com/codedellemc/libstorage/imports/remote"
+	// import and load the routers
+	_ "github.com/codedellemc/libstorage/api/server/router/help"
+	_ "github.com/codedellemc/libstorage/api/server/router/root"
+	_ "github.com/codedellemc/libstorage/api/server/router/service"
+	_ "github.com/codedellemc/libstorage/api/server/router/snapshot"
+	_ "github.com/codedellemc/libstorage/api/server/router/tasks"
+	_ "github.com/codedellemc/libstorage/api/server/router/volume"
 )
 
 var (

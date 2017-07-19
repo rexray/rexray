@@ -1,5 +1,9 @@
 SHELL := /bin/bash
 
+all:
+	$(MAKE) deps
+	$(MAKE) build
+
 # define the go version to use
 GO_VERSION := $(TRAVIS_GO_VERSION)
 ifeq (,$(strip $(GO_VERSION)))
@@ -14,15 +18,6 @@ endif
 # sort the BUILD_TAGS. this has the side-effect of removing duplicates
 ifneq (,$(strip $(BUILD_TAGS)))
 BUILD_TAGS := $(sort $(BUILD_TAGS))
-endif
-
-all:
-# if docker is running, then let's use docker to build it
-ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
-	$(MAKE) docker-build
-else
-	$(MAKE) deps
-	$(MAKE) build
 endif
 
 # record the paths to these binaries, if they exist
@@ -148,111 +143,6 @@ endif # ifeq (arm,$(GOARCH))
 
 export OS
 export ARCH
-
-
-################################################################################
-##                                  DOCKER                                    ##
-################################################################################
-ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
-
-DPKG := github.com/codedellemc/libstorage
-DIMG := golang:$(GO_VERSION)
-DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
-ifeq (undefined,$(origin DGOOS))
-DGOOS := $(DGOHOSTOS)
-endif
-DGOARCH ?= amd64
-DPRFX := build-libstorage
-DNAME := $(DPRFX)
-ifeq (1,$(DBUILD_ONCE))
-DNAME := $(DNAME)-$(shell date +%s)
-endif
-DPATH := /go/src/$(DPKG)
-DSRCS := $(shell git ls-files)
-ifneq (,$(DGLIDE_YAML))
-DSRCS := $(filter-out glide.yaml,$(DSRCS))
-DSRCS := $(filter-out glide.lock,$(DSRCS))
-DSRCS := $(filter-out glide.lock.d,$(DSRCS))
-endif
-DPROG1_NAME := lss-$(DGOOS)
-DPROG1_PATH := /go/bin/$(DPROG1_NAME)
-ifneq (linux,$(DGOOS))
-DPROG1_PATH := /go/bin/$(DGOOS)_$(DGOARCH)/$(DPROG1_NAME)
-endif
-ifeq (darwin,$(DGOHOSTOS))
-DTARC := -
-endif
-DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG) &> /dev/null
-DTO_CLOBBER := docker ps -a --format '{{.Names}}' | grep $(DPRFX)
-DNETRC := $(HOME)/.netrc
-
-# DLOCAL_IMPORTS specifics a list of imported packages to copy into the
-# container build's vendor directory instead of what is specified in the
-# glide.lock file. If this variable is set and the GOPATH variable is not
-# then the target will fail.
-ifeq (undefined,$(DLOCAL_IMPORTS))
-DLOCAL_IMPORTS :=
-endif
-ifneq (,$(DLOCAL_IMPORTS))
-ifneq (,$(GOPATH))
-DLOCAL_IMPORTS_FILES := $(foreach I,$(DLOCAL_IMPORTS),$(addprefix $I/,$(shell git --git-dir=$(GOPATH)/src/$(I)/.git --work-tree=$(GOPATH)/src/$(I) ls-files)))
-DLOCAL_IMPORTS_FILES += $(foreach I,$(DLOCAL_IMPORTS),$I/.git)
-endif
-endif
-
-docker-init:
-	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
-	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
-		docker exec $(DNAME) mkdir -p $(DPATH) && \
-		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH)
-ifneq (,$(DGLIDE_YAML))
-	@docker cp $(DGLIDE_YAML) $(DNAME):$(DPATH)/glide.yaml
-endif
-ifneq (,$(wildcard $(DNETRC)))
-	@docker cp $(DNETRC) $(DNAME):/root
-endif
-	docker exec -t $(DNAME) env make -C $(DPATH) deps
-ifneq (,$(DLOCAL_IMPORTS))
-ifeq (,$(GOPATH))
-	@echo GOPATH must be set when using DLOCAL_IMPORTS && false
-else
-	@docker exec -t $(DNAME) rm -fr $(addprefix $(DPATH)/vendor/,$(DLOCAL_IMPORTS))
-	@tar -C $(GOPATH)/src -c $(DTARC) $(DLOCAL_IMPORTS_FILES) | docker cp - $(DNAME):$(DPATH)/vendor
-endif
-endif
-	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
-		make -C $(DPATH) -j build
-
-docker-build: docker-init
-	@docker cp $(DNAME):$(DPROG1_PATH) $(DPROG1_NAME)
-	@bytes=$$(stat --format '%s' $(DPROG1_NAME) 2> /dev/null || \
-		stat -f '%z' $(DPROG1_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
-		printf "\nThe $(DPROG1_NAME) binary is $${mb}MB and located at: \n\n" && \
-		printf "  ./$(DPROG1_NAME)\n\n"
-ifeq (1,$(DBUILD_ONCE))
-	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
-endif
-
-docker-test: DGOOS=linux
-docker-test: DTEST_ENV_VARS=TRAVIS=true LIBSTORAGE_DISABLE_STARTUP_INFO=true
-docker-test: docker-init
-	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" $(DTEST_ENV_VARS) \
-		make -C $(DPATH) test
-
-docker-clean:
-	-docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
-
-docker-clobber:
-	-CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
-		docker stop $$CNAMES && docker rm $$CNAMES; \
-	fi
-
-docker-list:
-	-$(DTO_CLOBBER)
-
-endif # ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 
 ################################################################################

@@ -713,73 +713,6 @@ GO_CLEAN += $$(PKG_A_$1)-clean
 endif
 endif
 
-
-################################################################################
-##                               PROJECT TESTS                                ##
-################################################################################
-ifneq (,$$(strip $$(TEST_SRCS_$1)))
-ifneq (1,$$(TEST_C_$1))
-
-TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
-
-$$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_SRCS_$1))
-	$$(file >$$@,$$(PKG_TA_$1) $$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_DEPS_SRCS_$1)))
-
-$$(PKG_TD_$1)-clean:
-	rm -f $$(PKG_TD_$1)
-GO_CLEAN += $$(PKG_TD_$1)-clean
-
--include $$(PKG_TD_$1)
-
-ifneq (,$$(strip $$(PKG_A_$1)))
-$$(PKG_TA_$1): $$(PKG_A_$1)
-ifeq (true,$$(STALE_$1))
-GO_PHONY += $$(PKG_TA_$1)
-endif
-endif
-ifneq (,$$(strip $$(SRCS_$1)))
-$$(PKG_TA_$1): $$(SRCS_$1)
-endif
-
-$$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
-ifeq (,$$(BUILD_TAGS))
-ifeq (1,$(COVERAGE_ENABLED))
-	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
-else
-	go test -c -o $$@ $1
-endif
-else
-ifeq (1,$(COVERAGE_ENABLED))
-	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -tags "$$(BUILD_TAGS)" -c -o $$@ $1
-else
-	go test -tags "$$(BUILD_TAGS)" -c -o $$@ $1
-endif
-endif
-
-$$(PKG_TA_$1)-clean:
-	rm -f $$(PKG_TA_$1)
-GO_PHONY += $$(PKG_TA_$1)-clean
-GO_CLEAN += $$(PKG_TA_$1)-clean
-
-$$(PKG_TC_$1): $$(PKG_TA_$1)
-ifeq (1,$(COVERAGE_ENABLED))
-	$$(PKG_TA_$1) -test.coverprofile $$@ $$(GO_TEST_FLAGS)
-else
-	$$(PKG_TA_$1) $$(GO_TEST_FLAGS) && touch $$@
-endif
-TEST_PROFILES += $$(PKG_TC_$1)
-
-$$(PKG_TC_$1)-clean:
-	rm -f $$(PKG_TC_$1)
-GO_PHONY += $$(PKG_TC_$1)-clean
-
-GO_TEST += $$(PKG_TC_$1)
-GO_BUILD_TESTS += $$(PKG_TA_$1)
-GO_CLEAN += $$(PKG_TC_$1)-clean
-
-endif
-endif
-
 endef
 $(foreach i,\
 	$(IMPORT_PATH_INFO),\
@@ -973,11 +906,58 @@ endef
 
 
 ################################################################################
+##                                   TESTS                                    ##
+################################################################################
+
+# test all of the drivers that have a Makefile that match the pattern
+# ./drivers/storage/%/tests/Makefile. The % is extracted as the name
+# of the driver
+TEST_DRIVERS := $(strip $(patsubst ./drivers/storage/%/tests/Makefile,\
+				%,\
+				$(wildcard ./drivers/storage/*/tests/Makefile)))
+
+# a list of the framework packages to test
+TEST_FRAMEWORK_PKGS :=  ./api/context \
+						./api/server/auth \
+						./api/types \
+						./api/utils/filters \
+						./api/utils/schema \
+						./api/utils
+
+# a list of the driver packages to test
+TEST_DRIVER_PKGS := $(foreach d,$(TEST_DRIVERS),./drivers/storage/$d/tests)
+
+# a list of the packages to test
+TEST_PKGS := $(TEST_FRAMEWORK_PKGS) $(TEST_DRIVER_PKGS)
+
+# the recipe for building the pkgs' test binaries
+$(foreach d,$(TEST_PKGS),build-$d-test):
+	$(MAKE) -C $(patsubst build-%-test,%,$@) build
+
+# the recipe for executing the pkgs' test binaries
+$(foreach d,$(TEST_PKGS),$d-test): %-test: build-./%-test
+	$(MAKE) -C $(patsubst %-test,%,$@) test
+
+# the recipe for cleaning the pkgs' test output
+$(foreach d,$(TEST_PKGS),clean-$d-test):
+	$(MAKE) -C $(patsubst clean-%-test,%,$@) clean
+
+# builds all the tests
+build-tests: $(foreach p,$(TEST_PKGS),build-$p-test)
+
+# executes the framework test binaries and the vfs test binary
+test: $(addsuffix -test,$(TEST_FRAMEWORK_PKGS))
+	$(MAKE) -C ./drivers/storage/vfs/tests test
+
+clean-tests: $(foreach p,$(TEST_PKGS),clean-$p-test)
+
+################################################################################
 ##                                  COVERAGE                                  ##
 ################################################################################
 COVERAGE := coverage.out
 GO_COVERAGE := $(COVERAGE)
-$(COVERAGE): $(TEST_PROFILES)
+$(COVERAGE): $(foreach p,$(TEST_FRAMEWORK_PKGS),$p/$(notdir $p).test.out) \
+			 ./drivers/storage/vfs/tests/vfs.test.out
 	printf "mode: set\n" > $@
 	$(foreach f,$?,grep -v "mode: set" $(f) >> $@ &&) true
 
@@ -1034,75 +1014,6 @@ ifeq ($(GOOS)_$(GOARCH),$(GOHOSTOS)_$(GOHOSTARCH))
 	$(MAKE) libstor-c libstor-s
 endif
 	$(MAKE) build-lss
-
-build-tests:$(filter-out ./drivers/storage/%,$(GO_BUILD_TESTS)) \
-			$(filter ./drivers/storage/vfs/%,$(GO_BUILD_TESTS))
-
-test: build-tests
-	$(MAKE) -j $(filter-out ./drivers/storage/%,$(GO_TEST))
-	DRIVERS=vfs $(MAKE) $(filter ./drivers/storage/vfs/%,$(GO_TEST))
-
-test-debug:
-	LIBSTORAGE_DEBUG=true $(MAKE) test
-
-test-azureud:
-	DRIVERS=azureud $(MAKE) deps
-	DRIVERS=azureud $(MAKE) ./drivers/storage/azureud/tests/azureud.test
-
-test-azureud-clean:
-	DRIVERS=azureud $(MAKE) clean
-
-test-dobs:
-	DRIVERS=dobs $(MAKE) deps
-	DRIVERS=dobs $(MAKE) ./drivers/storage/dobs/tests/dobs.test
-
-test-dobs-clean:
-	DRIVERS=dobs $(MAKE) clean
-
-test-ebs:
-	DRIVERS=ebs $(MAKE) deps
-	DRIVERS=ebs $(MAKE) ./drivers/storage/ebs/tests/ebs.test
-
-test-ebs-clean:
-	DRIVERS=ebs $(MAKE) clean
-
-test-efs:
-	DRIVERS=efs $(MAKE) deps
-	DRIVERS=efs $(MAKE) ./drivers/storage/efs/tests/efs.test
-
-test-efs-clean:
-	DRIVERS=efs $(MAKE) clean
-
-test-fittedcloud:
-	DRIVERS=fittedcloud $(MAKE) deps
-	DRIVERS=fittedcloud $(MAKE) ./drivers/storage/fittedcloud/tests/fittedcloud.test
-
-test-fittedcloud-clean:
-	DRIVERS=fittedcloud $(MAKE) clean
-
-test-gcepd:
-	DRIVERS=gcepd $(MAKE) deps
-	DRIVERS=gcepd $(MAKE) ./drivers/storage/gcepd/tests/gcepd.test
-
-test-gcepd-clean:
-	DRIVERS=gcepd $(MAKE) clean
-
-test-rbd:
-	DRIVERS=rbd $(MAKE) deps
-	DRIVERS=rbd $(MAKE) ./drivers/storage/rbd/tests/rbd.test
-
-test-rbd-clean:
-	DRIVERS=rbd $(MAKE) clean
-
-test-vfs:
-	DRIVERS=vfs $(MAKE) ./drivers/storage/vfs/tests/vfs.test
-
-test-cinder:
-	DRIVERS=cinder $(MAKE) deps
-	DRIVERS=cinder $(MAKE) ./drivers/storage/cinder/tests/cinder.test
-
-test-cinder-clean:
-	DRIVERS=cinder $(MAKE) clean
 
 clean: $(GO_CLEAN)
 

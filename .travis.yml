@@ -1,24 +1,25 @@
 go_import_path: github.com/codedellemc/libstorage
 
 language: go
+
+# the order below is important as the first value is grok'd by the
+# Makefile as the default version of Go used to build the project
 go:
+  - 1.8.3
   - 1.6.3
   - 1.7.5
-  - 1.8
   - tip
 
 os:
   - linux
 
 env:
-  - TRAVIS_GOARCH=amd64 BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-  - TRAVIS_GOARCH=arm BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-  - TRAVIS_GOARCH=arm64 BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-  - VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-  - BUILD_TAGS="gofig pflag libstorage_integration_driver_linux"
-  - BUILD_TAGS=""
+  - TRAVIS_GOARCH=amd64 COVERAGE_ENABLED=1
+  - TRAVIS_GOARCH=arm
+  - TRAVIS_GOARCH=arm64
+  - VFS_INSTANCEID_USE_FIELDS=true
+  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
+  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
 
 matrix:
   fast_finish: true
@@ -27,29 +28,29 @@ matrix:
     - go: 1.7.5
     - go: tip
   exclude:
-    - go: 1.6.3
-      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: 1.6.3
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: 1.6.3
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: 1.7.5
-      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: 1.7.5
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: 1.7.5
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: tip
-      env: VFS_INSTANCEID_USE_FIELDS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: tip
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
-    - go: tip
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true BUILD_TAGS="gofig pflag libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_driver_vfs"
+    - go:  1.6.3
+      env: VFS_INSTANCEID_USE_FIELDS=true
+    - go:  1.6.3
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
+    - go:  1.6.3
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
+    - go:  1.7.5
+      env: VFS_INSTANCEID_USE_FIELDS=true
+    - go:  1.7.5
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
+    - go:  1.7.5
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
+    - go:  tip
+      env: VFS_INSTANCEID_USE_FIELDS=true
+    - go:  tip
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
+    - go:  tip
+      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
 
 before_install:
   - export GOARCH="${TRAVIS_GOARCH:-amd64}"
   - go env
-  - if [ "$BUILD_TAGS" = "$DEFAULT_BUILD_TAGS" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then echo coverage enabled; fi
+  - if [ "$COVERAGE_ENABLED" = "1" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then echo coverage enabled; fi
   - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
   - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
   - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
@@ -62,10 +63,10 @@ before_install:
 script:
   - make gometalinter-all
   - make -j build
-  - if [ "$GOARCH" = "amd64" ] && [ "$BUILD_TAGS" = "$DEFAULT_BUILD_TAGS" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j test; fi
+  - if [ "$GOARCH" = "amd64" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j test; fi
 
 after_success:
-  - if [ "$GOARCH" = "amd64" ] && [ "$BUILD_TAGS" = "$DEFAULT_BUILD_TAGS" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j cover; fi
+  - if [ "$GOARCH" = "amd64" ] && [ "$COVERAGE_ENABLED" = "1" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j cover; fi
 
 addons:
   apt:

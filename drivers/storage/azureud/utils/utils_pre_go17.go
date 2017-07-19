@@ -1,5 +1,4 @@
 // +build !go1.7
-// +build !libstorage_storage_driver libstorage_storage_driver_azureud
 
 package utils
 

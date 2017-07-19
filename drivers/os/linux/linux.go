@@ -1,5 +1,12 @@
 // +build linux
 
+/*
+Package linux is the OS driver for linux. In order to reduce external
+dependencies, this package borrows the following packages:
+
+  - github.com/docker/docker/pkg/mount
+  - github.com/opencontainers/runc/libcontainer/label
+*/
 package linux
 
 import (
@@ -12,6 +19,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
+	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
@@ -30,6 +38,11 @@ var (
 
 func init() {
 	registry.RegisterOSDriver(driverName, newDriver)
+
+	r := gofigCore.NewRegistration("Linux")
+	r.Key(gofig.Int, "", 0700, "", "linux.volume.filemode")
+	r.Key(gofig.String, "", "/data", "", "linux.volume.rootpath")
+	gofigCore.Register(r)
 }
 
 type driver struct {
@@ -145,8 +158,7 @@ func (d *driver) Mount(
 		}
 	}
 
-	options := formatMountLabel("", opts.MountLabel)
-	options = fmt.Sprintf("%s,%s", opts.MountOptions, opts.MountLabel)
+	options := fmt.Sprintf("%s,%s", opts.MountOptions, opts.MountLabel)
 	if fsType == "xfs" {
 		options = fmt.Sprintf("%s,nouuid", opts.MountLabel)
 	}

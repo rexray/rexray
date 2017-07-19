@@ -1,4 +1,3 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_cinder
 // +build linux
 
 package executor

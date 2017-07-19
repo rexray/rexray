@@ -1,5 +1,3 @@
-// +build !libstorage_storage_driver libstorage_storage_driver_ebs
-
 package storage
 
 import (

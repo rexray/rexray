@@ -1,5 +1,0 @@
-package config
-
-var (
-	defaultIntDriver = ""
-)

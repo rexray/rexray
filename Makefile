@@ -1,26 +1,20 @@
 SHELL := /bin/bash
 
-GO_VERSION := 1.8
-
-ifeq (undefined,$(origin BUILD_TAGS))
-BUILD_TAGS :=   gofig \
-				pflag \
-				libstorage_integration_driver_linux
-ifneq (true,$(TRAVIS))
-BUILD_TAGS +=   libstorage_storage_driver \
-				libstorage_storage_driver_vfs
-endif
+# define the go version to use
+GO_VERSION := $(TRAVIS_GO_VERSION)
+ifeq (,$(strip $(GO_VERSION)))
+GO_VERSION := $(shell grep -A 1 '^go:' .travis.yml | tail -n 1 | awk '{print $$2}')
 endif
 
-ifneq (,$(DRIVERS))
-BUILD_TAGS += libstorage_storage_driver
-BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d))
+# add DRIVERS to the list of Go build tags stored in BUILD_TAGS
+ifneq (,$(strip $(DRIVERS)))
+BUILD_TAGS += $(DRIVERS)
 endif
 
-ifneq (,$(BUILD_TAGS))
+# sort the BUILD_TAGS. this has the side-effect of removing duplicates
+ifneq (,$(strip $(BUILD_TAGS)))
 BUILD_TAGS := $(sort $(BUILD_TAGS))
 endif
-
 
 all:
 # if docker is running, then let's use docker to build it
@@ -306,11 +300,6 @@ GOPATH := $(shell go env | grep GOPATH | sed 's/GOPATH="\(.*\)"/\1/')
 GOPATH := $(word 1,$(subst :, ,$(GOPATH)))
 GOHOSTOS := $(shell go env | grep GOHOSTOS | sed 's/GOHOSTOS="\(.*\)"/\1/')
 GOHOSTARCH := $(shell go env | grep GOHOSTARCH | sed 's/GOHOSTARCH="\(.*\)"/\1/')
-ifneq (,$(TRAVIS_GO_VERSION))
-GOVERSION := $(TRAVIS_GO_VERSION)
-else
-GOVERSION := $(shell go version | awk '{print $$3}' | cut -c3-)
-endif
 
 ifeq ($(GO_VERSION),$(TRAVIS_GO_VERSION))
 ifeq (linux,$(TRAVIS_OS_NAME))
@@ -321,11 +310,11 @@ endif
 # explicitly enable vendoring for Go 1.5.x versions.
 GO15VENDOREXPERIMENT := 1
 
-ifneq (,$(strip $(findstring 1.3.,$(TRAVIS_GO_VERSION))))
+ifneq (,$(strip $(findstring 1.3.,$(GO_VERSION))))
 PRE_GO15 := 1
 endif
 
-ifneq (,$(strip $(findstring 1.4.,$(TRAVIS_GO_VERSION))))
+ifneq (,$(strip $(findstring 1.4.,$(GO_VERSION))))
 PRE_GO15 := 1
 endif
 
@@ -503,7 +492,7 @@ ifneq (,$(GOARM))
 endif
 	$(info GOHOSTOS....................$(GOHOSTOS))
 	$(info GOHOSTARCH..................$(GOHOSTARCH))
-	$(info GOVERSION...................$(GOVERSION))
+	$(info GOVERSION...................$(GO_VERSION))
 ifneq (,$(strip $(SRCS)))
 	$(info Sources.....................$(patsubst ./%,%,$(firstword $(SRCS))))
 	$(foreach s,$(patsubst ./%,%,$(wordlist 2,$(words $(SRCS)),$(SRCS))),\
@@ -1137,18 +1126,12 @@ cover-debug:
 ################################################################################
 deps: $(GO_DEPS)
 
-build-tests: $(GO_BUILD_TESTS)
-
 build-lss: $(LSS_ALL)
 
 build-libstorage: $(GO_BUILD)
 
 build-generated:
 	$(MAKE) $(API_GENERATED_SRC)
-
-build-client-nogofig:
-	go build ./client
-
 
 clean-build:
 	rm -fr $(API_GENERATED_SRC)
@@ -1162,11 +1145,12 @@ ifeq ($(GOOS)_$(GOARCH),$(GOHOSTOS)_$(GOHOSTARCH))
 endif
 	$(MAKE) build-lss
 
-parallel-test: $(filter-out ./drivers/storage/vfs/%,$(GO_TEST))
-vfs-test: $(filter ./drivers/storage/vfs/%,$(GO_TEST))
-test:
-	$(MAKE) vfs-test
-	$(MAKE) -j parallel-test
+build-tests:$(filter-out ./drivers/storage/%,$(GO_BUILD_TESTS)) \
+			$(filter ./drivers/storage/vfs/%,$(GO_BUILD_TESTS))
+
+test: build-tests
+	$(MAKE) -j $(filter-out ./drivers/storage/%,$(GO_TEST))
+	DRIVERS=vfs $(MAKE) $(filter ./drivers/storage/vfs/%,$(GO_TEST))
 
 test-debug:
 	LIBSTORAGE_DEBUG=true $(MAKE) test
@@ -1219,7 +1203,6 @@ test-rbd:
 
 test-rbd-clean:
 	DRIVERS=rbd $(MAKE) clean
-
 
 test-vfs:
 	DRIVERS=vfs $(MAKE) ./drivers/storage/vfs/tests/vfs.test

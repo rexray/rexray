@@ -138,6 +138,20 @@ func (d *driver) VolumeInspect(
 	return vols[0], nil
 }
 
+func (d *driver) VolumeInspectByName(
+        ctx types.Context,
+        volumeName string,
+        opts *types.VolumeInspectOpts) (*types.Volume, error) {
+
+        // volumeName and volumeID are the same for RBD
+        return d.VolumeInspect(
+                ctx,
+                volumeName,
+                opts,
+        )
+
+}
+
 func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 	opts *types.VolumeCreateOpts) (*types.Volume, error) {
 

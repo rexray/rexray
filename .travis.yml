@@ -56,17 +56,15 @@ before_install:
   - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
   - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
   - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
-  - make version
-  - make info
-  - make deps
+  - make -C api version
+  - make vendor
 
 script:
-  - make gometalinter-all
   - make -j build
-  - if [ "$GOARCH" = "amd64" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j test; fi
+  - if [ "$GOARCH" = "amd64" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make test; fi
 
 after_success:
-  - if [ "$GOARCH" = "amd64" ] && [ "$COVERAGE_ENABLED" = "1" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make -j cover; fi
+  - if [ "$GOARCH" = "amd64" ] && [ "$COVERAGE_ENABLED" = "1" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make cover; fi
 
 addons:
   apt:

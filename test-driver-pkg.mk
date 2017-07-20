@@ -2,9 +2,12 @@
 
 SHELL := $(shell env which bash)
 
+# the path of the parent directory
+PARENT := $(shell dirname $$(pwd))
+
 # the name of the driver is grok'd from the basename
 # of the parent directory
-DRIVER := $(shell basename $$(dirname $$(pwd)))
+DRIVER := $(shell basename "$(PARENT)")
 
 # a list of this package's Go sources, Go test sources, Go Xtest sources
 # (test sources in this directory but belonging to a different package)
@@ -19,19 +22,26 @@ SRCS := $(shell \
   . \
   $$(go list -tags $(DRIVER) -f '{{join .TestImports "\n"}}{{"\n"}}{{join .XTestImports "\n"}}') | sort -u))
 
+# the packages the test covers
+COVERPKG := $(PARENT),$(PARENT)/storage,$(PARENT)/executor
+ifneq (,$(strip $(wildcard $(PARENT)/utils)))
+COVERPKG := $(COVERPKG),$(PARENT)/utils
+endif
+COVERPKG := $(subst $(GOPATH)/src/,,$(COVERPKG))
+
 # the test binary
 $(DRIVER).test: $(SRCS)
-	go test -tags $(patsubst %.test,%,$@) -cover -c -o $@ .
+	go test -tags $(patsubst %.test,%,$@) -coverpkg '$(COVERPKG)' -c -o $@ .
 
 # the coverage file
 $(DRIVER).test.out: $(DRIVER).test
 	./$< -test.coverprofile $@
 
-build: $(DRIVER).test
+build-tests: $(DRIVER).test
 
 test: $(DRIVER).test.out
 
-clean:
+clean: $(CLEAN)
 	rm -f $(DRIVER).test $(DRIVER).test.out
 
 .PHONY: clean

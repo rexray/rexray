@@ -26,11 +26,11 @@ $(PKG).test: $(SRCS)
 $(PKG).test.out: $(PKG).test
 	./$< -test.coverprofile $@
 
-build: $(PKG).test
+build-tests: $(PKG).test
 
 test: $(PKG).test.out
 
-clean:
+clean: $(CLEAN)
 	rm -f $(PKG).test $(PKG).test.out
 
 .PHONY: clean

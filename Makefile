@@ -1,5 +1,9 @@
 SHELL := /bin/bash
 
+all:
+	$(MAKE) deps
+	$(MAKE) build
+
 # define the go version to use
 GO_VERSION := $(TRAVIS_GO_VERSION)
 ifeq (,$(strip $(GO_VERSION)))
@@ -14,15 +18,6 @@ endif
 # sort the BUILD_TAGS. this has the side-effect of removing duplicates
 ifneq (,$(strip $(BUILD_TAGS)))
 BUILD_TAGS := $(sort $(BUILD_TAGS))
-endif
-
-all:
-# if docker is running, then let's use docker to build it
-ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
-	$(MAKE) docker-build
-else
-	$(MAKE) deps
-	$(MAKE) build
 endif
 
 # record the paths to these binaries, if they exist
@@ -148,111 +143,6 @@ endif # ifeq (arm,$(GOARCH))
 
 export OS
 export ARCH
-
-
-################################################################################
-##                                  DOCKER                                    ##
-################################################################################
-ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
-
-DPKG := github.com/codedellemc/libstorage
-DIMG := golang:$(GO_VERSION)
-DGOHOSTOS := $(shell uname -s | tr A-Z a-z)
-ifeq (undefined,$(origin DGOOS))
-DGOOS := $(DGOHOSTOS)
-endif
-DGOARCH ?= amd64
-DPRFX := build-libstorage
-DNAME := $(DPRFX)
-ifeq (1,$(DBUILD_ONCE))
-DNAME := $(DNAME)-$(shell date +%s)
-endif
-DPATH := /go/src/$(DPKG)
-DSRCS := $(shell git ls-files)
-ifneq (,$(DGLIDE_YAML))
-DSRCS := $(filter-out glide.yaml,$(DSRCS))
-DSRCS := $(filter-out glide.lock,$(DSRCS))
-DSRCS := $(filter-out glide.lock.d,$(DSRCS))
-endif
-DPROG1_NAME := lss-$(DGOOS)
-DPROG1_PATH := /go/bin/$(DPROG1_NAME)
-ifneq (linux,$(DGOOS))
-DPROG1_PATH := /go/bin/$(DGOOS)_$(DGOARCH)/$(DPROG1_NAME)
-endif
-ifeq (darwin,$(DGOHOSTOS))
-DTARC := -
-endif
-DIMG_EXISTS := docker images --format '{{.Repository}}:{{.Tag}}' | grep $(DIMG) &> /dev/null
-DTO_CLOBBER := docker ps -a --format '{{.Names}}' | grep $(DPRFX)
-DNETRC := $(HOME)/.netrc
-
-# DLOCAL_IMPORTS specifics a list of imported packages to copy into the
-# container build's vendor directory instead of what is specified in the
-# glide.lock file. If this variable is set and the GOPATH variable is not
-# then the target will fail.
-ifeq (undefined,$(DLOCAL_IMPORTS))
-DLOCAL_IMPORTS :=
-endif
-ifneq (,$(DLOCAL_IMPORTS))
-ifneq (,$(GOPATH))
-DLOCAL_IMPORTS_FILES := $(foreach I,$(DLOCAL_IMPORTS),$(addprefix $I/,$(shell git --git-dir=$(GOPATH)/src/$(I)/.git --work-tree=$(GOPATH)/src/$(I) ls-files)))
-DLOCAL_IMPORTS_FILES += $(foreach I,$(DLOCAL_IMPORTS),$I/.git)
-endif
-endif
-
-docker-init:
-	@if ! $(DIMG_EXISTS); then docker pull $(DIMG); fi
-	@docker run --name $(DNAME) -d $(DIMG) /sbin/init -D &> /dev/null || true && \
-		docker exec $(DNAME) mkdir -p $(DPATH) && \
-		tar -c $(DTARC) .git $(DSRCS) | docker cp - $(DNAME):$(DPATH)
-ifneq (,$(DGLIDE_YAML))
-	@docker cp $(DGLIDE_YAML) $(DNAME):$(DPATH)/glide.yaml
-endif
-ifneq (,$(wildcard $(DNETRC)))
-	@docker cp $(DNETRC) $(DNAME):/root
-endif
-	docker exec -t $(DNAME) env make -C $(DPATH) deps
-ifneq (,$(DLOCAL_IMPORTS))
-ifeq (,$(GOPATH))
-	@echo GOPATH must be set when using DLOCAL_IMPORTS && false
-else
-	@docker exec -t $(DNAME) rm -fr $(addprefix $(DPATH)/vendor/,$(DLOCAL_IMPORTS))
-	@tar -C $(GOPATH)/src -c $(DTARC) $(DLOCAL_IMPORTS_FILES) | docker cp - $(DNAME):$(DPATH)/vendor
-endif
-endif
-	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" GOOS=$(DGOOS) GOARCH=$(DGOARCH) DOCKER=1 \
-		make -C $(DPATH) -j build
-
-docker-build: docker-init
-	@docker cp $(DNAME):$(DPROG1_PATH) $(DPROG1_NAME)
-	@bytes=$$(stat --format '%s' $(DPROG1_NAME) 2> /dev/null || \
-		stat -f '%z' $(DPROG1_NAME) 2> /dev/null) && mb=$$(($$bytes / 1024 / 1024)) && \
-		printf "\nThe $(DPROG1_NAME) binary is $${mb}MB and located at: \n\n" && \
-		printf "  ./$(DPROG1_NAME)\n\n"
-ifeq (1,$(DBUILD_ONCE))
-	docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
-endif
-
-docker-test: DGOOS=linux
-docker-test: DTEST_ENV_VARS=TRAVIS=true LIBSTORAGE_DISABLE_STARTUP_INFO=true
-docker-test: docker-init
-	docker exec -t $(DNAME) \
-		env BUILD_TAGS="$(BUILD_TAGS)" $(DTEST_ENV_VARS) \
-		make -C $(DPATH) test
-
-docker-clean:
-	-docker stop $(DNAME) &> /dev/null && docker rm $(DNAME) &> /dev/null
-
-docker-clobber:
-	-CNAMES=$$($(DTO_CLOBBER)); if [ "$$CNAMES" != "" ]; then \
-		docker stop $$CNAMES && docker rm $$CNAMES; \
-	fi
-
-docker-list:
-	-$(DTO_CLOBBER)
-
-endif # ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 
 
 ################################################################################
@@ -823,73 +713,6 @@ GO_CLEAN += $$(PKG_A_$1)-clean
 endif
 endif
 
-
-################################################################################
-##                               PROJECT TESTS                                ##
-################################################################################
-ifneq (,$$(strip $$(TEST_SRCS_$1)))
-ifneq (1,$$(TEST_C_$1))
-
-TEST_DEPS_SRCS_$1 := $$(foreach d,$$(TEST_INT_DEPS_$1),$$(SRCS_.$$(subst $$(ROOT_IMPORT_PATH),,$$(d))))
-
-$$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_SRCS_$1))
-	$$(file >$$@,$$(PKG_TA_$1) $$(PKG_TD_$1): $$(filter-out %_generated.go,$$(TEST_DEPS_SRCS_$1)))
-
-$$(PKG_TD_$1)-clean:
-	rm -f $$(PKG_TD_$1)
-GO_CLEAN += $$(PKG_TD_$1)-clean
-
--include $$(PKG_TD_$1)
-
-ifneq (,$$(strip $$(PKG_A_$1)))
-$$(PKG_TA_$1): $$(PKG_A_$1)
-ifeq (true,$$(STALE_$1))
-GO_PHONY += $$(PKG_TA_$1)
-endif
-endif
-ifneq (,$$(strip $$(SRCS_$1)))
-$$(PKG_TA_$1): $$(SRCS_$1)
-endif
-
-$$(PKG_TA_$1): $$(TEST_SRCS_$1) $$(TEST_EXT_DEPS_SRCS_$1) | $$(TEST_DEPS_ARKS_$1)
-ifeq (,$$(BUILD_TAGS))
-ifeq (1,$(COVERAGE_ENABLED))
-	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -c -o $$@ $1
-else
-	go test -c -o $$@ $1
-endif
-else
-ifeq (1,$(COVERAGE_ENABLED))
-	go test -cover -coverpkg '$$(TEST_COVERPKG_$1)' -tags "$$(BUILD_TAGS)" -c -o $$@ $1
-else
-	go test -tags "$$(BUILD_TAGS)" -c -o $$@ $1
-endif
-endif
-
-$$(PKG_TA_$1)-clean:
-	rm -f $$(PKG_TA_$1)
-GO_PHONY += $$(PKG_TA_$1)-clean
-GO_CLEAN += $$(PKG_TA_$1)-clean
-
-$$(PKG_TC_$1): $$(PKG_TA_$1)
-ifeq (1,$(COVERAGE_ENABLED))
-	$$(PKG_TA_$1) -test.coverprofile $$@ $$(GO_TEST_FLAGS)
-else
-	$$(PKG_TA_$1) $$(GO_TEST_FLAGS) && touch $$@
-endif
-TEST_PROFILES += $$(PKG_TC_$1)
-
-$$(PKG_TC_$1)-clean:
-	rm -f $$(PKG_TC_$1)
-GO_PHONY += $$(PKG_TC_$1)-clean
-
-GO_TEST += $$(PKG_TC_$1)
-GO_BUILD_TESTS += $$(PKG_TA_$1)
-GO_CLEAN += $$(PKG_TC_$1)-clean
-
-endif
-endif
-
 endef
 $(foreach i,\
 	$(IMPORT_PATH_INFO),\
@@ -1083,11 +906,58 @@ endef
 
 
 ################################################################################
+##                                   TESTS                                    ##
+################################################################################
+
+# test all of the drivers that have a Makefile that match the pattern
+# ./drivers/storage/%/tests/Makefile. The % is extracted as the name
+# of the driver
+TEST_DRIVERS := $(strip $(patsubst ./drivers/storage/%/tests/Makefile,\
+				%,\
+				$(wildcard ./drivers/storage/*/tests/Makefile)))
+
+# a list of the framework packages to test
+TEST_FRAMEWORK_PKGS :=  ./api/context \
+						./api/server/auth \
+						./api/types \
+						./api/utils/filters \
+						./api/utils/schema \
+						./api/utils
+
+# a list of the driver packages to test
+TEST_DRIVER_PKGS := $(foreach d,$(TEST_DRIVERS),./drivers/storage/$d/tests)
+
+# a list of the packages to test
+TEST_PKGS := $(TEST_FRAMEWORK_PKGS) $(TEST_DRIVER_PKGS)
+
+# the recipe for building the pkgs' test binaries
+$(foreach d,$(TEST_PKGS),build-$d-test):
+	$(MAKE) -C $(patsubst build-%-test,%,$@) build
+
+# the recipe for executing the pkgs' test binaries
+$(foreach d,$(TEST_PKGS),$d-test): %-test: build-./%-test
+	$(MAKE) -C $(patsubst %-test,%,$@) test
+
+# the recipe for cleaning the pkgs' test output
+$(foreach d,$(TEST_PKGS),clean-$d-test):
+	$(MAKE) -C $(patsubst clean-%-test,%,$@) clean
+
+# builds all the tests
+build-tests: $(foreach p,$(TEST_PKGS),build-$p-test)
+
+# executes the framework test binaries and the vfs test binary
+test: $(addsuffix -test,$(TEST_FRAMEWORK_PKGS))
+	$(MAKE) -C ./drivers/storage/vfs/tests test
+
+clean-tests: $(foreach p,$(TEST_PKGS),clean-$p-test)
+
+################################################################################
 ##                                  COVERAGE                                  ##
 ################################################################################
 COVERAGE := coverage.out
 GO_COVERAGE := $(COVERAGE)
-$(COVERAGE): $(TEST_PROFILES)
+$(COVERAGE): $(foreach p,$(TEST_FRAMEWORK_PKGS),$p/$(notdir $p).test.out) \
+			 ./drivers/storage/vfs/tests/vfs.test.out
 	printf "mode: set\n" > $@
 	$(foreach f,$?,grep -v "mode: set" $(f) >> $@ &&) true
 
@@ -1144,75 +1014,6 @@ ifeq ($(GOOS)_$(GOARCH),$(GOHOSTOS)_$(GOHOSTARCH))
 	$(MAKE) libstor-c libstor-s
 endif
 	$(MAKE) build-lss
-
-build-tests:$(filter-out ./drivers/storage/%,$(GO_BUILD_TESTS)) \
-			$(filter ./drivers/storage/vfs/%,$(GO_BUILD_TESTS))
-
-test: build-tests
-	$(MAKE) -j $(filter-out ./drivers/storage/%,$(GO_TEST))
-	DRIVERS=vfs $(MAKE) $(filter ./drivers/storage/vfs/%,$(GO_TEST))
-
-test-debug:
-	LIBSTORAGE_DEBUG=true $(MAKE) test
-
-test-azureud:
-	DRIVERS=azureud $(MAKE) deps
-	DRIVERS=azureud $(MAKE) ./drivers/storage/azureud/tests/azureud.test
-
-test-azureud-clean:
-	DRIVERS=azureud $(MAKE) clean
-
-test-dobs:
-	DRIVERS=dobs $(MAKE) deps
-	DRIVERS=dobs $(MAKE) ./drivers/storage/dobs/tests/dobs.test
-
-test-dobs-clean:
-	DRIVERS=dobs $(MAKE) clean
-
-test-ebs:
-	DRIVERS=ebs $(MAKE) deps
-	DRIVERS=ebs $(MAKE) ./drivers/storage/ebs/tests/ebs.test
-
-test-ebs-clean:
-	DRIVERS=ebs $(MAKE) clean
-
-test-efs:
-	DRIVERS=efs $(MAKE) deps
-	DRIVERS=efs $(MAKE) ./drivers/storage/efs/tests/efs.test
-
-test-efs-clean:
-	DRIVERS=efs $(MAKE) clean
-
-test-fittedcloud:
-	DRIVERS=fittedcloud $(MAKE) deps
-	DRIVERS=fittedcloud $(MAKE) ./drivers/storage/fittedcloud/tests/fittedcloud.test
-
-test-fittedcloud-clean:
-	DRIVERS=fittedcloud $(MAKE) clean
-
-test-gcepd:
-	DRIVERS=gcepd $(MAKE) deps
-	DRIVERS=gcepd $(MAKE) ./drivers/storage/gcepd/tests/gcepd.test
-
-test-gcepd-clean:
-	DRIVERS=gcepd $(MAKE) clean
-
-test-rbd:
-	DRIVERS=rbd $(MAKE) deps
-	DRIVERS=rbd $(MAKE) ./drivers/storage/rbd/tests/rbd.test
-
-test-rbd-clean:
-	DRIVERS=rbd $(MAKE) clean
-
-test-vfs:
-	DRIVERS=vfs $(MAKE) ./drivers/storage/vfs/tests/vfs.test
-
-test-cinder:
-	DRIVERS=cinder $(MAKE) deps
-	DRIVERS=cinder $(MAKE) ./drivers/storage/cinder/tests/cinder.test
-
-test-cinder-clean:
-	DRIVERS=cinder $(MAKE) clean
 
 clean: $(GO_CLEAN)
 

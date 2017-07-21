@@ -164,15 +164,15 @@ func newServer(goCtx gocontext.Context, config gofig.Config) (*server, error) {
 
 	s.ctx.Info("initializing server")
 
-	if err := s.initEndpoints(s.ctx); err != nil {
-		return nil, err
-	}
-	s.ctx.Info("initialized endpoints")
-
 	if err := services.Init(s.ctx, s.config); err != nil {
 		return nil, err
 	}
 	s.ctx.Info("initialized services")
+
+	if err := s.initEndpoints(s.ctx); err != nil {
+		return nil, err
+	}
+	s.ctx.Info("initialized endpoints")
 
 	if logConfig.HTTPRequests || logConfig.HTTPResponses {
 		s.logHTTPEnabled = true

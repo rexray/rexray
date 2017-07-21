@@ -6,7 +6,12 @@ Opening up storage for all
 
 ## Overview
 `libStorage` is an open source, platform agnostic, storage provisioning and
-orchestration framework, model, and API.
+orchestration framework, model, and API. Getting and building libStorage is
+as simple as the following command:
+
+```bash
+$ go get github.com/codedellemc/libstorage
+```
 
 ## Features
 The following features unique to this project make it a perfect choice for

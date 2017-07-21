@@ -829,6 +829,7 @@ func TestVolumeInspectWithAttachments(t *testing.T) {
 }
 
 func TestSnapshots(t *testing.T) {
+	t.SkipNow()
 	tc, _, _, snaps := newTestConfigAll(t)
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().Snapshots(nil)
@@ -844,6 +845,7 @@ func TestSnapshots(t *testing.T) {
 }
 
 func TestSnapshotsByService(t *testing.T) {
+	t.SkipNow()
 	tc, _, _, snaps := newTestConfigAll(t)
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().SnapshotsByService(nil, "vfs")
@@ -999,6 +1001,7 @@ func TestVolumeRemove(t *testing.T) {
 }
 
 func TestVolumeSnapshot(t *testing.T) {
+	t.SkipNow()
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		volumeID := "vfs-000"
 		snapshotName := "snapshot1"
@@ -1047,6 +1050,7 @@ func TestVolumeSnapshot(t *testing.T) {
 }
 
 func TestVolumeCreateFromSnapshot(t *testing.T) {
+	t.SkipNow()
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 
 		ogVol, err := client.API().VolumeInspect(
@@ -1315,6 +1319,7 @@ func TestVolumeDetachAllWithControllerClient(t *testing.T) {
 }
 
 func TestSnapshotCopy(t *testing.T) {
+	t.SkipNow()
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		snapshotName := "Snapshot from vfs-000-000"
 
@@ -1343,6 +1348,7 @@ func TestSnapshotCopy(t *testing.T) {
 }
 
 func TestSnapshotRemove(t *testing.T) {
+	t.SkipNow()
 	tf := func(config gofig.Config, client types.Client, t *testing.T) {
 		reply, err := client.API().SnapshotInspect(nil, "vfs", "vfs-000-002")
 		assert.NoError(t, err)

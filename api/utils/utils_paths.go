@@ -11,7 +11,37 @@ import (
 )
 
 // NewPathConfig returns a new path configuration object.
-func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
+//
+// The args parameter can take zero to three arguments:
+//
+//   1. The first argument is treated as a custom root, data
+//      directory path. This defaults root path is "/".
+//
+//   2. The second argument is treated as a custom application
+//      token. This is used to brand libStorage's paths, files,
+//      and environment variables. The default application
+//      token is "libstorage".
+//
+//   3. The third argument is treated as a custom home directory
+//      for the executing process's user. The default value
+//      is the user's home directory.
+func NewPathConfig(ctx types.Context, args ...string) *types.PathConfig {
+
+	var (
+		home     string
+		token    string
+		userHome string
+	)
+
+	if len(args) > 0 {
+		home = args[0]
+	}
+	if len(args) > 1 {
+		token = args[1]
+	}
+	if len(args) > 2 {
+		userHome = args[2]
+	}
 
 	if token == "" {
 		if v := os.Getenv("LIBSTORAGE_APPTOKEN"); v != "" {
@@ -20,10 +50,13 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 			token = "libstorage"
 		}
 	}
+	if userHome == "" {
+		userHome = gotil.HomeDir()
+	}
 
 	pathConfig := &types.PathConfig{
 		Token:    token,
-		UserHome: path.Join(gotil.HomeDir(), fmt.Sprintf(".%s", token)),
+		UserHome: path.Join(userHome, fmt.Sprintf(".%s", token)),
 	}
 	pathConfig.UserDefaultTLSKnownHosts = path.Join(
 		pathConfig.UserHome, "known_hosts")
@@ -48,7 +81,6 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 		pathConfig.Home = path.Join(gotil.HomeDir(), fmt.Sprintf(".%s", token))
 	}
 	os.MkdirAll(pathConfig.Home, 0755)
-	ctx.WithField("path", pathConfig.Home).Debug("mkdir -p")
 
 	// init the other paths
 	initPathConfigFieldWithEnvVar(ctx, envVarHomeEtc, &pathConfig.Etc)
@@ -82,6 +114,17 @@ func NewPathConfig(ctx types.Context, home, token string) *types.PathConfig {
 		ctx, false, false, token, pathConfig.TLS,
 		"cacerts", &pathConfig.DefaultTLSTrustedRootsFile)
 
+	ctx.WithFields(map[string]interface{}{
+		"token":   pathConfig.Token,
+		"usrHome": pathConfig.UserHome,
+		"sysHome": pathConfig.Home,
+		"sysEtc":  pathConfig.Etc,
+		"sysTLS":  pathConfig.TLS,
+		"sysLib":  pathConfig.Lib,
+		"sysLog":  pathConfig.Log,
+		"sysRun":  pathConfig.Run,
+	}).Info("created new path config")
+
 	return pathConfig
 }
 
@@ -100,7 +143,6 @@ func initPathConfigFieldWithPath(
 			return
 		}
 		os.MkdirAll(*field, 0755)
-		ctx.WithField("path", *field).Debug("mkdir -p")
 	}()
 
 	if *field != "" {

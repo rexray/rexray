@@ -18,8 +18,6 @@ env:
   - TRAVIS_GOARCH=arm
   - TRAVIS_GOARCH=arm64
   - VFS_INSTANCEID_USE_FIELDS=true
-  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
-  - LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
 
 matrix:
   fast_finish: true
@@ -30,22 +28,10 @@ matrix:
   exclude:
     - go:  1.6.3
       env: VFS_INSTANCEID_USE_FIELDS=true
-    - go:  1.6.3
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
-    - go:  1.6.3
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
     - go:  1.7.5
       env: VFS_INSTANCEID_USE_FIELDS=true
-    - go:  1.7.5
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
-    - go:  1.7.5
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
     - go:  tip
       env: VFS_INSTANCEID_USE_FIELDS=true
-    - go:  tip
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS=true
-    - go:  tip
-      env: LIBSTORAGE_TEST_TCP=false LIBSTORAGE_TEST_TCP_TLS_PEERS=true
 
 before_install:
   - export GOARCH="${TRAVIS_GOARCH:-amd64}"

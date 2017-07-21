@@ -30,7 +30,7 @@ build-tests: $(PKG).test
 
 test: $(PKG).test.out
 
-clean: $(CLEAN)
+clean:
 	rm -f $(PKG).test $(PKG).test.out
 
 .PHONY: clean

@@ -1,9 +1,5 @@
 all: build
 
-# defining CLEAN adds it as a dependency to the "clean" target
-# defined in the included test-framework-pkg makefile
-CLEAN := clean-schema
-
 include ../../../test-framework-pkg.mk
 
 ################################################################################
@@ -24,5 +20,7 @@ build: $(SCHEMA_SRC)
 
 clean-schema:
 	rm -f $(SCHEMA_SRC)
+
+clean: clean-schema
 
 .PHONY: clean-schema

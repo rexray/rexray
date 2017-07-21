@@ -41,7 +41,7 @@ build-tests: $(DRIVER).test
 
 test: $(DRIVER).test.out
 
-clean: $(CLEAN)
+clean:
 	rm -f $(DRIVER).test $(DRIVER).test.out
 
 .PHONY: clean

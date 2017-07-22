@@ -3,6 +3,25 @@
 Release early, release often
 
 ---
+## Version 0.6.3 (2017/07/22)
+This is the last public, tagged release of libStorage. The project will be
+absorbed into [REX-Ray](https://github.com/codedellemc/rexray).
+
+## Version 0.6.2 (2017/06/28)
+This is a minor release that improves volume lookup response for GCEPD
+and  DOBS, with minor enhancements to the EFS, RBD, and Integration
+drivers.
+
+### Bug Fixes
+* Cinder driver no longer complains about invalid local devices ([#578](https://github.com/codedellemc/libstorage/pull/578))
+
+### Enhancements
+* libStorage documentation is now searchable ([#574](https://github.com/codedellemc/libstorage/pull/574))
+* Add config option for force remove of volume from integration driver ([#577](https://github.com/codedellemc/libstorage/pull/577))
+* Add ability to disable `modprobe` call from RBD driver ([#576](https://github.com/codedellemc/libstorage/pull/576))
+* Add support for VolumeInsepctByName to GCEPD and DOBS drivers ([#579](https://github.com/codedellemc/libstorage/pull/579), [#581](https://github.com/codedellemc/libstorage/pull/581))
+* Add config option to translate volume names containing underscores to dashes for GCEPD and DOBS ([#580](https://github.com/codedellemc/libstorage/pull/580), [#582](https://github.com/codedellemc/libstorage/pull/582))
+
 ## Version 0.6.1 (2017/06/09)
 This is a minor release that includes bug fixes for RBD and Isilon, and some
 minor enhancements.

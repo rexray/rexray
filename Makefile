@@ -21,10 +21,6 @@ ifeq (,$(strip $(GO_VERSION)))
 GO_VERSION := $(shell grep -A 1 '^go:' .travis.yml | tail -n 1 | awk '{print $$2}')
 endif
 
-ifeq (undefined,$(origin BUILD_TAGS))
-BUILD_TAGS := gofig pflag libstorage_integration_driver_linux
-endif
-
 ifeq (,$(findstring scripts_generated,$(BUILD_TAGS)))
 BUILD_TAGS += scripts_generated
 endif
@@ -50,10 +46,6 @@ ifneq (,$(findstring rexray_build_type_client,$(BUILD_TAGS)))
 PROG := $(PROG)-client
 REXRAY_BUILD_TYPE := client
 BUILD_LIBSTORAGE_SERVER := false
-BUILD_TAGS := $(filter-out libstorage_storage_driver,$(BUILD_TAGS))
-BUILD_TAGS := $(filter-out libstorage_storage_driver_%,$(BUILD_TAGS))
-BUILD_TAGS := $(filter-out libstorage_storage_executor,$(BUILD_TAGS))
-BUILD_TAGS := $(filter-out libstorage_storage_executor_%,$(BUILD_TAGS))
 endif
 
 ifneq (,$(findstring rexray_build_type_agent,$(BUILD_TAGS)))
@@ -63,10 +55,6 @@ BUILD_LIBSTORAGE_SERVER := false
 EMBED_SCRIPTS := false
 EMBED_SCRIPTS_FLEXREX := false
 DEPEND_ON_GOBINDATA := false
-BUILD_TAGS := $(filter-out libstorage_storage_driver,$(BUILD_TAGS))
-BUILD_TAGS := $(filter-out libstorage_storage_driver_%,$(BUILD_TAGS))
-BUILD_TAGS := $(filter-out libstorage_storage_executor,$(BUILD_TAGS))
-BUILD_TAGS := $(filter-out libstorage_storage_executor_%,$(BUILD_TAGS))
 endif
 
 ifneq (,$(findstring rexray_build_type_controller,$(BUILD_TAGS)))
@@ -74,20 +62,23 @@ PROG := $(PROG)-controller
 REXRAY_BUILD_TYPE := controller
 EMBED_SCRIPTS := false
 EMBED_SCRIPTS_FLEXREX := false
-BUILD_TAGS := $(filter-out libstorage_integration_driver_%,$(BUILD_TAGS))
 endif
 
 ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
 # if this is a controller build then consider the DRIVERS var as it may
 # contain a list of drivers to include in the controller binary
-ifneq (,$(DRIVERS))
-BUILD_TAGS += libstorage_storage_driver libstorage_storage_executor
-BUILD_TAGS += $(foreach d,$(DRIVERS),libstorage_storage_driver_$(d) libstorage_storage_executor_$(d))
+ifneq (,$(strip $(DRIVERS)))
+BUILD_TAGS += $(DRIVERS)
 endif
 endif
 
 # remove leading and trailing whitespace from around the build tags
 BUILD_TAGS := $(strip $(BUILD_TAGS))
+
+# sort the build tags, removing any duplicates
+ifneq (,$(BUILD_TAGS))
+BUILD_TAGS := $(sort $(BUILD_TAGS))
+endif
 
 all:
 # if docker is running, then let's use docker to build it
@@ -1149,28 +1140,15 @@ endif
 ################################################################################
 
 LIBSTORAGE_DIR := vendor/github.com/codedellemc/libstorage
-LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_generated.go
-ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
-LIBSTORAGE_LSX := $(LIBSTORAGE_DIR)/api/server/executors/executors_generated.go
-LIBSTORAGE_LSX_BINDIR := $(LIBSTORAGE_DIR)/api/server/executors/bin
-$(LIBSTORAGE_API) $(LIBSTORAGE_LSX):
-else
+LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_version_generated.go
 $(LIBSTORAGE_API):
-endif
 	cd $(LIBSTORAGE_DIR) && \
 		BUILD_TAGS="$(BUILD_TAGS)" $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && \
 		cd -
-ifeq (true,$(BUILD_LIBSTORAGE_SERVER))
-$(LIBSTORAGE_LSX): | $(GO_BINDATA)
-build-libstorage: $(LIBSTORAGE_API) $(LIBSTORAGE_LSX)
-else
 build-libstorage: $(LIBSTORAGE_API)
-endif
 
 clean-libstorage:
-	if [ -f $(LIBSTORAGE_API) ]; then $(MAKE) -C $(LIBSTORAGE_DIR) clean; fi
-	rm -fr $(LIBSTORAGE_API) $(LIBSTORAGE_LSX) $(LIBSTORAGE_LSX_BINDIR)
-	find $(LIBSTORAGE_DIR) -name "*.d" -type f -delete
+	rm -f $(LIBSTORAGE_API)
 
 GO_CLEAN += clean-libstorage
 GO_PHONY += clean-libstorage

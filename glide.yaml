@@ -15,11 +15,11 @@ import:
     repo:    https://github.com/akutz/logrus
 
   - package: github.com/codedellemc/libstorage
-    version: v0.6.2 # libstorage-version
+    version: v0.6.3 # libstorage-version
     repo:    https://github.com/codedellemc/libstorage # libstorage-repo
 
   - package: github.com/akutz/gofig
-    version: v0.1.6
+    version: v0.1.8
   - package: github.com/akutz/gotil
     version: v0.1.0
 

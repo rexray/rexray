@@ -1,0 +1,25 @@
+a.headerlink {
+    font-size:          0.5em;
+    vertical-align:     super;
+    padding-left:       10px;
+    opacity:            0.25;
+}
+
+a.headerlink:hover {
+    opacity:            1.00;
+    text-decoration:    none;
+}
+
+body.body-api {
+    padding-top: 45px;
+}
+
+h1#libstorage::before {
+    background-image: url('../img/libstorage.svg');
+    background-size: 128px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: content-box;
+    height: 128px;
+    margin-top: -25px;
+}

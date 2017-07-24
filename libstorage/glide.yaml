@@ -1,0 +1,220 @@
+package: github.com/codedellemc/libstorage
+import:
+
+################################################################################
+##                           Framework Dependencies                           ##
+################################################################################
+
+  - package: github.com/spf13/pflag
+    version: d16db1e50e33dff1b6cdf37596cef36742128670
+
+  - package: github.com/akutz/golf
+    version: v0.1.2
+
+  - package: github.com/akutz/goof
+    version: v0.1.1
+
+  - package: github.com/Sirupsen/logrus
+    version: 5f376aa629ac60c3215cc368e674bd996093a01a
+    repo:    https://github.com/akutz/logrus
+
+  - package: github.com/akutz/gofig
+    version: v0.1.8
+
+  - package: github.com/akutz/gotil
+    version: v0.1.0
+
+  - package: github.com/codedellemc/gournal
+    version: v0.3.0
+
+  - package: github.com/cesanta/validate-json
+    version: 2f16017c76fc2403d143e93cea1e1b9526a01148
+
+  - package: github.com/SermoDigital/jose
+    version: 1.1
+
+
+################################################################################
+##                                  Golang X                                  ##
+################################################################################
+  - package: golang.org/x/net
+    version: b336a971b799939dd16ae9b1df8334cb8b977c4d
+
+  - package: golang.org/x/sys
+    version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+
+
+################################################################################
+##                         Storage Driver Dependencies                        ##
+################################################################################
+
+### ScaleIO
+  - package: github.com/codedellemc/goscaleio
+    version: support/tls-sio-gw-2.0.0.2
+    repo:    https://github.com/codedellemc/goscaleio
+
+### VirtualBox
+  - package: github.com/appropriate/go-virtualboxclient
+    version: e0978ab2ed407095400a69d5933958dd260058cd
+    repo:    https://github.com/clintonskitson/go-virtualboxclient
+
+### Isilon
+  - package: github.com/codedellemc/goisilon
+    version: v1.5.0
+
+### EFS and EBS and S3FS
+  - package: github.com/aws/aws-sdk-go
+    version: v1.6.18
+    repo:    https://github.com/aws/aws-sdk-go
+
+### GCE
+  - package: golang.org/x/oauth2
+    version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+
+  - package: google.golang.org/api
+    version: d61af0b67e5c8213e8c260ac29a762487bad020d
+    repo:    https://github.com/google/google-api-go-client
+
+### DigitalOcean
+  - package: github.com/digitalocean/godo
+    version: 83908b1ddd666d08a9b020c697b55ae3895be2fd
+
+### Azure
+  - package: github.com/Azure/azure-sdk-for-go
+    version: v7.0.1-beta
+  - package: github.com/Azure/go-autorest
+    version: v7.2.2
+  - package: github.com/rubiojr/go-vhd
+    version: 96a0db67ea8209453cfa694bdf03de202d6dd8f8
+    repo:    https://github.com/codenrhoden/go-vhd
+
+### Cinder
+  - package: github.com/gophercloud/gophercloud
+    ref:     9a5595b8ffe429439c63781cdc312c254e4ad990
+
+
+
+################################################################################
+##                              Test Dependencies                             ##
+################################################################################
+
+  - package: github.com/stretchr/testify
+    version: 4d4bfba8f1d1027c4fdbe371823030df51419987
+
+  - package: github.com/onsi/ginkgo
+    version: v1.3.1
+
+  - package: github.com/onsi/gomega
+    version: v1.1.0
+
+
+
+################################################################################
+##                           Transitive Dependencies                          ##
+################################################################################
+
+  - package: cloud.google.com/go
+    version: e4de3dc4493f142c5833f3185e1182025a61f805
+
+  - package: github.com/asaskevich/govalidator
+    version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
+
+  - package: github.com/cesanta/ucl
+    version: 97c016fce90e6af1b14558563ac46852167e6a76
+
+  - package: github.com/davecgh/go-spew
+    version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+
+  - package: github.com/dgrijalva/jwt-go
+    version: 2268707a8f0843315e2004ee4f1d021dc08baedf
+
+  - package: github.com/fsnotify/fsnotify
+    version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
+
+  - package: github.com/go-ini/ini
+    version: 6e4869b434bd001f6983749881c7ead3545887d8
+
+  - package: github.com/golang/protobuf
+    version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+
+  - package: github.com/google/go-querystring
+    version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
+
+  - package: github.com/googleapis/gax-go
+    version: da06d194a00e19ce00d9011a13931c3f6f6887c7
+
+  - package: github.com/gorilla/context
+    version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+
+  - package: github.com/gorilla/mux
+    version: 757bef944d0f21880861c2dd9c871ca543023cba
+
+  - package: github.com/hashicorp/hcl
+    version: f74cf8281543a0797d7b4ab7d88e76e7ba125308
+
+  - package: github.com/jmespath/go-jmespath
+    version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
+
+  - package: github.com/kardianos/osext
+    version: 9d302b58e975387d0b4d9be876622c86cefe64be
+
+  - package: github.com/kr/fs
+    version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
+
+  - package: github.com/magiconair/properties
+    version: 0723e352fa358f9322c938cc2dadda874e9151a9
+
+  - package: github.com/mitchellh/mapstructure
+    version: f3009df150dadf309fdee4a54ed65c124afad715
+
+  - package: github.com/pelletier/go-buffruneio
+    version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+
+  - package: github.com/pelletier/go-toml
+    version: 45932ad32dfdd20826f5671da37a5f3ce9f26a8d
+
+  - package: github.com/pkg/errors
+    version: 248dadf4e9068a0b3e79f02ed0a610d935de5302
+
+  - package: github.com/pkg/sftp
+    version: 4d0e916071f68db74f8a73926335f809396d6b42
+
+  - package: github.com/pmezard/go-difflib
+    version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+
+  - package: github.com/spf13/viper
+    version: 651d9d916abc3c3d6a91a12549495caba5edffd2
+
+  - package: github.com/spf13/afero
+    version: 52e4a6cfac46163658bd4f123c49b6ee7dc75f78
+
+  - package: github.com/spf13/cast
+    version: 2580bc98dc0e62908119e4737030cc2fdfc45e4c
+
+  - package: github.com/spf13/jwalterweatherman
+    version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
+
+  - package: github.com/tent/http-link-go
+    version: ac974c61c2f990f4115b119354b5e0b47550e888
+
+  - package: golang.org/x/crypto
+    version: 453249f01cfeb54c3d549ddb75ff152ca243f9d8
+    repo:    https://github.com/golang/crypto.git
+
+  - package: golang.org/x/text
+    version: 85c29909967d7f171f821e7a42e7b7af76fb9598
+    repo:    https://github.com/golang/text.git
+
+  - package: google.golang.org/appengine
+    version: 2e4a801b39fc199db615bfca7d0b9f8cd9580599
+
+  - package: google.golang.org/grpc
+    version: cbcceb2942a489498cf22b2f918536e819d33f0a
+
+  - package: gopkg.in/yaml.v2
+    version: bc35f417f8a7664a73d46c9def2933417c03019f
+    repo:    https://github.com/akutz/yaml.git
+
+testImports:
+  - package: gopkg.in/yaml.v1
+    version: 9f9df34309c04878acc86042b16630b0f696e1de

@@ -1,0 +1,60 @@
+go_import_path: github.com/codedellemc/libstorage
+
+language: go
+
+# the order below is important as the first value is grok'd by the
+# Makefile as the default version of Go used to build the project
+go:
+  - 1.8.3
+  - 1.6.3
+  - 1.7.5
+  - tip
+
+os:
+  - linux
+
+env:
+  - TRAVIS_GOARCH=amd64 COVERAGE_ENABLED=1
+  - TRAVIS_GOARCH=arm
+  - TRAVIS_GOARCH=arm64
+  - VFS_INSTANCEID_USE_FIELDS=true
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: 1.6.3
+    - go: 1.7.5
+    - go: tip
+  exclude:
+    - go:  1.6.3
+      env: VFS_INSTANCEID_USE_FIELDS=true
+    - go:  1.7.5
+      env: VFS_INSTANCEID_USE_FIELDS=true
+    - go:  tip
+      env: VFS_INSTANCEID_USE_FIELDS=true
+
+before_install:
+  - export GOARCH="${TRAVIS_GOARCH:-amd64}"
+  - go env
+  - if [ "$COVERAGE_ENABLED" = "1" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then echo coverage enabled; fi
+  - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
+  - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
+  - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
+  - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
+  - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
+  - make -C api version
+  - make vendor
+
+script:
+  - make -j build
+  - if [ "$GOARCH" = "amd64" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make test; fi
+
+after_success:
+  - if [ "$GOARCH" = "amd64" ] && [ "$COVERAGE_ENABLED" = "1" ] && [ "$TRAVIS_GO_VERSION" = "$COVERED_GO_VERSION" ]; then make cover; fi
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8

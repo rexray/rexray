@@ -1,0 +1,243 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# GCE config
+$GCE_PROJECT_ID = ENV['GCE_PROJECT_ID']
+$GCE_CLIENT_EMAIL = ENV['GCE_CLIENT_EMAIL']
+$GCE_JSON_KEY = ENV['GCE_JSON_KEY']
+$GCE_MACHINE_TYPE = ENV['GCE_MACHINE_TYPE'] ? ENV['GCE_MACHINE_TYPE'] : "n1-standard-1"
+$GCE_IMAGE = ENV['GCE_IMAGE'] ? ENV['GCE_IMAGE'] : "centos-7-v20170110"
+$GCE_ZONE = ENV['GCE_ZONE'] ? ENV['GCE_ZONE'] : "us-west1-b"
+$REMOTE_USER = ENV['GCE_USER'] ? ENV['GCE_USER'] : ENV['USER']
+$REMOTE_SSH_KEY = ENV['GCE_USER_SSH_KEY'] ? ENV['GCE_USER_SSH_KEY'] : "~/.ssh/id_rsa"
+
+# Flags to control which REX-Ray to install
+# one of these must be set to true
+$install_latest_stable_rex = false
+$install_latest_staged_rex = true
+$install_rex_from_source = false
+
+$node0_name = "libstorage-gce-test0"
+$node1_name = "libstorage-gce-test1"
+
+# Script to install node prerequisites
+$install_prereqs = <<SCRIPT
+yum -y install golang git
+SCRIPT
+
+# Script to install docker
+$install_docker = <<SCRIPT
+yum -y install yum-utils
+yum-config-manager -y \
+    --add-repo \
+    https://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo
+yum -y makecache fast
+yum -y install docker-engine
+systemctl start docker
+SCRIPT
+
+# Script to build rexray from source
+$build_rexray = <<SCRIPT
+export GOPATH=~/go
+SRC_DIR=${GOPATH}/src/github.com/codedellemc
+REX_REPO=https://github.com/codedellemc/rexray
+REX_BRANCH=master
+DEFAULT_LIBSTORAGE=false
+LS_REPO=https://github.com/codenrhoden/libstorage
+LS_BRANCH=feature/gce
+sudo yum -y install golang
+mkdir -p ${SRC_DIR}
+cd ${SRC_DIR}
+if [ ${DEFAULT_LIBSTORAGE} = false ]; then
+	git clone ${LS_REPO} --branch ${LS_BRANCH}
+fi
+git clone ${REX_REPO} --branch ${REX_BRANCH}
+cd rexray
+if [ ${DEFAULT_LIBSTORAGE} = false ]; then
+	sed -e "s|.*# libstorage-version|    ref:     ${LS_BRANCH}|g" -i glide.yaml
+	sed -e "s|.*# libstorage-repo|    repo:    file://${SRC_DIR}/libstorage\\n    vcs:     git|g" -i glide.yaml
+	rm glide.lock
+fi
+make deps && DRIVERS=gcepd make build && cp ${GOPATH}/bin/rexray /usr/bin
+SCRIPT
+
+$rexray_bin = "/usr/bin/rexray"
+$rexray_cfg = "/etc/rexray/config.yml"
+
+$write_rexray_server_config = <<SCRIPT
+mkdir -p #{File.dirname($rexray_cfg).shellescape}
+cat << EOF > #{$rexray_cfg.shellescape}
+rexray:
+  logLevel: debug
+libstorage:
+  host:     tcp://127.0.0.1:7979
+  embedded: true
+  service:  gcepd
+  server:
+    endpoints:
+      public:
+        address: tcp://:7979
+    services:
+      gcepd:
+        driver: gcepd
+gcepd:
+  keyFile: /home/#{$REMOTE_USER}/gce_key.json
+  tag: rexray
+EOF
+SCRIPT
+
+# the script to write rex-ray config file for the client node(s).
+$write_rexray_client_config = <<SCRIPT
+mkdir -p #{File.dirname($rexray_cfg).shellescape}
+cat << EOF > #{$rexray_cfg.shellescape}
+rexray:
+  logLevel: debug
+libstorage:
+  host:    tcp://#{$node0_name}:7979
+  service: gcepd
+EOF
+SCRIPT
+
+# the script to copy the rex-ray binary from the server node to the client node.
+# this script is executed from the server node
+$copy_rexray = <<SCRIPT
+set -x
+scp -q -o StrictHostKeyChecking=no \
+    #{$rexray_bin.shellescape} \
+    #{$REMOTE_USER}@#{$node1_name}:rexray
+ssh -o StrictHostKeyChecking=no \
+    #{$REMOTE_USER}@#{$node1_name} \
+    "sudo mv ~#{$REMOTE_USER}/rexray #{$rexray_bin.shellescape} && \
+     sudo chown root:root #{$rexray_bin.shellescape} && \
+     sudo chmod 0755 #{$rexray_bin.shellescape} && \
+     sudo rexray install && \
+     sudo systemctl start rexray"
+SCRIPT
+
+# init_gce initializes the gce config
+def init_gce(google, override, instance_name)
+  google.google_project_id = $GCE_PROJECT_ID
+  google.google_client_email = $GCE_CLIENT_EMAIL
+  google.google_json_key_location = $GCE_JSON_KEY
+  google.zone = $GCE_ZONE
+  google.image = $GCE_IMAGE
+  google.machine_type = $GCE_MACHINE_TYPE
+  google.name = instance_name
+
+  override.ssh.username = $REMOTE_USER
+  override.ssh.private_key_path = $REMOTE_SSH_KEY
+end
+
+Vagrant.configure("2") do |config|
+
+  # some shared setup
+  config.vm.box = "google/gce"
+  config.ssh.forward_agent = true
+
+  # configure node 1
+  config.vm.define $node1_name do |node|
+    node.vm.provider :google do |google, override|
+      init_gce google, override, $node1_name
+    end
+
+    # install Docker
+    node.vm.provision "shell" do |s|
+      s.name = "install docker"
+      s.privileged = true
+      s.inline = $install_docker
+    end
+
+    # write rex-ray config file
+    node.vm.provision "shell" do |s|
+      s.name       = "config rex-ray"
+      s.inline     = $write_rexray_client_config
+    end
+
+    # copy tests to run later
+    node.vm.provision "copytests1",
+      type: "file",
+      source: "client1-tests.sh",
+      destination: "$HOME/client1-tests.sh"
+  end
+
+  # configure node 0
+  config.vm.define $node0_name do |node|
+    node.vm.provider :google do |google, override|
+      init_gce google, override, $node0_name
+    end
+
+    if $install_rex_from_source
+      node.vm.provision "shell" do |s|
+        s.name = "install prereqs"
+        s.privileged = true
+        s.inline = $install_prereqs
+      end
+
+      node.vm.provision "shell" do |s|
+        s.name = "build rexray"
+        s.privileged = true
+        s.inline = $build_rexray
+      end
+    elsif $install_latest_staged_rex
+      node.vm.provision "shell", privileged: true, inline: <<-SHELL
+        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s staged
+      SHELL
+    else
+      node.vm.provision "shell", privileged: true, inline: <<-SHELL
+        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s stable
+      SHELL
+    end
+
+    # Copy JSON key file
+    node.vm.provision "file",
+      source: $GCE_JSON_KEY,
+      destination: "$HOME/gce_key.json"
+
+    # write rex-ray config file
+    node.vm.provision "shell" do |s|
+      s.name       = "config rex-ray"
+      s.inline     = $write_rexray_server_config
+    end
+
+    # install rex-ray to init system
+    node.vm.provision "shell" do |s|
+      s.name   = "rex-ray install"
+      s.inline = "rexray install"
+    end
+
+    # start rex-ray as a service
+    node.vm.provision "shell" do |s|
+      s.name   = "start rex-ray"
+      s.inline = "systemctl start rexray"
+    end
+
+    # install Docker
+    node.vm.provision "shell" do |s|
+      s.name = "install docker"
+      s.privileged = true
+      s.inline = $install_docker
+    end
+
+    # Copy rex-ray from node0 to node1
+    node.vm.provision "copyrexray",
+      type: "shell",
+      privileged: false,
+      inline: $copy_rexray
+
+    # run testse on node1
+    node.vm.provision "node1-tests",
+      type: "shell",
+      privileged: false,
+      inline: "ssh -o StrictHostKeyChecking=no \
+          #{$REMOTE_USER}@#{$node1_name} \
+          'sudo bash ~#{$REMOTE_USER}/client1-tests.sh'"
+
+    # Run the tests
+    #node.vm.provision "tests",
+    #  type: "shell",
+    #  path: "client0-tests.sh"
+
+  end
+
+
+end

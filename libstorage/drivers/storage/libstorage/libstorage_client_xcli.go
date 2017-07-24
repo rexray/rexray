@@ -231,13 +231,6 @@ func (c *client) LocalDevices(
 		return nil, err
 	}
 
-	// remove any local devices without values in the map
-	for k, v := range ld.DeviceMap {
-		if v == "" {
-			delete(ld.DeviceMap, k)
-		}
-	}
-
 	ctx.Debug("xli localdevices success")
 	return ld, nil
 }

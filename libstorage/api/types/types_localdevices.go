@@ -44,7 +44,9 @@ func (l *LocalDevices) MarshalText() ([]byte, error) {
 	keys := []string{}
 
 	for k := range l.DeviceMap {
-		keys = append(keys, k)
+		if k != "" {
+			keys = append(keys, k)
+		}
 	}
 
 	sort.Sort(byString(keys))
@@ -61,7 +63,7 @@ func (l *LocalDevices) MarshalText() ([]byte, error) {
 }
 
 var (
-	ldRX         = regexp.MustCompile(`^(.+?)=(\S+::\S+(?::\s*,\s*\S+::\S+)*)?$`)
+	ldRX         = regexp.MustCompile(`^(.+?)=(\S+::\S*(?::\s*,\s*\S+::\S*)*)?$`)
 	commaByteSep = []byte{','}
 	colonByteSep = []byte{':', ':'}
 )
@@ -82,10 +84,14 @@ func (l *LocalDevices) UnmarshalText(value []byte) error {
 
 	for _, p := range bytes.Split(m[2], commaByteSep) {
 		pp := bytes.Split(p, colonByteSep)
-		if len(pp) < 2 {
+		if len(pp) < 1 {
 			continue
 		}
-		l.DeviceMap[string(pp[0])] = string(pp[1])
+		val := ""
+		if len(pp) > 1 {
+			val = string(pp[1])
+		}
+		l.DeviceMap[string(pp[0])] = val
 	}
 
 	return nil

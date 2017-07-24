@@ -397,14 +397,17 @@ plug-in:
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `CINDER_AUTHURL` | The keystone authentication API |  | true
-`CINDER_USERNAMEID` | OpenStack userId for cinder access | |
+`CINDER_USERID` | OpenStack userId for cinder access | |
 `CINDER_USERNAME` | OpenStack username for cinder access | |
 `CINDER_PASSWORD` | OpenStack user password for cinder access | |
 `CINDER_TOKENID` | OpenStack tokenId for cinder access | |
+`CINDER_TRUSTID` | OpenStack trustId for cinder access | |
 `CINDER_TENANTID` | OpenStack tenantId | |
 `CINDER_TENANTNAME` | OpenStack tenantId | |
 `CINDER_DOMAINID` | OpenStack domainId to authenticate | |
 `CINDER_DOMAINNAME` | OpenStack domainName to authenticate | |
+`CINDER_REGIONNAME` | OpenStack regionName to authenticate | |
+`CINDER_AVAILABILITYZONENAME` | OpenStack availability zone for volumes | |
 
 
 ## Examples

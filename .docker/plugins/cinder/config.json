@@ -45,7 +45,7 @@
         },
         {
           "Description": "",
-          "Name": "CINDER_USERNAMEID",
+          "Name": "CINDER_USERID",
           "Settable": [
             "value"
           ],
@@ -77,6 +77,14 @@
         },		
         {
           "Description": "",
+          "Name": "CINDER_TRUSTID",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },		
+        {
+          "Description": "",
           "Name": "CINDER_TENANTID",
           "Settable": [
             "value"
@@ -93,6 +101,14 @@
         },
         {
           "Description": "",
+          "Name": "CINDER_DOMAINNAME",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },		
+        {
+          "Description": "",
           "Name": "CINDER_DOMAINID",
           "Settable": [
             "value"
@@ -101,7 +117,15 @@
         },		
         {
           "Description": "",
-          "Name": "CINDER_DOMAINNAME",
+          "Name": "CINDER_REGIONNAME",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },		
+        {
+          "Description": "",
+          "Name": "CINDER_AVAILABILITYZONENAME",
           "Settable": [
             "value"
           ],

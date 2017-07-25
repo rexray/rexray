@@ -14,10 +14,10 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
-	"github.com/codedellemc/libstorage/drivers/storage/vfs"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/vfs"
 )
 
 var (

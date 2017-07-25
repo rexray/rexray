@@ -6,7 +6,7 @@ import (
 	"os"
 
 	gofig "github.com/akutz/gofig/types"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 
 	"github.com/codedellemc/rexray/util"
 )

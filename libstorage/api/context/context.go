@@ -10,7 +10,7 @@ import (
 	gcontext "github.com/gorilla/context"
 	"golang.org/x/net/context"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 type lsc struct {

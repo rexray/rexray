@@ -14,10 +14,10 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/azureud"
-	"github.com/codedellemc/libstorage/drivers/storage/azureud/utils"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/azureud"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/azureud/utils"
 )
 
 // driver is the storage executor for the azureud storage driver.

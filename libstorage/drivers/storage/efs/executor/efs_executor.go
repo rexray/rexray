@@ -9,11 +9,11 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/efs"
-	efsUtils "github.com/codedellemc/libstorage/drivers/storage/efs/utils"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/efs"
+	efsUtils "github.com/codedellemc/rexray/libstorage/drivers/storage/efs/utils"
 )
 
 // driver is the storage executor for the efs storage driver.

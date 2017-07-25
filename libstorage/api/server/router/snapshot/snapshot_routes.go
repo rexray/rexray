@@ -4,13 +4,13 @@ import (
 	"net/http"
 
 	"github.com/akutz/goof"
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/server/httputils"
-	"github.com/codedellemc/libstorage/api/server/router/volume"
-	"github.com/codedellemc/libstorage/api/server/services"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
-	"github.com/codedellemc/libstorage/api/utils/schema"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/server/httputils"
+	"github.com/codedellemc/rexray/libstorage/api/server/router/volume"
+	"github.com/codedellemc/rexray/libstorage/api/server/services"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/api/utils/schema"
 )
 
 func (r *router) snapshots(

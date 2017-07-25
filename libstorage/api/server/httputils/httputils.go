@@ -8,8 +8,8 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/codedellemc/libstorage/api/server/services"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/server/services"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // WriteJSON writes the value v to the http response stream as json with

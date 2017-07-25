@@ -12,9 +12,9 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/scaleio"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/scaleio"
 )
 
 // driver is the storage executor for the VFS storage driver.

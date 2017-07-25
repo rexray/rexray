@@ -7,9 +7,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/types"
-	apiutils "github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
 )
 
 type idm struct {

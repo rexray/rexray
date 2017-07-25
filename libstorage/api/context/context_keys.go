@@ -5,7 +5,7 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // Key is the type used as a context key.

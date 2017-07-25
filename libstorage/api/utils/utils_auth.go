@@ -7,7 +7,7 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // ParseAuthConfig returns a new AuthTokenConfig instance.

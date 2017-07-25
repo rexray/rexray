@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/codedellemc/libstorage/api"
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/server/httputils"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/rexray/core"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/server/httputils"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
 )
 
 func (r *router) helpInspect(
@@ -40,7 +40,7 @@ func (r *router) versionInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	httputils.WriteJSON(w, http.StatusOK, api.Version)
+	httputils.WriteJSON(w, http.StatusOK, core.Version)
 	return nil
 }
 

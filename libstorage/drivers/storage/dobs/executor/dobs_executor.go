@@ -7,10 +7,10 @@ import (
 	"regexp"
 
 	gofig "github.com/akutz/gofig/types"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	do "github.com/codedellemc/libstorage/drivers/storage/dobs"
-	doUtils "github.com/codedellemc/libstorage/drivers/storage/dobs/utils"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	do "github.com/codedellemc/rexray/libstorage/drivers/storage/dobs"
+	doUtils "github.com/codedellemc/rexray/libstorage/drivers/storage/dobs/utils"
 )
 
 var (

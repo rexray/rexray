@@ -3,7 +3,7 @@ package client
 import (
 	"net/http"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // Client is the libStorage API client.

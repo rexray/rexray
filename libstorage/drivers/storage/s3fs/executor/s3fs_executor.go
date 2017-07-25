@@ -11,11 +11,11 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 
-	"github.com/codedellemc/libstorage/drivers/storage/s3fs"
-	"github.com/codedellemc/libstorage/drivers/storage/s3fs/utils"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/s3fs"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/s3fs/utils"
 )
 
 // driver is the storage executor for the s3fs storage driver.

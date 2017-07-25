@@ -9,11 +9,11 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
-	apiconfig "github.com/codedellemc/libstorage/api/utils/config"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
+	apiconfig "github.com/codedellemc/rexray/libstorage/api/utils/config"
 )
 
 type suiteRunner struct {

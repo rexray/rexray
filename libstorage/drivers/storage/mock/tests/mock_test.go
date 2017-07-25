@@ -12,16 +12,16 @@ import (
 	"github.com/akutz/goof"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/server"
-	apitests "github.com/codedellemc/libstorage/api/tests"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/server"
+	apitests "github.com/codedellemc/rexray/libstorage/api/tests"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
 
 	// load the  driver
 
-	"github.com/codedellemc/libstorage/drivers/storage/mock"
-	mockx "github.com/codedellemc/libstorage/drivers/storage/mock/executor"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/mock"
+	mockx "github.com/codedellemc/rexray/libstorage/drivers/storage/mock/executor"
 )
 
 var (

@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // storageSessionHandler is an HTTP filter for ensuring that a storage session

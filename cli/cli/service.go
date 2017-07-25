@@ -13,8 +13,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/context"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/core"
 	rrdaemon "github.com/codedellemc/rexray/daemon"
 	"github.com/codedellemc/rexray/util"

@@ -1,9 +1,9 @@
 package server
 
 import (
-	"github.com/codedellemc/libstorage/api/server/handlers"
-	"github.com/codedellemc/libstorage/api/server/services"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/server/handlers"
+	"github.com/codedellemc/rexray/libstorage/api/server/services"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func (s *server) initGlobalMiddleware() {

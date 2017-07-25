@@ -19,9 +19,8 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	apiversion "github.com/codedellemc/libstorage/api"
-	"github.com/codedellemc/libstorage/api/context"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 
 	"github.com/codedellemc/rexray/core"
 )
@@ -296,18 +295,8 @@ func PrintVersion(out io.Writer) {
 	fmt.Fprintf(out, "OsArch: %s\n", core.Version.Arch)
 	fmt.Fprintf(out, "Branch: %s\n", core.Version.Branch)
 	fmt.Fprintf(out, "Commit: %s\n", core.Version.ShaLong)
-	fmt.Fprintf(out, "Formed: %s\n\n",
+	fmt.Fprintf(out, "Formed: %s\n",
 		core.Version.BuildTimestamp.Format(time.RFC1123))
-
-	fmt.Fprintln(out, "libStorage")
-	fmt.Fprintln(out, "----------")
-	fmt.Fprintf(out, "SemVer: %s\n", apiversion.Version.SemVer)
-	fmt.Fprintf(out, "OsArch: %s\n", apiversion.Version.Arch)
-	fmt.Fprintf(out, "Branch: %s\n", apiversion.Version.Branch)
-	fmt.Fprintf(out, "Commit: %s\n", apiversion.Version.ShaLong)
-
-	timestamp := apiversion.Version.BuildTimestamp.Format(time.RFC1123)
-	fmt.Fprintf(out, "Formed: %s\n", timestamp)
 }
 
 var localHostRX = regexp.MustCompile(

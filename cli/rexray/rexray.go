@@ -12,10 +12,10 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	apitypes "github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
 	"github.com/codedellemc/rexray/cli/cli"
 	"github.com/codedellemc/rexray/core"
 

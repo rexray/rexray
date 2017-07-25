@@ -12,10 +12,10 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/ebs"
-	ebsUtils "github.com/codedellemc/libstorage/drivers/storage/ebs/utils"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/ebs"
+	ebsUtils "github.com/codedellemc/rexray/libstorage/drivers/storage/ebs/utils"
 )
 
 // driver is the storage executor for the ec2 storage driver.

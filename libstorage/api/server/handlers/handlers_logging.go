@@ -16,7 +16,7 @@ import (
 
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 const (

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // localDevicesHandler is a global HTTP filter for grokking the local devices

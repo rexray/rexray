@@ -9,7 +9,7 @@ import (
 	"github.com/cesanta/ucl"
 	"github.com/cesanta/validate-json/schema"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 const (

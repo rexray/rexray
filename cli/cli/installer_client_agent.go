@@ -4,7 +4,7 @@ package cli
 
 import (
 	gofig "github.com/akutz/gofig/types"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func installSelfCert(ctx apitypes.Context, config gofig.Config) {}

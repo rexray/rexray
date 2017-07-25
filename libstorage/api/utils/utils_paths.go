@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/akutz/gotil"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // NewPathConfig returns a new path configuration object.

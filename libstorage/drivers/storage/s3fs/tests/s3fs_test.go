@@ -3,11 +3,11 @@ package s3fs
 import (
 	"testing"
 
-	apitests "github.com/codedellemc/libstorage/api/tests"
+	apitests "github.com/codedellemc/rexray/libstorage/api/tests"
 
 	// load the driver packages
-	"github.com/codedellemc/libstorage/drivers/storage/s3fs"
-	_ "github.com/codedellemc/libstorage/drivers/storage/s3fs/storage"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/s3fs"
+	_ "github.com/codedellemc/rexray/libstorage/drivers/storage/s3fs/storage"
 )
 
 func TestSuite(t *testing.T) {

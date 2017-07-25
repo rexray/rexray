@@ -18,12 +18,12 @@ import (
 	goof "github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	apiUtils "github.com/codedellemc/libstorage/api/utils"
-	"github.com/codedellemc/libstorage/drivers/storage/gcepd"
-	"github.com/codedellemc/libstorage/drivers/storage/gcepd/utils"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	apiUtils "github.com/codedellemc/rexray/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/gcepd"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/gcepd/utils"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

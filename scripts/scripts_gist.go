@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/akutz/goof"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 const (

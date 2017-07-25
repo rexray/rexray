@@ -18,20 +18,20 @@ import (
 	"github.com/codedellemc/gournal"
 	glogrus "github.com/codedellemc/gournal/logrus"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/server/services"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
-	apicnfg "github.com/codedellemc/libstorage/api/utils/config"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/server/services"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
+	apicnfg "github.com/codedellemc/rexray/libstorage/api/utils/config"
 
 	// import and load the routers
-	_ "github.com/codedellemc/libstorage/api/server/router/help"
-	_ "github.com/codedellemc/libstorage/api/server/router/root"
-	_ "github.com/codedellemc/libstorage/api/server/router/service"
-	_ "github.com/codedellemc/libstorage/api/server/router/snapshot"
-	_ "github.com/codedellemc/libstorage/api/server/router/tasks"
-	_ "github.com/codedellemc/libstorage/api/server/router/volume"
+	_ "github.com/codedellemc/rexray/libstorage/api/server/router/help"
+	_ "github.com/codedellemc/rexray/libstorage/api/server/router/root"
+	_ "github.com/codedellemc/rexray/libstorage/api/server/router/service"
+	_ "github.com/codedellemc/rexray/libstorage/api/server/router/snapshot"
+	_ "github.com/codedellemc/rexray/libstorage/api/server/router/tasks"
+	_ "github.com/codedellemc/rexray/libstorage/api/server/router/volume"
 )
 
 var (

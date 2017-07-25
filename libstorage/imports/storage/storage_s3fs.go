@@ -4,5 +4,5 @@ package storage
 
 import (
 	// load the packages
-	_ "github.com/codedellemc/libstorage/drivers/storage/s3fs/storage"
+	_ "github.com/codedellemc/rexray/libstorage/drivers/storage/s3fs/storage"
 )

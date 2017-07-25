@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/azureud"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/azureud"
 )
 
 const (

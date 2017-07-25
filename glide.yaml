@@ -14,10 +14,6 @@ import:
     ref:     feature/logrus-aware-types
     repo:    https://github.com/akutz/logrus
 
-  - package: github.com/codedellemc/libstorage
-    version: v0.6.3 # libstorage-version
-    repo:    https://github.com/codedellemc/libstorage # libstorage-repo
-
   - package: github.com/akutz/gofig
     version: v0.1.8
   - package: github.com/akutz/gotil
@@ -27,10 +23,67 @@ import:
     ref:     d16db1e50e33dff1b6cdf37596cef36742128670
   - package: github.com/spf13/cobra
     ref:     7be4beda01ec05d0b93d80b3facd2b6f44080d94
-  - package: golang.org/x/net
-    repo:    https://github.com/golang/net
   - package: github.com/SermoDigital/jose
     version: 1.1
+
+
+################################################################################
+##                                  Golang X                                  ##
+################################################################################
+  - package: golang.org/x/net
+    version: b336a971b799939dd16ae9b1df8334cb8b977c4d
+
+  - package: golang.org/x/sys
+    version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+
+
+################################################################################
+##                         Storage Driver Dependencies                        ##
+################################################################################
+
+### ScaleIO
+  - package: github.com/codedellemc/goscaleio
+    version: support/tls-sio-gw-2.0.0.2
+    repo:    https://github.com/codedellemc/goscaleio
+
+### VirtualBox
+  - package: github.com/appropriate/go-virtualboxclient
+    version: e0978ab2ed407095400a69d5933958dd260058cd
+    repo:    https://github.com/clintonskitson/go-virtualboxclient
+
+### Isilon
+  - package: github.com/codedellemc/goisilon
+    version: v1.5.0
+
+### EFS and EBS and S3FS
+  - package: github.com/aws/aws-sdk-go
+    version: v1.6.18
+    repo:    https://github.com/aws/aws-sdk-go
+
+### GCE
+  - package: golang.org/x/oauth2
+    version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+
+  - package: google.golang.org/api
+    version: d61af0b67e5c8213e8c260ac29a762487bad020d
+    repo:    https://github.com/google/google-api-go-client
+
+### DigitalOcean
+  - package: github.com/digitalocean/godo
+    version: 83908b1ddd666d08a9b020c697b55ae3895be2fd
+
+### Azure
+  - package: github.com/Azure/azure-sdk-for-go
+    version: v7.0.1-beta
+  - package: github.com/Azure/go-autorest
+    version: v7.2.2
+  - package: github.com/rubiojr/go-vhd
+    version: 96a0db67ea8209453cfa694bdf03de202d6dd8f8
+    repo:    https://github.com/codenrhoden/go-vhd
+
+### Cinder
+  - package: github.com/gophercloud/gophercloud
+    ref:     9a5595b8ffe429439c63781cdc312c254e4ad990
 
 
 ################################################################################
@@ -55,3 +108,17 @@ import:
   - package: github.com/jteeuwen/go-bindata
     ref:     feature/md5checksum
     repo:    https://github.com/akutz/go-bindata
+
+
+################################################################################
+##                              Test Dependencies                             ##
+################################################################################
+
+  - package: github.com/stretchr/testify
+    version: 4d4bfba8f1d1027c4fdbe371823030df51419987
+
+  - package: github.com/onsi/ginkgo
+    version: v1.3.1
+
+  - package: github.com/onsi/gomega
+    version: v1.1.0

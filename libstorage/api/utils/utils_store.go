@@ -10,7 +10,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 type keyValueStore struct {

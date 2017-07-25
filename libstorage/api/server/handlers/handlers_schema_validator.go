@@ -9,8 +9,8 @@ import (
 
 	//log "github.com/Sirupsen/logrus"
 
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils/schema"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils/schema"
 )
 
 var (

@@ -7,8 +7,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/codedellemc/libstorage/api/context"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func newCLI(format, tpl string, tplTabs bool) *CLI {

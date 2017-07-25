@@ -8,8 +8,8 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 var (

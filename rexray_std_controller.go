@@ -5,5 +5,5 @@ package rexray
 
 import (
 	// load the libstorage packages
-	_ "github.com/codedellemc/libstorage/imports/storage"
+	_ "github.com/codedellemc/rexray/libstorage/imports/storage"
 )

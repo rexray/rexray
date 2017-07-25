@@ -3,8 +3,8 @@ package libstorage
 import (
 	"strings"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func (c *client) requireCtx(ctx types.Context) types.Context {

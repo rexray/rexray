@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/codedellemc/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/context"
 
-	"github.com/codedellemc/libstorage/drivers/storage/ebs"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/ebs"
 )
 
 func skipTest(t *testing.T) {

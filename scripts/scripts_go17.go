@@ -7,7 +7,7 @@ package scripts
 import (
 	"net/http"
 
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func doRequest(

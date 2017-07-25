@@ -14,17 +14,17 @@ import (
 	"github.com/akutz/gotil"
 	flag "github.com/spf13/pflag"
 
-	"github.com/codedellemc/libstorage/api"
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/server"
-	apitypes "github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
-	apiconfig "github.com/codedellemc/libstorage/api/utils/config"
+	"github.com/codedellemc/rexray/core"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/server"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
+	apiconfig "github.com/codedellemc/rexray/libstorage/api/utils/config"
 
 	// load the drivers
-	_ "github.com/codedellemc/libstorage/imports/config"
-	_ "github.com/codedellemc/libstorage/imports/storage"
+	_ "github.com/codedellemc/rexray/libstorage/imports/config"
+	_ "github.com/codedellemc/rexray/libstorage/imports/storage"
 )
 
 var (
@@ -63,7 +63,7 @@ func Run() {
 	if flagVersion != nil && *flagVersion {
 		_, _, thisExeAbsPath := gotil.GetThisPathParts()
 		fmt.Fprintf(apitypes.Stdout, "Binary: %s\n", thisExeAbsPath)
-		fmt.Fprint(apitypes.Stdout, api.Version.String())
+		fmt.Fprint(apitypes.Stdout, core.Version.String())
 		os.Exit(0)
 	}
 

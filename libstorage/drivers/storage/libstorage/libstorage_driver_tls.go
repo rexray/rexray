@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
 )
 
 var errServerFingerprint = errors.New("invalid server fingerprint")

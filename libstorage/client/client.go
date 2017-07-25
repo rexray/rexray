@@ -5,20 +5,20 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	gocontext "golang.org/x/net/context"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/api/utils"
-	apicnfg "github.com/codedellemc/libstorage/api/utils/config"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
+	apicnfg "github.com/codedellemc/rexray/libstorage/api/utils/config"
 
 	// load the config
-	_ "github.com/codedellemc/libstorage/imports/config"
+	_ "github.com/codedellemc/rexray/libstorage/imports/config"
 
 	// load the libStorage storage executors
-	_ "github.com/codedellemc/libstorage/imports/executors"
+	_ "github.com/codedellemc/rexray/libstorage/imports/executors"
 
 	// load the libStorage storage driver
-	_ "github.com/codedellemc/libstorage/drivers/storage/libstorage"
+	_ "github.com/codedellemc/rexray/libstorage/drivers/storage/libstorage"
 )
 
 type client struct {

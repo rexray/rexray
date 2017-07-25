@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/fittedcloud"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/fittedcloud"
 )
 
 const (

@@ -18,8 +18,8 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
-	apitypes "github.com/codedellemc/libstorage/api/types"
-	apiutils "github.com/codedellemc/libstorage/api/utils"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
 
 	"github.com/codedellemc/rexray/daemon/module"
 )

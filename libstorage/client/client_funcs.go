@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func (c *client) API() types.APIClient {

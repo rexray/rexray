@@ -5,8 +5,13 @@ all: build
 # include the golang makefile content
 include golang.mk
 
-# include the glide makefile content
-include glide.mk
+# the root project's vendor directory
+VENDOR := ../vendor
+vendor: $(VENDOR)
+
+# the target for making the dependencies
+$(VENDOR):
+	$(MAKE) -C $(@D) $(@F)
 
 # a list of this package's Go sources and Go sources
 # for packages on which this package depends
@@ -18,8 +23,7 @@ SRCS := $(shell \
 
 # define a list of the generated source files and a target
 # for generating the files if missing
-GENERATED_SRCS := ./api/api_version_generated.go \
-  ./api/utils/schema/schema_generated.go
+GENERATED_SRCS := ./api/utils/schema/schema_generated.go
 $(GENERATED_SRCS):
 	$(MAKE) -C $(@D) $(@F)
 
@@ -45,4 +49,4 @@ clean:
 	go clean -i -x
 	$(MAKE) -C api clean
 
-.PHONY: clean
+.PHONY: clean vendor

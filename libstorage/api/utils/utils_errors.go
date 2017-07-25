@@ -3,7 +3,7 @@ package utils
 import (
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 // NewUnsupportedForClientTypeError returns a new ErrUnsupportedForClientType

@@ -5,7 +5,7 @@ package utils
 import (
 	"net/http"
 
-	"github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func doRequest(ctx types.Context, req *http.Request) (*http.Response, error) {

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codedellemc/libstorage/api"
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/server/services"
+	"github.com/codedellemc/rexray/core"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/server/services"
 )
 
 var (
@@ -45,7 +45,7 @@ func (s *server) PrintServerStartupHeader(w io.Writer) {
 
 	var (
 		n          int
-		v          = api.Version
+		v          = core.Version
 		b          = &bytes.Buffer{}
 		bar        = strings.Repeat("#", 80)
 		barl       = fmt.Sprintf("##%s##", strings.Repeat(" ", 76))

@@ -6,7 +6,7 @@
 ifeq (,$(strip $(GO_VERSION)))
 GO_VERSION := $(TRAVIS_GO_VERSION)
 ifeq (,$(strip $(GO_VERSION)))
-GO_VERSION := $(shell grep -A 1 '^go:' .travis.yml | tail -n 1 | awk '{print $$2}')
+GO_VERSION := $(shell grep -A 1 '^go:' ../.travis.yml | tail -n 1 | awk '{print $$2}')
 endif
 endif
 

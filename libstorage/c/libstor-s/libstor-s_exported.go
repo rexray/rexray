@@ -8,11 +8,11 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/codedellemc/libstorage/api/context"
-	"github.com/codedellemc/libstorage/api/registry"
-	"github.com/codedellemc/libstorage/api/server"
-	"github.com/codedellemc/libstorage/api/utils"
-	apicfg "github.com/codedellemc/libstorage/api/utils/config"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	"github.com/codedellemc/rexray/libstorage/api/server"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
+	apicfg "github.com/codedellemc/rexray/libstorage/api/utils/config"
 )
 
 // closeOnAbort is a helper function that can be called by programs, such as

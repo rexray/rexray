@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codedellemc/libstorage/api/types"
-	"github.com/codedellemc/libstorage/drivers/storage/gcepd"
+	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/gcepd"
 )
 
 const (

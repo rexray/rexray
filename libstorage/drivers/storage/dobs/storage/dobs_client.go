@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/codedellemc/libstorage/api"
+	"github.com/codedellemc/rexray/core"
 	"github.com/digitalocean/godo"
 	"golang.org/x/oauth2"
 )
@@ -18,5 +18,5 @@ func Client(token string) (*godo.Client, error) {
 }
 
 func userAgent() string {
-	return "libstorage/" + api.Version.SemVer
+	return "libstorage/" + core.Version.SemVer
 }

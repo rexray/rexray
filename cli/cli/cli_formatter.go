@@ -13,7 +13,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/cli/cli/template"
 )
 

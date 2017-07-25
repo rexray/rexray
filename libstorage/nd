@@ -1,0 +1,720 @@
+#!/bin/sh
+
+################################################################################
+# create a new libStorage driver
+#
+# usage: nd [-t type] [-d directory] DRIVER
+#
+#       -t type          The type of driver to create. Possible values
+#                        include: integration, os, and storage. The
+#                        default value is storage.
+#
+#       -d directory     The directory in which to create the driver's
+#                        directory and file structure. The default value
+#                        is determined by the driver's type and name:
+#
+#                        integration    ./drivers/integration/DRIVER
+#                        os             ./drivers/os/DRIVER
+#                        storage        ./drivers/storage/DRIVER
+#
+################################################################################
+
+create_integration_template() {
+
+cat << EOF > ${DPATH}/${DNAME}.go
+// +build !libstorage_integration_driver libstorage_integration_driver_${DNAME}
+
+package ${DNAME}
+
+import (
+	gofig "github.com/akutz/gofig/types"
+
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+)
+
+type driver struct {
+	ctx    types.Context
+	config gofig.Config
+}
+
+// init registers the package's integration driver with the central registry.
+// the registration involves providing the name of the driver and a
+// function that returns a new instance of the driver object. The
+// function that acts as the driver's constructor should *never* cause
+// an error or really do any initialization of any type. The purpose
+// of this function is simply to return an uninitialized driver object.
+func init() {
+	registry.RegisterIntegrationDriver("${DNAME}", newDriver)
+}
+
+func newDriver() types.IntegrationDriver {
+	return &driver{}
+}
+
+// Name returns the name of the driver.
+func (d *driver) Name() string {
+	return "${DNAME}"
+}
+
+// Init initializes the integration driver with context and configuration
+// objects.
+//
+// Returning a non-nill error from this function will mark the driver
+// instance as in error and unusable.
+func (d *driver) Init(ctx types.Context, config gofig.Config) error {
+	d.ctx = ctx
+	d.config = config
+	return nil
+}
+
+// List a map that relates volume names to their mount points.
+func (d *driver) List(
+	ctx types.Context,
+	opts types.Store) ([]types.VolumeMapping, error) {
+
+	return nil, nil
+}
+
+// Inspect returns a specific volume as identified by the provided
+// volume name.
+func (d *driver) Inspect(
+	ctx types.Context,
+	volumeName string,
+	opts types.Store) (types.VolumeMapping, error) {
+
+	return nil, nil
+}
+
+// Mount will return a mount point path when specifying either a volumeName
+// or volumeID.  If a overwriteFs boolean is specified it will overwrite
+// the FS based on newFsType if it is detected that there is no FS present.
+func (d *driver) Mount(
+	ctx types.Context,
+	volumeID, volumeName string,
+	opts *types.VolumeMountOpts) (string, *types.Volume, error) {
+
+	return "", nil, nil
+}
+
+// Unmount will unmount the specified volume by volumeName or volumeID.
+func (d *driver) Unmount(
+	ctx types.Context,
+	volumeID, volumeName string,
+	opts types.Store) (*types.Volume, error) {
+
+	return nil, nil
+}
+
+// Path will return the mounted path of the volumeName or volumeID.
+func (d *driver) Path(
+	ctx types.Context,
+	volumeID, volumeName string,
+	opts types.Store) (string, error) {
+
+	return "", nil
+}
+
+// Create will create a new volume with the volumeName and opts.
+func (d *driver) Create(
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
+
+	return nil, nil
+}
+
+// Remove will remove a volume of volumeName.
+func (d *driver) Remove(
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeRemoveOpts) error {
+
+	return nil
+}
+
+// Attach will attach a volume based on volumeName to the instance of
+// instanceID.
+func (d *driver) Attach(
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeAttachOpts) (string, error) {
+
+	return "", nil
+}
+
+// Detach will detach a volume based on volumeName to the instance of
+// instanceID.
+func (d *driver) Detach(
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeDetachOpts) error {
+
+	return nil
+}
+EOF
+}
+
+create_os_template() {
+cat << EOF > ${DPATH}/${DNAME}.go
+// +build !libstorage_os_driver libstorage_os_driver_${DNAME}
+
+package ${DNAME}
+
+import (
+	gofig "github.com/akutz/gofig/types"
+
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+)
+
+type driver struct {
+	ctx    types.Context
+	config gofig.Config
+}
+
+// init registers the package's os driver with the central registry.
+// the registration involves providing the name of the driver and a
+// function that returns a new instance of the driver object. The
+// function that acts as the driver's constructor should *never* cause
+// an error or really do any initialization of any type. The purpose
+// of this function is simply to return an uninitialized driver object.
+func init() {
+	registry.RegisterOSDriver("${DNAME}", newDriver)
+}
+
+func newDriver() types.OSDriver {
+	return &driver{}
+}
+
+// Name returns the name of the driver.
+func (d *driver) Name() string {
+	return "${DNAME}"
+}
+
+// Init initializes the OS driver with context and configuration
+// objects.
+//
+// Returning a non-nill error from this function will mark the driver
+// instance as in error and unusable.
+func (d *driver) Init(ctx types.Context, config gofig.Config) error {
+	d.ctx = ctx
+	d.config = config
+	return nil
+}
+
+// Mounts get a list of mount points for a local device.
+func (d *driver) Mounts(
+	ctx types.Context,
+	deviceName, mountPoint string,
+	opts types.Store) ([]*types.MountInfo, error) {
+
+	return nil, nil
+}
+
+// Mount mounts a device to a specified path.
+func (d *driver) Mount(
+	ctx types.Context,
+	deviceName, mountPoint string,
+	opts *types.DeviceMountOpts) error {
+
+	return nil
+}
+
+// Unmount unmounts the underlying device from the specified path.
+func (d *driver) Unmount(
+	ctx types.Context,
+	mountPoint string,
+	opts types.Store) error {
+
+	return nil
+}
+
+// IsMounted checks whether a path is mounted or not
+func (d *driver) IsMounted(
+	ctx types.Context,
+	mountPoint string,
+	opts types.Store) (bool, error) {
+
+	return false, nil
+}
+
+// Format formats a device.
+func (d *driver) Format(
+	ctx types.Context,
+	deviceName string,
+	opts *types.DeviceFormatOpts) error {
+
+	return nil
+}
+EOF
+}
+
+create_storage_template() {
+
+# create the storage driver directories
+mkdir -p ${DPATH}/executor
+mkdir -p ${DPATH}/storage
+mkdir -p ${DPATH}/tests
+
+# create the root source
+cat << EOF > ${DPATH}/${DNAME}.go
+// +build !libstorage_storage_driver libstorage_storage_driver_${DNAME}
+
+package ${DNAME}
+
+const (
+	// Name is the name of the driver.
+	Name = "${DNAME}"
+)
+EOF
+
+# create the tests source
+cat << EOF > ${DPATH}/tests/${DNAME}_test.go
+// +build !libstorage_storage_driver libstorage_storage_driver_${DNAME}
+
+package ${DNAME}
+
+import (
+	"testing"
+
+	apitests "github.com/codedellemc/libstorage/api/tests"
+
+	// load the driver packages
+	"github.com/codedellemc/libstorage/drivers/storage/${DNAME}"
+	_ "github.com/codedellemc/libstorage/drivers/storage/${DNAME}/storage"
+)
+
+func TestSuite(t *testing.T) {
+	apitests.RunSuite(t, ${DNAME}.Name)
+}
+EOF
+
+# create the coverage file
+cat << EOF > ${DPATH}/tests/coverage.mk
+${U}_COVERPKG := \$(ROOT_IMPORT_PATH)/drivers/storage/${DNAME}
+TEST_COVERPKG_./drivers/storage/${DNAME}/tests := \$(${U}_COVERPKG),\$(${U}_COVERPKG)/storage
+EOF
+
+# create the storage source
+cat << EOF > ${DPATH}/storage/${DNAME}_storage.go
+// +build !libstorage_storage_driver libstorage_storage_driver_${DNAME}
+
+package storage
+
+import (
+	gofig "github.com/akutz/gofig/types"
+
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+
+	"github.com/codedellemc/libstorage/drivers/storage/${DNAME}"
+)
+
+type driver struct {
+	ctx    types.Context
+	config gofig.Config
+}
+
+// init registers the package's storage driver with the central registry.
+// the registration involves providing the name of the driver and a
+// function that returns a new instance of the driver object. The
+// function that acts as the driver's constructor should *never* cause
+// an error or really do any initialization of any type. The purpose
+// of this function is simply to return an uninitialized driver object.
+func init() {
+	registry.RegisterStorageDriver(${DNAME}.Name, newDriver)
+}
+
+func newDriver() types.StorageDriver {
+	return &driver{}
+}
+
+// Name returns the name of the driver.
+func (d *driver) Name() string {
+	return ${DNAME}.Name
+}
+
+// Init initializes the storage driver with context and configuration
+// objects.
+//
+// Returning a non-nill error from this function will mark the driver
+// instance as in error and unusable.
+func (d *driver) Init(ctx types.Context, config gofig.Config) error {
+	d.ctx = ctx
+	d.config = config
+	return nil
+}
+
+// Login is an optional function that can be defined on the driver. If
+// defined it will be invoked by the libStorage framework upon every
+// API call, enabling a driver to validate credentials or other
+// identifying information such as a token.
+//
+//func (d *driver) Login(ctx types.Context) (interface{}, error) {
+//	return nil, nil
+//}
+
+// Type returns the type of storage provided by the storage platform
+// this driver accesses.
+func (d *driver) Type(ctx types.Context) (types.StorageType, error) {
+	return types.Block, nil
+}
+
+// NextDeviceInfo returns information about the driver's next device
+// workflow, such as whether a driver requires a next device string
+// for performing an attach operation.
+func (d *driver) NextDeviceInfo(
+	ctx types.Context) (*types.NextDeviceInfo, error) {
+
+	return &types.NextDeviceInfo{Ignore: true}, nil
+}
+
+// InstanceInspect is invoked by clients for driver's that require the
+// transformation of some seed information, provided by the client, into
+// the eventual data that uniquely identifies a client to a storage
+// platform.
+func (d *driver) InstanceInspect(
+	ctx types.Context,
+	opts types.Store) (*types.Instance, error) {
+
+	return nil, nil
+}
+
+// Volumes returns a list of all volumes.
+func (d *driver) Volumes(
+	ctx types.Context,
+	opts *types.VolumesOpts) ([]*types.Volume, error) {
+
+	return nil, nil
+}
+
+// VolumeInspect returns information about a single volume.
+func (d *driver) VolumeInspect(
+	ctx types.Context,
+	volumeID string,
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
+
+	return nil, nil
+}
+
+// VolumeCreate creates a new volume.
+func (d *driver) VolumeCreate(
+	ctx types.Context,
+	name string,
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
+
+	return nil, nil
+}
+
+// VolumeCreateFromSnapshot creates a new volume from an existing snapshot.
+func (d *driver) VolumeCreateFromSnapshot(
+	ctx types.Context,
+	snapshotID, volumeName string,
+	opts *types.VolumeCreateOpts) (*types.Volume, error) {
+
+	return nil, nil
+}
+
+// VolumeCopy copies an existing volume.
+func (d *driver) VolumeCopy(
+	ctx types.Context,
+	volumeID, volumeName string,
+	opts types.Store) (*types.Volume, error) {
+
+	return nil, nil
+}
+
+// VolumeSnapshot creates a snapshot from an existing volume.
+func (d *driver) VolumeSnapshot(
+	ctx types.Context,
+	volumeID, snapshotName string,
+	opts types.Store) (*types.Snapshot, error) {
+
+	return nil, nil
+}
+
+// VolumeRemove removes an existing volume.
+func (d *driver) VolumeRemove(
+	ctx types.Context,
+	volumeID string,
+	opts *types.VolumeRemoveOpts) error {
+
+	return nil
+}
+
+// VolumeAttach attaches an existing volume.
+func (d *driver) VolumeAttach(
+	ctx types.Context,
+	volumeID string,
+	opts *types.VolumeAttachOpts) (*types.Volume, string, error) {
+
+	// when attaching a new volume, the client's instance ID and local devices
+	// map are almost always required pieces of information. this example
+	// illustrates how to request that information from the provided context.
+
+	// it is safe to use the context.MustInstanceID function to retrieve the
+	// instance ID from the context since the libStorage framework ensures
+	// that a driver's VolumeAttach won't be invoked unless there is an
+	// InstanceID object present.
+	iid := context.MustInstanceID(ctx)
+
+	// a hack to keep the go compiler from complaining that the iid variable
+	// is defined but not used
+	_ = iid
+
+	// since a local device map isn't strictly required for attaching a new
+	// volume, it's important to use the context.LocalDevices function and
+	// *not* its variant, context.MustLocalDevices. the function used below
+	// returns both the local devices map as well as a boolean flag that
+	// indicates whether there *was* a local devices map in the context.
+	// if there was no such map the flag is false and the variable ld below
+	// will be assigned a nil value.
+	ld, ldOk := context.LocalDevices(ctx)
+
+	// a hack to keep the go compiler from complaining that the ld and
+	// ldOk variables are defined but not used
+	_ = ld
+	_ = ldOk
+
+	return nil, "", nil
+}
+
+// VolumeDetach detaches an existing volume.
+func (d *driver) VolumeDetach(
+	ctx types.Context,
+	volumeID string,
+	opts *types.VolumeDetachOpts) (*types.Volume, error) {
+
+	return nil, nil
+}
+
+// Snapshots returns a list of all snapshots.
+func (d *driver) Snapshots(
+	ctx types.Context,
+	opts types.Store) ([]*types.Snapshot, error) {
+
+	return nil, nil
+}
+
+// SnapshotInspect returns information about a single snapshot.
+func (d *driver) SnapshotInspect(
+	ctx types.Context,
+	snapshotID string,
+	opts types.Store) (*types.Snapshot, error) {
+
+	return nil, nil
+}
+
+// SnapshotCopy copies an existing snapshot.
+func (d *driver) SnapshotCopy(
+	ctx types.Context,
+	snapshotID, snapshotName, destinationID string,
+	opts types.Store) (*types.Snapshot, error) {
+
+	return nil, nil
+}
+
+// SnapshotRemove removes an existing snapshot.
+func (d *driver) SnapshotRemove(
+	ctx types.Context,
+	snapshotID string,
+	opts types.Store) error {
+
+	return nil
+}
+EOF
+
+# create the executor source
+cat << EOF > ${DPATH}/executor/${DNAME}_executor.go
+// +build !libstorage_storage_executor libstorage_storage_executor_${DNAME}
+
+package executor
+
+import (
+	gofig "github.com/akutz/gofig/types"
+
+	"github.com/codedellemc/libstorage/api/registry"
+	"github.com/codedellemc/libstorage/api/types"
+
+	"github.com/codedellemc/libstorage/drivers/storage/${DNAME}"
+)
+
+type driver struct {
+	ctx    types.Context
+	config gofig.Config
+}
+
+// init registers the package's storage executor with the central registry.
+// the registration involves providing the name of the driver and a
+// function that returns a new instance of the driver object. The
+// function that acts as the driver's constructor should *never* cause
+// an error or really do any initialization of any type. The purpose
+// of this function is simply to return an uninitialized driver object.
+func init() {
+	registry.RegisterStorageExecutor(${DNAME}.Name, newDriver)
+}
+
+func newDriver() types.StorageExecutor {
+	return &driver{}
+}
+
+// Name returns the name of the executor.
+func (d *driver) Name() string {
+	return ${DNAME}.Name
+}
+
+// Init initializes the storage executor with context and configuration
+// objects.
+//
+// Returning a non-nill error from this function will mark the driver
+// instance as in error and unusable.
+func (d *driver) Init(ctx types.Context, config gofig.Config) error {
+	d.ctx = ctx
+	d.config = config
+	return nil
+}
+
+// Supported returns a flag indicating whether the executor is supported on
+// the executing host.
+//
+// For example, an executor for an NFS-based platform would likely return
+// false for clients that do not support NFS.
+func (d *driver) Supported(
+	ctx types.Context,
+	opts types.Store) (bool, error) {
+
+	return true, nil
+}
+
+// InstanceID returns the local system's InstanceID.
+func (d *driver) InstanceID(
+	ctx types.Context,
+	opts types.Store) (*types.InstanceID, error) {
+
+	return nil, nil
+}
+
+// NextDevice returns the next available device path.
+//
+// Not all storage platforms require this piece of the workflow, but
+// the function should still be defined and return an empty string
+// and nil error regardless.
+func (d *driver) NextDevice(
+	ctx types.Context,
+	opts types.Store) (string, error) {
+
+	return "", nil
+}
+
+// LocalDevices returns a map of the system's devices specific to this
+// executors associated storage platform.
+//
+// The map's keys should be a piece of information available both
+// locally and remotely that can be used to identify the storage volume
+// attached as the corresponding device.
+//
+// The map's values should be the device path.
+func (d *driver) LocalDevices(
+	ctx types.Context,
+	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
+
+	return nil, nil
+}
+
+// Mount is an optional function for a storage executor implementation.
+// If defined the Mount function will replace the OS driver's
+// responsibility in the client-side workflow for mounting the file
+// system on a storage volume's attached device.
+//
+//func (d *driver) Mount(
+//	ctx types.Context,
+//	deviceName, mountPoint string,
+//	opts *types.DeviceMountOpts) error {
+//
+//	return nil
+//}
+
+// Unmount is an optional function for a storage executor implementation.
+// If defined the Unmount function will replace the OS driver's
+// responsibility in the client-side workflow for unmounting the file
+// system on a storage volume's attached device.
+// func (d *driver) Unmount(
+// 	ctx types.Context,
+// 	mountPoint string,
+// 	opts types.Store) error {
+//
+// 	return nil
+// }
+EOF
+
+}
+
+usage() {
+    echo "usage: nd [-t type] [-d directory] DRIVER"
+    echo
+    echo "       -t type          The type of driver to create. Possible values"
+    echo "                        include: integration, os, and storage. The"
+    echo "                        default value is storage."
+    echo
+    echo "       -d directory     The directory in which to create the driver's"
+    echo "                        directory and file structure. The default value"
+    echo "                        is determined by the driver's type and name:"
+    echo
+    echo "                        integration    ./drivers/integration/DRIVER"
+    echo "                        os             ./drivers/os/DRIVER"
+    echo "                        storage        ./drivers/storage/DRIVER"
+	exit 1
+}
+
+# the driver's type
+DTYPE=storage
+
+# the driver's name
+DNAME=
+
+# the driver's directory
+DPATH=
+
+while getopts ":t:d:" opt; do
+  case $opt in
+    t)
+      DTYPE=$OPTARG
+      if [ ! "$DTYPE" == "integration" ] && \
+         [ ! "$DTYPE" == "os" ] && \
+         [ ! "$DTYPE" == "storage" ]; then
+         usage
+      fi
+      ;;
+    d)
+      DPATH=$OPTARG
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+# assign the driver's name
+DNAME=$1
+
+if [ -z $DNAME ]; then
+  usage
+  exit 1
+fi
+
+# assign the driver's directory if not already set via the -d flag
+DPATH=${DPATH:-drivers/$DTYPE/$DNAME}
+
+# create the root directory
+mkdir -p ${DPATH}
+
+# the next series of steps depend upon the driver's type
+if [ "$DTYPE" = "integration" ]; then
+  create_integration_template
+elif [ "$DTYPE" = "os" ]; then
+  create_os_template
+elif [ "$DTYPE" = "storage" ]; then
+  create_storage_template
+fi

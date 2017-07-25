@@ -7,8 +7,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/codedellemc/libstorage/api/context"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 var (

@@ -1,0 +1,29 @@
+site_name: libStorage
+site_url: https://github.com/codedellemc/libstorage
+repo_url: https://github.com/codedellemc/libstorage.git
+docs_dir: .docs
+site_dir: .site
+theme_dir: .docs-themes/yeti
+extra_css:
+    - css/codedellemc.css
+    - css/codedellemc-font.css
+    - css/hX.css
+markdown_extensions:
+    - admonition
+    - toc:
+        permalink: true
+pages:
+- Home: index.md
+- User Guide:
+    - Configuration: user-guide/config.md
+    - Storage Providers: user-guide/storage-providers.md
+    - Schedulers: user-guide/schedulers.md
+- Developers Guide:
+    - Project Guidelines: dev-guide/project-guidelines.md
+    - Build Reference: dev-guide/build-reference.md
+    - Release Process: dev-guide/release-process.md
+- API: api.md
+- About:
+    - Contributing: about/contributing.md
+    - License: about/license.md
+    - Release Notes: about/release-notes.md

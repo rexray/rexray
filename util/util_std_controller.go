@@ -9,8 +9,8 @@ import (
 	"os"
 
 	gofig "github.com/akutz/gofig/types"
-	apiserver "github.com/codedellemc/libstorage/api/server"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apiserver "github.com/codedellemc/rexray/libstorage/api/server"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 const defaultServiceConfigFormat = `

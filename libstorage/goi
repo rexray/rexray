@@ -1,0 +1,10 @@
+#!/bin/sh
+
+BUILD_TAGS="pflag gofig libstorage_integration_driver_linux libstorage_storage_driver libstorage_storage_executor"
+DRIVERS=${DRIVERS:=vfs}
+
+for D in $DRIVERS; do
+  BUILD_TAGS="${BUILD_TAGS} libstorage_storage_driver_${D} libstorage_storage_executor_${D}"
+done
+
+go install -tags "$BUILD_TAGS" $*

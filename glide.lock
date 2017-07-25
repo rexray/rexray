@@ -1,11 +1,10 @@
-hash: 8afc683dcd7201c10c6f15edb64237ce3ee9fab59f0e3384ecf8120035fbf982
-updated: 2017-07-23T02:18:15.538170952-05:00
+hash: 7ec3dba505b1a0e4155309a8b83384c5bec05ad82a00a4d88e3b3951ea3da48d
+updated: 2017-07-24T12:40:06.824065233-05:00
 imports:
 - name: cloud.google.com/go
-  version: e4de3dc4493f142c5833f3185e1182025a61f805
+  version: 76d607c4e7a2b9df49f1d1a58a3f3d2dd2614704
   subpackages:
   - compute/metadata
-  - internal
 - name: github.com/akutz/gofig
   version: 65fa82bc59644020b3ad6be479c0954fc82bd0fc
   subpackages:
@@ -25,7 +24,7 @@ imports:
   - vboxwebsrv
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
-  version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
+  version: aa5cce4a76edb1a5acecab1870c17abbffb5419e
 - name: github.com/aws/aws-sdk-go
   version: 3f8f870ec9939e32b3372abf74d24e468bcd285d
   repo: https://github.com/aws/aws-sdk-go
@@ -97,109 +96,27 @@ imports:
   version: 4293aaf7e91602963a5777caef4b346e1cf21936
   subpackages:
   - logrus
-- name: github.com/codedellemc/libstorage
-  version: c113db26203c4e295d79e4fe9755a28a9b45a6f9
-  repo: https://github.com/codedellemc/libstorage
-  subpackages:
-  - imports/config
-  - imports/executors
-  - imports/storage
-  - api/context
-  - api/types
-  - api/utils
-  - api/registry
-  - api
-  - api/server
-  - client
-  - drivers/storage/azureud/executor
-  - drivers/storage/cinder/executor
-  - drivers/storage/dobs/executor
-  - drivers/storage/ebs/executor
-  - drivers/storage/efs/executor
-  - drivers/storage/fittedcloud/executor
-  - drivers/storage/gcepd/executor
-  - drivers/storage/isilon/executor
-  - drivers/storage/rbd/executor
-  - drivers/storage/s3fs/executor
-  - drivers/storage/scaleio/executor
-  - drivers/storage/vbox/executor
-  - drivers/storage/vfs/executor
-  - drivers/storage/azureud/storage
-  - drivers/storage/cinder/storage
-  - drivers/storage/dobs/storage
-  - drivers/storage/ebs/storage
-  - drivers/storage/efs/storage
-  - drivers/storage/fittedcloud/storage
-  - drivers/storage/gcepd/storage
-  - drivers/storage/isilon/storage
-  - drivers/storage/rbd/storage
-  - drivers/storage/s3fs/storage
-  - drivers/storage/scaleio/storage
-  - drivers/storage/vbox/storage
-  - drivers/storage/vfs/storage
-  - api/server/handlers
-  - api/server/router/help
-  - api/server/router/root
-  - api/server/router/service
-  - api/server/router/snapshot
-  - api/server/router/tasks
-  - api/server/router/volume
-  - api/server/services
-  - api/utils/config
-  - drivers/integration/linux
-  - drivers/os/darwin
-  - drivers/os/linux
-  - drivers/storage/libstorage
-  - drivers/storage/azureud
-  - drivers/storage/azureud/utils
-  - drivers/storage/cinder
-  - drivers/storage/dobs
-  - drivers/storage/dobs/utils
-  - drivers/storage/ebs
-  - drivers/storage/ebs/utils
-  - drivers/storage/efs
-  - drivers/storage/efs/utils
-  - drivers/storage/fittedcloud
-  - drivers/storage/fittedcloud/utils
-  - drivers/storage/gcepd
-  - drivers/storage/gcepd/utils
-  - drivers/storage/isilon
-  - drivers/storage/rbd
-  - drivers/storage/rbd/utils
-  - drivers/storage/s3fs
-  - drivers/storage/s3fs/utils
-  - drivers/storage/scaleio
-  - drivers/storage/vbox
-  - drivers/storage/vfs
-  - drivers/storage/fittedcloud/fcagent
-  - api/server/auth
-  - api/server/httputils
-  - api/utils/schema
-  - api/utils/filters
-  - api/client
 - name: github.com/dgrijalva/jwt-go
-  version: 2268707a8f0843315e2004ee4f1d021dc08baedf
+  version: a539ee1a749a2b895533f979515ac7e6e0f5b650
 - name: github.com/digitalocean/godo
   version: 83908b1ddd666d08a9b020c697b55ae3895be2fd
   subpackages:
   - context
 - name: github.com/fsnotify/fsnotify
-  version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
+  version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-ini/ini
-  version: 6e4869b434bd001f6983749881c7ead3545887d8
+  version: 3d73f4b845efdf9989fffd4b4e562727744a34ba
 - name: github.com/go-yaml/yaml
   version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git
 - name: github.com/golang/protobuf
-  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  version: 0a4f71a498b7c4812f64969510bcb4eca251e33a
   subpackages:
   - proto
 - name: github.com/google/go-querystring
   version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
   subpackages:
   - query
-- name: github.com/googleapis/gax-go
-  version: da06d194a00e19ce00d9011a13931c3f6f6887c7
 - name: github.com/gophercloud/gophercloud
   version: 9a5595b8ffe429439c63781cdc312c254e4ad990
   subpackages:
@@ -218,9 +135,9 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 757bef944d0f21880861c2dd9c871ca543023cba
+  version: ac112f7d75a0714af1bd86ab17749b31f7809640
 - name: github.com/hashicorp/hcl
-  version: f74cf8281543a0797d7b4ab7d88e76e7ba125308
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -241,20 +158,46 @@ imports:
   version: ae77be60afb1dcacde03767a8c37337fad28ac14
   repo: https://github.com/kardianos/osext.git
   vcs: git
-- name: github.com/kr/fs
-  version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/magiconair/properties
-  version: 0723e352fa358f9322c938cc2dadda874e9151a9
+  version: be5ece7dd465ab0765a9682137865547526d1dfb
 - name: github.com/mitchellh/mapstructure
-  version: f3009df150dadf309fdee4a54ed65c124afad715
-- name: github.com/pelletier/go-buffruneio
-  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+  version: d0303fe809921458f417bcf828397a65db30a7e4
+- name: github.com/onsi/ginkgo
+  version: 77a8c1e5c40d6bb6c5eb4dd4bdce9763564f6298
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/failer
+  - internal/remote
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - types
+  - internal/spec_iterator
+  - internal/containernode
+  - internal/leafnodes
+  - internal/spec
+  - internal/specrunner
+  - reporters/stenographer/support/go-colorable
+  - reporters/stenographer/support/go-isatty
+- name: github.com/onsi/gomega
+  version: 334b8f472b3af5d541c5642701c1e29e2126f486
+  subpackages:
+  - types
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/testingtsupport
+  - matchers
+  - internal/oraclematcher
+  - format
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
 - name: github.com/pelletier/go-toml
-  version: 45932ad32dfdd20826f5671da37a5f3ce9f26a8d
-- name: github.com/pkg/errors
-  version: 248dadf4e9068a0b3e79f02ed0a610d935de5302
-- name: github.com/pkg/sftp
-  version: 4d0e916071f68db74f8a73926335f809396d6b42
+  version: 69d355db5304c0f7f809a2edc054553e7142f016
 - name: github.com/rubiojr/go-vhd
   version: 96a0db67ea8209453cfa694bdf03de202d6dd8f8
   repo: https://github.com/codenrhoden/go-vhd
@@ -270,44 +213,37 @@ imports:
   version: 5f376aa629ac60c3215cc368e674bd996093a01a
   repo: https://github.com/akutz/logrus
 - name: github.com/spf13/afero
-  version: 52e4a6cfac46163658bd4f123c49b6ee7dc75f78
+  version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
   - mem
-  - sftp
 - name: github.com/spf13/cast
-  version: 2580bc98dc0e62908119e4737030cc2fdfc45e4c
+  version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
   version: 7be4beda01ec05d0b93d80b3facd2b6f44080d94
 - name: github.com/spf13/jwalterweatherman
-  version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
+  version: 0efa5202c04663c757d84f90f5219c1250baf94f
 - name: github.com/spf13/pflag
   version: d16db1e50e33dff1b6cdf37596cef36742128670
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
+- name: github.com/stretchr/testify
+  version: 4d4bfba8f1d1027c4fdbe371823030df51419987
+  subpackages:
+  - assert
 - name: github.com/tent/http-link-go
   version: ac974c61c2f990f4115b119354b5e0b47550e888
 - name: golang.org/x/crypto
-  version: 453249f01cfeb54c3d549ddb75ff152ca243f9d8
+  version: 6914964337150723782436d56b3f21610a74ce7b
   repo: https://github.com/golang/crypto.git
+  vcs: git
   subpackages:
   - pkcs12
   - pkcs12/internal/rc2
-  - ssh
-  - curve25519
-  - ed25519
-  - ed25519/internal/edwards25519
 - name: golang.org/x/net
   version: b336a971b799939dd16ae9b1df8334cb8b977c4d
-  repo: https://github.com/golang/net
   subpackages:
-  - context/ctxhttp
   - context
-  - http2
-  - trace
-  - http2/hpack
-  - idna
-  - lex/httplex
-  - internal/timeseries
+  - context/ctxhttp
 - name: golang.org/x/oauth2
   version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
   subpackages:
@@ -320,9 +256,11 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 85c29909967d7f171f821e7a42e7b7af76fb9598
+  version: 836efe42bb4aa16aaa17b9c155d8813d336ed720
   repo: https://github.com/golang/text.git
+  vcs: git
   subpackages:
+  - .
   - transform
   - unicode/norm
 - name: google.golang.org/api
@@ -334,7 +272,7 @@ imports:
   - gensupport
   - googleapi/internal/uritemplates
 - name: google.golang.org/appengine
-  version: 2e4a801b39fc199db615bfca7d0b9f8cd9580599
+  version: ad2570cd3913654e00c5f0183b39d2f998e54046
   subpackages:
   - urlfetch
   - internal
@@ -345,23 +283,18 @@ imports:
   - internal/datastore
   - internal/log
   - internal/remote_api
-- name: google.golang.org/grpc
-  version: cbcceb2942a489498cf22b2f918536e819d33f0a
-  subpackages:
-  - codes
-  - credentials
-  - grpclog
-  - internal
-  - metadata
-  - naming
-  - peer
-  - stats
-  - tap
-  - transport
 - name: gopkg.in/yaml.v1
   version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git
 - name: gopkg.in/yaml.v2
   version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib

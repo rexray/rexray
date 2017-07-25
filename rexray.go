@@ -51,7 +51,7 @@ import (
 	"github.com/codedellemc/rexray/util"
 
 	// load the libstorage packages
-	_ "github.com/codedellemc/libstorage/imports/config"
+	_ "github.com/codedellemc/rexray/libstorage/imports/config"
 )
 
 func init() {

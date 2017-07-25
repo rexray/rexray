@@ -12,7 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 
 	"github.com/codedellemc/rexray/util"
 )

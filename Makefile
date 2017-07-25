@@ -981,7 +981,7 @@ package core
 import (
 	"time"
 
-	apitypes "github.com/codedellemc/libstorage/api/types"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
 func init() {
@@ -1112,6 +1112,11 @@ $(foreach i,\
 	$(IMPORT_PATH_INFO),\
 	$(eval $(call IMPORT_PATH_BUILD_DEF,$(subst $(ROOT_DIR),.,$(word 3,$(subst ;, ,$(i)))),$(i))))
 
+# remove the storage driver tests and add the vfs tests back
+GO_TEST := $(filter-out ./libstorage/drivers/storage/%,$(GO_TEST))
+GO_TEST += ./libstorage/drivers/storage/vfs/tests/vfs.test.out
+TEST_PROFILES := $(filter-out ./libstorage/drivers/storage/%,$(TEST_PROFILES))
+TEST_PROFILES += ./libstorage/drivers/storage/vfs/tests/vfs.test.out
 
 ################################################################################
 ##                                  COVERAGE                                  ##
@@ -1134,24 +1139,6 @@ else
 	@echo codecov offline
 endif
 
-
-################################################################################
-##                                LIBSTORAGE                                  ##
-################################################################################
-
-LIBSTORAGE_DIR := vendor/github.com/codedellemc/libstorage
-LIBSTORAGE_API := $(LIBSTORAGE_DIR)/api/api_version_generated.go
-$(LIBSTORAGE_API):
-	cd $(LIBSTORAGE_DIR) && \
-		BUILD_TAGS="$(BUILD_TAGS)" $(MAKE) $(subst $(LIBSTORAGE_DIR)/,,$@) && \
-		cd -
-build-libstorage: $(LIBSTORAGE_API)
-
-clean-libstorage:
-	rm -f $(LIBSTORAGE_API)
-
-GO_CLEAN += clean-libstorage
-GO_PHONY += clean-libstorage
 
 ################################################################################
 ##                                 SCRIPTS                                    ##
@@ -1466,13 +1453,11 @@ ifeq (true,$($EMBED_SCRIPTS))
 endif
 
 clean-build:
-	$(MAKE) clean-libstorage
 	$(MAKE) $(CORE_GENERATED_SRC)-clean
 	$(MAKE) $(SCRIPTS_GENERATED_SRC)-clean
 	$(MAKE) build
 
 build:
-	$(MAKE) build-libstorage
 	$(MAKE) build-generated
 	$(MAKE) -j build-$(PROG)
 ifneq (1,$(NOSTAT))
@@ -1511,6 +1496,9 @@ pkg: build
 pkg-clean:
 	rm -f $(PROG)*.tar.gz && rm -f *.rpm && rm -f *.deb
 
+# remove the storage driver tests and add the vfs tests back
+GO_TEST := $(filter-out ./libstorage/drivers/storage/%,$(GO_TEST))
+GO_TEST += ./libstorage/drivers/storage/vfs/tests/vfs.test.out
 test: $(GO_TEST)
 
 test-client:

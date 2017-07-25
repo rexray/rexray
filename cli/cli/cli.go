@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/codedellemc/libstorage/api/context"
-	apitypes "github.com/codedellemc/libstorage/api/types"
-	apiutils "github.com/codedellemc/libstorage/api/utils"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
 
 	"github.com/codedellemc/rexray/cli/cli/term"
 	"github.com/codedellemc/rexray/util"

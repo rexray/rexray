@@ -72,16 +72,25 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
+	username := d.userName()
+
 	// Get all Volumes in all pools
-	pools, err := utils.GetRadosPools(ctx)
+	pools, err := utils.GetRadosPools(ctx, username)
 	if err != nil {
 		return nil, err
+	}
+
+	if username != "admin" {
+		pools = utils.ConvStrArrayToPtr([]string{d.defaultPool()})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var volumes []*types.Volume
 
 	for _, pool := range pools {
-		images, err := utils.GetRBDImages(ctx, pool)
+		images, err := utils.GetRBDImages(ctx, username, pool)
 		if err != nil {
 			return nil, err
 		}
@@ -103,12 +112,14 @@ func (d *driver) VolumeInspect(
 	volumeID string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
+	username := d.userName()
+
 	pool, image, err := d.parseVolumeID(&volumeID)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := utils.GetRBDInfo(ctx, pool, image)
+	info, err := utils.GetRBDInfo(ctx, username, pool, image)
 	if err != nil {
 		return nil, err
 	}
@@ -162,12 +173,14 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 
 	ctx.WithFields(fields).Debug("creating volume")
 
+	username := d.userName()
+
 	pool, imageName, err := d.parseVolumeID(&volumeName)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := utils.GetRBDInfo(ctx, pool, imageName)
+	info, err := utils.GetRBDInfo(ctx, username, pool, imageName)
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +207,7 @@ func (d *driver) VolumeCreate(ctx types.Context, volumeName string,
 
 	err = utils.RBDCreate(
 		ctx,
+		username,
 		pool,
 		imageName,
 		opts.Size,
@@ -244,6 +258,8 @@ func (d *driver) VolumeRemove(
 		"volumeID":   volumeID,
 	}
 
+	username := d.userName()
+
 	ctx.WithFields(fields).Debug("deleting volume")
 
 	pool, imageName, err := d.parseVolumeID(&volumeID)
@@ -251,7 +267,7 @@ func (d *driver) VolumeRemove(
 		return goof.WithError("Unable to set image name", err)
 	}
 
-	err = utils.RBDRemove(ctx, pool, imageName)
+	err = utils.RBDRemove(ctx, username, pool, imageName)
 	if err != nil {
 		return goof.WithError("Error while deleting RBD image", err)
 	}
@@ -269,6 +285,8 @@ func (d *driver) VolumeAttach(
 		"driverName": d.Name(),
 		"volumeID":   volumeID,
 	}
+
+	username := d.userName()
 
 	ctx.WithFields(fields).Debug("attaching volume")
 
@@ -295,7 +313,7 @@ func (d *driver) VolumeAttach(
 		}
 	}
 
-	_, err = utils.RBDMap(ctx, pool, imageName)
+	_, err = utils.RBDMap(ctx, username, pool, imageName)
 	if err != nil {
 		return nil, "", err
 	}
@@ -322,10 +340,12 @@ func (d *driver) VolumeDetach(
 		"volumeID":   volumeID,
 	}
 
+	username := d.userName()
+
 	ctx.WithFields(fields).Debug("detaching volume")
 
 	// Can't rely on local devices header, so get local attachments
-	localAttachMap, err := utils.GetMappedRBDs(ctx)
+	localAttachMap, err := utils.GetMappedRBDs(ctx, username)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +355,7 @@ func (d *driver) VolumeDetach(
 		return nil, goof.New("Volume not attached")
 	}
 
-	err = utils.RBDUnmap(ctx, &dev)
+	err = utils.RBDUnmap(ctx, username, &dev)
 	if err != nil {
 		return nil, goof.WithError("Unable to detach volume", err)
 	}
@@ -385,12 +405,17 @@ func (d *driver) defaultPool() string {
 	return d.config.GetString(rbd.ConfigDefaultPool)
 }
 
+func (d *driver) userName() string {
+	return d.config.GetString(rbd.ConfigUserName)
+}
+
 func (d *driver) toTypeVolumes(
 	ctx types.Context,
 	images []*utils.RBDImage,
 	getAttachments types.VolumeAttachmentsTypes) ([]*types.Volume, error) {
 
 	lsVolumes := make([]*types.Volume, len(images))
+	username := d.userName()
 
 	var localAttachMap map[string]string
 
@@ -398,7 +423,7 @@ func (d *driver) toTypeVolumes(
 	// rely on that being present unless getAttachments.Devices is set
 	if getAttachments.Requested() {
 		var err error
-		localAttachMap, err = utils.GetMappedRBDs(ctx)
+		localAttachMap, err = utils.GetMappedRBDs(ctx, username)
 		if err != nil {
 			return nil, err
 		}
@@ -439,7 +464,7 @@ func (d *driver) toTypeVolumes(
 				//Check if RBD has watchers to infer attachment
 				//to a different host
 				b, err := utils.RBDHasWatchers(
-					ctx, &image.Pool, &image.Name,
+					ctx, username, &image.Pool, &image.Name,
 				)
 				if err != nil {
 					ctx.Warnf("Unable to determine attachment state: %v", err)

@@ -198,10 +198,28 @@ func (d *driver) NextDevice(
 func (d *driver) LocalDevices(
 	ctx types.Context,
 	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
+	devicesMap := make(map[string]string)
 
-	/* There is no current method to look up what the volume ID is for
-	volumes attached to a host via Cinder. All lookups are done on the
-	server-side from the Cinder API
-	*/
-	return &types.LocalDevices{Driver: d.Name()}, nil
+	file := "/proc/partitions"
+	contentBytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil,
+			goof.WithFieldE("file", file, "error reading file", err)
+	}
+
+	content := string(contentBytes)
+
+	lines := strings.Split(content, "\n")
+	for _, line := range lines[2:] {
+		fields := strings.Fields(line)
+		if len(fields) >= 4 {
+			devicePath := "/dev/" + fields[3]
+			devicesMap[devicePath] = ""
+		}
+	}
+
+	return &types.LocalDevices{
+		Driver:    cinder.Name,
+		DeviceMap: devicesMap,
+	}, nil
 }

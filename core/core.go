@@ -1,11 +1,14 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/codedellemc/rexray/libstorage/api/context"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
@@ -13,7 +16,10 @@ import (
 
 var (
 	// Version of REX-Ray.
-	Version *apitypes.VersionInfo
+	Version = &apitypes.VersionInfo{
+		Arch:           fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH),
+		BuildTimestamp: time.Now().UTC(),
+	}
 
 	// BuildType is the build type of this binary.
 	BuildType = "client+agent+controller"

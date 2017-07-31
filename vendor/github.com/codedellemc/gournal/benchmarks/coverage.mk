@@ -1,0 +1,1 @@
+TEST_COVERPKG_./benchmarks := $(ROOT_IMPORT_PATH)

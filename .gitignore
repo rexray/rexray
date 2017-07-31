@@ -25,10 +25,8 @@ site/
 site/
 .build/*/
 .build/*-filtered.json
-vendor/
 .project
 core/core_generated.go
-/scripts/scripts_generated.go
 /scripts/scripts/test.sh
 
 # Created by https://www.gitignore.io

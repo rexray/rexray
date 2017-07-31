@@ -80,14 +80,7 @@ ifneq (,$(BUILD_TAGS))
 BUILD_TAGS := $(sort $(BUILD_TAGS))
 endif
 
-all:
-# if docker is running, then let's use docker to build it
-ifneq (,$(shell if [ ! "$$NODOCKER" = "1" ] && docker version &> /dev/null; then echo -; fi))
-	$(MAKE) docker-build
-else
-	$(MAKE) deps
-	$(MAKE) build
-endif
+all: build
 
 endif # ifneq (1,$(PORCELAIN))
 
@@ -646,34 +639,7 @@ endif # ifneq (,$(shell if docker version &> /dev/null; then echo -; fi))
 ifneq (,$(shell which go 2> /dev/null)) # if go exists
 
 # a list of the go 1.6 stdlib pacakges as grepped from https://golang.org/pkg/
-GO_STDLIB := archive archive/tar archive/zip bufio builtin bytes compress \
-			 compress/bzip2 compress/flate compress/gzip compress/lzw \
-			 compress/zlib container container/heap container/list \
-			 container/ring crypto crypto/aes crypto/cipher crypto/des \
-			 crypto/dsa crypto/ecdsa crypto/elliptic crypto/hmac crypto/md5 \
-			 crypto/rand crypto/rc4 crypto/rsa crypto/sha1 crypto/sha256 \
-			 crypto/sha512 crypto/subtle crypto/tls crypto/x509 \
-			 crypto/x509/pkix database database/sql database/sql/driver debug \
-			 debug/dwarf debug/elf debug/gosym debug/macho debug/pe \
-			 debug/plan9obj encoding encoding/ascii85 encoding/asn1 \
-			 encoding/base32 encoding/base64 encoding/binary encoding/csv \
-			 encoding/gob encoding/hex encoding/json encoding/pem encoding/xml \
-			 errors expvar flag fmt go go/ast go/build go/constant go/doc \
-			 go/format go/importer go/parser go/printer go/scanner go/token \
-			 go/types hash hash/adler32 hash/crc32 hash/crc64 hash/fnv html \
-			 html/template image image/color image/color/palette image/draw \
-			 image/gif image/jpeg image/png index index/suffixarray io \
-			 io/ioutil log log/syslog math math/big math/cmplx math/rand mime \
-			 mime/multipart mime/quotedprintable net net/http net/http/cgi \
-			 net/http/cookiejar net/http/fcgi net/http/httptest \
-			 net/http/httputil net/http/pprof net/mail net/rpc net/rpc/jsonrpc \
-			 net/smtp net/textproto net/url os os/exec os/signal os/user path \
-			 path/filepath reflect regexp regexp/syntax runtime runtime/cgo \
-			 runtime/debug runtime/msan runtime/pprof runtime/race \
-			 runtime/trace sort strconv strings sync sync/atomic syscall \
-			 testing testing/iotest testing/quick text text/scanner \
-			 text/tabwriter text/template text/template/parse time unicode \
-			 unicode/utf16 unicode/utf8 unsafe
+GO_STDLIB := $(shell go list std)
 
 
 ################################################################################
@@ -846,18 +812,6 @@ $(foreach i,\
 ################################################################################
 ##                               DEPENDENCIES                                 ##
 ################################################################################
-GO_BINDATA := $(GOPATH)/bin/go-bindata
-go-bindata: $(GO_BINDATA)
-
-GLIDE := $(GOPATH)/bin/glide
-GLIDE_VER := 0.11.1
-GLIDE_TGZ := glide-v$(GLIDE_VER)-$(GOHOSTOS)-$(GOHOSTARCH).tar.gz
-GLIDE_URL := https://github.com/Masterminds/glide/releases/download/v$(GLIDE_VER)/$(GLIDE_TGZ)
-GOGET_LOCK := goget.lock
-GLIDE_LOCK := glide.lock
-GLIDE_YAML := glide.yaml
-GLIDE_LOCK_D := glide.lock.d
-
 EXT_DEPS := $(sort $(EXT_DEPS))
 EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS))
 TEST_EXT_DEPS := $(sort $(TEST_EXT_DEPS))
@@ -865,7 +819,19 @@ TEST_EXT_DEPS_SRCS := $(sort $(TEST_EXT_DEPS_SRCS))
 ALL_EXT_DEPS := $(sort $(EXT_DEPS) $(TEST_EXT_DEPS))
 ALL_EXT_DEPS_SRCS := $(sort $(EXT_DEPS_SRCS) $(TEST_EXT_DEPS_SRCS))
 
-ifneq (1,$(VENDORED))
+
+################################################################################
+##                                  GLIDE                                     ##
+################################################################################
+
+GLIDE := $(GOPATH)/bin/glide
+GLIDE_VER := 0.11.1
+GLIDE_TGZ := glide-v$(GLIDE_VER)-$(GOHOSTOS)-$(GOHOSTARCH).tar.gz
+GLIDE_URL := https://github.com/Masterminds/glide/releases/download/v$(GLIDE_VER)/$(GLIDE_TGZ)
+GLIDE_LOCK := glide.lock
+GLIDE_YAML := glide.yaml
+VENDOR := vendor
+
 $(GLIDE):
 	@curl -SLO $(GLIDE_URL) && \
 		tar xzf $(GLIDE_TGZ) && \
@@ -874,36 +840,16 @@ $(GLIDE):
 		mv $(GOHOSTOS)-$(GOHOSTARCH)/glide $(GOPATH)/bin && \
 		rm -fr $(GOHOSTOS)-$(GOHOSTARCH)
 glide: $(GLIDE)
-GO_DEPS += $(GLIDE)
 
-GO_DEPS += $(GLIDE_LOCK_D)
-$(ALL_EXT_DEPS_SRCS): $(GLIDE_LOCK_D)
+$(VENDOR): $(GLIDE_LOCK)
+	$(GLIDE) install
 
-ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
-$(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
-	touch $@
-
-$(GLIDE_LOCK): $(GLIDE_YAML)
+$(GLIDE_LOCK): $(GLIDE_YAML) | $(GLIDE)
 	$(GLIDE) up
 
-else #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
 
-$(GLIDE_LOCK_D): $(GLIDE_LOCK) | $(GLIDE)
-	$(GLIDE) install && touch $@
-
-$(GLIDE_LOCK): $(GLIDE_YAML)
-	$(GLIDE) up && touch $@ && touch $(GLIDE_LOCK_D)
-
-endif #ifeq (,$(strip $(wildcard $(GLIDE_LOCK))))
-
-$(GLIDE_YAML):
-	$(GLIDE) init
-
-$(GLIDE_LOCK)-clean:
-	rm -f $(GLIDE_LOCK)
-GO_PHONY += $(GLIDE_LOCK)-clean
-#GO_CLOBBER += $(GLIDE_LOCK)-clean
-endif
+GO_BINDATA := $(GOPATH)/bin/go-bindata
+go-bindata: $(GO_BINDATA)
 
 ifeq (true,$(DEPEND_ON_GOBINDATA))
 GO_BINDATA_IMPORT_PATH := vendor/github.com/jteeuwen/go-bindata/go-bindata
@@ -913,11 +859,12 @@ else
 GO_BINDATA_IMPORT_PATH := $(firstword $(subst /vendor/, ,$(ROOT_IMPORT_PATH)))/$(GO_BINDATA_IMPORT_PATH)
 endif
 
-$(GO_BINDATA): $(GLIDE_LOCK_D)
+$(GO_BINDATA): | $(VENDOR)
 	GOOS="" GOARCH="" go install $(GO_BINDATA_IMPORT_PATH)
 	@touch $@
 GO_DEPS += $(GO_BINDATA)
 endif
+
 
 ################################################################################
 ##                               GOMETALINTER                                 ##
@@ -978,14 +925,9 @@ endif
 define CORE_GENERATED_CONTENT
 package core
 
-import (
-	"time"
-
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-)
+import "time"
 
 func init() {
-	Version = &apitypes.VersionInfo{}
 	Version.Arch = "$(V_OS_ARCH)"
 	Version.Branch = "$(V_BRANCH)"
 	Version.BuildTimestamp = time.Unix($(V_EPOCH), 0)
@@ -1138,7 +1080,6 @@ ifneq (1,$(CODECOV_OFFLINE))
 else
 	@echo codecov offline
 endif
-
 
 ################################################################################
 ##                                 SCRIPTS                                    ##
@@ -1448,7 +1389,7 @@ build-$(PROG): $(GO_BUILD)
 
 build-generated:
 	$(MAKE) $(CORE_GENERATED_SRC)
-ifeq (true,$($EMBED_SCRIPTS))
+ifeq (true,$(EMBED_SCRIPTS))
 	$(MAKE) $(SCRIPTS_GENERATED_SRC)
 endif
 
@@ -1457,7 +1398,7 @@ clean-build:
 	$(MAKE) $(SCRIPTS_GENERATED_SRC)-clean
 	$(MAKE) build
 
-build:
+build: | $(VENDOR)
 	$(MAKE) build-generated
 	$(MAKE) -j build-$(PROG)
 ifneq (1,$(NOSTAT))
@@ -1496,9 +1437,6 @@ pkg: build
 pkg-clean:
 	rm -f $(PROG)*.tar.gz && rm -f *.rpm && rm -f *.deb
 
-# remove the storage driver tests and add the vfs tests back
-GO_TEST := $(filter-out ./libstorage/drivers/storage/%,$(GO_TEST))
-GO_TEST += ./libstorage/drivers/storage/vfs/tests/vfs.test.out
 test: $(GO_TEST)
 
 test-client:

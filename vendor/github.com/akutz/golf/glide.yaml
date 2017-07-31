@@ -1,0 +1,5 @@
+package: github.com/akutz/golf
+import:
+  - package: github.com/Sirupsen/logrus
+    ref:     feature/logrus-aware-types
+    repo:    https://github.com/akutz/logrus

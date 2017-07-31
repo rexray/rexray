@@ -1,0 +1,48 @@
+hash: 8fd76425f72074620e4ade0f82b4dd42d9743826cca58bd5484cf87ef5018f39
+updated: 2016-10-27T12:40:13.905438564-05:00
+imports:
+- name: github.com/golang/protobuf
+  version: 98fa357170587e470c5f27d3c3ea0947b71eb455
+  subpackages:
+  - proto
+- name: github.com/Sirupsen/logrus
+  version: 3ec0642a7fb6488f65b06f9040adc67e3990296a
+- name: github.com/stretchr/testify
+  version: 976c720a22c8eb4eb6a0b4348ad85ad12491a506
+  subpackages:
+  - assert
+- name: github.com/uber-go/atomic
+  version: 9e99152552a6ce13fa3b2ce4a9c4fb117cca4506
+- name: github.com/uber-go/zap
+  version: f2929c57adb5be8fb03cad9a6912c509a5cb60af
+- name: golang.org/x/net
+  version: b626cca987fa6333e5dd25baa0fd61708c145011
+  subpackages:
+  - context
+- name: golang.org/x/sys
+  version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+  subpackages:
+  - unix
+- name: google.golang.org/appengine
+  version: 46239ca616842c00f41b8cbc6bbf2bd6ffbfcdad
+  subpackages:
+  - aetest
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/modules
+  - internal/remote_api
+  - internal/user
+  - log
+  - user
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib

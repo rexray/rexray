@@ -1,0 +1,27 @@
+package: github.com/codedellemc/gournal
+import:
+
+################################################################################
+##                             Logging Frameworks                             ##
+################################################################################
+
+  - package: github.com/Sirupsen/logrus
+  - package: github.com/uber-go/zap
+  - package: google.golang.org/appengine
+    subpackages:
+    - log
+    - aetest
+
+################################################################################
+##                              Core Dependencies                             ##
+################################################################################
+
+  - package: golang.org/x/net
+    subpackages:
+    - context
+
+################################################################################
+##                              Test Dependencies                             ##
+################################################################################
+
+  - package: github.com/stretchr/testify

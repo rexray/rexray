@@ -1,6 +1,6 @@
 // +build go1.7
-// +build !rexray_build_type_agent
-// +build !rexray_build_type_controller
+// +build !agent
+// +build !controller
 
 package scripts
 

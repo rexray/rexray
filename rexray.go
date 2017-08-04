@@ -1,60 +1,175 @@
-// Package rexray provides visibility and management of external/underlying
-// storage via guest storage introspection. Available as a Go package, CLI tool,
-// and Linux service, and with built-in third-party support for tools such as
-// Docker, REX-Ray is easily integrated into any workflow. For example, here's
-// how to list storage for a guest hosted on Amazon Web Services (AWS) with
-// REX-Ray:
-//
-//     [0]akutz@pax:~$ export REXRAY_STORAGEDRIVERS=ec2
-//     [0]akutz@pax:~$ export AWS_ACCESSKEY=access_key
-//     [0]akutz@pax:~$ export AWS_SECRETKEY=secret_key
-//     [0]akutz@pax:~$ rexray volume get
-//
-//     - providername: ec2
-//       instanceid: i-695bb6ab
-//       volumeid: vol-dedbadc3
-//       devicename: /dev/sda1
-//       region: us-west-1
-//       status: attached
-//     - providername: ec2
-//       instanceid: i-695bb6ab
-//       volumeid: vol-04c4b219
-//       devicename: /dev/xvdb
-//       region: us-west-1
-//       status: attached
-//
-//     [0]akutz@pax:~$
-//
-// Using REX-Ray as a library is easy too. To perform the same volume listing
-// as above, simply use the following snippet:
-//
-//     import "github.com/codedellemc/rexray"
-//
-//     r := rexray.NewWithEnv(map[string]string{
-//         "REXRAY_STORAGEDRIVERS": "ec2",
-//         "AWS_ACCESSKEY": "access_key",
-//         "AWS_SECRETKEY": "secret_key"})
-//
-//     r.InitDrivers()
-//
-//     volumes, err := r.Storage.GetVolumeMapping()
-//
-package rexray
+//go:generate go generate ./core
+//go:generate go run core/semver/semver.go -f mk -o semver.mk
+//go:generate go run core/semver/semver.go -f env -o semver.env -x
+
+package main
 
 import (
+	"net/http"
+	"os"
 	"path"
+	"path/filepath"
+	"runtime/pprof"
+	"runtime/trace"
+	"strconv"
+	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 
+	"github.com/codedellemc/rexray/cli/cli"
+	"github.com/codedellemc/rexray/core"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/api/utils"
 	"github.com/codedellemc/rexray/util"
 
-	// load the libstorage packages
+	// import the libstorage config package
 	_ "github.com/codedellemc/rexray/libstorage/imports/config"
+
+	// load the profiler
+	_ "net/http/pprof"
 )
 
-func init() {
+func main() {
+	registerConfig()
+	updateLogLevel()
+
+	var (
+		err          error
+		traceProfile *os.File
+		cpuProfile   *os.File
+		ctx          = context.Background()
+		exit         sync.Once
+	)
+
+	pathConfig := utils.NewPathConfig(ctx, "", "")
+	ctx = ctx.WithValue(
+		context.PathConfigKey, pathConfig)
+	registry.ProcessRegisteredConfigs(ctx)
+
+	createUserKnownHostsFile(ctx, pathConfig)
+
+	onExit := func() {
+		if traceProfile != nil {
+			ctx.Info("stopping trace profile")
+			trace.Stop()
+			traceProfile.Close()
+			ctx.Debug("stopped trace profile")
+		}
+
+		if cpuProfile != nil {
+			ctx.Info("stopping cpu profile")
+			pprof.StopCPUProfile()
+			cpuProfile.Close()
+			ctx.Debug("stopped cpu profile")
+		}
+
+		ctx.Info("exiting process")
+	}
+
+	core.RegisterSignalHandler(func(ctx apitypes.Context, s os.Signal) {
+		if ok, _ := core.IsExitSignal(s); ok {
+			ctx.Info("received exit signal")
+			exit.Do(onExit)
+		}
+	})
+
+	if p := os.Getenv("REXRAY_TRACE_PROFILE"); p != "" {
+		if traceProfile, err = os.Create(p); err != nil {
+			panic(err)
+		}
+		if err = trace.Start(traceProfile); err != nil {
+			panic(err)
+		}
+		ctx.WithField("path", traceProfile.Name()).Info("trace profile enabled")
+	}
+
+	if p := os.Getenv("REXRAY_CPU_PROFILE"); p != "" {
+		if cpuProfile, err = os.Create(p); err != nil {
+			panic(err)
+		}
+		if err = pprof.StartCPUProfile(cpuProfile); err != nil {
+			panic(err)
+		}
+		ctx.WithField("path", cpuProfile.Name()).Info("cpu profile enabled")
+	}
+
+	if p := os.Getenv("REXRAY_PROFILE_ADDR"); p != "" {
+		go http.ListenAndServe(p, http.DefaultServeMux)
+		ctx.WithField("address", p).Info("http pprof enabled")
+	}
+
+	core.TrapSignals(ctx)
+	ctx.Debug("trapped signals")
+
+	cli.Execute(ctx)
+	ctx.Debug("completed cli execution")
+
+	exit.Do(onExit)
+	ctx.Debug("completed onExit at end of program")
+}
+
+func updateLogLevel() {
+	if ok, _ := strconv.ParseBool(os.Getenv("REXRAY_DEBUG")); ok {
+		enableDebugMode()
+		return
+	}
+
+	if ok, _ := strconv.ParseBool(os.Getenv("LIBSTORAGE_DEBUG")); ok {
+		enableDebugMode()
+		return
+	}
+
+	if ll := os.Getenv("REXRAY_LOG_LEVEL"); ll != "" {
+		if lvl, err := log.ParseLevel(ll); err != nil {
+			setLogLevels(lvl)
+			return
+		}
+	}
+
+	if ll := os.Getenv("LIBSTORAGE_LOGGING_LEVEL"); ll != "" {
+		if lvl, err := log.ParseLevel(ll); err != nil {
+			setLogLevels(lvl)
+		}
+	}
+}
+
+func enableDebugMode() {
+	log.SetLevel(log.DebugLevel)
+	apitypes.Debug = true
+	setLogLevels(log.DebugLevel)
+}
+
+func setLogLevels(lvl log.Level) {
+	os.Setenv("REXRAY_LOGLEVEL", lvl.String())
+	os.Setenv("LIBSTORAGE_LOGGING_LEVEL", lvl.String())
+}
+
+func createUserKnownHostsFile(
+	ctx apitypes.Context,
+	pathConfig *apitypes.PathConfig) {
+
+	khPath := pathConfig.UserDefaultTLSKnownHosts
+
+	if gotil.FileExists(khPath) {
+		return
+	}
+
+	khDirPath := filepath.Dir(khPath)
+	os.MkdirAll(khDirPath, 0755)
+	khFile, err := os.Create(khPath)
+	if err != nil {
+		ctx.WithField("path", khPath).Fatal(
+			"failed to create known_hosts")
+	}
+	defer khFile.Close()
+}
+
+func registerConfig() {
 	gofigCore.SetGlobalConfigPath(util.EtcDirPath())
 	gofigCore.SetUserConfigPath(path.Join(gotil.HomeDir(), util.DotDirName))
 	r := gofigCore.NewRegistration("Global")

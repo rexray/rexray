@@ -1,6 +1,6 @@
-// +build !rexray_build_type_controller
+// +build !controller
 
-package rexray
+package main
 
 import (
 	// load the libstorage packages

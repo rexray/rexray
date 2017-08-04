@@ -1,4 +1,4 @@
-// +build !rexray_build_type_client
+// +build !client
 // +build darwin dragonfly freebsd !android,linux netbsd openbsd solaris
 
 package cli

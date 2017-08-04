@@ -1,4 +1,4 @@
-// +build rexray_build_type_client rexray_build_type_agent
+// +build client agent
 
 package cli
 

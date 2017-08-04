@@ -1,5 +1,5 @@
-// +build !rexray_build_type_client
-// +build !rexray_build_type_agent
+// +build !client
+// +build !agent
 
 package cli
 

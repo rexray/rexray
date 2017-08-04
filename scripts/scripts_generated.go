@@ -3,7 +3,7 @@
 // scripts/scripts/flexrex
 // DO NOT EDIT!
 
-// +build scripts_generated,!rexray_build_type_agent,!rexray_build_type_controller
+// +build scripts_generated,!agent,!controller
 
 package scripts
 

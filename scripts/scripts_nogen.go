@@ -1,6 +1,6 @@
 // +build !scripts_generated
-// +build !rexray_build_type_agent
-// +build !rexray_build_type_controller
+// +build !agent
+// +build !controller
 
 package scripts
 

@@ -13,13 +13,38 @@ vendor: $(VENDOR)
 $(VENDOR):
 	$(MAKE) -C $(@D) $(@F)
 
+# define aliases for the go commands
+GOBUILD := go build
+GOCLEAN := go clean
+GOINSTALL := go install
+GOLIST := go list
+GOTEST := go test
+
+# update the go commands if there are build tags to consider
+ifneq (,$(strip $(BUILD_TAGS)))
+GOBUILD += -tags '$(BUILD_TAGS)'
+GOCLEAN += -tags '$(BUILD_TAGS)'
+GOINSTALL += -tags '$(BUILD_TAGS)'
+GOLIST += -tags '$(BUILD_TAGS)'
+GOTEST += -tags '$(BUILD_TAGS)'
+endif
+
+# update the go commands if there is a pkgdir to consider
+ifneq (,$(strip $(PKGDIR)))
+GOBUILD += -pkgdir '$(PKGDIR)'
+GOCLEAN += -pkgdir '$(PKGDIR)'
+GOINSTALL += -pkgdir '$(PKGDIR)'
+GOLIST += -pkgdir '$(PKGDIR)'
+GOTEST += -pkgdir '$(PKGDIR)'
+endif
+
 # a list of this package's Go sources and Go sources
 # for packages on which this package depends
 SRCS := $(shell \
-  go list -f \
+  $(GOLIST) -f \
   '{{with $$p := .}}{{if not $$p.Standard}}{{range $$f := $$p.GoFiles}}{{printf "%s/%s\n" $$p.Dir $$f }}{{end}}{{end}}{{end}}' \
   . \
-  $$(go list -f '{{if not .Standard}}{{join .Deps "\n"}}{{end}}') 2> /dev/null)
+  $$($(GOLIST) -f '{{if not .Standard}}{{join .Deps "\n"}}{{end}}') 2> /dev/null)
 
 # define a list of the generated source files and a target
 # for generating the files if missing
@@ -31,7 +56,7 @@ $(GENERATED_SRCS):
 PROG := $(shell go list -f '{{.Target}}')
 
 $(PROG): $(SRCS) $(GENERATED_SRCS) $(GLIDE_LOCK) | $(VENDOR)
-	go install -v .
+	$(GOINSTALL) -v
 
 build: $(PROG)
 
@@ -46,7 +71,6 @@ include codecov.mk
 ################################################################################
 
 clean:
-	go clean -i -x
-	$(MAKE) -C api clean
+	$(GOCLEAN) -i -x
 
 .PHONY: clean vendor

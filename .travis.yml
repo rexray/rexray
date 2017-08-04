@@ -32,6 +32,7 @@ jobs:
       services:       docker
       sudo:           required
       before_install:
+        - gem install gist
         - sudo apt-get update
         - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
         - docker --version
@@ -42,11 +43,14 @@ jobs:
       script:
         - make
         - md5sum $PROG
+        - ls -al $PROG
         - ./$PROG version
         - make tgz
         - make rpm
         - make deb
         - make bintray
+      after_success:
+        - make create-gist
       deploy:
         - &deploy-to-bintray
           provider:       bintray
@@ -56,17 +60,17 @@ jobs:
           skip_cleanup:   true
           on:
             all_branches: true
-            condition:    $DISABLE_BINTRAY != true && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
         - <<: *deploy-to-bintray
           file:           bintray-staged.json
           on:
             all_branches: true
-            condition:    $DISABLE_BINTRAY != true && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
         - <<: *deploy-to-bintray
           file:           bintray-stable.json
           on:
             all_branches: true
-            condition:    $DISABLE_BINTRAY != true && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
     - <<: *deploy-stage
       env: PROG=rexray-agent      TYPE=agent
@@ -85,6 +89,7 @@ jobs:
       services:       docker
       sudo:           required
       before_install:
+        - gem install gist
         - sudo apt-get update
         - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
         - docker --version
@@ -93,8 +98,11 @@ jobs:
       script:
         - make
         - md5sum $PROG
+        - ls -al $PROG
         - ./$PROG version
         - make build-docker-plugin
+      after_success:
+        - make create-gist
       deploy:
         - &deploy-docker
           provider: script
@@ -102,19 +110,19 @@ jobs:
           skip_cleanup: true
           on:
             all_branches: true
-            condition: $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
         - <<: *deploy-docker
           script: ./make.sh push-docker-plugin staged
           on:
             all_branches: true
-            condition: $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
         - <<: *deploy-docker
           script: ./make.sh push-docker-plugin stable
           on:
             all_branches: true
-            condition: $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
     - <<: *docker-stage
       env: DRIVER=dobs

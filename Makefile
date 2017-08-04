@@ -159,7 +159,7 @@ define BINTRAY_GENERATED_JSON
 {
    "package": {
         "name":     "$${REPO}",
-        "repo":     "$(PROG)",
+        "repo":     "rexray",
         "subject":  "$(BINTRAY_SUBJ)"
     },
     "version": {
@@ -172,7 +172,7 @@ define BINTRAY_GENERATED_JSON
     "files": [{
         "includePattern": "./($(PROG).*?\.(?:gz|rpm|deb))",
         "excludePattern": "./.*/.*",
-        "uploadPattern":  "$${REPO}/$(SEMVER)/$1"
+        "uploadPattern":  "$${REPO}/$(SEMVER)/$$1"
     }],
     "publish": true
 }
@@ -180,7 +180,7 @@ endef
 export BINTRAY_GENERATED_JSON
 
 bintray: $(BINTRAY_FILES)
-$(BINTRAY_FILES):
+$(BINTRAY_FILES): $(SEMVER_MK)
 	@echo generating $@
 	@echo "$$BINTRAY_GENERATED_JSON" | \
 	sed -e 's/$${REPO}/$(@F:bintray-%.json=%)/g' > $@
@@ -327,6 +327,27 @@ endif
 endif
 
 .PHONY: docker-build-plugin build-docker-plugin push-docker-plugin
+
+
+################################################################################
+##                                   GIST                                     ##
+################################################################################
+ifeq (true,$(TRAVIS))
+GIST_DESC := https://travis-ci.org/$(TRAVIS_REPO_SLUG)/jobs/$(TRAVIS_BUILD_ID)
+endif
+GIST_FILES := $(BINTRAY_FILES) $(SEMVER_MK) semver.env
+ifneq (,$(strip $(DRIVER)))
+GIST_DRIVER := .docker/plugins/$(DRIVER)
+ifneq (,$(wildcard $(GIST_DRIVER)))
+GIST_FILES += $(shell find "$(GIST_DRIVER)" -d 1 -type f \
+	-not -name "rexray" \
+	-not -name ".gitignore" \
+	-not -name "README.md")
+endif
+endif
+create-gist: $(GIST_FILES)
+	-ls -al > files.txt && gist -s -d "$(GIST_DESC)" files.txt $^
+.PHONY: create-gist
 
 
 ################################################################################

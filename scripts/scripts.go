@@ -1,5 +1,5 @@
-// +build !rexray_build_type_agent
-// +build !rexray_build_type_controller
+// +build !agent
+// +build !controller
 
 /*
 Package scripts includes scripts that are embedded in REX-Ray during the

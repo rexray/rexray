@@ -45,12 +45,11 @@ func (s *server) PrintServerStartupHeader(w io.Writer) {
 
 	var (
 		n          int
-		v          = core.Version
 		b          = &bytes.Buffer{}
 		bar        = strings.Repeat("#", 80)
 		barl       = fmt.Sprintf("##%s##", strings.Repeat(" ", 76))
 		now        = time.Now().UTC().Format(dateFormat)
-		vts        = v.BuildTimestamp.Format(time.RFC1123)
+		vts        = core.CommitTime.Format(time.RFC1123)
 		pathConfig = context.MustPathConfig(s.ctx)
 	)
 
@@ -76,16 +75,13 @@ func (s *server) PrintServerStartupHeader(w io.Writer) {
 
 	fmt.Fprintln(b, barl)
 
-	n, _ = fmt.Fprintf(b, "##     semver:      %s", v.SemVer)
+	n, _ = fmt.Fprintf(b, "##     semver:      %s", core.SemVer)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##     osarch:      %s", v.Arch)
+	n, _ = fmt.Fprintf(b, "##     osarch:      %s", core.Arch)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##     branch:      %s", v.Branch)
-	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
-	fmt.Fprintln(b, "##")
-	n, _ = fmt.Fprintf(b, "##     commit:      %s", v.ShaLong)
+	n, _ = fmt.Fprintf(b, "##     commit:      %s", core.CommitSha7)
 	fmt.Fprint(b, strings.Repeat(" ", trunc80(n)))
 	fmt.Fprintln(b, "##")
 	n, _ = fmt.Fprintf(b, "##     formed:      %s", vts)

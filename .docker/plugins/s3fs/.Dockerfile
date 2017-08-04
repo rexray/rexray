@@ -1,8 +1,5 @@
 FROM alpine:3.5
 
-LABEL drivers="${DRIVERS}"
-LABEL version="${VERSION}"
-
 RUN apk update
 RUN apk add xfsprogs e2fsprogs ca-certificates fuse alpine-sdk automake autoconf libxml2-dev fuse-dev curl-dev
 

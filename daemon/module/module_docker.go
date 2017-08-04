@@ -1,5 +1,5 @@
-// +build !rexray_build_type_client
-// +build !rexray_build_type_controller
+// +build !client
+// +build !controller
 // +build libstorage_integration_driver_linux
 
 package module

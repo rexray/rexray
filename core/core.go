@@ -1,3 +1,5 @@
+//go:generate go run semver/semver.go -f semver.tpl -o core_generated.go
+
 package core
 
 import (
@@ -15,11 +17,27 @@ import (
 )
 
 var (
-	// Version of REX-Ray.
-	Version = &apitypes.VersionInfo{
-		Arch:           fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH),
-		BuildTimestamp: time.Now().UTC(),
-	}
+
+	// Arch is the uname OS-Arch string.
+	Arch = fmt.Sprintf(
+		"%s-%s",
+		goosToUname[runtime.GOOS],
+		goarchToUname[runtime.GOARCH])
+
+	// SemVer is the semantic version.
+	SemVer string
+
+	// CommitSha7 is the short version of the commit hash from which
+	// this program was built.
+	CommitSha7 string
+
+	// CommitSha32 is the long version of the commit hash from which
+	// this program was built.
+	CommitSha32 string
+
+	// CommitTime is the commit timestamp of the commit from which
+	// this program was built.
+	CommitTime time.Time
 
 	// BuildType is the build type of this binary.
 	BuildType = "client+agent+controller"
@@ -28,34 +46,6 @@ var (
 	// to a truthy value.
 	Debug, _ = strconv.ParseBool(os.Getenv("REXRAY_DEBUG"))
 )
-
-type osString string
-
-func (o osString) String() string {
-	switch o {
-	case "linux":
-		return "Linux"
-	case "darwin":
-		return "Darwin"
-	case "windows":
-		return "Windows"
-	default:
-		return string(o)
-	}
-}
-
-type archString string
-
-func (a archString) String() string {
-	switch a {
-	case "386":
-		return "i386"
-	case "amd64":
-		return "x86_64"
-	default:
-		return string(a)
-	}
-}
 
 // SignalHandlerFunc is a function that can be registered with
 // `core.RegisterSignalHandler` to receive a callback when the process receives
@@ -134,4 +124,33 @@ func IsExitSignal(s os.Signal) (bool, bool) {
 	default:
 		return false, false
 	}
+}
+
+var goosToUname = map[string]string{
+	"android":   "Android",
+	"darwin":    "Darwin",
+	"dragonfly": "DragonFly",
+	"freebsd":   "kFreeBSD",
+	"linux":     "Linux",
+	"nacl":      "NaCl",
+	"netbsd":    "NetBSD",
+	"openbsd":   "OpenBSD",
+	"plan9":     "Plan9",
+	"solaris":   "Solaris",
+	"windows":   "Windows",
+}
+
+var goarchToUname = map[string]string{
+	"386":      "i386",
+	"amd64":    "x86_64",
+	"amd64p32": "x86_64_P32",
+	"arm":      "ARMv7",
+	"arm64":    "ARMv8",
+	"mips":     "MIPS32",
+	"mips64":   "MIPS64",
+	"mips64le": "MIPS64LE",
+	"mipsle":   "MIPS32LE",
+	"ppc64":    "PPC64",
+	"ppc64le":  "PPC64LE",
+	"s390x":    "S390X",
 }

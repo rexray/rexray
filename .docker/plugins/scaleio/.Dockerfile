@@ -1,8 +1,5 @@
 FROM alpine:3.5
 
-LABEL drivers="${DRIVERS}"
-LABEL version="${VERSION}"
-
 RUN apk update
 RUN apk add xfsprogs e2fsprogs ca-certificates libaio curl
 RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && apk update && apk add numactl

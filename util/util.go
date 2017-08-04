@@ -291,12 +291,11 @@ func PrintVersion(out io.Writer) {
 	fmt.Fprintln(out, "-------")
 	fmt.Fprintf(out, "Binary: %s\n", BinFilePath)
 	fmt.Fprintf(out, "Flavor: %s\n", core.BuildType)
-	fmt.Fprintf(out, "SemVer: %s\n", core.Version.SemVer)
-	fmt.Fprintf(out, "OsArch: %s\n", core.Version.Arch)
-	fmt.Fprintf(out, "Branch: %s\n", core.Version.Branch)
-	fmt.Fprintf(out, "Commit: %s\n", core.Version.ShaLong)
+	fmt.Fprintf(out, "SemVer: %s\n", core.SemVer)
+	fmt.Fprintf(out, "OsArch: %s\n", core.Arch)
+	fmt.Fprintf(out, "Commit: %s\n", core.CommitSha32)
 	fmt.Fprintf(out, "Formed: %s\n",
-		core.Version.BuildTimestamp.Format(time.RFC1123))
+		core.CommitTime.Format(time.RFC1123))
 }
 
 var localHostRX = regexp.MustCompile(

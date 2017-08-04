@@ -1,8 +1,5 @@
 FROM centos:7.3.1611
 
-LABEL drivers="${DRIVERS}"
-LABEL version="${VERSION}"
-
 ENV CEPH_VERSION kraken
 
 RUN rpm --import 'https://download.ceph.com/keys/release.asc'

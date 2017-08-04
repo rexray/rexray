@@ -40,7 +40,7 @@ func (r *router) versionInspect(
 	req *http.Request,
 	store types.Store) error {
 
-	httputils.WriteJSON(w, http.StatusOK, core.Version)
+	httputils.WriteJSON(w, http.StatusOK, core.SemVer)
 	return nil
 }
 

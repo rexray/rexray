@@ -1,125 +1,134 @@
-go_import_path: github.com/codedellemc/rexray
-
-sudo: required
-
-services:
-  - docker
-
-language: go
-
-go:
-  - 1.8.3
+os:   linux
+dist: trusty
 
 env:
-  - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=amd64
-  - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=arm
-  - REXRAY_BUILD_TYPE= TRAVIS_GOARCH=arm64
-  - REXRAY_BUILD_TYPE=client
-  - REXRAY_BUILD_TYPE=agent
-  - REXRAY_BUILD_TYPE=controller
-  - REXRAY_BUILD_TYPE= DRIVERS=cinder
-  - REXRAY_BUILD_TYPE= DRIVERS=dobs
-  - REXRAY_BUILD_TYPE= DRIVERS=ebs
-  - REXRAY_BUILD_TYPE= DRIVERS=efs
-  - REXRAY_BUILD_TYPE= DRIVERS=gcepd
-  - REXRAY_BUILD_TYPE= DRIVERS=isilon
-  - REXRAY_BUILD_TYPE= DRIVERS=rbd
-  - REXRAY_BUILD_TYPE= DRIVERS=s3fs
-  - REXRAY_BUILD_TYPE= DRIVERS=scaleio
+  global:
+    - PROG=rexray
 
-before_install:
-  - export GOARCH="${TRAVIS_GOARCH:-amd64}"
-  - go env
-  - if [ "$DRIVERS" != "" ]; then sudo apt-get update; fi
-  - if [ "$DRIVERS" != "" ]; then sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce; fi
-  - if [ "$DRIVERS" != "" ]; then docker --version; fi
-  - git config --global 'url.https://gopkg.in/yaml.v1.insteadof' 'https://gopkg.in/yaml.v1/'
-  - git config --global 'url.https://gopkg.in/yaml.v2.insteadof' 'https://gopkg.in/yaml.v2/'
-  - git config --global 'url.https://gopkg.in/fsnotify.v1.insteadof' 'https://gopkg.in/fsnotify.v1/'
-  - git config --global 'url.https://github.com/.insteadof' 'git://github.com/'
-  - git config --global 'url.https://github.com/.insteadof' 'git@github.com:'
-  - if [ "$DRIVERS" = "" ]; then go get github.com/onsi/gomega; fi
-  - if [ "$DRIVERS" = "" ]; then go get github.com/onsi/ginkgo; fi
-  - if [ "$DRIVERS" = "" ]; then go get golang.org/x/tools/cmd/cover; fi
-  - make deps
-  - make info
+jobs:
+  include:
 
-script:
-  - make gometalinter-all
-  - ./build.sh -x -a "$GOARCH" -b make
-  - if [ "$REXRAY_BUILD_TYPE" = "" ]; then file rexray; else REXRAY_DEBUG=true file rexray-$REXRAY_BUILD_TYPE; fi
-  - if [ "$GOARCH" = "amd64" ]; then if [ "$REXRAY_BUILD_TYPE" = "" ]; then REXRAY_DEBUG=true ./rexray version; else REXRAY_DEBUG=true ./rexray-$REXRAY_BUILD_TYPE version; fi; fi
-  - if [ "$GOARCH" = "amd64" ] && [ "$DRIVERS" = "" ]; then make -j test; fi
+    # the first stage builds all of the tests, executes the framework
+    # tests using the vfs driver, and uploads the resulting coverage
+    # results to codecov.io
+    - stage:          test
+      language:       go
+      go:             1.8.3
+      go_import_path: github.com/codedellemc/rexray
+      before_script:
+        - git fetch --unshallow --tags
+        - go run core/semver/semver.go -f json
+      script:
+        - make test
+        - make cover
 
-after_success:
-  - if [ "$GOARCH" = "amd64" ] && [ "$DRIVERS" = "" ]; then make -j cover; fi
-  - if [ "$GOARCH" = "amd64" ] && [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make tgz; fi
-  - if [ "$GOARCH" = "amd64" ] && [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make rpm; fi
-  - if [ "$GOARCH" = "amd64" ] && [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make deb; fi
-  - if [ "$GOARCH" = "amd64" ] && [ "$DRIVERS" = "" ]  && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make bintray; fi
-  - if [ "$GOARCH" = "amd64" ] && [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then make build-docker-plugin; fi
-  - if [ "$GOARCH" = "amd64" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$REXRAY_BUILD_TYPE" = "" ] && [ "$DRIVERS" != "" ] && [ "$TRAVIS_OS_NAME" = "$BINTRAY_OS_NAME" ]; then docker login -u $DOCKER_USER -p $DOCKER_PASS; fi
-  - ls -al
+    # the second stage is responsible for producing the rexray stand-alone,
+    # agent, client, and controller binaries as well as packaging the
+    # binaries and uploading them to bintray
+    - &deploy-stage
+      stage:          deploy
+      language:       c
+      env:            PROG=rexray
+      services:       docker
+      sudo:           required
+      before_install:
+        - sudo apt-get update
+        - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+        - docker --version
+      install:
+        - sudo apt-get -y install rpm debhelper dpkg dpkg-dev fakeroot alien
+      before_script:
+        - git fetch --unshallow --tags
+      script:
+        - make
+        - md5sum $PROG
+        - ./$PROG version
+        - make tgz
+        - make rpm
+        - make deb
+        - make bintray
+      deploy:
+        - &deploy-to-bintray
+          provider:       bintray
+          file:           bintray-unstable.json
+          user:           $BINTRAY_USER
+          key:            $BINTRAY_KEY
+          skip_cleanup:   true
+          on:
+            all_branches: true
+            condition:    $DISABLE_BINTRAY != true && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+        - <<: *deploy-to-bintray
+          file:           bintray-staged.json
+          on:
+            all_branches: true
+            condition:    $DISABLE_BINTRAY != true && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+        - <<: *deploy-to-bintray
+          file:           bintray-stable.json
+          on:
+            all_branches: true
+            condition:    $DISABLE_BINTRAY != true && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
-deploy:
-  - provider: bintray
-    file: bintray-unstable.json
-    user: $BINTRAY_USER
-    key: $BINTRAY_KEY
-    skip_cleanup: true
-    on:
-      all_branches: true
-      condition: $GOARCH = 'amd64' && $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+    - <<: *deploy-stage
+      env: PROG=rexray-agent      TYPE=agent
+    - <<: *deploy-stage
+      env: PROG=rexray-client     TYPE=client
+    - <<: *deploy-stage
+      env: PROG=rexray-controller TYPE=controller
 
-  - provider: bintray
-    file: bintray-staged.json
-    user: $BINTRAY_USER
-    key: $BINTRAY_KEY
-    skip_cleanup: true
-    on:
-      all_branches: true
-      condition: $GOARCH = 'amd64' && $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+    # the final stage is responsible for building the docker managed
+    # storage plug-ins using driver-specific versions of the stand-alone
+    # rex-ray binaries
+    - &docker-stage
+      stage:          docker
+      language:       c
+      env:            DRIVER=cinder
+      services:       docker
+      sudo:           required
+      before_install:
+        - sudo apt-get update
+        - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+        - docker --version
+      before_script:
+        - git fetch --unshallow --tags
+      script:
+        - make
+        - md5sum $PROG
+        - ./$PROG version
+        - make build-docker-plugin
+      deploy:
+        - &deploy-docker
+          provider: script
+          script: ./make.sh push-docker-plugin unstable
+          skip_cleanup: true
+          on:
+            all_branches: true
+            condition: $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
-  - provider: bintray
-    file: bintray-stable.json
-    user: $BINTRAY_USER
-    key: $BINTRAY_KEY
-    skip_cleanup: true
-    on:
-      all_branches: true
-      condition: $GOARCH = 'amd64' && $DRIVERS = '' && $DISABLE_BINTRAY != true && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+        - <<: *deploy-docker
+          script: ./make.sh push-docker-plugin staged
+          on:
+            all_branches: true
+            condition: $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
-  - provider: script
-    script: ./make.sh push-docker-plugin unstable
-    skip_cleanup: true
-    on:
-      all_branches: true
-      condition: $GOARCH = 'amd64' && $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+        - <<: *deploy-docker
+          script: ./make.sh push-docker-plugin stable
+          on:
+            all_branches: true
+            condition: $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
-  - provider: script
-    script: ./make.sh push-docker-plugin staged
-    skip_cleanup: true
-    on:
-      all_branches: true
-      condition: $GOARCH = 'amd64' && $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
-
-  - provider: script
-    script: ./make.sh push-docker-plugin stable
-    skip_cleanup: true
-    on:
-      all_branches: true
-      condition: $GOARCH = 'amd64' && $DRIVERS != '' && $REXRAY_BUILD_TYPE = '' && $TRAVIS_OS_NAME = $BINTRAY_OS_NAME && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
-
-cache:
-  apt: true
-  directories:
-  - $HOME/.opt
-
-addons:
-  apt:
-    packages:
-    - rpm
-    - debhelper
-    - dpkg
-    - dpkg-dev
-    - fakeroot
+    - <<: *docker-stage
+      env: DRIVER=dobs
+    - <<: *docker-stage
+      env: DRIVER=ebs
+    - <<: *docker-stage
+      env: DRIVER=efs
+    - <<: *docker-stage
+      env: DRIVER=gcepd
+    - <<: *docker-stage
+      env: DRIVER=isilon
+    - <<: *docker-stage
+      env: DRIVER=rbd
+    - <<: *docker-stage
+      env: DRIVER=s3fs
+    - <<: *docker-stage
+      env: DRIVER=scaleio

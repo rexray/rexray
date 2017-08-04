@@ -1,4 +1,4 @@
-// +build rexray_build_type_controller
+// +build controller
 
 package util
 

@@ -1,7 +1,7 @@
-// +build !rexray_build_type_client
-// +build !rexray_build_type_agent
+// +build !client
+// +build !agent
 
-package rexray
+package main
 
 import (
 	// load the libstorage packages

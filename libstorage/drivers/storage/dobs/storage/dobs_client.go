@@ -18,5 +18,5 @@ func Client(token string) (*godo.Client, error) {
 }
 
 func userAgent() string {
-	return "libstorage/" + core.Version.SemVer
+	return "libstorage/" + core.SemVer
 }

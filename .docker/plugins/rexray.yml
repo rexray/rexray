@@ -1,7 +1,7 @@
 rexray:
   loglevel: warn
 libstorage:
-  service: ${DRIVERS}
+  service: ${DRIVER}
   integration:
     volume:
       operations:
@@ -12,3 +12,5 @@ libstorage:
           preempt: true
   server:
     services:
+      ${DRIVER}:
+        driver: ${DRIVER}

@@ -24,6 +24,8 @@ endif
 ifeq (,$(strip $(GO_IMPORT_PATH)))
 GO_IMPORT_PATH := $(shell grep "go_import_path:" .travis.yml | awk '{print $$2}')
 endif
+# the import path less the github.com/ at the front
+GO_IMPORT_PATH_SLUG := $(subst github.com/,,$(GO_IMPORT_PATH))
 
 
 ################################################################################
@@ -332,10 +334,9 @@ endif
 ################################################################################
 ##                                   GIST                                     ##
 ################################################################################
-ifeq (true,$(TRAVIS))
-GIST_DESC := https://travis-ci.org/$(TRAVIS_REPO_SLUG)/jobs/$(TRAVIS_BUILD_ID)
-endif
-GIST_FILES := $(BINTRAY_FILES) $(SEMVER_MK) semver.env
+TRAVIS_BUILD_URL := https://travis-ci.org/$(TRAVIS_REPO_SLUG)/builds/$(TRAVIS_BUILD_ID)
+TRAVIS_JOB_URL := https://travis-ci.org/$(TRAVIS_REPO_SLUG)/jobs/$(TRAVIS_JOB_ID)
+GIST_FILES := $(BINTRAY_FILES) semver.env
 ifneq (,$(strip $(DRIVER)))
 GIST_DRIVER := .docker/plugins/$(DRIVER)
 ifneq (,$(wildcard $(GIST_DRIVER)))
@@ -345,8 +346,113 @@ GIST_FILES += $(shell find "$(GIST_DRIVER)" -d 1 -type f \
 	-not -name "README.md")
 endif
 endif
+
+UNAME_TXT := uname.txt
+$(UNAME_TXT):
+	uname -a > $@
+GIST_FILES += $(UNAME_TXT)
+
+FILES_TXT := files.txt
+$(FILES_TXT):
+	ls -al > $@
+.PHONY: $(FILES_TXT)
+GIST_FILES += $(FILES_TXT)
+
+MD5SUM_TXT := md5sum.txt
+$(MD5SUM_TXT): $(PROG)
+	md5sum $< > $@
+GIST_FILES += $(MD5SUM_TXT)
+
+DOCKER_OUT_DIR := /tmp/rexray
+DOCKER_GIT_DIR := /go/src/$(GO_IMPORT_PATH)
+
+ifneq (,$(strip $(DRIVER)))
+define GIST_README_CONTENT_DRIVER
+
+| **Driver** | `$(DRIVER)` |
+endef
+endif
+
+# built from GO_IMPORT_PATH_SLUG
+ifeq ($(GO_IMPORT_PATH_SLUG),$(TRAVIS_REPO_SLUG))
+# built from GO_IMPORT_PATH_SLUG AND pull request
+ifneq (false,$(TRAVIS_PULL_REQUEST))
+define GIST_GIT_FETCH
+
+    git fetch origin +refs/pull/$(TRAVIS_PULL_REQUEST)/merge: &&
+    git fetch --tags origin &&
+endef
+else
+# built from GO_IMPORT_PATH_SLUG and NOT pull request
+define GIST_GIT_FETCH
+
+    git fetch --tags origin &&
+endef
+endif
+# built from NOT GO_IMPORT_PATH_SLUG
+else
+# built from NOT GO_IMPORT_PATH_SLUG AND pull request
+ifneq (false,$(TRAVIS_PULL_REQUEST))
+define GIST_GIT_FETCH
+
+    git fetch origin +refs/pull/$(TRAVIS_PULL_REQUEST)/merge: &&
+    git remote add upstream https://$(GO_IMPORT_PATH) &&
+    git fetch --tags upstream &&
+endef
+else
+# built from NOT GO_IMPORT_PATH_SLUG AND NOT pull request
+define GIST_GIT_FETCH
+
+    git remote add upstream https://$(GO_IMPORT_PATH) &&
+    git fetch --tags upstream &&
+endef
+endif
+endif
+
+define GIST_README_CONTENT
+# REX-Ray Build [$(TRAVIS_JOB_ID)]($(TRAVIS_JOB_URL))
+This gist contains information about REX-Ray build
+[$(TRAVIS_BUILD_ID)]($(TRAVIS_BUILD_URL)), job
+[$(TRAVIS_JOB_ID)]($(TRAVIS_JOB_URL)).
+
+| Key | Value |
+|-----|-------|
+| **Binary** | `$(PROG)` |
+| **MD5Sum** | `$${MD5SUM}` |
+| **SemVer** | `$(SEMVER)` |$(GIST_README_CONTENT_DRIVER)
+
+A REX-Ray binary with a matching checksum can be created
+locally using Docker:
+
+```
+$$ docker run -it \\
+  -v "$$(pwd)":"$(DOCKER_OUT_DIR)" \\
+  golang:$(GO_VERSION) \\
+  bash -c "git clone https://github.com/$(TRAVIS_REPO_SLUG) \\
+      \"$(DOCKER_GIT_DIR)\" &&
+    cd \"$(DOCKER_GIT_DIR)\" && $(GIST_GIT_FETCH)
+    git checkout -b $(SHA7) $(SHA32) &&
+    go generate && go $(GOBUILD) -o \"$(PROG)\" &&
+    cp -f \"$(PROG)\" \"$(DOCKER_OUT_DIR)\"" && \\
+  md5sum "$(PROG)" && \\
+  ls -al "$(PROG)"
+```
+endef
+export GIST_README_CONTENT
+
+GIST_README := .gist/README.md
+$(GIST_README): $(MD5SUM_TXT)
+	@echo generating $@ && mkdir -p $(@D)
+	@echo "$$GIST_README_CONTENT" | sed \
+	  -e 's/$${MD5SUM}/'"$$(cat $< | awk '{print $$1}')"'/g' \
+	  -e 's/\\\\/\\/g' \
+	  > $@
+.PHONY: $(GIST_README)
+GIST_FILES += $(GIST_README)
+
 create-gist: $(GIST_FILES)
-	-ls -al > files.txt && gist -s -d "$(GIST_DESC)" files.txt $^
+	@echo create gist
+	-gist -d "$(TRAVIS_JOB_URL)" $^
 .PHONY: create-gist
 
 

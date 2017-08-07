@@ -51,6 +51,8 @@ jobs:
         - make bintray
       after_success:
         - make create-gist
+      after_failure:
+        - make create-gist
       deploy:
         - &deploy-to-bintray
           provider:       bintray
@@ -102,6 +104,8 @@ jobs:
         - ./$PROG version
         - make build-docker-plugin
       after_success:
+        - make create-gist
+      after_failure:
         - make create-gist
       deploy:
         - &deploy-docker

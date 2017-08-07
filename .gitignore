@@ -1,3 +1,6 @@
+.gist/
+md5sum.txt
+uname.txt
 files.txt
 /core/semver/semver
 semver.mk

@@ -88,11 +88,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	goos := os.Getenv("XGOOS")
+	if goos == "" {
+		goos = runtime.GOOS
+	}
+	goarch := os.Getenv("XGOARCH")
+	if goarch == "" {
+		goarch = runtime.GOARCH
+	}
+
 	ver := &semver{
-		GOOS:   runtime.GOOS,
-		GOARCH: runtime.GOARCH,
-		OS:     goosToUname[runtime.GOOS],
-		Arch:   goarchToUname[runtime.GOARCH],
+		GOOS:   goos,
+		GOARCH: goarch,
+		OS:     goosToUname[goos],
+		Arch:   goarchToUname[goarch],
 		Major:  toInt(m[1]),
 		Minor:  toInt(m[2]),
 		Patch:  toInt(m[3]),
@@ -128,7 +137,7 @@ func main() {
 		for _, v := range ver.EnvVars() {
 			p := strings.SplitN(v, "=", 2)
 			key := p[0]
-			fmt.Fprintf(w, "%s :=", key)
+			fmt.Fprintf(w, "%s ?=", key)
 			if len(p) == 1 {
 				fmt.Fprintln(w)
 				continue

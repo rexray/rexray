@@ -6,7 +6,7 @@
         "Value": null
       },
       "Description": "REX-Ray for Cinder Persistent Disks",
-      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/cinder",
+      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugins/cinder",
       "Entrypoint": [
         "/rexray.sh", "rexray", "start", "-f", "--nopid"
       ],
@@ -74,7 +74,7 @@
             "value"
           ],
           "Value": ""
-        },		
+        },
         {
           "Description": "",
           "Name": "CINDER_TRUSTID",
@@ -82,7 +82,7 @@
             "value"
           ],
           "Value": ""
-        },		
+        },
         {
           "Description": "",
           "Name": "CINDER_TENANTID",
@@ -90,7 +90,7 @@
             "value"
           ],
           "Value": ""
-        },		
+        },
         {
           "Description": "",
           "Name": "CINDER_TENANTNAME",
@@ -106,7 +106,7 @@
             "value"
           ],
           "Value": ""
-        },		
+        },
         {
           "Description": "",
           "Name": "CINDER_DOMAINID",
@@ -114,7 +114,7 @@
             "value"
           ],
           "Value": ""
-        },		
+        },
         {
           "Description": "",
           "Name": "CINDER_REGIONNAME",
@@ -122,7 +122,7 @@
             "value"
           ],
           "Value": ""
-        },		
+        },
         {
           "Description": "",
           "Name": "CINDER_AVAILABILITYZONENAME",

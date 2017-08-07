@@ -6,7 +6,7 @@
         "Value": null
       },
       "Description": "REX-Ray for Digital Ocean Block Storage",
-      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugin/dobs",
+      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugins/dobs",
       "Entrypoint": [
         "/rexray.sh", "rexray", "start", "-f", "--nopid"
       ],
@@ -60,7 +60,7 @@
           "Value": ""
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "DOBS_STATUSTIMEOUT",
           "Settable": [
             "value"
@@ -68,7 +68,7 @@
           "Value": ""
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "DOBS_TOKEN",
           "Settable": [
             "value"

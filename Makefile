@@ -8,9 +8,11 @@ endif
 # this makefile's default target is PROG
 all: $(PROG)
 
-# detect whether go and docker are available locally
-GO := $(shell ! which go > /dev/null 2>&1 || echo 1)
-DOCKER := $(shell ! docker version > /dev/null 2>&1 || echo 1)
+# a flag indicating whether or not to use docker for the builds. if
+# set to 1 then docker will be used, otherwise go is used
+ifeq (,$(strip $(DOCKER)))
+DOCKER := $(shell docker version > /dev/null 2>&1 && echo 1)
+endif
 
 # store the current directory
 PWD := $(shell pwd)
@@ -48,22 +50,22 @@ endif
 # otherwise check to see if go is available. if neither are
 # available then print an error
 $(PROG):
-ifeq ($(XDOCKER)1,$(DOCKER))
-	docker run -it -v "$(PWD)":"/go/src/$(GO_IMPORT_PATH)" golang:$(GO_VERSION) bash -c "cd \"src/$(GO_IMPORT_PATH)\" && go generate && go $(GOBUILD) -o \"$(PROG)\""
+ifeq (1,$(DOCKER))
+	docker run -it \
+	  -v "$(PWD)":"/go/src/$(GO_IMPORT_PATH)" golang:$(GO_VERSION) \
+	  bash -c "cd \"src/$(GO_IMPORT_PATH)\" && \
+	  XGOOS=$(GOOS) XGOARCH=$(GOARCH) GOOS= GOARCH= go generate && \
+	  GOOS=$(GOOS) GOARCH=$(GOARCH) go $(GOBUILD) -o \"$(PROG)\""
 else
-ifeq ($(XGO)1,$(GO))
-	go generate && go $(GOBUILD) -o "$(PROG)"
-else
-	@echo "either docker or go is required to build REX-Ray"
-	exit 1
-endif
+	XGOOS=$(GOOS) XGOARCH=$(GOARCH) GOOS= GOARCH= go generate
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go $(GOBUILD) -o "$(PROG)"
 endif
 
 clean-build:
 	rm -f rexray rexray-client rexray-agent rexray-controller
 clean: clean-build
 
-.PHONY: clean-build
+.PHONY: $(PROG) clean-build
 
 
 ################################################################################
@@ -79,15 +81,13 @@ $(SEMVER_MK): .git
 endif
 
 $(SEMVER_MK):
-ifeq ($(XDOCKER)1,$(DOCKER))
-	docker run -it -v "$(PWD)":"/go/src/$(GO_IMPORT_PATH)" golang:$(GO_VERSION) bash -c "cd \"src/$(GO_IMPORT_PATH)\" && go run core/semver/semver.go -f mk -o $@"
+ifeq (1,$(DOCKER))
+	docker run -it \
+	  -v "$(PWD)":"/go/src/$(GO_IMPORT_PATH)" golang:$(GO_VERSION) \
+	  bash -c "cd \"src/$(GO_IMPORT_PATH)\" && \
+	  XGOOS=$(GOOS) XGOARCH=$(GOARCH) GOOS= GOARCH= go run core/semver/semver.go -f mk -o $@"
 else
-ifeq ($(XGO)1,$(GO))
-	go run core/semver/semver.go -f mk -o $@
-else
-	@echo "either docker or go is required to build REX-Ray"
-	exit 1
-endif
+	XGOOS=$(GOOS) XGOARCH=$(GOARCH) GOOS= GOARCH= go run core/semver/semver.go -f mk -o $@
 endif
 
 include $(SEMVER_MK)
@@ -432,7 +432,8 @@ $$ docker run -it \\
       \"$(DOCKER_GIT_DIR)\" &&
     cd \"$(DOCKER_GIT_DIR)\" && $(GIST_GIT_FETCH)
     git checkout -b $(SHA7) $(SHA32) &&
-    go generate && go $(GOBUILD) -o \"$(PROG)\" &&
+    XGOOS=$(GOOS) XGOARCH=$(GOARCH) GOOS= GOARCH= go generate &&
+    GOOS=$(GOOS) GOARCH=$(GOARCH) go $(GOBUILD) -o \"$(PROG)\" &&
     cp -f \"$(PROG)\" \"$(DOCKER_OUT_DIR)\"" && \\
   md5sum "$(PROG)" && \\
   ls -al "$(PROG)"

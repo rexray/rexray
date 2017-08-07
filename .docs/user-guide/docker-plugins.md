@@ -48,12 +48,12 @@ Environment Variable | Description | Default Value
 `REXRAY_PREEMPT` | Enable preemption | `false`
 
 ### Building a Plug-in
-Please see the build reference for 
-[Docker plug-ins](../dev-guide/build-reference.md#build-docker-plug-ins).
+Please see the build reference for
+[Docker plug-ins](../dev-guide/build-reference.md#building-docker-plug-ins).
 
 ### Creating a Plug-in
-Please see the build reference for 
-[Docker plug-ins](../dev-guide/build-reference.md#build-docker-plug-ins).
+Please see the build reference for
+[Docker plug-ins](../dev-guide/build-reference.md#creating-docker-plug-ins).
 
 ## Amazon
 REX-Ray has plug-ins for multiple Amazon Web Services (AWS) storage services.

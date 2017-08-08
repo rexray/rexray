@@ -33,7 +33,24 @@ make backwards-incompatible changes.
 
 ## News
 
+_July 31, 2017_
+
+*v0.11.0*
+
+- Clients for spanner, pubsub and video are now in beta.
+
+- New client for DLP.
+
+- spanner: performance and testing improvements.
+
+- storage: requester-pays buckets are supported.
+
+- storage, profiler, bigtable, bigquery: bug fixes and other minor improvements.
+
+- pubsub: bug fixes and other minor improvements
+
 _June 17, 2017_
+
 
 *v0.10.0*
 
@@ -67,7 +84,7 @@ Google API                       | Status       | Package
 [Vision][cloud-vision]           | beta         | [`cloud.google.com/go/vision/apiv1`][cloud-vision-ref]
 [Language][cloud-language]       | beta         | [`cloud.google.com/go/language/apiv1`][cloud-language-ref]
 [Speech][cloud-speech]           | beta         | [`cloud.google.com/go/speech/apiv1`][cloud-speech-ref]
-[Spanner][cloud-spanner]         | alpha        | [`cloud.google.com/go/spanner`][cloud-spanner-ref]
+[Spanner][cloud-spanner]         | beta         | [`cloud.google.com/go/spanner`][cloud-spanner-ref]
 [Translation][cloud-translation] | stable       | [`cloud.google.com/go/translate`][cloud-translation-ref]
 [Trace][cloud-trace]             | alpha        | [`cloud.google.com/go/trace`][cloud-trace-ref]
 [Video Intelligence][cloud-video]| beta         | [`cloud.google.com/go/videointelligence/apiv1beta1`][cloud-video-ref]

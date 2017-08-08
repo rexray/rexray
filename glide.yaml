@@ -122,3 +122,86 @@ import:
 
   - package: github.com/onsi/gomega
     version: v1.1.0
+
+
+################################################################################
+##                           Transitive Dependencies                          ##
+################################################################################
+  - package: cloud.google.com/go
+    version: 9be7f826df5cb36bc19f57a919cffb1c1b6d9696
+  - package: github.com/asaskevich/govalidator
+    version: 15028e809df8c71964e8efa6c11e81d5c0262302
+  - package: github.com/cesanta/ucl
+    version: 97c016fce90e6af1b14558563ac46852167e6a76
+  - package: github.com/cesanta/validate-json
+    version: 2f16017c76fc2403d143e93cea1e1b9526a01148
+  - package: github.com/codedellemc/gournal
+    version: 4293aaf7e91602963a5777caef4b346e1cf21936
+  - package: github.com/dgrijalva/jwt-go
+    version: a539ee1a749a2b895533f979515ac7e6e0f5b650
+  - package: github.com/fsnotify/fsnotify
+    version: 4da3e2cfbabc9f751898f250b49f2439785783a1
+  - package: github.com/go-ini/ini
+    version: 3d73f4b845efdf9989fffd4b4e562727744a34ba
+  - package: github.com/golang/protobuf
+    version: 1909bc2f63dc92bb931deace8b8312c4db72d12f
+  - package: github.com/google/go-querystring
+    version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
+  - package: github.com/gorilla/context
+    version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+  - package: github.com/gorilla/mux
+    version: ac112f7d75a0714af1bd86ab17749b31f7809640
+  - package: github.com/hashicorp/hcl
+    version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
+  - package: github.com/inconshreveable/mousetrap
+    version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+  - package: github.com/jmespath/go-jmespath
+    version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
+  - package: github.com/kardianos/osext
+    version: ae77be60afb1dcacde03767a8c37337fad28ac14
+    repo: https://github.com/kardianos/osext.git
+    vcs: git
+  - package: github.com/magiconair/properties
+    version: be5ece7dd465ab0765a9682137865547526d1dfb
+  - package: github.com/mitchellh/mapstructure
+    version: d0303fe809921458f417bcf828397a65db30a7e4
+  - package: github.com/pelletier/go-toml
+    version: 69d355db5304c0f7f809a2edc054553e7142f016
+  - package: github.com/spf13/afero
+    version: 9be650865eab0c12963d8753212f4f9c66cdcf12
+  - package: github.com/spf13/cast
+    version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
+  - package: github.com/spf13/jwalterweatherman
+    version: 0efa5202c04663c757d84f90f5219c1250baf94f
+  - package: github.com/tent/http-link-go
+    version: ac974c61c2f990f4115b119354b5e0b47550e888
+  - package: golang.org/x/crypto
+    version: b176d7def5d71bdd214203491f89843ed217f420
+    repo: https://github.com/golang/crypto.git
+    vcs: git
+  - package: golang.org/x/net
+    version: b336a971b799939dd16ae9b1df8334cb8b977c4d
+  - package: golang.org/x/oauth2
+    version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+  - package: golang.org/x/sys
+    version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+  - package: golang.org/x/text
+    version: 3bd178b88a8180be2df394a1fbb81313916f0e7b
+    repo: https://github.com/golang/text.git
+    vcs: git
+  - package: google.golang.org/api
+    version: d61af0b67e5c8213e8c260ac29a762487bad020d
+    repo: https://github.com/google/google-api-go-client
+  - package: google.golang.org/appengine
+    version: c5a90ac045b779001847fec87403f5cba090deae
+
+
+################################################################################
+##                                 Test Imports                               ##
+################################################################################
+
+testImports:
+  - package: github.com/davecgh/go-spew
+    version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  - package: github.com/pmezard/go-difflib
+    version: d8ed2627bdf02c080bf22230dbb337003b7aba2d

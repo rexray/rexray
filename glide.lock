@@ -1,8 +1,8 @@
-hash: 7ec3dba505b1a0e4155309a8b83384c5bec05ad82a00a4d88e3b3951ea3da48d
-updated: 2017-07-24T12:40:06.824065233-05:00
+hash: 362baa64fc1630ddffc536f7bda130d6d4993fe8a6f3a741e97efc26d765937e
+updated: 2017-08-08T12:49:09.595326533-05:00
 imports:
 - name: cloud.google.com/go
-  version: 76d607c4e7a2b9df49f1d1a58a3f3d2dd2614704
+  version: 9be7f826df5cb36bc19f57a919cffb1c1b6d9696
   subpackages:
   - compute/metadata
 - name: github.com/akutz/gofig
@@ -24,42 +24,42 @@ imports:
   - vboxwebsrv
   - virtualboxclient
 - name: github.com/asaskevich/govalidator
-  version: aa5cce4a76edb1a5acecab1870c17abbffb5419e
+  version: 15028e809df8c71964e8efa6c11e81d5c0262302
 - name: github.com/aws/aws-sdk-go
   version: 3f8f870ec9939e32b3372abf74d24e468bcd285d
   repo: https://github.com/aws/aws-sdk-go
   subpackages:
   - aws
-  - aws/credentials
-  - aws/credentials/ec2rolecreds
-  - aws/ec2metadata
-  - aws/session
-  - service/ec2
   - aws/awserr
-  - service/efs
-  - service/s3
-  - aws/endpoints
+  - aws/awsutil
   - aws/client
   - aws/client/metadata
-  - aws/request
   - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
+  - aws/credentials/endpointcreds
   - aws/credentials/stscreds
   - aws/defaults
-  - aws/awsutil
+  - aws/ec2metadata
+  - aws/endpoints
+  - aws/request
+  - aws/session
   - aws/signer/v4
   - private/protocol
   - private/protocol/ec2query
-  - private/waiter
-  - private/protocol/restjson
-  - private/protocol/restxml
-  - service/sts
-  - aws/credentials/endpointcreds
-  - private/protocol/rest
-  - private/protocol/query/queryutil
-  - private/protocol/xml/xmlutil
+  - private/protocol/json/jsonutil
   - private/protocol/jsonrpc
   - private/protocol/query
-  - private/protocol/json/jsonutil
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/restjson
+  - private/protocol/restxml
+  - private/protocol/xml/xmlutil
+  - private/waiter
+  - service/ec2
+  - service/efs
+  - service/s3
+  - service/sts
 - name: github.com/Azure/azure-sdk-for-go
   version: 0984e0641ae43b89283223034574d6465be93bf4
   subpackages:
@@ -68,8 +68,8 @@ imports:
 - name: github.com/Azure/go-autorest
   version: 8a25372bbfec739b8719a9e3987400d15ef9e179
   subpackages:
-  - autorest/azure
   - autorest
+  - autorest/azure
   - autorest/date
   - autorest/to
   - autorest/validation
@@ -83,15 +83,15 @@ imports:
   version: 2ea94fb4dd4f34507c9d67d8d2e35dcc0edb5f89
   subpackages:
   - api
+  - api/json
   - api/v1
   - api/v2
-  - api/json
 - name: github.com/codedellemc/goscaleio
   version: 485da3636bfcc8e70f74fe7bdc7cb25e5a6e4c4a
   repo: https://github.com/codedellemc/goscaleio
   subpackages:
-  - types/v1
   - tls
+  - types/v1
 - name: github.com/codedellemc/gournal
   version: 4293aaf7e91602963a5777caef4b346e1cf21936
   subpackages:
@@ -110,7 +110,7 @@ imports:
   version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git
 - name: github.com/golang/protobuf
-  version: 0a4f71a498b7c4812f64969510bcb4eca251e33a
+  version: 1909bc2f63dc92bb931deace8b8312c4db72d12f
   subpackages:
   - proto
 - name: github.com/google/go-querystring
@@ -126,12 +126,12 @@ imports:
   - openstack/blockstorage/v1/volumes
   - openstack/blockstorage/v2/volumes
   - openstack/compute/v2/extensions/volumeattach
-  - openstack/identity/v3/extensions/trusts
+  - openstack/identity/v2/tenants
   - openstack/identity/v2/tokens
+  - openstack/identity/v3/extensions/trusts
   - openstack/identity/v3/tokens
   - openstack/utils
   - pagination
-  - openstack/identity/v2/tenants
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -141,10 +141,10 @@ imports:
   subpackages:
   - hcl/ast
   - hcl/parser
-  - hcl/token
-  - json/parser
   - hcl/scanner
   - hcl/strconv
+  - hcl/token
+  - json/parser
   - json/scanner
   - json/token
 - name: github.com/inconshreveable/mousetrap
@@ -167,35 +167,35 @@ imports:
   subpackages:
   - config
   - internal/codelocation
+  - internal/containernode
   - internal/failer
+  - internal/leafnodes
   - internal/remote
+  - internal/spec
+  - internal/spec_iterator
+  - internal/specrunner
   - internal/suite
   - internal/testingtproxy
   - internal/writer
   - reporters
   - reporters/stenographer
-  - types
-  - internal/spec_iterator
-  - internal/containernode
-  - internal/leafnodes
-  - internal/spec
-  - internal/specrunner
   - reporters/stenographer/support/go-colorable
   - reporters/stenographer/support/go-isatty
+  - types
 - name: github.com/onsi/gomega
   version: 334b8f472b3af5d541c5642701c1e29e2126f486
   subpackages:
-  - types
+  - format
   - internal/assertion
   - internal/asyncassertion
+  - internal/oraclematcher
   - internal/testingtsupport
   - matchers
-  - internal/oraclematcher
-  - format
   - matchers/support/goraph/bipartitegraph
   - matchers/support/goraph/edge
   - matchers/support/goraph/node
   - matchers/support/goraph/util
+  - types
 - name: github.com/pelletier/go-toml
   version: 69d355db5304c0f7f809a2edc054553e7142f016
 - name: github.com/rubiojr/go-vhd
@@ -233,7 +233,7 @@ imports:
 - name: github.com/tent/http-link-go
   version: ac974c61c2f990f4115b119354b5e0b47550e888
 - name: golang.org/x/crypto
-  version: 6914964337150723782436d56b3f21610a74ce7b
+  version: b176d7def5d71bdd214203491f89843ed217f420
   repo: https://github.com/golang/crypto.git
   vcs: git
   subpackages:
@@ -256,11 +256,10 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 836efe42bb4aa16aaa17b9c155d8813d336ed720
+  version: 3bd178b88a8180be2df394a1fbb81313916f0e7b
   repo: https://github.com/golang/text.git
   vcs: git
   subpackages:
-  - .
   - transform
   - unicode/norm
 - name: google.golang.org/api
@@ -268,21 +267,21 @@ imports:
   repo: https://github.com/google/google-api-go-client
   subpackages:
   - compute/v0.beta
-  - googleapi
   - gensupport
+  - googleapi
   - googleapi/internal/uritemplates
 - name: google.golang.org/appengine
-  version: ad2570cd3913654e00c5f0183b39d2f998e54046
+  version: c5a90ac045b779001847fec87403f5cba090deae
   subpackages:
-  - urlfetch
   - internal
-  - internal/urlfetch
   - internal/app_identity
-  - internal/modules
   - internal/base
   - internal/datastore
   - internal/log
+  - internal/modules
   - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
 - name: gopkg.in/yaml.v1
   version: bc35f417f8a7664a73d46c9def2933417c03019f
   repo: https://github.com/akutz/yaml.git

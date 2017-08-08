@@ -567,12 +567,13 @@ func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64)
 		crc, checkCRC = parseCRC32c(res)
 	}
 	return &Reader{
-		body:        body,
-		size:        size,
-		remain:      remain,
-		contentType: res.Header.Get("Content-Type"),
-		wantCRC:     crc,
-		checkCRC:    checkCRC,
+		body:         body,
+		size:         size,
+		remain:       remain,
+		contentType:  res.Header.Get("Content-Type"),
+		cacheControl: res.Header.Get("Cache-Control"),
+		wantCRC:      crc,
+		checkCRC:     checkCRC,
 	}, nil
 }
 
@@ -812,26 +813,27 @@ func newObject(o *raw.Object) *ObjectAttrs {
 		sha256 = o.CustomerEncryption.KeySha256
 	}
 	return &ObjectAttrs{
-		Bucket:            o.Bucket,
-		Name:              o.Name,
-		ContentType:       o.ContentType,
-		ContentLanguage:   o.ContentLanguage,
-		CacheControl:      o.CacheControl,
-		ACL:               acl,
-		Owner:             owner,
-		ContentEncoding:   o.ContentEncoding,
-		Size:              int64(o.Size),
-		MD5:               md5,
-		CRC32C:            crc32c,
-		MediaLink:         o.MediaLink,
-		Metadata:          o.Metadata,
-		Generation:        o.Generation,
-		Metageneration:    o.Metageneration,
-		StorageClass:      o.StorageClass,
-		CustomerKeySHA256: sha256,
-		Created:           convertTime(o.TimeCreated),
-		Deleted:           convertTime(o.TimeDeleted),
-		Updated:           convertTime(o.Updated),
+		Bucket:             o.Bucket,
+		Name:               o.Name,
+		ContentType:        o.ContentType,
+		ContentLanguage:    o.ContentLanguage,
+		CacheControl:       o.CacheControl,
+		ACL:                acl,
+		Owner:              owner,
+		ContentEncoding:    o.ContentEncoding,
+		ContentDisposition: o.ContentDisposition,
+		Size:               int64(o.Size),
+		MD5:                md5,
+		CRC32C:             crc32c,
+		MediaLink:          o.MediaLink,
+		Metadata:           o.Metadata,
+		Generation:         o.Generation,
+		Metageneration:     o.Metageneration,
+		StorageClass:       o.StorageClass,
+		CustomerKeySHA256:  sha256,
+		Created:            convertTime(o.TimeCreated),
+		Deleted:            convertTime(o.TimeDeleted),
+		Updated:            convertTime(o.Updated),
 	}
 }
 

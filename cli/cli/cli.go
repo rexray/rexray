@@ -102,6 +102,7 @@ type CLI struct {
 	flexRexUninstallCmd *cobra.Command
 	flexRexStatusCmd    *cobra.Command
 
+	options                 []string
 	verify                  bool
 	key                     string
 	alg                     string

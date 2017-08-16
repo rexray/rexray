@@ -86,4 +86,8 @@ func (c *CLI) initOtherFlags() {
 
 	c.uninstallCmd.Flags().Bool("package", false,
 		"A flag indicating a package manager is performing the uninstallation")
+
+	c.c.PersistentFlags().StringSliceVarP(
+		&c.options, "options", "o", []string{},
+		"Specify one or more freeform options to pass to the API")
 }

@@ -29,6 +29,7 @@ type driver struct {
 	region           string
 	accessKey        string
 	secretKey        string
+	endpoint         string
 	maxRetries       int
 	disablePathStyle bool
 	svcs             map[string]*awss3.S3
@@ -65,6 +66,9 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	if d.secretKey != "" {
 		fields[s3fs.SecretKey] = "******"
 	}
+
+	d.endpoint = d.config.GetString(s3fs.ConfigS3FSEndpoint)
+	fields[s3fs.Endpoint] = d.endpoint
 
 	d.region = d.config.GetString(s3fs.ConfigS3FSRegion)
 	fields[s3fs.Region] = d.region
@@ -143,6 +147,10 @@ func (d *driver) getService(
 		),
 		Logger:   awsLogger,
 		LogLevel: aws.LogLevel(awsLogLevel),
+	}
+
+	if d.endpoint != "" {
+		config.Endpoint = &d.endpoint
 	}
 
 	svc = awss3.New(sess, config)

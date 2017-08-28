@@ -14,6 +14,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/util"
 )
 
@@ -30,12 +31,12 @@ const (
 	ChkConfig
 )
 
-func install() {
+func install(ctx apitypes.Context) {
 	checkOpPerms("installed")
 	if runtime.GOOS == "linux" {
 		switch getInitSystemType() {
 		case SystemD:
-			installSystemD()
+			installSystemD(ctx)
 		case UpdateRcD:
 			installUpdateRcd()
 		case ChkConfig:
@@ -114,7 +115,7 @@ func uninstallDeb(pkgName string) bool {
 	return true
 }
 
-func uninstall(pkgManager bool) {
+func uninstall(ctx apitypes.Context, pkgManager bool) {
 	checkOpPerms("uninstalled")
 
 	binFilePath := util.BinFilePath
@@ -138,7 +139,7 @@ func uninstall(pkgManager bool) {
 		defer func() {
 			recover()
 		}()
-		stop()
+		serviceStop(ctx)
 	}()
 
 	switch getInitSystemType() {
@@ -152,8 +153,8 @@ func uninstall(pkgManager bool) {
 
 	if !pkgManager {
 		os.Remove(binFilePath)
-		if util.IsPrefixed() {
-			os.RemoveAll(util.GetPrefix())
+		if util.IsPrefixed(ctx) {
+			os.RemoveAll(util.GetPrefix(ctx))
 		}
 	}
 }
@@ -187,9 +188,9 @@ func getInitSystemType() int {
 	return Unknown
 }
 
-func installSystemD() {
-	createUnitFile()
-	createEnvFile()
+func installSystemD(ctx apitypes.Context) {
+	createUnitFile(ctx)
+	createEnvFile(ctx)
 
 	cmd := exec.Command("systemctl", "enable", "-q", util.UnitFileName)
 	cmd.Stdout = os.Stdout
@@ -275,19 +276,19 @@ func uninstallChkConfig() {
 	os.Remove(util.InitFilePath)
 }
 
-func createEnvFile() {
-	f, err := os.OpenFile(util.EnvFilePath(), os.O_CREATE|os.O_WRONLY, 0644)
+func createEnvFile(ctx apitypes.Context) {
+	f, err := os.OpenFile(util.EnvFilePath(ctx), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	if util.IsPrefixed() {
+	if util.IsPrefixed(ctx) {
 		f.WriteString("REXRAY_HOME=")
-		f.WriteString(util.GetPrefix())
+		f.WriteString(util.GetPrefix(ctx))
 	}
 }
 
-func createUnitFile() {
+func createUnitFile(ctx apitypes.Context) {
 	data := struct {
 		BinFileName string
 		BinFilePath string
@@ -295,7 +296,7 @@ func createUnitFile() {
 	}{
 		util.BinFileName,
 		util.BinFilePath,
-		util.EnvFilePath(),
+		util.EnvFilePath(ctx),
 	}
 	tmpl, err := template.New("UnitFile").Parse(unitFileTemplate)
 	if err != nil {

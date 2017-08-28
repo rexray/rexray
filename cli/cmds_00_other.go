@@ -6,13 +6,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/util"
 )
 
 var (
-	installFunc         func()
-	uninstallFunc       func(bool)
-	initConfigFlagsFunc func(*CLI)
+	installFunc   func(apitypes.Context)
+	uninstallFunc func(apitypes.Context, bool)
 )
 
 func init() {
@@ -50,7 +50,7 @@ func (c *CLI) initOtherCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			if installFunc != nil {
 				installSelfCert(c.ctx, c.config)
-				installFunc()
+				installFunc(c.ctx)
 			}
 		},
 	}
@@ -62,7 +62,7 @@ func (c *CLI) initOtherCmds() {
 		Run: func(cmd *cobra.Command, args []string) {
 			if uninstallFunc != nil {
 				pkgManager, _ := cmd.Flags().GetBool("package")
-				uninstallFunc(pkgManager)
+				uninstallFunc(c.ctx, pkgManager)
 			}
 		},
 	}
@@ -80,8 +80,8 @@ func (c *CLI) initOtherFlags() {
 	//c.c.PersistentFlags().StringVarP(&c.service, "service", "s", "",
 	//	"The name of the libStorage service")
 
-	if initConfigFlagsFunc != nil {
-		initConfigFlagsFunc(c)
+	for _, fs := range c.config.FlagSets() {
+		c.c.PersistentFlags().AddFlagSet(fs)
 	}
 
 	c.uninstallCmd.Flags().Bool("package", false,

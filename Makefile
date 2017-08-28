@@ -7,6 +7,7 @@ endif
 
 # this makefile's default target is PROG
 all: $(PROG)
+build: $(PROG)
 
 # a flag indicating whether or not to use docker for the builds. if
 # set to 1 then docker will be used, otherwise go is used
@@ -65,7 +66,13 @@ clean-build:
 	rm -f rexray rexray-client rexray-agent rexray-controller
 clean: clean-build
 
-.PHONY: $(PROG) clean-build
+build-all:
+	$(MAKE) build
+	PROG=$(PROG)-agent BUILD_TAGS=agent $(MAKE) build
+	PROG=$(PROG)-client BUILD_TAGS=client $(MAKE) build
+	PROG=$(PROG)-controller BUILD_TAGS=controller $(MAKE) build
+
+.PHONY: $(PROG) clean-build build-all
 
 
 ################################################################################

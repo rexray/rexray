@@ -41,7 +41,7 @@ func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 	ctx := context.New(goCtx)
 
 	if _, ok := context.PathConfig(ctx); !ok {
-		pathConfig := utils.NewPathConfig(ctx, "", "")
+		pathConfig := utils.NewPathConfig()
 		ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
 		registry.ProcessRegisteredConfigs(ctx)
 	}

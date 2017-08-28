@@ -86,7 +86,7 @@ func (t *testRunner) beforeEach() {
 	// registered config registrations
 	t.ctx = context.Background()
 	Ω(t.ctx).ShouldNot(BeNil())
-	t.pathConfig = utils.NewPathConfig(t.ctx, t.sysHome, "", t.usrHome)
+	t.pathConfig = utils.NewPathConfig(t.sysHome, "", t.usrHome)
 	Ω(t.pathConfig).ShouldNot(BeNil())
 	t.ctx = context.WithValue(t.ctx, context.PathConfigKey, t.pathConfig)
 	registry.ProcessRegisteredConfigs(t.ctx)

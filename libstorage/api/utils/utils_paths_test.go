@@ -8,7 +8,6 @@ import (
 	"path"
 
 	"github.com/akutz/gotil"
-	"github.com/codedellemc/rexray/libstorage/api/context"
 	"github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/libstorage/api/utils"
 	gomegaTypes "github.com/onsi/gomega/types"
@@ -43,7 +42,7 @@ var _ = Describe("Paths", func() {
 			var pathConfig *types.PathConfig
 
 			BeforeEach(func() {
-				pathConfig = utils.NewPathConfig(context.Background(), "", "")
+				pathConfig = utils.NewPathConfig()
 			})
 			AfterEach(func() {
 				pathConfig = nil
@@ -103,8 +102,7 @@ var _ = Describe("Paths", func() {
 			var pathConfig *types.PathConfig
 
 			BeforeEach(func() {
-				pathConfig = utils.NewPathConfig(
-					context.Background(), tmpDir, "")
+				pathConfig = utils.NewPathConfig(tmpDir, "")
 			})
 			AfterEach(func() {
 				pathConfig = nil
@@ -164,8 +162,7 @@ var _ = Describe("Paths", func() {
 			var pathConfig *types.PathConfig
 
 			BeforeEach(func() {
-				pathConfig = utils.NewPathConfig(
-					context.Background(), "", "rexray")
+				pathConfig = utils.NewPathConfig("", "rexray")
 			})
 			AfterEach(func() {
 				pathConfig = nil
@@ -227,8 +224,7 @@ var _ = Describe("Paths", func() {
 			BeforeEach(func() {
 				Ω(tmpDir).ShouldNot(BeEmpty())
 				os.Setenv("REXRAY_HOME_ETC_TLS", tmpDir)
-				pathConfig = utils.NewPathConfig(
-					context.Background(), "", "rexray")
+				pathConfig = utils.NewPathConfig("", "rexray")
 			})
 			AfterEach(func() {
 				os.Setenv("REXRAY_HOME_ETC_TLS", "")
@@ -290,8 +286,7 @@ var _ = Describe("Paths", func() {
 			BeforeEach(func() {
 				Ω(tmpDir).ShouldNot(BeEmpty())
 				os.Setenv("REXRAY_HOME", tmpDir)
-				pathConfig = utils.NewPathConfig(
-					context.Background(), "", "rexray")
+				pathConfig = utils.NewPathConfig("", "rexray")
 			})
 			AfterEach(func() {
 				os.Setenv("REXRAY_HOME", "")
@@ -353,7 +348,7 @@ var _ = Describe("Paths", func() {
 			BeforeEach(func() {
 				Ω(tmpDir).ShouldNot(BeEmpty())
 				os.Setenv("LIBSTORAGE_HOME", tmpDir)
-				pathConfig = utils.NewPathConfig(context.Background(), "", "")
+				pathConfig = utils.NewPathConfig("", "")
 			})
 			AfterEach(func() {
 				os.Setenv("LIBSTORAGE_HOME", "")

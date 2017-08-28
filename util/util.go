@@ -11,6 +11,7 @@ import (
 	"path"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -25,25 +26,7 @@ import (
 	"github.com/codedellemc/rexray/core"
 )
 
-const (
-	logDirPathSuffix = "/var/log/rexray"
-	etcDirPathSuffix = "/etc/rexray"
-	runDirPathSuffix = "/var/run/rexray"
-	libDirPathSuffix = "/var/lib/rexray"
-)
-
 var (
-	prefix string
-
-	binDirPath  string
-	logDirPath  string
-	libDirPath  string
-	runDirPath  string
-	etcDirPath  string
-	pidFilePath string
-	spcFilePath string
-	envFilePath string
-	scrDirPath  string
 
 	// BinFileName is the name of the executing binary.
 	BinFileName string
@@ -75,42 +58,72 @@ var (
 )
 
 func init() {
-	prefix = os.Getenv("REXRAY_HOME")
 	BinFileDirPath, BinFileName, BinFilePath = gotil.GetThisPathParts()
 	UnitFileName = fmt.Sprintf("%s.service", BinFileName)
 	UnitFilePath = path.Join("/etc/systemd/system", UnitFileName)
 	InitFileName = BinFileName
 	InitFilePath = path.Join("/etc/init.d", InitFileName)
 	PIDFileName = fmt.Sprintf("%s.pid", BinFileName)
+
 	DotDirName = fmt.Sprintf(".rexray")
 }
 
+// IsPrefixed determines whether REX-Ray is prefixed.
+func IsPrefixed(ctx apitypes.Context) bool {
+	pc := context.MustPathConfig(ctx)
+	return !(pc.Home == "" || pc.Home == "/")
+}
+
 // GetPrefix gets the root path to the REX-Ray data.
-func GetPrefix() string {
-	return prefix
+func GetPrefix(ctx apitypes.Context) string {
+	return context.MustPathConfig(ctx).Home
 }
 
-// Prefix sets the root path to the REX-Ray data.
-func Prefix(p string) {
-	if p == "" || p == "/" {
-		return
+// ScriptDirPath returns the path to the REX-Ray script directory.
+func ScriptDirPath(ctx apitypes.Context) string {
+	pathConfig := context.MustPathConfig(ctx)
+	v := path.Join(pathConfig.Lib, "scripts")
+	if !gotil.FileExists(v) {
+		os.MkdirAll(v, 0755)
 	}
-
-	logDirPath = ""
-	libDirPath = ""
-	runDirPath = ""
-	etcDirPath = ""
-	pidFilePath = ""
-	spcFilePath = ""
-	envFilePath = ""
-	scrDirPath = ""
-
-	prefix = p
+	return v
 }
 
-// IsPrefixed returns a flag indicating whether or not a prefix value is set.
-func IsPrefixed() bool {
-	return !(prefix == "" || prefix == "/")
+// ScriptFilePath returns the path to a file inside the REX-Ray script directory
+// with the provided file name.
+func ScriptFilePath(ctx apitypes.Context, fileName string) string {
+	return path.Join(ScriptDirPath(ctx), fileName)
+}
+
+// EtcFilePath returns the path to a file inside the REX-Ray etc directory
+// with the provided file name.
+func EtcFilePath(ctx apitypes.Context, fileName string) string {
+	return path.Join(context.MustPathConfig(ctx).Etc, fileName)
+}
+
+// RunFilePath returns the path to a file inside the REX-Ray run directory
+// with the provided file name.
+func RunFilePath(ctx apitypes.Context, fileName string) string {
+	return path.Join(context.MustPathConfig(ctx).Run, fileName)
+}
+
+// PidFilePath returns the path to the REX-Ray PID file.
+func PidFilePath(ctx apitypes.Context) string {
+	return path.Join(
+		context.MustPathConfig(ctx).Run,
+		fmt.Sprintf("%s.pid", BinFileName))
+}
+
+// EnvFilePath returns the path to the REX-Ray env file.
+func EnvFilePath(ctx apitypes.Context) string {
+	return path.Join(
+		context.MustPathConfig(ctx).Etc,
+		fmt.Sprintf("%s.env", BinFileName))
+}
+
+// SpecFilePath returns the path to the REX-Ray spec file.
+func SpecFilePath(ctx apitypes.Context) string {
+	return RunFilePath(ctx, "rexray.spec")
 }
 
 // Install executes the system install command.
@@ -134,116 +147,25 @@ func InstallDirChownRoot(dirPath string) {
 	InstallChownRoot("-d", dirPath)
 }
 
-// EtcDirPath returns the path to the REX-Ray etc directory.
-func EtcDirPath() string {
-	if etcDirPath == "" {
-		etcDirPath = fmt.Sprintf("%s%s", prefix, etcDirPathSuffix)
-		os.MkdirAll(etcDirPath, 0755)
-	}
-	return etcDirPath
-}
-
-// RunDirPath returns the path to the REX-Ray run directory.
-func RunDirPath() string {
-	if runDirPath == "" {
-		runDirPath = fmt.Sprintf("%s%s", prefix, runDirPathSuffix)
-		os.MkdirAll(runDirPath, 0755)
-	}
-	return runDirPath
-}
-
-// LogDirPath returns the path to the REX-Ray log directory.
-func LogDirPath() string {
-	if logDirPath == "" {
-		logDirPath = fmt.Sprintf("%s%s", prefix, logDirPathSuffix)
-		os.MkdirAll(logDirPath, 0755)
-	}
-	return logDirPath
-}
-
-// LibDirPath returns the path to the REX-Ray bin directory.
-func LibDirPath() string {
-	if libDirPath == "" {
-		libDirPath = fmt.Sprintf("%s%s", prefix, libDirPathSuffix)
-		os.MkdirAll(libDirPath, 0755)
-	}
-	return libDirPath
-}
-
-// LibFilePath returns the path to a file inside the REX-Ray lib directory
-// with the provided file name.
-func LibFilePath(fileName string) string {
-	return path.Join(LibDirPath(), fileName)
-}
-
-// ScriptDirPath returns the path to the REX-Ray script directory.
-func ScriptDirPath() string {
-	if scrDirPath == "" {
-		scrDirPath = LibFilePath("scripts")
-		os.MkdirAll(scrDirPath, 0755)
-	}
-	return scrDirPath
-}
-
-// ScriptFilePath returns the path to a file inside the REX-Ray script directory
-// with the provided file name.
-func ScriptFilePath(fileName string) string {
-	return path.Join(ScriptDirPath(), fileName)
-}
-
-// RunFilePath returns the path to a file inside the REX-Ray run directory
-// with the provided file name.
-func RunFilePath(fileName string) string {
-	return path.Join(RunDirPath(), fileName)
-}
-
-// PidFilePath returns the path to the REX-Ray PID file.
-func PidFilePath() string {
-	if pidFilePath == "" {
-		pidFilePath = RunFilePath(fmt.Sprintf("%s.pid", BinFileName))
-	}
-	return pidFilePath
-}
-
-// EnvFilePath returns the path to the REX-Ray env file.
-func EnvFilePath() string {
-	if envFilePath == "" {
-		envFilePath = EtcFilePath(fmt.Sprintf("%s.env", BinFileName))
-	}
-	return envFilePath
-}
-
-// SpecFilePath returns the path to the REX-Ray spec file.
-func SpecFilePath() string {
-	if spcFilePath == "" {
-		spcFilePath = RunFilePath("rexray.spec")
-	}
-	return spcFilePath
-}
-
-// EtcFilePath returns the path to a file inside the REX-Ray etc directory
-// with the provided file name.
-func EtcFilePath(fileName string) string {
-	return path.Join(EtcDirPath(), fileName)
-}
-
 // LogFilePath returns the path to a file inside the REX-Ray log directory
 // with the provided file name.
-func LogFilePath(fileName string) string {
-	return path.Join(LogDirPath(), fileName)
+func LogFilePath(ctx apitypes.Context, fileName string) string {
+	return path.Join(context.MustPathConfig(ctx).Log, fileName)
 }
 
 // LogFile returns a writer to a file inside the REX-Ray log directory
 // with the provided file name.
-func LogFile(fileName string) (io.Writer, error) {
+func LogFile(ctx apitypes.Context, fileName string) (io.Writer, error) {
 	return os.OpenFile(
-		LogFilePath(fileName), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+		LogFilePath(ctx, fileName),
+		os.O_CREATE|os.O_APPEND|os.O_RDWR,
+		0644)
 }
 
 // StdOutAndLogFile returns a mutltiplexed writer for the current process's
 // stdout descriptor and a REX-Ray log file with the provided name.
-func StdOutAndLogFile(fileName string) (io.Writer, error) {
-	lf, lfErr := LogFile(fileName)
+func StdOutAndLogFile(ctx apitypes.Context, fileName string) (io.Writer, error) {
+	lf, lfErr := LogFile(ctx, fileName)
 	if lfErr != nil {
 		return nil, lfErr
 	}
@@ -251,16 +173,16 @@ func StdOutAndLogFile(fileName string) (io.Writer, error) {
 }
 
 // WritePidFile writes the current process ID to the REX-Ray PID file.
-func WritePidFile(pid int) error {
+func WritePidFile(ctx apitypes.Context, pid int) error {
 	if pid < 0 {
 		pid = os.Getpid()
 	}
-	return gotil.WriteStringToFile(fmt.Sprintf("%d", pid), PidFilePath())
+	return gotil.WriteStringToFile(fmt.Sprintf("%d", pid), PidFilePath(ctx))
 }
 
 // ReadPidFile reads the REX-Ray PID from the PID file.
-func ReadPidFile() (int, error) {
-	pidStr, pidStrErr := gotil.ReadFileToString(PidFilePath())
+func ReadPidFile(ctx apitypes.Context) (int, error) {
+	pidStr, pidStrErr := gotil.ReadFileToString(PidFilePath(ctx))
 	if pidStrErr != nil {
 		return -1, pidStrErr
 	}
@@ -272,13 +194,13 @@ func ReadPidFile() (int, error) {
 }
 
 // WriteSpecFile writes the current host address to the REX-Ray spec file.
-func WriteSpecFile(host string) error {
-	return gotil.WriteStringToFile(host, SpecFilePath())
+func WriteSpecFile(ctx apitypes.Context, host string) error {
+	return gotil.WriteStringToFile(host, SpecFilePath(ctx))
 }
 
 // ReadSpecFile reads the REX-Ray host address from the spec file.
-func ReadSpecFile() (string, error) {
-	host, err := gotil.ReadFileToString(SpecFilePath())
+func ReadSpecFile(ctx apitypes.Context) (string, error) {
+	host, err := gotil.ReadFileToString(SpecFilePath(ctx))
 	if err != nil {
 		return "", err
 	}
@@ -303,7 +225,7 @@ var localHostRX = regexp.MustCompile(
 
 func logHostSpec(ctx apitypes.Context, h, m string) {
 	ctx.WithFields(log.Fields{
-		"path": SpecFilePath(),
+		"path": SpecFilePath(ctx),
 		"host": h,
 	}).Debug(m)
 }
@@ -326,11 +248,11 @@ func IsLocalServerActive(
 
 	var (
 		isLocal  bool
-		specFile = SpecFilePath()
+		specFile = SpecFilePath(ctx)
 	)
 
 	if gotil.FileExists(specFile) {
-		if h, _ := ReadSpecFile(); h != "" {
+		if h, _ := ReadSpecFile(ctx); h != "" {
 			host = h
 			host = parseSafeHost(ctx, host)
 			logHostSpec(ctx, host, "read spec file")
@@ -410,7 +332,9 @@ func ActivateLibStorage(
 	}
 
 	if !config.IsSet(apitypes.ConfigIgVolOpsMountPath) {
-		config.Set(apitypes.ConfigIgVolOpsMountPath, LibFilePath("volumes"))
+		config.Set(
+			apitypes.ConfigIgVolOpsMountPath,
+			path.Join(context.MustPathConfig(ctx).Lib, "volumes"))
 	}
 
 	var (
@@ -459,6 +383,8 @@ func NewClient(
 
 // NewConfig returns a new config object.
 func NewConfig(ctx apitypes.Context) (config gofig.Config) {
+
+	pathConfig := context.MustPathConfig(ctx)
 
 	defer func() {
 		if config != nil {
@@ -509,8 +435,8 @@ func NewConfig(ctx apitypes.Context) (config gofig.Config) {
 		var (
 			fileName    = BinFileName
 			fileNameExt = fileName + "." + cfgFileExt
-			allFilePath = EtcFilePath(fileNameExt)
-			usrFilePath = path.Join(gotil.HomeDir(), DotDirName, fileNameExt)
+			allFilePath = EtcFilePath(ctx, fileNameExt)
+			usrFilePath = path.Join(pathConfig.UserHome, fileNameExt)
 		)
 		if config, ok := loadConfig(
 			gotil.FileExists(allFilePath),
@@ -527,8 +453,8 @@ func NewConfig(ctx apitypes.Context) (config gofig.Config) {
 		var (
 			fileName    = "rexray"
 			fileNameExt = fileName + "." + cfgFileExt
-			allFilePath = EtcFilePath(fileNameExt)
-			usrFilePath = path.Join(gotil.HomeDir(), DotDirName, fileNameExt)
+			allFilePath = EtcFilePath(ctx, fileNameExt)
+			usrFilePath = path.Join(pathConfig.UserHome, fileNameExt)
 		)
 		if config, ok := loadConfig(
 			gotil.FileExists(allFilePath),
@@ -545,8 +471,8 @@ func NewConfig(ctx apitypes.Context) (config gofig.Config) {
 		var (
 			fileName    = "config"
 			fileNameExt = fileName + "." + cfgFileExt
-			allFilePath = EtcFilePath(fileNameExt)
-			usrFilePath = path.Join(gotil.HomeDir(), DotDirName, fileNameExt)
+			allFilePath = EtcFilePath(ctx, fileNameExt)
+			usrFilePath = path.Join(pathConfig.UserHome, fileNameExt)
 		)
 		config, _ := loadConfig(
 			gotil.FileExists(allFilePath),
@@ -613,4 +539,37 @@ func parseSafeHost(ctx apitypes.Context, h string) string {
 		"postParse": h,
 	}).Debug(`parseSafeHost - no change`)
 	return h
+}
+
+// FindFlagVal looks at the provided list of arguments and attempts
+// to find the value for the specified flag. The indicies of the
+// arguments that are the flag and its value are also returned. If
+// the flag is specified as --flag=val then only a single index will
+// be returned.
+func FindFlagVal(name string, args ...string) (string, []int) {
+	var format string
+	if strings.HasPrefix(name, "--") {
+		format = `(?i)^%s(?:=(.+))?$`
+	} else {
+		format = `(?i)^%s$`
+	}
+	rx := regexp.MustCompile(fmt.Sprintf(format, name))
+	for i, v := range args {
+		m := rx.FindStringSubmatch(v)
+		switch len(m) {
+		case 0:
+			continue
+		case 1:
+			if i+1 <= len(args) {
+				return args[i+1], []int{i, i + 1}
+			}
+		case 2:
+			if m[1] == "" {
+				return args[i+1], []int{i, i + 1}
+			}
+			return m[1], []int{i}
+		}
+	}
+
+	return "", nil
 }

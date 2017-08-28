@@ -36,9 +36,9 @@ func (c *CLI) initFlexRexCmds() {
 			if c.force {
 				os.RemoveAll(c.scriptPath)
 			}
-			fp := util.ScriptFilePath("flexrex")
+			fp := util.ScriptFilePath(c.ctx, "flexrex")
 			if !gotil.FileExists(fp) {
-				if _, err := c.installScripts("flexrex"); err != nil {
+				if _, err := c.installScripts(c.ctx, "flexrex"); err != nil {
 					c.ctx.Fatal(err)
 				}
 			}

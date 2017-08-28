@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,7 +9,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	gcontext "github.com/gorilla/context"
-	"golang.org/x/net/context"
 
 	"github.com/codedellemc/rexray/libstorage/api/types"
 )
@@ -102,6 +102,15 @@ func New(parent context.Context) types.Context {
 // Background returns a new context with logging capabilities.
 func Background() types.Context {
 	return New(nil)
+}
+
+// WithCancel returns a copy of parent with a new Done channel. The
+// returned context's Done channel is closed when the returned cancel
+// function is called or when the parent context's Done channel is
+// closed, whichever happens first.
+func WithCancel(parent context.Context) (types.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(parent)
+	return New(ctx), cancel
 }
 
 // WithRequestRoute returns a new context with the injected *http.Request

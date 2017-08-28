@@ -9,7 +9,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	glog "github.com/akutz/golf/logrus"
-	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -17,7 +16,7 @@ import (
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
 
-	"github.com/codedellemc/rexray/cli/cli/term"
+	"github.com/codedellemc/rexray/cli/term"
 	"github.com/codedellemc/rexray/util"
 )
 
@@ -61,8 +60,8 @@ type CLI struct {
 
 	serviceCmd        *cobra.Command
 	serviceStartCmd   *cobra.Command
-	serviceRestartCmd *cobra.Command
 	serviceStopCmd    *cobra.Command
+	serviceRestartCmd *cobra.Command
 	serviceStatusCmd  *cobra.Command
 	serviceInitSysCmd *cobra.Command
 
@@ -173,20 +172,26 @@ const (
 )
 
 // New returns a new CLI using the current process's arguments.
-func New(ctx apitypes.Context) *CLI {
-	return NewWithArgs(ctx, os.Args[1:]...)
+func New(ctx apitypes.Context, config gofig.Config) *CLI {
+	return NewWithArgs(ctx, config, os.Args[1:]...)
 }
 
 // NewWithArgs returns a new CLI using the specified arguments.
-func NewWithArgs(ctx apitypes.Context, a ...string) *CLI {
+func NewWithArgs(
+	ctx apitypes.Context, config gofig.Config, a ...string) *CLI {
+
 	s := "REX-Ray:\n" +
 		"  A guest-based storage introspection tool that enables local\n" +
 		"  visibility and management from cloud and storage platforms."
 
+	if config == nil {
+		config = util.NewConfig(ctx)
+	}
+
 	c := &CLI{
 		l:      log.New(),
 		ctx:    ctx,
-		config: util.NewConfig(ctx),
+		config: config,
 	}
 
 	c.c = &cobra.Command{
@@ -210,13 +215,15 @@ func NewWithArgs(ctx apitypes.Context, a ...string) *CLI {
 }
 
 // Execute executes the CLI using the current process's arguments.
-func Execute(ctx apitypes.Context) {
-	New(ctx).Execute()
+func Execute(ctx apitypes.Context, config gofig.Config) {
+	New(ctx, config).Execute()
 }
 
 // ExecuteWithArgs executes the CLI using the specified arguments.
-func ExecuteWithArgs(ctx apitypes.Context, a ...string) {
-	NewWithArgs(ctx, a...).Execute()
+func ExecuteWithArgs(
+	ctx apitypes.Context, config gofig.Config, a ...string) {
+
+	NewWithArgs(ctx, config, a...).Execute()
 }
 
 // Execute executes the CLI.
@@ -228,7 +235,7 @@ func (c *CLI) Execute() {
 		}
 	}()
 
-	defer func() {
+	/*defer func() {
 		r := recover()
 		switch r := r.(type) {
 		case nil:
@@ -242,13 +249,13 @@ func (c *CLI) Execute() {
 			log.Debugf("exiting with default error code 1, r=%v", r)
 			os.Exit(1)
 		}
-	}()
+	}()*/
 
 	c.execute()
 }
 
 func (c *CLI) execute() {
-	defer func() {
+	/*defer func() {
 		r := recover()
 		if r != nil {
 			switch r.(type) {
@@ -260,7 +267,7 @@ func (c *CLI) execute() {
 				panic(r)
 			}
 		}
-	}()
+	}()*/
 	c.c.Execute()
 }
 
@@ -311,20 +318,25 @@ func (c *CLI) preRunActivateLibStorage(cmd *cobra.Command, args []string) {
 	c.preRun(cmd, args)
 }
 
+const (
+	configRexrayCLI = "rexray.cli"
+)
+
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
-	if c.cfgFile != "" && gotil.FileExists(c.cfgFile) {
+	/*if c.cfgFile != "" && gotil.FileExists(c.cfgFile) {
 		util.ValidateConfig(c.cfgFile)
 		if err := c.config.ReadConfigFile(c.cfgFile); err != nil {
 			panic(err)
 		}
 		os.Setenv("REXRAY_CONFIG_FILE", c.cfgFile)
 		cmd.Flags().Parse(os.Args[1:])
-	}
+	}*/
 
 	c.updateLogLevel()
 
-	// disable path caching for the CLI
+	// Disable patch caching for the CLI
+	c.config = c.config.Scope(configRexrayCLI)
 	c.config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, false)
 
 	if v := c.rrHost(); v != "" {
@@ -401,14 +413,6 @@ func (c *CLI) checkCmdPermRequirements(cmd *cobra.Command) error {
 
 	if cmd == c.serviceStartCmd {
 		return checkOpPerms("started")
-	}
-
-	if cmd == c.serviceStopCmd {
-		return checkOpPerms("stopped")
-	}
-
-	if cmd == c.serviceRestartCmd {
-		return checkOpPerms("restarted")
 	}
 
 	return nil

@@ -1,7 +1,4 @@
-// +build !client
-// +build !controller
-
-package volumedriver
+package docker
 
 import (
 	"encoding/json"
@@ -9,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -17,10 +15,12 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+
+	"github.com/codedellemc/rexray/agent"
+	"github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
-
-	"github.com/codedellemc/rexray/daemon/module"
 )
 
 const (
@@ -42,20 +42,55 @@ var (
 	illegalPath = regexp.MustCompile(`[^[:alnum:]\~\-\./]`)
 )
 
+const configFormat = `
+rexray:
+  modules:
+    default-docker:
+      type:     docker
+      desc:     The default docker module.
+      host:     unix://%[1]s
+      spec:     %[2]s
+      disabled: false
+`
+
 func init() {
-	module.RegisterModule(modName, newModule)
+	agent.RegisterModule(modName, newModule)
+	registry.RegisterConfigReg(
+		"Docker",
+		func(ctx apitypes.Context, r gofig.ConfigRegistration) {
+			r.SetYAML(fmt.Sprintf(
+				configFormat,
+				getSockFile(ctx),
+				getSpecFile(ctx)))
+		})
 }
 
-func newModule(ctx apitypes.Context, c *module.Config) (module.Module, error) {
+func getSockFile(ctx apitypes.Context) string {
+	return path.Join(
+		context.MustPathConfig(ctx).Home,
+		"/run/docker/plugins/rexray.sock")
+}
+
+func getSpecFile(ctx apitypes.Context) string {
+	return path.Join(
+		context.MustPathConfig(ctx).Home,
+		"/etc/docker/plugins/rexray.spec")
+}
+
+func newModule(ctx apitypes.Context, c *agent.Config) (agent.Module, error) {
 
 	host := strings.Trim(c.Address, " ")
 
 	if host == "" {
 		if c.Name == "default-docker" {
-			host = "unix:///run/docker/plugins/rexray.sock"
+			host = fmt.Sprintf("unix://%s", getSockFile(ctx))
 		} else {
 			fname := cleanName(c.Name)
-			host = fmt.Sprintf("unix:///run/docker/plugins/%s.sock", fname)
+			host = fmt.Sprintf("unix://%s",
+				path.Join(
+					context.MustPathConfig(ctx).Home,
+					"/run/docker/plugins",
+					fmt.Sprintf("%s.sock", fname)))
 		}
 	}
 
@@ -109,7 +144,10 @@ func (m *mod) Start() error {
 		return goof.WithField("protocol", proto, "invalid protocol")
 	}
 
-	if err := os.MkdirAll("/etc/docker/plugins", 0755); err != nil {
+	if err := os.MkdirAll(
+		path.Join(context.MustPathConfig(m.ctx).Home,
+			"/etc/docker/plugins"),
+		0755); err != nil {
 		return err
 	}
 

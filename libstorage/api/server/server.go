@@ -208,7 +208,7 @@ func Serve(
 	ctx := context.New(goCtx)
 
 	if _, ok := context.PathConfig(ctx); !ok {
-		pathConfig := utils.NewPathConfig(ctx, "", "")
+		pathConfig := utils.NewPathConfig()
 		ctx = ctx.WithValue(context.PathConfigKey, pathConfig)
 		registry.ProcessRegisteredConfigs(ctx)
 	}

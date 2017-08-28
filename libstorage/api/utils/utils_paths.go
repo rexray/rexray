@@ -25,7 +25,7 @@ import (
 //   3. The third argument is treated as a custom home directory
 //      for the executing process's user. The default value
 //      is the user's home directory.
-func NewPathConfig(ctx types.Context, args ...string) *types.PathConfig {
+func NewPathConfig(args ...string) *types.PathConfig {
 
 	var (
 		home     string
@@ -83,38 +83,38 @@ func NewPathConfig(ctx types.Context, args ...string) *types.PathConfig {
 	os.MkdirAll(pathConfig.Home, 0755)
 
 	// init the other paths
-	initPathConfigFieldWithEnvVar(ctx, envVarHomeEtc, &pathConfig.Etc)
-	initPathConfigFieldWithEnvVar(ctx, envVarHomeEtcTLS, &pathConfig.TLS)
-	initPathConfigFieldWithEnvVar(ctx, envVarHomeLib, &pathConfig.Lib)
-	initPathConfigFieldWithEnvVar(ctx, envVarHomeLog, &pathConfig.Log)
-	initPathConfigFieldWithEnvVar(ctx, envVarHomeRun, &pathConfig.Run)
+	initPathConfigFieldWithEnvVar(envVarHomeEtc, &pathConfig.Etc)
+	initPathConfigFieldWithEnvVar(envVarHomeEtcTLS, &pathConfig.TLS)
+	initPathConfigFieldWithEnvVar(envVarHomeLib, &pathConfig.Lib)
+	initPathConfigFieldWithEnvVar(envVarHomeLog, &pathConfig.Log)
+	initPathConfigFieldWithEnvVar(envVarHomeRun, &pathConfig.Run)
 
 	root := pathConfig.Home == "/"
 
 	initPathConfigFieldWithPath(
-		ctx, root, true, token, pathConfig.Home, "etc", &pathConfig.Etc)
+		root, true, token, pathConfig.Home, "etc", &pathConfig.Etc)
 	initPathConfigFieldWithPath(
-		ctx, false, true, token, pathConfig.Etc, "tls", &pathConfig.TLS)
+		false, true, token, pathConfig.Etc, "tls", &pathConfig.TLS)
 	initPathConfigFieldWithPath(
-		ctx, root, true, token, pathConfig.Home, "var/lib", &pathConfig.Lib)
+		root, true, token, pathConfig.Home, "var/lib", &pathConfig.Lib)
 	initPathConfigFieldWithPath(
-		ctx, root, true, token, pathConfig.Home, "var/log", &pathConfig.Log)
+		root, true, token, pathConfig.Home, "var/log", &pathConfig.Log)
 	initPathConfigFieldWithPath(
-		ctx, root, true, token, pathConfig.Home, "var/run", &pathConfig.Run)
+		root, true, token, pathConfig.Home, "var/run", &pathConfig.Run)
 	initPathConfigFieldWithPath(
-		ctx, false, false, token, pathConfig.TLS,
+		false, false, token, pathConfig.TLS,
 		fmt.Sprintf("%s.crt", token), &pathConfig.DefaultTLSCertFile)
 	initPathConfigFieldWithPath(
-		ctx, false, false, token, pathConfig.TLS,
+		false, false, token, pathConfig.TLS,
 		fmt.Sprintf("%s.key", token), &pathConfig.DefaultTLSKeyFile)
 	initPathConfigFieldWithPath(
-		ctx, false, false, token, pathConfig.TLS,
+		false, false, token, pathConfig.TLS,
 		"known_hosts", &pathConfig.DefaultTLSKnownHosts)
 	initPathConfigFieldWithPath(
-		ctx, false, false, token, pathConfig.TLS,
+		false, false, token, pathConfig.TLS,
 		"cacerts", &pathConfig.DefaultTLSTrustedRootsFile)
 
-	ctx.WithFields(map[string]interface{}{
+	/*ctx.WithFields(map[string]interface{}{
 		"token":   pathConfig.Token,
 		"usrHome": pathConfig.UserHome,
 		"sysHome": pathConfig.Home,
@@ -123,20 +123,19 @@ func NewPathConfig(ctx types.Context, args ...string) *types.PathConfig {
 		"sysLib":  pathConfig.Lib,
 		"sysLog":  pathConfig.Log,
 		"sysRun":  pathConfig.Run,
-	}).Info("created new path config")
+	}).Info("created new path config")*/
 
 	return pathConfig
 }
 
-func initPathConfigFieldWithEnvVar(
-	ctx types.Context, envVarName string, field *string) {
+func initPathConfigFieldWithEnvVar(envVarName string, field *string) {
 	if v := os.Getenv(envVarName); v != "" && gotil.FileExists(v) {
 		*field = v
 	}
 }
 
 func initPathConfigFieldWithPath(
-	ctx types.Context, root, mkdir bool,
+	root, mkdir bool,
 	token, parent, dir string, field *string) {
 	defer func() {
 		if !mkdir {

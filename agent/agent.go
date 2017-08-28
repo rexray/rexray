@@ -1,7 +1,4 @@
-// +build !client
-// +build !controller
-
-package module
+package agent
 
 import (
 	"fmt"
@@ -10,12 +7,75 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 
+	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/util"
 )
+
+func init() {
+	cfg := gofigCore.NewRegistration("Module")
+	cfg.Key(gofig.String, "", "10s", "", "rexray.module.startTimeout")
+	gofigCore.Register(cfg)
+}
+
+const (
+	configRexrayAgent = "rexray.agent"
+)
+
+// Start starts the agent.
+func Start(
+	ctx apitypes.Context,
+	config gofig.Config) (apitypes.Context, <-chan error, error) {
+
+	// Enable path caching for the modules.
+	config = config.Scope(configRexrayAgent)
+	config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, true)
+
+	// Activate libStorage if necessary.
+	var (
+		err    error
+		lsErrs <-chan error
+	)
+
+	// Attempt to activate libStorage, and if an ErrHostDetectionFailed
+	// error occurs then just log it as a warning since modules may
+	// define hosts directly.
+	ctx, config, lsErrs, err = util.ActivateLibStorage(ctx, config)
+	if err != nil {
+		if err.Error() == util.ErrHostDetectionFailed.Error() {
+			ctx.Warn(err)
+		} else {
+			return nil, nil, err
+		}
+	}
+
+	if err := InitializeDefaultModules(ctx, config); err != nil {
+		ctx.WithError(err).Error("default module(s) failed to initialize")
+		return nil, nil, err
+	}
+
+	if err := StartDefaultModules(ctx, config); err != nil {
+		ctx.WithError(err).Error("default module(s) failed to start")
+		return nil, nil, err
+	}
+
+	ctx.Info("agent successfully initialized, waiting on stop signal")
+
+	agentErrs := make(chan error)
+
+	go func() {
+		ctx.Info("agent context cancellation - waiting")
+		<-ctx.Done()
+		util.WaitUntilLibStorageStopped(ctx, lsErrs)
+		ctx.Info("agent context cancellation - received")
+		close(agentErrs)
+	}()
+
+	return ctx, agentErrs, nil
+}
 
 // Module is the interface to which types adhere in order to participate as
 // daemon modules.
@@ -130,35 +190,19 @@ func Instances() <-chan *Instance {
 // InitializeDefaultModules initializes the default modules.
 func InitializeDefaultModules(
 	ctx apitypes.Context,
-	config gofig.Config) (<-chan error, error) {
+	config gofig.Config) error {
 
 	modTypesRwl.RLock()
 	defer modTypesRwl.RUnlock()
 
 	var (
-		err  error
-		mod  *Instance
-		errs <-chan error
+		err error
+		mod *Instance
 	)
-
-	// enable path caching for the modules
-	config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, true)
-
-	// attempt to activate libStorage. if an ErrHostDetectionFailed
-	// error occurs then just log it as a warning since modules may
-	// define hosts directly
-	ctx, config, errs, err = util.ActivateLibStorage(ctx, config)
-	if err != nil {
-		if err.Error() == util.ErrHostDetectionFailed.Error() {
-			ctx.Warn(err)
-		} else {
-			return nil, err
-		}
-	}
 
 	modConfigs, err := getConfiguredModules(ctx, config)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ctx.WithField("len(modConfigs)", len(modConfigs)).Debug(
@@ -170,17 +214,17 @@ func InitializeDefaultModules(
 			"creating libStorage client for module instance")
 
 		if mc.Client, err = util.NewClient(ctx, mc.Config); err != nil {
-			panic(err)
+			return err
 		}
 
 		if mod, err = InitializeModule(ctx, mc); err != nil {
-			return nil, err
+			return err
 		}
 
 		modInstances[mod.Name] = mod
 	}
 
-	return errs, nil
+	return nil
 }
 
 // InitializeModule initializes a module.
@@ -330,6 +374,8 @@ func getConfiguredModules(
 		return nil, goof.New("invalid format rexray.modules")
 	}
 	ctx.WithField("count", len(modMap)).Debug("got modules map")
+
+	ctx.WithField("map", modMap).Info("rexray modules")
 
 	modConfigs := []*Config{}
 

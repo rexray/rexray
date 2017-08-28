@@ -1,8 +1,9 @@
 package types
 
 import (
+	"context"
+
 	log "github.com/Sirupsen/logrus"
-	"golang.org/x/net/context"
 )
 
 // Level is a log level.

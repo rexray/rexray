@@ -29,7 +29,7 @@ func (c *CLI) initServiceCmds() {
 		Use:   "start",
 		Short: "Start the service",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.start()
+			serviceStart(c.ctx, c.config, c.nopid)
 		},
 	}
 	c.c.AddCommand(c.serviceStartCmd)
@@ -40,7 +40,7 @@ func (c *CLI) initServiceCmds() {
 		Aliases: []string{"reload", "force-reload"},
 		Short:   "Restart the service",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.restart()
+			serviceRestart(c.ctx, c.config, c.nopid)
 		},
 	}
 	c.c.AddCommand(c.serviceRestartCmd)
@@ -50,7 +50,7 @@ func (c *CLI) initServiceCmds() {
 		Use:   "stop",
 		Short: "Stop the service",
 		Run: func(cmd *cobra.Command, args []string) {
-			stop()
+			serviceStop(c.ctx)
 		},
 	}
 	c.c.AddCommand(c.serviceStopCmd)
@@ -60,7 +60,7 @@ func (c *CLI) initServiceCmds() {
 		Use:   "status",
 		Short: "Print the service status",
 		Run: func(cmd *cobra.Command, args []string) {
-			c.status()
+			serviceStatus(c.ctx)
 		},
 	}
 	c.c.AddCommand(c.serviceStatusCmd)
@@ -73,16 +73,12 @@ func (c *CLI) initServiceCmds() {
 			fmt.Println(getInitSystemCmd())
 		},
 	}
-	c.serviceCmd.AddCommand(c.serviceInitSysCmd)
+	c.c.AddCommand(c.serviceInitSysCmd)
 }
 
 func (c *CLI) initServiceFlags() {
-	c.serviceStartCmd.Flags().BoolVarP(&c.fg, "foreground", "f", false,
-		"Starts the service in the foreground")
 	c.serviceStartCmd.Flags().BoolVarP(&c.nopid, "nopid", "", false,
 		"Disable PID file checking")
 	c.serviceStartCmd.Flags().BoolVarP(&c.force, "force", "", false,
 		"Forces the service to start, ignoring errors")
-	c.serviceStartCmd.Flags().BoolVarP(&c.fork, "fork", "", false,
-		"Indicates that the server is being forked.")
 }

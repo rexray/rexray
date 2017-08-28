@@ -15,8 +15,6 @@ import (
 	"github.com/codedellemc/rexray/util"
 )
 
-var additionalFlagSetsFunc func(*CLI) map[string]*flag.FlagSet
-
 func (c *CLI) initUsageTemplates() {
 
 	var ut string
@@ -101,10 +99,14 @@ func hasFlags(flags *flag.FlagSet) bool {
 }
 
 func (c *CLI) additionalFlagSets() map[string]*flag.FlagSet {
-	if additionalFlagSetsFunc != nil {
-		return additionalFlagSetsFunc(c)
+	afs := map[string]*flag.FlagSet{}
+	for fsn, fs := range c.config.FlagSets() {
+		if fsn == "Global Flags" || !fs.HasFlags() {
+			continue
+		}
+		afs[fsn] = fs
 	}
-	return nil
+	return afs
 }
 
 func (c *CLI) additionalFlags() *flag.FlagSet {
@@ -138,7 +140,8 @@ func commands(cmd *cobra.Command) []*cobra.Command {
 
 	cArr := []*cobra.Command{}
 	for _, c := range cmd.Commands() {
-		if m, _ := rx.MatchString("((re)?start)|stop|status|((un)?install)", c.Name()); !m {
+		if m, _ := rx.MatchString(
+			"(initsys|(re)?start)|stop|status|((un)?install)", c.Name()); !m {
 			cArr = append(cArr, c)
 		}
 	}

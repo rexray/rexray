@@ -218,7 +218,7 @@ ambiguity, correct a technical mistake, or to fix a grammatical error - please
 feel entitled to do so! We welcome doc pull requests with the same childlike
 enthusiasm as any other contribution!
 
-###3. Working on a new feature
+### 3. Working on a new feature
 
 If you've found something we've left out, definitely feel free to start work on
 introducing that feature. It's always useful to open an issue or submit a pull

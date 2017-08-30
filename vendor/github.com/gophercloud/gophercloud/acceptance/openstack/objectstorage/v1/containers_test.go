@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/acceptance/clients"
 	"github.com/gophercloud/gophercloud/acceptance/tools"
 	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/containers"
 	"github.com/gophercloud/gophercloud/pagination"
@@ -16,8 +17,10 @@ import (
 var numContainers = 2
 
 func TestContainers(t *testing.T) {
-	// Create a new client to execute the HTTP requests. See common.go for newClient body.
-	client := newClient(t)
+	client, err := clients.NewObjectStorageV1Client()
+	if err != nil {
+		t.Fatalf("Unable to create client: %v", err)
+	}
 
 	// Create a slice of random container names.
 	cNames := make([]string, numContainers)
@@ -40,7 +43,7 @@ func TestContainers(t *testing.T) {
 
 	// List the numContainer names that were just created. To just list those,
 	// the 'prefix' parameter is used.
-	err := containers.List(client, &containers.ListOpts{Full: true, Prefix: "gophercloud-test-container-"}).EachPage(func(page pagination.Page) (bool, error) {
+	err = containers.List(client, &containers.ListOpts{Full: true, Prefix: "gophercloud-test-container-"}).EachPage(func(page pagination.Page) (bool, error) {
 		containerList, err := containers.ExtractInfo(page)
 		th.AssertNoErr(t, err)
 
@@ -66,6 +69,10 @@ func TestContainers(t *testing.T) {
 	th.AssertNoErr(t, err)
 
 	// Update one of the numContainer container metadata.
+	metadata := map[string]string{
+		"Gophercloud-Test": "containers",
+	}
+
 	updateres := containers.Update(client, cNames[0], &containers.UpdateOpts{Metadata: metadata})
 	th.AssertNoErr(t, updateres.Err)
 	// After the tests are done, delete the metadata that was set.
@@ -89,8 +96,10 @@ func TestContainers(t *testing.T) {
 }
 
 func TestListAllContainers(t *testing.T) {
-	// Create a new client to execute the HTTP requests. See common.go for newClient body.
-	client := newClient(t)
+	client, err := clients.NewObjectStorageV1Client()
+	if err != nil {
+		t.Fatalf("Unable to create client: %v", err)
+	}
 
 	numContainers := 20
 

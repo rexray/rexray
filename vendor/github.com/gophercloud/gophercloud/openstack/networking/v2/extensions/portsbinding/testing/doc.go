@@ -1,2 +1,2 @@
-// networking_extensions_portsbinding_v2
+// portsbindings unit tests
 package testing

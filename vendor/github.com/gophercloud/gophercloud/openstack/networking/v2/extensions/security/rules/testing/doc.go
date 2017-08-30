@@ -1,2 +1,2 @@
-// networking_extensions_security_rules_v2
+// rules unit tests
 package testing

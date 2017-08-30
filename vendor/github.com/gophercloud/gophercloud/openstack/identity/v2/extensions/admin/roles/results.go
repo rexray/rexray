@@ -7,16 +7,16 @@ import (
 
 // Role represents an API role resource.
 type Role struct {
-	// The unique ID for the role.
+	// ID is the unique ID for the role.
 	ID string
 
-	// The human-readable name of the role.
+	// Name is the human-readable name of the role.
 	Name string
 
-	// The description of the role.
+	// Description is the description of the role.
 	Description string
 
-	// The associated service for this role.
+	// ServiceID is the associated service for this role.
 	ServiceID string
 }
 
@@ -25,7 +25,7 @@ type RolePage struct {
 	pagination.SinglePageBase
 }
 
-// IsEmpty determines whether or not a page of Tenants contains any results.
+// IsEmpty determines whether or not a page of Roles contains any results.
 func (r RolePage) IsEmpty() (bool, error) {
 	users, err := ExtractRoles(r)
 	return len(users) == 0, err
@@ -41,7 +41,8 @@ func ExtractRoles(r pagination.Page) ([]Role, error) {
 }
 
 // UserRoleResult represents the result of either an AddUserRole or
-// a DeleteUserRole operation.
+// a DeleteUserRole operation. Call its ExtractErr method to determine
+// if the request succeeded or failed.
 type UserRoleResult struct {
 	gophercloud.ErrResult
 }

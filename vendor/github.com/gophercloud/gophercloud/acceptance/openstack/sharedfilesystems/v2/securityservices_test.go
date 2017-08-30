@@ -18,6 +18,15 @@ func TestSecurityServiceCreateDelete(t *testing.T) {
 		t.Fatalf("Unable to create security service: %v", err)
 	}
 
+	newSecurityService, err := securityservices.Get(client, securityService.ID).Extract()
+	if err != nil {
+		t.Errorf("Unable to retrieve the security service: %v", err)
+	}
+
+	if newSecurityService.Name != securityService.Name {
+		t.Fatalf("Security service name was expeted to be: %s", securityService.Name)
+	}
+
 	PrintSecurityService(t, securityService)
 
 	defer DeleteSecurityService(t, client, securityService)
@@ -84,4 +93,50 @@ func TestSecurityServiceListFiltering(t *testing.T) {
 		}
 		PrintSecurityService(t, &listedSecurityService)
 	}
+}
+
+// Create a security service and update the name and description. Get the security
+// service and verify that the name and description have been updated
+func TestSecurityServiceUpdate(t *testing.T) {
+	client, err := clients.NewSharedFileSystemV2Client()
+	if err != nil {
+		t.Fatalf("Unable to create shared file system client: %v", err)
+	}
+
+	securityService, err := CreateSecurityService(t, client)
+	if err != nil {
+		t.Fatalf("Unable to create security service: %v", err)
+	}
+
+	options := securityservices.UpdateOpts{
+		Name:        "NewName",
+		Description: "New security service description",
+		Type:        "ldap",
+	}
+
+	_, err = securityservices.Update(client, securityService.ID, options).Extract()
+	if err != nil {
+		t.Errorf("Unable to update the security service: %v", err)
+	}
+
+	newSecurityService, err := securityservices.Get(client, securityService.ID).Extract()
+	if err != nil {
+		t.Errorf("Unable to retrieve the security service: %v", err)
+	}
+
+	if newSecurityService.Name != options.Name {
+		t.Fatalf("Security service name was expeted to be: %s", options.Name)
+	}
+
+	if newSecurityService.Description != options.Description {
+		t.Fatalf("Security service description was expeted to be: %s", options.Description)
+	}
+
+	if newSecurityService.Type != options.Type {
+		t.Fatalf("Security service type was expected to be: %s", options.Type)
+	}
+
+	PrintSecurityService(t, securityService)
+
+	defer DeleteSecurityService(t, client, securityService)
 }

@@ -1,4 +1,4 @@
-// Copyright 2012 The Go Authors.  All rights reserved.
+// Copyright 2012 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -28,18 +28,15 @@ func TestPacketConnReadWriteUnicastUDP(t *testing.T) {
 		t.Skipf("not available on %s", runtime.GOOS)
 	}
 
-	c, err := net.ListenPacket("udp4", "127.0.0.1:0")
+	c, err := nettest.NewLocalPacketListener("udp4")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer c.Close()
-
-	dst, err := net.ResolveUDPAddr("udp4", c.LocalAddr().String())
-	if err != nil {
-		t.Fatal(err)
-	}
 	p := ipv4.NewPacketConn(c)
 	defer p.Close()
+
+	dst := c.LocalAddr()
 	cf := ipv4.FlagTTL | ipv4.FlagDst | ipv4.FlagInterface
 	wb := []byte("HELLO-R-U-THERE")
 

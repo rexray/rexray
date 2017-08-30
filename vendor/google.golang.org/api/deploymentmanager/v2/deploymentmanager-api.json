@@ -1,12 +1,12 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"tbys6C40o18GZwyMen5GMkdK-3s/b_Ao7oNzPNpv0QI633khz4rEaEI\"",
+ "etag": "\"YWOzh2SDasdU84ArJnpYek-OMdg/eM7CIlPIGQ4hwjtk5wTBsMjDIYI\"",
  "discoveryVersion": "v1",
  "id": "deploymentmanager:v2",
  "name": "deploymentmanager",
  "canonicalName": "Deployment Manager",
  "version": "v2",
- "revision": "20161013",
+ "revision": "20170810",
  "title": "Google Cloud Deployment Manager API",
  "description": "Declares, configures, and deploys complex solutions on Google Cloud Platform.",
  "ownerDomain": "google.com",
@@ -89,18 +89,54 @@
   "AuditConfig": {
    "id": "AuditConfig",
    "type": "object",
-   "description": "Enables \"data access\" audit logging for a service and specifies a list of members that are log-exempted.",
+   "description": "Specifies the audit configuration for a service. The configuration determines which permission types are logged, and what identities, if any, are exempted from logging. An AuditConfig must have one or more AuditLogConfigs.\n\nIf there are AuditConfigs for both `allServices` and a specific service, the union of the two AuditConfigs is used for that service: the log_types specified in each AuditConfig are enabled, and the exempted_members in each AuditConfig are exempted.\n\nExample Policy with multiple AuditConfigs:\n\n{ \"audit_configs\": [ { \"service\": \"allServices\" \"audit_log_configs\": [ { \"log_type\": \"DATA_READ\", \"exempted_members\": [ \"user:foo@gmail.com\" ] }, { \"log_type\": \"DATA_WRITE\", }, { \"log_type\": \"ADMIN_READ\", } ] }, { \"service\": \"fooservice.googleapis.com\" \"audit_log_configs\": [ { \"log_type\": \"DATA_READ\", }, { \"log_type\": \"DATA_WRITE\", \"exempted_members\": [ \"user:bar@gmail.com\" ] } ] } ] }\n\nFor fooservice, this policy enables DATA_READ, DATA_WRITE and ADMIN_READ logging. It also exempts foo@gmail.com from DATA_READ logging, and bar@gmail.com from DATA_WRITE logging.",
    "properties": {
+    "auditLogConfigs": {
+     "type": "array",
+     "description": "The configuration for logging of each type of permission.",
+     "items": {
+      "$ref": "AuditLogConfig"
+     }
+    },
     "exemptedMembers": {
      "type": "array",
-     "description": "Specifies the identities that are exempted from \"data access\" audit logging for the `service` specified above. Follows the same format of Binding.members.",
+     "description": "",
      "items": {
       "type": "string"
      }
     },
     "service": {
      "type": "string",
-     "description": "Specifies a service that will be enabled for \"data access\" audit logging. For example, `resourcemanager`, `storage`, `compute`. `allServices` is a special value that covers all services."
+     "description": "Specifies a service that will be enabled for audit logging. For example, `storage.googleapis.com`, `cloudsql.googleapis.com`. `allServices` is a special value that covers all services."
+    }
+   }
+  },
+  "AuditLogConfig": {
+   "id": "AuditLogConfig",
+   "type": "object",
+   "description": "Provides the configuration for logging a type of permissions. Example:\n\n{ \"audit_log_configs\": [ { \"log_type\": \"DATA_READ\", \"exempted_members\": [ \"user:foo@gmail.com\" ] }, { \"log_type\": \"DATA_WRITE\", } ] }\n\nThis enables 'DATA_READ' and 'DATA_WRITE' logging, while exempting foo@gmail.com from DATA_READ logging.",
+   "properties": {
+    "exemptedMembers": {
+     "type": "array",
+     "description": "Specifies the identities that do not cause logging for this type of permission. Follows the same format of [Binding.members][].",
+     "items": {
+      "type": "string"
+     }
+    },
+    "logType": {
+     "type": "string",
+     "description": "The log type that this config enables."
+    }
+   }
+  },
+  "AuthorizationLoggingOptions": {
+   "id": "AuthorizationLoggingOptions",
+   "type": "object",
+   "description": "Authorization-related information used by Cloud Audit Logging.",
+   "properties": {
+    "permissionType": {
+     "type": "string",
+     "description": "The type of the permission that was checked."
     }
    }
   },
@@ -109,9 +145,13 @@
    "type": "object",
    "description": "Associates `members` with a `role`.",
    "properties": {
+    "condition": {
+     "$ref": "Expr",
+     "description": "The condition that is associated with this binding. NOTE: an unsatisfied condition will not allow user access via current binding. Different bindings, including their conditions, are examined independently. This field is GOOGLE_INTERNAL."
+    },
     "members": {
      "type": "array",
-     "description": "Specifies the identities requesting access for a Cloud Platform resource. `members` can have the following values:\n\n* `allUsers`: A special identifier that represents anyone who is on the internet; with or without a Google account.\n\n* `allAuthenticatedUsers`: A special identifier that represents anyone who is authenticated with a Google account or a service account.\n\n* `user:{emailid}`: An email address that represents a specific Google account. For example, `alice@gmail.com` or `joe@example.com`.\n\n\n\n* `serviceAccount:{emailid}`: An email address that represents a service account. For example, `my-other-app@appspot.gserviceaccount.com`.\n\n* `group:{emailid}`: An email address that represents a Google group. For example, `admins@example.com`.\n\n* `domain:{domain}`: A Google Apps domain name that represents all the users of that domain. For example, `google.com` or `example.com`.",
+     "description": "Specifies the identities requesting access for a Cloud Platform resource. `members` can have the following values:\n\n* `allUsers`: A special identifier that represents anyone who is on the internet; with or without a Google account.\n\n* `allAuthenticatedUsers`: A special identifier that represents anyone who is authenticated with a Google account or a service account.\n\n* `user:{emailid}`: An email address that represents a specific Google account. For example, `alice@gmail.com` or `joe@example.com`.\n\n\n\n* `serviceAccount:{emailid}`: An email address that represents a service account. For example, `my-other-app@appspot.gserviceaccount.com`.\n\n* `group:{emailid}`: An email address that represents a Google group. For example, `admins@example.com`.\n\n\n\n* `domain:{domain}`: A Google Apps domain name that represents all the users of that domain. For example, `google.com` or `example.com`.",
      "items": {
       "type": "string"
      }
@@ -240,6 +280,10 @@
    "type": "object",
    "description": "",
    "properties": {
+    "description": {
+     "type": "string",
+     "description": "[Output Only] An optional user-provided description of the deployment after the current update has been applied."
+    },
     "labels": {
      "type": "array",
      "description": "[Output Only] Map of labels; provided by the client when the resource is created or updated. Specifically: Label keys must be between 1 and 63 characters long and must conform to the following regular expression: [a-z]([-a-z0-9]*[a-z0-9])? Label values must be between 0 and 63 characters long and must conform to the regular expression ([a-z]([-a-z0-9]*[a-z0-9])?)?",
@@ -307,6 +351,29 @@
     }
    }
   },
+  "Expr": {
+   "id": "Expr",
+   "type": "object",
+   "description": "Represents an expression text. Example:\n\ntitle: \"User account presence\" description: \"Determines whether the request has a user account\" expression: \"size(request.user) \u003e 0\"",
+   "properties": {
+    "description": {
+     "type": "string",
+     "description": "An optional description of the expression. This is a longer text which describes the expression, e.g. when hovered over it in a UI."
+    },
+    "expression": {
+     "type": "string",
+     "description": "Textual representation of an expression in Common Expression Language syntax.\n\nThe application context of the containing message determines which well-known feature set of CEL is supported."
+    },
+    "location": {
+     "type": "string",
+     "description": "An optional string indicating the location of the expression for error reporting, e.g. a file name and a position in the file."
+    },
+    "title": {
+     "type": "string",
+     "description": "An optional title for the expression, i.e. a short string describing its purpose. This can be used e.g. in UIs which allow to enter the expression."
+    }
+   }
+  },
   "ImportFile": {
    "id": "ImportFile",
    "type": "object",
@@ -327,16 +394,39 @@
    "type": "object",
    "description": "Specifies what kind of log the caller must write",
    "properties": {
+    "cloudAudit": {
+     "$ref": "LogConfigCloudAuditOptions",
+     "description": "Cloud audit options."
+    },
     "counter": {
      "$ref": "LogConfigCounterOptions",
      "description": "Counter options."
+    },
+    "dataAccess": {
+     "$ref": "LogConfigDataAccessOptions",
+     "description": "Data access options."
+    }
+   }
+  },
+  "LogConfigCloudAuditOptions": {
+   "id": "LogConfigCloudAuditOptions",
+   "type": "object",
+   "description": "Write a Cloud Audit log",
+   "properties": {
+    "authorizationLoggingOptions": {
+     "$ref": "AuthorizationLoggingOptions",
+     "description": "Information used by the Cloud Audit Logging pipeline."
+    },
+    "logName": {
+     "type": "string",
+     "description": "The log_name to populate in the Cloud Audit Record."
     }
    }
   },
   "LogConfigCounterOptions": {
    "id": "LogConfigCounterOptions",
    "type": "object",
-   "description": "Options for counters",
+   "description": "Increment a streamz counter with the specified metric and field names.\n\nMetric names should start with a '/', generally be lowercase-only, and end in \"_count\". Field names should not contain an initial slash. The actual exported metric names will have \"/iam/policy\" prepended.\n\nField names correspond to IAM request parameters and field values are their respective values.\n\nAt present the only supported field names are - \"iam_principal\", corresponding to IAMContext.principal; - \"\" (empty string), resulting in one aggretated counter with no field.\n\nExamples: counter { metric: \"/debug_access_count\" field: \"iam_principal\" } ==\u003e increment counter /iam/policy/backend_debug_access_count {iam_principal=[value of IAMContext.principal]}\n\nAt this time we do not support: * multiple field names (though this may be supported in the future) * decrementing the counter * incrementing it by anything other than 1",
    "properties": {
     "field": {
      "type": "string",
@@ -345,6 +435,17 @@
     "metric": {
      "type": "string",
      "description": "The metric to update."
+    }
+   }
+  },
+  "LogConfigDataAccessOptions": {
+   "id": "LogConfigDataAccessOptions",
+   "type": "object",
+   "description": "Write a Data Access (Gin) log",
+   "properties": {
+    "logMode": {
+     "type": "string",
+     "description": "Whether Gin logging should happen in a fail-closed manner at the caller. This is relevant only in the LocalIAM implementation, for now."
     }
    }
   },
@@ -420,7 +521,7 @@
     },
     "creationTimestamp": {
      "type": "string",
-     "description": "[Output Only] Creation timestamp in RFC3339 text format."
+     "description": "[Deprecated] This field is deprecated."
     },
     "description": {
      "type": "string",
@@ -591,14 +692,14 @@
    "properties": {
     "auditConfigs": {
      "type": "array",
-     "description": "Specifies audit logging configs for \"data access\". \"data access\": generally refers to data reads/writes and admin reads. \"admin activity\": generally refers to admin writes.\n\nNote: `AuditConfig` doesn't apply to \"admin activity\", which always enables audit logging.",
+     "description": "Specifies cloud audit logging configuration for this policy.",
      "items": {
       "$ref": "AuditConfig"
      }
     },
     "bindings": {
      "type": "array",
-     "description": "Associates a list of `members` to a `role`. Multiple `bindings` must not be specified for the same `role`. `bindings` with no members will result in an error.",
+     "description": "Associates a list of `members` to a `role`. `bindings` with no members will result in an error.",
      "items": {
       "$ref": "Binding"
      }
@@ -1019,6 +1120,20 @@
      "httpMethod": "DELETE",
      "description": "Deletes a deployment and all of the resources in the deployment.",
      "parameters": {
+      "deletePolicy": {
+       "type": "string",
+       "description": "Sets the policy to use for deleting resources.",
+       "default": "DELETE",
+       "enum": [
+        "ABANDON",
+        "DELETE"
+       ],
+       "enumDescriptions": [
+        "",
+        ""
+       ],
+       "location": "query"
+      },
       "deployment": {
        "type": "string",
        "description": "The name of the deployment for this request.",
@@ -1098,7 +1213,7 @@
        "type": "string",
        "description": "Name of the resource for this request.",
        "required": true,
-       "pattern": "[a-z](?:[-a-z0-9_]{0,61}[a-z0-9])?",
+       "pattern": "[a-z0-9](?:[-a-z0-9_]{0,61}[a-z0-9])?",
        "location": "path"
       }
      },
@@ -1155,16 +1270,15 @@
      "parameters": {
       "filter": {
        "type": "string",
-       "description": "Sets a filter expression for filtering listed resources, in the form filter={expression}. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use filter=name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
+       "description": "Sets a filter {expression} for filtering listed resources. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
        "location": "query"
       },
       "maxResults": {
        "type": "integer",
-       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests.",
+       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests. Acceptable values are 0 to 500, inclusive. (Default: 500)",
        "default": "500",
        "format": "uint32",
        "minimum": "0",
-       "maximum": "500",
        "location": "query"
       },
       "orderBy": {
@@ -1285,7 +1399,7 @@
        "type": "string",
        "description": "Name of the resource for this request.",
        "required": true,
-       "pattern": "[a-z](?:[-a-z0-9_]{0,61}[a-z0-9])?",
+       "pattern": "[a-z0-9](?:[-a-z0-9_]{0,61}[a-z0-9])?",
        "location": "path"
       }
      },
@@ -1357,7 +1471,7 @@
        "type": "string",
        "description": "Name of the resource for this request.",
        "required": true,
-       "pattern": "[a-z](?:[-a-z0-9_]{0,61}[a-z0-9])?",
+       "pattern": "(?:[-a-z0-9_]{0,62}[a-z0-9])?",
        "location": "path"
       }
      },
@@ -1508,16 +1622,15 @@
       },
       "filter": {
        "type": "string",
-       "description": "Sets a filter expression for filtering listed resources, in the form filter={expression}. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use filter=name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
+       "description": "Sets a filter {expression} for filtering listed resources. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
        "location": "query"
       },
       "maxResults": {
        "type": "integer",
-       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests.",
+       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests. Acceptable values are 0 to 500, inclusive. (Default: 500)",
        "default": "500",
        "format": "uint32",
        "minimum": "0",
-       "maximum": "500",
        "location": "query"
       },
       "orderBy": {
@@ -1598,16 +1711,15 @@
      "parameters": {
       "filter": {
        "type": "string",
-       "description": "Sets a filter expression for filtering listed resources, in the form filter={expression}. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use filter=name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
+       "description": "Sets a filter {expression} for filtering listed resources. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
        "location": "query"
       },
       "maxResults": {
        "type": "integer",
-       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests.",
+       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests. Acceptable values are 0 to 500, inclusive. (Default: 500)",
        "default": "500",
        "format": "uint32",
        "minimum": "0",
-       "maximum": "500",
        "location": "query"
       },
       "orderBy": {
@@ -1702,16 +1814,15 @@
       },
       "filter": {
        "type": "string",
-       "description": "Sets a filter expression for filtering listed resources, in the form filter={expression}. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use filter=name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
+       "description": "Sets a filter {expression} for filtering listed resources. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
        "location": "query"
       },
       "maxResults": {
        "type": "integer",
-       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests.",
+       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests. Acceptable values are 0 to 500, inclusive. (Default: 500)",
        "default": "500",
        "format": "uint32",
        "minimum": "0",
-       "maximum": "500",
        "location": "query"
       },
       "orderBy": {
@@ -1758,16 +1869,15 @@
      "parameters": {
       "filter": {
        "type": "string",
-       "description": "Sets a filter expression for filtering listed resources, in the form filter={expression}. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use filter=name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
+       "description": "Sets a filter {expression} for filtering listed resources. Your {expression} must be in the format: field_name comparison_string literal_string.\n\nThe field_name is the name of the field you want to compare. Only atomic field types are supported (string, number, boolean). The comparison_string must be either eq (equals) or ne (not equals). The literal_string is the string value to filter to. The literal value must be valid for the type of field you are filtering by (string, number, boolean). For string fields, the literal value is interpreted as a regular expression using RE2 syntax. The literal value must match the entire field.\n\nFor example, to filter for instances that do not have a name of example-instance, you would use name ne example-instance.\n\nYou can filter on nested fields. For example, you could filter on instances that have set the scheduling.automaticRestart field to true. Use filtering on nested fields to take advantage of labels to organize and search for results based on label values.\n\nTo filter on multiple expressions, provide each separate expression within parentheses. For example, (scheduling.automaticRestart eq true) (zone eq us-central1-f). Multiple expressions are treated as AND expressions, meaning that resources must match all expressions to pass the filters.",
        "location": "query"
       },
       "maxResults": {
        "type": "integer",
-       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests.",
+       "description": "The maximum number of results per page that should be returned. If the number of available results is larger than maxResults, Compute Engine returns a nextPageToken that can be used to get the next page of results in subsequent list requests. Acceptable values are 0 to 500, inclusive. (Default: 500)",
        "default": "500",
        "format": "uint32",
        "minimum": "0",
-       "maximum": "500",
        "location": "query"
       },
       "orderBy": {

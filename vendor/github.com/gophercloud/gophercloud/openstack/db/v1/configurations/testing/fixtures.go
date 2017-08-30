@@ -154,6 +154,6 @@ var ExampleConfigWithValues = configurations.Config{
 	Updated:              timeVal,
 	Values: map[string]interface{}{
 		"collation_server": "latin1_swedish_ci",
-		"connect_timeout":  120,
+		"connect_timeout":  float64(120),
 	},
 }

@@ -138,7 +138,7 @@ type UpdateOpts struct {
 	VersionsLocation       string `h:"X-Versions-Location"`
 }
 
-// ToContainerUpdateMap formats a CreateOpts into a map of headers.
+// ToContainerUpdateMap formats a UpdateOpts into a map of headers.
 func (opts UpdateOpts) ToContainerUpdateMap() (map[string]string, error) {
 	h, err := gophercloud.BuildHeaders(opts)
 	if err != nil {

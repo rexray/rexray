@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path"
 	"reflect"
 	"runtime"
 	"strings"
@@ -134,7 +135,7 @@ func TestSaveToken(t *testing.T) {
 func TestSaveTokenFailsNoPermission(t *testing.T) {
 	pathWhereWeShouldntHavePermission := "/usr/thiswontwork/atall"
 	if runtime.GOOS == "windows" {
-		pathWhereWeShouldntHavePermission = "c:\\windows\\system32\\mytokendir\\mytoken"
+		pathWhereWeShouldntHavePermission = path.Join(os.Getenv("windir"), "system32\\mytokendir\\mytoken")
 	}
 	err := SaveToken(pathWhereWeShouldntHavePermission, 0644, *token())
 	expectedSubstring := "failed to create directory"
@@ -144,7 +145,11 @@ func TestSaveTokenFailsNoPermission(t *testing.T) {
 }
 
 func TestSaveTokenFailsCantCreate(t *testing.T) {
-	err := SaveToken("/thiswontwork", 0644, *token())
+	tokenPath := "/thiswontwork"
+	if runtime.GOOS == "windows" {
+		tokenPath = path.Join(os.Getenv("windir"), "system32")
+	}
+	err := SaveToken(tokenPath, 0644, *token())
 	expectedSubstring := "failed to create the temp file to write the token"
 	if err == nil || !strings.Contains(err.Error(), expectedSubstring) {
 		t.Fatalf("azure: failed to get correct error expected(%s) actual(%v)", expectedSubstring, err)

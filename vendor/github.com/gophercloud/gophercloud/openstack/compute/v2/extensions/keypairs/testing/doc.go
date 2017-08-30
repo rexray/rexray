@@ -1,2 +1,2 @@
-// compute_extensions_keypairs_v2
+// keypairs unit tests
 package testing

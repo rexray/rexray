@@ -2,12 +2,13 @@ package testing
 
 import (
 	"fmt"
+	"net/http"
+	"testing"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/quotasets"
 	th "github.com/gophercloud/gophercloud/testhelper"
 	"github.com/gophercloud/gophercloud/testhelper/client"
-	"net/http"
-	"testing"
 )
 
 // GetOutput is a sample response to a Get call.

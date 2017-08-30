@@ -109,7 +109,7 @@ func TestDeleteContainer(t *testing.T) {
 	th.CheckNoErr(t, res.Err)
 }
 
-func TestUpateContainer(t *testing.T) {
+func TestUpdateContainer(t *testing.T) {
 	th.SetupHTTP()
 	defer th.TeardownHTTP()
 	HandleUpdateContainerSuccessfully(t)

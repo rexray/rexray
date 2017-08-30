@@ -42,7 +42,7 @@ const GetOutput = `
 
 // LimitsResult is the result of the limits in GetOutput.
 var LimitsResult = limits.Limits{
-	limits.Absolute{
+	Absolute: limits.Absolute{
 		MaxServerMeta:           128,
 		MaxPersonality:          5,
 		TotalServerGroupsUsed:   0,

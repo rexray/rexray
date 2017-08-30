@@ -64,29 +64,50 @@ func Get(c *gophercloud.ServiceClient, id string) (r GetResult) {
 	return
 }
 
-// CreateOptsBuilder is the interface options structs have to satisfy in order
-// to be used in the main Create operation in this package. Since many
-// extensions decorate or modify the common logic, it is useful for them to
-// satisfy a basic interface in order for them to be used.
+// CreateOptsBuilder allows extensions to add additional parameters to the
+// List request.
 type CreateOptsBuilder interface {
 	ToSubnetCreateMap() (map[string]interface{}, error)
 }
 
 // CreateOpts represents the attributes used when creating a new subnet.
 type CreateOpts struct {
-	NetworkID       string                `json:"network_id" required:"true"`
-	CIDR            string                `json:"cidr" required:"true"`
-	Name            string                `json:"name,omitempty"`
-	TenantID        string                `json:"tenant_id,omitempty"`
-	AllocationPools []AllocationPool      `json:"allocation_pools,omitempty"`
-	GatewayIP       *string               `json:"gateway_ip,omitempty"`
-	IPVersion       gophercloud.IPVersion `json:"ip_version,omitempty"`
-	EnableDHCP      *bool                 `json:"enable_dhcp,omitempty"`
-	DNSNameservers  []string              `json:"dns_nameservers,omitempty"`
-	HostRoutes      []HostRoute           `json:"host_routes,omitempty"`
+	// NetworkID is the UUID of the network the subnet will be associated with.
+	NetworkID string `json:"network_id" required:"true"`
+
+	// CIDR is the address CIDR of the subnet.
+	CIDR string `json:"cidr" required:"true"`
+
+	// Name is a human-readable name of the subnet.
+	Name string `json:"name,omitempty"`
+
+	// The UUID of the tenant who owns the Subnet. Only administrative users
+	// can specify a tenant UUID other than their own.
+	TenantID string `json:"tenant_id,omitempty"`
+
+	// AllocationPools are IP Address pools that will be available for DHCP.
+	AllocationPools []AllocationPool `json:"allocation_pools,omitempty"`
+
+	// GatewayIP sets gateway information for the subnet. Setting to nil will
+	// cause a default gateway to automatically be created. Setting to an empty
+	// string will cause the subnet to be created with no gateway. Setting to
+	// an explicit address will set that address as the gateway.
+	GatewayIP *string `json:"gateway_ip,omitempty"`
+
+	// IPVersion is the IP version for the subnet.
+	IPVersion gophercloud.IPVersion `json:"ip_version,omitempty"`
+
+	// EnableDHCP will either enable to disable the DHCP service.
+	EnableDHCP *bool `json:"enable_dhcp,omitempty"`
+
+	// DNSNameservers are the nameservers to be set via DHCP.
+	DNSNameservers []string `json:"dns_nameservers,omitempty"`
+
+	// HostRoutes are any static host routes to be set via DHCP.
+	HostRoutes []HostRoute `json:"host_routes,omitempty"`
 }
 
-// ToSubnetCreateMap casts a CreateOpts struct to a map.
+// ToSubnetCreateMap builds a request body from CreateOpts.
 func (opts CreateOpts) ToSubnetCreateMap() (map[string]interface{}, error) {
 	b, err := gophercloud.BuildRequestBody(opts, "subnet")
 	if err != nil {
@@ -101,7 +122,8 @@ func (opts CreateOpts) ToSubnetCreateMap() (map[string]interface{}, error) {
 }
 
 // Create accepts a CreateOpts struct and creates a new subnet using the values
-// provided. You must remember to provide a valid NetworkID, CIDR and IP version.
+// provided. You must remember to provide a valid NetworkID, CIDR and IP
+// version.
 func Create(c *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResult) {
 	b, err := opts.ToSubnetCreateMap()
 	if err != nil {
@@ -120,14 +142,29 @@ type UpdateOptsBuilder interface {
 
 // UpdateOpts represents the attributes used when updating an existing subnet.
 type UpdateOpts struct {
-	Name           string      `json:"name,omitempty"`
-	GatewayIP      *string     `json:"gateway_ip,omitempty"`
-	DNSNameservers []string    `json:"dns_nameservers,omitempty"`
-	HostRoutes     []HostRoute `json:"host_routes,omitempty"`
-	EnableDHCP     *bool       `json:"enable_dhcp,omitempty"`
+	// Name is a human-readable name of the subnet.
+	Name string `json:"name,omitempty"`
+
+	// AllocationPools are IP Address pools that will be available for DHCP.
+	AllocationPools []AllocationPool `json:"allocation_pools,omitempty"`
+
+	// GatewayIP sets gateway information for the subnet. Setting to nil will
+	// cause a default gateway to automatically be created. Setting to an empty
+	// string will cause the subnet to be created with no gateway. Setting to
+	// an explicit address will set that address as the gateway.
+	GatewayIP *string `json:"gateway_ip,omitempty"`
+
+	// DNSNameservers are the nameservers to be set via DHCP.
+	DNSNameservers []string `json:"dns_nameservers,omitempty"`
+
+	// HostRoutes are any static host routes to be set via DHCP.
+	HostRoutes []HostRoute `json:"host_routes,omitempty"`
+
+	// EnableDHCP will either enable to disable the DHCP service.
+	EnableDHCP *bool `json:"enable_dhcp,omitempty"`
 }
 
-// ToSubnetUpdateMap casts an UpdateOpts struct to a map.
+// ToSubnetUpdateMap builds a request body from UpdateOpts.
 func (opts UpdateOpts) ToSubnetUpdateMap() (map[string]interface{}, error) {
 	b, err := gophercloud.BuildRequestBody(opts, "subnet")
 	if err != nil {
@@ -161,7 +198,8 @@ func Delete(c *gophercloud.ServiceClient, id string) (r DeleteResult) {
 	return
 }
 
-// IDFromName is a convenience function that returns a subnet's ID given its name.
+// IDFromName is a convenience function that returns a subnet's ID,
+// given its name.
 func IDFromName(client *gophercloud.ServiceClient, name string) (string, error) {
 	count := 0
 	id := ""

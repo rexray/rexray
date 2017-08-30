@@ -1,2 +1,2 @@
-// compute_servers_v2
+// servers unit tests
 package testing

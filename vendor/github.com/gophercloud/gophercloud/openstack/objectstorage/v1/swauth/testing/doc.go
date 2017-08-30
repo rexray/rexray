@@ -1,2 +1,2 @@
-// objectstorage_swauth_v1
+// swauth unit tests
 package testing

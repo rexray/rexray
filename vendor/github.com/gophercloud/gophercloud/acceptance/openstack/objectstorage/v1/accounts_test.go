@@ -6,16 +6,21 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/acceptance/clients"
 	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/accounts"
 	th "github.com/gophercloud/gophercloud/testhelper"
 )
 
 func TestAccounts(t *testing.T) {
-	// Create a provider client for making the HTTP requests.
-	// See common.go in this directory for more information.
-	client := newClient(t)
+	client, err := clients.NewObjectStorageV1Client()
+	if err != nil {
+		t.Fatalf("Unable to create client: %v", err)
+	}
 
 	// Update an account's metadata.
+	metadata := map[string]string{
+		"Gophercloud-Test": "accounts",
+	}
 	updateres := accounts.Update(client, accounts.UpdateOpts{Metadata: metadata})
 	t.Logf("Update Account Response: %+v\n", updateres)
 	updateHeaders, err := updateres.Extract()

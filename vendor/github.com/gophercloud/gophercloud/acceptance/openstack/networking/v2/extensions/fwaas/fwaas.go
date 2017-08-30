@@ -56,8 +56,8 @@ func CreateFirewallOnRouter(t *testing.T, client *gophercloud.ServiceClient, pol
 	}
 
 	createOpts := routerinsertion.CreateOptsExt{
-		firewallCreateOpts,
-		[]string{routerID},
+		CreateOptsBuilder: firewallCreateOpts,
+		RouterIDs:         []string{routerID},
 	}
 
 	firewall, err := firewalls.Create(client, createOpts).Extract()

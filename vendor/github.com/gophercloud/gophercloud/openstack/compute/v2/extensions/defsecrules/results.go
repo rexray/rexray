@@ -8,8 +8,8 @@ import (
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
-// DefaultRule represents a default rule - which is identical to a
-// normal security rule.
+// DefaultRule represents a rule belonging to the "default" security group.
+// It is identical to an openstack/compute/v2/extensions/secgroups.Rule.
 type DefaultRule secgroups.Rule
 
 func (r *DefaultRule) UnmarshalJSON(b []byte) error {
@@ -57,7 +57,7 @@ type GetResult struct {
 	commonResult
 }
 
-// Extract will extract a DefaultRule struct from most responses.
+// Extract will extract a DefaultRule struct from a Create or Get response.
 func (r commonResult) Extract() (*DefaultRule, error) {
 	var s struct {
 		DefaultRule DefaultRule `json:"security_group_default_rule"`

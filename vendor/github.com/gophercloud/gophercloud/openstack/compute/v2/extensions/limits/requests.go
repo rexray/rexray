@@ -12,7 +12,7 @@ type GetOptsBuilder interface {
 
 // GetOpts enables retrieving limits by a specific tenant.
 type GetOpts struct {
-	// The tenant ID to retrieve limits for
+	// The tenant ID to retrieve limits for.
 	TenantID string `q:"tenant_id"`
 }
 

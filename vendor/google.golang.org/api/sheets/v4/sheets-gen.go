@@ -50,6 +50,10 @@ const (
 	// View and manage the files in your Google Drive
 	DriveScope = "https://www.googleapis.com/auth/drive"
 
+	// View and manage Google Drive files and folders that you have opened
+	// or created with this app
+	DriveFileScope = "https://www.googleapis.com/auth/drive.file"
+
 	// View the files in your Google Drive
 	DriveReadonlyScope = "https://www.googleapis.com/auth/drive.readonly"
 
@@ -686,7 +690,6 @@ func (s *AutoFillRequest) MarshalJSON() ([]byte, error) {
 // of the cells in that dimension.
 type AutoResizeDimensionsRequest struct {
 	// Dimensions: The dimensions to automatically resize.
-	// Only COLUMNS are supported.
 	Dimensions *DimensionRange `json:"dimensions,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Dimensions") to
@@ -782,9 +785,9 @@ type BandingProperties struct {
 
 	// FooterColor: The color of the last row or column. If this field is
 	// not set, the last
-	// row or column will be filled with either first_row_color
+	// row or column will be filled with either first_band_color
 	// or
-	// second_row_color, depending on the color of the previous row
+	// second_band_color, depending on the color of the previous row
 	// or
 	// column.
 	FooterColor *Color `json:"footerColor,omitempty"`
@@ -793,7 +796,7 @@ type BandingProperties struct {
 	// set, the first
 	// row or column will be filled with this color and the colors
 	// will
-	// alternate between first_band_color and [second_band_color[]
+	// alternate between first_band_color and second_band_color
 	// starting
 	// from the second row or column. Otherwise, the first row or column
 	// will be
@@ -890,6 +893,10 @@ type BasicChartDomain struct {
 	// this is the data representing the dates.
 	Domain *ChartData `json:"domain,omitempty"`
 
+	// Reversed: True to reverse the order of the domain values (horizontal
+	// axis).
+	Reversed bool `json:"reversed,omitempty"`
+
 	// ForceSendFields is a list of field names (e.g. "Domain") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
@@ -969,6 +976,9 @@ type BasicChartSeries struct {
 	// chart</a>.
 	//   "COMBO" - A <a
 	// href="/chart/interactive/docs/gallery/combochart">combo chart</a>.
+	//   "STEPPED_AREA" - A <a
+	// href="/chart/interactive/docs/gallery/steppedareachart">stepped area
+	// chart</a>.
 	Type string `json:"type,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Series") to
@@ -1018,10 +1028,13 @@ type BasicChartSpec struct {
 	// chart</a>.
 	//   "COMBO" - A <a
 	// href="/chart/interactive/docs/gallery/combochart">combo chart</a>.
+	//   "STEPPED_AREA" - A <a
+	// href="/chart/interactive/docs/gallery/steppedareachart">stepped area
+	// chart</a>.
 	ChartType string `json:"chartType,omitempty"`
 
 	// Domains: The domain of data this is charting.
-	// Only a single domain is currently supported.
+	// Only a single domain is supported.
 	Domains []*BasicChartDomain `json:"domains,omitempty"`
 
 	// HeaderCount: The number of rows or columns in the data that are
@@ -1033,6 +1046,14 @@ type BasicChartSpec struct {
 	// (Note that BasicChartAxis.title may override the axis title
 	//  inferred from the header values.)
 	HeaderCount int64 `json:"headerCount,omitempty"`
+
+	// InterpolateNulls: If some values in a series are missing, gaps may
+	// appear in the chart (e.g,
+	// segments of lines in a line chart will be missing).  To eliminate
+	// these
+	// gaps set this to true.
+	// Applies to Line, Area, and Combo charts.
+	InterpolateNulls bool `json:"interpolateNulls,omitempty"`
 
 	// LegendPosition: The position of the chart legend.
 	//
@@ -1047,8 +1068,32 @@ type BasicChartSpec struct {
 	//   "NO_LEGEND" - No legend is rendered.
 	LegendPosition string `json:"legendPosition,omitempty"`
 
+	// LineSmoothing: Gets whether all lines should be rendered smooth or
+	// straight by default.
+	// Applies to Line charts.
+	LineSmoothing bool `json:"lineSmoothing,omitempty"`
+
 	// Series: The data this chart is visualizing.
 	Series []*BasicChartSeries `json:"series,omitempty"`
+
+	// StackedType: The stacked type for charts that support vertical
+	// stacking.
+	// Applies to Area, Bar, Column, and Stepped Area charts.
+	//
+	// Possible values:
+	//   "BASIC_CHART_STACKED_TYPE_UNSPECIFIED" - Default value, do not use.
+	//   "NOT_STACKED" - Series are not stacked.
+	//   "STACKED" - Series values are stacked, each value is rendered
+	// vertically beginning
+	// from the top of the value below it.
+	//   "PERCENT_STACKED" - Vertical stacks are stretched to reach the top
+	// of the chart, with
+	// values laid out as percentages of each other.
+	StackedType string `json:"stackedType,omitempty"`
+
+	// ThreeDimensional: True to make the chart 3D.
+	// Applies to Bar and Column charts.
+	ThreeDimensional bool `json:"threeDimensional,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Axis") to
 	// unconditionally include in API requests. By default, fields with
@@ -1141,7 +1186,7 @@ func (s *BatchClearValuesRequest) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// BatchClearValuesResponse: The response when updating a range of
+// BatchClearValuesResponse: The response when clearing a range of
 // values in a spreadsheet.
 type BatchClearValuesResponse struct {
 	// ClearedRanges: The ranges that were cleared, in A1 notation.
@@ -1227,6 +1272,8 @@ type BatchUpdateSpreadsheetRequest struct {
 	IncludeSpreadsheetInResponse bool `json:"includeSpreadsheetInResponse,omitempty"`
 
 	// Requests: A list of updates to apply to the spreadsheet.
+	// Requests will be applied in the order they are specified.
+	// If any request is not valid, no requests will be applied.
 	Requests []*Request `json:"requests,omitempty"`
 
 	// ResponseIncludeGridData: True if grid data should be returned.
@@ -1334,22 +1381,28 @@ type BatchUpdateValuesRequest struct {
 	// rendered. This is ignored if response_value_render_option
 	// is
 	// FORMATTED_VALUE.
-	// The default dateTime render option is
-	// [DateTimeRenderOption.SERIAL_NUMBER].
+	// The default dateTime render option
+	// is
+	// DateTimeRenderOption.SERIAL_NUMBER.
 	//
 	// Possible values:
 	//   "SERIAL_NUMBER" - Instructs date, time, datetime, and duration
 	// fields to be output
 	// as doubles in "serial number" format, as popularized by Lotus
 	// 1-2-3.
-	// Days are counted from December 31st 1899 and are incremented by
-	// 1,
-	// and times are fractions of a day.  For example, January 1st 1900 at
-	// noon
-	// would be 1.5, 1 because it's 1 day offset from December 31st
-	// 1899,
-	// and .5 because noon is half a day.  February 1st 1900 at 3pm would
-	// be 32.625. This correctly treats the year 1900 as not a leap year.
+	// The whole number portion of the value (left of the decimal)
+	// counts
+	// the days since December 30th 1899. The fractional portion (right
+	// of
+	// the decimal) counts the time as a fraction of the day. For
+	// example,
+	// January 1st 1900 at noon would be 2.5, 2 because it's 2 days
+	// after
+	// December 30st 1899, and .5 because noon is half a day.  February
+	// 1st
+	// 1900 at 3pm would be 33.625. This correctly treats the year 1900
+	// as
+	// not a leap year.
 	//   "FORMATTED_STRING" - Instructs date, time, datetime, and duration
 	// fields to be output
 	// as strings in their given number format (which is dependent
@@ -1769,6 +1822,262 @@ func (s *Borders) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// BubbleChartSpec: A <a
+// href="/chart/interactive/docs/gallery/bubblechart">bubble chart</a>.
+type BubbleChartSpec struct {
+	// BubbleBorderColor: The bubble border color.
+	BubbleBorderColor *Color `json:"bubbleBorderColor,omitempty"`
+
+	// BubbleLabels: The data containing the bubble labels.  These do not
+	// need to be unique.
+	BubbleLabels *ChartData `json:"bubbleLabels,omitempty"`
+
+	// BubbleMaxRadiusSize: The max radius size of the bubbles, in
+	// pixels.
+	// If specified, the field must be a positive value.
+	BubbleMaxRadiusSize int64 `json:"bubbleMaxRadiusSize,omitempty"`
+
+	// BubbleMinRadiusSize: The minimum radius size of the bubbles, in
+	// pixels.
+	// If specific, the field must be a positive value.
+	BubbleMinRadiusSize int64 `json:"bubbleMinRadiusSize,omitempty"`
+
+	// BubbleOpacity: The opacity of the bubbles between 0 and 1.0.
+	// 0 is fully transparent and 1 is fully opaque.
+	BubbleOpacity float64 `json:"bubbleOpacity,omitempty"`
+
+	// BubbleSizes: The data contianing the bubble sizes.  Bubble sizes are
+	// used to draw
+	// the bubbles at different sizes relative to each other.
+	// If specified, group_ids must also be specified.  This field
+	// is
+	// optional.
+	BubbleSizes *ChartData `json:"bubbleSizes,omitempty"`
+
+	// BubbleTextStyle: The format of the text inside the bubbles.
+	// Underline and Strikethrough are not supported.
+	BubbleTextStyle *TextFormat `json:"bubbleTextStyle,omitempty"`
+
+	// Domain: The data containing the bubble x-values.  These values locate
+	// the bubbles
+	// in the chart horizontally.
+	Domain *ChartData `json:"domain,omitempty"`
+
+	// GroupIds: The data containing the bubble group IDs. All bubbles with
+	// the same group
+	// ID will be drawn in the same color. If bubble_sizes is specified
+	// then
+	// this field must also be specified but may contain blank values.
+	// This field is optional.
+	GroupIds *ChartData `json:"groupIds,omitempty"`
+
+	// LegendPosition: Where the legend of the chart should be drawn.
+	//
+	// Possible values:
+	//   "BUBBLE_CHART_LEGEND_POSITION_UNSPECIFIED" - Default value, do not
+	// use.
+	//   "BOTTOM_LEGEND" - The legend is rendered on the bottom of the
+	// chart.
+	//   "LEFT_LEGEND" - The legend is rendered on the left of the chart.
+	//   "RIGHT_LEGEND" - The legend is rendered on the right of the chart.
+	//   "TOP_LEGEND" - The legend is rendered on the top of the chart.
+	//   "NO_LEGEND" - No legend is rendered.
+	//   "INSIDE_LEGEND" - The legend is rendered inside the chart area.
+	LegendPosition string `json:"legendPosition,omitempty"`
+
+	// Series: The data contianing the bubble y-values.  These values locate
+	// the bubbles
+	// in the chart vertically.
+	Series *ChartData `json:"series,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "BubbleBorderColor")
+	// to unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BubbleBorderColor") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *BubbleChartSpec) MarshalJSON() ([]byte, error) {
+	type noMethod BubbleChartSpec
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *BubbleChartSpec) UnmarshalJSON(data []byte) error {
+	type noMethod BubbleChartSpec
+	var s1 struct {
+		BubbleOpacity gensupport.JSONFloat64 `json:"bubbleOpacity"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.BubbleOpacity = float64(s1.BubbleOpacity)
+	return nil
+}
+
+// CandlestickChartSpec: A <a
+// href="/chart/interactive/docs/gallery/candlestickchart">candlestick
+// chart</a>.
+type CandlestickChartSpec struct {
+	// Data: The Candlestick chart data.
+	// Only one CandlestickData is supported.
+	Data []*CandlestickData `json:"data,omitempty"`
+
+	// Domain: The domain data (horizontal axis) for the candlestick chart.
+	// String data
+	// will be treated as discrete labels, other data will be treated
+	// as
+	// continuous values.
+	Domain *CandlestickDomain `json:"domain,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Data") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Data") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CandlestickChartSpec) MarshalJSON() ([]byte, error) {
+	type noMethod CandlestickChartSpec
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CandlestickData: The Candlestick chart data, each containing the low,
+// open, close, and high
+// values for a series.
+type CandlestickData struct {
+	// CloseSeries: The range data (vertical axis) for the close/final value
+	// for each candle.
+	// This is the top of the candle body.  If greater than the open value
+	// the
+	// candle will be filled.  Otherwise the candle will be hollow.
+	CloseSeries *CandlestickSeries `json:"closeSeries,omitempty"`
+
+	// HighSeries: The range data (vertical axis) for the high/maximum value
+	// for each
+	// candle. This is the top of the candle's center line.
+	HighSeries *CandlestickSeries `json:"highSeries,omitempty"`
+
+	// LowSeries: The range data (vertical axis) for the low/minimum value
+	// for each candle.
+	// This is the bottom of the candle's center line.
+	LowSeries *CandlestickSeries `json:"lowSeries,omitempty"`
+
+	// OpenSeries: The range data (vertical axis) for the open/initial value
+	// for each
+	// candle. This is the bottom of the candle body.  If less than the
+	// close
+	// value the candle will be filled.  Otherwise the candle will be
+	// hollow.
+	OpenSeries *CandlestickSeries `json:"openSeries,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CloseSeries") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CloseSeries") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CandlestickData) MarshalJSON() ([]byte, error) {
+	type noMethod CandlestickData
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CandlestickDomain: The domain of a CandlestickChart.
+type CandlestickDomain struct {
+	// Data: The data of the CandlestickDomain.
+	Data *ChartData `json:"data,omitempty"`
+
+	// Reversed: True to reverse the order of the domain values (horizontal
+	// axis).
+	Reversed bool `json:"reversed,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Data") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Data") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CandlestickDomain) MarshalJSON() ([]byte, error) {
+	type noMethod CandlestickDomain
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CandlestickSeries: The series of a CandlestickData.
+type CandlestickSeries struct {
+	// Data: The data of the CandlestickSeries.
+	Data *ChartData `json:"data,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Data") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Data") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CandlestickSeries) MarshalJSON() ([]byte, error) {
+	type noMethod CandlestickSeries
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // CellData: Data about a specific cell.
 type CellData struct {
 	// DataValidation: A data validation rule on the cell, if any.
@@ -1800,7 +2109,9 @@ type CellData struct {
 	FormattedValue string `json:"formattedValue,omitempty"`
 
 	// Hyperlink: A hyperlink this cell points to, if any.
-	// This field is read-only.  (To set it, use a `=HYPERLINK` formula.)
+	// This field is read-only.  (To set it, use a `=HYPERLINK` formula
+	// in the userEnteredValue.formulaValue
+	// field.)
 	Hyperlink string `json:"hyperlink,omitempty"`
 
 	// Note: Any note on the cell.
@@ -1918,6 +2229,9 @@ type CellFormat struct {
 	// TextFormat: The format of the text in the cell (unless overridden by
 	// a format run).
 	TextFormat *TextFormat `json:"textFormat,omitempty"`
+
+	// TextRotation: The rotation applied to text in a cell
+	TextRotation *TextRotation `json:"textRotation,omitempty"`
 
 	// VerticalAlignment: The vertical alignment of the value in the cell.
 	//
@@ -2079,11 +2393,33 @@ func (s *ChartSourceRange) MarshalJSON() ([]byte, error) {
 
 // ChartSpec: The specifications of a chart.
 type ChartSpec struct {
+	// AltText: The alternative text that describes the chart.  This is
+	// often used
+	// for accessibility.
+	AltText string `json:"altText,omitempty"`
+
+	// BackgroundColor: The background color of the entire chart.
+	// Not applicable to Org charts.
+	BackgroundColor *Color `json:"backgroundColor,omitempty"`
+
 	// BasicChart: A basic chart specification, can be one of many kinds of
 	// charts.
 	// See BasicChartType for the list of all
 	// charts this supports.
 	BasicChart *BasicChartSpec `json:"basicChart,omitempty"`
+
+	// BubbleChart: A bubble chart specification.
+	BubbleChart *BubbleChartSpec `json:"bubbleChart,omitempty"`
+
+	// CandlestickChart: A candlestick chart specification.
+	CandlestickChart *CandlestickChartSpec `json:"candlestickChart,omitempty"`
+
+	// FontName: The name of the font to use by default for all chart text
+	// (e.g. title,
+	// axis labels, legend).  If a font is specified for a specific part of
+	// the
+	// chart it will override this font name.
+	FontName string `json:"fontName,omitempty"`
 
 	// HiddenDimensionStrategy: Determines how the charts will use hidden
 	// rows or columns.
@@ -2098,13 +2434,29 @@ type ChartSpec struct {
 	//   "SHOW_ALL" - Charts will not skip any hidden rows or columns.
 	HiddenDimensionStrategy string `json:"hiddenDimensionStrategy,omitempty"`
 
+	// HistogramChart: A histogram chart specification.
+	HistogramChart *HistogramChartSpec `json:"histogramChart,omitempty"`
+
+	// Maximized: True to make a chart fill the entire space in which it's
+	// rendered with
+	// minimum padding.  False to use the default padding.
+	// (Not applicable to Geo and Org charts.)
+	Maximized bool `json:"maximized,omitempty"`
+
+	// OrgChart: An org chart specification.
+	OrgChart *OrgChartSpec `json:"orgChart,omitempty"`
+
 	// PieChart: A pie chart specification.
 	PieChart *PieChartSpec `json:"pieChart,omitempty"`
 
 	// Title: The title of the chart.
 	Title string `json:"title,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "BasicChart") to
+	// TitleTextFormat: The title text format.
+	// Strikethrough and underline are not supported.
+	TitleTextFormat *TextFormat `json:"titleTextFormat,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AltText") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -2112,7 +2464,7 @@ type ChartSpec struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "BasicChart") to include in
+	// NullFields is a list of field names (e.g. "AltText") to include in
 	// API requests with the JSON null value. By default, fields with empty
 	// values are omitted from API requests. However, any field with an
 	// empty value appearing in NullFields will be sent to the server as
@@ -2377,6 +2729,26 @@ func (s *Color) MarshalJSON() ([]byte, error) {
 	type noMethod Color
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *Color) UnmarshalJSON(data []byte) error {
+	type noMethod Color
+	var s1 struct {
+		Alpha gensupport.JSONFloat64 `json:"alpha"`
+		Blue  gensupport.JSONFloat64 `json:"blue"`
+		Green gensupport.JSONFloat64 `json:"green"`
+		Red   gensupport.JSONFloat64 `json:"red"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.Alpha = float64(s1.Alpha)
+	s.Blue = float64(s1.Blue)
+	s.Green = float64(s1.Green)
+	s.Red = float64(s1.Red)
+	return nil
 }
 
 // ConditionValue: The value of the condition.
@@ -2881,6 +3253,47 @@ func (s *DeleteProtectedRangeRequest) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// DeleteRangeRequest: Deletes a range of cells, shifting other cells
+// into the deleted area.
+type DeleteRangeRequest struct {
+	// Range: The range of cells to delete.
+	Range *GridRange `json:"range,omitempty"`
+
+	// ShiftDimension: The dimension from which deleted cells will be
+	// replaced with.
+	// If ROWS, existing cells will be shifted upward to
+	// replace the deleted cells. If COLUMNS, existing cells
+	// will be shifted left to replace the deleted cells.
+	//
+	// Possible values:
+	//   "DIMENSION_UNSPECIFIED" - The default value, do not use.
+	//   "ROWS" - Operates on the rows of a sheet.
+	//   "COLUMNS" - Operates on the columns of a sheet.
+	ShiftDimension string `json:"shiftDimension,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Range") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Range") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeleteRangeRequest) MarshalJSON() ([]byte, error) {
+	type noMethod DeleteRangeRequest
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // DeleteSheetRequest: Deletes the requested sheet.
 type DeleteSheetRequest struct {
 	// SheetId: The ID of the sheet to delete.
@@ -3329,6 +3742,20 @@ func (s *ExtendedValue) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+func (s *ExtendedValue) UnmarshalJSON(data []byte) error {
+	type noMethod ExtendedValue
+	var s1 struct {
+		NumberValue gensupport.JSONFloat64 `json:"numberValue"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.NumberValue = float64(s1.NumberValue)
+	return nil
+}
+
 // FilterCriteria: Criteria for showing/hiding rows in a filter or
 // filter view.
 type FilterCriteria struct {
@@ -3768,6 +4195,140 @@ func (s *GridRange) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// HistogramChartSpec: A <a
+// href="/chart/interactive/docs/gallery/histogram">histogram
+// chart</a>.
+// A histogram chart groups data items into bins, displaying each bin as
+// a
+// column of stacked items.  Histograms are used to display the
+// distribution
+// of a dataset.  Each column of items represents a range into which
+// those
+// items fall.  The number of bins can be chosen automatically or
+// specified
+// explicitly.
+type HistogramChartSpec struct {
+	// BucketSize: By default the bucket size (the range of values stacked
+	// in a single
+	// column) is chosen automatically, but it may be overridden here.
+	// E.g., A bucket size of 1.5 results in buckets from 0 - 1.5, 1.5 -
+	// 3.0, etc.
+	// Cannot be negative.
+	// This field is optional.
+	BucketSize float64 `json:"bucketSize,omitempty"`
+
+	// LegendPosition: The position of the chart legend.
+	//
+	// Possible values:
+	//   "HISTOGRAM_CHART_LEGEND_POSITION_UNSPECIFIED" - Default value, do
+	// not use.
+	//   "BOTTOM_LEGEND" - The legend is rendered on the bottom of the
+	// chart.
+	//   "LEFT_LEGEND" - The legend is rendered on the left of the chart.
+	//   "RIGHT_LEGEND" - The legend is rendered on the right of the chart.
+	//   "TOP_LEGEND" - The legend is rendered on the top of the chart.
+	//   "NO_LEGEND" - No legend is rendered.
+	//   "INSIDE_LEGEND" - The legend is rendered inside the chart area.
+	LegendPosition string `json:"legendPosition,omitempty"`
+
+	// OutlierPercentile: The outlier percentile is used to ensure that
+	// outliers do not adversely
+	// affect the calculation of bucket sizes.  For example, setting an
+	// outlier
+	// percentile of 0.05 indicates that the top and bottom 5% of values
+	// when
+	// calculating buckets.  The values are still included in the chart,
+	// they will
+	// be added to the first or last buckets instead of their own
+	// buckets.
+	// Must be between 0.0 and 0.5.
+	OutlierPercentile float64 `json:"outlierPercentile,omitempty"`
+
+	// Series: The series for a histogram may be either a single series of
+	// values to be
+	// bucketed or multiple series, each of the same length, containing the
+	// name
+	// of the series followed by the values to be bucketed for that series.
+	Series []*HistogramSeries `json:"series,omitempty"`
+
+	// ShowItemDividers: Whether horizontal divider lines should be
+	// displayed between items in each
+	// column.
+	ShowItemDividers bool `json:"showItemDividers,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "BucketSize") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BucketSize") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *HistogramChartSpec) MarshalJSON() ([]byte, error) {
+	type noMethod HistogramChartSpec
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *HistogramChartSpec) UnmarshalJSON(data []byte) error {
+	type noMethod HistogramChartSpec
+	var s1 struct {
+		BucketSize        gensupport.JSONFloat64 `json:"bucketSize"`
+		OutlierPercentile gensupport.JSONFloat64 `json:"outlierPercentile"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.BucketSize = float64(s1.BucketSize)
+	s.OutlierPercentile = float64(s1.OutlierPercentile)
+	return nil
+}
+
+// HistogramSeries: A histogram series containing the series color and
+// data.
+type HistogramSeries struct {
+	// BarColor: The color of the column representing this series in each
+	// bucket.
+	// This field is optional.
+	BarColor *Color `json:"barColor,omitempty"`
+
+	// Data: The data for this histogram series.
+	Data *ChartData `json:"data,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "BarColor") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BarColor") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *HistogramSeries) MarshalJSON() ([]byte, error) {
+	type noMethod HistogramSeries
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // InsertDimensionRequest: Inserts rows or columns in a sheet at a
 // particular index.
 type InsertDimensionRequest struct {
@@ -3816,6 +4377,46 @@ type InsertDimensionRequest struct {
 
 func (s *InsertDimensionRequest) MarshalJSON() ([]byte, error) {
 	type noMethod InsertDimensionRequest
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// InsertRangeRequest: Inserts cells into a range, shifting the existing
+// cells over or down.
+type InsertRangeRequest struct {
+	// Range: The range to insert new cells into.
+	Range *GridRange `json:"range,omitempty"`
+
+	// ShiftDimension: The dimension which will be shifted when inserting
+	// cells.
+	// If ROWS, existing cells will be shifted down.
+	// If COLUMNS, existing cells will be shifted right.
+	//
+	// Possible values:
+	//   "DIMENSION_UNSPECIFIED" - The default value, do not use.
+	//   "ROWS" - Operates on the rows of a sheet.
+	//   "COLUMNS" - Operates on the columns of a sheet.
+	ShiftDimension string `json:"shiftDimension,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Range") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Range") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *InsertRangeRequest) MarshalJSON() ([]byte, error) {
+	type noMethod InsertRangeRequest
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -3885,6 +4486,59 @@ func (s *InterpolationPoint) MarshalJSON() ([]byte, error) {
 	type noMethod InterpolationPoint
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// IterativeCalculationSettings: Settings to control how circular
+// dependencies are resolved with iterative
+// calculation.
+type IterativeCalculationSettings struct {
+	// ConvergenceThreshold: When iterative calculation is enabled and
+	// successive results differ by
+	// less than this threshold value, the calculation rounds stop.
+	ConvergenceThreshold float64 `json:"convergenceThreshold,omitempty"`
+
+	// MaxIterations: When iterative calculation is enabled, the maximum
+	// number of calculation
+	// rounds to perform.
+	MaxIterations int64 `json:"maxIterations,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ConvergenceThreshold") to unconditionally include in API requests.
+	// By default, fields with empty values are omitted from API requests.
+	// However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ConvergenceThreshold") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *IterativeCalculationSettings) MarshalJSON() ([]byte, error) {
+	type noMethod IterativeCalculationSettings
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *IterativeCalculationSettings) UnmarshalJSON(data []byte) error {
+	type noMethod IterativeCalculationSettings
+	var s1 struct {
+		ConvergenceThreshold gensupport.JSONFloat64 `json:"convergenceThreshold"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.ConvergenceThreshold = float64(s1.ConvergenceThreshold)
+	return nil
 }
 
 // MergeCellsRequest: Merges all cells in the range.
@@ -4009,8 +4663,8 @@ type NumberFormat struct {
 	// Pattern: Pattern string used for formatting.  If not set, a default
 	// pattern based on
 	// the user's locale will be used if necessary for the given type.
-	// See the [Date and Number Formats guide](/sheets/guides/formats) for
-	// more
+	// See the [Date and Number Formats guide](/sheets/api/guides/formats)
+	// for more
 	// information about the supported patterns.
 	Pattern string `json:"pattern,omitempty"`
 
@@ -4051,6 +4705,81 @@ type NumberFormat struct {
 
 func (s *NumberFormat) MarshalJSON() ([]byte, error) {
 	type noMethod NumberFormat
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// OrgChartSpec: An <a
+// href="/chart/interactive/docs/gallery/orgchart">org chart</a>.
+// Org charts require a unique set of labels in labels and
+// may
+// optionally include parent_labels and tooltips.
+// parent_labels contain, for each node, the label identifying the
+// parent
+// node.  tooltips contain, for each node, an optional tooltip.
+//
+// For example, to describe an OrgChart with Alice as the CEO, Bob as
+// the
+// President (reporting to Alice) and Cathy as VP of Sales (also
+// reporting to
+// Alice), have labels contain "Alice", "Bob", "Cathy",
+// parent_labels contain "", "Alice", "Alice" and tooltips
+// contain
+// "CEO", "President", "VP Sales".
+type OrgChartSpec struct {
+	// Labels: The data containing the labels for all the nodes in the
+	// chart.  Labels
+	// must be unique.
+	Labels *ChartData `json:"labels,omitempty"`
+
+	// NodeColor: The color of the org chart nodes.
+	NodeColor *Color `json:"nodeColor,omitempty"`
+
+	// NodeSize: The size of the org chart nodes.
+	//
+	// Possible values:
+	//   "ORG_CHART_LABEL_SIZE_UNSPECIFIED" - Default value, do not use.
+	//   "SMALL" - The small org chart node size.
+	//   "MEDIUM" - The medium org chart node size.
+	//   "LARGE" - The large org chart node size.
+	NodeSize string `json:"nodeSize,omitempty"`
+
+	// ParentLabels: The data containing the label of the parent for the
+	// corresponding node.
+	// A blank value indicates that the node has no parent and is a
+	// top-level
+	// node.
+	// This field is optional.
+	ParentLabels *ChartData `json:"parentLabels,omitempty"`
+
+	// SelectedNodeColor: The color of the selected org chart nodes.
+	SelectedNodeColor *Color `json:"selectedNodeColor,omitempty"`
+
+	// Tooltips: The data containing the tooltip for the corresponding node.
+	//  A blank value
+	// results in no tooltip being displayed for the node.
+	// This field is optional.
+	Tooltips *ChartData `json:"tooltips,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Labels") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Labels") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OrgChartSpec) MarshalJSON() ([]byte, error) {
+	type noMethod OrgChartSpec
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -4241,6 +4970,20 @@ func (s *PieChartSpec) MarshalJSON() ([]byte, error) {
 	type noMethod PieChartSpec
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *PieChartSpec) UnmarshalJSON(data []byte) error {
+	type noMethod PieChartSpec
+	var s1 struct {
+		PieHole gensupport.JSONFloat64 `json:"pieHole"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.PieHole = float64(s1.PieHole)
+	return nil
 }
 
 // PivotFilterCriteria: Criteria for showing/hiding rows in a pivot
@@ -4624,6 +5367,34 @@ func (s *ProtectedRange) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// RandomizeRangeRequest: Randomizes the order of the rows in a range.
+type RandomizeRangeRequest struct {
+	// Range: The range to randomize.
+	Range *GridRange `json:"range,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Range") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Range") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RandomizeRangeRequest) MarshalJSON() ([]byte, error) {
+	type noMethod RandomizeRangeRequest
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // RepeatCellRequest: Updates all cells in the range to the values in
 // the given Cell object.
 // Only the fields listed in the fields field are updated; others
@@ -4747,6 +5518,10 @@ type Request struct {
 	// DeleteProtectedRange: Deletes a protected range.
 	DeleteProtectedRange *DeleteProtectedRangeRequest `json:"deleteProtectedRange,omitempty"`
 
+	// DeleteRange: Deletes a range of cells from a sheet, shifting the
+	// remaining cells.
+	DeleteRange *DeleteRangeRequest `json:"deleteRange,omitempty"`
+
 	// DeleteSheet: Deletes a sheet.
 	DeleteSheet *DeleteSheetRequest `json:"deleteSheet,omitempty"`
 
@@ -4763,6 +5538,10 @@ type Request struct {
 	// InsertDimension: Inserts new rows or columns in a sheet.
 	InsertDimension *InsertDimensionRequest `json:"insertDimension,omitempty"`
 
+	// InsertRange: Inserts new cells in a sheet, shifting the existing
+	// cells.
+	InsertRange *InsertRangeRequest `json:"insertRange,omitempty"`
+
 	// MergeCells: Merges cells together.
 	MergeCells *MergeCellsRequest `json:"mergeCells,omitempty"`
 
@@ -4771,6 +5550,9 @@ type Request struct {
 
 	// PasteData: Pastes data (HTML or delimited) into a sheet.
 	PasteData *PasteDataRequest `json:"pasteData,omitempty"`
+
+	// RandomizeRange: Randomizes the order of the rows in a range.
+	RandomizeRange *RandomizeRangeRequest `json:"randomizeRange,omitempty"`
 
 	// RepeatCell: Repeats a single cell across a range.
 	RepeatCell *RepeatCellRequest `json:"repeatCell,omitempty"`
@@ -5086,7 +5868,15 @@ type SheetProperties struct {
 	// Index: The index of the sheet within the spreadsheet.
 	// When adding or updating sheet properties, if this field
 	// is excluded then the sheet will be added or moved to the end
-	// of the sheet list.
+	// of the sheet list. When updating sheet indices or inserting
+	// sheets, movement is considered in "before the move" indexes.
+	// For example, if there were 3 sheets (S1, S2, S3) in order to
+	// move S1 ahead of S2 the index would have to be set to 2. A
+	// sheet
+	// index update request will be ignored if the requested index
+	// is
+	// identical to the sheets current index or if the requested new
+	// index is equal to the current sheet index + 1.
 	Index int64 `json:"index,omitempty"`
 
 	// RightToLeft: True if the sheet is an RTL sheet instead of an LTR
@@ -5272,6 +6062,10 @@ type Spreadsheet struct {
 	// This field is read-only.
 	SpreadsheetId string `json:"spreadsheetId,omitempty"`
 
+	// SpreadsheetUrl: The url of the spreadsheet.
+	// This field is read-only.
+	SpreadsheetUrl string `json:"spreadsheetUrl,omitempty"`
+
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
@@ -5319,6 +6113,13 @@ type SpreadsheetProperties struct {
 	// cell's format is equal to this default format.
 	// This field is read-only.
 	DefaultFormat *CellFormat `json:"defaultFormat,omitempty"`
+
+	// IterativeCalculationSettings: Determines whether and how circular
+	// references are resolved with iterative
+	// calculation.  Absence of this field means that circular references
+	// will
+	// result in calculation errors.
+	IterativeCalculationSettings *IterativeCalculationSettings `json:"iterativeCalculationSettings,omitempty"`
 
 	// Locale: The locale of the spreadsheet in one of the following
 	// formats:
@@ -5445,6 +6246,57 @@ type TextFormatRun struct {
 
 func (s *TextFormatRun) MarshalJSON() ([]byte, error) {
 	type noMethod TextFormatRun
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// TextRotation: The rotation applied to text in a cell.
+type TextRotation struct {
+	// Angle: The angle between the standard orientation and the desired
+	// orientation.
+	// Measured in degrees. Valid values are between -90 and 90.
+	// Positive
+	// angles are angled upwards, negative are angled downwards.
+	//
+	// Note: For LTR text direction positive angles are in the
+	// counterclockwise
+	// direction, whereas for RTL they are in the clockwise direction
+	Angle int64 `json:"angle,omitempty"`
+
+	// Vertical: If true, text reads top to bottom, but the orientation of
+	// individual
+	// characters is unchanged.
+	// For example:
+	//
+	//     | V |
+	//     | e |
+	//     | r |
+	//     | t |
+	//     | i |
+	//     | c |
+	//     | a |
+	//     | l |
+	Vertical bool `json:"vertical,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Angle") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Angle") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TextRotation) MarshalJSON() ([]byte, error) {
+	type noMethod TextRotation
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -6364,6 +7216,7 @@ func (c *SpreadsheetsBatchUpdateCall) Do(opts ...googleapi.CallOption) (*BatchUp
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }
@@ -6486,6 +7339,7 @@ func (c *SpreadsheetsCreateCall) Do(opts ...googleapi.CallOption) (*Spreadsheet,
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }
@@ -6675,6 +7529,7 @@ func (c *SpreadsheetsGetCall) Do(opts ...googleapi.CallOption) (*Spreadsheet, er
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/drive.readonly",
 	//     "https://www.googleapis.com/auth/spreadsheets",
 	//     "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -6825,6 +7680,7 @@ func (c *SpreadsheetsSheetsCopyToCall) Do(opts ...googleapi.CallOption) (*SheetP
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }
@@ -6851,9 +7707,9 @@ type SpreadsheetsValuesAppendCall struct {
 // of
 // the table. See
 // the
-// [guide](/sheets/guides/values#appending_values)
+// [guide](/sheets/api/guides/values#appending_values)
 // and
-// [sample code](/sheets/samples/writing#append_values)
+// [sample code](/sheets/api/samples/writing#append_values)
 // for specific details of how tables are detected and data is
 // appended.
 //
@@ -7023,7 +7879,7 @@ func (c *SpreadsheetsValuesAppendCall) Do(opts ...googleapi.CallOption) (*Append
 	}
 	return ret, nil
 	// {
-	//   "description": "Appends values to a spreadsheet. The input range is used to search for\nexisting data and find a \"table\" within that range. Values will be\nappended to the next row of the table, starting with the first column of\nthe table. See the\n[guide](/sheets/guides/values#appending_values)\nand\n[sample code](/sheets/samples/writing#append_values)\nfor specific details of how tables are detected and data is appended.\n\nThe caller must specify the spreadsheet ID, range, and\na valueInputOption.  The `valueInputOption` only\ncontrols how the input data will be added to the sheet (column-wise or\nrow-wise), it does not influence what cell the data starts being written\nto.",
+	//   "description": "Appends values to a spreadsheet. The input range is used to search for\nexisting data and find a \"table\" within that range. Values will be\nappended to the next row of the table, starting with the first column of\nthe table. See the\n[guide](/sheets/api/guides/values#appending_values)\nand\n[sample code](/sheets/api/samples/writing#append_values)\nfor specific details of how tables are detected and data is appended.\n\nThe caller must specify the spreadsheet ID, range, and\na valueInputOption.  The `valueInputOption` only\ncontrols how the input data will be added to the sheet (column-wise or\nrow-wise), it does not influence what cell the data starts being written\nto.",
 	//   "flatPath": "v4/spreadsheets/{spreadsheetId}/values/{range}:append",
 	//   "httpMethod": "POST",
 	//   "id": "sheets.spreadsheets.values.append",
@@ -7097,6 +7953,7 @@ func (c *SpreadsheetsValuesAppendCall) Do(opts ...googleapi.CallOption) (*Append
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }
@@ -7238,6 +8095,7 @@ func (c *SpreadsheetsValuesBatchClearCall) Do(opts ...googleapi.CallOption) (*Ba
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }
@@ -7470,6 +8328,7 @@ func (c *SpreadsheetsValuesBatchGetCall) Do(opts ...googleapi.CallOption) (*Batc
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/drive.readonly",
 	//     "https://www.googleapis.com/auth/spreadsheets",
 	//     "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -7610,6 +8469,7 @@ func (c *SpreadsheetsValuesBatchUpdateCall) Do(opts ...googleapi.CallOption) (*B
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }
@@ -7759,6 +8619,7 @@ func (c *SpreadsheetsValuesClearCall) Do(opts ...googleapi.CallOption) (*ClearVa
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }
@@ -7987,6 +8848,7 @@ func (c *SpreadsheetsValuesGetCall) Do(opts ...googleapi.CallOption) (*ValueRang
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/drive.readonly",
 	//     "https://www.googleapis.com/auth/spreadsheets",
 	//     "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -8228,6 +9090,7 @@ func (c *SpreadsheetsValuesUpdateCall) Do(opts ...googleapi.CallOption) (*Update
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/drive",
+	//     "https://www.googleapis.com/auth/drive.file",
 	//     "https://www.googleapis.com/auth/spreadsheets"
 	//   ]
 	// }

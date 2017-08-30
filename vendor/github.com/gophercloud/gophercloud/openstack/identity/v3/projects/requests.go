@@ -11,7 +11,7 @@ type ListOptsBuilder interface {
 	ToProjectListQuery() (string, error)
 }
 
-// ListOpts allows you to query the List method.
+// ListOpts enables filtering of a list request.
 type ListOpts struct {
 	// DomainID filters the response by a domain ID.
 	DomainID string `q:"domain_id"`
@@ -36,7 +36,7 @@ func (opts ListOpts) ToProjectListQuery() (string, error) {
 	return q.String(), err
 }
 
-// List enumerats the Projects to which the current token has access.
+// List enumerates the Projects to which the current token has access.
 func List(client *gophercloud.ServiceClient, opts ListOptsBuilder) pagination.Pager {
 	url := listURL(client)
 	if opts != nil {
@@ -51,36 +51,9 @@ func List(client *gophercloud.ServiceClient, opts ListOptsBuilder) pagination.Pa
 	})
 }
 
-// GetOptsBuilder allows extensions to add additional parameters to
-// the Get request.
-type GetOptsBuilder interface {
-	ToProjectGetQuery() (string, error)
-}
-
-// GetOpts allows you to modify the details included in the Get request.
-type GetOpts struct{}
-
-// ToProjectGetQuery formats a GetOpts into a query string.
-func (opts GetOpts) ToProjectGetQuery() (string, error) {
-	q, err := gophercloud.BuildQueryString(opts)
-	return q.String(), err
-}
-
 // Get retrieves details on a single project, by ID.
-func Get(client *gophercloud.ServiceClient, id string, opts GetOptsBuilder) (r GetResult) {
-	url := getURL(client, id)
-	if opts != nil {
-		query, err := opts.ToProjectGetQuery()
-		if err != nil {
-			r.Err = err
-			return
-		}
-		url += query
-	}
-
-	_, r.Err = client.Get(url, &r.Body, &gophercloud.RequestOpts{
-		OkCodes: []int{200},
-	})
+func Get(client *gophercloud.ServiceClient, id string) (r GetResult) {
+	_, r.Err = client.Get(getURL(client, id), &r.Body, nil)
 	return
 }
 
@@ -90,7 +63,7 @@ type CreateOptsBuilder interface {
 	ToProjectCreateMap() (map[string]interface{}, error)
 }
 
-// CreateOpts allows you to modify the details included in the Create request.
+// CreateOpts represents parameters used to create a project.
 type CreateOpts struct {
 	// DomainID is the ID this project will belong under.
 	DomainID string `json:"domain_id,omitempty"`
@@ -102,7 +75,7 @@ type CreateOpts struct {
 	IsDomain *bool `json:"is_domain,omitempty"`
 
 	// Name is the name of the project.
-	Name string `json:"name,required"`
+	Name string `json:"name" required:"true"`
 
 	// ParentID specifies the parent project of this new project.
 	ParentID string `json:"parent_id,omitempty"`
@@ -139,7 +112,7 @@ type UpdateOptsBuilder interface {
 	ToProjectUpdateMap() (map[string]interface{}, error)
 }
 
-// UpdateOpts allows you to modify the details included in the Update request.
+// UpdateOpts represents parameters to update a project.
 type UpdateOpts struct {
 	// DomainID is the ID this project will belong under.
 	DomainID string `json:"domain_id,omitempty"`

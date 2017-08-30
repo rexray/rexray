@@ -148,3 +148,61 @@ func TestFilteredList(t *testing.T) {
 
 	th.CheckDeepEquals(t, expected, actual)
 }
+
+// Verifies that it is possible to get a security service
+func TestGet(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	MockGetResponse(t)
+
+	var nilTime time.Time
+	expected := securityservices.SecurityService{
+		ID:          "3c829734-0679-4c17-9637-801da48c0d5f",
+		Name:        "SecServ1",
+		CreatedAt:   time.Date(2015, 9, 7, 12, 19, 10, 0, time.UTC),
+		Description: "Creating my first Security Service",
+		Type:        "kerberos",
+		UpdatedAt:   nilTime,
+		ProjectID:   "16e1ab15c35a457e9c2b2aa189f544e1",
+		Status:      "new",
+		Domain:      "",
+		Server:      "",
+		DNSIP:       "10.0.0.0/24",
+		User:        "demo",
+		Password:    "supersecret",
+	}
+
+	n, err := securityservices.Get(client.ServiceClient(), "3c829734-0679-4c17-9637-801da48c0d5f").Extract()
+	th.AssertNoErr(t, err)
+
+	th.CheckDeepEquals(t, &expected, n)
+}
+
+// Verifies that it is possible to update a security service
+func TestUpdate(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	MockUpdateResponse(t)
+	expected := securityservices.SecurityService{
+		ID:          "securityServiceID",
+		Name:        "SecServ2",
+		CreatedAt:   time.Date(2015, 9, 7, 12, 19, 10, 0, time.UTC),
+		Description: "Updating my first Security Service",
+		Type:        "kerberos",
+		UpdatedAt:   time.Date(2015, 9, 7, 12, 20, 10, 0, time.UTC),
+		ProjectID:   "16e1ab15c35a457e9c2b2aa189f544e1",
+		Status:      "new",
+		Domain:      "",
+		Server:      "",
+		DNSIP:       "10.0.0.0/24",
+		User:        "demo",
+		Password:    "supersecret",
+	}
+
+	options := securityservices.UpdateOpts{Name: "SecServ2"}
+	s, err := securityservices.Update(client.ServiceClient(), "securityServiceID", options).Extract()
+	th.AssertNoErr(t, err)
+	th.CheckDeepEquals(t, &expected, s)
+}

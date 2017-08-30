@@ -1,2 +1,2 @@
-// compute_extensions_secgroups_v2
+// secgroups unit tests
 package testing

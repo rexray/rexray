@@ -2,10 +2,12 @@ package v2
 
 import (
 	"encoding/json"
+	"fmt"
+	"testing"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/acceptance/clients"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
-	"testing"
 )
 
 // CreateShare will create a share with a name, and a size of 1Gb. An
@@ -33,7 +35,7 @@ func CreateShare(t *testing.T, client *gophercloud.ServiceClient) (*shares.Share
 		return share, err
 	}
 
-	err = waitForStatus(client, share.ID, "available", 60)
+	err = waitForStatus(client, share.ID, "available", 600)
 	if err != nil {
 		return share, err
 	}
@@ -67,6 +69,10 @@ func waitForStatus(c *gophercloud.ServiceClient, id, status string, secs int) er
 		current, err := shares.Get(c, id).Extract()
 		if err != nil {
 			return false, err
+		}
+
+		if current.Status == "error" {
+			return true, fmt.Errorf("An error occurred")
 		}
 
 		if current.Status == status {

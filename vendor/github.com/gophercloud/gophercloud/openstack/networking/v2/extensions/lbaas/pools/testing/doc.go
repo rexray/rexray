@@ -1,2 +1,2 @@
-// networking_extensions_lbaas_pools_v2
+// pools unit tests
 package testing

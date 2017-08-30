@@ -167,7 +167,7 @@ func deepDiffEqual(expected, actual reflect.Value, visited map[visit]bool, path 
 
 		for _, k := range keys {
 			expectedValue := expected.MapIndex(k)
-			actualValue := expected.MapIndex(k)
+			actualValue := actual.MapIndex(k)
 
 			if !expectedValue.IsValid() {
 				logDifference(path, nil, actual.Interface())

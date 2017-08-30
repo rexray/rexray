@@ -95,7 +95,34 @@ func MockUploadImageResponse(t *testing.T) {
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusAccepted)
 
-			fmt.Fprintf(w, `{}`)
+			fmt.Fprintf(w, `
+{
+    "os-volume_upload_image": {
+        "container_format": "bare",
+        "display_description": null,
+        "id": "cd281d77-8217-4830-be95-9528227c105c",
+        "image_id": "ecb92d98-de08-45db-8235-bbafe317269c",
+        "image_name": "test",
+        "disk_format": "raw",
+        "size": 5,
+        "status": "uploading",
+        "updated_at": "2017-07-17T09:29:22.000000",
+        "volume_type": {
+            "created_at": "2016-05-04T08:54:14.000000",
+            "deleted": false,
+            "deleted_at": null,
+            "description": null,
+            "extra_specs": {
+                "volume_backend_name": "basic.ru-2a"
+            },
+            "id": "b7133444-62f6-4433-8da3-70ac332229b7",
+            "is_public": true,
+            "name": "basic.ru-2a",
+            "updated_at": "2016-05-04T09:15:33.000000"
+        }
+    }
+}
+          `)
 		})
 }
 

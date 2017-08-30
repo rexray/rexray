@@ -1,2 +1,2 @@
-// networking_extensions_lbaas_v2_loadbalancers_v2
+// loadbalancers unit tests
 package testing

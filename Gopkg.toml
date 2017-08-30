@@ -13,27 +13,27 @@ required = [
 
 [[constraint]]
   name = "github.com/akutz/gofig"
-  version = "=0.1.8"
+  version = "0.1.8"
 
 [[constraint]]
   name = "github.com/akutz/golf"
-  version = "=0.1.2"
+  version = "0.1.2"
 
 [[constraint]]
   name = "github.com/akutz/goof"
-  version = "=0.1.1"
+  version = "0.1.1"
 
 [[constraint]]
   name = "github.com/akutz/gotil"
-  version = "=0.1.0"
+  version = "0.1.0"
 
 [[constraint]]
   name = "github.com/codedellemc/gournal"
-  version = "=0.3.0"
+  version = "0.3.0"
 
 [[constraint]]
   name = "github.com/SermoDigital/jose"
-  version = "=1.1.0"
+  version = "1.1.0"
 
 [[constraint]]
   name = "github.com/Sirupsen/logrus"
@@ -42,10 +42,10 @@ required = [
 
 [[constraint]]
   name = "github.com/spf13/cobra"
-  revision = "7be4beda01ec05d0b93d80b3facd2b6f44080d94"
+  branch = "master"
 [[constraint]]
   name = "github.com/spf13/pflag"
-  revision = "d16db1e50e33dff1b6cdf37596cef36742128670"
+  branch = "master"
 
 
 ################################################################################
@@ -55,15 +55,15 @@ required = [
 ### Amazon
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
-  version = "=1.6.18"
+  version = "1.10.34"
 
 ### Azure
 [[constraint]]
   name = "github.com/Azure/azure-sdk-for-go"
-  version = "=7.0.1-beta"
+  version = "~7.0.1-beta"
 [[constraint]]
   name = "github.com/Azure/go-autorest"
-  version = "=7.2.2"
+  version = "~7.2.2"
 [[constraint]]
   name = "github.com/rubiojr/go-vhd"
   revision = "96a0db67ea8209453cfa694bdf03de202d6dd8f8"
@@ -72,26 +72,25 @@ required = [
 ### Cinder
 [[constraint]]
   name = "github.com/gophercloud/gophercloud"
-  revision = "9a5595b8ffe429439c63781cdc312c254e4ad990"
+  revision = "31ccc1afefa5f02925f672d2c1d512cb2e938b7d"
 
 ### DigitalOcean
 [[constraint]]
   name = "github.com/digitalocean/godo"
-  revision = "83908b1ddd666d08a9b020c697b55ae3895be2fd"
+  version = "1.1.0"
 
 ### GCE
 [[constraint]]
   name = "google.golang.org/api"
-  revision = "d61af0b67e5c8213e8c260ac29a762487bad020d"
-  source = "https://github.com/google/google-api-go-client"
-[[override]]
+  branch = "master"
+[[constraint]]
   name = "google.golang.org/appengine"
-  revision = "c5a90ac045b779001847fec87403f5cba090deae"
+  branch = "master"
 
 ### Isilon
 [[constraint]]
   name = "github.com/codedellemc/goisilon"
-  version = "=1.5.0"
+  version = "1.5.0"
 
 ### ScaleIO
 [[constraint]]
@@ -111,15 +110,15 @@ required = [
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
-  version = "=1.3.1"
+  version = "1.4.0"
 
 [[constraint]]
   name = "github.com/onsi/gomega"
-  version = "=1.1.0"
+  version = "1.2.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
-  revision = "4d4bfba8f1d1027c4fdbe371823030df51419987"
+  branch = "master"
 
 
 ################################################################################
@@ -140,99 +139,3 @@ required = [
   name = "gopkg.in/yaml.v2"
   source = "https://github.com/akutz/yaml.git"
   revision = "bc35f417f8a7664a73d46c9def2933417c03019f"
-
-
-################################################################################
-##                                 Various                                    ##
-################################################################################
-
-[[override]]
-  name = "cloud.google.com/go"
-  revision = "9be7f826df5cb36bc19f57a919cffb1c1b6d9696"
-[[override]]
-  name = "github.com/dgrijalva/jwt-go"
-  revision = "a539ee1a749a2b895533f979515ac7e6e0f5b650"
-[[override]]
-  name = "github.com/fsnotify/fsnotify"
-  revision = "4da3e2cfbabc9f751898f250b49f2439785783a1"
-[[override]]
-  name = "github.com/asaskevich/govalidator"
-  revision = "15028e809df8c71964e8efa6c11e81d5c0262302"
-[[override]]
-  name = "github.com/jmespath/go-jmespath"
-  revision = "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d"
-[[override]]
-  name = "github.com/go-ini/ini"
-  revision = "3d73f4b845efdf9989fffd4b4e562727744a34ba"
-[[override]]
-  name = "github.com/golang/protobuf"
-  revision = "1909bc2f63dc92bb931deace8b8312c4db72d12f"
-[[override]]
-  name = "github.com/pelletier/go-toml"
-  revision = "69d355db5304c0f7f809a2edc054553e7142f016"
-[[override]]
-  name = "github.com/spf13/afero"
-  revision = "9be650865eab0c12963d8753212f4f9c66cdcf12"
-[[override]]
-  name = "golang.org/x/sys"
-  revision = "002cbb5f952456d0c50e0d2aff17ea5eca716979"
-[[override]]
-  name = "golang.org/x/text"
-  revision = "3bd178b88a8180be2df394a1fbb81313916f0e7b"
-[[override]]
-  name = "github.com/davecgh/go-spew"
-  revision = "04cdfd42973bb9c8589fd6a731800cf222fde1a9"
-[[override]]
-  name = "github.com/pmezard/go-difflib"
-  revision = "d8ed2627bdf02c080bf22230dbb337003b7aba2d"
-[[override]]
-  name = "github.com/hashicorp/hcl"
-  revision = "392dba7d905ed5d04a5794ba89f558b27e2ba1ca"
-
-[[constraint]]
-  name = "github.com/cesanta/ucl"
-  revision = "97c016fce90e6af1b14558563ac46852167e6a76"
-[[constraint]]
-  name = "github.com/cesanta/validate-json"
-  revision = "2f16017c76fc2403d143e93cea1e1b9526a01148"
-[[constraint]]
-  name = "github.com/google/go-querystring"
-  revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
-[[constraint]]
-  name = "github.com/gorilla/context"
-  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
-[[constraint]]
-  name = "github.com/gorilla/mux"
-  revision = "ac112f7d75a0714af1bd86ab17749b31f7809640"
-[[constraint]]
-  name = "github.com/inconshreveable/mousetrap"
-  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
-[[constraint]]
-  name = "github.com/kardianos/osext"
-  revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
-  source = "https://github.com/kardianos/osext.git"
-[[constraint]]
-  name = "github.com/magiconair/properties"
-  revision = "be5ece7dd465ab0765a9682137865547526d1dfb"
-[[constraint]]
-  name = "github.com/mitchellh/mapstructure"
-  revision = "d0303fe809921458f417bcf828397a65db30a7e4"
-[[constraint]]
-  name = "github.com/spf13/cast"
-  revision = "acbeb36b902d72a7a4c18e8f3241075e7ab763e4"
-[[constraint]]
-  name = "github.com/spf13/jwalterweatherman"
-  revision = "0efa5202c04663c757d84f90f5219c1250baf94f"
-[[constraint]]
-  name = "github.com/tent/http-link-go"
-  revision = "ac974c61c2f990f4115b119354b5e0b47550e888"
-[[constraint]]
-  name = "golang.org/x/crypto"
-  revision = "b176d7def5d71bdd214203491f89843ed217f420"
-  source = "https://github.com/golang/crypto.git"
-[[constraint]]
-  name = "golang.org/x/net"
-  revision = "b336a971b799939dd16ae9b1df8334cb8b977c4d"
-[[constraint]]
-  name = "golang.org/x/oauth2"
-  revision = "314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd"

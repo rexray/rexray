@@ -1,6 +1,9 @@
 package snapshots
 
 import (
+	"encoding/json"
+	"time"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/pagination"
 )
@@ -23,7 +26,7 @@ type Snapshot struct {
 	Bootable string `json:"bootable"`
 
 	// Date created.
-	CreatedAt gophercloud.JSONRFC3339MilliNoZ `json:"created_at"`
+	CreatedAt time.Time `json:"-"`
 
 	// Display description.
 	Description string `json:"display_description"`
@@ -45,6 +48,23 @@ type Snapshot struct {
 
 	// Size of the Snapshot, in GB.
 	Size int `json:"size"`
+}
+
+func (r *Snapshot) UnmarshalJSON(b []byte) error {
+	type tmp Snapshot
+	var s struct {
+		tmp
+		CreatedAt gophercloud.JSONRFC3339MilliNoZ `json:"created_at"`
+	}
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	*r = Snapshot(s.tmp)
+
+	r.CreatedAt = time.Time(s.CreatedAt)
+
+	return err
 }
 
 // CreateResult contains the response body and error from a Create request.

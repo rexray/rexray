@@ -25,37 +25,74 @@ const (
 	numModes
 )
 
-// A RoundingContext indicates how a number should be converted to digits.
-type RoundingContext struct {
-	Mode      RoundingMode
-	Increment int32 // if > 0, round to Increment * 10^-Scale
-
-	Precision int32 // maximum number of significant digits.
-	Scale     int32 // maximum number of decimals after the dot.
-}
-
 const maxIntDigits = 20
 
-// A Decimal represents floating point number represented in digits of the base
-// in which a number is to be displayed. Digits represents a number [0, 1.0),
-// and the absolute value represented by Decimal is Digits * 10^Exp.
-// Leading and trailing zeros may be omitted and Exp may point outside a valid
-// position in Digits.
+// A Decimal represents a floating point number in decimal format.
+// Digits represents a number [0, 1.0), and the absolute value represented by
+// Decimal is Digits * 10^Exp. Leading and trailing zeros may be omitted and Exp
+// may point outside a valid position in Digits.
 //
 // Examples:
 //      Number     Decimal
 //      12345      Digits: [1, 2, 3, 4, 5], Exp: 5
 //      12.345     Digits: [1, 2, 3, 4, 5], Exp: 2
 //      12000      Digits: [1, 2],          Exp: 5
+//      12000.00   Digits: [1, 2],          Exp: 5
 //      0.00123    Digits: [1, 2, 3],       Exp: -2
+//      0          Digits: [],              Exp: 0
 type Decimal struct {
+	digits
+
+	buf [maxIntDigits]byte
+}
+
+type digits struct {
 	Digits []byte // mantissa digits, big-endian
 	Exp    int32  // exponent
 	Neg    bool
 	Inf    bool // Takes precedence over Digits and Exp.
 	NaN    bool // Takes precedence over Inf.
+}
 
-	buf [maxIntDigits]byte
+// Digits represents a floating point number represented in digits of the
+// base in which a number is to be displayed. It is similar to Decimal, but
+// keeps track of trailing fraction zeros and the comma placement for
+// engineering notation. Digits must have at least one digit.
+//
+// Examples:
+//      Number     Decimal
+//    decimal
+//      12345      Digits: [1, 2, 3, 4, 5], Exp: 5  End: 5
+//      12.345     Digits: [1, 2, 3, 4, 5], Exp: 2  End: 5
+//      12000      Digits: [1, 2],          Exp: 5  End: 5
+//      12000.00   Digits: [1, 2],          Exp: 5  End: 7
+//      0.00123    Digits: [1, 2, 3],       Exp: -2 End: 3
+//      0          Digits: [],              Exp: 0  End: 1
+//    scientific (actual exp is Exp - Comma)
+//      0e0        Digits: [0],             Exp: 1, End: 1, Comma: 1
+//      .0e0       Digits: [0],             Exp: 0, End: 1, Comma: 0
+//      0.0e0      Digits: [0],             Exp: 1, End: 2, Comma: 1
+//      1.23e4     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 1
+//      .123e5     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 0
+//    engineering
+//      12.3e3     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 2
+type Digits struct {
+	digits
+	// End indicates the end position of the number.
+	End int32 // For decimals Exp <= End. For scientific len(Digits) <= End.
+	// Comma is used for the comma position for scientific (always 0 or 1) and
+	// engineering notation (always 0, 1, 2, or 3).
+	Comma uint8
+	// IsScientific indicates whether this number is to be rendered as a
+	// scientific number.
+	IsScientific bool
+}
+
+func (d *Digits) NumFracDigits() int {
+	if d.Exp >= d.End {
+		return 0
+	}
+	return int(d.End - d.Exp)
 }
 
 // normalize returns a new Decimal with leading and trailing zeros removed.
@@ -137,7 +174,7 @@ func appendZeros(buf []byte, n int) []byte {
 	return buf
 }
 
-func (d *Decimal) round(mode RoundingMode, n int) {
+func (d *digits) round(mode RoundingMode, n int) {
 	if n >= len(d.Digits) {
 		return
 	}
@@ -213,7 +250,7 @@ func (r RoundingMode) roundFloat(x float64) float64 {
 	return i
 }
 
-func (x *Decimal) roundUp(n int) {
+func (x *digits) roundUp(n int) {
 	if n < 0 || n >= len(x.Digits) {
 		return // nothing to do
 	}
@@ -234,7 +271,7 @@ func (x *Decimal) roundUp(n int) {
 	// x already trimmed
 }
 
-func (x *Decimal) roundDown(n int) {
+func (x *digits) roundDown(n int) {
 	if n < 0 || n >= len(x.Digits) {
 		return // nothing to do
 	}
@@ -244,7 +281,7 @@ func (x *Decimal) roundDown(n int) {
 
 // trim cuts off any trailing zeros from x's mantissa;
 // they are meaningless for the value of x.
-func trim(x *Decimal) {
+func trim(x *digits) {
 	i := len(x.Digits)
 	for i > 0 && x.Digits[i-1] == 0 {
 		i--
@@ -258,7 +295,7 @@ func trim(x *Decimal) {
 // A Converter converts a number into decimals according to the given rounding
 // criteria.
 type Converter interface {
-	Convert(d *Decimal, r *RoundingContext)
+	Convert(d *Decimal, r RoundingContext)
 }
 
 const (
@@ -268,7 +305,7 @@ const (
 
 // Convert converts the given number to the decimal representation using the
 // supplied RoundingContext.
-func (d *Decimal) Convert(r *RoundingContext, number interface{}) {
+func (d *Decimal) Convert(r RoundingContext, number interface{}) {
 	switch f := number.(type) {
 	case Converter:
 		d.clear()
@@ -298,6 +335,8 @@ func (d *Decimal) Convert(r *RoundingContext, number interface{}) {
 	case uint64:
 		d.ConvertInt(r, unsigned, f)
 
+	default:
+		d.NaN = true
 		// TODO:
 		// case string: if produced by strconv, allows for easy arbitrary pos.
 		// case reflect.Value:
@@ -310,7 +349,7 @@ func (d *Decimal) Convert(r *RoundingContext, number interface{}) {
 }
 
 // ConvertInt converts an integer to decimals.
-func (d *Decimal) ConvertInt(r *RoundingContext, signed bool, x uint64) {
+func (d *Decimal) ConvertInt(r RoundingContext, signed bool, x uint64) {
 	if r.Increment > 0 {
 		// TODO: if uint64 is too large, fall back to float64
 		if signed {
@@ -330,7 +369,7 @@ func (d *Decimal) ConvertInt(r *RoundingContext, signed bool, x uint64) {
 }
 
 // ConvertFloat converts a floating point number to decimals.
-func (d *Decimal) ConvertFloat(r *RoundingContext, x float64, size int) {
+func (d *Decimal) ConvertFloat(r RoundingContext, x float64, size int) {
 	d.clear()
 	if math.IsNaN(x) {
 		d.NaN = true
@@ -346,11 +385,13 @@ func (d *Decimal) ConvertFloat(r *RoundingContext, x float64, size int) {
 		return
 	}
 	// Simple case: decimal notation
-	if r.Scale > 0 || r.Increment > 0 || r.Precision == 0 {
-		if int(r.Scale) > len(scales) {
-			x *= math.Pow(10, float64(r.Scale))
+	scale := r.scale()
+	prec := r.precision()
+	if scale > 0 || r.Increment > 0 || prec == 0 {
+		if scale > len(scales) {
+			x *= math.Pow(10, float64(scale))
 		} else {
-			x *= scales[r.Scale]
+			x *= scales[scale]
 		}
 		if r.Increment > 0 {
 			inc := float64(r.Increment)
@@ -361,7 +402,7 @@ func (d *Decimal) ConvertFloat(r *RoundingContext, x float64, size int) {
 			x = r.Mode.roundFloat(x)
 		}
 		d.fillIntDigits(uint64(math.Abs(x)))
-		d.Exp = int32(len(d.Digits)) - r.Scale
+		d.Exp = int32(len(d.Digits) - scale)
 		return
 	}
 
@@ -373,7 +414,6 @@ func (d *Decimal) ConvertFloat(r *RoundingContext, x float64, size int) {
 	//   AppendDigits(dst []byte, x float64, base, size, prec int) (digits []byte, exp, accuracy int)
 	// TODO: This only supports the nearest even rounding mode.
 
-	prec := int(r.Precision)
 	if prec > 0 {
 		prec--
 	}

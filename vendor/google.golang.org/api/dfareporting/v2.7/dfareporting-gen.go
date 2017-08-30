@@ -844,6 +844,7 @@ type Account struct {
 	//
 	// Possible values:
 	//   "ACTIVE_ADS_TIER_100K"
+	//   "ACTIVE_ADS_TIER_1M"
 	//   "ACTIVE_ADS_TIER_200K"
 	//   "ACTIVE_ADS_TIER_300K"
 	//   "ACTIVE_ADS_TIER_40K"
@@ -914,6 +915,7 @@ type Account struct {
 	// - "46" for AED
 	// - "47" for BGN
 	// - "48" for HRK
+	// - "49" for MXN
 	CurrencyId int64 `json:"currencyId,omitempty,string"`
 
 	// DefaultCreativeSizeId: Default placement dimensions for this account.
@@ -949,7 +951,8 @@ type Account struct {
 	// - "zh-TW" (Chinese Traditional)
 	Locale string `json:"locale,omitempty"`
 
-	// MaximumImageSize: Maximum image size allowed for this account.
+	// MaximumImageSize: Maximum image size allowed for this account, in
+	// kilobytes. Value must be greater than or equal to 1.
 	MaximumImageSize int64 `json:"maximumImageSize,omitempty,string"`
 
 	// Name: Name of this account. This is a required field, and must be
@@ -968,7 +971,7 @@ type Account struct {
 	ShareReportsWithTwitter bool `json:"shareReportsWithTwitter,omitempty"`
 
 	// TeaserSizeLimit: File size limit in kilobytes of Rich Media teaser
-	// creatives. Must be between 1 and 10240.
+	// creatives. Acceptable values are 1 to 10240, inclusive.
 	TeaserSizeLimit int64 `json:"teaserSizeLimit,omitempty,string"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -1013,6 +1016,7 @@ type AccountActiveAdSummary struct {
 	//
 	// Possible values:
 	//   "ACTIVE_ADS_TIER_100K"
+	//   "ACTIVE_ADS_TIER_1M"
 	//   "ACTIVE_ADS_TIER_200K"
 	//   "ACTIVE_ADS_TIER_300K"
 	//   "ACTIVE_ADS_TIER_40K"
@@ -2040,9 +2044,10 @@ func (s *AdvertisersListResponse) MarshalJSON() ([]byte, error) {
 
 // AudienceSegment: Audience Segment.
 type AudienceSegment struct {
-	// Allocation: Weight allocated to this segment. Must be between 1 and
-	// 1000. The weight assigned will be understood in proportion to the
-	// weights assigned to other segments in the same segment group.
+	// Allocation: Weight allocated to this segment. The weight assigned
+	// will be understood in proportion to the weights assigned to other
+	// segments in the same segment group. Acceptable values are 1 to 1000,
+	// inclusive.
 	Allocation int64 `json:"allocation,omitempty"`
 
 	// Id: ID of this audience segment. This is a read-only, auto-generated
@@ -3334,8 +3339,8 @@ type ConversionsBatchInsertResponse struct {
 	// string "dfareporting#conversionsBatchInsertResponse".
 	Kind string `json:"kind,omitempty"`
 
-	// Status: The status of each conversion's insertion status. The status
-	// is returned in the same order that conversions are inserted.
+	// Status: The insert status of each conversion. Statuses are returned
+	// in the same order that conversions are inserted.
 	Status []*ConversionStatus `json:"status,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -3735,7 +3740,7 @@ type Creative struct {
 	FsCommand *FsCommand `json:"fsCommand,omitempty"`
 
 	// HtmlCode: HTML code for the creative. This is a required field when
-	// applicable. This field is ignored if htmlCodeLocked is false.
+	// applicable. This field is ignored if htmlCodeLocked is true.
 	// Applicable to the following creative types: all CUSTOM, FLASH_INPAGE,
 	// and HTML5_BANNER, and all RICH_MEDIA.
 	HtmlCode string `json:"htmlCode,omitempty"`
@@ -4054,7 +4059,7 @@ type CreativeAsset struct {
 
 	// CustomStartTimeValue: Custom start time in seconds for making the
 	// asset visible. Applicable to the following creative types: all
-	// RICH_MEDIA.
+	// RICH_MEDIA. Value must be greater than or equal to 0.
 	CustomStartTimeValue int64 `json:"customStartTimeValue,omitempty"`
 
 	// DetectedFeatures: List of feature dependencies for the creative asset
@@ -4151,7 +4156,7 @@ type CreativeAsset struct {
 
 	// Duration: Duration in seconds for which an asset will be displayed.
 	// Applicable to the following creative types: INSTREAM_VIDEO and
-	// VPAID_LINEAR_VIDEO.
+	// VPAID_LINEAR_VIDEO. Value must be greater than or equal to 1.
 	Duration int64 `json:"duration,omitempty"`
 
 	// DurationType: Duration type for which an asset will be displayed.
@@ -4253,11 +4258,12 @@ type CreativeAsset struct {
 	// size.height.
 	Pushdown bool `json:"pushdown,omitempty"`
 
-	// PushdownDuration: Pushdown duration in seconds for an asset. Must be
-	// between 0 and 9.99. Applicable to the following creative types: all
+	// PushdownDuration: Pushdown duration in seconds for an asset.
+	// Applicable to the following creative types: all
 	// RICH_MEDIA.Additionally, only applicable when the asset pushdown
 	// field is true, the offsets are 0, the collapsedSize.width matches
 	// size.width, and the collapsedSize.height is less than size.height.
+	// Acceptable values are 0 to 9.99, inclusive.
 	PushdownDuration float64 `json:"pushdownDuration,omitempty"`
 
 	// Role: Role of the asset in relation to creative. Applicable to all
@@ -4353,11 +4359,11 @@ type CreativeAsset struct {
 	//   "WINDOW"
 	WindowMode string `json:"windowMode,omitempty"`
 
-	// ZIndex: zIndex value of an asset. This is a read-only field.
-	// Applicable to the following creative types: all
-	// RICH_MEDIA.Additionally, only applicable to assets whose displayType
-	// is NOT one of the following types: ASSET_DISPLAY_TYPE_INPAGE or
-	// ASSET_DISPLAY_TYPE_OVERLAY.
+	// ZIndex: zIndex value of an asset. Applicable to the following
+	// creative types: all RICH_MEDIA.Additionally, only applicable to
+	// assets whose displayType is NOT one of the following types:
+	// ASSET_DISPLAY_TYPE_INPAGE or ASSET_DISPLAY_TYPE_OVERLAY. Acceptable
+	// values are -999999999 to 999999999, inclusive.
 	ZIndex int64 `json:"zIndex,omitempty"`
 
 	// ZipFilename: File name of zip file. This is a read-only field.
@@ -4712,6 +4718,7 @@ type CreativeAssignment struct {
 	// RichMediaExitOverrides: Rich media exit overrides for this creative
 	// assignment.
 	// Applicable when the creative type is any of the following:
+	// - DISPLAY
 	// - RICH_MEDIA_INPAGE
 	// - RICH_MEDIA_INPAGE_FLOATING
 	// - RICH_MEDIA_IM_EXPAND
@@ -4720,13 +4727,13 @@ type CreativeAssignment struct {
 	// - RICH_MEDIA_MOBILE_IN_APP
 	// - RICH_MEDIA_MULTI_FLOATING
 	// - RICH_MEDIA_PEEL_DOWN
-	// - ADVANCED_BANNER
 	// - VPAID_LINEAR
 	// - VPAID_NON_LINEAR
 	RichMediaExitOverrides []*RichMediaExitOverride `json:"richMediaExitOverrides,omitempty"`
 
 	// Sequence: Sequence number of the creative assignment, applicable when
-	// the rotation type is CREATIVE_ROTATION_TYPE_SEQUENTIAL.
+	// the rotation type is CREATIVE_ROTATION_TYPE_SEQUENTIAL. Acceptable
+	// values are 1 to 65535, inclusive.
 	Sequence int64 `json:"sequence,omitempty"`
 
 	// SslCompliant: Whether the creative to be assigned is SSL-compliant.
@@ -4739,7 +4746,8 @@ type CreativeAssignment struct {
 	StartTime string `json:"startTime,omitempty"`
 
 	// Weight: Weight of the creative assignment, applicable when the
-	// rotation type is CREATIVE_ROTATION_TYPE_RANDOM.
+	// rotation type is CREATIVE_ROTATION_TYPE_RANDOM. Value must be greater
+	// than or equal to 1.
 	Weight int64 `json:"weight,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Active") to
@@ -5077,12 +5085,9 @@ type CreativeGroup struct {
 	AdvertiserIdDimensionValue *DimensionValue `json:"advertiserIdDimensionValue,omitempty"`
 
 	// GroupNumber: Subgroup of the creative group. Assign your creative
-	// groups to one of the following subgroups in order to filter or manage
-	// them more easily. This field is required on insertion and is
-	// read-only after insertion.
-	// Acceptable values are:
-	// - 1
-	// - 2
+	// groups to a subgroup in order to filter or manage them more easily.
+	// This field is required on insertion and is read-only after insertion.
+	// Acceptable values are 1 to 2, inclusive.
 	GroupNumber int64 `json:"groupNumber,omitempty"`
 
 	// Id: ID of this creative group. This is a read-only, auto-generated
@@ -5683,13 +5688,13 @@ type DayPartTargeting struct {
 	//   "WEDNESDAY"
 	DaysOfWeek []string `json:"daysOfWeek,omitempty"`
 
-	// HoursOfDay: Hours of the day when the ad will serve. Must be an
-	// integer between 0 and 23 (inclusive), where 0 is midnight to 1 AM,
-	// and 23 is 11 PM to midnight. Can be specified with days of week, in
-	// which case the ad would serve during these hours on the specified
-	// days. For example, if Monday, Wednesday, Friday are the days of week
-	// specified and 9-10am, 3-5pm (hours 9, 15, and 16) is specified, the
-	// ad would serve Monday, Wednesdays, and Fridays at 9-10am and 3-5pm.
+	// HoursOfDay: Hours of the day when the ad will serve, where 0 is
+	// midnight to 1 AM and 23 is 11 PM to midnight. Can be specified with
+	// days of week, in which case the ad would serve during these hours on
+	// the specified days. For example if Monday, Wednesday, Friday are the
+	// days of week specified and 9-10am, 3-5pm (hours 9, 15, and 16) is
+	// specified, the ad would serve Monday, Wednesdays, and Fridays at
+	// 9-10am and 3-5pm. Acceptable values are 0 to 23, inclusive.
 	HoursOfDay []int64 `json:"hoursOfDay,omitempty"`
 
 	// UserLocalTime: Whether or not to use the user's local time. If false,
@@ -5771,8 +5776,8 @@ type DeliverySchedule struct {
 	// ImpressionRatio: Impression ratio for this ad. This ratio determines
 	// how often each ad is served relative to the others. For example, if
 	// ad A has an impression ratio of 1 and ad B has an impression ratio of
-	// 3, then DCM will serve ad B three times as often as ad A. Must be
-	// between 1 and 10.
+	// 3, then DCM will serve ad B three times as often as ad A. Acceptable
+	// values are 1 to 10, inclusive.
 	ImpressionRatio int64 `json:"impressionRatio,omitempty,string"`
 
 	// Priority: Serving priority of an ad, with respect to other ads. The
@@ -6087,10 +6092,12 @@ type DirectorySite struct {
 	// ContactAssignments: Directory site contacts.
 	ContactAssignments []*DirectorySiteContactAssignment `json:"contactAssignments,omitempty"`
 
-	// CountryId: Country ID of this directory site.
+	// CountryId: Country ID of this directory site. This is a read-only
+	// field.
 	CountryId int64 `json:"countryId,omitempty,string"`
 
-	// CurrencyId: Currency ID of this directory site.
+	// CurrencyId: Currency ID of this directory site. This is a read-only
+	// field.
 	// Possible values are:
 	// - "1" for USD
 	// - "2" for GBP
@@ -6139,9 +6146,11 @@ type DirectorySite struct {
 	// - "46" for AED
 	// - "47" for BGN
 	// - "48" for HRK
+	// - "49" for MXN
 	CurrencyId int64 `json:"currencyId,omitempty,string"`
 
-	// Description: Description of this directory site.
+	// Description: Description of this directory site. This is a read-only
+	// field.
 	Description string `json:"description,omitempty"`
 
 	// Id: ID of this directory site. This is a read-only, auto-generated
@@ -6404,7 +6413,7 @@ type DirectorySiteSettings struct {
 	VerificationTagOptOut bool `json:"verificationTagOptOut,omitempty"`
 
 	// VideoActiveViewOptOut: Whether this directory site has disabled
-	// active view for in-stream video creatives.
+	// active view for in-stream video creatives. This is a read-only field.
 	VideoActiveViewOptOut bool `json:"videoActiveViewOptOut,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ActiveViewOptOut") to
@@ -7098,7 +7107,8 @@ type FloodlightActivity struct {
 	AdvertiserIdDimensionValue *DimensionValue `json:"advertiserIdDimensionValue,omitempty"`
 
 	// CacheBustingType: Code type used for cache busting in the generated
-	// tag.
+	// tag. Applicable only when floodlightActivityGroupType is COUNTER and
+	// countingMethod is STANDARD_COUNTING or UNIQUE_COUNTING.
 	//
 	// Possible values:
 	//   "ACTIVE_SERVER_PAGE"
@@ -7218,29 +7228,9 @@ type FloodlightActivity struct {
 	TagString string `json:"tagString,omitempty"`
 
 	// UserDefinedVariableTypes: List of the user-defined variables used by
-	// this conversion tag. These map to the "u[1-20]=" in the tags. Each of
-	// these can have a user defined type.
-	// Acceptable values are:
-	// - "U1"
-	// - "U2"
-	// - "U3"
-	// - "U4"
-	// - "U5"
-	// - "U6"
-	// - "U7"
-	// - "U8"
-	// - "U9"
-	// - "U10"
-	// - "U11"
-	// - "U12"
-	// - "U13"
-	// - "U14"
-	// - "U15"
-	// - "U16"
-	// - "U17"
-	// - "U18"
-	// - "U19"
-	// - "U20"
+	// this conversion tag. These map to the "u[1-100]=" in the tags. Each
+	// of these can have a user defined type.
+	// Acceptable values are U1 to U100, inclusive.
 	//
 	// Possible values:
 	//   "U1"
@@ -7795,11 +7785,13 @@ func (s *FloodlightReportCompatibleFields) MarshalJSON() ([]byte, error) {
 // FrequencyCap: Frequency Cap.
 type FrequencyCap struct {
 	// Duration: Duration of time, in seconds, for this frequency cap. The
-	// maximum duration is 90 days in seconds, or 7,776,000.
+	// maximum duration is 90 days. Acceptable values are 1 to 7776000,
+	// inclusive.
 	Duration int64 `json:"duration,omitempty,string"`
 
 	// Impressions: Number of times an individual user can be served the ad
-	// within the specified duration. The maximum allowed is 15.
+	// within the specified duration. Acceptable values are 1 to 15,
+	// inclusive.
 	Impressions int64 `json:"impressions,omitempty,string"`
 
 	// ForceSendFields is a list of field names (e.g. "Duration") to
@@ -8519,13 +8511,15 @@ type LookbackConfiguration struct {
 	// user clicked on one of your ads. If you enter 0, clicks will not be
 	// considered as triggering events for floodlight tracking. If you leave
 	// this field blank, the default value for your account will be used.
+	// Acceptable values are 0 to 90, inclusive.
 	ClickDuration int64 `json:"clickDuration,omitempty"`
 
 	// PostImpressionActivitiesDuration: Lookback window, in days, from the
 	// last time a given user viewed one of your ads. If you enter 0,
 	// impressions will not be considered as triggering events for
 	// floodlight tracking. If you leave this field blank, the default value
-	// for your account will be used.
+	// for your account will be used. Acceptable values are 0 to 90,
+	// inclusive.
 	PostImpressionActivitiesDuration int64 `json:"postImpressionActivitiesDuration,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ClickDuration") to
@@ -9047,9 +9041,9 @@ type OptimizationActivity struct {
 	// floodlight activity. This is a read-only, auto-generated field.
 	FloodlightActivityIdDimensionValue *DimensionValue `json:"floodlightActivityIdDimensionValue,omitempty"`
 
-	// Weight: Weight associated with this optimization. Must be greater
-	// than 1. The weight assigned will be understood in proportion to the
-	// weights assigned to the other optimization activities.
+	// Weight: Weight associated with this optimization. The weight assigned
+	// will be understood in proportion to the weights assigned to the other
+	// optimization activities. Value must be greater than or equal to 1.
 	Weight int64 `json:"weight,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g.
@@ -9617,6 +9611,8 @@ type Placement struct {
 	// - "PLACEMENT_TAG_INTERSTITIAL_JAVASCRIPT"
 	// - "PLACEMENT_TAG_CLICK_COMMANDS"
 	// - "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH"
+	// - "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_3"
+	// - "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_4"
 	// - "PLACEMENT_TAG_TRACKING"
 	// - "PLACEMENT_TAG_TRACKING_IFRAME"
 	// - "PLACEMENT_TAG_TRACKING_JAVASCRIPT"
@@ -9628,6 +9624,7 @@ type Placement struct {
 	//   "PLACEMENT_TAG_IFRAME_JAVASCRIPT_LEGACY"
 	//   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH"
 	//   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_3"
+	//   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_4"
 	//   "PLACEMENT_TAG_INTERNAL_REDIRECT"
 	//   "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT"
 	//   "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT_LEGACY"
@@ -9663,6 +9660,9 @@ type Placement struct {
 	// VpaidAdapterChoice: VPAID adapter setting for this placement.
 	// Controls which VPAID format the measurement adapter will use for
 	// in-stream video creatives assigned to this placement.
+	//
+	// Note: Flash is no longer supported. This field now defaults to HTML5
+	// when the following values are provided: FLASH, BOTH.
 	//
 	// Possible values:
 	//   "BOTH"
@@ -10503,7 +10503,9 @@ type PricingSchedulePricingPeriod struct {
 	// PricingComment: Comments for this pricing period.
 	PricingComment string `json:"pricingComment,omitempty"`
 
-	// RateOrCostNanos: Rate or cost of this pricing period.
+	// RateOrCostNanos: Rate or cost of this pricing period in nanos (i.e.,
+	// multipled by 1000000000). Acceptable values are 0 to
+	// 1000000000000000000, inclusive.
 	RateOrCostNanos int64 `json:"rateOrCostNanos,omitempty,string"`
 
 	// StartDate: Pricing period start date. This date must be later than,
@@ -10512,7 +10514,8 @@ type PricingSchedulePricingPeriod struct {
 	// in an error.
 	StartDate string `json:"startDate,omitempty"`
 
-	// Units: Units of this pricing period.
+	// Units: Units of this pricing period. Acceptable values are 0 to
+	// 10000000000, inclusive.
 	Units int64 `json:"units,omitempty,string"`
 
 	// ForceSendFields is a list of field names (e.g. "EndDate") to
@@ -10901,7 +10904,8 @@ type RemarketingList struct {
 	Kind string `json:"kind,omitempty"`
 
 	// LifeSpan: Number of days that a user should remain in the remarketing
-	// list without an impression.
+	// list without an impression. Acceptable values are 1 to 540,
+	// inclusive.
 	LifeSpan int64 `json:"lifeSpan,omitempty,string"`
 
 	// ListPopulationRule: Rule used to populate the remarketing list with
@@ -12066,8 +12070,11 @@ type SiteSettings struct {
 	// measurement adapter will use for in-stream video creatives assigned
 	// to the placement. The publisher's specifications will typically
 	// determine this setting. For VPAID creatives, the adapter format will
-	// match the VPAID format (HTML5 VPAID creatives use the HTML5 adapter,
-	// and Flash VPAID creatives use the Flash adapter).
+	// match the VPAID format (HTML5 VPAID creatives use the HTML5
+	// adapter).
+	//
+	// Note: Flash is no longer supported. This field now defaults to HTML5
+	// when the following values are provided: FLASH, BOTH.
 	//
 	// Possible values:
 	//   "BOTH"
@@ -12143,7 +12150,8 @@ func (s *SitesListResponse) MarshalJSON() ([]byte, error) {
 // Size: Represents the dimensions of ads, placements, creatives, or
 // creative assets.
 type Size struct {
-	// Height: Height of this size.
+	// Height: Height of this size. Acceptable values are 0 to 32767,
+	// inclusive.
 	Height int64 `json:"height,omitempty"`
 
 	// Iab: IAB standard size. This is a read-only, auto-generated field.
@@ -12156,7 +12164,8 @@ type Size struct {
 	// string "dfareporting#size".
 	Kind string `json:"kind,omitempty"`
 
-	// Width: Width of this size.
+	// Width: Width of this size. Acceptable values are 0 to 32767,
+	// inclusive.
 	Width int64 `json:"width,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -12394,13 +12403,15 @@ func (s *SubaccountsListResponse) MarshalJSON() ([]byte, error) {
 
 // TagData: Placement Tag Data
 type TagData struct {
-	// AdId: Ad associated with this placement tag.
+	// AdId: Ad associated with this placement tag. Applicable only when
+	// format is PLACEMENT_TAG_TRACKING.
 	AdId int64 `json:"adId,omitempty,string"`
 
 	// ClickTag: Tag string to record a click.
 	ClickTag string `json:"clickTag,omitempty"`
 
-	// CreativeId: Creative associated with this placement tag.
+	// CreativeId: Creative associated with this placement tag. Applicable
+	// only when format is PLACEMENT_TAG_TRACKING.
 	CreativeId int64 `json:"creativeId,omitempty,string"`
 
 	// Format: TagData tag format of this tag.
@@ -12412,6 +12423,7 @@ type TagData struct {
 	//   "PLACEMENT_TAG_IFRAME_JAVASCRIPT_LEGACY"
 	//   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH"
 	//   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_3"
+	//   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_4"
 	//   "PLACEMENT_TAG_INTERNAL_REDIRECT"
 	//   "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT"
 	//   "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT_LEGACY"
@@ -13613,11 +13625,12 @@ func (s *VideoFormatsListResponse) MarshalJSON() ([]byte, error) {
 // VideoOffset: Video Offset
 type VideoOffset struct {
 	// OffsetPercentage: Duration, as a percentage of video duration. Do not
-	// set when offsetSeconds is set.
+	// set when offsetSeconds is set. Acceptable values are 0 to 100,
+	// inclusive.
 	OffsetPercentage int64 `json:"offsetPercentage,omitempty"`
 
 	// OffsetSeconds: Duration, in seconds. Do not set when offsetPercentage
-	// is set.
+	// is set. Acceptable values are 0 to 86399, inclusive.
 	OffsetSeconds int64 `json:"offsetSeconds,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "OffsetPercentage") to
@@ -14764,7 +14777,7 @@ func (c *AccountUserProfilesListCall) SearchString(searchString string) *Account
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *AccountUserProfilesListCall) SortField(sortField string) *AccountUserProfilesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -14772,10 +14785,10 @@ func (c *AccountUserProfilesListCall) SortField(sortField string) *AccountUserPr
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *AccountUserProfilesListCall) SortOrder(sortOrder string) *AccountUserProfilesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -14910,9 +14923,12 @@ func (c *AccountUserProfilesListCall) Do(opts ...googleapi.CallOption) (*Account
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -14933,6 +14949,7 @@ func (c *AccountUserProfilesListCall) Do(opts ...googleapi.CallOption) (*Account
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -14946,7 +14963,8 @@ func (c *AccountUserProfilesListCall) Do(opts ...googleapi.CallOption) (*Account
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -15499,7 +15517,7 @@ func (c *AccountsListCall) SearchString(searchString string) *AccountsListCall {
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *AccountsListCall) SortField(sortField string) *AccountsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -15507,10 +15525,10 @@ func (c *AccountsListCall) SortField(sortField string) *AccountsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *AccountsListCall) SortOrder(sortOrder string) *AccountsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -15631,9 +15649,12 @@ func (c *AccountsListCall) Do(opts ...googleapi.CallOption) (*AccountsListRespon
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -15654,6 +15675,7 @@ func (c *AccountsListCall) Do(opts ...googleapi.CallOption) (*AccountsListRespon
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -15667,7 +15689,8 @@ func (c *AccountsListCall) Do(opts ...googleapi.CallOption) (*AccountsListRespon
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -16480,7 +16503,7 @@ func (c *AdsListCall) SizeIds(sizeIds ...int64) *AdsListCall {
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *AdsListCall) SortField(sortField string) *AdsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -16488,10 +16511,10 @@ func (c *AdsListCall) SortField(sortField string) *AdsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *AdsListCall) SortOrder(sortOrder string) *AdsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -16709,9 +16732,12 @@ func (c *AdsListCall) Do(opts ...googleapi.CallOption) (*AdsListResponse, error)
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "overriddenEventTagId": {
@@ -16759,6 +16785,7 @@ func (c *AdsListCall) Do(opts ...googleapi.CallOption) (*AdsListResponse, error)
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -16772,7 +16799,8 @@ func (c *AdsListCall) Do(opts ...googleapi.CallOption) (*AdsListResponse, error)
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -17574,7 +17602,7 @@ func (c *AdvertiserGroupsListCall) SearchString(searchString string) *Advertiser
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *AdvertiserGroupsListCall) SortField(sortField string) *AdvertiserGroupsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -17582,10 +17610,10 @@ func (c *AdvertiserGroupsListCall) SortField(sortField string) *AdvertiserGroups
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *AdvertiserGroupsListCall) SortOrder(sortOrder string) *AdvertiserGroupsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -17701,9 +17729,12 @@ func (c *AdvertiserGroupsListCall) Do(opts ...googleapi.CallOption) (*Advertiser
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -17724,6 +17755,7 @@ func (c *AdvertiserGroupsListCall) Do(opts ...googleapi.CallOption) (*Advertiser
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -17737,7 +17769,8 @@ func (c *AdvertiserGroupsListCall) Do(opts ...googleapi.CallOption) (*Advertiser
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -18442,7 +18475,7 @@ func (c *AdvertisersListCall) SearchString(searchString string) *AdvertisersList
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *AdvertisersListCall) SortField(sortField string) *AdvertisersListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -18450,10 +18483,10 @@ func (c *AdvertisersListCall) SortField(sortField string) *AdvertisersListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *AdvertisersListCall) SortOrder(sortOrder string) *AdvertisersListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -18606,9 +18639,12 @@ func (c *AdvertisersListCall) Do(opts ...googleapi.CallOption) (*AdvertisersList
 	//       "type": "boolean"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "onlyParent": {
@@ -18634,6 +18670,7 @@ func (c *AdvertisersListCall) Do(opts ...googleapi.CallOption) (*AdvertisersList
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -18647,7 +18684,8 @@ func (c *AdvertisersListCall) Do(opts ...googleapi.CallOption) (*AdvertisersList
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -19310,10 +19348,10 @@ func (c *CampaignCreativeAssociationsListCall) PageToken(pageToken string) *Camp
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *CampaignCreativeAssociationsListCall) SortOrder(sortOrder string) *CampaignCreativeAssociationsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -19433,9 +19471,12 @@ func (c *CampaignCreativeAssociationsListCall) Do(opts ...googleapi.CallOption) 
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -19451,7 +19492,8 @@ func (c *CampaignCreativeAssociationsListCall) Do(opts ...googleapi.CallOption) 
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -19914,7 +19956,7 @@ func (c *CampaignsListCall) SearchString(searchString string) *CampaignsListCall
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *CampaignsListCall) SortField(sortField string) *CampaignsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -19922,10 +19964,10 @@ func (c *CampaignsListCall) SortField(sortField string) *CampaignsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *CampaignsListCall) SortOrder(sortOrder string) *CampaignsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -20079,9 +20121,12 @@ func (c *CampaignsListCall) Do(opts ...googleapi.CallOption) (*CampaignsListResp
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "overriddenEventTagId": {
@@ -20108,6 +20153,7 @@ func (c *CampaignsListCall) Do(opts ...googleapi.CallOption) (*CampaignsListResp
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -20121,7 +20167,8 @@ func (c *CampaignsListCall) Do(opts ...googleapi.CallOption) (*CampaignsListResp
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -20929,9 +20976,12 @@ func (c *ChangeLogsListCall) Do(opts ...googleapi.CallOption) (*ChangeLogsListRe
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "minChangeTime": {
@@ -22033,7 +22083,7 @@ func (c *ContentCategoriesListCall) SearchString(searchString string) *ContentCa
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *ContentCategoriesListCall) SortField(sortField string) *ContentCategoriesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -22041,10 +22091,10 @@ func (c *ContentCategoriesListCall) SortField(sortField string) *ContentCategori
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *ContentCategoriesListCall) SortOrder(sortOrder string) *ContentCategoriesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -22160,9 +22210,12 @@ func (c *ContentCategoriesListCall) Do(opts ...googleapi.CallOption) (*ContentCa
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -22183,6 +22236,7 @@ func (c *ContentCategoriesListCall) Do(opts ...googleapi.CallOption) (*ContentCa
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -22196,7 +22250,8 @@ func (c *ContentCategoriesListCall) Do(opts ...googleapi.CallOption) (*ContentCa
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -23684,7 +23739,7 @@ func (c *CreativeFieldValuesListCall) SearchString(searchString string) *Creativ
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "VALUE"
 func (c *CreativeFieldValuesListCall) SortField(sortField string) *CreativeFieldValuesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -23692,10 +23747,10 @@ func (c *CreativeFieldValuesListCall) SortField(sortField string) *CreativeField
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *CreativeFieldValuesListCall) SortOrder(sortOrder string) *CreativeFieldValuesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -23820,9 +23875,12 @@ func (c *CreativeFieldValuesListCall) Do(opts ...googleapi.CallOption) (*Creativ
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -23843,6 +23901,7 @@ func (c *CreativeFieldValuesListCall) Do(opts ...googleapi.CallOption) (*Creativ
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -23856,7 +23915,8 @@ func (c *CreativeFieldValuesListCall) Do(opts ...googleapi.CallOption) (*Creativ
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -24664,7 +24724,7 @@ func (c *CreativeFieldsListCall) SearchString(searchString string) *CreativeFiel
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *CreativeFieldsListCall) SortField(sortField string) *CreativeFieldsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -24672,10 +24732,10 @@ func (c *CreativeFieldsListCall) SortField(sortField string) *CreativeFieldsList
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *CreativeFieldsListCall) SortOrder(sortOrder string) *CreativeFieldsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -24798,9 +24858,12 @@ func (c *CreativeFieldsListCall) Do(opts ...googleapi.CallOption) (*CreativeFiel
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -24821,6 +24884,7 @@ func (c *CreativeFieldsListCall) Do(opts ...googleapi.CallOption) (*CreativeFiel
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -24834,7 +24898,8 @@ func (c *CreativeFieldsListCall) Do(opts ...googleapi.CallOption) (*CreativeFiel
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -25520,7 +25585,7 @@ func (c *CreativeGroupsListCall) SearchString(searchString string) *CreativeGrou
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *CreativeGroupsListCall) SortField(sortField string) *CreativeGroupsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -25528,10 +25593,10 @@ func (c *CreativeGroupsListCall) SortField(sortField string) *CreativeGroupsList
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *CreativeGroupsListCall) SortOrder(sortOrder string) *CreativeGroupsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -25650,6 +25715,8 @@ func (c *CreativeGroupsListCall) Do(opts ...googleapi.CallOption) (*CreativeGrou
 	//       "description": "Select only creative groups that belong to this subgroup.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "2",
+	//       "minimum": "1",
 	//       "type": "integer"
 	//     },
 	//     "ids": {
@@ -25660,9 +25727,12 @@ func (c *CreativeGroupsListCall) Do(opts ...googleapi.CallOption) (*CreativeGrou
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -25683,6 +25753,7 @@ func (c *CreativeGroupsListCall) Do(opts ...googleapi.CallOption) (*CreativeGrou
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -25696,7 +25767,8 @@ func (c *CreativeGroupsListCall) Do(opts ...googleapi.CallOption) (*CreativeGrou
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -26436,7 +26508,7 @@ func (c *CreativesListCall) SizeIds(sizeIds ...int64) *CreativesListCall {
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *CreativesListCall) SortField(sortField string) *CreativesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -26444,10 +26516,10 @@ func (c *CreativesListCall) SortField(sortField string) *CreativesListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *CreativesListCall) SortOrder(sortOrder string) *CreativesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -26639,9 +26711,12 @@ func (c *CreativesListCall) Do(opts ...googleapi.CallOption) (*CreativesListResp
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -26676,6 +26751,7 @@ func (c *CreativesListCall) Do(opts ...googleapi.CallOption) (*CreativesListResp
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -26689,7 +26765,8 @@ func (c *CreativesListCall) Do(opts ...googleapi.CallOption) (*CreativesListResp
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -27204,6 +27281,7 @@ func (c *DimensionValuesQueryCall) Do(opts ...googleapi.CallOption) (*DimensionV
 	//   ],
 	//   "parameters": {
 	//     "maxResults": {
+	//       "default": "100",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
@@ -27236,6 +27314,27 @@ func (c *DimensionValuesQueryCall) Do(opts ...googleapi.CallOption) (*DimensionV
 	//   ]
 	// }
 
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *DimensionValuesQueryCall) Pages(ctx context.Context, f func(*DimensionValueList) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
 }
 
 // method id "dfareporting.directorySiteContacts.get":
@@ -27462,7 +27561,7 @@ func (c *DirectorySiteContactsListCall) SearchString(searchString string) *Direc
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *DirectorySiteContactsListCall) SortField(sortField string) *DirectorySiteContactsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -27470,10 +27569,10 @@ func (c *DirectorySiteContactsListCall) SortField(sortField string) *DirectorySi
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *DirectorySiteContactsListCall) SortOrder(sortOrder string) *DirectorySiteContactsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -27597,9 +27696,12 @@ func (c *DirectorySiteContactsListCall) Do(opts ...googleapi.CallOption) (*Direc
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -27620,6 +27722,7 @@ func (c *DirectorySiteContactsListCall) Do(opts ...googleapi.CallOption) (*Direc
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -27633,7 +27736,8 @@ func (c *DirectorySiteContactsListCall) Do(opts ...googleapi.CallOption) (*Direc
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -28076,7 +28180,7 @@ func (c *DirectorySitesListCall) SearchString(searchString string) *DirectorySit
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *DirectorySitesListCall) SortField(sortField string) *DirectorySitesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -28084,10 +28188,10 @@ func (c *DirectorySitesListCall) SortField(sortField string) *DirectorySitesList
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *DirectorySitesListCall) SortOrder(sortOrder string) *DirectorySitesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -28234,9 +28338,12 @@ func (c *DirectorySitesListCall) Do(opts ...googleapi.CallOption) (*DirectorySit
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -28263,6 +28370,7 @@ func (c *DirectorySitesListCall) Do(opts ...googleapi.CallOption) (*DirectorySit
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -28276,7 +28384,8 @@ func (c *DirectorySitesListCall) Do(opts ...googleapi.CallOption) (*DirectorySit
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -29299,7 +29408,7 @@ func (c *EventTagsListCall) SearchString(searchString string) *EventTagsListCall
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *EventTagsListCall) SortField(sortField string) *EventTagsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -29307,10 +29416,10 @@ func (c *EventTagsListCall) SortField(sortField string) *EventTagsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *EventTagsListCall) SortOrder(sortOrder string) *EventTagsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -29482,6 +29591,7 @@ func (c *EventTagsListCall) Do(opts ...googleapi.CallOption) (*EventTagsListResp
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -29495,7 +29605,8 @@ func (c *EventTagsListCall) Do(opts ...googleapi.CallOption) (*EventTagsListResp
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -29809,7 +29920,8 @@ type FilesGetCall struct {
 	header_      http.Header
 }
 
-// Get: Retrieves a report file by its report ID and file ID.
+// Get: Retrieves a report file by its report ID and file ID. This
+// method supports media download.
 func (r *FilesService) Get(reportId int64, fileId int64) *FilesGetCall {
 	c := &FilesGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.reportId = reportId
@@ -29928,7 +30040,7 @@ func (c *FilesGetCall) Do(opts ...googleapi.CallOption) (*File, error) {
 	}
 	return ret, nil
 	// {
-	//   "description": "Retrieves a report file by its report ID and file ID.",
+	//   "description": "Retrieves a report file by its report ID and file ID. This method supports media download.",
 	//   "httpMethod": "GET",
 	//   "id": "dfareporting.files.get",
 	//   "parameterOrder": [
@@ -29996,7 +30108,7 @@ func (c *FilesListCall) PageToken(pageToken string) *FilesListCall {
 }
 
 // Scope sets the optional parameter "scope": The scope that defines
-// which results are returned, default is 'MINE'.
+// which results are returned.
 //
 // Possible values:
 //   "ALL" - All files in account.
@@ -30019,7 +30131,7 @@ func (c *FilesListCall) SortField(sortField string) *FilesListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is 'DESCENDING'.
+// results.
 //
 // Possible values:
 //   "ASCENDING" - Ascending order.
@@ -30131,6 +30243,7 @@ func (c *FilesListCall) Do(opts ...googleapi.CallOption) (*FileList, error) {
 	//   ],
 	//   "parameters": {
 	//     "maxResults": {
+	//       "default": "10",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
@@ -30152,7 +30265,7 @@ func (c *FilesListCall) Do(opts ...googleapi.CallOption) (*FileList, error) {
 	//     },
 	//     "scope": {
 	//       "default": "MINE",
-	//       "description": "The scope that defines which results are returned, default is 'MINE'.",
+	//       "description": "The scope that defines which results are returned.",
 	//       "enum": [
 	//         "ALL",
 	//         "MINE",
@@ -30182,7 +30295,7 @@ func (c *FilesListCall) Do(opts ...googleapi.CallOption) (*FileList, error) {
 	//     },
 	//     "sortOrder": {
 	//       "default": "DESCENDING",
-	//       "description": "Order of sorted results, default is 'DESCENDING'.",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -30877,7 +30990,7 @@ func (c *FloodlightActivitiesListCall) SearchString(searchString string) *Floodl
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *FloodlightActivitiesListCall) SortField(sortField string) *FloodlightActivitiesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -30885,10 +30998,10 @@ func (c *FloodlightActivitiesListCall) SortField(sortField string) *FloodlightAc
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *FloodlightActivitiesListCall) SortOrder(sortOrder string) *FloodlightActivitiesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -31053,9 +31166,12 @@ func (c *FloodlightActivitiesListCall) Do(opts ...googleapi.CallOption) (*Floodl
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -31076,6 +31192,7 @@ func (c *FloodlightActivitiesListCall) Do(opts ...googleapi.CallOption) (*Floodl
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -31089,7 +31206,8 @@ func (c *FloodlightActivitiesListCall) Do(opts ...googleapi.CallOption) (*Floodl
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -31782,7 +31900,7 @@ func (c *FloodlightActivityGroupsListCall) SearchString(searchString string) *Fl
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *FloodlightActivityGroupsListCall) SortField(sortField string) *FloodlightActivityGroupsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -31790,10 +31908,10 @@ func (c *FloodlightActivityGroupsListCall) SortField(sortField string) *Floodlig
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *FloodlightActivityGroupsListCall) SortOrder(sortOrder string) *FloodlightActivityGroupsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -31933,9 +32051,12 @@ func (c *FloodlightActivityGroupsListCall) Do(opts ...googleapi.CallOption) (*Fl
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -31956,6 +32077,7 @@ func (c *FloodlightActivityGroupsListCall) Do(opts ...googleapi.CallOption) (*Fl
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -31969,7 +32091,8 @@ func (c *FloodlightActivityGroupsListCall) Do(opts ...googleapi.CallOption) (*Fl
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -33130,7 +33253,7 @@ func (c *InventoryItemsListCall) SiteId(siteId ...int64) *InventoryItemsListCall
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *InventoryItemsListCall) SortField(sortField string) *InventoryItemsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -33138,10 +33261,10 @@ func (c *InventoryItemsListCall) SortField(sortField string) *InventoryItemsList
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *InventoryItemsListCall) SortOrder(sortOrder string) *InventoryItemsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -33275,9 +33398,12 @@ func (c *InventoryItemsListCall) Do(opts ...googleapi.CallOption) (*InventoryIte
 	//       "type": "boolean"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "orderId": {
@@ -33314,6 +33440,7 @@ func (c *InventoryItemsListCall) Do(opts ...googleapi.CallOption) (*InventoryIte
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -33327,7 +33454,8 @@ func (c *InventoryItemsListCall) Do(opts ...googleapi.CallOption) (*InventoryIte
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -35648,7 +35776,7 @@ func (c *OrderDocumentsListCall) SiteId(siteId ...int64) *OrderDocumentsListCall
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *OrderDocumentsListCall) SortField(sortField string) *OrderDocumentsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -35656,10 +35784,10 @@ func (c *OrderDocumentsListCall) SortField(sortField string) *OrderDocumentsList
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *OrderDocumentsListCall) SortOrder(sortOrder string) *OrderDocumentsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -35782,9 +35910,12 @@ func (c *OrderDocumentsListCall) Do(opts ...googleapi.CallOption) (*OrderDocumen
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "orderId": {
@@ -35826,6 +35957,7 @@ func (c *OrderDocumentsListCall) Do(opts ...googleapi.CallOption) (*OrderDocumen
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -35839,7 +35971,8 @@ func (c *OrderDocumentsListCall) Do(opts ...googleapi.CallOption) (*OrderDocumen
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -36117,7 +36250,7 @@ func (c *OrdersListCall) SiteId(siteId ...int64) *OrdersListCall {
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *OrdersListCall) SortField(sortField string) *OrdersListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -36125,10 +36258,10 @@ func (c *OrdersListCall) SortField(sortField string) *OrdersListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *OrdersListCall) SortOrder(sortOrder string) *OrdersListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -36246,9 +36379,12 @@ func (c *OrdersListCall) Do(opts ...googleapi.CallOption) (*OrdersListResponse, 
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -36283,6 +36419,7 @@ func (c *OrdersListCall) Do(opts ...googleapi.CallOption) (*OrdersListResponse, 
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -36296,7 +36433,8 @@ func (c *OrdersListCall) Do(opts ...googleapi.CallOption) (*OrdersListResponse, 
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -36826,7 +36964,7 @@ func (c *PlacementGroupsListCall) SiteIds(siteIds ...int64) *PlacementGroupsList
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *PlacementGroupsListCall) SortField(sortField string) *PlacementGroupsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -36834,10 +36972,10 @@ func (c *PlacementGroupsListCall) SortField(sortField string) *PlacementGroupsLi
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *PlacementGroupsListCall) SortOrder(sortOrder string) *PlacementGroupsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -36991,9 +37129,12 @@ func (c *PlacementGroupsListCall) Do(opts ...googleapi.CallOption) (*PlacementGr
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "800",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "800",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "maxStartDate": {
@@ -37078,6 +37219,7 @@ func (c *PlacementGroupsListCall) Do(opts ...googleapi.CallOption) (*PlacementGr
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -37091,7 +37233,8 @@ func (c *PlacementGroupsListCall) Do(opts ...googleapi.CallOption) (*PlacementGr
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -37866,7 +38009,7 @@ func (c *PlacementStrategiesListCall) SearchString(searchString string) *Placeme
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *PlacementStrategiesListCall) SortField(sortField string) *PlacementStrategiesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -37874,10 +38017,10 @@ func (c *PlacementStrategiesListCall) SortField(sortField string) *PlacementStra
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *PlacementStrategiesListCall) SortOrder(sortOrder string) *PlacementStrategiesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -37993,9 +38136,12 @@ func (c *PlacementStrategiesListCall) Do(opts ...googleapi.CallOption) (*Placeme
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -38016,6 +38162,7 @@ func (c *PlacementStrategiesListCall) Do(opts ...googleapi.CallOption) (*Placeme
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -38029,7 +38176,8 @@ func (c *PlacementStrategiesListCall) Do(opts ...googleapi.CallOption) (*Placeme
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -38390,6 +38538,9 @@ func (c *PlacementsGeneratetagsCall) PlacementIds(placementIds ...int64) *Placem
 // TagFormats sets the optional parameter "tagFormats": Tag formats to
 // generate for these placements.
 //
+// Note: PLACEMENT_TAG_STANDARD can only be generated for 1x1
+// placements.
+//
 // Possible values:
 //   "PLACEMENT_TAG_CLICK_COMMANDS"
 //   "PLACEMENT_TAG_IFRAME_ILAYER"
@@ -38397,6 +38548,7 @@ func (c *PlacementsGeneratetagsCall) PlacementIds(placementIds ...int64) *Placem
 //   "PLACEMENT_TAG_IFRAME_JAVASCRIPT_LEGACY"
 //   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH"
 //   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_3"
+//   "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_4"
 //   "PLACEMENT_TAG_INTERNAL_REDIRECT"
 //   "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT"
 //   "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT_LEGACY"
@@ -38523,7 +38675,7 @@ func (c *PlacementsGeneratetagsCall) Do(opts ...googleapi.CallOption) (*Placemen
 	//       "type": "string"
 	//     },
 	//     "tagFormats": {
-	//       "description": "Tag formats to generate for these placements.",
+	//       "description": "Tag formats to generate for these placements.\n\nNote: PLACEMENT_TAG_STANDARD can only be generated for 1x1 placements.",
 	//       "enum": [
 	//         "PLACEMENT_TAG_CLICK_COMMANDS",
 	//         "PLACEMENT_TAG_IFRAME_ILAYER",
@@ -38531,6 +38683,7 @@ func (c *PlacementsGeneratetagsCall) Do(opts ...googleapi.CallOption) (*Placemen
 	//         "PLACEMENT_TAG_IFRAME_JAVASCRIPT_LEGACY",
 	//         "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH",
 	//         "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_3",
+	//         "PLACEMENT_TAG_INSTREAM_VIDEO_PREFETCH_VAST_4",
 	//         "PLACEMENT_TAG_INTERNAL_REDIRECT",
 	//         "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT",
 	//         "PLACEMENT_TAG_INTERSTITIAL_IFRAME_JAVASCRIPT_LEGACY",
@@ -38545,6 +38698,7 @@ func (c *PlacementsGeneratetagsCall) Do(opts ...googleapi.CallOption) (*Placemen
 	//         "PLACEMENT_TAG_TRACKING_JAVASCRIPT"
 	//       ],
 	//       "enumDescriptions": [
+	//         "",
 	//         "",
 	//         "",
 	//         "",
@@ -39100,7 +39254,7 @@ func (c *PlacementsListCall) SizeIds(sizeIds ...int64) *PlacementsListCall {
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *PlacementsListCall) SortField(sortField string) *PlacementsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -39108,10 +39262,10 @@ func (c *PlacementsListCall) SortField(sortField string) *PlacementsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *PlacementsListCall) SortOrder(sortOrder string) *PlacementsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -39292,9 +39446,12 @@ func (c *PlacementsListCall) Do(opts ...googleapi.CallOption) (*PlacementsListRe
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "maxStartDate": {
@@ -39386,6 +39543,7 @@ func (c *PlacementsListCall) Do(opts ...googleapi.CallOption) (*PlacementsListRe
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -39399,7 +39557,8 @@ func (c *PlacementsListCall) Do(opts ...googleapi.CallOption) (*PlacementsListRe
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -40516,7 +40675,7 @@ func (c *ProjectsListCall) SearchString(searchString string) *ProjectsListCall {
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *ProjectsListCall) SortField(sortField string) *ProjectsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -40524,10 +40683,10 @@ func (c *ProjectsListCall) SortField(sortField string) *ProjectsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *ProjectsListCall) SortOrder(sortOrder string) *ProjectsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -40650,9 +40809,12 @@ func (c *ProjectsListCall) Do(opts ...googleapi.CallOption) (*ProjectsListRespon
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -40673,6 +40835,7 @@ func (c *ProjectsListCall) Do(opts ...googleapi.CallOption) (*ProjectsListRespon
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -40686,7 +40849,8 @@ func (c *ProjectsListCall) Do(opts ...googleapi.CallOption) (*ProjectsListRespon
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -41645,7 +41809,7 @@ func (c *RemarketingListsListCall) PageToken(pageToken string) *RemarketingLists
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *RemarketingListsListCall) SortField(sortField string) *RemarketingListsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -41653,10 +41817,10 @@ func (c *RemarketingListsListCall) SortField(sortField string) *RemarketingLists
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *RemarketingListsListCall) SortOrder(sortOrder string) *RemarketingListsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -41784,9 +41948,12 @@ func (c *RemarketingListsListCall) Do(opts ...googleapi.CallOption) (*Remarketin
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "name": {
@@ -41807,6 +41974,7 @@ func (c *RemarketingListsListCall) Do(opts ...googleapi.CallOption) (*Remarketin
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -41820,7 +41988,8 @@ func (c *RemarketingListsListCall) Do(opts ...googleapi.CallOption) (*Remarketin
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -42566,7 +42735,7 @@ func (c *ReportsListCall) PageToken(pageToken string) *ReportsListCall {
 }
 
 // Scope sets the optional parameter "scope": The scope that defines
-// which results are returned, default is 'MINE'.
+// which results are returned.
 //
 // Possible values:
 //   "ALL" - All reports in account.
@@ -42589,7 +42758,7 @@ func (c *ReportsListCall) SortField(sortField string) *ReportsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is 'DESCENDING'.
+// results.
 //
 // Possible values:
 //   "ASCENDING" - Ascending order.
@@ -42701,6 +42870,7 @@ func (c *ReportsListCall) Do(opts ...googleapi.CallOption) (*ReportList, error) 
 	//   ],
 	//   "parameters": {
 	//     "maxResults": {
+	//       "default": "10",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
@@ -42722,7 +42892,7 @@ func (c *ReportsListCall) Do(opts ...googleapi.CallOption) (*ReportList, error) 
 	//     },
 	//     "scope": {
 	//       "default": "MINE",
-	//       "description": "The scope that defines which results are returned, default is 'MINE'.",
+	//       "description": "The scope that defines which results are returned.",
 	//       "enum": [
 	//         "ALL",
 	//         "MINE"
@@ -42752,7 +42922,7 @@ func (c *ReportsListCall) Do(opts ...googleapi.CallOption) (*ReportList, error) 
 	//     },
 	//     "sortOrder": {
 	//       "default": "DESCENDING",
-	//       "description": "Order of sorted results, default is 'DESCENDING'.",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -43073,6 +43243,7 @@ func (c *ReportsRunCall) Do(opts ...googleapi.CallOption) (*File, error) {
 	//       "type": "string"
 	//     },
 	//     "synchronous": {
+	//       "default": "false",
 	//       "description": "If set and true, tries to run the report synchronously.",
 	//       "location": "query",
 	//       "type": "boolean"
@@ -43383,7 +43554,7 @@ type ReportsFilesGetCall struct {
 	header_      http.Header
 }
 
-// Get: Retrieves a report file.
+// Get: Retrieves a report file. This method supports media download.
 func (r *ReportsFilesService) Get(profileId int64, reportId int64, fileId int64) *ReportsFilesGetCall {
 	c := &ReportsFilesGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.profileId = profileId
@@ -43504,7 +43675,7 @@ func (c *ReportsFilesGetCall) Do(opts ...googleapi.CallOption) (*File, error) {
 	}
 	return ret, nil
 	// {
-	//   "description": "Retrieves a report file.",
+	//   "description": "Retrieves a report file. This method supports media download.",
 	//   "httpMethod": "GET",
 	//   "id": "dfareporting.reports.files.get",
 	//   "parameterOrder": [
@@ -43593,7 +43764,7 @@ func (c *ReportsFilesListCall) SortField(sortField string) *ReportsFilesListCall
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is 'DESCENDING'.
+// results.
 //
 // Possible values:
 //   "ASCENDING" - Ascending order.
@@ -43707,6 +43878,7 @@ func (c *ReportsFilesListCall) Do(opts ...googleapi.CallOption) (*FileList, erro
 	//   ],
 	//   "parameters": {
 	//     "maxResults": {
+	//       "default": "10",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
@@ -43749,7 +43921,7 @@ func (c *ReportsFilesListCall) Do(opts ...googleapi.CallOption) (*FileList, erro
 	//     },
 	//     "sortOrder": {
 	//       "default": "DESCENDING",
-	//       "description": "Order of sorted results, default is 'DESCENDING'.",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -44197,7 +44369,7 @@ func (c *SitesListCall) SearchString(searchString string) *SitesListCall {
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *SitesListCall) SortField(sortField string) *SitesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -44205,10 +44377,10 @@ func (c *SitesListCall) SortField(sortField string) *SitesListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *SitesListCall) SortOrder(sortOrder string) *SitesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -44377,9 +44549,12 @@ func (c *SitesListCall) Do(opts ...googleapi.CallOption) (*SitesListResponse, er
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -44400,6 +44575,7 @@ func (c *SitesListCall) Do(opts ...googleapi.CallOption) (*SitesListResponse, er
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -44413,7 +44589,8 @@ func (c *SitesListCall) Do(opts ...googleapi.CallOption) (*SitesListResponse, er
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -45185,6 +45362,8 @@ func (c *SizesListCall) Do(opts ...googleapi.CallOption) (*SizesListResponse, er
 	//       "description": "Select only sizes with this height.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "32767",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "iabStandard": {
@@ -45210,6 +45389,8 @@ func (c *SizesListCall) Do(opts ...googleapi.CallOption) (*SizesListResponse, er
 	//       "description": "Select only sizes with this width.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "32767",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     }
 	//   },
@@ -45568,7 +45749,7 @@ func (c *SubaccountsListCall) SearchString(searchString string) *SubaccountsList
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *SubaccountsListCall) SortField(sortField string) *SubaccountsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -45576,10 +45757,10 @@ func (c *SubaccountsListCall) SortField(sortField string) *SubaccountsListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *SubaccountsListCall) SortOrder(sortOrder string) *SubaccountsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -45695,9 +45876,12 @@ func (c *SubaccountsListCall) Do(opts ...googleapi.CallOption) (*SubaccountsList
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -45718,6 +45902,7 @@ func (c *SubaccountsListCall) Do(opts ...googleapi.CallOption) (*SubaccountsList
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -45731,7 +45916,8 @@ func (c *SubaccountsListCall) Do(opts ...googleapi.CallOption) (*SubaccountsList
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -46261,7 +46447,7 @@ func (c *TargetableRemarketingListsListCall) PageToken(pageToken string) *Target
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *TargetableRemarketingListsListCall) SortField(sortField string) *TargetableRemarketingListsListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -46269,10 +46455,10 @@ func (c *TargetableRemarketingListsListCall) SortField(sortField string) *Target
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *TargetableRemarketingListsListCall) SortOrder(sortOrder string) *TargetableRemarketingListsListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -46395,9 +46581,12 @@ func (c *TargetableRemarketingListsListCall) Do(opts ...googleapi.CallOption) (*
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "name": {
@@ -46418,6 +46607,7 @@ func (c *TargetableRemarketingListsListCall) Do(opts ...googleapi.CallOption) (*
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -46431,7 +46621,8 @@ func (c *TargetableRemarketingListsListCall) Do(opts ...googleapi.CallOption) (*
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -46827,7 +47018,7 @@ func (c *TargetingTemplatesListCall) SearchString(searchString string) *Targetin
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *TargetingTemplatesListCall) SortField(sortField string) *TargetingTemplatesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -46835,10 +47026,10 @@ func (c *TargetingTemplatesListCall) SortField(sortField string) *TargetingTempl
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *TargetingTemplatesListCall) SortOrder(sortOrder string) *TargetingTemplatesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -46960,9 +47151,12 @@ func (c *TargetingTemplatesListCall) Do(opts ...googleapi.CallOption) (*Targetin
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -46983,6 +47177,7 @@ func (c *TargetingTemplatesListCall) Do(opts ...googleapi.CallOption) (*Targetin
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -46996,7 +47191,8 @@ func (c *TargetingTemplatesListCall) Do(opts ...googleapi.CallOption) (*Targetin
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"
@@ -48632,7 +48828,7 @@ func (c *UserRolesListCall) SearchString(searchString string) *UserRolesListCall
 // sort the list.
 //
 // Possible values:
-//   "ID"
+//   "ID" (default)
 //   "NAME"
 func (c *UserRolesListCall) SortField(sortField string) *UserRolesListCall {
 	c.urlParams_.Set("sortField", sortField)
@@ -48640,10 +48836,10 @@ func (c *UserRolesListCall) SortField(sortField string) *UserRolesListCall {
 }
 
 // SortOrder sets the optional parameter "sortOrder": Order of sorted
-// results, default is ASCENDING.
+// results.
 //
 // Possible values:
-//   "ASCENDING"
+//   "ASCENDING" (default)
 //   "DESCENDING"
 func (c *UserRolesListCall) SortOrder(sortOrder string) *UserRolesListCall {
 	c.urlParams_.Set("sortOrder", sortOrder)
@@ -48771,9 +48967,12 @@ func (c *UserRolesListCall) Do(opts ...googleapi.CallOption) (*UserRolesListResp
 	//       "type": "string"
 	//     },
 	//     "maxResults": {
+	//       "default": "1000",
 	//       "description": "Maximum number of results to return.",
 	//       "format": "int32",
 	//       "location": "query",
+	//       "maximum": "1000",
+	//       "minimum": "0",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
@@ -48794,6 +48993,7 @@ func (c *UserRolesListCall) Do(opts ...googleapi.CallOption) (*UserRolesListResp
 	//       "type": "string"
 	//     },
 	//     "sortField": {
+	//       "default": "ID",
 	//       "description": "Field by which to sort the list.",
 	//       "enum": [
 	//         "ID",
@@ -48807,7 +49007,8 @@ func (c *UserRolesListCall) Do(opts ...googleapi.CallOption) (*UserRolesListResp
 	//       "type": "string"
 	//     },
 	//     "sortOrder": {
-	//       "description": "Order of sorted results, default is ASCENDING.",
+	//       "default": "ASCENDING",
+	//       "description": "Order of sorted results.",
 	//       "enum": [
 	//         "ASCENDING",
 	//         "DESCENDING"

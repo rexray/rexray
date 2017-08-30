@@ -34,7 +34,7 @@ func TestGetProject(t *testing.T) {
 	defer th.TeardownHTTP()
 	HandleGetProjectSuccessfully(t)
 
-	actual, err := projects.Get(client.ServiceClient(), "1234", nil).Extract()
+	actual, err := projects.Get(client.ServiceClient(), "1234").Extract()
 	th.AssertNoErr(t, err)
 	th.CheckDeepEquals(t, RedTeam, *actual)
 }

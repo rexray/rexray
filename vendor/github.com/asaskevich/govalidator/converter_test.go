@@ -62,9 +62,9 @@ func TestToFloat(t *testing.T) {
 func TestToJSON(t *testing.T) {
 	tests := []interface{}{"test", map[string]string{"a": "b", "b": "c"}, func() error { return fmt.Errorf("Error") }}
 	expected := [][]string{
-		{"\"test\"", "<nil>"},
-		{"{\"a\":\"b\",\"b\":\"c\"}", "<nil>"},
-		{"", "json: unsupported type: func() error"},
+		[]string{"\"test\"", "<nil>"},
+		[]string{"{\"a\":\"b\",\"b\":\"c\"}", "<nil>"},
+		[]string{"", "json: unsupported type: func() error"},
 	}
 	for i, test := range tests {
 		actual, err := ToJSON(test)

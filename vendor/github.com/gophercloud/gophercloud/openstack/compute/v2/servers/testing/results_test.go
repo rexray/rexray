@@ -21,7 +21,7 @@ func TestExtractPassword_no_pwd_data(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	resp := servers.GetPasswordResult{gophercloud.Result{Body: dejson}}
+	resp := servers.GetPasswordResult{Result: gophercloud.Result{Body: dejson}}
 
 	pwd, err := resp.ExtractPassword(nil)
 	th.AssertEquals(t, pwd, "")
@@ -38,7 +38,7 @@ func TestExtractPassword_encrypted_pwd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	resp := servers.GetPasswordResult{gophercloud.Result{Body: dejson}}
+	resp := servers.GetPasswordResult{Result: gophercloud.Result{Body: dejson}}
 
 	pwd, err := resp.ExtractPassword(nil)
 	th.AssertNoErr(t, err)
@@ -91,7 +91,7 @@ KSde3I0ybDz7iS2EtceKB7m4C0slYd+oBkm4efuF00rCOKDwpFq45m0=
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	resp := servers.GetPasswordResult{gophercloud.Result{Body: dejson}}
+	resp := servers.GetPasswordResult{Result: gophercloud.Result{Body: dejson}}
 
 	pwd, err := resp.ExtractPassword(privateKey.(*rsa.PrivateKey))
 	th.AssertNoErr(t, err)

@@ -47,7 +47,7 @@ const basePath = "https://www.googleapis.com/groups/v1/groups/"
 
 // OAuth2 scopes used by this API.
 const (
-	// View and manage the settings of a Google Apps Group
+	// View and manage the settings of a G Suite group
 	AppsGroupsSettingsScope = "https://www.googleapis.com/auth/apps.groups.settings"
 )
 
@@ -189,7 +189,8 @@ type Groups struct {
 
 	// WhoCanPostMessage: Permissions to post messages to the group.
 	// Possible values are: NONE_CAN_POST ALL_MANAGERS_CAN_POST
-	// ALL_MEMBERS_CAN_POST ALL_IN_DOMAIN_CAN_POST ANYONE_CAN_POST
+	// ALL_MEMBERS_CAN_POST ALL_OWNERS_CAN_POST ALL_IN_DOMAIN_CAN_POST
+	// ANYONE_CAN_POST
 	WhoCanPostMessage string `json:"whoCanPostMessage,omitempty"`
 
 	// WhoCanViewGroup: Permissions to view group. Possible values are:

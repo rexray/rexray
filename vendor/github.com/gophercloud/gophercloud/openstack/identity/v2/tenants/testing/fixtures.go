@@ -62,3 +62,94 @@ func HandleListTenantsSuccessfully(t *testing.T) {
 		fmt.Fprintf(w, ListOutput)
 	})
 }
+
+func mockCreateTenantResponse(t *testing.T) {
+	th.Mux.HandleFunc("/tenants", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+
+		th.TestJSONRequest(t, r, `
+{
+    "tenant": {
+		    "name": "new_tenant",
+		    "description": "This is new tenant",
+		    "enabled": true
+    }
+}
+	`)
+
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		fmt.Fprintf(w, `
+{
+    "tenant": {
+        "name": "new_tenant",
+        "description": "This is new tenant",
+        "enabled": true,
+        "id": "5c62ef576dc7444cbb73b1fe84b97648"
+    }
+}
+`)
+	})
+}
+
+func mockDeleteTenantResponse(t *testing.T) {
+	th.Mux.HandleFunc("/tenants/2466f69cd4714d89a548a68ed97ffcd4", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "DELETE")
+		th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
+func mockUpdateTenantResponse(t *testing.T) {
+	th.Mux.HandleFunc("/tenants/5c62ef576dc7444cbb73b1fe84b97648", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "PUT")
+		th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+
+		th.TestJSONRequest(t, r, `
+{
+    "tenant": {
+		    "name": "new_name",
+	 	    "description": "This is new name",
+		    "enabled": true
+    }
+}
+`)
+
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		fmt.Fprintf(w, `
+{
+		"tenant": {
+				"name": "new_name",
+				"description": "This is new name",
+				"enabled": true,
+				"id": "5c62ef576dc7444cbb73b1fe84b97648"
+		}
+}
+`)
+	})
+}
+
+func mockGetTenantResponse(t *testing.T) {
+	th.Mux.HandleFunc("/tenants/5c62ef576dc7444cbb73b1fe84b97648", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "GET")
+		th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		fmt.Fprintf(w, `
+{
+		"tenant": {
+				"name": "new_tenant",
+				"description": "This is new tenant",
+				"enabled": true,
+				"id": "5c62ef576dc7444cbb73b1fe84b97648"
+		}
+}
+`)
+	})
+}

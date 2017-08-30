@@ -18,6 +18,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/context"
 )
 
 // TODO: add tests to check XML responses with the expected prefix path
@@ -48,7 +50,7 @@ func TestPrefix(t *testing.T) {
 			req.Header.Add(headers[0], headers[1])
 			headers = headers[2:]
 		}
-		res, err := http.DefaultClient.Do(req)
+		res, err := http.DefaultTransport.RoundTrip(req)
 		if err != nil {
 			return nil, err
 		}
@@ -65,6 +67,7 @@ func TestPrefix(t *testing.T) {
 		"/a/b/",
 		"/a/b/c/",
 	}
+	ctx := context.Background()
 	for _, prefix := range prefixes {
 		fs := NewMemFS()
 		h := &Handler{
@@ -183,7 +186,7 @@ func TestPrefix(t *testing.T) {
 			continue
 		}
 
-		got, err := find(nil, fs, "/")
+		got, err := find(ctx, nil, fs, "/")
 		if err != nil {
 			t.Errorf("prefix=%-9q find: %v", prefix, err)
 			continue
@@ -198,6 +201,44 @@ func TestPrefix(t *testing.T) {
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("prefix=%-9q find:\ngot  %v\nwant %v", prefix, got, want)
 			continue
+		}
+	}
+}
+
+func TestEscapeXML(t *testing.T) {
+	// These test cases aren't exhaustive, and there is more than one way to
+	// escape e.g. a quot (as "&#34;" or "&quot;") or an apos. We presume that
+	// the encoding/xml package tests xml.EscapeText more thoroughly. This test
+	// here is just a sanity check for this package's escapeXML function, and
+	// its attempt to provide a fast path (and avoid a bytes.Buffer allocation)
+	// when escaping filenames is obviously a no-op.
+	testCases := map[string]string{
+		"":              "",
+		" ":             " ",
+		"&":             "&amp;",
+		"*":             "*",
+		"+":             "+",
+		",":             ",",
+		"-":             "-",
+		".":             ".",
+		"/":             "/",
+		"0":             "0",
+		"9":             "9",
+		":":             ":",
+		"<":             "&lt;",
+		">":             "&gt;",
+		"A":             "A",
+		"_":             "_",
+		"a":             "a",
+		"~":             "~",
+		"\u0201":        "\u0201",
+		"&amp;":         "&amp;amp;",
+		"foo&<b/ar>baz": "foo&amp;&lt;b/ar&gt;baz",
+	}
+
+	for in, want := range testCases {
+		if got := escapeXML(in); got != want {
+			t.Errorf("in=%q: got %q, want %q", in, got, want)
 		}
 	}
 }
@@ -259,14 +300,15 @@ func TestFilenameEscape(t *testing.T) {
 		wantHref:        `/go%3Clang`,
 		wantDisplayName: `go&lt;lang`,
 	}}
+	ctx := context.Background()
 	fs := NewMemFS()
 	for _, tc := range testCases {
 		if strings.HasSuffix(tc.name, "/") {
-			if err := fs.Mkdir(tc.name, 0755); err != nil {
+			if err := fs.Mkdir(ctx, tc.name, 0755); err != nil {
 				t.Fatalf("name=%q: Mkdir: %v", tc.name, err)
 			}
 		} else {
-			f, err := fs.OpenFile(tc.name, os.O_CREATE, 0644)
+			f, err := fs.OpenFile(ctx, tc.name, os.O_CREATE, 0644)
 			if err != nil {
 				t.Fatalf("name=%q: OpenFile: %v", tc.name, err)
 			}

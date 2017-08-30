@@ -2,6 +2,7 @@ package testing
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/extensions/volumeactions"
@@ -55,8 +56,33 @@ func TestUploadImage(t *testing.T) {
 		Force:           true,
 	}
 
-	err := volumeactions.UploadImage(client.ServiceClient(), "cd281d77-8217-4830-be95-9528227c105c", options).ExtractErr()
+	actual, err := volumeactions.UploadImage(client.ServiceClient(), "cd281d77-8217-4830-be95-9528227c105c", options).Extract()
 	th.AssertNoErr(t, err)
+
+	expected := volumeactions.VolumeImage{
+		VolumeID:        "cd281d77-8217-4830-be95-9528227c105c",
+		ContainerFormat: "bare",
+		DiskFormat:      "raw",
+		Description:     "",
+		ImageID:         "ecb92d98-de08-45db-8235-bbafe317269c",
+		ImageName:       "test",
+		Size:            5,
+		Status:          "uploading",
+		UpdatedAt:       time.Date(2017, 7, 17, 9, 29, 22, 0, time.UTC),
+		VolumeType: volumeactions.ImageVolumeType{
+			ID:          "b7133444-62f6-4433-8da3-70ac332229b7",
+			Name:        "basic.ru-2a",
+			Description: "",
+			IsPublic:    true,
+			ExtraSpecs:  map[string]interface{}{"volume_backend_name": "basic.ru-2a"},
+			QosSpecsID:  "",
+			Deleted:     false,
+			DeletedAt:   time.Time{},
+			CreatedAt:   time.Date(2016, 5, 4, 8, 54, 14, 0, time.UTC),
+			UpdatedAt:   time.Date(2016, 5, 4, 9, 15, 33, 0, time.UTC),
+		},
+	}
+	th.AssertDeepEquals(t, expected, actual)
 }
 
 func TestReserve(t *testing.T) {

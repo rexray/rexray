@@ -49,7 +49,7 @@ func TestList(t *testing.T) {
 
 		expected := []extensions.Extension{
 			{
-				common.Extension{
+				Extension: common.Extension{
 					Updated:     "2013-01-20T00:00:00-00:00",
 					Name:        "Neutron Service Type Management",
 					Links:       []interface{}{},

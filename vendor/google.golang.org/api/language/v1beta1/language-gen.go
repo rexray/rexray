@@ -47,6 +47,10 @@ const basePath = "https://language.googleapis.com/"
 
 // OAuth2 scopes used by this API.
 const (
+	// Apply machine learning models to reveal the structure and meaning of
+	// text
+	CloudLanguageScope = "https://www.googleapis.com/auth/cloud-language"
+
 	// View and manage your data across Google Cloud Platform services
 	CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 )
@@ -176,9 +180,7 @@ func (s *AnalyzeEntitiesResponse) MarshalJSON() ([]byte, error) {
 
 // AnalyzeSentimentRequest: The sentiment analysis request message.
 type AnalyzeSentimentRequest struct {
-	// Document: Input document. Currently, `analyzeSentiment` only supports
-	// English text
-	// (Document.language="EN").
+	// Document: Input document.
 	Document *Document `json:"document,omitempty"`
 
 	// EncodingType: The encoding type used by the API to calculate sentence
@@ -238,6 +240,7 @@ type AnalyzeSentimentResponse struct {
 	// language specified
 	// in the request or, if not specified, the automatically-detected
 	// language.
+	// See Document.language field for more details.
 	Language string `json:"language,omitempty"`
 
 	// Sentences: The sentiment for all the sentences in the document.
@@ -628,11 +631,8 @@ type Document struct {
 	// automatically detected). Both ISO and BCP-47 language codes
 	// are
 	// accepted.<br>
-	// **Current Language Restrictions:**
-	//
-	//  * Only English, Spanish, and Japanese textual content
-	//    are supported, with the following additional restriction:
-	//    * `analyzeSentiment` only supports English text.
+	// [Language Support](/natural-language/docs/languages)
+	// lists currently supported languages for each API method.
 	// If the language (either specified by the caller or automatically
 	// detected)
 	// is not supported by the called API method, an `INVALID_ARGUMENT`
@@ -741,6 +741,20 @@ func (s *Entity) MarshalJSON() ([]byte, error) {
 	type noMethod Entity
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *Entity) UnmarshalJSON(data []byte) error {
+	type noMethod Entity
+	var s1 struct {
+		Salience gensupport.JSONFloat64 `json:"salience"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.Salience = float64(s1.Salience)
+	return nil
 }
 
 // EntityMention: Represents a mention for an entity in the text.
@@ -1053,7 +1067,7 @@ type Sentiment struct {
 
 	// Score: Sentiment score between -1.0 (negative sentiment) and
 	// 1.0
-	// (positive sentiment.)
+	// (positive sentiment).
 	Score float64 `json:"score,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Magnitude") to
@@ -1077,6 +1091,24 @@ func (s *Sentiment) MarshalJSON() ([]byte, error) {
 	type noMethod Sentiment
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *Sentiment) UnmarshalJSON(data []byte) error {
+	type noMethod Sentiment
+	var s1 struct {
+		Magnitude gensupport.JSONFloat64 `json:"magnitude"`
+		Polarity  gensupport.JSONFloat64 `json:"polarity"`
+		Score     gensupport.JSONFloat64 `json:"score"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.Magnitude = float64(s1.Magnitude)
+	s.Polarity = float64(s1.Polarity)
+	s.Score = float64(s1.Score)
+	return nil
 }
 
 // Status: The `Status` type defines a logical error model that is
@@ -1107,7 +1139,7 @@ func (s *Sentiment) MarshalJSON() ([]byte, error) {
 // arbitrary
 // information about the error. There is a predefined set of error
 // detail types
-// in the package `google.rpc` which can be used for common error
+// in the package `google.rpc` that can be used for common error
 // conditions.
 //
 // # Language mapping
@@ -1140,7 +1172,7 @@ func (s *Sentiment) MarshalJSON() ([]byte, error) {
 //
 // - Workflow errors. A typical workflow has multiple steps. Each step
 // may
-//     have a `Status` message for error reporting purpose.
+//     have a `Status` message for error reporting.
 //
 // - Batch operations. If a client uses batch request and batch
 // response, the
@@ -1163,9 +1195,9 @@ type Status struct {
 	// google.rpc.Code.
 	Code int64 `json:"code,omitempty"`
 
-	// Details: A list of messages that carry the error details.  There will
-	// be a
-	// common set of message types for APIs to use.
+	// Details: A list of messages that carry the error details.  There is a
+	// common set of
+	// message types for APIs to use.
 	Details []googleapi.RawMessage `json:"details,omitempty"`
 
 	// Message: A developer-facing error message, which should be in
@@ -1236,9 +1268,8 @@ type Token struct {
 	// DependencyEdge: Dependency tree parse for this token.
 	DependencyEdge *DependencyEdge `json:"dependencyEdge,omitempty"`
 
-	// Lemma: <a
-	// href="https://en.wikipedia.org/wiki/Lemma_(morphology)">
-	// Lemma</a> of the token.
+	// Lemma: [Lemma](https://en.wikipedia.org/wiki/Lemma_%28morphology%29)
+	// of the token.
 	Lemma string `json:"lemma,omitempty"`
 
 	// PartOfSpeech: Parts of speech tag for this token.
@@ -1281,10 +1312,11 @@ type DocumentsAnalyzeEntitiesCall struct {
 	header_                http.Header
 }
 
-// AnalyzeEntities: Finds named entities (currently finds proper names)
-// in the text,
-// entity types, salience, mentions for each entity, and other
-// properties.
+// AnalyzeEntities: Finds named entities (currently proper names and
+// common nouns) in the text
+// along with entity types, salience, mentions for each entity,
+// and
+// other properties.
 func (r *DocumentsService) AnalyzeEntities(analyzeentitiesrequest *AnalyzeEntitiesRequest) *DocumentsAnalyzeEntitiesCall {
 	c := &DocumentsAnalyzeEntitiesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.analyzeentitiesrequest = analyzeentitiesrequest
@@ -1374,7 +1406,7 @@ func (c *DocumentsAnalyzeEntitiesCall) Do(opts ...googleapi.CallOption) (*Analyz
 	}
 	return ret, nil
 	// {
-	//   "description": "Finds named entities (currently finds proper names) in the text,\nentity types, salience, mentions for each entity, and other properties.",
+	//   "description": "Finds named entities (currently proper names and common nouns) in the text\nalong with entity types, salience, mentions for each entity, and\nother properties.",
 	//   "flatPath": "v1beta1/documents:analyzeEntities",
 	//   "httpMethod": "POST",
 	//   "id": "language.documents.analyzeEntities",
@@ -1388,6 +1420,7 @@ func (c *DocumentsAnalyzeEntitiesCall) Do(opts ...googleapi.CallOption) (*Analyz
 	//     "$ref": "AnalyzeEntitiesResponse"
 	//   },
 	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-language",
 	//     "https://www.googleapis.com/auth/cloud-platform"
 	//   ]
 	// }
@@ -1508,6 +1541,7 @@ func (c *DocumentsAnalyzeSentimentCall) Do(opts ...googleapi.CallOption) (*Analy
 	//     "$ref": "AnalyzeSentimentResponse"
 	//   },
 	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-language",
 	//     "https://www.googleapis.com/auth/cloud-platform"
 	//   ]
 	// }
@@ -1632,6 +1666,7 @@ func (c *DocumentsAnalyzeSyntaxCall) Do(opts ...googleapi.CallOption) (*AnalyzeS
 	//     "$ref": "AnalyzeSyntaxResponse"
 	//   },
 	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-language",
 	//     "https://www.googleapis.com/auth/cloud-platform"
 	//   ]
 	// }
@@ -1754,6 +1789,7 @@ func (c *DocumentsAnnotateTextCall) Do(opts ...googleapi.CallOption) (*AnnotateT
 	//     "$ref": "AnnotateTextResponse"
 	//   },
 	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-language",
 	//     "https://www.googleapis.com/auth/cloud-platform"
 	//   ]
 	// }

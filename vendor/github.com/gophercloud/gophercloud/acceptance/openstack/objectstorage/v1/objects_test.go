@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/acceptance/clients"
 	"github.com/gophercloud/gophercloud/acceptance/tools"
 	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/containers"
 	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/objects"
-	"github.com/gophercloud/gophercloud/pagination"
 	th "github.com/gophercloud/gophercloud/testhelper"
 )
 
@@ -18,9 +18,10 @@ import (
 var numObjects = 2
 
 func TestObjects(t *testing.T) {
-	// Create a provider client for executing the HTTP request.
-	// See common.go for more information.
-	client := newClient(t)
+	client, err := clients.NewObjectStorageV1Client()
+	if err != nil {
+		t.Fatalf("Unable to create client: %v", err)
+	}
 
 	// Make a slice of length numObjects to hold the random object names.
 	oNames := make([]string, numObjects)
@@ -30,7 +31,7 @@ func TestObjects(t *testing.T) {
 
 	// Create a container to hold the test objects.
 	cName := tools.RandomString("test-container-", 8)
-	header, err := containers.Create(client, cName, nil).ExtractHeader()
+	header, err := containers.Create(client, cName, nil).Extract()
 	th.AssertNoErr(t, err)
 	t.Logf("Create object headers: %+v\n", header)
 
@@ -44,7 +45,10 @@ func TestObjects(t *testing.T) {
 	oContents := make([]*bytes.Buffer, numObjects)
 	for i := 0; i < numObjects; i++ {
 		oContents[i] = bytes.NewBuffer([]byte(tools.RandomString("", 10)))
-		res := objects.Create(client, cName, oNames[i], oContents[i], nil)
+		createOpts := objects.CreateOpts{
+			Content: oContents[i],
+		}
+		res := objects.Create(client, cName, oNames[i], createOpts)
 		th.AssertNoErr(t, res.Err)
 	}
 	// Delete the objects after testing.
@@ -55,46 +59,61 @@ func TestObjects(t *testing.T) {
 		}
 	}()
 
-	ons := make([]string, 0, len(oNames))
-	err = objects.List(client, cName, &objects.ListOpts{Full: false, Prefix: "test-object-"}).EachPage(func(page pagination.Page) (bool, error) {
-		names, err := objects.ExtractNames(page)
-		th.AssertNoErr(t, err)
-		ons = append(ons, names...)
+	// List all created objects
+	listOpts := objects.ListOpts{
+		Full:   true,
+		Prefix: "test-object-",
+	}
 
-		return true, nil
-	})
-	th.AssertNoErr(t, err)
+	allPages, err := objects.List(client, cName, listOpts).AllPages()
+	if err != nil {
+		t.Fatalf("Unable to list objects: %v", err)
+	}
+
+	ons, err := objects.ExtractNames(allPages)
+	if err != nil {
+		t.Fatalf("Unable to extract objects: %v", err)
+	}
 	th.AssertEquals(t, len(ons), len(oNames))
 
-	ois := make([]objects.Object, 0, len(oNames))
-	err = objects.List(client, cName, &objects.ListOpts{Full: true, Prefix: "test-object-"}).EachPage(func(page pagination.Page) (bool, error) {
-		info, err := objects.ExtractInfo(page)
-		th.AssertNoErr(t, err)
-
-		ois = append(ois, info...)
-
-		return true, nil
-	})
-	th.AssertNoErr(t, err)
+	ois, err := objects.ExtractInfo(allPages)
+	if err != nil {
+		t.Fatalf("Unable to extract object info: %v", err)
+	}
 	th.AssertEquals(t, len(ois), len(oNames))
 
 	// Copy the contents of one object to another.
-	copyres := objects.Copy(client, cName, oNames[0], &objects.CopyOpts{Destination: cName + "/" + oNames[1]})
+	copyOpts := objects.CopyOpts{
+		Destination: cName + "/" + oNames[1],
+	}
+	copyres := objects.Copy(client, cName, oNames[0], copyOpts)
 	th.AssertNoErr(t, copyres.Err)
 
 	// Download one of the objects that was created above.
-	o1Content, err := objects.Download(client, cName, oNames[0], nil).ExtractContent()
+	downloadres := objects.Download(client, cName, oNames[0], nil)
+	th.AssertNoErr(t, downloadres.Err)
+
+	o1Content, err := downloadres.ExtractContent()
 	th.AssertNoErr(t, err)
 
 	// Download the another object that was create above.
-	o2Content, err := objects.Download(client, cName, oNames[1], nil).ExtractContent()
+	downloadres = objects.Download(client, cName, oNames[1], nil)
+	th.AssertNoErr(t, downloadres.Err)
+	o2Content, err := downloadres.ExtractContent()
 	th.AssertNoErr(t, err)
 
 	// Compare the two object's contents to test that the copy worked.
 	th.AssertEquals(t, string(o2Content), string(o1Content))
 
 	// Update an object's metadata.
-	updateres := objects.Update(client, cName, oNames[0], &objects.UpdateOpts{Metadata: metadata})
+	metadata := map[string]string{
+		"Gophercloud-Test": "objects",
+	}
+
+	updateOpts := objects.UpdateOpts{
+		Metadata: metadata,
+	}
+	updateres := objects.Update(client, cName, oNames[0], updateOpts)
 	th.AssertNoErr(t, updateres.Err)
 
 	// Delete the object's metadata after testing.

@@ -1,2 +1,2 @@
-// networking_extensions_v2
+// extensions unit tests
 package testing

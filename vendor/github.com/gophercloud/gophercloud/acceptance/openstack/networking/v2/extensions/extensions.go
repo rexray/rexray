@@ -21,12 +21,16 @@ func CreateExternalNetwork(t *testing.T, client *gophercloud.ServiceClient) (*ne
 
 	adminStateUp := true
 	isExternal := true
-	createOpts := external.CreateOpts{
-		External: &isExternal,
+
+	networkCreateOpts := networks.CreateOpts{
+		Name:         networkName,
+		AdminStateUp: &adminStateUp,
 	}
 
-	createOpts.Name = networkName
-	createOpts.AdminStateUp = &adminStateUp
+	createOpts := external.CreateOptsExt{
+		networkCreateOpts,
+		&isExternal,
+	}
 
 	network, err := networks.Create(client, createOpts).Extract()
 	if err != nil {

@@ -1,2 +1,2 @@
-// objectstorage_objects_v1
+// objects unit tests
 package testing

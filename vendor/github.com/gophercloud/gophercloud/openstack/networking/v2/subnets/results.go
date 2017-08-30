@@ -18,22 +18,26 @@ func (r commonResult) Extract() (*Subnet, error) {
 	return s.Subnet, err
 }
 
-// CreateResult represents the result of a create operation.
+// CreateResult represents the result of a create operation. Call its Extract
+// method to interpret it as a Subnet.
 type CreateResult struct {
 	commonResult
 }
 
-// GetResult represents the result of a get operation.
+// GetResult represents the result of a get operation. Call its Extract
+// method to interpret it as a Subnet.
 type GetResult struct {
 	commonResult
 }
 
-// UpdateResult represents the result of an update operation.
+// UpdateResult represents the result of an update operation. Call its Extract
+// method to interpret it as a Subnet.
 type UpdateResult struct {
 	commonResult
 }
 
-// DeleteResult represents the result of a delete operation.
+// DeleteResult represents the result of a delete operation. Call its
+// ExtractErr method to determine if the request succeeded or failed.
 type DeleteResult struct {
 	gophercloud.ErrResult
 }
@@ -55,27 +59,39 @@ type HostRoute struct {
 // Subnet represents a subnet. See package documentation for a top-level
 // description of what this is.
 type Subnet struct {
-	// UUID representing the subnet
+	// UUID representing the subnet.
 	ID string `json:"id"`
-	// UUID of the parent network
+
+	// UUID of the parent network.
 	NetworkID string `json:"network_id"`
+
 	// Human-readable name for the subnet. Might not be unique.
 	Name string `json:"name"`
-	// IP version, either `4' or `6'
+
+	// IP version, either `4' or `6'.
 	IPVersion int `json:"ip_version"`
-	// CIDR representing IP range for this subnet, based on IP version
+
+	// CIDR representing IP range for this subnet, based on IP version.
 	CIDR string `json:"cidr"`
-	// Default gateway used by devices in this subnet
+
+	// Default gateway used by devices in this subnet.
 	GatewayIP string `json:"gateway_ip"`
+
 	// DNS name servers used by hosts in this subnet.
 	DNSNameservers []string `json:"dns_nameservers"`
-	// Sub-ranges of CIDR available for dynamic allocation to ports. See AllocationPool.
+
+	// Sub-ranges of CIDR available for dynamic allocation to ports.
+	// See AllocationPool.
 	AllocationPools []AllocationPool `json:"allocation_pools"`
-	// Routes that should be used by devices with IPs from this subnet (not including local subnet route).
+
+	// Routes that should be used by devices with IPs from this subnet
+	// (not including local subnet route).
 	HostRoutes []HostRoute `json:"host_routes"`
+
 	// Specifies whether DHCP is enabled for this subnet or not.
 	EnableDHCP bool `json:"enable_dhcp"`
-	// Owner of network. Only admin users can specify a tenant_id other than its own.
+
+	// Owner of network.
 	TenantID string `json:"tenant_id"`
 }
 

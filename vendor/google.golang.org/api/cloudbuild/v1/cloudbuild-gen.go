@@ -169,8 +169,8 @@ type Build struct {
 	// of all build
 	// steps.
 	//
-	// The images will be pushed using the builder
-	// service account's credentials.
+	// The images will be pushed using the builder service account's
+	// credentials.
 	//
 	// The digests of the pushed images will be stored in the Build
 	// resource's
@@ -205,6 +205,9 @@ type Build struct {
 	// @OutputOnly
 	Results *Results `json:"results,omitempty"`
 
+	// Secrets: Secrets to decrypt using Cloud KMS.
+	Secrets []*Secret `json:"secrets,omitempty"`
+
 	// Source: Describes where to find the source files to build.
 	Source *Source `json:"source,omitempty"`
 
@@ -213,7 +216,9 @@ type Build struct {
 	// @OutputOnly
 	SourceProvenance *SourceProvenance `json:"sourceProvenance,omitempty"`
 
-	// StartTime: Time at which execution of the build was started.
+	// StartTime: Time at which execution of the build was
+	// started.
+	// @OutputOnly
 	StartTime string `json:"startTime,omitempty"`
 
 	// Status: Status of the build.
@@ -221,7 +226,6 @@ type Build struct {
 	//
 	// Possible values:
 	//   "STATUS_UNKNOWN" - Status of the build is unknown.
-	//   "QUEUING" - Build has been received and is being queued.
 	//   "QUEUED" - Build is queued; work has not yet begun.
 	//   "WORKING" - Build is being executed.
 	//   "SUCCESS" - Build finished successfully.
@@ -238,6 +242,12 @@ type Build struct {
 
 	// Steps: Describes the operations to be performed on the workspace.
 	Steps []*BuildStep `json:"steps,omitempty"`
+
+	// Substitutions: Substitutions data for Build resource.
+	Substitutions map[string]string `json:"substitutions,omitempty"`
+
+	// Tags: Tags for annotation of a Build. These are not docker tags.
+	Tags []string `json:"tags,omitempty"`
 
 	// Timeout: Amount of time that this build should be allowed to run, to
 	// second
@@ -321,6 +331,17 @@ type BuildOptions struct {
 	//   "SHA256" - Use a sha256 hash.
 	SourceProvenanceHash []string `json:"sourceProvenanceHash,omitempty"`
 
+	// SubstitutionOption: SubstitutionOption to allow unmatch
+	// substitutions.
+	//
+	// Possible values:
+	//   "MUST_MATCH" - Fails the build if error in substitutions checks,
+	// like missing
+	// a substitution in the template or in the map.
+	//   "ALLOW_LOOSE" - Do not fail the build if error in substitutions
+	// checks.
+	SubstitutionOption string `json:"substitutionOption,omitempty"`
+
 	// ForceSendFields is a list of field names (e.g.
 	// "RequestedVerifyOption") to unconditionally include in API requests.
 	// By default, fields with empty values are omitted from API requests.
@@ -366,6 +387,11 @@ type BuildStep struct {
 	// this operation's container.
 	Dir string `json:"dir,omitempty"`
 
+	// Entrypoint: Optional entrypoint to be used instead of the build step
+	// image's default
+	// If unset, the image's default will be used.
+	Entrypoint string `json:"entrypoint,omitempty"`
+
 	// Env: A list of environment variable definitions to be used when
 	// running a step.
 	//
@@ -382,24 +408,24 @@ type BuildStep struct {
 	// Name: The name of the container image that will run this particular
 	// build step.
 	//
-	// If the image is already available in the host's
-	// Docker daemon's cache, it will be run directly. If not, the host
-	// will
-	// attempt to pull the image first, using the builder service
-	// account's
-	// credentials if necessary.
+	// If the image is already available in the host's Docker daemon's
+	// cache, it
+	// will be run directly. If not, the host will attempt to pull the
+	// image
+	// first, using the builder service account's credentials if
+	// necessary.
 	//
 	// The Docker daemon's cache will already have the latest versions of
 	// all of
 	// the officially supported build
 	// steps
-	// (https://github.com/GoogleCloudPlatform/cloud-builders). The Docker
-	// daemon
-	// will also have cached many of the layers for some popular images,
-	// like
-	// "ubuntu", "debian", but they will be refreshed at the time you
-	// attempt to
-	// use them.
+	// ([https://github.com/GoogleCloudPlatform/cloud-builders](https:/
+	// /github.com/GoogleCloudPlatform/cloud-builders)).
+	// The Docker daemon will also have cached many of the layers for some
+	// popular
+	// images, like "ubuntu", "debian", but they will be refreshed at the
+	// time you
+	// attempt to use them.
 	//
 	// If you built an image in a previous build step, it will be stored in
 	// the
@@ -407,6 +433,24 @@ type BuildStep struct {
 	// a
 	// later build step.
 	Name string `json:"name,omitempty"`
+
+	// SecretEnv: A list of environment variables which are encrypted using
+	// a Cloud KMS
+	// crypto key. These values must be specified in the build's secrets.
+	SecretEnv []string `json:"secretEnv,omitempty"`
+
+	// Volumes: List of volumes to mount into the build step.
+	//
+	// Each volume will be created as an empty volume prior to execution of
+	// the
+	// build step. Upon completion of the build, volumes and their contents
+	// will
+	// be discarded.
+	//
+	// Using a named volume in only one step is not valid as it is
+	// indicative
+	// of a mis-configured build request.
+	Volumes []*Volume `json:"volumes,omitempty"`
 
 	// WaitFor: The ID(s) of the step(s) that this build step depends
 	// on.
@@ -469,6 +513,9 @@ type BuildTrigger struct {
 	//
 	// @OutputOnly
 	Id string `json:"id,omitempty"`
+
+	// Substitutions: Substitutions data for Build resource.
+	Substitutions map[string]string `json:"substitutions,omitempty"`
 
 	// TriggerTemplate: Template describing the types of source changes to
 	// trigger a build.
@@ -542,6 +589,11 @@ func (s *BuiltImage) MarshalJSON() ([]byte, error) {
 
 // CancelBuildRequest: Request to cancel an ongoing build.
 type CancelBuildRequest struct {
+}
+
+// CancelOperationRequest: The request message for
+// Operations.CancelOperation.
+type CancelOperationRequest struct {
 }
 
 // Empty: A generic empty message that you can re-use to avoid defining
@@ -740,8 +792,8 @@ func (s *ListOperationsResponse) MarshalJSON() ([]byte, error) {
 type Operation struct {
 	// Done: If the value is `false`, it means the operation is still in
 	// progress.
-	// If true, the operation is completed, and either `error` or `response`
-	// is
+	// If `true`, the operation is completed, and either `error` or
+	// `response` is
 	// available.
 	Done bool `json:"done,omitempty"`
 
@@ -888,6 +940,48 @@ func (s *Results) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// Secret: Secret pairs a set of secret environment variables containing
+// encrypted
+// values with the Cloud KMS key to use to decrypt the value.
+type Secret struct {
+	// KmsKeyName: Cloud KMS key name to use to decrypt these envs.
+	KmsKeyName string `json:"kmsKeyName,omitempty"`
+
+	// SecretEnv: Map of environment variable name to its encrypted
+	// value.
+	//
+	// Secret environment variables must be unique across all of a
+	// build's
+	// secrets, and must be used by at least one build step. Values can be
+	// at most
+	// 1 KB in size. There can be at most ten secret values across all of
+	// a
+	// build's secrets.
+	SecretEnv map[string]string `json:"secretEnv,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "KmsKeyName") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "KmsKeyName") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Secret) MarshalJSON() ([]byte, error) {
+	type noMethod Secret
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // Source: Source describes the location of the source in a supported
 // storage
 // service.
@@ -1007,7 +1101,7 @@ func (s *SourceProvenance) MarshalJSON() ([]byte, error) {
 // arbitrary
 // information about the error. There is a predefined set of error
 // detail types
-// in the package `google.rpc` which can be used for common error
+// in the package `google.rpc` that can be used for common error
 // conditions.
 //
 // # Language mapping
@@ -1040,7 +1134,7 @@ func (s *SourceProvenance) MarshalJSON() ([]byte, error) {
 //
 // - Workflow errors. A typical workflow has multiple steps. Each step
 // may
-//     have a `Status` message for error reporting purpose.
+//     have a `Status` message for error reporting.
 //
 // - Batch operations. If a client uses batch request and batch
 // response, the
@@ -1063,9 +1157,9 @@ type Status struct {
 	// google.rpc.Code.
 	Code int64 `json:"code,omitempty"`
 
-	// Details: A list of messages that carry the error details.  There will
-	// be a
-	// common set of message types for APIs to use.
+	// Details: A list of messages that carry the error details.  There is a
+	// common set of
+	// message types for APIs to use.
 	Details []googleapi.RawMessage `json:"details,omitempty"`
 
 	// Message: A developer-facing error message, which should be in
@@ -1142,6 +1236,200 @@ func (s *StorageSource) MarshalJSON() ([]byte, error) {
 	type noMethod StorageSource
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// Volume: Volume describes a Docker container volume which is mounted
+// into build steps
+// in order to persist files across build step execution.
+type Volume struct {
+	// Name: Name of the volume to mount.
+	//
+	// Volume names must be unique per build step and must be valid names
+	// for
+	// Docker volumes. Each named volume must be used by at least two build
+	// steps.
+	Name string `json:"name,omitempty"`
+
+	// Path: Path at which to mount the volume.
+	//
+	// Paths must be absolute and cannot conflict with other volume paths on
+	// the
+	// same build step or with certain reserved volume paths.
+	Path string `json:"path,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Name") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Name") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Volume) MarshalJSON() ([]byte, error) {
+	type noMethod Volume
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// method id "cloudbuild.operations.cancel":
+
+type OperationsCancelCall struct {
+	s                      *Service
+	name                   string
+	canceloperationrequest *CancelOperationRequest
+	urlParams_             gensupport.URLParams
+	ctx_                   context.Context
+	header_                http.Header
+}
+
+// Cancel: Starts asynchronous cancellation on a long-running operation.
+//  The server
+// makes a best effort to cancel the operation, but success is
+// not
+// guaranteed.  If the server doesn't support this method, it
+// returns
+// `google.rpc.Code.UNIMPLEMENTED`.  Clients can
+// use
+// Operations.GetOperation or
+// other methods to check whether the cancellation succeeded or whether
+// the
+// operation completed despite cancellation. On successful
+// cancellation,
+// the operation is not deleted; instead, it becomes an operation
+// with
+// an Operation.error value with a google.rpc.Status.code of
+// 1,
+// corresponding to `Code.CANCELLED`.
+func (r *OperationsService) Cancel(name string, canceloperationrequest *CancelOperationRequest) *OperationsCancelCall {
+	c := &OperationsCancelCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.canceloperationrequest = canceloperationrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OperationsCancelCall) Fields(s ...googleapi.Field) *OperationsCancelCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OperationsCancelCall) Context(ctx context.Context) *OperationsCancelCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OperationsCancelCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OperationsCancelCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.canceloperationrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+name}:cancel")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "cloudbuild.operations.cancel" call.
+// Exactly one of *Empty or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Empty.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *OperationsCancelCall) Do(opts ...googleapi.CallOption) (*Empty, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Empty{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Starts asynchronous cancellation on a long-running operation.  The server\nmakes a best effort to cancel the operation, but success is not\nguaranteed.  If the server doesn't support this method, it returns\n`google.rpc.Code.UNIMPLEMENTED`.  Clients can use\nOperations.GetOperation or\nother methods to check whether the cancellation succeeded or whether the\noperation completed despite cancellation. On successful cancellation,\nthe operation is not deleted; instead, it becomes an operation with\nan Operation.error value with a google.rpc.Status.code of 1,\ncorresponding to `Code.CANCELLED`.",
+	//   "flatPath": "v1/operations/{operationsId}:cancel",
+	//   "httpMethod": "POST",
+	//   "id": "cloudbuild.operations.cancel",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "The name of the operation resource to be cancelled.",
+	//       "location": "path",
+	//       "pattern": "^operations/.+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v1/{+name}:cancel",
+	//   "request": {
+	//     "$ref": "CancelOperationRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "Empty"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform"
+	//   ]
+	// }
+
 }
 
 // method id "cloudbuild.operations.get":
@@ -1303,9 +1591,18 @@ type OperationsListCall struct {
 // server doesn't support this method, it returns
 // `UNIMPLEMENTED`.
 //
-// NOTE: the `name` binding below allows API services to override the
+// NOTE: the `name` binding allows API services to override the
 // binding
 // to use different resource name schemes, such as `users/*/operations`.
+// To
+// override the binding, API services can add a binding such
+// as
+// "/v1/{name=users/*}/operations" to their service configuration.
+// For backwards compatibility, the default name includes the
+// operations
+// collection id, however overriding users must ensure the name
+// binding
+// is the parent resource, without the operations collection id.
 func (r *OperationsService) List(name string) *OperationsListCall {
 	c := &OperationsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.name = name
@@ -1427,7 +1724,7 @@ func (c *OperationsListCall) Do(opts ...googleapi.CallOption) (*ListOperationsRe
 	}
 	return ret, nil
 	// {
-	//   "description": "Lists operations that match the specified filter in the request. If the\nserver doesn't support this method, it returns `UNIMPLEMENTED`.\n\nNOTE: the `name` binding below allows API services to override the binding\nto use different resource name schemes, such as `users/*/operations`.",
+	//   "description": "Lists operations that match the specified filter in the request. If the\nserver doesn't support this method, it returns `UNIMPLEMENTED`.\n\nNOTE: the `name` binding allows API services to override the binding\nto use different resource name schemes, such as `users/*/operations`. To\noverride the binding, API services can add a binding such as\n`\"/v1/{name=users/*}/operations\"` to their service configuration.\nFor backwards compatibility, the default name includes the operations\ncollection id, however overriding users must ensure the name binding\nis the parent resource, without the operations collection id.",
 	//   "flatPath": "v1/operations",
 	//   "httpMethod": "GET",
 	//   "id": "cloudbuild.operations.list",
@@ -1441,7 +1738,7 @@ func (c *OperationsListCall) Do(opts ...googleapi.CallOption) (*ListOperationsRe
 	//       "type": "string"
 	//     },
 	//     "name": {
-	//       "description": "The name of the operation collection.",
+	//       "description": "The name of the operation's parent resource.",
 	//       "location": "path",
 	//       "pattern": "^operations$",
 	//       "required": true,

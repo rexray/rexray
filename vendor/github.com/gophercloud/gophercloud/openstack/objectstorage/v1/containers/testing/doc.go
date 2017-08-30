@@ -1,2 +1,2 @@
-// objectstorage_containers_v1
+// containers unit tests
 package testing

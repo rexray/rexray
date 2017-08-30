@@ -165,3 +165,69 @@ func Update(client *gophercloud.ServiceClient, id string, opts UpdateOptsBuilder
 	})
 	return
 }
+
+// AddSecurityServiceOptsBuilder allows extensions to add additional parameters to the
+// AddSecurityService request.
+type AddSecurityServiceOptsBuilder interface {
+	ToShareNetworkAddSecurityServiceMap() (map[string]interface{}, error)
+}
+
+// AddSecurityServiceOpts contain options for adding a security service to an
+// existing ShareNetwork. This object is passed to the sharenetworks.AddSecurityService
+// function. For more information about the parameters, see the ShareNetwork object.
+type AddSecurityServiceOpts struct {
+	SecurityServiceID string `json:"security_service_id"`
+}
+
+// ToShareNetworkAddSecurityServiceMap assembles a request body based on the contents of an
+// AddSecurityServiceOpts.
+func (opts AddSecurityServiceOpts) ToShareNetworkAddSecurityServiceMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "add_security_service")
+}
+
+// AddSecurityService will add the security service to a ShareNetwork. To extract the updated
+// ShareNetwork from the response, call the Extract method on the UpdateResult.
+func AddSecurityService(client *gophercloud.ServiceClient, id string, opts AddSecurityServiceOptsBuilder) (r UpdateResult) {
+	b, err := opts.ToShareNetworkAddSecurityServiceMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+	_, r.Err = client.Post(addSecurityServiceURL(client, id), b, &r.Body, &gophercloud.RequestOpts{
+		OkCodes: []int{200},
+	})
+	return
+}
+
+// RemoveSecurityServiceOptsBuilder allows extensions to add additional parameters to the
+// RemoveSecurityService request.
+type RemoveSecurityServiceOptsBuilder interface {
+	ToShareNetworkRemoveSecurityServiceMap() (map[string]interface{}, error)
+}
+
+// RemoveSecurityServiceOpts contain options for removing a security service from an
+// existing ShareNetwork. This object is passed to the sharenetworks.RemoveSecurityService
+// function. For more information about the parameters, see the ShareNetwork object.
+type RemoveSecurityServiceOpts struct {
+	SecurityServiceID string `json:"security_service_id"`
+}
+
+// ToShareNetworkRemoveSecurityServiceMap assembles a request body based on the contents of an
+// RemoveSecurityServiceOpts.
+func (opts RemoveSecurityServiceOpts) ToShareNetworkRemoveSecurityServiceMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "remove_security_service")
+}
+
+// RemoveSecurityService will remove the security service from a ShareNetwork. To extract the updated
+// ShareNetwork from the response, call the Extract method on the UpdateResult.
+func RemoveSecurityService(client *gophercloud.ServiceClient, id string, opts RemoveSecurityServiceOptsBuilder) (r UpdateResult) {
+	b, err := opts.ToShareNetworkRemoveSecurityServiceMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+	_, r.Err = client.Post(removeSecurityServiceURL(client, id), b, &r.Body, &gophercloud.RequestOpts{
+		OkCodes: []int{200},
+	})
+	return
+}

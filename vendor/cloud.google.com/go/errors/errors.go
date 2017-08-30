@@ -69,6 +69,8 @@
 // If you try to write an error report with a nil client, or if the client
 // fails to write the report to the server, the error report is logged using
 // log.Println.
+//
+// Deprecated: Use cloud.google.com/go/errorreporting instead.
 package errors // import "cloud.google.com/go/errors"
 
 import (

@@ -339,6 +339,35 @@ endif
 
 
 ################################################################################
+##                                   DEP                                      ##
+################################################################################
+DEP := ./dep
+DEP_VER ?= 0.3.0
+DEP_ZIP := dep-$$GOHOSTOS-$$GOHOSTARCH.zip
+DEP_URL := https://github.com/golang/dep/releases/download/v$(DEP_VER)/$$DEP_ZIP
+
+$(DEP):
+	GOVERSION=$$(go version | awk '{print $$4}') && \
+	GOHOSTOS=$$(echo $$GOVERSION | awk -F/ '{print $$1}') && \
+	GOHOSTARCH=$$(echo $$GOVERSION | awk -F/ '{print $$2}') && \
+	DEP_ZIP="$(DEP_ZIP)" && \
+	DEP_URL="$(DEP_URL)" && \
+	mkdir -p .dep && \
+	cd .dep && \
+	curl -sSLO $$DEP_URL && \
+	unzip "$$DEP_ZIP" && \
+	mv $(@F) ../ && \
+	cd ../ && \
+	rm -fr .dep
+ifneq (./dep,$(DEP))
+dep: $(DEP)
+endif
+
+dep-ensure: | $(DEP)
+	$(DEP) ensure -v
+
+
+################################################################################
 ##                                   GIST                                     ##
 ################################################################################
 TRAVIS_BUILD_URL := https://travis-ci.org/$(TRAVIS_REPO_SLUG)/builds/$(TRAVIS_BUILD_ID)

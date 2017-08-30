@@ -16,15 +16,20 @@ func List(client *gophercloud.ServiceClient) pagination.Pager {
 
 // CreateOpts represents the configuration for adding a new default rule.
 type CreateOpts struct {
-	// The lower bound of the port range that will be opened.s
+	// The lower bound of the port range that will be opened.
 	FromPort int `json:"from_port"`
+
 	// The upper bound of the port range that will be opened.
 	ToPort int `json:"to_port"`
+
 	// The protocol type that will be allowed, e.g. TCP.
 	IPProtocol string `json:"ip_protocol" required:"true"`
+
 	// ONLY required if FromGroupID is blank. This represents the IP range that
-	// will be the source of network traffic to your security group. Use
-	// 0.0.0.0/0 to allow all IP addresses.
+	// will be the source of network traffic to your security group.
+	//
+	// Use 0.0.0.0/0 to allow all IPv4 addresses.
+	// Use ::/0 to allow all IPv6 addresses.
 	CIDR string `json:"cidr,omitempty"`
 }
 
@@ -63,7 +68,7 @@ func Get(client *gophercloud.ServiceClient, id string) (r GetResult) {
 	return
 }
 
-// Delete will permanently delete a default rule from the project.
+// Delete will permanently delete a rule the project's default security group.
 func Delete(client *gophercloud.ServiceClient, id string) (r gophercloud.ErrResult) {
 	_, r.Err = client.Delete(resourceURL(client, id), nil)
 	return

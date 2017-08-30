@@ -33,6 +33,28 @@ make backwards-incompatible changes.
 
 ## News
 
+_August 22, 2017+
+
+*v0.12.0*
+
+- pubsub: Subscription.Receive now uses streaming pull.
+
+- pubsub: add Client.TopicInProject to access topics in a different project
+  than the client.
+
+- errors: renamed errorreporting. The errors package will be removed shortly.
+
+- datastore: improved retry behavior.
+
+- bigquery: support updates to dataset metadata, with etags.
+
+- bigquery: add etag support to Table.Update (BREAKING: etag argument added).
+
+- bigquery: generate all job IDs on the client.
+
+- storage: support bucket lifecycle configurations.
+
+
 _July 31, 2017_
 
 *v0.11.0*
@@ -88,7 +110,7 @@ Google API                       | Status       | Package
 [Translation][cloud-translation] | stable       | [`cloud.google.com/go/translate`][cloud-translation-ref]
 [Trace][cloud-trace]             | alpha        | [`cloud.google.com/go/trace`][cloud-trace-ref]
 [Video Intelligence][cloud-video]| beta         | [`cloud.google.com/go/videointelligence/apiv1beta1`][cloud-video-ref]
-[ErrorReporting][cloud-errors]   | alpha        | [`cloud.google.com/go/errors`][cloud-errors-ref]
+[ErrorReporting][cloud-errors]   | alpha        | [`cloud.google.com/go/errorreporting`][cloud-errors-ref]
 
 
 > **Alpha status**: the API is still being actively developed. As a
@@ -455,6 +477,6 @@ for more information.
 [cloud-video-ref]: https://godoc.org/cloud.google.com/go/videointelligence/apiv1beta1
 
 [cloud-errors]: https://cloud.google.com/error-reporting/
-[cloud-errors-ref]: https://godoc.org/cloud.google.com/go/errors
+[cloud-errors-ref]: https://godoc.org/cloud.google.com/go/errorreporting
 
 [default-creds]: https://developers.google.com/identity/protocols/application-default-credentials

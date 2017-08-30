@@ -163,3 +163,140 @@ func HandleGetSuccessfully(t *testing.T) {
 		fmt.Fprintf(w, GetOutput)
 	})
 }
+
+// CreateZoneRequest is a sample request to create a zone.
+const CreateZoneRequest = `
+{
+    "name": "example.org.",
+    "email": "joe@example.org",
+    "type": "PRIMARY",
+    "ttl": 7200,
+    "description": "This is an example zone."
+}
+`
+
+// CreateZoneResponse is a sample response to a create request.
+const CreateZoneResponse = `
+{
+    "id": "a86dba58-0043-4cc6-a1bb-69d5e86f3ca3",
+    "pool_id": "572ba08c-d929-4c70-8e42-03824bb24ca2",
+    "project_id": "4335d1f0-f793-11e2-b778-0800200c9a66",
+    "name": "example.org.",
+    "email": "joe@example.org",
+    "ttl": 7200,
+    "serial": 1404757531,
+    "status": "ACTIVE",
+    "action": "CREATE",
+    "description": "This is an example zone.",
+    "masters": [],
+    "type": "PRIMARY",
+    "transferred_at": null,
+    "version": 1,
+    "created_at": "2014-07-07T18:25:31.275934",
+    "updated_at": null,
+    "links": {
+      "self": "https://127.0.0.1:9001/v2/zones/a86dba58-0043-4cc6-a1bb-69d5e86f3ca3"
+    }
+}
+`
+
+// CreatedZone is the expected created zone
+var CreatedZone = FirstZone
+
+// HandleZoneCreationSuccessfully configures the test server to respond to a Create request.
+func HandleCreateSuccessfully(t *testing.T) {
+	th.Mux.HandleFunc("/zones", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+		th.TestJSONRequest(t, r, CreateZoneRequest)
+
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Add("Content-Type", "application/json")
+		fmt.Fprintf(w, CreateZoneResponse)
+	})
+}
+
+// UpdateZoneRequest is a sample request to update a zone.
+const UpdateZoneRequest = `
+{
+    "ttl": 600,
+    "description": "Updated Description"
+}
+`
+
+// UpdateZoneResponse is a sample response to update a zone.
+const UpdateZoneResponse = `
+{
+    "id": "a86dba58-0043-4cc6-a1bb-69d5e86f3ca3",
+    "pool_id": "572ba08c-d929-4c70-8e42-03824bb24ca2",
+    "project_id": "4335d1f0-f793-11e2-b778-0800200c9a66",
+    "name": "example.org.",
+    "email": "joe@example.org",
+    "ttl": 600,
+    "serial": 1404757531,
+    "status": "PENDING",
+    "action": "UPDATE",
+    "description": "Updated Description",
+    "masters": [],
+    "type": "PRIMARY",
+    "transferred_at": null,
+    "version": 1,
+    "created_at": "2014-07-07T18:25:31.275934",
+    "updated_at": null,
+    "links": {
+      "self": "https://127.0.0.1:9001/v2/zones/a86dba58-0043-4cc6-a1bb-69d5e86f3ca3"
+    }
+}
+`
+
+// HandleZoneUpdateSuccessfully configures the test server to respond to an Update request.
+func HandleUpdateSuccessfully(t *testing.T) {
+	th.Mux.HandleFunc("/zones/a86dba58-0043-4cc6-a1bb-69d5e86f3ca3",
+		func(w http.ResponseWriter, r *http.Request) {
+			th.TestMethod(t, r, "PATCH")
+			th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+			th.TestJSONRequest(t, r, UpdateZoneRequest)
+
+			w.WriteHeader(http.StatusOK)
+			w.Header().Add("Content-Type", "application/json")
+			fmt.Fprintf(w, UpdateZoneResponse)
+		})
+}
+
+// DeleteZoneResponse is a sample response to update a zone.
+const DeleteZoneResponse = `
+{
+    "id": "a86dba58-0043-4cc6-a1bb-69d5e86f3ca3",
+    "pool_id": "572ba08c-d929-4c70-8e42-03824bb24ca2",
+    "project_id": "4335d1f0-f793-11e2-b778-0800200c9a66",
+    "name": "example.org.",
+    "email": "joe@example.org",
+    "ttl": 600,
+    "serial": 1404757531,
+    "status": "PENDING",
+    "action": "DELETE",
+    "description": "Updated Description",
+    "masters": [],
+    "type": "PRIMARY",
+    "transferred_at": null,
+    "version": 1,
+    "created_at": "2014-07-07T18:25:31.275934",
+    "updated_at": null,
+    "links": {
+      "self": "https://127.0.0.1:9001/v2/zones/a86dba58-0043-4cc6-a1bb-69d5e86f3ca3"
+    }
+}
+`
+
+// HandleZoneDeleteSuccessfully configures the test server to respond to an Delete request.
+func HandleDeleteSuccessfully(t *testing.T) {
+	th.Mux.HandleFunc("/zones/a86dba58-0043-4cc6-a1bb-69d5e86f3ca3",
+		func(w http.ResponseWriter, r *http.Request) {
+			th.TestMethod(t, r, "DELETE")
+			th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+
+			w.WriteHeader(http.StatusAccepted)
+			w.Header().Add("Content-Type", "application/json")
+			fmt.Fprintf(w, DeleteZoneResponse)
+		})
+}

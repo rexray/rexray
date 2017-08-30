@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gophercloud/gophercloud/acceptance/clients"
+	"github.com/gophercloud/gophercloud/acceptance/tools"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v2/volumes"
 
 	blockstorage "github.com/gophercloud/gophercloud/acceptance/openstack/blockstorage/v2"
@@ -28,12 +29,14 @@ func TestVolumeActionsUploadImageDestroy(t *testing.T) {
 	}
 	defer blockstorage.DeleteVolume(t, blockClient, volume)
 
-	imageName, err := CreateUploadImage(t, blockClient, volume)
+	volumeImage, err := CreateUploadImage(t, blockClient, volume)
 	if err != nil {
 		t.Fatalf("Unable to upload volume-backed image: %v", err)
 	}
 
-	err = DeleteUploadedImage(t, computeClient, imageName)
+	tools.PrintResource(t, volumeImage)
+
+	err = DeleteUploadedImage(t, computeClient, volumeImage.ImageName)
 	if err != nil {
 		t.Fatalf("Unable to delete volume-backed image: %v", err)
 	}
@@ -92,6 +95,33 @@ func TestVolumeActionsReserveUnreserve(t *testing.T) {
 		t.Fatalf("Unable to create volume reserve: %v", err)
 	}
 	defer DeleteVolumeReserve(t, client, volume)
+}
+
+func TestVolumeActionsExtendSize(t *testing.T) {
+	blockClient, err := clients.NewBlockStorageV2Client()
+	if err != nil {
+		t.Fatalf("Unable to create a blockstorage client: %v", err)
+	}
+
+	volume, err := blockstorage.CreateVolume(t, blockClient)
+	if err != nil {
+		t.Fatalf("Unable to create volume: %v", err)
+	}
+	defer blockstorage.DeleteVolume(t, blockClient, volume)
+
+	tools.PrintResource(t, volume)
+
+	err = ExtendVolumeSize(t, blockClient, volume)
+	if err != nil {
+		t.Fatalf("Unable to resize volume: %v", err)
+	}
+
+	newVolume, err := volumes.Get(blockClient, volume.ID).Extract()
+	if err != nil {
+		t.Fatal("Unable to get updated volume information: %v", err)
+	}
+
+	tools.PrintResource(t, newVolume)
 }
 
 // Note(jtopjian): I plan to work on this at some point, but it requires

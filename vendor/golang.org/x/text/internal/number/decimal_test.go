@@ -22,6 +22,15 @@ func mkfloat(num string) float64 {
 // digits are shifted. Numbers may have an additional exponent or be the special
 // value NaN, Inf, or -Inf.
 func mkdec(num string) (d Decimal) {
+	var r RoundingContext
+	d.Convert(r, dec(num))
+	return
+}
+
+type dec string
+
+func (s dec) Convert(d *Decimal, _ RoundingContext) {
+	num := string(s)
 	if num[0] == '-' {
 		d.Neg = true
 		num = num[1:]
@@ -52,7 +61,7 @@ func mkdec(num string) (d Decimal) {
 	for i := range d.Digits {
 		d.Digits[i] -= '0'
 	}
-	return d.normalize()
+	*d = d.normalize()
 }
 
 func byteNum(s string) []byte {
@@ -77,11 +86,11 @@ func TestDecimalString(t *testing.T) {
 		want string
 	}{
 		{want: "0"},
-		{Decimal{Digits: nil, Exp: 1000}, "0"}, // exponent of 1000 is ignored
-		{Decimal{Digits: byteNum("12345"), Exp: 0}, "0.12345"},
-		{Decimal{Digits: byteNum("12345"), Exp: -3}, "0.00012345"},
-		{Decimal{Digits: byteNum("12345"), Exp: +3}, "123.45"},
-		{Decimal{Digits: byteNum("12345"), Exp: +10}, "1234500000"},
+		{Decimal{digits: digits{Digits: nil, Exp: 1000}}, "0"}, // exponent of 1000 is ignored
+		{Decimal{digits: digits{Digits: byteNum("12345"), Exp: 0}}, "0.12345"},
+		{Decimal{digits: digits{Digits: byteNum("12345"), Exp: -3}}, "0.00012345"},
+		{Decimal{digits: digits{Digits: byteNum("12345"), Exp: +3}}, "123.45"},
+		{Decimal{digits: digits{Digits: byteNum("12345"), Exp: +10}}, "1234500000"},
 	} {
 		if got := test.x.String(); got != test.want {
 			t.Errorf("%v == %q; want %q", test.x, got, test.want)
@@ -232,14 +241,18 @@ func TestRounding(t *testing.T) {
 }
 
 func TestConvert(t *testing.T) {
-	scale2 := &RoundingContext{Scale: 2}
-	scale2away := &RoundingContext{Scale: 2, Mode: AwayFromZero}
-	inc0_05 := &RoundingContext{Increment: 5, Scale: 2}
-	inc50 := &RoundingContext{Increment: 50}
-	prec3 := &RoundingContext{Precision: 3}
+	scale2 := RoundingContext{}
+	scale2.SetScale(2)
+	scale2away := RoundingContext{Mode: AwayFromZero}
+	scale2away.SetScale(2)
+	inc0_05 := RoundingContext{Increment: 5}
+	inc0_05.SetScale(2)
+	inc50 := RoundingContext{Increment: 50}
+	prec3 := RoundingContext{}
+	prec3.SetPrecision(3)
 	testCases := []struct {
 		x   interface{}
-		rc  *RoundingContext
+		rc  RoundingContext
 		out string
 	}{
 		{int8(-34), scale2, "-34"},
@@ -271,6 +284,7 @@ func TestConvert(t *testing.T) {
 		{math.Inf(1), inc50, "Inf"},
 		{math.Inf(-1), inc50, "-Inf"},
 		{math.NaN(), inc50, "NaN"},
+		{"clearly not a number", scale2, "NaN"},
 	}
 	for _, tc := range testCases {
 		var d Decimal
@@ -285,7 +299,7 @@ func TestConvert(t *testing.T) {
 
 type converter int
 
-func (c converter) Convert(d *Decimal, r *RoundingContext) {
+func (c converter) Convert(d *Decimal, r RoundingContext) {
 	d.Digits = append(d.Digits, 1, 0, 0)
 	d.Exp = 3
 }

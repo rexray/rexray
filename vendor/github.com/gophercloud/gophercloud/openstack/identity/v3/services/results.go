@@ -9,8 +9,8 @@ type commonResult struct {
 	gophercloud.Result
 }
 
-// Extract interprets a GetResult, CreateResult or UpdateResult as a concrete Service.
-// An error is returned if the original call or the extraction failed.
+// Extract interprets a GetResult, CreateResult or UpdateResult as a concrete
+// Service. An error is returned if the original call or the extraction failed.
 func (r commonResult) Extract() (*Service, error) {
 	var s struct {
 		Service *Service `json:"service"`
@@ -19,32 +19,43 @@ func (r commonResult) Extract() (*Service, error) {
 	return s.Service, err
 }
 
-// CreateResult is the deferred result of a Create call.
+// CreateResult is the response from a Create request. Call its Extract method
+// to interpret it as a Service.
 type CreateResult struct {
 	commonResult
 }
 
-// GetResult is the deferred result of a Get call.
+// GetResult is the response from a Get request. Call its Extract method
+// to interpret it as a Service.
 type GetResult struct {
 	commonResult
 }
 
-// UpdateResult is the deferred result of an Update call.
+// UpdateResult is the response from an Update request. Call its Extract method
+// to interpret it as a Service.
 type UpdateResult struct {
 	commonResult
 }
 
-// DeleteResult is the deferred result of an Delete call.
+// DeleteResult is the response from a Delete request. Call its ExtractErr
+// method to interpret it as a Service.
 type DeleteResult struct {
 	gophercloud.ErrResult
 }
 
-// Service is the result of a list or information query.
+// Service represents an OpenStack Service.
 type Service struct {
-	Description string `json:"description`
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
+	// Description is a description of the service.
+	Description string `json:"description"`
+
+	// ID is the unique ID of the service.
+	ID string `json:"id"`
+
+	// Name is the name of the service.
+	Name string `json:"name"`
+
+	// Type is the type of the service.
+	Type string `json:"type"`
 }
 
 // ServicePage is a single page of Service results.
@@ -52,13 +63,14 @@ type ServicePage struct {
 	pagination.LinkedPageBase
 }
 
-// IsEmpty returns true if the page contains no results.
+// IsEmpty returns true if the ServicePage contains no results.
 func (p ServicePage) IsEmpty() (bool, error) {
 	services, err := ExtractServices(p)
 	return len(services) == 0, err
 }
 
-// ExtractServices extracts a slice of Services from a Collection acquired from List.
+// ExtractServices extracts a slice of Services from a Collection acquired
+// from List.
 func ExtractServices(r pagination.Page) ([]Service, error) {
 	var s struct {
 		Services []Service `json:"services"`

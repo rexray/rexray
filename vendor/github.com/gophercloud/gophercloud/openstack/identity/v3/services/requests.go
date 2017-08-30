@@ -12,17 +12,20 @@ func Create(client *gophercloud.ServiceClient, serviceType string) (r CreateResu
 	return
 }
 
+// ListOptsBuilder enables extensions to add additional parameters to the List
+// request.
 type ListOptsBuilder interface {
 	ToServiceListMap() (string, error)
 }
 
-// ListOpts allows you to query the List method.
+// ListOpts provides options for filtering the List results.
 type ListOpts struct {
 	ServiceType string `q:"type"`
 	PerPage     int    `q:"perPage"`
 	Page        int    `q:"page"`
 }
 
+// ToServiceListMap builds a list query from the list options.
 func (opts ListOpts) ToServiceListMap() (string, error) {
 	q, err := gophercloud.BuildQueryString(opts)
 	return q.String(), err
@@ -57,7 +60,8 @@ func Update(client *gophercloud.ServiceClient, serviceID string, serviceType str
 }
 
 // Delete removes an existing service.
-// It either deletes all associated endpoints, or fails until all endpoints are deleted.
+// It either deletes all associated endpoints, or fails until all endpoints
+// are deleted.
 func Delete(client *gophercloud.ServiceClient, serviceID string) (r DeleteResult) {
 	_, r.Err = client.Delete(serviceURL(client, serviceID), nil)
 	return

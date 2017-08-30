@@ -16,7 +16,7 @@ import (
 
 // CreateUploadImage will upload volume it as volume-baked image. An name of new image or err will be
 // returned
-func CreateUploadImage(t *testing.T, client *gophercloud.ServiceClient, volume *volumes.Volume) (string, error) {
+func CreateUploadImage(t *testing.T, client *gophercloud.ServiceClient, volume *volumes.Volume) (volumeactions.VolumeImage, error) {
 	if testing.Short() {
 		t.Skip("Skipping test that requires volume-backed image uploading in short mode.")
 	}
@@ -27,19 +27,20 @@ func CreateUploadImage(t *testing.T, client *gophercloud.ServiceClient, volume *
 		Force:     true,
 	}
 
-	if err := volumeactions.UploadImage(client, volume.ID, uploadImageOpts).ExtractErr(); err != nil {
-		return "", err
+	volumeImage, err := volumeactions.UploadImage(client, volume.ID, uploadImageOpts).Extract()
+	if err != nil {
+		return volumeImage, err
 	}
 
 	t.Logf("Uploading volume %s as volume-backed image %s", volume.ID, imageName)
 
 	if err := volumes.WaitForStatus(client, volume.ID, "available", 60); err != nil {
-		return "", err
+		return volumeImage, err
 	}
 
 	t.Logf("Uploaded volume %s as volume-backed image %s", volume.ID, imageName)
 
-	return imageName, nil
+	return volumeImage, nil
 
 }
 
@@ -149,4 +150,24 @@ func DeleteVolumeReserve(t *testing.T, client *gophercloud.ServiceClient, volume
 	}
 
 	t.Logf("Unreserved volume %s", volume.ID)
+}
+
+// ExtendVolumeSize will extend the size of a volume.
+func ExtendVolumeSize(t *testing.T, client *gophercloud.ServiceClient, volume *volumes.Volume) error {
+	t.Logf("Attempting to extend the size of volume %s", volume.ID)
+
+	extendOpts := volumeactions.ExtendSizeOpts{
+		NewSize: 2,
+	}
+
+	err := volumeactions.ExtendSize(client, volume.ID, extendOpts).ExtractErr()
+	if err != nil {
+		return err
+	}
+
+	if err := volumes.WaitForStatus(client, volume.ID, "available", 60); err != nil {
+		return err
+	}
+
+	return nil
 }

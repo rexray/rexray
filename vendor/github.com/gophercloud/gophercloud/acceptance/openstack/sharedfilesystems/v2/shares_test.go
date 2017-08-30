@@ -1,9 +1,10 @@
 package v2
 
 import (
+	"testing"
+
 	"github.com/gophercloud/gophercloud/acceptance/clients"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
-	"testing"
 )
 
 func TestShareCreate(t *testing.T) {

@@ -89,7 +89,7 @@ func TestExchangeRequest(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
-		if string(body) != "client_id=CLIENT_ID&code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL&scope=scope1+scope2" {
+		if string(body) != "code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL" {
 			t.Errorf("Unexpected exchange payload, %v is found.", string(body))
 		}
 		w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
@@ -133,7 +133,7 @@ func TestExchangeRequest_JSONResponse(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
-		if string(body) != "client_id=CLIENT_ID&code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL&scope=scope1+scope2" {
+		if string(body) != "code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL" {
 			t.Errorf("Unexpected exchange payload, %v is found.", string(body))
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -325,7 +325,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
-		expected = "client_id=CLIENT_ID&grant_type=password&password=password1&scope=scope1+scope2&username=user1"
+		expected = "grant_type=password&password=password1&scope=scope1+scope2&username=user1"
 		if string(body) != expected {
 			t.Errorf("res.Body = %q; want %q", string(body), expected)
 		}
@@ -364,7 +364,7 @@ func TestTokenRefreshRequest(t *testing.T) {
 			t.Errorf("Unexpected Content-Type header, %v is found.", headerContentType)
 		}
 		body, _ := ioutil.ReadAll(r.Body)
-		if string(body) != "client_id=CLIENT_ID&grant_type=refresh_token&refresh_token=REFRESH_TOKEN" {
+		if string(body) != "grant_type=refresh_token&refresh_token=REFRESH_TOKEN" {
 			t.Errorf("Unexpected refresh token payload, %v is found.", string(body))
 		}
 	}))
@@ -403,15 +403,15 @@ func TestFetchWithNoRefreshToken(t *testing.T) {
 func TestRefreshToken_RefreshTokenReplacement(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"access_token":"ACCESS TOKEN",  "scope": "user", "token_type": "bearer", "refresh_token": "NEW REFRESH TOKEN"}`))
+		w.Write([]byte(`{"access_token":"ACCESS_TOKEN",  "scope": "user", "token_type": "bearer", "refresh_token": "NEW_REFRESH_TOKEN"}`))
 		return
 	}))
 	defer ts.Close()
 	conf := newConf(ts.URL)
-	tkr := tokenRefresher{
+	tkr := &tokenRefresher{
 		conf:         conf,
 		ctx:          context.Background(),
-		refreshToken: "OLD REFRESH TOKEN",
+		refreshToken: "OLD_REFRESH_TOKEN",
 	}
 	tk, err := tkr.Token()
 	if err != nil {
@@ -420,6 +420,29 @@ func TestRefreshToken_RefreshTokenReplacement(t *testing.T) {
 	}
 	if tk.RefreshToken != tkr.refreshToken {
 		t.Errorf("tokenRefresher.refresh_token = %q; want %q", tkr.refreshToken, tk.RefreshToken)
+	}
+}
+
+func TestRefreshToken_RefreshTokenPreservation(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"access_token":"ACCESS_TOKEN",  "scope": "user", "token_type": "bearer"}`))
+		return
+	}))
+	defer ts.Close()
+	conf := newConf(ts.URL)
+	const oldRefreshToken = "OLD_REFRESH_TOKEN"
+	tkr := &tokenRefresher{
+		conf:         conf,
+		ctx:          context.Background(),
+		refreshToken: oldRefreshToken,
+	}
+	_, err := tkr.Token()
+	if err != nil {
+		t.Fatalf("got err = %v; want none", err)
+	}
+	if tkr.refreshToken != oldRefreshToken {
+		t.Errorf("tokenRefresher.refreshToken = %q; want %q", tkr.refreshToken, oldRefreshToken)
 	}
 }
 

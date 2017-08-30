@@ -30,7 +30,7 @@ func CreateMember(t *testing.T, client *gophercloud.ServiceClient, poolID string
 		return member, err
 	}
 
-	t.Logf("Successfully created member %s")
+	t.Logf("Successfully created member %s", member.ID)
 
 	return member, nil
 }
@@ -53,7 +53,7 @@ func CreateMonitor(t *testing.T, client *gophercloud.ServiceClient) (*monitors.M
 		return monitor, err
 	}
 
-	t.Logf("Successfully created monitor")
+	t.Logf("Successfully created monitor %s", monitor.ID)
 
 	return monitor, nil
 }

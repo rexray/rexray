@@ -18,7 +18,9 @@ func TestLayer3FloatingIPsList(t *testing.T) {
 		t.Fatalf("Unable to create a compute client: %v", err)
 	}
 
-	listOpts := floatingips.ListOpts{}
+	listOpts := floatingips.ListOpts{
+		Status: "DOWN",
+	}
 	allPages, err := floatingips.List(client, listOpts).AllPages()
 	if err != nil {
 		t.Fatalf("Unable to list floating IPs: %v", err)
@@ -45,7 +47,7 @@ func TestLayer3FloatingIPsCreateDelete(t *testing.T) {
 		t.Fatalf("Unable to get choices: %v", err)
 	}
 
-	netid, err := networks.IDFromName(client,chocices.NetworkName)
+	netid, err := networks.IDFromName(client, choices.NetworkName)
 	if err != nil {
 		t.Fatalf("Unable to find network id: %v", err)
 	}

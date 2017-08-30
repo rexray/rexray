@@ -33,7 +33,7 @@ func TestSecurityGroupsList(t *testing.T) {
 	}
 }
 
-func TestSecurityGroupsCreateDelete(t *testing.T) {
+func TestSecurityGroupsCreateUpdateDelete(t *testing.T) {
 	client, err := clients.NewNetworkV2Client()
 	if err != nil {
 		t.Fatalf("Unable to create a network client: %v", err)
@@ -52,6 +52,17 @@ func TestSecurityGroupsCreateDelete(t *testing.T) {
 	defer DeleteSecurityGroupRule(t, client, rule.ID)
 
 	tools.PrintResource(t, group)
+
+	updateOpts := groups.UpdateOpts{
+		Description: "A security group",
+	}
+
+	newGroup, err := groups.Update(client, group.ID, updateOpts).Extract()
+	if err != nil {
+		t.Fatalf("Unable to update security group: %v", err)
+	}
+
+	tools.PrintResource(t, newGroup)
 }
 
 func TestSecurityGroupsPort(t *testing.T) {

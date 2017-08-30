@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v7.2.5
+- Fixed the Active Directory endpoint for the China cloud.
+- Removes UTF-8 BOM if present in response payload.
+- Added telemetry.
+
+## v7.2.3
+- Fixing bug in calls to `DelayForBackoff` that caused doubling of delay duration.
+
 ## v7.2.2
 - autorest/azure: added ASM and ARM VM DNS suffixes.
 

@@ -1,3 +1,5 @@
+/dep
+/.dep/
 /glide
 .gist/
 md5sum.txt

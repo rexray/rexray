@@ -64,7 +64,7 @@ func TestListAllServersWithExtensions(t *testing.T) {
 
 	type ServerWithExt struct {
 		servers.Server
-		availabilityzones.ServerExt
+		availabilityzones.ServerAvailabilityZoneExt
 	}
 
 	allPages, err := servers.List(client.ServiceClient(), servers.ListOpts{}).AllPages()
@@ -217,7 +217,7 @@ func TestGetServerWithExtensions(t *testing.T) {
 
 	var s struct {
 		servers.Server
-		availabilityzones.ServerExt
+		availabilityzones.ServerAvailabilityZoneExt
 	}
 
 	err := servers.Get(client.ServiceClient(), "1234asdf").ExtractInto(&s)

@@ -9,7 +9,10 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/acceptance/clients"
 	"github.com/gophercloud/gophercloud/acceptance/tools"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/pauseunpause"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/suspendresume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	th "github.com/gophercloud/gophercloud/testhelper"
 )
@@ -73,6 +76,20 @@ func TestServersCreateDestroy(t *testing.T) {
 		t.Logf("Addresses on %s: %+v", network, address)
 	}
 
+	allInterfacePages, err := attachinterfaces.List(client, server.ID).AllPages()
+	if err != nil {
+		t.Errorf("Unable to list server Interfaces: %v", err)
+	}
+
+	allInterfaces, err := attachinterfaces.ExtractInterfaces(allInterfacePages)
+	if err != nil {
+		t.Errorf("Unable to extract server Interfaces: %v", err)
+	}
+
+	for _, Interface := range allInterfaces {
+		t.Logf("Interfaces: %+v", Interface)
+	}
+
 	allNetworkAddressPages, err := servers.ListAddressesByNetwork(client, server.ID, choices.NetworkName).AllPages()
 	if err != nil {
 		t.Errorf("Unable to list server addresses: %v", err)
@@ -92,7 +109,7 @@ func TestServersCreateDestroy(t *testing.T) {
 func TestServersCreateDestroyWithExtensions(t *testing.T) {
 	var extendedServer struct {
 		servers.Server
-		availabilityzones.ServerExt
+		availabilityzones.ServerAvailabilityZoneExt
 	}
 
 	client, err := clients.NewComputeV2Client()
@@ -111,6 +128,8 @@ func TestServersCreateDestroyWithExtensions(t *testing.T) {
 		t.Errorf("Unable to retrieve server: %v", err)
 	}
 	tools.PrintResource(t, extendedServer)
+
+	t.Logf("Availability Zone: %s\n", extendedServer.AvailabilityZone)
 }
 
 func TestServersWithoutImageRef(t *testing.T) {
@@ -385,6 +404,78 @@ func TestServersActionResizeRevert(t *testing.T) {
 	}
 
 	if err = WaitForComputeStatus(client, server, "ACTIVE"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestServersActionPause(t *testing.T) {
+	t.Parallel()
+
+	client, err := clients.NewComputeV2Client()
+	if err != nil {
+		t.Fatalf("Unable to create a compute client: %v", err)
+	}
+
+	server, err := CreateServer(t, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer DeleteServer(t, client, server)
+
+	t.Logf("Attempting to pause server %s", server.ID)
+	err = pauseunpause.Pause(client, server.ID).ExtractErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = WaitForComputeStatus(client, server, "PAUSED")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = pauseunpause.Unpause(client, server.ID).ExtractErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = WaitForComputeStatus(client, server, "ACTIVE")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestServersActionSuspend(t *testing.T) {
+	t.Parallel()
+
+	client, err := clients.NewComputeV2Client()
+	if err != nil {
+		t.Fatalf("Unable to create a compute client: %v", err)
+	}
+
+	server, err := CreateServer(t, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer DeleteServer(t, client, server)
+
+	t.Logf("Attempting to suspend server %s", server.ID)
+	err = suspendresume.Suspend(client, server.ID).ExtractErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = WaitForComputeStatus(client, server, "SUSPENDED")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = suspendresume.Resume(client, server.ID).ExtractErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = WaitForComputeStatus(client, server, "ACTIVE")
+	if err != nil {
 		t.Fatal(err)
 	}
 }

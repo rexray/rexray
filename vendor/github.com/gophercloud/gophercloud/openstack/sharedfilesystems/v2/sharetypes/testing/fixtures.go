@@ -238,3 +238,35 @@ func MockShowAccessResponse(t *testing.T) {
         }`)
 	})
 }
+
+func MockAddAccessResponse(t *testing.T) {
+	th.Mux.HandleFunc("/types/shareTypeID/action", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		th.TestHeader(t, r, "Content-Type", "application/json")
+		th.TestHeader(t, r, "Accept", "application/json")
+		th.TestJSONRequest(t, r, `
+        {
+            "addProjectAccess": {
+                "project": "e1284adea3ee4d2482af5ed214f3ad90"
+            }
+        }`)
+		w.WriteHeader(http.StatusAccepted)
+	})
+}
+
+func MockRemoveAccessResponse(t *testing.T) {
+	th.Mux.HandleFunc("/types/shareTypeID/action", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		th.TestHeader(t, r, "Content-Type", "application/json")
+		th.TestHeader(t, r, "Accept", "application/json")
+		th.TestJSONRequest(t, r, `
+        {
+            "removeProjectAccess": {
+                "project": "e1284adea3ee4d2482af5ed214f3ad90"
+            }
+        }`)
+		w.WriteHeader(http.StatusAccepted)
+	})
+}

@@ -126,7 +126,7 @@ func Delete(client *gophercloud.ServiceClient, configID string) (r DeleteResult)
 // configuration group.
 func ListInstances(client *gophercloud.ServiceClient, configID string) pagination.Pager {
 	return pagination.NewPager(client, instancesURL(client, configID), func(r pagination.PageResult) pagination.Page {
-		return instances.InstancePage{pagination.LinkedPageBase{PageResult: r}}
+		return instances.InstancePage{LinkedPageBase: pagination.LinkedPageBase{PageResult: r}}
 	})
 }
 

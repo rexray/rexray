@@ -1,2 +1,2 @@
-// networking_extensions_fwaas_firewalls_v2
+// firewalls unit tests
 package testing

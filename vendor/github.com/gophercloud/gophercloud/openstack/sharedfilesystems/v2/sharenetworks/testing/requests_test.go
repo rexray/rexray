@@ -236,3 +236,45 @@ func TestUpdateNova(t *testing.T) {
 	th.AssertNoErr(t, err)
 	th.CheckDeepEquals(t, &expected, v)
 }
+
+// Verifies that it is possible to add a security service to a share network
+func TestAddSecurityService(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	MockAddSecurityServiceResponse(t)
+
+	var nilTime time.Time
+	expected := sharenetworks.ShareNetwork{
+		ID:              "d8ae6799-2567-4a89-aafb-fa4424350d2b",
+		Name:            "net2",
+		CreatedAt:       time.Date(2015, 9, 7, 12, 31, 12, 0, time.UTC),
+		Description:     "",
+		NetworkType:     "",
+		CIDR:            "",
+		NovaNetID:       "998b42ee-2cee-4d36-8b95-67b5ca1f2109",
+		NeutronNetID:    "",
+		NeutronSubnetID: "",
+		IPVersion:       4,
+		SegmentationID:  0,
+		UpdatedAt:       nilTime,
+		ProjectID:       "16e1ab15c35a457e9c2b2aa189f544e1",
+	}
+
+	options := sharenetworks.AddSecurityServiceOpts{SecurityServiceID: "securityServiceID"}
+	s, err := sharenetworks.AddSecurityService(client.ServiceClient(), "shareNetworkID", options).Extract()
+	th.AssertNoErr(t, err)
+	th.CheckDeepEquals(t, &expected, s)
+}
+
+// Verifies that it is possible to remove a security service from a share network
+func TestRemoveSecurityService(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	MockRemoveSecurityServiceResponse(t)
+
+	options := sharenetworks.RemoveSecurityServiceOpts{SecurityServiceID: "securityServiceID"}
+	_, err := sharenetworks.RemoveSecurityService(client.ServiceClient(), "shareNetworkID", options).Extract()
+	th.AssertNoErr(t, err)
+}

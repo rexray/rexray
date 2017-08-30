@@ -101,3 +101,13 @@ type CreateResult struct {
 type DeleteResult struct {
 	gophercloud.ErrResult
 }
+
+// GetResult contains the response body and error from a Get request.
+type GetResult struct {
+	commonResult
+}
+
+// UpdateResult contains the response body and error from an Update request.
+type UpdateResult struct {
+	commonResult
+}

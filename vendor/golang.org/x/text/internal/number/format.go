@@ -28,7 +28,6 @@ import (
 type Formatter struct {
 	Pattern
 	Info
-	RoundingContext
 }
 
 func (f *Formatter) init(t language.Tag, index []uint8) {
@@ -82,17 +81,29 @@ func (f *Formatter) InitPerMille(t language.Tag) {
 
 func (f *Formatter) Append(dst []byte, x interface{}) []byte {
 	var d Decimal
-	d.Convert(&f.RoundingContext, x)
-	return f.Format(dst, &d)
+	r := f.RoundingContext
+	d.Convert(r, x)
+	return f.Render(dst, FormatDigits(&d, r))
+}
+
+func FormatDigits(d *Decimal, r RoundingContext) Digits {
+	if r.isScientific() {
+		return scientificVisibleDigits(r, d)
+	}
+	return decimalVisibleDigits(r, d)
 }
 
 func (f *Formatter) Format(dst []byte, d *Decimal) []byte {
+	return f.Render(dst, FormatDigits(d, f.RoundingContext))
+}
+
+func (f *Formatter) Render(dst []byte, d Digits) []byte {
 	var result []byte
 	var postPrefix, preSuffix int
-	if f.MinExponentDigits > 0 {
-		result, postPrefix, preSuffix = appendScientific(dst, f, d)
+	if d.IsScientific {
+		result, postPrefix, preSuffix = appendScientific(dst, f, &d)
 	} else {
-		result, postPrefix, preSuffix = appendDecimal(dst, f, d)
+		result, postPrefix, preSuffix = appendDecimal(dst, f, &d)
 	}
 	if f.PadRune == 0 {
 		return result
@@ -131,23 +142,88 @@ func (f *Formatter) Format(dst []byte, d *Decimal) []byte {
 	return result
 }
 
-// appendDecimal appends a formatted number to dst. It returns two possible
-// insertion points for padding.
-func appendDecimal(dst []byte, f *Formatter, d *Decimal) (b []byte, postPre, preSuf int) {
-	if dst, ok := f.renderSpecial(dst, d); ok {
-		return dst, 0, len(dst)
+// decimalVisibleDigits converts d according to the RoundingContext. Note that
+// the exponent may change as a result of this operation.
+func decimalVisibleDigits(r RoundingContext, d *Decimal) Digits {
+	if d.NaN || d.Inf {
+		return Digits{digits: digits{Neg: d.Neg, NaN: d.NaN, Inf: d.Inf}}
 	}
-	n := d.normalize()
-	if maxSig := int(f.MaxSignificantDigits); maxSig > 0 {
+	n := Digits{digits: d.normalize().digits}
+
+	if maxSig := int(r.MaxSignificantDigits); maxSig > 0 {
+		// TODO: really round to zero?
 		n.round(ToZero, maxSig)
 	}
 	digits := n.Digits
 	exp := n.Exp
-	exp += int32(f.Pattern.DigitShift)
+	exp += int32(r.DigitShift)
+
+	// Cap integer digits. Remove *most-significant* digits.
+	if r.MaxIntegerDigits > 0 {
+		if p := int(exp) - int(r.MaxIntegerDigits); p > 0 {
+			if p > len(digits) {
+				p = len(digits)
+			}
+			if digits = digits[p:]; len(digits) == 0 {
+				exp = 0
+			} else {
+				exp -= int32(p)
+			}
+			// Strip leading zeros.
+			for len(digits) > 0 && digits[0] == 0 {
+				digits = digits[1:]
+				exp--
+			}
+		}
+	}
+
+	// Rounding usually is done by convert, but we don't rely on it.
+	numFrac := len(digits) - int(exp)
+	if r.MaxSignificantDigits == 0 && int(r.MaxFractionDigits) < numFrac {
+		p := int(exp) + int(r.MaxFractionDigits)
+		if p <= 0 {
+			p = 0
+		} else if p >= len(digits) {
+			p = len(digits)
+		}
+		digits = digits[:p] // TODO: round
+	}
+
+	// set End (trailing zeros)
+	n.End = int32(len(digits))
+	if len(digits) == 0 {
+		if r.MinFractionDigits > 0 {
+			n.End = int32(r.MinFractionDigits)
+		}
+		if p := int32(r.MinSignificantDigits) - 1; p > n.End {
+			n.End = p
+		}
+	} else {
+		if end := exp + int32(r.MinFractionDigits); end > n.End {
+			n.End = end
+		}
+		if n.End < int32(r.MinSignificantDigits) {
+			n.End = int32(r.MinSignificantDigits)
+		}
+	}
+	n.Digits = digits
+	n.Exp = exp
+	return n
+}
+
+// appendDecimal appends a formatted number to dst. It returns two possible
+// insertion points for padding.
+func appendDecimal(dst []byte, f *Formatter, n *Digits) (b []byte, postPre, preSuf int) {
+	if dst, ok := f.renderSpecial(dst, n); ok {
+		return dst, 0, len(dst)
+	}
+	digits := n.Digits
+	exp := n.Exp
 
 	// Split in integer and fraction part.
 	var intDigits, fracDigits []byte
-	var numInt, numFrac int
+	numInt := 0
+	numFrac := int(n.End - n.Exp)
 	if exp > 0 {
 		numInt = int(exp)
 		if int(exp) >= len(digits) { // ddddd | ddddd00
@@ -155,42 +231,12 @@ func appendDecimal(dst []byte, f *Formatter, d *Decimal) (b []byte, postPre, pre
 		} else { // ddd.dd
 			intDigits = digits[:exp]
 			fracDigits = digits[exp:]
-			numFrac = len(fracDigits)
 		}
 	} else {
 		fracDigits = digits
-		numFrac = -int(exp) + len(digits)
-	}
-	// Cap integer digits. Remove *most-significant* digits.
-	if f.MaxIntegerDigits > 0 && numInt > int(f.MaxIntegerDigits) {
-		offset := numInt - int(f.MaxIntegerDigits)
-		if offset > len(intDigits) {
-			numInt = 0
-			intDigits = nil
-		} else {
-			numInt = int(f.MaxIntegerDigits)
-			intDigits = intDigits[offset:]
-			// for keeping track of significant digits
-			digits = digits[offset:]
-		}
-		// Strip leading zeros. Resulting number of digits is significant digits.
-		for len(intDigits) > 0 && intDigits[0] == 0 {
-			intDigits = intDigits[1:]
-			digits = digits[1:]
-			numInt--
-		}
-	}
-	if f.MaxSignificantDigits == 0 && int(f.MaxFractionDigits) < numFrac {
-		if extra := numFrac - int(f.MaxFractionDigits); extra > len(fracDigits) {
-			numFrac = 0
-			fracDigits = nil
-		} else {
-			numFrac = int(f.MaxFractionDigits)
-			fracDigits = fracDigits[:len(fracDigits)-extra]
-		}
 	}
 
-	neg := d.Neg
+	neg := n.Neg
 	affix, suffix := f.getAffixes(neg)
 	dst = appendAffix(dst, f, affix, neg)
 	savedLen := len(dst)
@@ -220,68 +266,84 @@ func appendDecimal(dst []byte, f *Formatter, d *Decimal) (b []byte, postPre, pre
 		}
 	}
 
-	trailZero := int(f.MinFractionDigits) - numFrac
-	if d := int(f.MinSignificantDigits) - len(digits); d > 0 && d > trailZero {
-		trailZero = d
-	}
-	if numFrac > 0 || trailZero > 0 || f.Flags&AlwaysDecimalSeparator != 0 {
+	if numFrac > 0 || f.Flags&AlwaysDecimalSeparator != 0 {
 		dst = append(dst, f.Symbol(SymDecimal)...)
 	}
-	// Add leading zeros
-	for i := numFrac - len(fracDigits); i > 0; i-- {
+	// Add trailing zeros
+	i = 0
+	for n := -int(n.Exp); i < n; i++ {
 		dst = f.AppendDigit(dst, 0)
 	}
-	i = 0
-	for ; i < len(fracDigits); i++ {
-		dst = f.AppendDigit(dst, fracDigits[i])
+	for _, d := range fracDigits {
+		i++
+		dst = f.AppendDigit(dst, d)
 	}
-	for ; trailZero > 0; trailZero-- {
+	for ; i < numFrac; i++ {
 		dst = f.AppendDigit(dst, 0)
 	}
 	return appendAffix(dst, f, suffix, neg), savedLen, len(dst)
 }
 
-// appendScientific appends a formatted number to dst. It returns two possible
-// insertion points for padding.
-func appendScientific(dst []byte, f *Formatter, d *Decimal) (b []byte, postPre, preSuf int) {
-	if dst, ok := f.renderSpecial(dst, d); ok {
-		return dst, 0, 0
+func scientificVisibleDigits(r RoundingContext, d *Decimal) Digits {
+	if d.NaN || d.Inf {
+		return Digits{digits: digits{Neg: d.Neg, NaN: d.NaN, Inf: d.Inf}}
 	}
-	// Significant digits are transformed by parser for scientific notation and
-	// do not need to be handled here.
-	maxInt, numInt := int(f.MaxIntegerDigits), int(f.MinIntegerDigits)
+	n := Digits{digits: d.normalize().digits, IsScientific: true}
+
+	// Normalize to have at least one digit. This simplifies engineering
+	// notation.
+	if len(n.Digits) == 0 {
+		n.Digits = append(n.Digits, 0)
+		n.Exp = 1
+	}
+
+	// Significant digits are transformed by the parser for scientific notation
+	// and do not need to be handled here.
+	maxInt, numInt := int(r.MaxIntegerDigits), int(r.MinIntegerDigits)
 	if numInt == 0 {
 		numInt = 1
 	}
-	maxSig := int(f.MaxFractionDigits) + numInt
-	minSig := int(f.MinFractionDigits) + numInt
-	n := d.normalize()
+	maxSig := int(r.MaxFractionDigits) + numInt
+	minSig := int(r.MinFractionDigits) + numInt
+
 	if maxSig > 0 {
+		// TODO: really round to zero?
 		n.round(ToZero, maxSig)
 	}
-	digits := n.Digits
-	exp := n.Exp
 
 	// If a maximum number of integers is specified, the minimum must be 1
 	// and the exponent is grouped by this number (e.g. for engineering)
-	if len(digits) == 0 {
-		exp = 0
-	} else if maxInt > numInt {
+	if maxInt > numInt {
 		// Correct the exponent to reflect a single integer digit.
-		exp--
 		numInt = 1
 		// engineering
 		// 0.01234 ([12345]e-1) -> 1.2345e-2  12.345e-3
 		// 12345   ([12345]e+5) -> 1.2345e4  12.345e3
-		d := int(exp) % maxInt
+		d := int(n.Exp-1) % maxInt
 		if d < 0 {
 			d += maxInt
 		}
-		exp -= int32(d)
 		numInt += d
-	} else {
-		exp -= int32(numInt)
 	}
+
+	n.Comma = uint8(numInt)
+	n.End = int32(len(n.Digits))
+	if n.End < int32(minSig) {
+		n.End = int32(minSig)
+	}
+	return n
+}
+
+// appendScientific appends a formatted number to dst. It returns two possible
+// insertion points for padding.
+func appendScientific(dst []byte, f *Formatter, n *Digits) (b []byte, postPre, preSuf int) {
+	if dst, ok := f.renderSpecial(dst, n); ok {
+		return dst, 0, 0
+	}
+	digits := n.Digits
+	numInt := int(n.Comma)
+	numFrac := int(n.End) - int(n.Comma)
+
 	var intDigits, fracDigits []byte
 	if numInt <= len(digits) {
 		intDigits = digits[:numInt]
@@ -289,7 +351,7 @@ func appendScientific(dst []byte, f *Formatter, d *Decimal) (b []byte, postPre, 
 	} else {
 		intDigits = digits
 	}
-	neg := d.Neg
+	neg := n.Neg
 	affix, suffix := f.getAffixes(neg)
 	dst = appendAffix(dst, f, affix, neg)
 	savedLen := len(dst)
@@ -308,15 +370,14 @@ func appendScientific(dst []byte, f *Formatter, d *Decimal) (b []byte, postPre, 
 		}
 	}
 
-	trailZero := minSig - numInt - len(fracDigits)
-	if len(fracDigits) > 0 || trailZero > 0 || f.Flags&AlwaysDecimalSeparator != 0 {
+	if numFrac > 0 || f.Flags&AlwaysDecimalSeparator != 0 {
 		dst = append(dst, f.Symbol(SymDecimal)...)
 	}
 	i = 0
 	for ; i < len(fracDigits); i++ {
 		dst = f.AppendDigit(dst, fracDigits[i])
 	}
-	for ; trailZero > 0; trailZero-- {
+	for ; i < numFrac; i++ {
 		dst = f.AppendDigit(dst, 0)
 	}
 
@@ -324,6 +385,7 @@ func appendScientific(dst []byte, f *Formatter, d *Decimal) (b []byte, postPre, 
 	buf := [12]byte{}
 	// TODO: use exponential if superscripting is not available (no Latin
 	// numbers or no tags) and use exponential in all other cases.
+	exp := n.Exp - int32(n.Comma)
 	exponential := f.Symbol(SymExponential)
 	if exponential == "E" {
 		dst = append(dst, "\u202f"...) // NARROW NO-BREAK SPACE
@@ -408,7 +470,7 @@ func (f *Formatter) getAffixes(neg bool) (affix, suffix string) {
 	return affix, suffix
 }
 
-func (f *Formatter) renderSpecial(dst []byte, d *Decimal) (b []byte, ok bool) {
+func (f *Formatter) renderSpecial(dst []byte, d *Digits) (b []byte, ok bool) {
 	if d.NaN {
 		return fmtNaN(dst, f), true
 	}
@@ -422,7 +484,7 @@ func fmtNaN(dst []byte, f *Formatter) []byte {
 	return append(dst, f.Symbol(SymNan)...)
 }
 
-func fmtInfinite(dst []byte, f *Formatter, d *Decimal) []byte {
+func fmtInfinite(dst []byte, f *Formatter, d *Digits) []byte {
 	affix, suffix := f.getAffixes(d.Neg)
 	dst = appendAffix(dst, f, affix, d.Neg)
 	dst = append(dst, f.Symbol(SymInfinity)...)

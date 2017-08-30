@@ -45,6 +45,11 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults"
     },
+    "ListObjectParentPaths": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults"
+    },
     "ListObjectParents": {
       "input_token": "NextToken",
       "output_token": "NextToken",
@@ -66,6 +71,16 @@
       "limit_key": "MaxResults"
     },
     "ListTagsForResource": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults"
+    },
+    "ListTypedLinkFacetAttributes": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults"
+    },
+    "ListTypedLinkFacetNames": {
       "input_token": "NextToken",
       "output_token": "NextToken",
       "limit_key": "MaxResults"

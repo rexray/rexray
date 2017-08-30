@@ -9,8 +9,8 @@ type commonResult struct {
 	gophercloud.Result
 }
 
-// Extract interprets a GetResult, CreateResult or UpdateResult as a concrete Endpoint.
-// An error is returned if the original call or the extraction failed.
+// Extract interprets a GetResult, CreateResult or UpdateResult as a concrete
+// Endpoint. An error is returned if the original call or the extraction failed.
 func (r commonResult) Extract() (*Endpoint, error) {
 	var s struct {
 		Endpoint *Endpoint `json:"endpoint"`
@@ -19,29 +19,44 @@ func (r commonResult) Extract() (*Endpoint, error) {
 	return s.Endpoint, err
 }
 
-// CreateResult is the deferred result of a Create call.
+// CreateResult is the response from a Create operation. Call its Extract
+// method to interpret it as an Endpoint.
 type CreateResult struct {
 	commonResult
 }
 
-// UpdateResult is the deferred result of an Update call.
+// UpdateResult is the response from an Update operation. Call its Extract
+// method to interpret it as an Endpoint.
 type UpdateResult struct {
 	commonResult
 }
 
-// DeleteResult is the deferred result of an Delete call.
+// DeleteResult is the response from a Delete operation. Call its ExtractErr
+// method to determine if the call succeeded or failed.
 type DeleteResult struct {
 	gophercloud.ErrResult
 }
 
 // Endpoint describes the entry point for another service's API.
 type Endpoint struct {
-	ID           string                   `json:"id"`
+	// ID is the unique ID of the endpoint.
+	ID string `json:"id"`
+
+	// Availability is the interface type of the Endpoint (admin, internal,
+	// or public), referenced by the gophercloud.Availability type.
 	Availability gophercloud.Availability `json:"interface"`
-	Name         string                   `json:"name"`
-	Region       string                   `json:"region"`
-	ServiceID    string                   `json:"service_id"`
-	URL          string                   `json:"url"`
+
+	// Name is the name of the Endpoint.
+	Name string `json:"name"`
+
+	// Region is the region the Endpoint is located in.
+	Region string `json:"region"`
+
+	// ServiceID is the ID of the service the Endpoint refers to.
+	ServiceID string `json:"service_id"`
+
+	// URL is the url of the Endpoint.
+	URL string `json:"url"`
 }
 
 // EndpointPage is a single page of Endpoint results.

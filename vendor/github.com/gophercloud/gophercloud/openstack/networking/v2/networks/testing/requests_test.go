@@ -22,34 +22,7 @@ func TestList(t *testing.T) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		fmt.Fprintf(w, `
-{
-    "networks": [
-        {
-            "status": "ACTIVE",
-            "subnets": [
-                "54d6f61d-db07-451c-9ab3-b9609b6b6f0b"
-            ],
-            "name": "private-network",
-            "admin_state_up": true,
-            "tenant_id": "4fd44f30292945e481c7b8a0c8908869",
-            "shared": true,
-            "id": "d32019d3-bc6e-4319-9c1d-6722fc136a22"
-        },
-        {
-            "status": "ACTIVE",
-            "subnets": [
-                "08eae331-0402-425a-923c-34f7cfe39c1b"
-            ],
-            "name": "private",
-            "admin_state_up": true,
-            "tenant_id": "26a7980765d0414dbc1fc1f88cdb7e6e",
-            "shared": true,
-            "id": "db193ab3-96e3-4cb3-8fc5-05f4296d0324"
-        }
-    ]
-}
-			`)
+		fmt.Fprintf(w, ListResponse)
 	})
 
 	client := fake.ServiceClient()
@@ -63,28 +36,7 @@ func TestList(t *testing.T) {
 			return false, err
 		}
 
-		expected := []networks.Network{
-			{
-				Status:       "ACTIVE",
-				Subnets:      []string{"54d6f61d-db07-451c-9ab3-b9609b6b6f0b"},
-				Name:         "private-network",
-				AdminStateUp: true,
-				TenantID:     "4fd44f30292945e481c7b8a0c8908869",
-				Shared:       true,
-				ID:           "d32019d3-bc6e-4319-9c1d-6722fc136a22",
-			},
-			{
-				Status:       "ACTIVE",
-				Subnets:      []string{"08eae331-0402-425a-923c-34f7cfe39c1b"},
-				Name:         "private",
-				AdminStateUp: true,
-				TenantID:     "26a7980765d0414dbc1fc1f88cdb7e6e",
-				Shared:       true,
-				ID:           "db193ab3-96e3-4cb3-8fc5-05f4296d0324",
-			},
-		}
-
-		th.CheckDeepEquals(t, expected, actual)
+		th.CheckDeepEquals(t, ExpectedNetworkSlice, actual)
 
 		return true, nil
 	})
@@ -105,33 +57,12 @@ func TestGet(t *testing.T) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		fmt.Fprintf(w, `
-{
-    "network": {
-        "status": "ACTIVE",
-        "subnets": [
-            "54d6f61d-db07-451c-9ab3-b9609b6b6f0b"
-        ],
-        "name": "private-network",
-        "admin_state_up": true,
-        "tenant_id": "4fd44f30292945e481c7b8a0c8908869",
-        "shared": true,
-        "id": "d32019d3-bc6e-4319-9c1d-6722fc136a22"
-    }
-}
-			`)
+		fmt.Fprintf(w, GetResponse)
 	})
 
 	n, err := networks.Get(fake.ServiceClient(), "d32019d3-bc6e-4319-9c1d-6722fc136a22").Extract()
 	th.AssertNoErr(t, err)
-
-	th.AssertEquals(t, n.Status, "ACTIVE")
-	th.AssertDeepEquals(t, n.Subnets, []string{"54d6f61d-db07-451c-9ab3-b9609b6b6f0b"})
-	th.AssertEquals(t, n.Name, "private-network")
-	th.AssertEquals(t, n.AdminStateUp, true)
-	th.AssertEquals(t, n.TenantID, "4fd44f30292945e481c7b8a0c8908869")
-	th.AssertEquals(t, n.Shared, true)
-	th.AssertEquals(t, n.ID, "d32019d3-bc6e-4319-9c1d-6722fc136a22")
+	th.CheckDeepEquals(t, &Network1, n)
 }
 
 func TestCreate(t *testing.T) {
@@ -143,45 +74,20 @@ func TestCreate(t *testing.T) {
 		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
 		th.TestHeader(t, r, "Content-Type", "application/json")
 		th.TestHeader(t, r, "Accept", "application/json")
-		th.TestJSONRequest(t, r, `
-{
-    "network": {
-        "name": "sample_network",
-        "admin_state_up": true
-    }
-}
-			`)
-
+		th.TestJSONRequest(t, r, CreateRequest)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 
-		fmt.Fprintf(w, `
-{
-    "network": {
-        "status": "ACTIVE",
-        "subnets": [],
-        "name": "net1",
-        "admin_state_up": true,
-        "tenant_id": "9bacb3c5d39d41a79512987f338cf177",
-        "shared": false,
-        "id": "4e8e5957-649f-477b-9e5b-f1f75b21c03c"
-    }
-}
-		`)
+		fmt.Fprintf(w, CreateResponse)
 	})
 
 	iTrue := true
-	options := networks.CreateOpts{Name: "sample_network", AdminStateUp: &iTrue}
+	options := networks.CreateOpts{Name: "private", AdminStateUp: &iTrue}
 	n, err := networks.Create(fake.ServiceClient(), options).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertEquals(t, n.Status, "ACTIVE")
-	th.AssertDeepEquals(t, n.Subnets, []string{})
-	th.AssertEquals(t, n.Name, "net1")
-	th.AssertEquals(t, n.AdminStateUp, true)
-	th.AssertEquals(t, n.TenantID, "9bacb3c5d39d41a79512987f338cf177")
-	th.AssertEquals(t, n.Shared, false)
-	th.AssertEquals(t, n.ID, "4e8e5957-649f-477b-9e5b-f1f75b21c03c")
+	th.AssertDeepEquals(t, &Network2, n)
 }
 
 func TestCreateWithOptionalFields(t *testing.T) {
@@ -193,23 +99,14 @@ func TestCreateWithOptionalFields(t *testing.T) {
 		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
 		th.TestHeader(t, r, "Content-Type", "application/json")
 		th.TestHeader(t, r, "Accept", "application/json")
-		th.TestJSONRequest(t, r, `
-{
-	"network": {
-			"name": "sample_network",
-			"admin_state_up": true,
-			"shared": true,
-			"tenant_id": "12345"
-	}
-}
-		`)
+		th.TestJSONRequest(t, r, CreateOptionalFieldsRequest)
 
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(w, `{}`)
 	})
 
 	iTrue := true
-	options := networks.CreateOpts{Name: "sample_network", AdminStateUp: &iTrue, Shared: &iTrue, TenantID: "12345"}
+	options := networks.CreateOpts{Name: "public", AdminStateUp: &iTrue, Shared: &iTrue, TenantID: "12345"}
 	_, err := networks.Create(fake.ServiceClient(), options).Extract()
 	th.AssertNoErr(t, err)
 }
@@ -223,32 +120,12 @@ func TestUpdate(t *testing.T) {
 		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
 		th.TestHeader(t, r, "Content-Type", "application/json")
 		th.TestHeader(t, r, "Accept", "application/json")
-		th.TestJSONRequest(t, r, `
-{
-		"network": {
-				"name": "new_network_name",
-				"admin_state_up": false,
-				"shared": true
-		}
-}
-			`)
+		th.TestJSONRequest(t, r, UpdateRequest)
 
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		fmt.Fprintf(w, `
-{
-    "network": {
-        "status": "ACTIVE",
-        "subnets": [],
-        "name": "new_network_name",
-        "admin_state_up": false,
-        "tenant_id": "4fd44f30292945e481c7b8a0c8908869",
-        "shared": true,
-        "id": "4e8e5957-649f-477b-9e5b-f1f75b21c03c"
-    }
-}
-		`)
+		fmt.Fprintf(w, UpdateResponse)
 	})
 
 	iTrue, iFalse := true, false

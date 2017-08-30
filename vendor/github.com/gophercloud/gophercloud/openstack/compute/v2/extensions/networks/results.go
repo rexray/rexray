@@ -5,7 +5,7 @@ import (
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
-// A Network represents a nova-network that an instance communicates on
+// A Network represents a network in an OpenStack cloud.
 type Network struct {
 	// The Bridge that VIFs on this network are connected to
 	Bridge string `json:"bridge"`
@@ -92,8 +92,7 @@ type Network struct {
 	VPNPublicPort int `json:"vpn_public_port"`
 }
 
-// NetworkPage stores a single, only page of Networks
-// results from a List call.
+// NetworkPage stores a single page of all Network results from a List call.
 type NetworkPage struct {
 	pagination.SinglePageBase
 }
@@ -104,7 +103,7 @@ func (page NetworkPage) IsEmpty() (bool, error) {
 	return len(va) == 0, err
 }
 
-// ExtractNetworks interprets a page of results as a slice of Networks
+// ExtractNetworks interprets a page of results as a slice of Networks.
 func ExtractNetworks(r pagination.Page) ([]Network, error) {
 	var s struct {
 		Networks []Network `json:"networks"`
@@ -127,8 +126,8 @@ func (r NetworkResult) Extract() (*Network, error) {
 	return s.Network, err
 }
 
-// GetResult is the response from a Get operation. Call its Extract method to interpret it
-// as a Network.
+// GetResult is the response from a Get operation. Call its Extract method to
+// interpret it as a Network.
 type GetResult struct {
 	NetworkResult
 }

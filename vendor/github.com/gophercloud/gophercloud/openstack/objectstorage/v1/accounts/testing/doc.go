@@ -1,2 +1,2 @@
-// objectstorage_accounts_v1
+// accounts unit tests
 package testing

@@ -1,2 +1,2 @@
-// compute_extensions_tenantnetworks_v2
+// tenantnetworks unit tests
 package testing

@@ -48,3 +48,58 @@ func TestGet(t *testing.T) {
 	th.AssertNoErr(t, err)
 	th.CheckDeepEquals(t, &FirstZone, actual)
 }
+
+func TestCreate(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+	HandleCreateSuccessfully(t)
+
+	createOpts := zones.CreateOpts{
+		Name:        "example.org.",
+		Email:       "joe@example.org",
+		Type:        "PRIMARY",
+		TTL:         7200,
+		Description: "This is an example zone.",
+	}
+
+	actual, err := zones.Create(client.ServiceClient(), createOpts).Extract()
+	th.AssertNoErr(t, err)
+	th.CheckDeepEquals(t, &CreatedZone, actual)
+}
+
+func TestUpdate(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+	HandleUpdateSuccessfully(t)
+
+	updateOpts := zones.UpdateOpts{
+		TTL:         600,
+		Description: "Updated Description",
+	}
+
+	UpdatedZone := CreatedZone
+	UpdatedZone.Status = "PENDING"
+	UpdatedZone.Action = "UPDATE"
+	UpdatedZone.TTL = 600
+	UpdatedZone.Description = "Updated Description"
+
+	actual, err := zones.Update(client.ServiceClient(), UpdatedZone.ID, updateOpts).Extract()
+	th.AssertNoErr(t, err)
+	th.CheckDeepEquals(t, &UpdatedZone, actual)
+}
+
+func TestDelete(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+	HandleDeleteSuccessfully(t)
+
+	DeletedZone := CreatedZone
+	DeletedZone.Status = "PENDING"
+	DeletedZone.Action = "DELETE"
+	DeletedZone.TTL = 600
+	DeletedZone.Description = "Updated Description"
+
+	actual, err := zones.Delete(client.ServiceClient(), DeletedZone.ID).Extract()
+	th.AssertNoErr(t, err)
+	th.CheckDeepEquals(t, &DeletedZone, actual)
+}

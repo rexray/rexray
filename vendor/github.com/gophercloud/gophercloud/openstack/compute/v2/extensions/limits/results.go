@@ -29,7 +29,7 @@ type Absolute struct {
 	MaxPersonalitySize int `json:"maxPersonalitySize"`
 
 	// MaxTotalKeypairs is the total keypairs available to a tenant.
-	MaxTotalKeypairs int `json:maxTotalKeypairs"`
+	MaxTotalKeypairs int `json:"maxTotalKeypairs"`
 
 	// MaxSecurityGroups is the number of security groups available to a tenant.
 	MaxSecurityGroups int `json:"maxSecurityGroups"`
@@ -83,7 +83,7 @@ func (r GetResult) Extract() (*Limits, error) {
 	return s.Limits, err
 }
 
-// GetResult is the response from a Get operation. Call its ExtractAbsolute
+// GetResult is the response from a Get operation. Call its Extract
 // method to interpret it as an Absolute.
 type GetResult struct {
 	gophercloud.Result

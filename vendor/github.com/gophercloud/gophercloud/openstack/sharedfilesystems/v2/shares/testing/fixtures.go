@@ -2,10 +2,11 @@ package testing
 
 import (
 	"fmt"
-	th "github.com/gophercloud/gophercloud/testhelper"
-	fake "github.com/gophercloud/gophercloud/testhelper/client"
 	"net/http"
 	"testing"
+
+	th "github.com/gophercloud/gophercloud/testhelper"
+	fake "github.com/gophercloud/gophercloud/testhelper/client"
 )
 
 const (
@@ -138,5 +139,61 @@ func MockGetResponse(t *testing.T) {
 		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, getResponse)
+	})
+}
+
+var getExportLocationsResponse = `{
+    "export_locations": [
+        {
+		"path": "127.0.0.1:/var/lib/manila/mnt/share-9a922036-ad26-4d27-b955-7a1e285fa74d",
+        	"share_instance_id": "011d21e2-fbc3-4e4a-9993-9ea223f73264",
+		"is_admin_only": false,
+        	"id": "80ed63fc-83bc-4afc-b881-da4a345ac83d",
+		"preferred": false
+	}
+    ]
+}`
+
+// MockGetExportLocationsResponse creates a mock get export locations response
+func MockGetExportLocationsResponse(t *testing.T) {
+	th.Mux.HandleFunc(shareEndpoint+"/"+shareID+"/export_locations", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "GET")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, getExportLocationsResponse)
+	})
+}
+
+var grantAccessRequest = `{
+		"allow_access": {
+			"access_type": "ip",
+			"access_to": "0.0.0.0/0",
+			"access_level": "rw"
+		}
+	}`
+
+var grantAccessResponse = `{
+    "access": {
+	"share_id": "011d21e2-fbc3-4e4a-9993-9ea223f73264",
+	"access_type": "ip",
+	"access_to": "0.0.0.0/0",
+	"access_key": "",
+	"access_level": "rw",
+	"state": "new",
+	"id": "a2f226a5-cee8-430b-8a03-78a59bd84ee8"
+    }
+}`
+
+// MockGrantAccessResponse creates a mock grant access response
+func MockGrantAccessResponse(t *testing.T) {
+	th.Mux.HandleFunc(shareEndpoint+"/"+shareID+"/action", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		th.TestHeader(t, r, "Content-Type", "application/json")
+		th.TestHeader(t, r, "Accept", "application/json")
+		th.TestJSONRequest(t, r, grantAccessRequest)
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, grantAccessResponse)
 	})
 }

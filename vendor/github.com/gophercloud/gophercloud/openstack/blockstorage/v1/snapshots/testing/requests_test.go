@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v1/snapshots"
 	"github.com/gophercloud/gophercloud/pagination"
 	th "github.com/gophercloud/gophercloud/testhelper"
@@ -34,7 +33,7 @@ func TestList(t *testing.T) {
 				VolumeID:    "521752a6-acf6-4b2d-bc7a-119f9148cd8c",
 				Status:      "available",
 				Size:        30,
-				CreatedAt:   gophercloud.JSONRFC3339MilliNoZ(time.Date(2012, 2, 14, 20, 53, 7, 0, time.UTC)),
+				CreatedAt:   time.Date(2012, 2, 14, 20, 53, 7, 0, time.UTC),
 				Description: "Daily Backup",
 			},
 			{
@@ -43,7 +42,7 @@ func TestList(t *testing.T) {
 				VolumeID:    "76b8950a-8594-4e5b-8dce-0dfa9c696358",
 				Status:      "available",
 				Size:        25,
-				CreatedAt:   gophercloud.JSONRFC3339MilliNoZ(time.Date(2012, 2, 14, 20, 53, 8, 0, time.UTC)),
+				CreatedAt:   time.Date(2012, 2, 14, 20, 53, 8, 0, time.UTC),
 				Description: "Weekly Backup",
 			},
 		}

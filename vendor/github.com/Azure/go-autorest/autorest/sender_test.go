@@ -465,7 +465,7 @@ func TestDoRetryForDurationReturnsResponse(t *testing.T) {
 func TestDelayForBackoff(t *testing.T) {
 	d := 2 * time.Second
 	start := time.Now()
-	DelayForBackoff(d, 1, nil)
+	DelayForBackoff(d, 0, nil)
 	if time.Since(start) < d {
 		t.Fatal("autorest: DelayForBackoff did not delay as long as expected")
 	}
@@ -480,7 +480,7 @@ func TestDelayForBackoff_Cancels(t *testing.T) {
 	start := time.Now()
 	go func() {
 		wg.Done()
-		DelayForBackoff(delay, 1, cancel)
+		DelayForBackoff(delay, 0, cancel)
 	}()
 	wg.Wait()
 	close(cancel)
@@ -492,10 +492,12 @@ func TestDelayForBackoff_Cancels(t *testing.T) {
 
 func TestDelayForBackoffWithinReason(t *testing.T) {
 	d := 5 * time.Second
+	maxCoefficient := 2
 	start := time.Now()
-	DelayForBackoff(d, 1, nil)
-	if time.Since(start) > (5 * d) {
-		t.Fatal("autorest: DelayForBackoff delayed too long (exceeded 5 times the specified duration)")
+	DelayForBackoff(d, 0, nil)
+	if time.Since(start) > (time.Duration(maxCoefficient) * d) {
+
+		t.Fatalf("autorest: DelayForBackoff delayed too long (exceeded %d times the specified duration)", maxCoefficient)
 	}
 }
 

@@ -1,2 +1,2 @@
-// identity_extensions_trusts_v3
+// trusts unit tests
 package testing

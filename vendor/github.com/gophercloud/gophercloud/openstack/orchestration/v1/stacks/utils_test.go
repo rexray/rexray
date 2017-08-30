@@ -21,7 +21,7 @@ func TestTEFixFileRefs(t *testing.T) {
 	th.AssertEquals(t, string(te.Bin), `london bridge is falling down: my fair lady`)
 }
 
-func TesttoStringKeys(t *testing.T) {
+func TestToStringKeys(t *testing.T) {
 	var test1 interface{} = map[interface{}]interface{}{
 		"Adam":  "Smith",
 		"Isaac": "Newton",

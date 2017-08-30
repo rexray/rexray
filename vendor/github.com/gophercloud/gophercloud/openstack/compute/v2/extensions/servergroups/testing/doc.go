@@ -1,2 +1,2 @@
-// compute_extensions_servergroups_v2
+// servergroups unit tests
 package testing

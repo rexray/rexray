@@ -1,2 +1,2 @@
-// networking_extensions_layer3_floatingips_v2
+// floatingips unit tests
 package testing

@@ -53,7 +53,7 @@ type PriorityWriteSchedulerConfig struct {
 }
 
 // NewPriorityWriteScheduler constructs a WriteScheduler that schedules
-// frames by following HTTP/2 priorities as described in RFC 7340 Section 5.3.
+// frames by following HTTP/2 priorities as described in RFC 7540 Section 5.3.
 // If cfg is nil, default options are used.
 func NewPriorityWriteScheduler(cfg *PriorityWriteSchedulerConfig) WriteScheduler {
 	if cfg == nil {
@@ -388,7 +388,15 @@ func (ws *priorityWriteScheduler) Push(wr FrameWriteRequest) {
 	} else {
 		n = ws.nodes[id]
 		if n == nil {
-			panic("add on non-open stream")
+			// id is an idle or closed stream. wr should not be a HEADERS or
+			// DATA frame. However, wr can be a RST_STREAM. In this case, we
+			// push wr onto the root, rather than creating a new priorityNode,
+			// since RST_STREAM is tiny and the stream's priority is unknown
+			// anyway. See issue #17919.
+			if wr.DataSize() > 0 {
+				panic("add DATA on non-open stream")
+			}
+			n = &ws.root
 		}
 	}
 	n.q.push(wr)

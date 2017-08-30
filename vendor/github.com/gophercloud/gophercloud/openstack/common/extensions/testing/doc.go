@@ -1,2 +1,2 @@
-// common_extensions
+// common extensions unit tests
 package testing

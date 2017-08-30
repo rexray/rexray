@@ -1,2 +1,2 @@
-// compute_extensions_bootfromvolume_v2
+// bootfromvolume unit tests
 package testing

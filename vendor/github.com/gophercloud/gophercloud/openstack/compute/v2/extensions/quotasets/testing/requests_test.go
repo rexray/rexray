@@ -1,9 +1,9 @@
 package testing
 
 import (
+	"errors"
 	"testing"
 
-	"errors"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/quotasets"
 	th "github.com/gophercloud/gophercloud/testhelper"

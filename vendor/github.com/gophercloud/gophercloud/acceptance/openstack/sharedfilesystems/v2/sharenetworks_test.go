@@ -55,12 +55,10 @@ func TestShareNetworkUpdate(t *testing.T) {
 	options := sharenetworks.UpdateOpts{
 		Name:        "NewName",
 		Description: "New share network description",
-		NovaNetID:   "New_nova_network_id",
 	}
 
 	expectedShareNetwork.Name = options.Name
 	expectedShareNetwork.Description = options.Description
-	expectedShareNetwork.NovaNetID = options.NovaNetID
 
 	_, err = sharenetworks.Update(client, shareNetwork.ID, options).Extract()
 	if err != nil {
@@ -183,4 +181,43 @@ func TestShareNetworkListPagination(t *testing.T) {
 		t.Fatal("Expected to get at least 2 pages")
 	}
 
+}
+
+func TestShareNetworkAddRemoveSecurityService(t *testing.T) {
+	client, err := clients.NewSharedFileSystemV2Client()
+	if err != nil {
+		t.Fatalf("Unable to create a shared file system client: %v", err)
+	}
+
+	securityService, err := CreateSecurityService(t, client)
+	if err != nil {
+		t.Fatalf("Unable to create security service: %v", err)
+	}
+	defer DeleteSecurityService(t, client, securityService)
+
+	shareNetwork, err := CreateShareNetwork(t, client)
+	if err != nil {
+		t.Fatalf("Unable to create share network: %v", err)
+	}
+	defer DeleteShareNetwork(t, client, shareNetwork)
+
+	options := sharenetworks.AddSecurityServiceOpts{
+		SecurityServiceID: securityService.ID,
+	}
+
+	_, err = sharenetworks.AddSecurityService(client, shareNetwork.ID, options).Extract()
+	if err != nil {
+		t.Errorf("Unable to add security service: %v", err)
+	}
+
+	removeOptions := sharenetworks.RemoveSecurityServiceOpts{
+		SecurityServiceID: securityService.ID,
+	}
+
+	_, err = sharenetworks.RemoveSecurityService(client, shareNetwork.ID, removeOptions).Extract()
+	if err != nil {
+		t.Errorf("Unable to remove security service: %v", err)
+	}
+
+	PrintShareNetwork(t, shareNetwork)
 }

@@ -1,2 +1,2 @@
-// identity_endpoints_v3
+// endpoints unit tests
 package testing

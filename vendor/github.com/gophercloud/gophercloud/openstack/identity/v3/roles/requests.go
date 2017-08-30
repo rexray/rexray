@@ -12,17 +12,28 @@ type ListAssignmentsOptsBuilder interface {
 }
 
 // ListAssignmentsOpts allows you to query the ListAssignments method.
-// Specify one of or a combination of GroupId, RoleId, ScopeDomainId, ScopeProjectId,
-// and/or UserId to search for roles assigned to corresponding entities.
-// Effective lists effective assignments at the user, project, and domain level,
-// allowing for the effects of group membership.
+// Specify one of or a combination of GroupId, RoleId, ScopeDomainId,
+// ScopeProjectId, and/or UserId to search for roles assigned to corresponding
+// entities.
 type ListAssignmentsOpts struct {
-	GroupID        string `q:"group.id"`
-	RoleID         string `q:"role.id"`
-	ScopeDomainID  string `q:"scope.domain.id"`
+	// GroupID is the group ID to query.
+	GroupID string `q:"group.id"`
+
+	// RoleID is the specific role to query assignments to.
+	RoleID string `q:"role.id"`
+
+	// ScopeDomainID filters the results by the given domain ID.
+	ScopeDomainID string `q:"scope.domain.id"`
+
+	// ScopeProjectID filters the results by the given Project ID.
 	ScopeProjectID string `q:"scope.project.id"`
-	UserID         string `q:"user.id"`
-	Effective      *bool  `q:"effective"`
+
+	// UserID filterst he results by the given User ID.
+	UserID string `q:"user.id"`
+
+	// Effective lists effective assignments at the user, project, and domain
+	// level, allowing for the effects of group membership.
+	Effective *bool `q:"effective"`
 }
 
 // ToRolesListAssignmentsQuery formats a ListAssignmentsOpts into a query string.

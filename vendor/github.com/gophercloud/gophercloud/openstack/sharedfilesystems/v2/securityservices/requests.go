@@ -119,3 +119,58 @@ func List(client *gophercloud.ServiceClient, opts ListOptsBuilder) pagination.Pa
 		return SecurityServicePage{pagination.SinglePageBase(r)}
 	})
 }
+
+// Get retrieves the SecurityService with the provided ID. To extract the SecurityService
+// object from the response, call the Extract method on the GetResult.
+func Get(client *gophercloud.ServiceClient, id string) (r GetResult) {
+	_, r.Err = client.Get(getURL(client, id), &r.Body, nil)
+	return
+}
+
+// UpdateOptsBuilder allows extensions to add additional parameters to the
+// Update request.
+type UpdateOptsBuilder interface {
+	ToSecurityServiceUpdateMap() (map[string]interface{}, error)
+}
+
+// UpdateOpts contain options for updating an existing SecurityService. This object is passed
+// to the securityservices.Update function. For more information about the parameters, see
+// the SecurityService object.
+type UpdateOpts struct {
+	// The security service name
+	Name string `json:"name"`
+	// The security service description
+	Description string `json:"description,omitempty"`
+	// The security service type. A valid value is ldap, kerberos, or active_directory
+	Type string `json:"type,omitempty"`
+	// The DNS IP address that is used inside the tenant network
+	DNSIP string `json:"dns_ip,omitempty"`
+	// The security service user or group name that is used by the tenant
+	User string `json:"user,omitempty"`
+	// The user password, if you specify a user
+	Password string `json:"password,omitempty"`
+	// The security service domain
+	Domain string `json:"domain,omitempty"`
+	// The security service host name or IP address
+	Server string `json:"server,omitempty"`
+}
+
+// ToSecurityServiceUpdateMap assembles a request body based on the contents of an
+// UpdateOpts.
+func (opts UpdateOpts) ToSecurityServiceUpdateMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "security_service")
+}
+
+// Update will update the SecurityService with provided information. To extract the updated
+// SecurityService from the response, call the Extract method on the UpdateResult.
+func Update(client *gophercloud.ServiceClient, id string, opts UpdateOptsBuilder) (r UpdateResult) {
+	b, err := opts.ToSecurityServiceUpdateMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+	_, r.Err = client.Put(updateURL(client, id), b, &r.Body, &gophercloud.RequestOpts{
+		OkCodes: []int{200},
+	})
+	return
+}

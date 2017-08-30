@@ -94,7 +94,7 @@ func TestList(t *testing.T) {
 			Name:               "d",
 			IsPublic:           true,
 			ExtraSpecs:         map[string]interface{}{"driver_handles_share_servers": "false", "snapshot_support": "True"},
-			RequiredExtraSpecs: map[string]interface{}{"driver_handles_share_servers": "True"},
+			RequiredExtraSpecs: map[string]interface{}{"driver_handles_share_servers": "false"},
 		},
 	}
 
@@ -184,4 +184,34 @@ func TestShowAccess(t *testing.T) {
 	th.AssertNoErr(t, err)
 
 	th.CheckDeepEquals(t, expected, shareType)
+}
+
+// Verifies that an access can be added to a share type
+func TestAddAccess(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	MockAddAccessResponse(t)
+
+	options := &sharetypes.AccessOpts{
+		Project: "e1284adea3ee4d2482af5ed214f3ad90",
+	}
+
+	err := sharetypes.AddAccess(client.ServiceClient(), "shareTypeID", options).ExtractErr()
+	th.AssertNoErr(t, err)
+}
+
+// Verifies that an access can be removed from a share type
+func TestRemoveAccess(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	MockRemoveAccessResponse(t)
+
+	options := &sharetypes.AccessOpts{
+		Project: "e1284adea3ee4d2482af5ed214f3ad90",
+	}
+
+	err := sharetypes.RemoveAccess(client.ServiceClient(), "shareTypeID", options).ExtractErr()
+	th.AssertNoErr(t, err)
 }

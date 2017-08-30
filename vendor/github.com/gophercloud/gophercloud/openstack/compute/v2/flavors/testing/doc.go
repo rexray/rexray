@@ -1,2 +1,2 @@
-// compute_flavors_v2
+// flavors unit tests
 package testing

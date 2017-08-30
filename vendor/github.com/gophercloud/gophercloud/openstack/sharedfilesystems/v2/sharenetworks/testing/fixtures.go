@@ -305,3 +305,55 @@ func MockUpdateNovaResponse(t *testing.T) {
         `)
 	})
 }
+
+func MockAddSecurityServiceResponse(t *testing.T) {
+	th.Mux.HandleFunc("/share-networks/shareNetworkID/action", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `
+        {
+            "share_network": {
+                "name": "net2",
+                "segmentation_id": null,
+                "created_at": "2015-09-07T12:31:12.000000",
+                "neutron_subnet_id": null,
+                "updated_at": null,
+                "id": "d8ae6799-2567-4a89-aafb-fa4424350d2b",
+                "neutron_net_id": null,
+                "ip_version": 4,
+                "nova_net_id": "998b42ee-2cee-4d36-8b95-67b5ca1f2109",
+                "cidr": null,
+                "project_id": "16e1ab15c35a457e9c2b2aa189f544e1",
+                "network_type": null,
+                "description": null
+            }
+        }`)
+	})
+}
+
+func MockRemoveSecurityServiceResponse(t *testing.T) {
+	th.Mux.HandleFunc("/share-networks/shareNetworkID/action", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `
+        {
+            "share_network": {
+                "name": "net2",
+                "segmentation_id": null,
+                "created_at": "2015-09-07T12:31:12.000000",
+                "neutron_subnet_id": null,
+                "updated_at": null,
+                "id": "d8ae6799-2567-4a89-aafb-fa4424350d2b",
+                "neutron_net_id": null,
+                "ip_version": null,
+                "nova_net_id": "998b42ee-2cee-4d36-8b95-67b5ca1f2109",
+                "cidr": null,
+                "project_id": "16e1ab15c35a457e9c2b2aa189f544e1",
+                "network_type": null,
+                "description": null
+            }
+        }`)
+	})
+}

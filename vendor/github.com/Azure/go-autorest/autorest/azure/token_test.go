@@ -377,8 +377,11 @@ func TestServicePrincipalTokenWithAuthorization(t *testing.T) {
 
 func TestServicePrincipalTokenWithAuthorizationReturnsErrorIfCannotRefresh(t *testing.T) {
 	spt := newServicePrincipalToken()
+	s := mocks.NewSender()
+	s.AppendResponse(mocks.NewResponseWithStatus("400 Bad Request", 400))
+	spt.SetSender(s)
 
-	_, err := autorest.Prepare(&http.Request{}, spt.WithAuthorization())
+	_, err := autorest.Prepare(mocks.NewRequest(), spt.WithAuthorization())
 	if err == nil {
 		t.Fatal("azure: ServicePrincipalToken#WithAuthorization failed to return an error when refresh fails")
 	}

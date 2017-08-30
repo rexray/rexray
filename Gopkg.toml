@@ -1,0 +1,141 @@
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# Refer to https://github.com/toml-lang/toml for detailed TOML docs.
+
+required = [
+  "github.com/jteeuwen/go-bindata",
+]
+
+################################################################################
+##                           Framework Dependencies                           ##
+################################################################################
+
+[[constraint]]
+  name = "github.com/akutz/gofig"
+  version = "0.1.8"
+
+[[constraint]]
+  name = "github.com/akutz/golf"
+  version = "0.1.2"
+
+[[constraint]]
+  name = "github.com/akutz/goof"
+  version = "0.1.1"
+
+[[constraint]]
+  name = "github.com/akutz/gotil"
+  version = "0.1.0"
+
+[[constraint]]
+  name = "github.com/codedellemc/gournal"
+  version = "0.3.0"
+
+[[constraint]]
+  name = "github.com/SermoDigital/jose"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/Sirupsen/logrus"
+  source = "https://github.com/akutz/logrus"
+  revision = "5f376aa629ac60c3215cc368e674bd996093a01a"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  branch = "master"
+[[constraint]]
+  name = "github.com/spf13/pflag"
+  branch = "master"
+
+
+################################################################################
+##                         Storage Driver Dependencies                        ##
+################################################################################
+
+### Amazon
+[[constraint]]
+  name = "github.com/aws/aws-sdk-go"
+  version = "1.10.34"
+
+### Azure
+[[constraint]]
+  name = "github.com/Azure/azure-sdk-for-go"
+  version = "~7.0.1-beta"
+[[constraint]]
+  name = "github.com/Azure/go-autorest"
+  version = "~7.2.2"
+[[constraint]]
+  name = "github.com/rubiojr/go-vhd"
+  revision = "96a0db67ea8209453cfa694bdf03de202d6dd8f8"
+  source = "https://github.com/codenrhoden/go-vhd"
+
+### Cinder
+[[constraint]]
+  name = "github.com/gophercloud/gophercloud"
+  revision = "31ccc1afefa5f02925f672d2c1d512cb2e938b7d"
+
+### DigitalOcean
+[[constraint]]
+  name = "github.com/digitalocean/godo"
+  version = "1.1.0"
+
+### GCE
+[[constraint]]
+  name = "google.golang.org/api"
+  branch = "master"
+[[constraint]]
+  name = "google.golang.org/appengine"
+  branch = "master"
+
+### Isilon
+[[constraint]]
+  name = "github.com/codedellemc/goisilon"
+  version = "1.5.0"
+
+### ScaleIO
+[[constraint]]
+  name = "github.com/codedellemc/goscaleio"
+  revision = "485da3636bfcc8e70f74fe7bdc7cb25e5a6e4c4a"
+
+### VirtualBox
+[[constraint]]
+  name = "github.com/appropriate/go-virtualboxclient"
+  revision = "e0978ab2ed407095400a69d5933958dd260058cd"
+  source = "https://github.com/clintonskitson/go-virtualboxclient"
+
+
+################################################################################
+##                                 Testing                                    ##
+################################################################################
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  branch = "master"
+
+
+################################################################################
+##                                  Tools                                     ##
+################################################################################
+
+[[constraint]]
+  name = "github.com/jteeuwen/go-bindata"
+  source = "https://github.com/akutz/go-bindata"
+  revision = "1dd44b25b79c4d9060e582e90798e4d72537818c"
+
+
+################################################################################
+##                                  Go-YAML                                   ##
+################################################################################
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
+  source = "https://github.com/akutz/yaml.git"
+  revision = "bc35f417f8a7664a73d46c9def2933417c03019f"

@@ -1,8 +1,6 @@
 package shares
 
-import (
-	"github.com/gophercloud/gophercloud"
-)
+import "github.com/gophercloud/gophercloud"
 
 // CreateOptsBuilder allows extensions to add additional parameters to the
 // Create request.
@@ -77,5 +75,49 @@ func Delete(client *gophercloud.ServiceClient, id string) (r DeleteResult) {
 // Get will get a single share with given UUID
 func Get(client *gophercloud.ServiceClient, id string) (r GetResult) {
 	_, r.Err = client.Get(getURL(client, id), &r.Body, nil)
+	return
+}
+
+// GetExportLocations will get shareID's export locations
+func GetExportLocations(client *gophercloud.ServiceClient, id string) (r GetExportLocationsResult) {
+	_, r.Err = client.Get(getExportLocationsURL(client, id), &r.Body, nil)
+	return
+}
+
+// GrantAccessOptsBuilder allows extensions to add additional parameters to the
+// GrantAccess request.
+type GrantAccessOptsBuilder interface {
+	ToGrantAccessMap() (map[string]interface{}, error)
+}
+
+// GrantAccessOpts contains the options for creation of an GrantAccess request.
+// For more information about these parameters, please, refer to the shared file systems API v2,
+// Share Actions, Grant Access documentation
+type GrantAccessOpts struct {
+	// The access rule type that can be "ip", "cert" or "user".
+	AccessType string `json:"access_type"`
+	// The value that defines the access that can be a valid format of IP, cert or user.
+	AccessTo string `json:"access_to"`
+	// The access level to the share is either "rw" or "ro".
+	AccessLevel string `json:"access_level"`
+}
+
+// ToGrantAccessMap assembles a request body based on the contents of a
+// GrantAccessOpts.
+func (opts GrantAccessOpts) ToGrantAccessMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "allow_access")
+}
+
+// GrantAccess will grant access to a Share based on the values in GrantAccessOpts. To extract
+// the GrantAccess object from the response, call the Extract method on the GrantAccessResult.
+func GrantAccess(client *gophercloud.ServiceClient, id string, opts GrantAccessOptsBuilder) (r GrantAccessResult) {
+	b, err := opts.ToGrantAccessMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+	_, r.Err = client.Post(grantAccessURL(client, id), b, &r.Body, &gophercloud.RequestOpts{
+		OkCodes: []int{200},
+	})
 	return
 }

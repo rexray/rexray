@@ -7,7 +7,6 @@ import (
 
 	fake "github.com/gophercloud/gophercloud/openstack/networking/v2/common"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	"github.com/gophercloud/gophercloud/pagination"
 	th "github.com/gophercloud/gophercloud/testhelper"
 )
@@ -23,19 +22,7 @@ func TestList(t *testing.T) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		fmt.Fprintf(w, `
-{
-    "security_groups": [
-        {
-            "description": "default",
-            "id": "85cc3048-abc3-43cc-89b3-377341426ac5",
-            "name": "default",
-            "security_group_rules": [],
-            "tenant_id": "e4f50856753b4dc6afee5fa6b9b6c550"
-        }
-    ]
-}
-      `)
+		fmt.Fprintf(w, SecurityGroupListResponse)
 	})
 
 	count := 0
@@ -48,16 +35,7 @@ func TestList(t *testing.T) {
 			return false, err
 		}
 
-		expected := []groups.SecGroup{
-			{
-				Description: "default",
-				ID:          "85cc3048-abc3-43cc-89b3-377341426ac5",
-				Name:        "default",
-				Rules:       []rules.SecGroupRule{},
-				TenantID:    "e4f50856753b4dc6afee5fa6b9b6c550",
-			},
-		}
-
+		expected := []groups.SecGroup{SecurityGroup1}
 		th.CheckDeepEquals(t, expected, actual)
 
 		return true, nil
@@ -77,59 +55,44 @@ func TestCreate(t *testing.T) {
 		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
 		th.TestHeader(t, r, "Content-Type", "application/json")
 		th.TestHeader(t, r, "Accept", "application/json")
-		th.TestJSONRequest(t, r, `
-{
-    "security_group": {
-        "name": "new-webservers",
-        "description": "security group for webservers"
-    }
-}
-      `)
+		th.TestJSONRequest(t, r, SecurityGroupCreateRequest)
 
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 
-		fmt.Fprintf(w, `
-{
-    "security_group": {
-        "description": "security group for webservers",
-        "id": "2076db17-a522-4506-91de-c6dd8e837028",
-        "name": "new-webservers",
-        "security_group_rules": [
-            {
-                "direction": "egress",
-                "ethertype": "IPv4",
-                "id": "38ce2d8e-e8f1-48bd-83c2-d33cb9f50c3d",
-                "port_range_max": null,
-                "port_range_min": null,
-                "protocol": null,
-                "remote_group_id": null,
-                "remote_ip_prefix": null,
-                "security_group_id": "2076db17-a522-4506-91de-c6dd8e837028",
-                "tenant_id": "e4f50856753b4dc6afee5fa6b9b6c550"
-            },
-            {
-                "direction": "egress",
-                "ethertype": "IPv6",
-                "id": "565b9502-12de-4ffd-91e9-68885cff6ae1",
-                "port_range_max": null,
-                "port_range_min": null,
-                "protocol": null,
-                "remote_group_id": null,
-                "remote_ip_prefix": null,
-                "security_group_id": "2076db17-a522-4506-91de-c6dd8e837028",
-                "tenant_id": "e4f50856753b4dc6afee5fa6b9b6c550"
-            }
-        ],
-        "tenant_id": "e4f50856753b4dc6afee5fa6b9b6c550"
-    }
-}
-    `)
+		fmt.Fprintf(w, SecurityGroupCreateResponse)
 	})
 
 	opts := groups.CreateOpts{Name: "new-webservers", Description: "security group for webservers"}
 	_, err := groups.Create(fake.ServiceClient(), opts).Extract()
 	th.AssertNoErr(t, err)
+}
+
+func TestUpdate(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	th.Mux.HandleFunc("/v2.0/security-groups/2076db17-a522-4506-91de-c6dd8e837028",
+		func(w http.ResponseWriter, r *http.Request) {
+			th.TestMethod(t, r, "PUT")
+			th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+			th.TestHeader(t, r, "Content-Type", "application/json")
+			th.TestHeader(t, r, "Accept", "application/json")
+			th.TestJSONRequest(t, r, SecurityGroupUpdateRequest)
+
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+
+			fmt.Fprintf(w, SecurityGroupUpdateResponse)
+		})
+
+	opts := groups.UpdateOpts{Name: "newer-webservers"}
+	sg, err := groups.Update(fake.ServiceClient(), "2076db17-a522-4506-91de-c6dd8e837028", opts).Extract()
+	th.AssertNoErr(t, err)
+
+	th.AssertEquals(t, "newer-webservers", sg.Name)
+	th.AssertEquals(t, "security group for webservers", sg.Description)
+	th.AssertEquals(t, "2076db17-a522-4506-91de-c6dd8e837028", sg.ID)
 }
 
 func TestGet(t *testing.T) {
@@ -143,42 +106,7 @@ func TestGet(t *testing.T) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		fmt.Fprintf(w, `
-{
-    "security_group": {
-        "description": "default",
-        "id": "85cc3048-abc3-43cc-89b3-377341426ac5",
-        "name": "default",
-        "security_group_rules": [
-            {
-                "direction": "egress",
-                "ethertype": "IPv6",
-                "id": "3c0e45ff-adaf-4124-b083-bf390e5482ff",
-                "port_range_max": null,
-                "port_range_min": null,
-                "protocol": null,
-                "remote_group_id": null,
-                "remote_ip_prefix": null,
-                "security_group_id": "85cc3048-abc3-43cc-89b3-377341426ac5",
-                "tenant_id": "e4f50856753b4dc6afee5fa6b9b6c550"
-            },
-            {
-                "direction": "egress",
-                "ethertype": "IPv4",
-                "id": "93aa42e5-80db-4581-9391-3a608bd0e448",
-                "port_range_max": null,
-                "port_range_min": null,
-                "protocol": null,
-                "remote_group_id": null,
-                "remote_ip_prefix": null,
-                "security_group_id": "85cc3048-abc3-43cc-89b3-377341426ac5",
-                "tenant_id": "e4f50856753b4dc6afee5fa6b9b6c550"
-            }
-        ],
-        "tenant_id": "e4f50856753b4dc6afee5fa6b9b6c550"
-    }
-}
-      `)
+		fmt.Fprintf(w, SecurityGroupGetResponse)
 	})
 
 	sg, err := groups.Get(fake.ServiceClient(), "85cc3048-abc3-43cc-89b3-377341426ac5").Extract()

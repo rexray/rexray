@@ -1,2 +1,2 @@
-// networking_extensions_security_groups_v2
+// groups unit tests
 package testing

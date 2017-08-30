@@ -1,5 +1,5 @@
 hash: 51202aefdfe9c4a992f96ab58f6cacf21cdbd1b66efe955c9030bca736ac816d
-updated: 2016-10-25T10:45:46.536665-07:00
+updated: 2017-02-03T13:22:36.5716905-08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 24c63f56522a87ec5339cc3567883f1039378fdb
@@ -13,13 +13,13 @@ imports:
   - pkcs12
   - pkcs12/internal/rc2
 - name: golang.org/x/net
-  version: 65dfc08770ce66f74becfdff5f8ab01caef4e946
+  version: 007e530097ad7f954752df63046b4036f98ba6a6
   repo: https://github.com/golang/net.git
   vcs: git
   subpackages:
   - .
 - name: golang.org/x/text
-  version: 16e1d1f27f7aba51c74c0aeb7a7ee31a75c5c63c
+  version: 506f9d5c962f284575e88337e7d9296d27e729d3
   repo: https://github.com/golang/text.git
   vcs: git
   subpackages:
@@ -29,6 +29,8 @@ testImports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
+- name: github.com/Masterminds/semver
+  version: 59c29afe1a994eacb71c833025ca7acf874bb1da
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:

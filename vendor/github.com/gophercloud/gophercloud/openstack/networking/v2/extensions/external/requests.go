@@ -1,32 +1,56 @@
 package external
 
 import (
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 )
 
-// CreateOpts is the structure used when creating new external network
+// CreateOptsExt is the structure used when creating new external network
 // resources. It embeds networks.CreateOpts and so inherits all of its required
 // and optional fields, with the addition of the External field.
-type CreateOpts struct {
-	networks.CreateOpts
+type CreateOptsExt struct {
+	networks.CreateOptsBuilder
 	External *bool `json:"router:external,omitempty"`
 }
 
-// ToNetworkCreateMap casts a CreateOpts struct to a map.
-func (opts CreateOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
-	return gophercloud.BuildRequestBody(opts, "network")
+// ToNetworkCreateMap adds the router:external options to the base network
+// creation options.
+func (opts CreateOptsExt) ToNetworkCreateMap() (map[string]interface{}, error) {
+	base, err := opts.CreateOptsBuilder.ToNetworkCreateMap()
+	if err != nil {
+		return nil, err
+	}
+
+	if opts.External == nil {
+		return base, nil
+	}
+
+	networkMap := base["network"].(map[string]interface{})
+	networkMap["router:external"] = opts.External
+
+	return base, nil
 }
 
-// UpdateOpts is the structure used when updating existing external network
+// UpdateOptsExt is the structure used when updating existing external network
 // resources. It embeds networks.UpdateOpts and so inherits all of its required
 // and optional fields, with the addition of the External field.
-type UpdateOpts struct {
-	networks.UpdateOpts
+type UpdateOptsExt struct {
+	networks.UpdateOptsBuilder
 	External *bool `json:"router:external,omitempty"`
 }
 
 // ToNetworkUpdateMap casts an UpdateOpts struct to a map.
-func (opts UpdateOpts) ToNetworkUpdateMap() (map[string]interface{}, error) {
-	return gophercloud.BuildRequestBody(opts, "network")
+func (opts UpdateOptsExt) ToNetworkUpdateMap() (map[string]interface{}, error) {
+	base, err := opts.UpdateOptsBuilder.ToNetworkUpdateMap()
+	if err != nil {
+		return nil, err
+	}
+
+	if opts.External == nil {
+		return base, nil
+	}
+
+	networkMap := base["network"].(map[string]interface{})
+	networkMap["router:external"] = opts.External
+
+	return base, nil
 }

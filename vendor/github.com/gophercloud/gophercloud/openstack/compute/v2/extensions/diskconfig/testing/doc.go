@@ -1,2 +1,2 @@
-// compute_extensions_diskconfig_v2
+// diskconfig unit tests
 package testing

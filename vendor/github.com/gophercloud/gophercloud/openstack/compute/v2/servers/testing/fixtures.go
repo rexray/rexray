@@ -870,17 +870,17 @@ var ListAddressesExpected = map[string][]servers.Address{
 	"public": []servers.Address{
 		{
 			Version: 4,
-			Address: "80.56.136.39",
+			Address: "50.56.176.35",
 		},
 		{
 			Version: 6,
-			Address: "2001:4800:790e:510:be76:4eff:fe04:82a8",
+			Address: "2001:4800:790e:510:be76:4eff:fe04:84a8",
 		},
 	},
 	"private": []servers.Address{
 		{
 			Version: 4,
-			Address: "10.880.3.154",
+			Address: "10.180.3.155",
 		},
 	},
 }
@@ -901,7 +901,7 @@ func HandleAddressListSuccessfully(t *testing.T) {
 				},
 				{
 					"version": 6,
-					"addr": "2001:4800:780e:510:be76:4eff:fe04:84a8"
+					"addr": "2001:4800:790e:510:be76:4eff:fe04:84a8"
 				}
 				],
 				"private": [
@@ -923,7 +923,7 @@ var ListNetworkAddressesExpected = []servers.Address{
 	},
 	{
 		Version: 6,
-		Address: "2001:4800:780e:510:be76:4eff:fe04:84a8",
+		Address: "2001:4800:790e:510:be76:4eff:fe04:84a8",
 	},
 }
 
@@ -942,7 +942,7 @@ func HandleNetworkAddressListSuccessfully(t *testing.T) {
 				},
 				{
 					"version": 6,
-					"addr": "2001:4800:780e:510:be76:4eff:fe04:84a8"
+					"addr": "2001:4800:790e:510:be76:4eff:fe04:84a8"
 				}
 			]
 			}`)

@@ -104,6 +104,7 @@ func (s *Service) userAgent() string {
 
 func NewBillingAccountsService(s *Service) *BillingAccountsService {
 	rs := &BillingAccountsService{s: s}
+	rs.Exclusions = NewBillingAccountsExclusionsService(s)
 	rs.Logs = NewBillingAccountsLogsService(s)
 	rs.Sinks = NewBillingAccountsSinksService(s)
 	return rs
@@ -112,9 +113,20 @@ func NewBillingAccountsService(s *Service) *BillingAccountsService {
 type BillingAccountsService struct {
 	s *Service
 
+	Exclusions *BillingAccountsExclusionsService
+
 	Logs *BillingAccountsLogsService
 
 	Sinks *BillingAccountsSinksService
+}
+
+func NewBillingAccountsExclusionsService(s *Service) *BillingAccountsExclusionsService {
+	rs := &BillingAccountsExclusionsService{s: s}
+	return rs
+}
+
+type BillingAccountsExclusionsService struct {
+	s *Service
 }
 
 func NewBillingAccountsLogsService(s *Service) *BillingAccountsLogsService {
@@ -146,6 +158,7 @@ type EntriesService struct {
 
 func NewFoldersService(s *Service) *FoldersService {
 	rs := &FoldersService{s: s}
+	rs.Exclusions = NewFoldersExclusionsService(s)
 	rs.Logs = NewFoldersLogsService(s)
 	rs.Sinks = NewFoldersSinksService(s)
 	return rs
@@ -154,9 +167,20 @@ func NewFoldersService(s *Service) *FoldersService {
 type FoldersService struct {
 	s *Service
 
+	Exclusions *FoldersExclusionsService
+
 	Logs *FoldersLogsService
 
 	Sinks *FoldersSinksService
+}
+
+func NewFoldersExclusionsService(s *Service) *FoldersExclusionsService {
+	rs := &FoldersExclusionsService{s: s}
+	return rs
+}
+
+type FoldersExclusionsService struct {
+	s *Service
 }
 
 func NewFoldersLogsService(s *Service) *FoldersLogsService {
@@ -188,6 +212,7 @@ type MonitoredResourceDescriptorsService struct {
 
 func NewOrganizationsService(s *Service) *OrganizationsService {
 	rs := &OrganizationsService{s: s}
+	rs.Exclusions = NewOrganizationsExclusionsService(s)
 	rs.Logs = NewOrganizationsLogsService(s)
 	rs.Sinks = NewOrganizationsSinksService(s)
 	return rs
@@ -196,9 +221,20 @@ func NewOrganizationsService(s *Service) *OrganizationsService {
 type OrganizationsService struct {
 	s *Service
 
+	Exclusions *OrganizationsExclusionsService
+
 	Logs *OrganizationsLogsService
 
 	Sinks *OrganizationsSinksService
+}
+
+func NewOrganizationsExclusionsService(s *Service) *OrganizationsExclusionsService {
+	rs := &OrganizationsExclusionsService{s: s}
+	return rs
+}
+
+type OrganizationsExclusionsService struct {
+	s *Service
 }
 
 func NewOrganizationsLogsService(s *Service) *OrganizationsLogsService {
@@ -221,6 +257,7 @@ type OrganizationsSinksService struct {
 
 func NewProjectsService(s *Service) *ProjectsService {
 	rs := &ProjectsService{s: s}
+	rs.Exclusions = NewProjectsExclusionsService(s)
 	rs.Logs = NewProjectsLogsService(s)
 	rs.Metrics = NewProjectsMetricsService(s)
 	rs.Sinks = NewProjectsSinksService(s)
@@ -230,11 +267,22 @@ func NewProjectsService(s *Service) *ProjectsService {
 type ProjectsService struct {
 	s *Service
 
+	Exclusions *ProjectsExclusionsService
+
 	Logs *ProjectsLogsService
 
 	Metrics *ProjectsMetricsService
 
 	Sinks *ProjectsSinksService
+}
+
+func NewProjectsExclusionsService(s *Service) *ProjectsExclusionsService {
+	rs := &ProjectsExclusionsService{s: s}
+	return rs
+}
+
+type ProjectsExclusionsService struct {
+	s *Service
 }
 
 func NewProjectsLogsService(s *Service) *ProjectsLogsService {
@@ -264,97 +312,225 @@ type ProjectsSinksService struct {
 	s *Service
 }
 
+// BucketOptions: BucketOptions describes the bucket boundaries used to
+// create a histogram for the distribution. The buckets can be in a
+// linear sequence, an exponential sequence, or each bucket can be
+// specified explicitly. BucketOptions does not include the number of
+// values in each bucket.A bucket has an inclusive lower bound and
+// exclusive upper bound for the values that are counted for that
+// bucket. The upper bound of a bucket must be strictly greater than the
+// lower bound. The sequence of N buckets for a distribution consists of
+// an underflow bucket (number 0), zero or more finite buckets (number 1
+// through N - 2) and an overflow bucket (number N - 1). The buckets are
+// contiguous: the lower bound of bucket i (i > 0) is the same as the
+// upper bound of bucket i - 1. The buckets span the whole range of
+// finite values: lower bound of the underflow bucket is -infinity and
+// the upper bound of the overflow bucket is +infinity. The finite
+// buckets are so-called because both bounds are finite.
+type BucketOptions struct {
+	// ExplicitBuckets: The explicit buckets.
+	ExplicitBuckets *Explicit `json:"explicitBuckets,omitempty"`
+
+	// ExponentialBuckets: The exponential buckets.
+	ExponentialBuckets *Exponential `json:"exponentialBuckets,omitempty"`
+
+	// LinearBuckets: The linear bucket.
+	LinearBuckets *Linear `json:"linearBuckets,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ExplicitBuckets") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ExplicitBuckets") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *BucketOptions) MarshalJSON() ([]byte, error) {
+	type noMethod BucketOptions
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // Empty: A generic empty message that you can re-use to avoid defining
-// duplicated
-// empty messages in your APIs. A typical example is to use it as the
-// request
-// or the response type of an API method. For instance:
-//
-//     service Foo {
-//       rpc Bar(google.protobuf.Empty) returns
+// duplicated empty messages in your APIs. A typical example is to use
+// it as the request or the response type of an API method. For
+// instance:
+// service Foo {
+//   rpc Bar(google.protobuf.Empty) returns
 // (google.protobuf.Empty);
-//     }
-//
-// The JSON representation for `Empty` is empty JSON object `{}`.
+// }
+// The JSON representation for Empty is empty JSON object {}.
 type Empty struct {
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
 }
 
+// Explicit: Specifies a set of buckets with arbitrary widths.There are
+// size(bounds) + 1 (= N) buckets. Bucket i has the following
+// boundaries:Upper bound (0 <= i < N-1): boundsi  Lower bound (1 <= i <
+// N); boundsi - 1The bounds field must contain at least one element. If
+// bounds has only one element, then there are no finite buckets, and
+// that single element is the common boundary of the overflow and
+// underflow buckets.
+type Explicit struct {
+	// Bounds: The values must be monotonically increasing.
+	Bounds []float64 `json:"bounds,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Bounds") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Bounds") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Explicit) MarshalJSON() ([]byte, error) {
+	type noMethod Explicit
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// Exponential: Specifies an exponential sequence of buckets that have a
+// width that is proportional to the value of the lower bound. Each
+// bucket represents a constant relative uncertainty on a specific value
+// in the bucket.There are num_finite_buckets + 2 (= N) buckets. Bucket
+// i has the following boundaries:Upper bound (0 <= i < N-1): scale *
+// (growth_factor ^ i).  Lower bound (1 <= i < N): scale *
+// (growth_factor ^ (i - 1)).
+type Exponential struct {
+	// GrowthFactor: Must be greater than 1.
+	GrowthFactor float64 `json:"growthFactor,omitempty"`
+
+	// NumFiniteBuckets: Must be greater than 0.
+	NumFiniteBuckets int64 `json:"numFiniteBuckets,omitempty"`
+
+	// Scale: Must be greater than 0.
+	Scale float64 `json:"scale,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "GrowthFactor") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "GrowthFactor") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Exponential) MarshalJSON() ([]byte, error) {
+	type noMethod Exponential
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *Exponential) UnmarshalJSON(data []byte) error {
+	type noMethod Exponential
+	var s1 struct {
+		GrowthFactor gensupport.JSONFloat64 `json:"growthFactor"`
+		Scale        gensupport.JSONFloat64 `json:"scale"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.GrowthFactor = float64(s1.GrowthFactor)
+	s.Scale = float64(s1.Scale)
+	return nil
+}
+
 // HttpRequest: A common proto for logging HTTP requests. Only contains
-// semantics
-// defined by the HTTP specification. Product-specific
-// logging
+// semantics defined by the HTTP specification. Product-specific logging
 // information MUST be defined in a separate message.
 type HttpRequest struct {
 	// CacheFillBytes: The number of HTTP response bytes inserted into
-	// cache. Set only when a
-	// cache fill was attempted.
+	// cache. Set only when a cache fill was attempted.
 	CacheFillBytes int64 `json:"cacheFillBytes,omitempty,string"`
 
-	// CacheHit: Whether or not an entity was served from cache
-	// (with or without validation).
+	// CacheHit: Whether or not an entity was served from cache (with or
+	// without validation).
 	CacheHit bool `json:"cacheHit,omitempty"`
 
 	// CacheLookup: Whether or not a cache lookup was attempted.
 	CacheLookup bool `json:"cacheLookup,omitempty"`
 
 	// CacheValidatedWithOriginServer: Whether or not the response was
-	// validated with the origin server before
-	// being served from cache. This field is only meaningful if `cache_hit`
-	// is
-	// True.
+	// validated with the origin server before being served from cache. This
+	// field is only meaningful if cache_hit is True.
 	CacheValidatedWithOriginServer bool `json:"cacheValidatedWithOriginServer,omitempty"`
 
 	// Latency: The request processing latency on the server, from the time
-	// the request was
-	// received until the response was sent.
+	// the request was received until the response was sent.
 	Latency string `json:"latency,omitempty"`
 
-	// Referer: The referer URL of the request, as defined in
-	// [HTTP/1.1 Header Field
-	// Definitions](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html).
+	// Protocol: Protocol used for the request. Examples: "HTTP/1.1",
+	// "HTTP/2", "websocket"
+	Protocol string `json:"protocol,omitempty"`
+
+	// Referer: The referer URL of the request, as defined in HTTP/1.1
+	// Header Field Definitions
+	// (http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html).
 	Referer string `json:"referer,omitempty"`
 
 	// RemoteIp: The IP address (IPv4 or IPv6) of the client that issued the
-	// HTTP
-	// request. Examples: "192.168.1.1", "FE80::0202:B3FF:FE1E:8329".
+	// HTTP request. Examples: "192.168.1.1", "FE80::0202:B3FF:FE1E:8329".
 	RemoteIp string `json:"remoteIp,omitempty"`
 
-	// RequestMethod: The request method. Examples: "GET", "HEAD",
-	// "PUT", "POST".
+	// RequestMethod: The request method. Examples: "GET", "HEAD", "PUT",
+	// "POST".
 	RequestMethod string `json:"requestMethod,omitempty"`
 
 	// RequestSize: The size of the HTTP request message in bytes, including
-	// the request
-	// headers and the request body.
+	// the request headers and the request body.
 	RequestSize int64 `json:"requestSize,omitempty,string"`
 
 	// RequestUrl: The scheme (http, https), the host name, the path and the
-	// query
-	// portion of the URL that was requested.
-	// Example: "http://example.com/some/info?color=red".
+	// query portion of the URL that was requested. Example:
+	// "http://example.com/some/info?color=red".
 	RequestUrl string `json:"requestUrl,omitempty"`
 
 	// ResponseSize: The size of the HTTP response message sent back to the
-	// client, in bytes,
-	// including the response headers and the response body.
+	// client, in bytes, including the response headers and the response
+	// body.
 	ResponseSize int64 `json:"responseSize,omitempty,string"`
 
 	// ServerIp: The IP address (IPv4 or IPv6) of the origin server that the
-	// request was
-	// sent to.
+	// request was sent to.
 	ServerIp string `json:"serverIp,omitempty"`
 
-	// Status: The response code indicating the status of
-	// response.
+	// Status: The response code indicating the status of response.
 	// Examples: 200, 404.
 	Status int64 `json:"status,omitempty"`
 
-	// UserAgent: The user agent sent by the client. Example:
-	// "Mozilla/4.0 (compatible; MSIE 6.0; Windows 98; Q312461; .NET CLR
-	// 1.0.3705)".
+	// UserAgent: The user agent sent by the client. Example: "Mozilla/4.0
+	// (compatible; MSIE 6.0; Windows 98; Q312461; .NET CLR 1.0.3705)".
 	UserAgent string `json:"userAgent,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "CacheFillBytes") to
@@ -420,62 +596,148 @@ func (s *LabelDescriptor) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// ListLogEntriesRequest: The parameters to `ListLogEntries`.
+// Linear: Specifies a linear sequence of buckets that all have the same
+// width (except overflow and underflow). Each bucket represents a
+// constant absolute uncertainty on the specific value in the
+// bucket.There are num_finite_buckets + 2 (= N) buckets. Bucket i has
+// the following boundaries:Upper bound (0 <= i < N-1): offset + (width
+// * i).  Lower bound (1 <= i < N): offset + (width * (i - 1)).
+type Linear struct {
+	// NumFiniteBuckets: Must be greater than 0.
+	NumFiniteBuckets int64 `json:"numFiniteBuckets,omitempty"`
+
+	// Offset: Lower bound of the first bucket.
+	Offset float64 `json:"offset,omitempty"`
+
+	// Width: Must be greater than 0.
+	Width float64 `json:"width,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "NumFiniteBuckets") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "NumFiniteBuckets") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Linear) MarshalJSON() ([]byte, error) {
+	type noMethod Linear
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *Linear) UnmarshalJSON(data []byte) error {
+	type noMethod Linear
+	var s1 struct {
+		Offset gensupport.JSONFloat64 `json:"offset"`
+		Width  gensupport.JSONFloat64 `json:"width"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.Offset = float64(s1.Offset)
+	s.Width = float64(s1.Width)
+	return nil
+}
+
+// ListExclusionsResponse: Result returned from ListExclusions.
+type ListExclusionsResponse struct {
+	// Exclusions: A list of exclusions.
+	Exclusions []*LogExclusion `json:"exclusions,omitempty"`
+
+	// NextPageToken: If there might be more results than appear in this
+	// response, then nextPageToken is included. To get the next set of
+	// results, call the same method again using the value of nextPageToken
+	// as pageToken.
+	NextPageToken string `json:"nextPageToken,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "Exclusions") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Exclusions") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ListExclusionsResponse) MarshalJSON() ([]byte, error) {
+	type noMethod ListExclusionsResponse
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ListLogEntriesRequest: The parameters to ListLogEntries.
 type ListLogEntriesRequest struct {
 	// Filter: Optional. A filter that chooses which log entries to return.
-	// See [Advanced
-	// Logs Filters](/logging/docs/view/advanced_filters).  Only log entries
-	// that
-	// match the filter are returned.  An empty filter matches all log
-	// entries.
+	// See Advanced Logs Filters. Only log entries that match the filter are
+	// returned. An empty filter matches all log entries in the resources
+	// listed in resource_names. Referencing a parent resource that is not
+	// listed in resource_names will cause the filter to return no results.
 	// The maximum length of the filter is 20000 characters.
 	Filter string `json:"filter,omitempty"`
 
-	// OrderBy: Optional. How the results should be sorted.  Presently, the
-	// only permitted
-	// values are "timestamp asc" (default) and "timestamp desc". The
-	// first
-	// option returns entries in order of increasing values
-	// of
-	// `LogEntry.timestamp` (oldest first), and the second option returns
-	// entries
-	// in order of decreasing timestamps (newest first).  Entries with
-	// equal
-	// timestamps are returned in order of `LogEntry.insertId`.
+	// OrderBy: Optional. How the results should be sorted. Presently, the
+	// only permitted values are "timestamp asc" (default) and "timestamp
+	// desc". The first option returns entries in order of increasing values
+	// of LogEntry.timestamp (oldest first), and the second option returns
+	// entries in order of decreasing timestamps (newest first). Entries
+	// with equal timestamps are returned in order of their insert_id
+	// values.
 	OrderBy string `json:"orderBy,omitempty"`
 
 	// PageSize: Optional. The maximum number of results to return from this
-	// request.
-	// Non-positive values are ignored.  The presence of `nextPageToken` in
-	// the
-	// response indicates that more results might be available.
+	// request. Non-positive values are ignored. The presence of
+	// next_page_token in the response indicates that more results might be
+	// available.
 	PageSize int64 `json:"pageSize,omitempty"`
 
 	// PageToken: Optional. If present, then retrieve the next batch of
-	// results from the
-	// preceding call to this method.  `pageToken` must be the value
-	// of
-	// `nextPageToken` from the previous response.  The values of other
-	// method
-	// parameters should be identical to those in the previous call.
+	// results from the preceding call to this method. page_token must be
+	// the value of next_page_token from the previous response. The values
+	// of other method parameters should be identical to those in the
+	// previous call.
 	PageToken string `json:"pageToken,omitempty"`
 
-	// ProjectIds: Deprecated. One or more project identifiers or project
-	// numbers from which
-	// to retrieve log entries.  Examples: "my-project-1A",
-	// "1234567890". If
-	// present, these project identifiers are converted to resource format
-	// and
-	// added to the list of resources in `resourceNames`. Callers should
-	// use
-	// `resourceNames` rather than this parameter.
+	// ProjectIds: Deprecated. Use resource_names instead. One or more
+	// project identifiers or project numbers from which to retrieve log
+	// entries. Example: "my-project-1A". If present, these project
+	// identifiers are converted to resource name format and added to the
+	// list of resources in resource_names.
 	ProjectIds []string `json:"projectIds,omitempty"`
 
-	// ResourceNames: Required. One or more cloud resources from which to
-	// retrieve log entries.
-	// Example: "projects/my-project-1A", "projects/1234567890".
-	// Projects
-	// listed in `projectIds` are added to this list.
+	// ResourceNames: Required. Names of one or more parent resources from
+	// which to retrieve log
+	// entries:
+	// "projects/[PROJECT_ID]"
+	// "organizations/[ORGANIZATION_ID]"
+	// "bi
+	// llingAccounts/[BILLING_ACCOUNT_ID]"
+	// "folders/[FOLDER_ID]"
+	// Projects listed in the project_ids field are added to this list.
 	ResourceNames []string `json:"resourceNames,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Filter") to
@@ -501,16 +763,23 @@ func (s *ListLogEntriesRequest) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// ListLogEntriesResponse: Result returned from `ListLogEntries`.
+// ListLogEntriesResponse: Result returned from ListLogEntries.
 type ListLogEntriesResponse struct {
-	// Entries: A list of log entries.
+	// Entries: A list of log entries. If entries is empty, nextPageToken
+	// may still be returned, indicating that more entries may exist. See
+	// nextPageToken for more information.
 	Entries []*LogEntry `json:"entries,omitempty"`
 
-	// NextPageToken: If there might be more results than appear in this
-	// response, then
-	// `nextPageToken` is included.  To get the next set of results, call
-	// this
-	// method again using the value of `nextPageToken` as `pageToken`.
+	// NextPageToken: If there might be more results than those appearing in
+	// this response, then nextPageToken is included. To get the next set of
+	// results, call this method again using the value of nextPageToken as
+	// pageToken.If a value for next_page_token appears and the entries
+	// field is empty, it means that the search found no log entries so far
+	// but it did not have time to search all the possible log entries.
+	// Retry the method with this value for page_token to continue the
+	// search. Alternatively, consider speeding up the search by changing
+	// your filter to specify a single log name or resource type, or to
+	// narrow the time range of the search.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -546,10 +815,9 @@ type ListLogMetricsResponse struct {
 	Metrics []*LogMetric `json:"metrics,omitempty"`
 
 	// NextPageToken: If there might be more results than appear in this
-	// response, then
-	// `nextPageToken` is included.  To get the next set of results, call
-	// this
-	// method again using the value of `nextPageToken` as `pageToken`.
+	// response, then nextPageToken is included. To get the next set of
+	// results, call this method again using the value of nextPageToken as
+	// pageToken.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -579,14 +847,53 @@ func (s *ListLogMetricsResponse) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// ListLogsResponse: Result returned from ListLogs.
+type ListLogsResponse struct {
+	// LogNames: A list of log names. For example,
+	// "projects/my-project/syslog" or
+	// "organizations/123/cloudresourcemanager.googleapis.com%2Factivity".
+	LogNames []string `json:"logNames,omitempty"`
+
+	// NextPageToken: If there might be more results than those appearing in
+	// this response, then nextPageToken is included. To get the next set of
+	// results, call this method again using the value of nextPageToken as
+	// pageToken.
+	NextPageToken string `json:"nextPageToken,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "LogNames") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "LogNames") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ListLogsResponse) MarshalJSON() ([]byte, error) {
+	type noMethod ListLogsResponse
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // ListMonitoredResourceDescriptorsResponse: Result returned from
 // ListMonitoredResourceDescriptors.
 type ListMonitoredResourceDescriptorsResponse struct {
-	// NextPageToken: If there might be more results than appear in this
-	// response, then
-	// `nextPageToken` is included.  To get the next set of results, call
-	// this
-	// method again using the value of `nextPageToken` as `pageToken`.
+	// NextPageToken: If there might be more results than those appearing in
+	// this response, then nextPageToken is included. To get the next set of
+	// results, call this method again using the value of nextPageToken as
+	// pageToken.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// ResourceDescriptors: A list of resource descriptors.
@@ -619,13 +926,12 @@ func (s *ListMonitoredResourceDescriptorsResponse) MarshalJSON() ([]byte, error)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// ListSinksResponse: Result returned from `ListSinks`.
+// ListSinksResponse: Result returned from ListSinks.
 type ListSinksResponse struct {
 	// NextPageToken: If there might be more results than appear in this
-	// response, then
-	// `nextPageToken` is included.  To get the next set of results, call
-	// the same
-	// method again using the value of `nextPageToken` as `pageToken`.
+	// response, then nextPageToken is included. To get the next set of
+	// results, call the same method again using the value of nextPageToken
+	// as pageToken.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// Sinks: A list of sinks.
@@ -661,72 +967,68 @@ func (s *ListSinksResponse) MarshalJSON() ([]byte, error) {
 // LogEntry: An individual entry in a log.
 type LogEntry struct {
 	// HttpRequest: Optional. Information about the HTTP request associated
-	// with this
-	// log entry, if applicable.
+	// with this log entry, if applicable.
 	HttpRequest *HttpRequest `json:"httpRequest,omitempty"`
 
-	// InsertId: Optional. A unique ID for the log entry. If you provide
-	// this
-	// field, the logging service considers other log entries in the
-	// same project with the same ID as duplicates which can be removed.
-	// If
-	// omitted, Stackdriver Logging will generate a unique ID for this
-	// log entry.
+	// InsertId: Optional. A unique identifier for the log entry. If you
+	// provide a value, then Stackdriver Logging considers other log entries
+	// in the same project, with the same timestamp, and with the same
+	// insert_id to be duplicates which can be removed. If omitted in new
+	// log entries, then Stackdriver Logging assigns its own unique
+	// identifier. The insert_id is also used to order log entries that have
+	// the same timestamp value.
 	InsertId string `json:"insertId,omitempty"`
 
-	// JsonPayload: The log entry payload, represented as a structure
-	// that
+	// JsonPayload: The log entry payload, represented as a structure that
 	// is expressed as a JSON object.
 	JsonPayload googleapi.RawMessage `json:"jsonPayload,omitempty"`
 
 	// Labels: Optional. A set of user-defined (key, value) data that
-	// provides additional
-	// information about the log entry.
+	// provides additional information about the log entry.
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// LogName: Required. The resource name of the log to which this log
 	// entry
-	// belongs. The format of the name
-	// is
-	// "projects/<project-id>/logs/<log-id>".
-	// Examples:
-	// "projects/my-projectid/logs/syslog",
-	// "projects/my-project
-	// id/logs/library.googleapis.com%2Fbook_log".
-	//
-	// The log ID part of resource name must be less than 512
-	// characters
-	// long and can only include the following characters: upper and
-	// lower case alphanumeric characters: [A-Za-z0-9]; and
-	// punctuation
-	// characters: forward-slash, underscore, hyphen, and
-	// period.
-	// Forward-slash (`/`) characters in the log ID must be URL-encoded.
+	// belongs:
+	// "projects/[PROJECT_ID]/logs/[LOG_ID]"
+	// "organizations/[ORGANIZ
+	// ATION_ID]/logs/[LOG_ID]"
+	// "billingAccounts/[BILLING_ACCOUNT_ID]/logs/[L
+	// OG_ID]"
+	// "folders/[FOLDER_ID]/logs/[LOG_ID]"
+	// [LOG_ID] must be URL-encoded within log_name. Example:
+	// "organizations/1234567890/logs/cloudresourcemanager.googleapis.com%2Fa
+	// ctivity". [LOG_ID] must be less than 512 characters long and can only
+	// include the following characters: upper and lower case alphanumeric
+	// characters, forward-slash, underscore, hyphen, and period.For
+	// backward compatibility, if log_name begins with a forward-slash, such
+	// as /projects/..., then the log entry is ingested as usual but the
+	// forward-slash is removed. Listing the log entry will not show the
+	// leading slash and filtering for a log name with a leading slash will
+	// never return any results.
 	LogName string `json:"logName,omitempty"`
 
 	// Operation: Optional. Information about an operation associated with
-	// the log entry, if
-	// applicable.
+	// the log entry, if applicable.
 	Operation *LogEntryOperation `json:"operation,omitempty"`
 
 	// ProtoPayload: The log entry payload, represented as a protocol
-	// buffer.  Some
-	// Google Cloud Platform services use this field for their log
-	// entry payloads.
+	// buffer. Some Google Cloud Platform services use this field for their
+	// log entry payloads.
 	ProtoPayload googleapi.RawMessage `json:"protoPayload,omitempty"`
 
+	// ReceiveTimestamp: Output only. The time the log entry was received by
+	// Stackdriver Logging.
+	ReceiveTimestamp string `json:"receiveTimestamp,omitempty"`
+
 	// Resource: Required. The monitored resource associated with this log
-	// entry.
-	// Example: a log entry that reports a database error would
-	// be
-	// associated with the monitored resource designating the
-	// particular
+	// entry. Example: a log entry that reports a database error would be
+	// associated with the monitored resource designating the particular
 	// database that reported the error.
 	Resource *MonitoredResource `json:"resource,omitempty"`
 
 	// Severity: Optional. The severity of the log entry. The default value
-	// is
-	// `LogSeverity.DEFAULT`.
+	// is LogSeverity.DEFAULT.
 	//
 	// Possible values:
 	//   "DEFAULT" - (0) The log entry has no assigned severity level.
@@ -734,8 +1036,7 @@ type LogEntry struct {
 	//   "INFO" - (200) Routine information, such as ongoing status or
 	// performance.
 	//   "NOTICE" - (300) Normal but significant events, such as start up,
-	// shut down, or
-	// a configuration change.
+	// shut down, or a configuration change.
 	//   "WARNING" - (400) Warning events might cause problems.
 	//   "ERROR" - (500) Error events are likely to cause problems.
 	//   "CRITICAL" - (600) Critical events cause more severe problems or
@@ -744,15 +1045,28 @@ type LogEntry struct {
 	//   "EMERGENCY" - (800) One or more systems are unusable.
 	Severity string `json:"severity,omitempty"`
 
+	// SourceLocation: Optional. Source code location information associated
+	// with the log entry, if any.
+	SourceLocation *LogEntrySourceLocation `json:"sourceLocation,omitempty"`
+
 	// TextPayload: The log entry payload, represented as a Unicode string
 	// (UTF-8).
 	TextPayload string `json:"textPayload,omitempty"`
 
 	// Timestamp: Optional. The time the event described by the log entry
-	// occurred.  If
-	// omitted, Stackdriver Logging will use the time the log entry is
-	// received.
+	// occurred. This time is used to compute the log entry's age and to
+	// enforce the logs retention period. If this field is omitted in a new
+	// log entry, then Stackdriver Logging assigns it the current
+	// time.Incoming log entries should have timestamps that are no more
+	// than the logs retention period in the past, and no more than 24 hours
+	// in the future. See the entries.write API method for more information.
 	Timestamp string `json:"timestamp,omitempty"`
+
+	// Trace: Optional. Resource name of the trace associated with the log
+	// entry, if any. If it contains a relative resource name, the name is
+	// assumed to be relative to //tracing.googleapis.com. Example:
+	// projects/my-projectid/traces/06796866738c859f2f19b7cfb3214824
+	Trace string `json:"trace,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "HttpRequest") to
 	// unconditionally include in API requests. By default, fields with
@@ -778,15 +1092,13 @@ func (s *LogEntry) MarshalJSON() ([]byte, error) {
 }
 
 // LogEntryOperation: Additional information about a potentially
-// long-running operation with which
-// a log entry is associated.
+// long-running operation with which a log entry is associated.
 type LogEntryOperation struct {
 	// First: Optional. Set this to True if this is the first log entry in
 	// the operation.
 	First bool `json:"first,omitempty"`
 
-	// Id: Optional. An arbitrary operation identifier. Log entries with
-	// the
+	// Id: Optional. An arbitrary operation identifier. Log entries with the
 	// same identifier are assumed to be part of the same operation.
 	Id string `json:"id,omitempty"`
 
@@ -795,11 +1107,8 @@ type LogEntryOperation struct {
 	Last bool `json:"last,omitempty"`
 
 	// Producer: Optional. An arbitrary producer identifier. The combination
-	// of
-	// `id` and `producer` must be globally unique.  Examples for
-	// `producer`:
-	// "MyDivision.MyBigCompany.com",
-	// "github.com/MyProject/MyApplication".
+	// of id and producer must be globally unique. Examples for producer:
+	// "MyDivision.MyBigCompany.com", "github.com/MyProject/MyApplication".
 	Producer string `json:"producer,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "First") to
@@ -825,6 +1134,106 @@ func (s *LogEntryOperation) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// LogEntrySourceLocation: Additional information about the source code
+// location that produced the log entry.
+type LogEntrySourceLocation struct {
+	// File: Optional. Source file name. Depending on the runtime
+	// environment, this might be a simple name or a fully-qualified name.
+	File string `json:"file,omitempty"`
+
+	// Function: Optional. Human-readable name of the function or method
+	// being invoked, with optional context such as the class or package
+	// name. This information may be used in contexts such as the logs
+	// viewer, where a file and line number are less meaningful. The format
+	// can vary by language. For example: qual.if.ied.Class.method (Java),
+	// dir/package.func (Go), function (Python).
+	Function string `json:"function,omitempty"`
+
+	// Line: Optional. Line within the source file. 1-based; 0 indicates no
+	// line number available.
+	Line int64 `json:"line,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "File") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "File") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *LogEntrySourceLocation) MarshalJSON() ([]byte, error) {
+	type noMethod LogEntrySourceLocation
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// LogExclusion: Specifies a set of log entries that are not to be
+// stored in Stackdriver Logging. If your project receives a large
+// volume of logs, you might be able to use exclusions to reduce your
+// chargeable logs. Exclusions are processed after log sinks, so you can
+// export log entries before they are excluded. Audit log entries and
+// log entries from Amazon Web Services are never excluded.
+type LogExclusion struct {
+	// Description: Optional. A description of this exclusion.
+	Description string `json:"description,omitempty"`
+
+	// Disabled: Optional. If set to True, then this exclusion is disabled
+	// and it does not exclude any log entries. You can use exclusions.patch
+	// to change the value of this field.
+	Disabled bool `json:"disabled,omitempty"`
+
+	// Filter: Required. An advanced logs filter that matches the log
+	// entries to be excluded. By using the sample function, you can exclude
+	// less than 100% of the matching log entries. For example, the
+	// following filter matches 99% of low-severity log entries from load
+	// balancers:
+	// "resource.type=http_load_balancer severity<ERROR sample(insertId,
+	// 0.99)"
+	//
+	Filter string `json:"filter,omitempty"`
+
+	// Name: Required. A client-assigned identifier, such as
+	// "load-balancer-exclusion". Identifiers are limited to 100 characters
+	// and can include only letters, digits, underscores, hyphens, and
+	// periods.
+	Name string `json:"name,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "Description") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Description") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *LogExclusion) MarshalJSON() ([]byte, error) {
+	type noMethod LogExclusion
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // LogLine: Application log line emitted while processing a request.
 type LogLine struct {
 	// LogMessage: App-provided log message.
@@ -838,8 +1247,7 @@ type LogLine struct {
 	//   "INFO" - (200) Routine information, such as ongoing status or
 	// performance.
 	//   "NOTICE" - (300) Normal but significant events, such as start up,
-	// shut down, or
-	// a configuration change.
+	// shut down, or a configuration change.
 	//   "WARNING" - (400) Warning events might cause problems.
 	//   "ERROR" - (500) Error events are likely to cause problems.
 	//   "CRITICAL" - (600) Critical events cause more severe problems or
@@ -878,40 +1286,94 @@ func (s *LogLine) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// LogMetric: Describes a logs-based metric.  The value of the metric is
-// the
-// number of log entries that match a logs filter.
+// LogMetric: Describes a logs-based metric. The value of the metric is
+// the number of log entries that match a logs filter in a given time
+// interval.Logs-based metric can also be used to extract values from
+// logs and create a a distribution of the values. The distribution
+// records the statistics of the extracted values along with an optional
+// histogram of the values as specified by the bucket options.
 type LogMetric struct {
+	// BucketOptions: Optional. The bucket_options are required when the
+	// logs-based metric is using a DISTRIBUTION value type and it describes
+	// the bucket boundaries used to create a histogram of the extracted
+	// values.
+	BucketOptions *BucketOptions `json:"bucketOptions,omitempty"`
+
 	// Description: Optional. A description of this metric, which is used in
 	// documentation.
 	Description string `json:"description,omitempty"`
 
-	// Filter: Required. An [advanced logs
-	// filter](/logging/docs/view/advanced_filters).
-	// Example: "resource.type=gae_app AND severity>=ERROR".
+	// Filter: Required. An advanced logs filter which is used to match log
+	// entries. Example:
+	// "resource.type=gae_app AND severity>=ERROR"
 	// The maximum length of the filter is 20000 characters.
 	Filter string `json:"filter,omitempty"`
 
-	// Name: Required. The client-assigned metric identifier.
-	// Example:
-	// "severe_errors".  Metric identifiers are limited to 100
-	// characters and can include only the following characters:
-	// `A-Z`,
-	// `a-z`, `0-9`, and the special characters `_-.,+!*',()%/`.
-	// The
-	// forward-slash character (`/`) denotes a hierarchy of name pieces,
-	// and it cannot be the first character of the name.  The '%'
-	// character
-	// is used to URL encode unsafe and reserved characters and must
-	// be
-	// followed by two hexadecimal digits according to RFC 1738.
+	// LabelExtractors: Optional. A map from a label key string to an
+	// extractor expression which is used to extract data from a log entry
+	// field and assign as the label value. Each label key specified in the
+	// LabelDescriptor must have an associated extractor expression in this
+	// map. The syntax of the extractor expression is the same as for the
+	// value_extractor field.The extracted value is converted to the type
+	// defined in the label descriptor. If the either the extraction or the
+	// type conversion fails, the label will have a default value. The
+	// default value for a string label is an empty string, for an integer
+	// label its 0, and for a boolean label its false.Note that there are
+	// upper bounds on the maximum number of labels and the number of active
+	// time series that are allowed in a project.
+	LabelExtractors map[string]string `json:"labelExtractors,omitempty"`
+
+	// MetricDescriptor: Optional. The metric descriptor associated with the
+	// logs-based metric. If unspecified, it uses a default metric
+	// descriptor with a DELTA metric kind, INT64 value type, with no labels
+	// and a unit of "1". Such a metric counts the number of log entries
+	// matching the filter expression.The name, type, and description fields
+	// in the metric_descriptor are output only, and is constructed using
+	// the name and description field in the LogMetric.To create a
+	// logs-based metric that records a distribution of log values, a DELTA
+	// metric kind with a DISTRIBUTION value type must be used along with a
+	// value_extractor expression in the LogMetric.Each label in the metric
+	// descriptor must have a matching label name as the key and an
+	// extractor expression as the value in the label_extractors map.The
+	// metric_kind and value_type fields in the metric_descriptor cannot be
+	// updated once initially configured. New labels can be added in the
+	// metric_descriptor, but existing labels cannot be modified except for
+	// their description.
+	MetricDescriptor *MetricDescriptor `json:"metricDescriptor,omitempty"`
+
+	// Name: Required. The client-assigned metric identifier. Examples:
+	// "error_count", "nginx/requests".Metric identifiers are limited to 100
+	// characters and can include only the following characters: A-Z, a-z,
+	// 0-9, and the special characters _-.,+!*',()%/. The forward-slash
+	// character (/) denotes a hierarchy of name pieces, and it cannot be
+	// the first character of the name.The metric identifier in this field
+	// must not be URL-encoded
+	// (https://en.wikipedia.org/wiki/Percent-encoding). However, when the
+	// metric identifier appears as the [METRIC_ID] part of a metric_name
+	// API parameter, then the metric identifier must be URL-encoded.
+	// Example: "projects/my-project/metrics/nginx%2Frequests".
 	Name string `json:"name,omitempty"`
 
-	// Version: Output only. The API version that created or updated this
-	// metric.
-	// The version also dictates the syntax of the filter expression. When a
-	// value
-	// for this field is missing, the default value of V2 should be assumed.
+	// ValueExtractor: Optional. A value_extractor is required when using a
+	// distribution logs-based metric to extract the values to record from a
+	// log entry. Two functions are supported for value extraction:
+	// EXTRACT(field) or REGEXP_EXTRACT(field, regex). The argument are:  1.
+	// field: The name of the log entry field from which the value is to be
+	// extracted.  2. regex: A regular expression using the Google RE2
+	// syntax  (https://github.com/google/re2/wiki/Syntax) with a single
+	// capture  group to extract data from the specified log entry field.
+	// The value  of the field is converted to a string before applying the
+	// regex.  It is an error to specify a regex that does not include
+	// exactly one  capture group.The result of the extraction must be
+	// convertible to a double type, as the distribution always records
+	// double values. If either the extraction or the conversion to double
+	// fails, then those values are not recorded in the
+	// distribution.Example: REGEXP_EXTRACT(jsonPayload.request,
+	// ".*quantity=(\d+).*")
+	ValueExtractor string `json:"valueExtractor,omitempty"`
+
+	// Version: Deprecated. The API version that created or updated this
+	// metric. The v2 format is used by default and cannot be changed.
 	//
 	// Possible values:
 	//   "V2" - Stackdriver Logging API v2.
@@ -922,7 +1384,7 @@ type LogMetric struct {
 	// server.
 	googleapi.ServerResponse `json:"-"`
 
-	// ForceSendFields is a list of field names (e.g. "Description") to
+	// ForceSendFields is a list of field names (e.g. "BucketOptions") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -930,7 +1392,7 @@ type LogMetric struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Description") to include
+	// NullFields is a list of field names (e.g. "BucketOptions") to include
 	// in API requests with the JSON null value. By default, fields with
 	// empty values are omitted from API requests. However, any field with
 	// an empty value appearing in NullFields will be sent to the server as
@@ -945,89 +1407,91 @@ func (s *LogMetric) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// LogSink: Describes a sink used to export log entries outside of
-// Stackdriver Logging.
-// A logs filter controls which log entries are exported.  Sinks can
-// have a
-// start time and an end time; these can be used to place log entries
-// from an
-// exact time range into a particular destination.  If both `start_time`
-// and
-// `end_time` are present, then `start_time` must be less than
-// `end_time`.
+// LogSink: Describes a sink used to export log entries to one of the
+// following destinations in any project: a Cloud Storage bucket, a
+// BigQuery dataset, or a Cloud Pub/Sub topic. A logs filter controls
+// which log entries are exported. The sink must be created within a
+// project, organization, billing account, or folder.
 type LogSink struct {
-	// Destination: Required. The export destination. See
-	// [Exporting Logs With
-	// Sinks](/logging/docs/api/tasks/exporting-logs).
-	// Examples:
-	//
-	//     "storage.googleapis.com/my-gcs-bucket"
-	//
-	// "bigquery.googleapis.com/projects/my-project-id/datasets/my-dataset"
-	//     "pubsub.googleapis.com/projects/my-project/topics/my-topic"
+	// Destination: Required. The export
+	// destination:
+	// "storage.googleapis.com/[GCS_BUCKET]"
+	// "bigquery.googleapi
+	// s.com/projects/[PROJECT_ID]/datasets/[DATASET]"
+	// "pubsub.googleapis.com
+	// /projects/[PROJECT_ID]/topics/[TOPIC_ID]"
+	// The sink's writer_identity, set when the sink is created, must have
+	// permission to write to the destination or else the log entries are
+	// not exported. For more information, see Exporting Logs With Sinks.
 	Destination string `json:"destination,omitempty"`
 
-	// EndTime: Optional. Time at which this sink will stop exporting log
-	// entries.  If this
-	// value is present, then log entries are exported only if
-	// `entry.timestamp` <
-	// `end_time`.
+	// EndTime: Optional. The time at which this sink will stop exporting
+	// log entries. Log entries are exported only if their timestamp is
+	// earlier than the end time. If this field is not supplied, there is no
+	// end time. If both a start time and an end time are provided, then the
+	// end time must be later than the start time.
 	EndTime string `json:"endTime,omitempty"`
 
-	// Filter: Optional. An [advanced logs
-	// filter](/logging/docs/view/advanced_filters).
-	// Only log entries matching the filter are exported. The filter
-	// must be consistent with the log entry format specified by
-	// the
-	// `outputVersionFormat` parameter, regardless of the format of the
-	// log entry that was originally written to Stackdriver Logging.
-	// Example filter (V2 format):
+	// Filter: Optional. An advanced logs filter. The only exported log
+	// entries are those that are in the resource owning the sink and that
+	// match the filter. The filter must use the log entry format specified
+	// by the output_version_format parameter. For example, in the v2
+	// format:
+	// logName="projects/[PROJECT_ID]/logs/[LOG_ID]" AND severity>=ERROR
 	//
-	//     logName=projects/my-projectid/logs/syslog AND severity>=ERROR
-	// The maximum length of the filter is 20000 characters.
 	Filter string `json:"filter,omitempty"`
 
+	// IncludeChildren: Optional. This field applies only to sinks owned by
+	// organizations and folders. If the field is false, the default, only
+	// the logs owned by the sink's parent resource are available for
+	// export. If the field is true, then logs from all the projects,
+	// folders, and billing accounts contained in the sink's parent resource
+	// are also available for export. Whether a particular log entry from
+	// the children is exported depends on the sink's filter expression. For
+	// example, if this field is true, then the filter
+	// resource.type=gce_instance would export all Compute Engine VM
+	// instance log entries from all projects in the sink's parent. To only
+	// export entries from certain child projects, filter on the project
+	// part of the log name:
+	// logName:("projects/test-project1/" OR "projects/test-project2/")
+	// AND
+	// resource.type=gce_instance
+	//
+	IncludeChildren bool `json:"includeChildren,omitempty"`
+
 	// Name: Required. The client-assigned sink identifier, unique within
-	// the
-	// project. Example: "my-syslog-errors-to-pubsub".  Sink identifiers
-	// are
-	// limited to 1000 characters and can include only the following
-	// characters:
-	// `A-Z`, `a-z`, `0-9`, and the special characters `_-.`.  The maximum
-	// length
-	// of the name is 100 characters.
+	// the project. Example: "my-syslog-errors-to-pubsub". Sink identifiers
+	// are limited to 100 characters and can include only the following
+	// characters: upper and lower-case alphanumeric characters,
+	// underscores, hyphens, and periods.
 	Name string `json:"name,omitempty"`
 
-	// OutputVersionFormat: Optional. The log entry version to use for this
-	// sink's exported log
-	// entries.  This version does not have to correspond to the version of
-	// the
-	// log entry that was written to Stackdriver Logging. If omitted, the
-	// v2 format is used.
+	// OutputVersionFormat: Deprecated. The log entry format to use for this
+	// sink's exported log entries. The v2 format is used by default and
+	// cannot be changed.
 	//
 	// Possible values:
-	//   "VERSION_FORMAT_UNSPECIFIED" - An unspecified version format will
-	// default to V2.
-	//   "V2" - `LogEntry` version 2 format.
-	//   "V1" - `LogEntry` version 1 format.
+	//   "VERSION_FORMAT_UNSPECIFIED" - An unspecified format version that
+	// will default to V2.
+	//   "V2" - LogEntry version 2 format.
+	//   "V1" - LogEntry version 1 format.
 	OutputVersionFormat string `json:"outputVersionFormat,omitempty"`
 
 	// StartTime: Optional. The time at which this sink will begin exporting
-	// log entries.  If
-	// this value is present, then log entries are exported only if
-	// `start_time`
-	// <=`entry.timestamp`.
+	// log entries. Log entries are exported only if their timestamp is not
+	// earlier than the start time. The default value of this field is the
+	// time the sink is created or updated.
 	StartTime string `json:"startTime,omitempty"`
 
 	// WriterIdentity: Output only. An IAM identity&mdash;a service account
-	// or group&mdash;that
-	// will write exported log entries to the destination on behalf of
-	// Stackdriver
-	// Logging. You must grant this identity write-access to the
-	// destination.
+	// or group&mdash;under which Stackdriver Logging writes the exported
+	// log entries to the sink's destination. This field is set by
+	// sinks.create and sinks.update, based on the setting of
+	// unique_writer_identity in those methods.Until you grant this identity
+	// write-access to the destination, log entry exports from this sink
+	// will fail. For more information, see Granting access for a resource.
 	// Consult the destination service's documentation to determine the
-	// exact role
-	// that must be granted.
+	// appropriate IAM roles to assign to the identity.
 	WriterIdentity string `json:"writerIdentity,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -1057,40 +1521,177 @@ func (s *LogSink) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// MetricDescriptor: Defines a metric type and its schema. Once a metric
+// descriptor is created, deleting or altering it stops data collection
+// and makes the metric type's existing data unusable.
+type MetricDescriptor struct {
+	// Description: A detailed description of the metric, which can be used
+	// in documentation.
+	Description string `json:"description,omitempty"`
+
+	// DisplayName: A concise name for the metric, which can be displayed in
+	// user interfaces. Use sentence case without an ending period, for
+	// example "Request count".
+	DisplayName string `json:"displayName,omitempty"`
+
+	// Labels: The set of labels that can be used to describe a specific
+	// instance of this metric type. For example, the
+	// appengine.googleapis.com/http/server/response_latencies metric type
+	// has a label for the HTTP response code, response_code, so you can
+	// look at latencies for successful responses or just for responses that
+	// failed.
+	Labels []*LabelDescriptor `json:"labels,omitempty"`
+
+	// MetricKind: Whether the metric records instantaneous values, changes
+	// to a value, etc. Some combinations of metric_kind and value_type
+	// might not be supported.
+	//
+	// Possible values:
+	//   "METRIC_KIND_UNSPECIFIED" - Do not use this default value.
+	//   "GAUGE" - An instantaneous measurement of a value.
+	//   "DELTA" - The change in a value during a time interval.
+	//   "CUMULATIVE" - A value accumulated over a time interval. Cumulative
+	// measurements in a time series should have the same start time and
+	// increasing end times, until an event resets the cumulative value to
+	// zero and sets a new start time for the following points.
+	MetricKind string `json:"metricKind,omitempty"`
+
+	// Name: The resource name of the metric descriptor. Depending on the
+	// implementation, the name typically includes: (1) the parent resource
+	// name that defines the scope of the metric type or of its data; and
+	// (2) the metric's URL-encoded type, which also appears in the type
+	// field of this descriptor. For example, following is the resource name
+	// of a custom metric within the GCP project
+	// my-project-id:
+	// "projects/my-project-id/metricDescriptors/custom.google
+	// apis.com%2Finvoice%2Fpaid%2Famount"
+	//
+	Name string `json:"name,omitempty"`
+
+	// Type: The metric type, including its DNS name prefix. The type is not
+	// URL-encoded. All user-defined custom metric types have the DNS name
+	// custom.googleapis.com. Metric types should use a natural hierarchical
+	// grouping. For
+	// example:
+	// "custom.googleapis.com/invoice/paid/amount"
+	// "appengine.google
+	// apis.com/http/server/response_latencies"
+	//
+	Type string `json:"type,omitempty"`
+
+	// Unit: The unit in which the metric value is reported. It is only
+	// applicable if the value_type is INT64, DOUBLE, or DISTRIBUTION. The
+	// supported units are a subset of The Unified Code for Units of Measure
+	// (http://unitsofmeasure.org/ucum.html) standard:Basic units (UNIT)
+	// bit bit
+	// By byte
+	// s second
+	// min minute
+	// h hour
+	// d dayPrefixes (PREFIX)
+	// k kilo (10**3)
+	// M mega (10**6)
+	// G giga (10**9)
+	// T tera (10**12)
+	// P peta (10**15)
+	// E exa (10**18)
+	// Z zetta (10**21)
+	// Y yotta (10**24)
+	// m milli (10**-3)
+	// u micro (10**-6)
+	// n nano (10**-9)
+	// p pico (10**-12)
+	// f femto (10**-15)
+	// a atto (10**-18)
+	// z zepto (10**-21)
+	// y yocto (10**-24)
+	// Ki kibi (2**10)
+	// Mi mebi (2**20)
+	// Gi gibi (2**30)
+	// Ti tebi (2**40)GrammarThe grammar includes the dimensionless unit 1,
+	// such as 1/s.The grammar also includes these connectors:
+	// / division (as an infix operator, e.g. 1/s).
+	// . multiplication (as an infix operator, e.g. GBy.d)The grammar for a
+	// unit is as follows:
+	// Expression = Component { "." Component } { "/" Component }
+	// ;
+	//
+	// Component = [ PREFIX ] UNIT [ Annotation ]
+	//           | Annotation
+	//           | "1"
+	//           ;
+	//
+	// Annotation = "{" NAME "}" ;
+	// Notes:
+	// Annotation is just a comment if it follows a UNIT and is  equivalent
+	// to 1 if it is used alone. For examples,  {requests}/s == 1/s,
+	// By{transmitted}/s == By/s.
+	// NAME is a sequence of non-blank printable ASCII characters not
+	// containing '{' or '}'.
+	Unit string `json:"unit,omitempty"`
+
+	// ValueType: Whether the measurement is an integer, a floating-point
+	// number, etc. Some combinations of metric_kind and value_type might
+	// not be supported.
+	//
+	// Possible values:
+	//   "VALUE_TYPE_UNSPECIFIED" - Do not use this default value.
+	//   "BOOL" - The value is a boolean. This value type can be used only
+	// if the metric kind is GAUGE.
+	//   "INT64" - The value is a signed 64-bit integer.
+	//   "DOUBLE" - The value is a double precision floating point number.
+	//   "STRING" - The value is a text string. This value type can be used
+	// only if the metric kind is GAUGE.
+	//   "DISTRIBUTION" - The value is a Distribution.
+	//   "MONEY" - The value is money.
+	ValueType string `json:"valueType,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Description") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Description") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *MetricDescriptor) MarshalJSON() ([]byte, error) {
+	type noMethod MetricDescriptor
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // MonitoredResource: An object representing a resource that can be used
-// for monitoring, logging,
-// billing, or other purposes. Examples include virtual machine
-// instances,
-// databases, and storage devices such as disks. The `type` field
-// identifies a
-// MonitoredResourceDescriptor object that describes the
-// resource's
-// schema. Information in the `labels` field identifies the actual
-// resource and
-// its attributes according to the schema. For example, a particular
-// Compute
-// Engine VM instance could be represented by the following object,
-// because the
-// MonitoredResourceDescriptor for "gce_instance" has
-// labels
+// for monitoring, logging, billing, or other purposes. Examples include
+// virtual machine instances, databases, and storage devices such as
+// disks. The type field identifies a MonitoredResourceDescriptor object
+// that describes the resource's schema. Information in the labels field
+// identifies the actual resource and its attributes according to the
+// schema. For example, a particular Compute Engine VM instance could be
+// represented by the following object, because the
+// MonitoredResourceDescriptor for "gce_instance" has labels
 // "instance_id" and "zone":
+// { "type": "gce_instance",
+//   "labels": { "instance_id": "12345678901234",
+//               "zone": "us-central1-a" }}
 //
-//     { "type": "gce_instance",
-//       "labels": { "instance_id": "12345678901234",
-//                   "zone": "us-central1-a" }}
 type MonitoredResource struct {
 	// Labels: Required. Values for all of the labels listed in the
-	// associated monitored
-	// resource descriptor. For example, Cloud SQL databases use the
-	// labels
-	// "database_id" and "zone".
+	// associated monitored resource descriptor. For example, Compute Engine
+	// VM instances use the labels "project_id", "instance_id", and "zone".
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// Type: Required. The monitored resource type. This field must
-	// match
-	// the `type` field of a MonitoredResourceDescriptor object.
-	// For
-	// example, the type of a Cloud SQL database is "cloudsql_database".
+	// Type: Required. The monitored resource type. This field must match
+	// the type field of a MonitoredResourceDescriptor object. For example,
+	// the type of a Compute Engine VM instance is gce_instance.
 	Type string `json:"type,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Labels") to
@@ -1117,58 +1718,42 @@ func (s *MonitoredResource) MarshalJSON() ([]byte, error) {
 }
 
 // MonitoredResourceDescriptor: An object that describes the schema of a
-// MonitoredResource object using a
-// type name and a set of labels.  For example, the monitored
-// resource
-// descriptor for Google Compute Engine VM instances has a type
-// of
-// "gce_instance" and specifies the use of the labels "instance_id"
-// and
-// "zone" to identify particular VM instances.
-//
-// Different APIs can support different monitored resource types. APIs
-// generally
-// provide a `list` method that returns the monitored resource
-// descriptors used
-// by the API.
+// MonitoredResource object using a type name and a set of labels. For
+// example, the monitored resource descriptor for Google Compute Engine
+// VM instances has a type of "gce_instance" and specifies the use of
+// the labels "instance_id" and "zone" to identify particular VM
+// instances.Different APIs can support different monitored resource
+// types. APIs generally provide a list method that returns the
+// monitored resource descriptors used by the API.
 type MonitoredResourceDescriptor struct {
 	// Description: Optional. A detailed description of the monitored
-	// resource type that might
-	// be used in documentation.
+	// resource type that might be used in documentation.
 	Description string `json:"description,omitempty"`
 
 	// DisplayName: Optional. A concise name for the monitored resource type
-	// that might be
-	// displayed in user interfaces. It should be a Title Cased Noun
-	// Phrase,
-	// without any article or other determiners. For example,
-	// "Google Cloud SQL Database".
+	// that might be displayed in user interfaces. It should be a Title
+	// Cased Noun Phrase, without any article or other determiners. For
+	// example, "Google Cloud SQL Database".
 	DisplayName string `json:"displayName,omitempty"`
 
 	// Labels: Required. A set of labels used to describe instances of this
-	// monitored
-	// resource type. For example, an individual Google Cloud SQL database
-	// is
-	// identified by values for the labels "database_id" and "zone".
+	// monitored resource type. For example, an individual Google Cloud SQL
+	// database is identified by values for the labels "database_id" and
+	// "zone".
 	Labels []*LabelDescriptor `json:"labels,omitempty"`
 
 	// Name: Optional. The resource name of the monitored resource
 	// descriptor:
-	// "projects/{project_id}/monitoredResourceDescriptors/{type
-	// }" where
-	// {type} is the value of the `type` field in this object
-	// and
-	// {project_id} is a project ID that provides API-specific context
-	// for
-	// accessing the type.  APIs that do not use project information can use
-	// the
-	// resource name format "monitoredResourceDescriptors/{type}".
+	// "projects/{project_id}/monitoredResourceDescriptors/{type}" where
+	// {type} is the value of the type field in this object and {project_id}
+	// is a project ID that provides API-specific context for accessing the
+	// type. APIs that do not use project information can use the resource
+	// name format "monitoredResourceDescriptors/{type}".
 	Name string `json:"name,omitempty"`
 
-	// Type: Required. The monitored resource type. For example, the
-	// type
-	// "cloudsql_database" represents databases in Google Cloud SQL.
-	// The maximum length of this value is 256 characters.
+	// Type: Required. The monitored resource type. For example, the type
+	// "cloudsql_database" represents databases in Google Cloud SQL. The
+	// maximum length of this value is 256 characters.
 	Type string `json:"type,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Description") to
@@ -1195,8 +1780,7 @@ func (s *MonitoredResourceDescriptor) MarshalJSON() ([]byte, error) {
 }
 
 // RequestLog: Complete log information about a single HTTP request to
-// an App Engine
-// application.
+// an App Engine application.
 type RequestLog struct {
 	// AppEngineRelease: App Engine release version.
 	AppEngineRelease string `json:"appEngineRelease,omitempty"`
@@ -1213,11 +1797,9 @@ type RequestLog struct {
 	// Finished: Whether this request is finished or active.
 	Finished bool `json:"finished,omitempty"`
 
-	// First: Whether this is the first `RequestLog` entry for this request.
-	//  If an
-	// active request has several `RequestLog` entries written to
-	// Stackdriver
-	// Logging, then this field will be set for one of them.
+	// First: Whether this is the first RequestLog entry for this request.
+	// If an active request has several RequestLog entries written to
+	// Stackdriver Logging, then this field will be set for one of them.
 	First bool `json:"first,omitempty"`
 
 	// Host: Internet host and port number of the resource being requested.
@@ -1230,10 +1812,8 @@ type RequestLog struct {
 	InstanceId string `json:"instanceId,omitempty"`
 
 	// InstanceIndex: If the instance processing this request belongs to a
-	// manually scaled
-	// module, then this is the 0-based index of the instance. Otherwise,
-	// this
-	// value is -1.
+	// manually scaled module, then this is the 0-based index of the
+	// instance. Otherwise, this value is -1.
 	InstanceIndex int64 `json:"instanceIndex,omitempty"`
 
 	// Ip: Origin IP address.
@@ -1249,24 +1829,19 @@ type RequestLog struct {
 	// MegaCycles: Number of CPU megacycles used to process request.
 	MegaCycles int64 `json:"megaCycles,omitempty,string"`
 
-	// Method: Request method. Example: "GET", "HEAD", "PUT",
-	// "POST", "DELETE".
+	// Method: Request method. Example: "GET", "HEAD", "PUT", "POST",
+	// "DELETE".
 	Method string `json:"method,omitempty"`
 
 	// ModuleId: Module of the application that handled this request.
 	ModuleId string `json:"moduleId,omitempty"`
 
-	// Nickname: The logged-in user who made the request.
-	//
-	// Most likely, this is the part of the user's email before the `@`
-	// sign.  The
-	// field value is the same for different requests from the same user,
-	// but
-	// different users can have similar names.  This information is
-	// also
-	// available to the application via the App Engine Users API.
-	//
-	// This field will be populated starting with App Engine 1.9.21.
+	// Nickname: The logged-in user who made the request.Most likely, this
+	// is the part of the user's email before the @ sign. The field value is
+	// the same for different requests from the same user, but different
+	// users can have similar names. This information is also available to
+	// the application via the App Engine Users API.This field will be
+	// populated starting with App Engine 1.9.21.
 	Nickname string `json:"nickname,omitempty"`
 
 	// PendingTime: Time this request spent in the pending request queue.
@@ -1276,29 +1851,25 @@ type RequestLog struct {
 	Referrer string `json:"referrer,omitempty"`
 
 	// RequestId: Globally unique identifier for a request, which is based
-	// on the request
-	// start time.  Request IDs for requests which started later will
-	// compare
-	// greater as strings than those for requests which started earlier.
+	// on the request start time. Request IDs for requests which started
+	// later will compare greater as strings than those for requests which
+	// started earlier.
 	RequestId string `json:"requestId,omitempty"`
 
 	// Resource: Contains the path and query portion of the URL that was
-	// requested. For
-	// example, if the URL was "http://example.com/app?name=val", the
-	// resource
-	// would be "/app?name=val".  The fragment identifier, which is
-	// identified by
-	// the `#` character, is not included.
+	// requested. For example, if the URL was
+	// "http://example.com/app?name=val", the resource would be
+	// "/app?name=val". The fragment identifier, which is identified by the
+	// # character, is not included.
 	Resource string `json:"resource,omitempty"`
 
 	// ResponseSize: Size in bytes sent back to client by request.
 	ResponseSize int64 `json:"responseSize,omitempty,string"`
 
 	// SourceReference: Source code for the application that handled this
-	// request. There can be
-	// more than one source reference per deployed application if source
-	// code is
-	// distributed among multiple repositories.
+	// request. There can be more than one source reference per deployed
+	// application if source code is distributed among multiple
+	// repositories.
 	SourceReference []*SourceReference `json:"sourceReference,omitempty"`
 
 	// StartTime: Time when the request started.
@@ -1355,24 +1926,32 @@ func (s *RequestLog) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+func (s *RequestLog) UnmarshalJSON(data []byte) error {
+	type noMethod RequestLog
+	var s1 struct {
+		Cost gensupport.JSONFloat64 `json:"cost"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.Cost = float64(s1.Cost)
+	return nil
+}
+
 // SourceLocation: Specifies a location in a source code file.
 type SourceLocation struct {
 	// File: Source file name. Depending on the runtime environment, this
-	// might be a
-	// simple name or a fully-qualified name.
+	// might be a simple name or a fully-qualified name.
 	File string `json:"file,omitempty"`
 
 	// FunctionName: Human-readable name of the function or method being
-	// invoked, with optional
-	// context such as the class or package name. This information is used
-	// in
-	// contexts such as the logs viewer, where a file and line number are
-	// less
-	// meaningful. The format can vary by language. For
-	// example:
-	// `qual.if.ied.Class.method` (Java), `dir/package.func` (Go),
-	// `function`
-	// (Python).
+	// invoked, with optional context such as the class or package name.
+	// This information is used in contexts such as the logs viewer, where a
+	// file and line number are less meaningful. The format can vary by
+	// language. For example: qual.if.ied.Class.method (Java),
+	// dir/package.func (Go), function (Python).
 	FunctionName string `json:"functionName,omitempty"`
 
 	// Line: Line within the source file.
@@ -1402,17 +1981,14 @@ func (s *SourceLocation) MarshalJSON() ([]byte, error) {
 }
 
 // SourceReference: A reference to a particular snapshot of the source
-// tree used to build and
-// deploy an application.
+// tree used to build and deploy an application.
 type SourceReference struct {
-	// Repository: Optional. A URI string identifying the
-	// repository.
+	// Repository: Optional. A URI string identifying the repository.
 	// Example: "https://github.com/GoogleCloudPlatform/kubernetes.git"
 	Repository string `json:"repository,omitempty"`
 
 	// RevisionId: The canonical and persistent identifier of the deployed
-	// revision.
-	// Example (git): "0035781c50ec7aa23385dc841529ce8a4b70db1b"
+	// revision. Example (git): "0035781c50ec7aa23385dc841529ce8a4b70db1b"
 	RevisionId string `json:"revisionId,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Repository") to
@@ -1440,59 +2016,61 @@ func (s *SourceReference) MarshalJSON() ([]byte, error) {
 
 // WriteLogEntriesRequest: The parameters to WriteLogEntries.
 type WriteLogEntriesRequest struct {
-	// Entries: Required. The log entries to write. Values supplied for the
-	// fields
-	// `log_name`, `resource`, and `labels` in this `entries.write` request
-	// are
-	// added to those log entries that do not provide their own values for
-	// the
-	// fields.
-	//
-	// To improve throughput and to avoid exceeding the
-	// [quota limit](/logging/quota-policy) for calls to
-	// `entries.write`,
-	// you should write multiple log entries at once rather than
-	// calling this method for each individual log entry.
+	// Entries: Required. The log entries to send to Stackdriver Logging.
+	// The order of log entries in this list does not matter. Values
+	// supplied in this method's log_name, resource, and labels fields are
+	// copied into those log entries in this list that do not include values
+	// for their corresponding fields. For more information, see the
+	// LogEntry type.If the timestamp or insert_id fields are missing in log
+	// entries, then this method supplies the current time or a unique
+	// identifier, respectively. The supplied values are chosen so that,
+	// among the log entries that did not supply their own values, the
+	// entries earlier in the list will sort before the entries later in the
+	// list. See entries.list.Log entries with timestamps that are more than
+	// the logs retention period in the past or more than 24 hours in the
+	// future might be discarded. Discarding does not return an error.To
+	// improve throughput and to avoid exceeding the quota limit for calls
+	// to entries.write, you should try to include several log entries in
+	// this list, rather than calling this method for each individual log
+	// entry.
 	Entries []*LogEntry `json:"entries,omitempty"`
 
-	// Labels: Optional. Default labels that are added to the `labels` field
-	// of all log
-	// entries in `entries`. If a log entry already has a label with the
-	// same key
-	// as a label in this parameter, then the log entry's label is not
-	// changed.
-	// See LogEntry.
+	// Labels: Optional. Default labels that are added to the labels field
+	// of all log entries in entries. If a log entry already has a label
+	// with the same key as a label in this parameter, then the log entry's
+	// label is not changed. See LogEntry.
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// LogName: Optional. A default log resource name that is assigned to
-	// all log entries
-	// in `entries` that do not specify a value for `log_name`.
-	// Example:
-	// "projects/my-project/logs/syslog".  See
-	// LogEntry.
+	// all log entries in entries that do not specify a value for
+	// log_name:
+	// "projects/[PROJECT_ID]/logs/[LOG_ID]"
+	// "organizations/[ORGANI
+	// ZATION_ID]/logs/[LOG_ID]"
+	// "billingAccounts/[BILLING_ACCOUNT_ID]/logs/[
+	// LOG_ID]"
+	// "folders/[FOLDER_ID]/logs/[LOG_ID]"
+	// [LOG_ID] must be URL-encoded. For example,
+	// "projects/my-project-id/logs/syslog" or
+	// "organizations/1234567890/logs/cloudresourcemanager.googleapis.com%2Fa
+	// ctivity". For more information about log names, see LogEntry.
 	LogName string `json:"logName,omitempty"`
 
 	// PartialSuccess: Optional. Whether valid entries should be written
-	// even if some other
-	// entries fail due to INVALID_ARGUMENT or PERMISSION_DENIED errors. If
-	// any
-	// entry is not written, the response status will be the error
-	// associated
-	// with one of the failed entries and include error details in the form
-	// of
-	// WriteLogEntriesPartialErrors.
+	// even if some other entries fail due to INVALID_ARGUMENT or
+	// PERMISSION_DENIED errors. If any entry is not written, then the
+	// response status is the error associated with one of the failed
+	// entries and the response includes error details keyed by the entries'
+	// zero-based index in the entries.write method.
 	PartialSuccess bool `json:"partialSuccess,omitempty"`
 
 	// Resource: Optional. A default monitored resource object that is
-	// assigned to all log
-	// entries in `entries` that do not specify a value for `resource`.
-	// Example:
-	//
-	//     { "type": "gce_instance",
-	//       "labels": {
-	//         "zone": "us-central1-a", "instance_id":
-	// "00000000000000000000" }}
-	//
+	// assigned to all log entries in entries that do not specify a value
+	// for resource. Example:
+	// { "type": "gce_instance",
+	//   "labels": {
+	//     "zone": "us-central1-a", "instance_id": "00000000000000000000"
+	// }}
 	// See LogEntry.
 	Resource *MonitoredResource `json:"resource,omitempty"`
 
@@ -1519,12 +2097,764 @@ func (s *WriteLogEntriesRequest) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// WriteLogEntriesResponse: Result returned from WriteLogEntries.
-// empty
+// WriteLogEntriesResponse: Result returned from WriteLogEntries. empty
 type WriteLogEntriesResponse struct {
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
+}
+
+// method id "logging.billingAccounts.exclusions.create":
+
+type BillingAccountsExclusionsCreateCall struct {
+	s            *Service
+	parent       string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Create: Creates a new exclusion in a specified parent resource. Only
+// log entries belonging to that resource can be excluded. You can have
+// up to 10 exclusions in a resource.
+func (r *BillingAccountsExclusionsService) Create(parent string, logexclusion *LogExclusion) *BillingAccountsExclusionsCreateCall {
+	c := &BillingAccountsExclusionsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.logexclusion = logexclusion
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *BillingAccountsExclusionsCreateCall) Fields(s ...googleapi.Field) *BillingAccountsExclusionsCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *BillingAccountsExclusionsCreateCall) Context(ctx context.Context) *BillingAccountsExclusionsCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *BillingAccountsExclusionsCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *BillingAccountsExclusionsCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.billingAccounts.exclusions.create" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *BillingAccountsExclusionsCreateCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new exclusion in a specified parent resource. Only log entries belonging to that resource can be excluded. You can have up to 10 exclusions in a resource.",
+	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/exclusions",
+	//   "httpMethod": "POST",
+	//   "id": "logging.billingAccounts.exclusions.create",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "parent": {
+	//       "description": "Required. The parent resource in which to create the exclusion:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
+	//       "location": "path",
+	//       "pattern": "^billingAccounts/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.billingAccounts.exclusions.delete":
+
+type BillingAccountsExclusionsDeleteCall struct {
+	s          *Service
+	name       string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Delete: Deletes an exclusion.
+func (r *BillingAccountsExclusionsService) Delete(name string) *BillingAccountsExclusionsDeleteCall {
+	c := &BillingAccountsExclusionsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *BillingAccountsExclusionsDeleteCall) Fields(s ...googleapi.Field) *BillingAccountsExclusionsDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *BillingAccountsExclusionsDeleteCall) Context(ctx context.Context) *BillingAccountsExclusionsDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *BillingAccountsExclusionsDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *BillingAccountsExclusionsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.billingAccounts.exclusions.delete" call.
+// Exactly one of *Empty or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Empty.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *BillingAccountsExclusionsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Empty{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Deletes an exclusion.",
+	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "logging.billingAccounts.exclusions.delete",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion to delete:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^billingAccounts/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "Empty"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.billingAccounts.exclusions.get":
+
+type BillingAccountsExclusionsGetCall struct {
+	s            *Service
+	name         string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Gets the description of an exclusion.
+func (r *BillingAccountsExclusionsService) Get(name string) *BillingAccountsExclusionsGetCall {
+	c := &BillingAccountsExclusionsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *BillingAccountsExclusionsGetCall) Fields(s ...googleapi.Field) *BillingAccountsExclusionsGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *BillingAccountsExclusionsGetCall) IfNoneMatch(entityTag string) *BillingAccountsExclusionsGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *BillingAccountsExclusionsGetCall) Context(ctx context.Context) *BillingAccountsExclusionsGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *BillingAccountsExclusionsGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *BillingAccountsExclusionsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.billingAccounts.exclusions.get" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *BillingAccountsExclusionsGetCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Gets the description of an exclusion.",
+	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "GET",
+	//   "id": "logging.billingAccounts.exclusions.get",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^billingAccounts/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// method id "logging.billingAccounts.exclusions.list":
+
+type BillingAccountsExclusionsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists all the exclusions in a parent resource.
+func (r *BillingAccountsExclusionsService) List(parent string) *BillingAccountsExclusionsListCall {
+	c := &BillingAccountsExclusionsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *BillingAccountsExclusionsListCall) PageSize(pageSize int64) *BillingAccountsExclusionsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *BillingAccountsExclusionsListCall) PageToken(pageToken string) *BillingAccountsExclusionsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *BillingAccountsExclusionsListCall) Fields(s ...googleapi.Field) *BillingAccountsExclusionsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *BillingAccountsExclusionsListCall) IfNoneMatch(entityTag string) *BillingAccountsExclusionsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *BillingAccountsExclusionsListCall) Context(ctx context.Context) *BillingAccountsExclusionsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *BillingAccountsExclusionsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *BillingAccountsExclusionsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.billingAccounts.exclusions.list" call.
+// Exactly one of *ListExclusionsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListExclusionsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *BillingAccountsExclusionsListCall) Do(opts ...googleapi.CallOption) (*ListExclusionsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListExclusionsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists all the exclusions in a parent resource.",
+	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/exclusions",
+	//   "httpMethod": "GET",
+	//   "id": "logging.billingAccounts.exclusions.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The parent resource whose exclusions are to be listed.\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^billingAccounts/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "response": {
+	//     "$ref": "ListExclusionsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *BillingAccountsExclusionsListCall) Pages(ctx context.Context, f func(*ListExclusionsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
+// method id "logging.billingAccounts.exclusions.patch":
+
+type BillingAccountsExclusionsPatchCall struct {
+	s            *Service
+	name         string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Patch: Changes one or more properties of an existing exclusion.
+func (r *BillingAccountsExclusionsService) Patch(name string, logexclusion *LogExclusion) *BillingAccountsExclusionsPatchCall {
+	c := &BillingAccountsExclusionsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.logexclusion = logexclusion
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": Required. A
+// nonempty list of fields to change in the existing exclusion. New
+// values for the fields are taken from the corresponding fields in the
+// LogExclusion included in this request. Fields not mentioned in
+// update_mask are not changed and are ignored in the request.For
+// example, to change the filter and description of an exclusion,
+// specify an update_mask of "filter,description".
+func (c *BillingAccountsExclusionsPatchCall) UpdateMask(updateMask string) *BillingAccountsExclusionsPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *BillingAccountsExclusionsPatchCall) Fields(s ...googleapi.Field) *BillingAccountsExclusionsPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *BillingAccountsExclusionsPatchCall) Context(ctx context.Context) *BillingAccountsExclusionsPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *BillingAccountsExclusionsPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *BillingAccountsExclusionsPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.billingAccounts.exclusions.patch" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *BillingAccountsExclusionsPatchCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Changes one or more properties of an existing exclusion.",
+	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.billingAccounts.exclusions.patch",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of the exclusion to update:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^billingAccounts/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Required. A nonempty list of fields to change in the existing exclusion. New values for the fields are taken from the corresponding fields in the LogExclusion included in this request. Fields not mentioned in update_mask are not changed and are ignored in the request.For example, to change the filter and description of an exclusion, specify an update_mask of \"filter,description\".",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
 }
 
 // method id "logging.billingAccounts.logs.delete":
@@ -1537,8 +2867,9 @@ type BillingAccountsLogsDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a log and all its log entries.
-// The log will reappear if it receives new entries.
+// Delete: Deletes all the log entries in a log. The log reappears if it
+// receives new entries. Log entries written shortly before the delete
+// operation might not be deleted.
 func (r *BillingAccountsLogsService) Delete(logName string) *BillingAccountsLogsDeleteCall {
 	c := &BillingAccountsLogsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.logName = logName
@@ -1626,7 +2957,7 @@ func (c *BillingAccountsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a log and all its log entries.\nThe log will reappear if it receives new entries.",
+	//   "description": "Deletes all the log entries in a log. The log reappears if it receives new entries. Log entries written shortly before the delete operation might not be deleted.",
 	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/logs/{logsId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.billingAccounts.logs.delete",
@@ -1635,7 +2966,7 @@ func (c *BillingAccountsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty
 	//   ],
 	//   "parameters": {
 	//     "logName": {
-	//       "description": "Required. The resource name of the log to delete.  Example:\n`\"projects/my-project/logs/syslog\"`.",
+	//       "description": "Required. The resource name of the log to delete:\n\"projects/[PROJECT_ID]/logs/[LOG_ID]\"\n\"organizations/[ORGANIZATION_ID]/logs/[LOG_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/logs/[LOG_ID]\"\n\"folders/[FOLDER_ID]/logs/[LOG_ID]\"\n[LOG_ID] must be URL-encoded. For example, \"projects/my-project-id/logs/syslog\", \"organizations/1234567890/logs/cloudresourcemanager.googleapis.com%2Factivity\". For more information about log names, see LogEntry.",
 	//       "location": "path",
 	//       "pattern": "^billingAccounts/[^/]+/logs/[^/]+$",
 	//       "required": true,
@@ -1654,6 +2985,200 @@ func (c *BillingAccountsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty
 
 }
 
+// method id "logging.billingAccounts.logs.list":
+
+type BillingAccountsLogsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists the logs in projects, organizations, folders, or billing
+// accounts. Only logs that have entries are listed.
+func (r *BillingAccountsLogsService) List(parent string) *BillingAccountsLogsListCall {
+	c := &BillingAccountsLogsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *BillingAccountsLogsListCall) PageSize(pageSize int64) *BillingAccountsLogsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *BillingAccountsLogsListCall) PageToken(pageToken string) *BillingAccountsLogsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *BillingAccountsLogsListCall) Fields(s ...googleapi.Field) *BillingAccountsLogsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *BillingAccountsLogsListCall) IfNoneMatch(entityTag string) *BillingAccountsLogsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *BillingAccountsLogsListCall) Context(ctx context.Context) *BillingAccountsLogsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *BillingAccountsLogsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *BillingAccountsLogsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/logs")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.billingAccounts.logs.list" call.
+// Exactly one of *ListLogsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListLogsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *BillingAccountsLogsListCall) Do(opts ...googleapi.CallOption) (*ListLogsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListLogsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists the logs in projects, organizations, folders, or billing accounts. Only logs that have entries are listed.",
+	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/logs",
+	//   "httpMethod": "GET",
+	//   "id": "logging.billingAccounts.logs.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The resource name that owns the logs:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^billingAccounts/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/logs",
+	//   "response": {
+	//     "$ref": "ListLogsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *BillingAccountsLogsListCall) Pages(ctx context.Context, f func(*ListLogsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
 // method id "logging.billingAccounts.sinks.create":
 
 type BillingAccountsSinksCreateCall struct {
@@ -1665,7 +3190,12 @@ type BillingAccountsSinksCreateCall struct {
 	header_    http.Header
 }
 
-// Create: Creates a sink.
+// Create: Creates a sink that exports specified log entries to a
+// destination. The export of newly-ingested log entries begins
+// immediately, unless the current time is outside the sink's start and
+// end times or the sink's writer_identity is not permitted to write to
+// the destination. A sink can export log entries only from the resource
+// owning the sink.
 func (r *BillingAccountsSinksService) Create(parent string, logsink *LogSink) *BillingAccountsSinksCreateCall {
 	c := &BillingAccountsSinksCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -1674,15 +3204,17 @@ func (r *BillingAccountsSinksService) Create(parent string, logsink *LogSink) *B
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": Determines the kind of IAM identity returned
+// as writer_identity in the new sink. If this value is omitted or set
+// to false, and if the sink's parent is a project, then the value
+// returned as writer_identity is the same group or service account used
+// by Stackdriver Logging before the addition of writer identities to
+// this API. The sink's destination must be in the same project as the
+// sink itself.If this field is set to true, or if the sink is owned by
+// a non-project resource such as an organization, then the value of
+// writer_identity will be a unique service account used only for
+// exports from the new sink. For more information, see writer_identity
+// in LogSink.
 func (c *BillingAccountsSinksCreateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *BillingAccountsSinksCreateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -1774,7 +3306,7 @@ func (c *BillingAccountsSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogS
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a sink.",
+	//   "description": "Creates a sink that exports specified log entries to a destination. The export of newly-ingested log entries begins immediately, unless the current time is outside the sink's start and end times or the sink's writer_identity is not permitted to write to the destination. A sink can export log entries only from the resource owning the sink.",
 	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/sinks",
 	//   "httpMethod": "POST",
 	//   "id": "logging.billingAccounts.sinks.create",
@@ -1783,14 +3315,14 @@ func (c *BillingAccountsSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogS
 	//   ],
 	//   "parameters": {
 	//     "parent": {
-	//       "description": "Required. The resource in which to create the sink.\nExample: `\"projects/my-project-id\"`.\nThe new sink must be provided in the request.",
+	//       "description": "Required. The resource in which to create the sink:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
 	//       "location": "path",
 	//       "pattern": "^billingAccounts/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. Determines the kind of IAM identity returned as writer_identity in the new sink. If this value is omitted or set to false, and if the sink's parent is a project, then the value returned as writer_identity is the same group or service account used by Stackdriver Logging before the addition of writer identities to this API. The sink's destination must be in the same project as the sink itself.If this field is set to true, or if the sink is owned by a non-project resource such as an organization, then the value of writer_identity will be a unique service account used only for exports from the new sink. For more information, see writer_identity in LogSink.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }
@@ -1820,7 +3352,8 @@ type BillingAccountsSinksDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a sink.
+// Delete: Deletes a sink. If the sink has a unique writer_identity,
+// then that service account is also deleted.
 func (r *BillingAccountsSinksService) Delete(sinkNameid string) *BillingAccountsSinksDeleteCall {
 	c := &BillingAccountsSinksDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -1908,7 +3441,7 @@ func (c *BillingAccountsSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empt
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a sink.",
+	//   "description": "Deletes a sink. If the sink has a unique writer_identity, then that service account is also deleted.",
 	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/sinks/{sinksId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.billingAccounts.sinks.delete",
@@ -1917,7 +3450,7 @@ func (c *BillingAccountsSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empt
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to delete, including the parent\nresource and the sink identifier.  Example:\n`\"projects/my-project-id/sinks/my-sink-id\"`.  It is an error if the sink\ndoes not exist.",
+	//       "description": "Required. The full resource name of the sink to delete, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^billingAccounts/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -2057,7 +3590,7 @@ func (c *BillingAccountsSinksGetCall) Do(opts ...googleapi.CallOption) (*LogSink
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to return.\nExample: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The resource name of the sink:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^billingAccounts/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -2097,22 +3630,19 @@ func (r *BillingAccountsSinksService) List(parent string) *BillingAccountsSinksL
 }
 
 // PageSize sets the optional parameter "pageSize": The maximum number
-// of results to return from this request.
-// Non-positive values are ignored.  The presence of `nextPageToken` in
-// the
-// response indicates that more results might be available.
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
 func (c *BillingAccountsSinksListCall) PageSize(pageSize int64) *BillingAccountsSinksListCall {
 	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
 	return c
 }
 
 // PageToken sets the optional parameter "pageToken": If present, then
-// retrieve the next batch of results from the
-// preceding call to this method.  `pageToken` must be the value
-// of
-// `nextPageToken` from the previous response.  The values of other
-// method
-// parameters should be identical to those in the previous call.
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
 func (c *BillingAccountsSinksListCall) PageToken(pageToken string) *BillingAccountsSinksListCall {
 	c.urlParams_.Set("pageToken", pageToken)
 	return c
@@ -2221,18 +3751,18 @@ func (c *BillingAccountsSinksListCall) Do(opts ...googleapi.CallOption) (*ListSi
 	//   ],
 	//   "parameters": {
 	//     "pageSize": {
-	//       "description": "Optional. The maximum number of results to return from this request.\nNon-positive values are ignored.  The presence of `nextPageToken` in the\nresponse indicates that more results might be available.",
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
 	//       "format": "int32",
 	//       "location": "query",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
-	//       "description": "Optional. If present, then retrieve the next batch of results from the\npreceding call to this method.  `pageToken` must be the value of\n`nextPageToken` from the previous response.  The values of other method\nparameters should be identical to those in the previous call.",
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "parent": {
-	//       "description": "Required. The resource name where this sink was created.\nExample: `\"projects/my-logging-project\"`.",
+	//       "description": "Required. The parent resource whose sinks are to be listed:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
 	//       "location": "path",
 	//       "pattern": "^billingAccounts/[^/]+$",
 	//       "required": true,
@@ -2274,6 +3804,167 @@ func (c *BillingAccountsSinksListCall) Pages(ctx context.Context, f func(*ListSi
 	}
 }
 
+// method id "logging.billingAccounts.sinks.patch":
+
+type BillingAccountsSinksPatchCall struct {
+	s          *Service
+	sinkNameid string
+	logsink    *LogSink
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Patch: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
+func (r *BillingAccountsSinksService) Patch(sinkNameid string, logsink *LogSink) *BillingAccountsSinksPatchCall {
+	c := &BillingAccountsSinksPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.sinkNameid = sinkNameid
+	c.logsink = logsink
+	return c
+}
+
+// UniqueWriterIdentity sets the optional parameter
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
+func (c *BillingAccountsSinksPatchCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *BillingAccountsSinksPatchCall {
+	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *BillingAccountsSinksPatchCall) Fields(s ...googleapi.Field) *BillingAccountsSinksPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *BillingAccountsSinksPatchCall) Context(ctx context.Context) *BillingAccountsSinksPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *BillingAccountsSinksPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *BillingAccountsSinksPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logsink)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+sinkName}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"sinkName": c.sinkNameid,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.billingAccounts.sinks.patch" call.
+// Exactly one of *LogSink or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *LogSink.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *BillingAccountsSinksPatchCall) Do(opts ...googleapi.CallOption) (*LogSink, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogSink{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
+	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/sinks/{sinksId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.billingAccounts.sinks.patch",
+	//   "parameterOrder": [
+	//     "sinkName"
+	//   ],
+	//   "parameters": {
+	//     "sinkName": {
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
+	//       "location": "path",
+	//       "pattern": "^billingAccounts/[^/]+/sinks/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "uniqueWriterIdentity": {
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
+	//       "location": "query",
+	//       "type": "boolean"
+	//     }
+	//   },
+	//   "path": "v2/{+sinkName}",
+	//   "request": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "response": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
 // method id "logging.billingAccounts.sinks.update":
 
 type BillingAccountsSinksUpdateCall struct {
@@ -2285,7 +3976,11 @@ type BillingAccountsSinksUpdateCall struct {
 	header_    http.Header
 }
 
-// Update: Updates or creates a sink.
+// Update: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
 func (r *BillingAccountsSinksService) Update(sinkNameid string, logsink *LogSink) *BillingAccountsSinksUpdateCall {
 	c := &BillingAccountsSinksUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -2294,15 +3989,16 @@ func (r *BillingAccountsSinksService) Update(sinkNameid string, logsink *LogSink
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
 func (c *BillingAccountsSinksUpdateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *BillingAccountsSinksUpdateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -2394,7 +4090,7 @@ func (c *BillingAccountsSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogS
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates or creates a sink.",
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
 	//   "flatPath": "v2/billingAccounts/{billingAccountsId}/sinks/{sinksId}",
 	//   "httpMethod": "PUT",
 	//   "id": "logging.billingAccounts.sinks.update",
@@ -2403,14 +4099,14 @@ func (c *BillingAccountsSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogS
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to update, including the parent\nresource and the sink identifier.  If the sink does not exist, this method\ncreates the sink.  Example: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^billingAccounts/[^/]+/sinks/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }
@@ -2440,10 +4136,9 @@ type EntriesListCall struct {
 	header_               http.Header
 }
 
-// List: Lists log entries.  Use this method to retrieve log entries
-// from Cloud
-// Logging.  For ways to export log entries, see
-// [Exporting Logs](/logging/docs/export).
+// List: Lists log entries. Use this method to retrieve log entries from
+// Stackdriver Logging. For ways to export log entries, see Exporting
+// Logs.
 func (r *EntriesService) List(listlogentriesrequest *ListLogEntriesRequest) *EntriesListCall {
 	c := &EntriesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.listlogentriesrequest = listlogentriesrequest
@@ -2533,7 +4228,7 @@ func (c *EntriesListCall) Do(opts ...googleapi.CallOption) (*ListLogEntriesRespo
 	}
 	return ret, nil
 	// {
-	//   "description": "Lists log entries.  Use this method to retrieve log entries from Cloud\nLogging.  For ways to export log entries, see\n[Exporting Logs](/logging/docs/export).",
+	//   "description": "Lists log entries. Use this method to retrieve log entries from Stackdriver Logging. For ways to export log entries, see Exporting Logs.",
 	//   "flatPath": "v2/entries:list",
 	//   "httpMethod": "POST",
 	//   "id": "logging.entries.list",
@@ -2556,6 +4251,27 @@ func (c *EntriesListCall) Do(opts ...googleapi.CallOption) (*ListLogEntriesRespo
 
 }
 
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *EntriesListCall) Pages(ctx context.Context, f func(*ListLogEntriesResponse) error) error {
+	c.ctx_ = ctx
+	defer func(pt string) { c.listlogentriesrequest.PageToken = pt }(c.listlogentriesrequest.PageToken) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.listlogentriesrequest.PageToken = x.NextPageToken
+	}
+}
+
 // method id "logging.entries.write":
 
 type EntriesWriteCall struct {
@@ -2566,9 +4282,11 @@ type EntriesWriteCall struct {
 	header_                http.Header
 }
 
-// Write: Writes log entries to Stackdriver Logging.  All log entries
-// are
-// written by this method.
+// Write: Log entry resourcesWrites log entries to Stackdriver Logging.
+// This API method is the only way to send log entries to Stackdriver
+// Logging. This method is used, directly or indirectly, by the
+// Stackdriver Logging agent (fluentd) and all logging libraries
+// configured to use Stackdriver Logging.
 func (r *EntriesService) Write(writelogentriesrequest *WriteLogEntriesRequest) *EntriesWriteCall {
 	c := &EntriesWriteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.writelogentriesrequest = writelogentriesrequest
@@ -2658,7 +4376,7 @@ func (c *EntriesWriteCall) Do(opts ...googleapi.CallOption) (*WriteLogEntriesRes
 	}
 	return ret, nil
 	// {
-	//   "description": "Writes log entries to Stackdriver Logging.  All log entries are\nwritten by this method.",
+	//   "description": "Log entry resourcesWrites log entries to Stackdriver Logging. This API method is the only way to send log entries to Stackdriver Logging. This method is used, directly or indirectly, by the Stackdriver Logging agent (fluentd) and all logging libraries configured to use Stackdriver Logging.",
 	//   "flatPath": "v2/entries:write",
 	//   "httpMethod": "POST",
 	//   "id": "logging.entries.write",
@@ -2680,6 +4398,759 @@ func (c *EntriesWriteCall) Do(opts ...googleapi.CallOption) (*WriteLogEntriesRes
 
 }
 
+// method id "logging.folders.exclusions.create":
+
+type FoldersExclusionsCreateCall struct {
+	s            *Service
+	parent       string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Create: Creates a new exclusion in a specified parent resource. Only
+// log entries belonging to that resource can be excluded. You can have
+// up to 10 exclusions in a resource.
+func (r *FoldersExclusionsService) Create(parent string, logexclusion *LogExclusion) *FoldersExclusionsCreateCall {
+	c := &FoldersExclusionsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.logexclusion = logexclusion
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *FoldersExclusionsCreateCall) Fields(s ...googleapi.Field) *FoldersExclusionsCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *FoldersExclusionsCreateCall) Context(ctx context.Context) *FoldersExclusionsCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *FoldersExclusionsCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *FoldersExclusionsCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.folders.exclusions.create" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *FoldersExclusionsCreateCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new exclusion in a specified parent resource. Only log entries belonging to that resource can be excluded. You can have up to 10 exclusions in a resource.",
+	//   "flatPath": "v2/folders/{foldersId}/exclusions",
+	//   "httpMethod": "POST",
+	//   "id": "logging.folders.exclusions.create",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "parent": {
+	//       "description": "Required. The parent resource in which to create the exclusion:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
+	//       "location": "path",
+	//       "pattern": "^folders/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.folders.exclusions.delete":
+
+type FoldersExclusionsDeleteCall struct {
+	s          *Service
+	name       string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Delete: Deletes an exclusion.
+func (r *FoldersExclusionsService) Delete(name string) *FoldersExclusionsDeleteCall {
+	c := &FoldersExclusionsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *FoldersExclusionsDeleteCall) Fields(s ...googleapi.Field) *FoldersExclusionsDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *FoldersExclusionsDeleteCall) Context(ctx context.Context) *FoldersExclusionsDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *FoldersExclusionsDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *FoldersExclusionsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.folders.exclusions.delete" call.
+// Exactly one of *Empty or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Empty.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *FoldersExclusionsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Empty{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Deletes an exclusion.",
+	//   "flatPath": "v2/folders/{foldersId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "logging.folders.exclusions.delete",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion to delete:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^folders/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "Empty"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.folders.exclusions.get":
+
+type FoldersExclusionsGetCall struct {
+	s            *Service
+	name         string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Gets the description of an exclusion.
+func (r *FoldersExclusionsService) Get(name string) *FoldersExclusionsGetCall {
+	c := &FoldersExclusionsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *FoldersExclusionsGetCall) Fields(s ...googleapi.Field) *FoldersExclusionsGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *FoldersExclusionsGetCall) IfNoneMatch(entityTag string) *FoldersExclusionsGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *FoldersExclusionsGetCall) Context(ctx context.Context) *FoldersExclusionsGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *FoldersExclusionsGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *FoldersExclusionsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.folders.exclusions.get" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *FoldersExclusionsGetCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Gets the description of an exclusion.",
+	//   "flatPath": "v2/folders/{foldersId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "GET",
+	//   "id": "logging.folders.exclusions.get",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^folders/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// method id "logging.folders.exclusions.list":
+
+type FoldersExclusionsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists all the exclusions in a parent resource.
+func (r *FoldersExclusionsService) List(parent string) *FoldersExclusionsListCall {
+	c := &FoldersExclusionsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *FoldersExclusionsListCall) PageSize(pageSize int64) *FoldersExclusionsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *FoldersExclusionsListCall) PageToken(pageToken string) *FoldersExclusionsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *FoldersExclusionsListCall) Fields(s ...googleapi.Field) *FoldersExclusionsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *FoldersExclusionsListCall) IfNoneMatch(entityTag string) *FoldersExclusionsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *FoldersExclusionsListCall) Context(ctx context.Context) *FoldersExclusionsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *FoldersExclusionsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *FoldersExclusionsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.folders.exclusions.list" call.
+// Exactly one of *ListExclusionsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListExclusionsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *FoldersExclusionsListCall) Do(opts ...googleapi.CallOption) (*ListExclusionsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListExclusionsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists all the exclusions in a parent resource.",
+	//   "flatPath": "v2/folders/{foldersId}/exclusions",
+	//   "httpMethod": "GET",
+	//   "id": "logging.folders.exclusions.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The parent resource whose exclusions are to be listed.\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^folders/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "response": {
+	//     "$ref": "ListExclusionsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *FoldersExclusionsListCall) Pages(ctx context.Context, f func(*ListExclusionsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
+// method id "logging.folders.exclusions.patch":
+
+type FoldersExclusionsPatchCall struct {
+	s            *Service
+	name         string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Patch: Changes one or more properties of an existing exclusion.
+func (r *FoldersExclusionsService) Patch(name string, logexclusion *LogExclusion) *FoldersExclusionsPatchCall {
+	c := &FoldersExclusionsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.logexclusion = logexclusion
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": Required. A
+// nonempty list of fields to change in the existing exclusion. New
+// values for the fields are taken from the corresponding fields in the
+// LogExclusion included in this request. Fields not mentioned in
+// update_mask are not changed and are ignored in the request.For
+// example, to change the filter and description of an exclusion,
+// specify an update_mask of "filter,description".
+func (c *FoldersExclusionsPatchCall) UpdateMask(updateMask string) *FoldersExclusionsPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *FoldersExclusionsPatchCall) Fields(s ...googleapi.Field) *FoldersExclusionsPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *FoldersExclusionsPatchCall) Context(ctx context.Context) *FoldersExclusionsPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *FoldersExclusionsPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *FoldersExclusionsPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.folders.exclusions.patch" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *FoldersExclusionsPatchCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Changes one or more properties of an existing exclusion.",
+	//   "flatPath": "v2/folders/{foldersId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.folders.exclusions.patch",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of the exclusion to update:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^folders/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Required. A nonempty list of fields to change in the existing exclusion. New values for the fields are taken from the corresponding fields in the LogExclusion included in this request. Fields not mentioned in update_mask are not changed and are ignored in the request.For example, to change the filter and description of an exclusion, specify an update_mask of \"filter,description\".",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
 // method id "logging.folders.logs.delete":
 
 type FoldersLogsDeleteCall struct {
@@ -2690,8 +5161,9 @@ type FoldersLogsDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a log and all its log entries.
-// The log will reappear if it receives new entries.
+// Delete: Deletes all the log entries in a log. The log reappears if it
+// receives new entries. Log entries written shortly before the delete
+// operation might not be deleted.
 func (r *FoldersLogsService) Delete(logName string) *FoldersLogsDeleteCall {
 	c := &FoldersLogsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.logName = logName
@@ -2779,7 +5251,7 @@ func (c *FoldersLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error)
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a log and all its log entries.\nThe log will reappear if it receives new entries.",
+	//   "description": "Deletes all the log entries in a log. The log reappears if it receives new entries. Log entries written shortly before the delete operation might not be deleted.",
 	//   "flatPath": "v2/folders/{foldersId}/logs/{logsId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.folders.logs.delete",
@@ -2788,7 +5260,7 @@ func (c *FoldersLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error)
 	//   ],
 	//   "parameters": {
 	//     "logName": {
-	//       "description": "Required. The resource name of the log to delete.  Example:\n`\"projects/my-project/logs/syslog\"`.",
+	//       "description": "Required. The resource name of the log to delete:\n\"projects/[PROJECT_ID]/logs/[LOG_ID]\"\n\"organizations/[ORGANIZATION_ID]/logs/[LOG_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/logs/[LOG_ID]\"\n\"folders/[FOLDER_ID]/logs/[LOG_ID]\"\n[LOG_ID] must be URL-encoded. For example, \"projects/my-project-id/logs/syslog\", \"organizations/1234567890/logs/cloudresourcemanager.googleapis.com%2Factivity\". For more information about log names, see LogEntry.",
 	//       "location": "path",
 	//       "pattern": "^folders/[^/]+/logs/[^/]+$",
 	//       "required": true,
@@ -2807,6 +5279,200 @@ func (c *FoldersLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error)
 
 }
 
+// method id "logging.folders.logs.list":
+
+type FoldersLogsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists the logs in projects, organizations, folders, or billing
+// accounts. Only logs that have entries are listed.
+func (r *FoldersLogsService) List(parent string) *FoldersLogsListCall {
+	c := &FoldersLogsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *FoldersLogsListCall) PageSize(pageSize int64) *FoldersLogsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *FoldersLogsListCall) PageToken(pageToken string) *FoldersLogsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *FoldersLogsListCall) Fields(s ...googleapi.Field) *FoldersLogsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *FoldersLogsListCall) IfNoneMatch(entityTag string) *FoldersLogsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *FoldersLogsListCall) Context(ctx context.Context) *FoldersLogsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *FoldersLogsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *FoldersLogsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/logs")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.folders.logs.list" call.
+// Exactly one of *ListLogsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListLogsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *FoldersLogsListCall) Do(opts ...googleapi.CallOption) (*ListLogsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListLogsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists the logs in projects, organizations, folders, or billing accounts. Only logs that have entries are listed.",
+	//   "flatPath": "v2/folders/{foldersId}/logs",
+	//   "httpMethod": "GET",
+	//   "id": "logging.folders.logs.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The resource name that owns the logs:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^folders/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/logs",
+	//   "response": {
+	//     "$ref": "ListLogsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *FoldersLogsListCall) Pages(ctx context.Context, f func(*ListLogsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
 // method id "logging.folders.sinks.create":
 
 type FoldersSinksCreateCall struct {
@@ -2818,7 +5484,12 @@ type FoldersSinksCreateCall struct {
 	header_    http.Header
 }
 
-// Create: Creates a sink.
+// Create: Creates a sink that exports specified log entries to a
+// destination. The export of newly-ingested log entries begins
+// immediately, unless the current time is outside the sink's start and
+// end times or the sink's writer_identity is not permitted to write to
+// the destination. A sink can export log entries only from the resource
+// owning the sink.
 func (r *FoldersSinksService) Create(parent string, logsink *LogSink) *FoldersSinksCreateCall {
 	c := &FoldersSinksCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -2827,15 +5498,17 @@ func (r *FoldersSinksService) Create(parent string, logsink *LogSink) *FoldersSi
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": Determines the kind of IAM identity returned
+// as writer_identity in the new sink. If this value is omitted or set
+// to false, and if the sink's parent is a project, then the value
+// returned as writer_identity is the same group or service account used
+// by Stackdriver Logging before the addition of writer identities to
+// this API. The sink's destination must be in the same project as the
+// sink itself.If this field is set to true, or if the sink is owned by
+// a non-project resource such as an organization, then the value of
+// writer_identity will be a unique service account used only for
+// exports from the new sink. For more information, see writer_identity
+// in LogSink.
 func (c *FoldersSinksCreateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *FoldersSinksCreateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -2927,7 +5600,7 @@ func (c *FoldersSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogSink, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a sink.",
+	//   "description": "Creates a sink that exports specified log entries to a destination. The export of newly-ingested log entries begins immediately, unless the current time is outside the sink's start and end times or the sink's writer_identity is not permitted to write to the destination. A sink can export log entries only from the resource owning the sink.",
 	//   "flatPath": "v2/folders/{foldersId}/sinks",
 	//   "httpMethod": "POST",
 	//   "id": "logging.folders.sinks.create",
@@ -2936,14 +5609,14 @@ func (c *FoldersSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogSink, err
 	//   ],
 	//   "parameters": {
 	//     "parent": {
-	//       "description": "Required. The resource in which to create the sink.\nExample: `\"projects/my-project-id\"`.\nThe new sink must be provided in the request.",
+	//       "description": "Required. The resource in which to create the sink:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
 	//       "location": "path",
 	//       "pattern": "^folders/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. Determines the kind of IAM identity returned as writer_identity in the new sink. If this value is omitted or set to false, and if the sink's parent is a project, then the value returned as writer_identity is the same group or service account used by Stackdriver Logging before the addition of writer identities to this API. The sink's destination must be in the same project as the sink itself.If this field is set to true, or if the sink is owned by a non-project resource such as an organization, then the value of writer_identity will be a unique service account used only for exports from the new sink. For more information, see writer_identity in LogSink.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }
@@ -2973,7 +5646,8 @@ type FoldersSinksDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a sink.
+// Delete: Deletes a sink. If the sink has a unique writer_identity,
+// then that service account is also deleted.
 func (r *FoldersSinksService) Delete(sinkNameid string) *FoldersSinksDeleteCall {
 	c := &FoldersSinksDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -3061,7 +5735,7 @@ func (c *FoldersSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a sink.",
+	//   "description": "Deletes a sink. If the sink has a unique writer_identity, then that service account is also deleted.",
 	//   "flatPath": "v2/folders/{foldersId}/sinks/{sinksId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.folders.sinks.delete",
@@ -3070,7 +5744,7 @@ func (c *FoldersSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to delete, including the parent\nresource and the sink identifier.  Example:\n`\"projects/my-project-id/sinks/my-sink-id\"`.  It is an error if the sink\ndoes not exist.",
+	//       "description": "Required. The full resource name of the sink to delete, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^folders/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -3210,7 +5884,7 @@ func (c *FoldersSinksGetCall) Do(opts ...googleapi.CallOption) (*LogSink, error)
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to return.\nExample: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The resource name of the sink:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^folders/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -3250,22 +5924,19 @@ func (r *FoldersSinksService) List(parent string) *FoldersSinksListCall {
 }
 
 // PageSize sets the optional parameter "pageSize": The maximum number
-// of results to return from this request.
-// Non-positive values are ignored.  The presence of `nextPageToken` in
-// the
-// response indicates that more results might be available.
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
 func (c *FoldersSinksListCall) PageSize(pageSize int64) *FoldersSinksListCall {
 	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
 	return c
 }
 
 // PageToken sets the optional parameter "pageToken": If present, then
-// retrieve the next batch of results from the
-// preceding call to this method.  `pageToken` must be the value
-// of
-// `nextPageToken` from the previous response.  The values of other
-// method
-// parameters should be identical to those in the previous call.
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
 func (c *FoldersSinksListCall) PageToken(pageToken string) *FoldersSinksListCall {
 	c.urlParams_.Set("pageToken", pageToken)
 	return c
@@ -3374,18 +6045,18 @@ func (c *FoldersSinksListCall) Do(opts ...googleapi.CallOption) (*ListSinksRespo
 	//   ],
 	//   "parameters": {
 	//     "pageSize": {
-	//       "description": "Optional. The maximum number of results to return from this request.\nNon-positive values are ignored.  The presence of `nextPageToken` in the\nresponse indicates that more results might be available.",
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
 	//       "format": "int32",
 	//       "location": "query",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
-	//       "description": "Optional. If present, then retrieve the next batch of results from the\npreceding call to this method.  `pageToken` must be the value of\n`nextPageToken` from the previous response.  The values of other method\nparameters should be identical to those in the previous call.",
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "parent": {
-	//       "description": "Required. The resource name where this sink was created.\nExample: `\"projects/my-logging-project\"`.",
+	//       "description": "Required. The parent resource whose sinks are to be listed:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
 	//       "location": "path",
 	//       "pattern": "^folders/[^/]+$",
 	//       "required": true,
@@ -3427,6 +6098,167 @@ func (c *FoldersSinksListCall) Pages(ctx context.Context, f func(*ListSinksRespo
 	}
 }
 
+// method id "logging.folders.sinks.patch":
+
+type FoldersSinksPatchCall struct {
+	s          *Service
+	sinkNameid string
+	logsink    *LogSink
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Patch: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
+func (r *FoldersSinksService) Patch(sinkNameid string, logsink *LogSink) *FoldersSinksPatchCall {
+	c := &FoldersSinksPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.sinkNameid = sinkNameid
+	c.logsink = logsink
+	return c
+}
+
+// UniqueWriterIdentity sets the optional parameter
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
+func (c *FoldersSinksPatchCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *FoldersSinksPatchCall {
+	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *FoldersSinksPatchCall) Fields(s ...googleapi.Field) *FoldersSinksPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *FoldersSinksPatchCall) Context(ctx context.Context) *FoldersSinksPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *FoldersSinksPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *FoldersSinksPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logsink)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+sinkName}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"sinkName": c.sinkNameid,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.folders.sinks.patch" call.
+// Exactly one of *LogSink or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *LogSink.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *FoldersSinksPatchCall) Do(opts ...googleapi.CallOption) (*LogSink, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogSink{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
+	//   "flatPath": "v2/folders/{foldersId}/sinks/{sinksId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.folders.sinks.patch",
+	//   "parameterOrder": [
+	//     "sinkName"
+	//   ],
+	//   "parameters": {
+	//     "sinkName": {
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
+	//       "location": "path",
+	//       "pattern": "^folders/[^/]+/sinks/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "uniqueWriterIdentity": {
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
+	//       "location": "query",
+	//       "type": "boolean"
+	//     }
+	//   },
+	//   "path": "v2/{+sinkName}",
+	//   "request": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "response": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
 // method id "logging.folders.sinks.update":
 
 type FoldersSinksUpdateCall struct {
@@ -3438,7 +6270,11 @@ type FoldersSinksUpdateCall struct {
 	header_    http.Header
 }
 
-// Update: Updates or creates a sink.
+// Update: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
 func (r *FoldersSinksService) Update(sinkNameid string, logsink *LogSink) *FoldersSinksUpdateCall {
 	c := &FoldersSinksUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -3447,15 +6283,16 @@ func (r *FoldersSinksService) Update(sinkNameid string, logsink *LogSink) *Folde
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
 func (c *FoldersSinksUpdateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *FoldersSinksUpdateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -3547,7 +6384,7 @@ func (c *FoldersSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogSink, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates or creates a sink.",
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
 	//   "flatPath": "v2/folders/{foldersId}/sinks/{sinksId}",
 	//   "httpMethod": "PUT",
 	//   "id": "logging.folders.sinks.update",
@@ -3556,14 +6393,14 @@ func (c *FoldersSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogSink, err
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to update, including the parent\nresource and the sink identifier.  If the sink does not exist, this method\ncreates the sink.  Example: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^folders/[^/]+/sinks/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }
@@ -3593,30 +6430,27 @@ type MonitoredResourceDescriptorsListCall struct {
 	header_      http.Header
 }
 
-// List: Lists the monitored resource descriptors used by Stackdriver
-// Logging.
+// List: Lists the descriptors for monitored resource types used by
+// Stackdriver Logging.
 func (r *MonitoredResourceDescriptorsService) List() *MonitoredResourceDescriptorsListCall {
 	c := &MonitoredResourceDescriptorsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	return c
 }
 
 // PageSize sets the optional parameter "pageSize": The maximum number
-// of results to return from this request.
-// Non-positive values are ignored.  The presence of `nextPageToken` in
-// the
-// response indicates that more results might be available.
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
 func (c *MonitoredResourceDescriptorsListCall) PageSize(pageSize int64) *MonitoredResourceDescriptorsListCall {
 	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
 	return c
 }
 
 // PageToken sets the optional parameter "pageToken": If present, then
-// retrieve the next batch of results from the
-// preceding call to this method.  `pageToken` must be the value
-// of
-// `nextPageToken` from the previous response.  The values of other
-// method
-// parameters should be identical to those in the previous call.
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
 func (c *MonitoredResourceDescriptorsListCall) PageToken(pageToken string) *MonitoredResourceDescriptorsListCall {
 	c.urlParams_.Set("pageToken", pageToken)
 	return c
@@ -3715,20 +6549,20 @@ func (c *MonitoredResourceDescriptorsListCall) Do(opts ...googleapi.CallOption) 
 	}
 	return ret, nil
 	// {
-	//   "description": "Lists the monitored resource descriptors used by Stackdriver Logging.",
+	//   "description": "Lists the descriptors for monitored resource types used by Stackdriver Logging.",
 	//   "flatPath": "v2/monitoredResourceDescriptors",
 	//   "httpMethod": "GET",
 	//   "id": "logging.monitoredResourceDescriptors.list",
 	//   "parameterOrder": [],
 	//   "parameters": {
 	//     "pageSize": {
-	//       "description": "Optional. The maximum number of results to return from this request.\nNon-positive values are ignored.  The presence of `nextPageToken` in the\nresponse indicates that more results might be available.",
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
 	//       "format": "int32",
 	//       "location": "query",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
-	//       "description": "Optional. If present, then retrieve the next batch of results from the\npreceding call to this method.  `pageToken` must be the value of\n`nextPageToken` from the previous response.  The values of other method\nparameters should be identical to those in the previous call.",
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
 	//       "location": "query",
 	//       "type": "string"
 	//     }
@@ -3768,6 +6602,759 @@ func (c *MonitoredResourceDescriptorsListCall) Pages(ctx context.Context, f func
 	}
 }
 
+// method id "logging.organizations.exclusions.create":
+
+type OrganizationsExclusionsCreateCall struct {
+	s            *Service
+	parent       string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Create: Creates a new exclusion in a specified parent resource. Only
+// log entries belonging to that resource can be excluded. You can have
+// up to 10 exclusions in a resource.
+func (r *OrganizationsExclusionsService) Create(parent string, logexclusion *LogExclusion) *OrganizationsExclusionsCreateCall {
+	c := &OrganizationsExclusionsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.logexclusion = logexclusion
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OrganizationsExclusionsCreateCall) Fields(s ...googleapi.Field) *OrganizationsExclusionsCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OrganizationsExclusionsCreateCall) Context(ctx context.Context) *OrganizationsExclusionsCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OrganizationsExclusionsCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OrganizationsExclusionsCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.organizations.exclusions.create" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *OrganizationsExclusionsCreateCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new exclusion in a specified parent resource. Only log entries belonging to that resource can be excluded. You can have up to 10 exclusions in a resource.",
+	//   "flatPath": "v2/organizations/{organizationsId}/exclusions",
+	//   "httpMethod": "POST",
+	//   "id": "logging.organizations.exclusions.create",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "parent": {
+	//       "description": "Required. The parent resource in which to create the exclusion:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
+	//       "location": "path",
+	//       "pattern": "^organizations/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.organizations.exclusions.delete":
+
+type OrganizationsExclusionsDeleteCall struct {
+	s          *Service
+	name       string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Delete: Deletes an exclusion.
+func (r *OrganizationsExclusionsService) Delete(name string) *OrganizationsExclusionsDeleteCall {
+	c := &OrganizationsExclusionsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OrganizationsExclusionsDeleteCall) Fields(s ...googleapi.Field) *OrganizationsExclusionsDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OrganizationsExclusionsDeleteCall) Context(ctx context.Context) *OrganizationsExclusionsDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OrganizationsExclusionsDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OrganizationsExclusionsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.organizations.exclusions.delete" call.
+// Exactly one of *Empty or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Empty.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *OrganizationsExclusionsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Empty{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Deletes an exclusion.",
+	//   "flatPath": "v2/organizations/{organizationsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "logging.organizations.exclusions.delete",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion to delete:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^organizations/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "Empty"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.organizations.exclusions.get":
+
+type OrganizationsExclusionsGetCall struct {
+	s            *Service
+	name         string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Gets the description of an exclusion.
+func (r *OrganizationsExclusionsService) Get(name string) *OrganizationsExclusionsGetCall {
+	c := &OrganizationsExclusionsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OrganizationsExclusionsGetCall) Fields(s ...googleapi.Field) *OrganizationsExclusionsGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *OrganizationsExclusionsGetCall) IfNoneMatch(entityTag string) *OrganizationsExclusionsGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OrganizationsExclusionsGetCall) Context(ctx context.Context) *OrganizationsExclusionsGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OrganizationsExclusionsGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OrganizationsExclusionsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.organizations.exclusions.get" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *OrganizationsExclusionsGetCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Gets the description of an exclusion.",
+	//   "flatPath": "v2/organizations/{organizationsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "GET",
+	//   "id": "logging.organizations.exclusions.get",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^organizations/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// method id "logging.organizations.exclusions.list":
+
+type OrganizationsExclusionsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists all the exclusions in a parent resource.
+func (r *OrganizationsExclusionsService) List(parent string) *OrganizationsExclusionsListCall {
+	c := &OrganizationsExclusionsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *OrganizationsExclusionsListCall) PageSize(pageSize int64) *OrganizationsExclusionsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *OrganizationsExclusionsListCall) PageToken(pageToken string) *OrganizationsExclusionsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OrganizationsExclusionsListCall) Fields(s ...googleapi.Field) *OrganizationsExclusionsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *OrganizationsExclusionsListCall) IfNoneMatch(entityTag string) *OrganizationsExclusionsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OrganizationsExclusionsListCall) Context(ctx context.Context) *OrganizationsExclusionsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OrganizationsExclusionsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OrganizationsExclusionsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.organizations.exclusions.list" call.
+// Exactly one of *ListExclusionsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListExclusionsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *OrganizationsExclusionsListCall) Do(opts ...googleapi.CallOption) (*ListExclusionsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListExclusionsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists all the exclusions in a parent resource.",
+	//   "flatPath": "v2/organizations/{organizationsId}/exclusions",
+	//   "httpMethod": "GET",
+	//   "id": "logging.organizations.exclusions.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The parent resource whose exclusions are to be listed.\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^organizations/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "response": {
+	//     "$ref": "ListExclusionsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *OrganizationsExclusionsListCall) Pages(ctx context.Context, f func(*ListExclusionsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
+// method id "logging.organizations.exclusions.patch":
+
+type OrganizationsExclusionsPatchCall struct {
+	s            *Service
+	name         string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Patch: Changes one or more properties of an existing exclusion.
+func (r *OrganizationsExclusionsService) Patch(name string, logexclusion *LogExclusion) *OrganizationsExclusionsPatchCall {
+	c := &OrganizationsExclusionsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.logexclusion = logexclusion
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": Required. A
+// nonempty list of fields to change in the existing exclusion. New
+// values for the fields are taken from the corresponding fields in the
+// LogExclusion included in this request. Fields not mentioned in
+// update_mask are not changed and are ignored in the request.For
+// example, to change the filter and description of an exclusion,
+// specify an update_mask of "filter,description".
+func (c *OrganizationsExclusionsPatchCall) UpdateMask(updateMask string) *OrganizationsExclusionsPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OrganizationsExclusionsPatchCall) Fields(s ...googleapi.Field) *OrganizationsExclusionsPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OrganizationsExclusionsPatchCall) Context(ctx context.Context) *OrganizationsExclusionsPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OrganizationsExclusionsPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OrganizationsExclusionsPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.organizations.exclusions.patch" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *OrganizationsExclusionsPatchCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Changes one or more properties of an existing exclusion.",
+	//   "flatPath": "v2/organizations/{organizationsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.organizations.exclusions.patch",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of the exclusion to update:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^organizations/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Required. A nonempty list of fields to change in the existing exclusion. New values for the fields are taken from the corresponding fields in the LogExclusion included in this request. Fields not mentioned in update_mask are not changed and are ignored in the request.For example, to change the filter and description of an exclusion, specify an update_mask of \"filter,description\".",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
 // method id "logging.organizations.logs.delete":
 
 type OrganizationsLogsDeleteCall struct {
@@ -3778,8 +7365,9 @@ type OrganizationsLogsDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a log and all its log entries.
-// The log will reappear if it receives new entries.
+// Delete: Deletes all the log entries in a log. The log reappears if it
+// receives new entries. Log entries written shortly before the delete
+// operation might not be deleted.
 func (r *OrganizationsLogsService) Delete(logName string) *OrganizationsLogsDeleteCall {
 	c := &OrganizationsLogsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.logName = logName
@@ -3867,7 +7455,7 @@ func (c *OrganizationsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, 
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a log and all its log entries.\nThe log will reappear if it receives new entries.",
+	//   "description": "Deletes all the log entries in a log. The log reappears if it receives new entries. Log entries written shortly before the delete operation might not be deleted.",
 	//   "flatPath": "v2/organizations/{organizationsId}/logs/{logsId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.organizations.logs.delete",
@@ -3876,7 +7464,7 @@ func (c *OrganizationsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, 
 	//   ],
 	//   "parameters": {
 	//     "logName": {
-	//       "description": "Required. The resource name of the log to delete.  Example:\n`\"projects/my-project/logs/syslog\"`.",
+	//       "description": "Required. The resource name of the log to delete:\n\"projects/[PROJECT_ID]/logs/[LOG_ID]\"\n\"organizations/[ORGANIZATION_ID]/logs/[LOG_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/logs/[LOG_ID]\"\n\"folders/[FOLDER_ID]/logs/[LOG_ID]\"\n[LOG_ID] must be URL-encoded. For example, \"projects/my-project-id/logs/syslog\", \"organizations/1234567890/logs/cloudresourcemanager.googleapis.com%2Factivity\". For more information about log names, see LogEntry.",
 	//       "location": "path",
 	//       "pattern": "^organizations/[^/]+/logs/[^/]+$",
 	//       "required": true,
@@ -3895,6 +7483,200 @@ func (c *OrganizationsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, 
 
 }
 
+// method id "logging.organizations.logs.list":
+
+type OrganizationsLogsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists the logs in projects, organizations, folders, or billing
+// accounts. Only logs that have entries are listed.
+func (r *OrganizationsLogsService) List(parent string) *OrganizationsLogsListCall {
+	c := &OrganizationsLogsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *OrganizationsLogsListCall) PageSize(pageSize int64) *OrganizationsLogsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *OrganizationsLogsListCall) PageToken(pageToken string) *OrganizationsLogsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OrganizationsLogsListCall) Fields(s ...googleapi.Field) *OrganizationsLogsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *OrganizationsLogsListCall) IfNoneMatch(entityTag string) *OrganizationsLogsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OrganizationsLogsListCall) Context(ctx context.Context) *OrganizationsLogsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OrganizationsLogsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OrganizationsLogsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/logs")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.organizations.logs.list" call.
+// Exactly one of *ListLogsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListLogsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *OrganizationsLogsListCall) Do(opts ...googleapi.CallOption) (*ListLogsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListLogsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists the logs in projects, organizations, folders, or billing accounts. Only logs that have entries are listed.",
+	//   "flatPath": "v2/organizations/{organizationsId}/logs",
+	//   "httpMethod": "GET",
+	//   "id": "logging.organizations.logs.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The resource name that owns the logs:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^organizations/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/logs",
+	//   "response": {
+	//     "$ref": "ListLogsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *OrganizationsLogsListCall) Pages(ctx context.Context, f func(*ListLogsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
 // method id "logging.organizations.sinks.create":
 
 type OrganizationsSinksCreateCall struct {
@@ -3906,7 +7688,12 @@ type OrganizationsSinksCreateCall struct {
 	header_    http.Header
 }
 
-// Create: Creates a sink.
+// Create: Creates a sink that exports specified log entries to a
+// destination. The export of newly-ingested log entries begins
+// immediately, unless the current time is outside the sink's start and
+// end times or the sink's writer_identity is not permitted to write to
+// the destination. A sink can export log entries only from the resource
+// owning the sink.
 func (r *OrganizationsSinksService) Create(parent string, logsink *LogSink) *OrganizationsSinksCreateCall {
 	c := &OrganizationsSinksCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -3915,15 +7702,17 @@ func (r *OrganizationsSinksService) Create(parent string, logsink *LogSink) *Org
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": Determines the kind of IAM identity returned
+// as writer_identity in the new sink. If this value is omitted or set
+// to false, and if the sink's parent is a project, then the value
+// returned as writer_identity is the same group or service account used
+// by Stackdriver Logging before the addition of writer identities to
+// this API. The sink's destination must be in the same project as the
+// sink itself.If this field is set to true, or if the sink is owned by
+// a non-project resource such as an organization, then the value of
+// writer_identity will be a unique service account used only for
+// exports from the new sink. For more information, see writer_identity
+// in LogSink.
 func (c *OrganizationsSinksCreateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *OrganizationsSinksCreateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -4015,7 +7804,7 @@ func (c *OrganizationsSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogSin
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a sink.",
+	//   "description": "Creates a sink that exports specified log entries to a destination. The export of newly-ingested log entries begins immediately, unless the current time is outside the sink's start and end times or the sink's writer_identity is not permitted to write to the destination. A sink can export log entries only from the resource owning the sink.",
 	//   "flatPath": "v2/organizations/{organizationsId}/sinks",
 	//   "httpMethod": "POST",
 	//   "id": "logging.organizations.sinks.create",
@@ -4024,14 +7813,14 @@ func (c *OrganizationsSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogSin
 	//   ],
 	//   "parameters": {
 	//     "parent": {
-	//       "description": "Required. The resource in which to create the sink.\nExample: `\"projects/my-project-id\"`.\nThe new sink must be provided in the request.",
+	//       "description": "Required. The resource in which to create the sink:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
 	//       "location": "path",
 	//       "pattern": "^organizations/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. Determines the kind of IAM identity returned as writer_identity in the new sink. If this value is omitted or set to false, and if the sink's parent is a project, then the value returned as writer_identity is the same group or service account used by Stackdriver Logging before the addition of writer identities to this API. The sink's destination must be in the same project as the sink itself.If this field is set to true, or if the sink is owned by a non-project resource such as an organization, then the value of writer_identity will be a unique service account used only for exports from the new sink. For more information, see writer_identity in LogSink.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }
@@ -4061,7 +7850,8 @@ type OrganizationsSinksDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a sink.
+// Delete: Deletes a sink. If the sink has a unique writer_identity,
+// then that service account is also deleted.
 func (r *OrganizationsSinksService) Delete(sinkNameid string) *OrganizationsSinksDeleteCall {
 	c := &OrganizationsSinksDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -4149,7 +7939,7 @@ func (c *OrganizationsSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empty,
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a sink.",
+	//   "description": "Deletes a sink. If the sink has a unique writer_identity, then that service account is also deleted.",
 	//   "flatPath": "v2/organizations/{organizationsId}/sinks/{sinksId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.organizations.sinks.delete",
@@ -4158,7 +7948,7 @@ func (c *OrganizationsSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empty,
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to delete, including the parent\nresource and the sink identifier.  Example:\n`\"projects/my-project-id/sinks/my-sink-id\"`.  It is an error if the sink\ndoes not exist.",
+	//       "description": "Required. The full resource name of the sink to delete, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^organizations/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -4298,7 +8088,7 @@ func (c *OrganizationsSinksGetCall) Do(opts ...googleapi.CallOption) (*LogSink, 
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to return.\nExample: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The resource name of the sink:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^organizations/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -4338,22 +8128,19 @@ func (r *OrganizationsSinksService) List(parent string) *OrganizationsSinksListC
 }
 
 // PageSize sets the optional parameter "pageSize": The maximum number
-// of results to return from this request.
-// Non-positive values are ignored.  The presence of `nextPageToken` in
-// the
-// response indicates that more results might be available.
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
 func (c *OrganizationsSinksListCall) PageSize(pageSize int64) *OrganizationsSinksListCall {
 	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
 	return c
 }
 
 // PageToken sets the optional parameter "pageToken": If present, then
-// retrieve the next batch of results from the
-// preceding call to this method.  `pageToken` must be the value
-// of
-// `nextPageToken` from the previous response.  The values of other
-// method
-// parameters should be identical to those in the previous call.
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
 func (c *OrganizationsSinksListCall) PageToken(pageToken string) *OrganizationsSinksListCall {
 	c.urlParams_.Set("pageToken", pageToken)
 	return c
@@ -4462,18 +8249,18 @@ func (c *OrganizationsSinksListCall) Do(opts ...googleapi.CallOption) (*ListSink
 	//   ],
 	//   "parameters": {
 	//     "pageSize": {
-	//       "description": "Optional. The maximum number of results to return from this request.\nNon-positive values are ignored.  The presence of `nextPageToken` in the\nresponse indicates that more results might be available.",
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
 	//       "format": "int32",
 	//       "location": "query",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
-	//       "description": "Optional. If present, then retrieve the next batch of results from the\npreceding call to this method.  `pageToken` must be the value of\n`nextPageToken` from the previous response.  The values of other method\nparameters should be identical to those in the previous call.",
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "parent": {
-	//       "description": "Required. The resource name where this sink was created.\nExample: `\"projects/my-logging-project\"`.",
+	//       "description": "Required. The parent resource whose sinks are to be listed:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
 	//       "location": "path",
 	//       "pattern": "^organizations/[^/]+$",
 	//       "required": true,
@@ -4515,6 +8302,167 @@ func (c *OrganizationsSinksListCall) Pages(ctx context.Context, f func(*ListSink
 	}
 }
 
+// method id "logging.organizations.sinks.patch":
+
+type OrganizationsSinksPatchCall struct {
+	s          *Service
+	sinkNameid string
+	logsink    *LogSink
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Patch: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
+func (r *OrganizationsSinksService) Patch(sinkNameid string, logsink *LogSink) *OrganizationsSinksPatchCall {
+	c := &OrganizationsSinksPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.sinkNameid = sinkNameid
+	c.logsink = logsink
+	return c
+}
+
+// UniqueWriterIdentity sets the optional parameter
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
+func (c *OrganizationsSinksPatchCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *OrganizationsSinksPatchCall {
+	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *OrganizationsSinksPatchCall) Fields(s ...googleapi.Field) *OrganizationsSinksPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *OrganizationsSinksPatchCall) Context(ctx context.Context) *OrganizationsSinksPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *OrganizationsSinksPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *OrganizationsSinksPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logsink)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+sinkName}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"sinkName": c.sinkNameid,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.organizations.sinks.patch" call.
+// Exactly one of *LogSink or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *LogSink.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *OrganizationsSinksPatchCall) Do(opts ...googleapi.CallOption) (*LogSink, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogSink{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
+	//   "flatPath": "v2/organizations/{organizationsId}/sinks/{sinksId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.organizations.sinks.patch",
+	//   "parameterOrder": [
+	//     "sinkName"
+	//   ],
+	//   "parameters": {
+	//     "sinkName": {
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
+	//       "location": "path",
+	//       "pattern": "^organizations/[^/]+/sinks/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "uniqueWriterIdentity": {
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
+	//       "location": "query",
+	//       "type": "boolean"
+	//     }
+	//   },
+	//   "path": "v2/{+sinkName}",
+	//   "request": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "response": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
 // method id "logging.organizations.sinks.update":
 
 type OrganizationsSinksUpdateCall struct {
@@ -4526,7 +8474,11 @@ type OrganizationsSinksUpdateCall struct {
 	header_    http.Header
 }
 
-// Update: Updates or creates a sink.
+// Update: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
 func (r *OrganizationsSinksService) Update(sinkNameid string, logsink *LogSink) *OrganizationsSinksUpdateCall {
 	c := &OrganizationsSinksUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -4535,15 +8487,16 @@ func (r *OrganizationsSinksService) Update(sinkNameid string, logsink *LogSink) 
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
 func (c *OrganizationsSinksUpdateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *OrganizationsSinksUpdateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -4635,7 +8588,7 @@ func (c *OrganizationsSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogSin
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates or creates a sink.",
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
 	//   "flatPath": "v2/organizations/{organizationsId}/sinks/{sinksId}",
 	//   "httpMethod": "PUT",
 	//   "id": "logging.organizations.sinks.update",
@@ -4644,14 +8597,14 @@ func (c *OrganizationsSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogSin
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to update, including the parent\nresource and the sink identifier.  If the sink does not exist, this method\ncreates the sink.  Example: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^organizations/[^/]+/sinks/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }
@@ -4671,6 +8624,759 @@ func (c *OrganizationsSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogSin
 
 }
 
+// method id "logging.projects.exclusions.create":
+
+type ProjectsExclusionsCreateCall struct {
+	s            *Service
+	parent       string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Create: Creates a new exclusion in a specified parent resource. Only
+// log entries belonging to that resource can be excluded. You can have
+// up to 10 exclusions in a resource.
+func (r *ProjectsExclusionsService) Create(parent string, logexclusion *LogExclusion) *ProjectsExclusionsCreateCall {
+	c := &ProjectsExclusionsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.logexclusion = logexclusion
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsExclusionsCreateCall) Fields(s ...googleapi.Field) *ProjectsExclusionsCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsExclusionsCreateCall) Context(ctx context.Context) *ProjectsExclusionsCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsExclusionsCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsExclusionsCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.projects.exclusions.create" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *ProjectsExclusionsCreateCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new exclusion in a specified parent resource. Only log entries belonging to that resource can be excluded. You can have up to 10 exclusions in a resource.",
+	//   "flatPath": "v2/projects/{projectsId}/exclusions",
+	//   "httpMethod": "POST",
+	//   "id": "logging.projects.exclusions.create",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "parent": {
+	//       "description": "Required. The parent resource in which to create the exclusion:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.projects.exclusions.delete":
+
+type ProjectsExclusionsDeleteCall struct {
+	s          *Service
+	name       string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Delete: Deletes an exclusion.
+func (r *ProjectsExclusionsService) Delete(name string) *ProjectsExclusionsDeleteCall {
+	c := &ProjectsExclusionsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsExclusionsDeleteCall) Fields(s ...googleapi.Field) *ProjectsExclusionsDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsExclusionsDeleteCall) Context(ctx context.Context) *ProjectsExclusionsDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsExclusionsDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsExclusionsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.projects.exclusions.delete" call.
+// Exactly one of *Empty or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Empty.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *ProjectsExclusionsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Empty{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Deletes an exclusion.",
+	//   "flatPath": "v2/projects/{projectsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "logging.projects.exclusions.delete",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion to delete:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "Empty"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
+// method id "logging.projects.exclusions.get":
+
+type ProjectsExclusionsGetCall struct {
+	s            *Service
+	name         string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Gets the description of an exclusion.
+func (r *ProjectsExclusionsService) Get(name string) *ProjectsExclusionsGetCall {
+	c := &ProjectsExclusionsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsExclusionsGetCall) Fields(s ...googleapi.Field) *ProjectsExclusionsGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *ProjectsExclusionsGetCall) IfNoneMatch(entityTag string) *ProjectsExclusionsGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsExclusionsGetCall) Context(ctx context.Context) *ProjectsExclusionsGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsExclusionsGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsExclusionsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.projects.exclusions.get" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *ProjectsExclusionsGetCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Gets the description of an exclusion.",
+	//   "flatPath": "v2/projects/{projectsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "GET",
+	//   "id": "logging.projects.exclusions.get",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of an existing exclusion:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// method id "logging.projects.exclusions.list":
+
+type ProjectsExclusionsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists all the exclusions in a parent resource.
+func (r *ProjectsExclusionsService) List(parent string) *ProjectsExclusionsListCall {
+	c := &ProjectsExclusionsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *ProjectsExclusionsListCall) PageSize(pageSize int64) *ProjectsExclusionsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *ProjectsExclusionsListCall) PageToken(pageToken string) *ProjectsExclusionsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsExclusionsListCall) Fields(s ...googleapi.Field) *ProjectsExclusionsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *ProjectsExclusionsListCall) IfNoneMatch(entityTag string) *ProjectsExclusionsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsExclusionsListCall) Context(ctx context.Context) *ProjectsExclusionsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsExclusionsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsExclusionsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/exclusions")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.projects.exclusions.list" call.
+// Exactly one of *ListExclusionsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListExclusionsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ProjectsExclusionsListCall) Do(opts ...googleapi.CallOption) (*ListExclusionsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListExclusionsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists all the exclusions in a parent resource.",
+	//   "flatPath": "v2/projects/{projectsId}/exclusions",
+	//   "httpMethod": "GET",
+	//   "id": "logging.projects.exclusions.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The parent resource whose exclusions are to be listed.\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/exclusions",
+	//   "response": {
+	//     "$ref": "ListExclusionsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *ProjectsExclusionsListCall) Pages(ctx context.Context, f func(*ListExclusionsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
+// method id "logging.projects.exclusions.patch":
+
+type ProjectsExclusionsPatchCall struct {
+	s            *Service
+	name         string
+	logexclusion *LogExclusion
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Patch: Changes one or more properties of an existing exclusion.
+func (r *ProjectsExclusionsService) Patch(name string, logexclusion *LogExclusion) *ProjectsExclusionsPatchCall {
+	c := &ProjectsExclusionsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.logexclusion = logexclusion
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": Required. A
+// nonempty list of fields to change in the existing exclusion. New
+// values for the fields are taken from the corresponding fields in the
+// LogExclusion included in this request. Fields not mentioned in
+// update_mask are not changed and are ignored in the request.For
+// example, to change the filter and description of an exclusion,
+// specify an update_mask of "filter,description".
+func (c *ProjectsExclusionsPatchCall) UpdateMask(updateMask string) *ProjectsExclusionsPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsExclusionsPatchCall) Fields(s ...googleapi.Field) *ProjectsExclusionsPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsExclusionsPatchCall) Context(ctx context.Context) *ProjectsExclusionsPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsExclusionsPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsExclusionsPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logexclusion)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.projects.exclusions.patch" call.
+// Exactly one of *LogExclusion or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *LogExclusion.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *ProjectsExclusionsPatchCall) Do(opts ...googleapi.CallOption) (*LogExclusion, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogExclusion{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Changes one or more properties of an existing exclusion.",
+	//   "flatPath": "v2/projects/{projectsId}/exclusions/{exclusionsId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.projects.exclusions.patch",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The resource name of the exclusion to update:\n\"projects/[PROJECT_ID]/exclusions/[EXCLUSION_ID]\"\n\"organizations/[ORGANIZATION_ID]/exclusions/[EXCLUSION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/exclusions/[EXCLUSION_ID]\"\n\"folders/[FOLDER_ID]/exclusions/[EXCLUSION_ID]\"\nExample: \"projects/my-project-id/exclusions/my-exclusion-id\".",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+/exclusions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Required. A nonempty list of fields to change in the existing exclusion. New values for the fields are taken from the corresponding fields in the LogExclusion included in this request. Fields not mentioned in update_mask are not changed and are ignored in the request.For example, to change the filter and description of an exclusion, specify an update_mask of \"filter,description\".",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+name}",
+	//   "request": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "response": {
+	//     "$ref": "LogExclusion"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
 // method id "logging.projects.logs.delete":
 
 type ProjectsLogsDeleteCall struct {
@@ -4681,8 +9387,9 @@ type ProjectsLogsDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a log and all its log entries.
-// The log will reappear if it receives new entries.
+// Delete: Deletes all the log entries in a log. The log reappears if it
+// receives new entries. Log entries written shortly before the delete
+// operation might not be deleted.
 func (r *ProjectsLogsService) Delete(logName string) *ProjectsLogsDeleteCall {
 	c := &ProjectsLogsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.logName = logName
@@ -4770,7 +9477,7 @@ func (c *ProjectsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a log and all its log entries.\nThe log will reappear if it receives new entries.",
+	//   "description": "Deletes all the log entries in a log. The log reappears if it receives new entries. Log entries written shortly before the delete operation might not be deleted.",
 	//   "flatPath": "v2/projects/{projectsId}/logs/{logsId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.projects.logs.delete",
@@ -4779,7 +9486,7 @@ func (c *ProjectsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error
 	//   ],
 	//   "parameters": {
 	//     "logName": {
-	//       "description": "Required. The resource name of the log to delete.  Example:\n`\"projects/my-project/logs/syslog\"`.",
+	//       "description": "Required. The resource name of the log to delete:\n\"projects/[PROJECT_ID]/logs/[LOG_ID]\"\n\"organizations/[ORGANIZATION_ID]/logs/[LOG_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/logs/[LOG_ID]\"\n\"folders/[FOLDER_ID]/logs/[LOG_ID]\"\n[LOG_ID] must be URL-encoded. For example, \"projects/my-project-id/logs/syslog\", \"organizations/1234567890/logs/cloudresourcemanager.googleapis.com%2Factivity\". For more information about log names, see LogEntry.",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+/logs/[^/]+$",
 	//       "required": true,
@@ -4796,6 +9503,200 @@ func (c *ProjectsLogsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error
 	//   ]
 	// }
 
+}
+
+// method id "logging.projects.logs.list":
+
+type ProjectsLogsListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists the logs in projects, organizations, folders, or billing
+// accounts. Only logs that have entries are listed.
+func (r *ProjectsLogsService) List(parent string) *ProjectsLogsListCall {
+	c := &ProjectsLogsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
+func (c *ProjectsLogsListCall) PageSize(pageSize int64) *ProjectsLogsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": If present, then
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
+func (c *ProjectsLogsListCall) PageToken(pageToken string) *ProjectsLogsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsLogsListCall) Fields(s ...googleapi.Field) *ProjectsLogsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *ProjectsLogsListCall) IfNoneMatch(entityTag string) *ProjectsLogsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsLogsListCall) Context(ctx context.Context) *ProjectsLogsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsLogsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsLogsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+parent}/logs")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.projects.logs.list" call.
+// Exactly one of *ListLogsResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListLogsResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ProjectsLogsListCall) Do(opts ...googleapi.CallOption) (*ListLogsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &ListLogsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists the logs in projects, organizations, folders, or billing accounts. Only logs that have entries are listed.",
+	//   "flatPath": "v2/projects/{projectsId}/logs",
+	//   "httpMethod": "GET",
+	//   "id": "logging.projects.logs.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The resource name that owns the logs:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v2/{+parent}/logs",
+	//   "response": {
+	//     "$ref": "ListLogsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/logging.admin",
+	//     "https://www.googleapis.com/auth/logging.read"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *ProjectsLogsListCall) Pages(ctx context.Context, f func(*ListLogsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
 }
 
 // method id "logging.projects.metrics.create":
@@ -4912,7 +9813,7 @@ func (c *ProjectsMetricsCreateCall) Do(opts ...googleapi.CallOption) (*LogMetric
 	//   ],
 	//   "parameters": {
 	//     "parent": {
-	//       "description": "The resource name of the project in which to create the metric.\nExample: `\"projects/my-project-id\"`.\n\nThe new metric must be provided in the request.",
+	//       "description": "The resource name of the project in which to create the metric:\n\"projects/[PROJECT_ID]\"\nThe new metric must be provided in the request.",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+$",
 	//       "required": true,
@@ -5042,7 +9943,7 @@ func (c *ProjectsMetricsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, er
 	//   ],
 	//   "parameters": {
 	//     "metricName": {
-	//       "description": "The resource name of the metric to delete.\nExample: `\"projects/my-project-id/metrics/my-metric-id\"`.",
+	//       "description": "The resource name of the metric to delete:\n\"projects/[PROJECT_ID]/metrics/[METRIC_ID]\"\n",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+/metrics/[^/]+$",
 	//       "required": true,
@@ -5183,7 +10084,7 @@ func (c *ProjectsMetricsGetCall) Do(opts ...googleapi.CallOption) (*LogMetric, e
 	//   ],
 	//   "parameters": {
 	//     "metricName": {
-	//       "description": "The resource name of the desired metric.\nExample: `\"projects/my-project-id/metrics/my-metric-id\"`.",
+	//       "description": "The resource name of the desired metric:\n\"projects/[PROJECT_ID]/metrics/[METRIC_ID]\"\n",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+/metrics/[^/]+$",
 	//       "required": true,
@@ -5223,22 +10124,19 @@ func (r *ProjectsMetricsService) List(parent string) *ProjectsMetricsListCall {
 }
 
 // PageSize sets the optional parameter "pageSize": The maximum number
-// of results to return from this request.
-// Non-positive values are ignored.  The presence of `nextPageToken` in
-// the
-// response indicates that more results might be available.
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
 func (c *ProjectsMetricsListCall) PageSize(pageSize int64) *ProjectsMetricsListCall {
 	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
 	return c
 }
 
 // PageToken sets the optional parameter "pageToken": If present, then
-// retrieve the next batch of results from the
-// preceding call to this method.  `pageToken` must be the value
-// of
-// `nextPageToken` from the previous response.  The values of other
-// method
-// parameters should be identical to those in the previous call.
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
 func (c *ProjectsMetricsListCall) PageToken(pageToken string) *ProjectsMetricsListCall {
 	c.urlParams_.Set("pageToken", pageToken)
 	return c
@@ -5347,18 +10245,18 @@ func (c *ProjectsMetricsListCall) Do(opts ...googleapi.CallOption) (*ListLogMetr
 	//   ],
 	//   "parameters": {
 	//     "pageSize": {
-	//       "description": "Optional. The maximum number of results to return from this request.\nNon-positive values are ignored.  The presence of `nextPageToken` in the\nresponse indicates that more results might be available.",
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
 	//       "format": "int32",
 	//       "location": "query",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
-	//       "description": "Optional. If present, then retrieve the next batch of results from the\npreceding call to this method.  `pageToken` must be the value of\n`nextPageToken` from the previous response.  The values of other method\nparameters should be identical to those in the previous call.",
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "parent": {
-	//       "description": "Required. The resource name containing the metrics.\nExample: `\"projects/my-project-id\"`.",
+	//       "description": "Required. The name of the project containing the metrics:\n\"projects/[PROJECT_ID]\"\n",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+$",
 	//       "required": true,
@@ -5403,18 +10301,18 @@ func (c *ProjectsMetricsListCall) Pages(ctx context.Context, f func(*ListLogMetr
 // method id "logging.projects.metrics.update":
 
 type ProjectsMetricsUpdateCall struct {
-	s            *Service
-	metricNameid string
-	logmetric    *LogMetric
-	urlParams_   gensupport.URLParams
-	ctx_         context.Context
-	header_      http.Header
+	s          *Service
+	metricName string
+	logmetric  *LogMetric
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
 }
 
 // Update: Creates or updates a logs-based metric.
-func (r *ProjectsMetricsService) Update(metricNameid string, logmetric *LogMetric) *ProjectsMetricsUpdateCall {
+func (r *ProjectsMetricsService) Update(metricName string, logmetric *LogMetric) *ProjectsMetricsUpdateCall {
 	c := &ProjectsMetricsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.metricNameid = metricNameid
+	c.metricName = metricName
 	c.logmetric = logmetric
 	return c
 }
@@ -5462,7 +10360,7 @@ func (c *ProjectsMetricsUpdateCall) doRequest(alt string) (*http.Response, error
 	req, _ := http.NewRequest("PUT", urls, body)
 	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
-		"metricName": c.metricNameid,
+		"metricName": c.metricName,
 	})
 	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
@@ -5514,7 +10412,7 @@ func (c *ProjectsMetricsUpdateCall) Do(opts ...googleapi.CallOption) (*LogMetric
 	//   ],
 	//   "parameters": {
 	//     "metricName": {
-	//       "description": "The resource name of the metric to update.\nExample: `\"projects/my-project-id/metrics/my-metric-id\"`.\n\nThe updated metric must be provided in the request and have the\nsame identifier that is specified in `metricName`.\nIf the metric does not exist, it is created.",
+	//       "description": "The resource name of the metric to update:\n\"projects/[PROJECT_ID]/metrics/[METRIC_ID]\"\nThe updated metric must be provided in the request and it's name field must be the same as [METRIC_ID] If the metric does not exist in [PROJECT_ID], then a new metric is created.",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+/metrics/[^/]+$",
 	//       "required": true,
@@ -5548,7 +10446,12 @@ type ProjectsSinksCreateCall struct {
 	header_    http.Header
 }
 
-// Create: Creates a sink.
+// Create: Creates a sink that exports specified log entries to a
+// destination. The export of newly-ingested log entries begins
+// immediately, unless the current time is outside the sink's start and
+// end times or the sink's writer_identity is not permitted to write to
+// the destination. A sink can export log entries only from the resource
+// owning the sink.
 func (r *ProjectsSinksService) Create(parent string, logsink *LogSink) *ProjectsSinksCreateCall {
 	c := &ProjectsSinksCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.parent = parent
@@ -5557,15 +10460,17 @@ func (r *ProjectsSinksService) Create(parent string, logsink *LogSink) *Projects
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": Determines the kind of IAM identity returned
+// as writer_identity in the new sink. If this value is omitted or set
+// to false, and if the sink's parent is a project, then the value
+// returned as writer_identity is the same group or service account used
+// by Stackdriver Logging before the addition of writer identities to
+// this API. The sink's destination must be in the same project as the
+// sink itself.If this field is set to true, or if the sink is owned by
+// a non-project resource such as an organization, then the value of
+// writer_identity will be a unique service account used only for
+// exports from the new sink. For more information, see writer_identity
+// in LogSink.
 func (c *ProjectsSinksCreateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *ProjectsSinksCreateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -5657,7 +10562,7 @@ func (c *ProjectsSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogSink, er
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates a sink.",
+	//   "description": "Creates a sink that exports specified log entries to a destination. The export of newly-ingested log entries begins immediately, unless the current time is outside the sink's start and end times or the sink's writer_identity is not permitted to write to the destination. A sink can export log entries only from the resource owning the sink.",
 	//   "flatPath": "v2/projects/{projectsId}/sinks",
 	//   "httpMethod": "POST",
 	//   "id": "logging.projects.sinks.create",
@@ -5666,14 +10571,14 @@ func (c *ProjectsSinksCreateCall) Do(opts ...googleapi.CallOption) (*LogSink, er
 	//   ],
 	//   "parameters": {
 	//     "parent": {
-	//       "description": "Required. The resource in which to create the sink.\nExample: `\"projects/my-project-id\"`.\nThe new sink must be provided in the request.",
+	//       "description": "Required. The resource in which to create the sink:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\nExamples: \"projects/my-logging-project\", \"organizations/123456789\".",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. Determines the kind of IAM identity returned as writer_identity in the new sink. If this value is omitted or set to false, and if the sink's parent is a project, then the value returned as writer_identity is the same group or service account used by Stackdriver Logging before the addition of writer identities to this API. The sink's destination must be in the same project as the sink itself.If this field is set to true, or if the sink is owned by a non-project resource such as an organization, then the value of writer_identity will be a unique service account used only for exports from the new sink. For more information, see writer_identity in LogSink.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }
@@ -5703,7 +10608,8 @@ type ProjectsSinksDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a sink.
+// Delete: Deletes a sink. If the sink has a unique writer_identity,
+// then that service account is also deleted.
 func (r *ProjectsSinksService) Delete(sinkNameid string) *ProjectsSinksDeleteCall {
 	c := &ProjectsSinksDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -5791,7 +10697,7 @@ func (c *ProjectsSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, erro
 	}
 	return ret, nil
 	// {
-	//   "description": "Deletes a sink.",
+	//   "description": "Deletes a sink. If the sink has a unique writer_identity, then that service account is also deleted.",
 	//   "flatPath": "v2/projects/{projectsId}/sinks/{sinksId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "logging.projects.sinks.delete",
@@ -5800,7 +10706,7 @@ func (c *ProjectsSinksDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, erro
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to delete, including the parent\nresource and the sink identifier.  Example:\n`\"projects/my-project-id/sinks/my-sink-id\"`.  It is an error if the sink\ndoes not exist.",
+	//       "description": "Required. The full resource name of the sink to delete, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -5940,7 +10846,7 @@ func (c *ProjectsSinksGetCall) Do(opts ...googleapi.CallOption) (*LogSink, error
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to return.\nExample: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The resource name of the sink:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+/sinks/[^/]+$",
 	//       "required": true,
@@ -5980,22 +10886,19 @@ func (r *ProjectsSinksService) List(parent string) *ProjectsSinksListCall {
 }
 
 // PageSize sets the optional parameter "pageSize": The maximum number
-// of results to return from this request.
-// Non-positive values are ignored.  The presence of `nextPageToken` in
-// the
-// response indicates that more results might be available.
+// of results to return from this request. Non-positive values are
+// ignored. The presence of nextPageToken in the response indicates that
+// more results might be available.
 func (c *ProjectsSinksListCall) PageSize(pageSize int64) *ProjectsSinksListCall {
 	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
 	return c
 }
 
 // PageToken sets the optional parameter "pageToken": If present, then
-// retrieve the next batch of results from the
-// preceding call to this method.  `pageToken` must be the value
-// of
-// `nextPageToken` from the previous response.  The values of other
-// method
-// parameters should be identical to those in the previous call.
+// retrieve the next batch of results from the preceding call to this
+// method. pageToken must be the value of nextPageToken from the
+// previous response. The values of other method parameters should be
+// identical to those in the previous call.
 func (c *ProjectsSinksListCall) PageToken(pageToken string) *ProjectsSinksListCall {
 	c.urlParams_.Set("pageToken", pageToken)
 	return c
@@ -6104,18 +11007,18 @@ func (c *ProjectsSinksListCall) Do(opts ...googleapi.CallOption) (*ListSinksResp
 	//   ],
 	//   "parameters": {
 	//     "pageSize": {
-	//       "description": "Optional. The maximum number of results to return from this request.\nNon-positive values are ignored.  The presence of `nextPageToken` in the\nresponse indicates that more results might be available.",
+	//       "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of nextPageToken in the response indicates that more results might be available.",
 	//       "format": "int32",
 	//       "location": "query",
 	//       "type": "integer"
 	//     },
 	//     "pageToken": {
-	//       "description": "Optional. If present, then retrieve the next batch of results from the\npreceding call to this method.  `pageToken` must be the value of\n`nextPageToken` from the previous response.  The values of other method\nparameters should be identical to those in the previous call.",
+	//       "description": "Optional. If present, then retrieve the next batch of results from the preceding call to this method. pageToken must be the value of nextPageToken from the previous response. The values of other method parameters should be identical to those in the previous call.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "parent": {
-	//       "description": "Required. The resource name where this sink was created.\nExample: `\"projects/my-logging-project\"`.",
+	//       "description": "Required. The parent resource whose sinks are to be listed:\n\"projects/[PROJECT_ID]\"\n\"organizations/[ORGANIZATION_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]\"\n\"folders/[FOLDER_ID]\"\n",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+$",
 	//       "required": true,
@@ -6157,6 +11060,167 @@ func (c *ProjectsSinksListCall) Pages(ctx context.Context, f func(*ListSinksResp
 	}
 }
 
+// method id "logging.projects.sinks.patch":
+
+type ProjectsSinksPatchCall struct {
+	s          *Service
+	sinkNameid string
+	logsink    *LogSink
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Patch: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
+func (r *ProjectsSinksService) Patch(sinkNameid string, logsink *LogSink) *ProjectsSinksPatchCall {
+	c := &ProjectsSinksPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.sinkNameid = sinkNameid
+	c.logsink = logsink
+	return c
+}
+
+// UniqueWriterIdentity sets the optional parameter
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
+func (c *ProjectsSinksPatchCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *ProjectsSinksPatchCall {
+	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsSinksPatchCall) Fields(s ...googleapi.Field) *ProjectsSinksPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsSinksPatchCall) Context(ctx context.Context) *ProjectsSinksPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsSinksPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsSinksPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.logsink)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v2/{+sinkName}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"sinkName": c.sinkNameid,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "logging.projects.sinks.patch" call.
+// Exactly one of *LogSink or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *LogSink.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *ProjectsSinksPatchCall) Do(opts ...googleapi.CallOption) (*LogSink, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &LogSink{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
+	//   "flatPath": "v2/projects/{projectsId}/sinks/{sinksId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "logging.projects.sinks.patch",
+	//   "parameterOrder": [
+	//     "sinkName"
+	//   ],
+	//   "parameters": {
+	//     "sinkName": {
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+/sinks/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "uniqueWriterIdentity": {
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
+	//       "location": "query",
+	//       "type": "boolean"
+	//     }
+	//   },
+	//   "path": "v2/{+sinkName}",
+	//   "request": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "response": {
+	//     "$ref": "LogSink"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/logging.admin"
+	//   ]
+	// }
+
+}
+
 // method id "logging.projects.sinks.update":
 
 type ProjectsSinksUpdateCall struct {
@@ -6168,7 +11232,11 @@ type ProjectsSinksUpdateCall struct {
 	header_    http.Header
 }
 
-// Update: Updates or creates a sink.
+// Update: Updates a sink. This method replaces the following fields in
+// the existing sink with values from the new sink: destination, filter,
+// output_version_format, start_time, and end_time. The updated sink
+// might also have a new writer_identity; see the unique_writer_identity
+// field.
 func (r *ProjectsSinksService) Update(sinkNameid string, logsink *LogSink) *ProjectsSinksUpdateCall {
 	c := &ProjectsSinksUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sinkNameid = sinkNameid
@@ -6177,15 +11245,16 @@ func (r *ProjectsSinksService) Update(sinkNameid string, logsink *LogSink) *Proj
 }
 
 // UniqueWriterIdentity sets the optional parameter
-// "uniqueWriterIdentity": Whether the sink will have a dedicated
-// service account returned
-// in the sink's writer_identity. Set this field to be true to
-// export
-// logs from one project to a different project. This field is ignored
-// for
-// non-project sinks (e.g. organization sinks) because those sinks
-// are
-// required to have dedicated service accounts.
+// "uniqueWriterIdentity": See sinks.create for a description of this
+// field. When updating a sink, the effect of this field on the value of
+// writer_identity in the updated sink depends on both the old and new
+// values of this field:
+// If the old and new values of this field are both false or both true,
+// then there is no change to the sink's writer_identity.
+// If the old value is false and the new value is true, then
+// writer_identity is changed to a unique service account.
+// It is an error if the old value is true and the new value is set to
+// false or defaulted to false.
 func (c *ProjectsSinksUpdateCall) UniqueWriterIdentity(uniqueWriterIdentity bool) *ProjectsSinksUpdateCall {
 	c.urlParams_.Set("uniqueWriterIdentity", fmt.Sprint(uniqueWriterIdentity))
 	return c
@@ -6277,7 +11346,7 @@ func (c *ProjectsSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogSink, er
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates or creates a sink.",
+	//   "description": "Updates a sink. This method replaces the following fields in the existing sink with values from the new sink: destination, filter, output_version_format, start_time, and end_time. The updated sink might also have a new writer_identity; see the unique_writer_identity field.",
 	//   "flatPath": "v2/projects/{projectsId}/sinks/{sinksId}",
 	//   "httpMethod": "PUT",
 	//   "id": "logging.projects.sinks.update",
@@ -6286,14 +11355,14 @@ func (c *ProjectsSinksUpdateCall) Do(opts ...googleapi.CallOption) (*LogSink, er
 	//   ],
 	//   "parameters": {
 	//     "sinkName": {
-	//       "description": "Required. The resource name of the sink to update, including the parent\nresource and the sink identifier.  If the sink does not exist, this method\ncreates the sink.  Example: `\"projects/my-project-id/sinks/my-sink-id\"`.",
+	//       "description": "Required. The full resource name of the sink to update, including the parent resource and the sink identifier:\n\"projects/[PROJECT_ID]/sinks/[SINK_ID]\"\n\"organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]\"\n\"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_ID]\"\n\"folders/[FOLDER_ID]/sinks/[SINK_ID]\"\nExample: \"projects/my-project-id/sinks/my-sink-id\".",
 	//       "location": "path",
 	//       "pattern": "^projects/[^/]+/sinks/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "uniqueWriterIdentity": {
-	//       "description": "Optional. Whether the sink will have a dedicated service account returned\nin the sink's writer_identity. Set this field to be true to export\nlogs from one project to a different project. This field is ignored for\nnon-project sinks (e.g. organization sinks) because those sinks are\nrequired to have dedicated service accounts.",
+	//       "description": "Optional. See sinks.create for a description of this field. When updating a sink, the effect of this field on the value of writer_identity in the updated sink depends on both the old and new values of this field:\nIf the old and new values of this field are both false or both true, then there is no change to the sink's writer_identity.\nIf the old value is false and the new value is true, then writer_identity is changed to a unique service account.\nIt is an error if the old value is true and the new value is set to false or defaulted to false.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     }

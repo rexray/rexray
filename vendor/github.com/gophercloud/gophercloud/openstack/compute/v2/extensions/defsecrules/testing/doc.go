@@ -1,2 +1,2 @@
-// compute_extensions_defsecrules_v2
+// defsecrules unit tests
 package testing

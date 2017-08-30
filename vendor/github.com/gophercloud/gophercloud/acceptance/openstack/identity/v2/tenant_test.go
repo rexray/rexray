@@ -30,3 +30,34 @@ func TestTenantsList(t *testing.T) {
 		tools.PrintResource(t, tenant)
 	}
 }
+
+func TestTenantsCRUD(t *testing.T) {
+	client, err := clients.NewIdentityV2AdminClient()
+	if err != nil {
+		t.Fatalf("Unable to obtain an identity client: %v")
+	}
+
+	tenant, err := CreateTenant(t, client, nil)
+	if err != nil {
+		t.Fatalf("Unable to create tenant: %v", err)
+	}
+	defer DeleteTenant(t, client, tenant.ID)
+
+	tenant, err = tenants.Get(client, tenant.ID).Extract()
+	if err != nil {
+		t.Fatalf("Unable to get tenant: %v", err)
+	}
+
+	tools.PrintResource(t, tenant)
+
+	updateOpts := tenants.UpdateOpts{
+		Description: "some tenant",
+	}
+
+	newTenant, err := tenants.Update(client, tenant.ID, updateOpts).Extract()
+	if err != nil {
+		t.Fatalf("Unable to update tenant: %v", err)
+	}
+
+	tools.PrintResource(t, newTenant)
+}

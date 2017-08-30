@@ -68,6 +68,9 @@ func TestServergroupsAffinityPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create server: %v", err)
 	}
+	if err = WaitForComputeStatus(client, firstServer, "ACTIVE"); err != nil {
+		t.Fatalf("Unable to wait for server: %v", err)
+	}
 	defer DeleteServer(t, client, firstServer)
 
 	firstServer, err = servers.Get(client, firstServer.ID).Extract()

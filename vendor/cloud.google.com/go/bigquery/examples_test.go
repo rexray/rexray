@@ -394,6 +394,7 @@ func ExampleTable_Create() {
 	}
 }
 
+// If you know your table's schema initially, pass a Schema to Create.
 func ExampleTable_Create_schema() {
 	ctx := context.Background()
 	// Infer table schema from a Go type.
@@ -514,6 +515,8 @@ func ExampleTable_LoaderFrom() {
 	}
 	gcsRef := bigquery.NewGCSReference("gs://my-bucket/my-object")
 	gcsRef.AllowJaggedRows = true
+	gcsRef.MaxBadRecords = 5
+	gcsRef.Schema = schema
 	// TODO: set other options on the GCSReference.
 	ds := client.Dataset("my_dataset")
 	loader := ds.Table("my_table").LoaderFrom(gcsRef)
@@ -544,6 +547,8 @@ func ExampleTable_LoaderFrom_reader() {
 	}
 	rs := bigquery.NewReaderSource(f)
 	rs.AllowJaggedRows = true
+	rs.MaxBadRecords = 5
+	rs.Schema = schema
 	// TODO: set other options on the GCSReference.
 	ds := client.Dataset("my_dataset")
 	loader := ds.Table("my_table").LoaderFrom(rs)

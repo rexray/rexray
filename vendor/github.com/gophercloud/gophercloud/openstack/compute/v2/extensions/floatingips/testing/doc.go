@@ -1,2 +1,2 @@
-// compute_extensions_floatingips_v2
+// floatingips unit tests
 package testing

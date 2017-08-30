@@ -8,6 +8,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	fake "github.com/gophercloud/gophercloud/openstack/networking/v2/common"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/fwaas/firewalls"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/fwaas/routerinsertion"
 	"github.com/gophercloud/gophercloud/pagination"
 	th "github.com/gophercloud/gophercloud/testhelper"
 )
@@ -88,6 +89,60 @@ func TestList(t *testing.T) {
 	if count != 1 {
 		t.Errorf("Expected 1 page, got %d", count)
 	}
+}
+
+func TestListWithExtensions(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	th.Mux.HandleFunc("/v2.0/fw/firewalls", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "GET")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		fmt.Fprintf(w, `
+{
+   "firewalls":[
+        {
+           "status": "ACTIVE",
+           "name": "fw1",
+           "admin_state_up": false,
+           "tenant_id": "b4eedccc6fb74fa8a7ad6b08382b852b",
+           "firewall_policy_id": "34be8c83-4d42-4dca-a74e-b77fffb8e28a",
+           "id": "fb5b5315-64f6-4ea3-8e58-981cc37c6f61",
+           "description": "OpenStack firewall 1",
+           "router_ids": ["abcd1234"]
+        },
+        {
+           "status": "PENDING_UPDATE",
+           "name": "fw2",
+           "admin_state_up": true,
+           "tenant_id": "b4eedccc6fb74fa8a7ad6b08382b852b",
+           "firewall_policy_id": "34be8c83-4d42-4dca-a74e-b77fffb8e299",
+           "id": "fb5b5315-64f6-4ea3-8e58-981cc37c6f99",
+           "description": "OpenStack firewall 2"
+        }
+   ]
+}
+      `)
+	})
+
+	type FirewallsWithExt struct {
+		firewalls.Firewall
+		routerinsertion.FirewallExt
+	}
+
+	allPages, err := firewalls.List(fake.ServiceClient(), nil).AllPages()
+	th.AssertNoErr(t, err)
+
+	var actual []FirewallsWithExt
+	err = firewalls.ExtractFirewallsInto(allPages, &actual)
+	th.AssertNoErr(t, err)
+	th.AssertEquals(t, 2, len(actual))
+	th.AssertEquals(t, "fb5b5315-64f6-4ea3-8e58-981cc37c6f61", actual[0].ID)
+	th.AssertEquals(t, "abcd1234", actual[0].RouterIDs[0])
 }
 
 func TestCreate(t *testing.T) {
@@ -175,6 +230,51 @@ func TestGet(t *testing.T) {
 	th.AssertEquals(t, "34be8c83-4d42-4dca-a74e-b77fffb8e28a", fw.PolicyID)
 	th.AssertEquals(t, "fb5b5315-64f6-4ea3-8e58-981cc37c6f61", fw.ID)
 	th.AssertEquals(t, "b4eedccc6fb74fa8a7ad6b08382b852b", fw.TenantID)
+}
+
+func TestGetWithExtensions(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	th.Mux.HandleFunc("/v2.0/fw/firewalls/fb5b5315-64f6-4ea3-8e58-981cc37c6f61", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "GET")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		fmt.Fprintf(w, `
+{
+    "firewall": {
+        "status": "ACTIVE",
+        "name": "fw",
+        "admin_state_up": true,
+        "tenant_id": "b4eedccc6fb74fa8a7ad6b08382b852b",
+        "firewall_policy_id": "34be8c83-4d42-4dca-a74e-b77fffb8e28a",
+        "id": "fb5b5315-64f6-4ea3-8e58-981cc37c6f61",
+        "description": "OpenStack firewall",
+        "router_ids": ["abcd1234"]
+    }
+}
+        `)
+	})
+
+	var fw struct {
+		firewalls.Firewall
+		routerinsertion.FirewallExt
+	}
+
+	err := firewalls.Get(fake.ServiceClient(), "fb5b5315-64f6-4ea3-8e58-981cc37c6f61").ExtractInto(&fw)
+	th.AssertNoErr(t, err)
+
+	th.AssertEquals(t, "ACTIVE", fw.Status)
+	th.AssertEquals(t, "fw", fw.Name)
+	th.AssertEquals(t, "OpenStack firewall", fw.Description)
+	th.AssertEquals(t, true, fw.AdminStateUp)
+	th.AssertEquals(t, "34be8c83-4d42-4dca-a74e-b77fffb8e28a", fw.PolicyID)
+	th.AssertEquals(t, "fb5b5315-64f6-4ea3-8e58-981cc37c6f61", fw.ID)
+	th.AssertEquals(t, "b4eedccc6fb74fa8a7ad6b08382b852b", fw.TenantID)
+	th.AssertEquals(t, "abcd1234", fw.RouterIDs[0])
 }
 
 func TestUpdate(t *testing.T) {

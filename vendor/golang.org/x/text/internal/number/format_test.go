@@ -193,7 +193,9 @@ func TestAppendDecimal(t *testing.T) {
 	}, {
 		pattern: "#,max_int=2",
 		pat: &Pattern{
-			MaxIntegerDigits: 2,
+			RoundingContext: RoundingContext{
+				MaxIntegerDigits: 2,
+			},
 		},
 		test: pairs{
 			"2017": "17",
@@ -201,8 +203,10 @@ func TestAppendDecimal(t *testing.T) {
 	}, {
 		pattern: "0,max_int=2",
 		pat: &Pattern{
-			MaxIntegerDigits: 2,
-			MinIntegerDigits: 1,
+			RoundingContext: RoundingContext{
+				MaxIntegerDigits: 2,
+				MinIntegerDigits: 1,
+			},
 		},
 		test: pairs{
 			"2000": "0",
@@ -212,8 +216,10 @@ func TestAppendDecimal(t *testing.T) {
 	}, {
 		pattern: "00,max_int=2",
 		pat: &Pattern{
-			MaxIntegerDigits: 2,
-			MinIntegerDigits: 2,
+			RoundingContext: RoundingContext{
+				MaxIntegerDigits: 2,
+				MinIntegerDigits: 2,
+			},
 		},
 		test: pairs{
 			"2000": "00",
@@ -223,8 +229,10 @@ func TestAppendDecimal(t *testing.T) {
 	}, {
 		pattern: "@@@@,max_int=2",
 		pat: &Pattern{
-			MaxIntegerDigits:     2,
-			MinSignificantDigits: 4,
+			RoundingContext: RoundingContext{
+				MaxIntegerDigits:     2,
+				MinSignificantDigits: 4,
+			},
 		},
 		test: pairs{
 			"2017": "17.00",
@@ -441,11 +449,12 @@ func TestAppendDecimal(t *testing.T) {
 		}
 		var f Formatter
 		f.InitPattern(language.English, pat)
-		for dec, want := range tc.test {
+		for num, want := range tc.test {
 			buf := make([]byte, 100)
-			t.Run(tc.pattern+"/"+dec, func(t *testing.T) {
-				dec := mkdec(dec)
-				buf = f.Format(buf[:0], &dec)
+			t.Run(tc.pattern+"/"+num, func(t *testing.T) {
+				var d Decimal
+				d.Convert(f.RoundingContext, dec(num))
+				buf = f.Format(buf[:0], &d)
 				if got := string(buf); got != want {
 					t.Errorf("\n got %[1]q (%[1]s)\nwant %[2]q (%[2]s)", got, want)
 				}
@@ -470,7 +479,8 @@ func TestLocales(t *testing.T) {
 		t.Run(fmt.Sprint(tc.tag, "/", tc.num), func(t *testing.T) {
 			var f Formatter
 			f.InitDecimal(tc.tag)
-			d := mkdec(tc.num)
+			var d Decimal
+			d.Convert(f.RoundingContext, dec(tc.num))
 			b := f.Format(nil, &d)
 			if got := string(b); got != tc.want {
 				t.Errorf("got %[1]q (%[1]s); want %[2]q (%[2]s)", got, tc.want)
@@ -496,9 +506,9 @@ func TestFormatters(t *testing.T) {
 	for i, tc := range testCases {
 		t.Run(fmt.Sprint(i, "/", tc.num), func(t *testing.T) {
 			tc.init(language.English)
-			f.Pattern.MinFractionDigits = 2
-			f.Pattern.MaxFractionDigits = 2
-			d := mkdec(tc.num)
+			f.SetScale(2)
+			var d Decimal
+			d.Convert(f.RoundingContext, dec(tc.num))
 			b := f.Format(nil, &d)
 			if got := string(b); got != tc.want {
 				t.Errorf("got %[1]q (%[1]s); want %[2]q (%[2]s)", got, tc.want)

@@ -7,32 +7,32 @@ import (
 
 // User represents a user resource that exists on the API.
 type User struct {
-	// The UUID for this user.
+	// ID is the UUID for this user.
 	ID string
 
-	// The human name for this user.
+	// Name is the human name for this user.
 	Name string
 
-	// The username for this user.
+	// Username is the username for this user.
 	Username string
 
-	// Indicates whether the user is enabled (true) or disabled (false).
+	// Enabled indicates whether the user is enabled (true) or disabled (false).
 	Enabled bool
 
-	// The email address for this user.
+	// Email is the email address for this user.
 	Email string
 
-	// The ID of the tenant to which this user belongs.
+	// TenantID is the ID of the tenant to which this user belongs.
 	TenantID string `json:"tenant_id"`
 }
 
 // Role assigns specific responsibilities to users, allowing them to accomplish
 // certain API operations whilst scoped to a service.
 type Role struct {
-	// UUID of the role
+	// ID is the UUID of the role.
 	ID string
 
-	// Name of the role
+	// Name is the name of the role.
 	Name string
 }
 
@@ -46,13 +46,13 @@ type RolePage struct {
 	pagination.SinglePageBase
 }
 
-// IsEmpty determines whether or not a page of Tenants contains any results.
+// IsEmpty determines whether or not a page of Users contains any results.
 func (r UserPage) IsEmpty() (bool, error) {
 	users, err := ExtractUsers(r)
 	return len(users) == 0, err
 }
 
-// ExtractUsers returns a slice of Tenants contained in a single page of results.
+// ExtractUsers returns a slice of Users contained in a single page of results.
 func ExtractUsers(r pagination.Page) ([]User, error) {
 	var s struct {
 		Users []User `json:"users"`
@@ -61,7 +61,7 @@ func ExtractUsers(r pagination.Page) ([]User, error) {
 	return s.Users, err
 }
 
-// IsEmpty determines whether or not a page of Tenants contains any results.
+// IsEmpty determines whether or not a page of Roles contains any results.
 func (r RolePage) IsEmpty() (bool, error) {
 	users, err := ExtractRoles(r)
 	return len(users) == 0, err
@@ -89,22 +89,26 @@ func (r commonResult) Extract() (*User, error) {
 	return s.User, err
 }
 
-// CreateResult represents the result of a Create operation
+// CreateResult represents the result of a Create operation. Call its Extract
+// method to interpret the result as a User.
 type CreateResult struct {
 	commonResult
 }
 
-// GetResult represents the result of a Get operation
+// GetResult represents the result of a Get operation. Call its Extract method
+// to interpret the result as a User.
 type GetResult struct {
 	commonResult
 }
 
-// UpdateResult represents the result of an Update operation
+// UpdateResult represents the result of an Update operation. Call its Extract
+// method to interpret the result as a User.
 type UpdateResult struct {
 	commonResult
 }
 
-// DeleteResult represents the result of a Delete operation
+// DeleteResult represents the result of a Delete operation. Call its
+// ExtractErr method to determine if the request succeeded or failed.
 type DeleteResult struct {
 	commonResult
 }

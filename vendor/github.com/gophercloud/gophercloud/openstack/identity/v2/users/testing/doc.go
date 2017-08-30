@@ -1,2 +1,2 @@
-// identity_users_v2
+// users unit tests
 package testing

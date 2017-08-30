@@ -27,6 +27,34 @@ func AddUserRole(t *testing.T, client *gophercloud.ServiceClient, tenant *tenant
 	return nil
 }
 
+// CreateTenant will create a project with a random name.
+// It takes an optional createOpts parameter since creating a project
+// has so many options. An error will be returned if the project was
+// unable to be created.
+func CreateTenant(t *testing.T, client *gophercloud.ServiceClient, c *tenants.CreateOpts) (*tenants.Tenant, error) {
+	name := tools.RandomString("ACPTTEST", 8)
+	t.Logf("Attempting to create tenant: %s", name)
+
+	var createOpts tenants.CreateOpts
+	if c != nil {
+		createOpts = *c
+	} else {
+		createOpts = tenants.CreateOpts{}
+	}
+
+	createOpts.Name = name
+
+	tenant, err := tenants.Create(client, createOpts).Extract()
+	if err != nil {
+		t.Logf("Foo")
+		return tenant, err
+	}
+
+	t.Logf("Successfully created project %s with ID %s", name, tenant.ID)
+
+	return tenant, nil
+}
+
 // CreateUser will create a user with a random name and adds them to the given
 // tenant. An error will be returned if the user was unable to be created.
 func CreateUser(t *testing.T, client *gophercloud.ServiceClient, tenant *tenants.Tenant) (*users.User, error) {
@@ -47,6 +75,18 @@ func CreateUser(t *testing.T, client *gophercloud.ServiceClient, tenant *tenants
 	}
 
 	return user, nil
+}
+
+// DeleteTenant will delete a tenant by ID. A fatal error will occur if
+// the tenant ID failed to be deleted. This works best when using it as
+// a deferred function.
+func DeleteTenant(t *testing.T, client *gophercloud.ServiceClient, tenantID string) {
+	err := tenants.Delete(client, tenantID).ExtractErr()
+	if err != nil {
+		t.Fatalf("Unable to delete tenant %s: %v", tenantID, err)
+	}
+
+	t.Logf("Deleted tenant: %s", tenantID)
 }
 
 // DeleteUser will delete a user. A fatal error will occur if the delete was

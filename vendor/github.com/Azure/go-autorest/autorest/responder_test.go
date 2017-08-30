@@ -2,6 +2,7 @@ package autorest
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -420,6 +421,61 @@ func TestRespondAcceptsNullResponse(t *testing.T) {
 	err := Respond(nil)
 	if err != nil {
 		t.Fatalf("autorest: Respond returned an unexpected error when given a null Response (%v)", err)
+	}
+}
+
+func TestWithErrorUnlessStatusCodeOKResponse(t *testing.T) {
+	v := &mocks.T{}
+	r := mocks.NewResponseWithContent(jsonT)
+	err := Respond(r,
+		WithErrorUnlessStatusCode(http.StatusOK),
+		ByUnmarshallingJSON(v),
+		ByClosing())
+
+	if err != nil {
+		t.Fatalf("autorest: WithErrorUnlessStatusCode(http.StatusOK) failed on okay response. (%v)", err)
+	}
+
+	if v.Name != "Rob Pike" || v.Age != 42 {
+		t.Fatalf("autorest: WithErrorUnlessStatusCode(http.StatusOK) corrupted the response body of okay response.")
+	}
+}
+
+func TesWithErrorUnlessStatusCodeErrorResponse(t *testing.T) {
+	v := &mocks.T{}
+	e := &mocks.T{}
+	r := mocks.NewResponseWithContent(jsonT)
+	r.Status = "400 BadRequest"
+	r.StatusCode = http.StatusBadRequest
+
+	err := Respond(r,
+		WithErrorUnlessStatusCode(http.StatusOK),
+		ByUnmarshallingJSON(v),
+		ByClosing())
+
+	if err == nil {
+		t.Fatal("autorest: WithErrorUnlessStatusCode(http.StatusOK) did not return error, on a response to a bad request.")
+	}
+
+	var errorRespBody []byte
+	if derr, ok := err.(DetailedError); !ok {
+		t.Fatalf("autorest: WithErrorUnlessStatusCode(http.StatusOK) got wrong error type : %T, expected: DetailedError, on a response to a bad request.", err)
+	} else {
+		errorRespBody = derr.ServiceError
+	}
+
+	if errorRespBody == nil {
+		t.Fatalf("autorest: WithErrorUnlessStatusCode(http.StatusOK) ServiceError not returned in DetailedError on a response to a bad request.")
+	}
+
+	err = json.Unmarshal(errorRespBody, e)
+	if err != nil {
+		t.Fatalf("autorest: WithErrorUnlessStatusCode(http.StatusOK) cannot parse error returned in ServiceError into json. %v", err)
+	}
+
+	expected := &mocks.T{Name: "Rob Pike", Age: 42}
+	if e != expected {
+		t.Fatalf("autorest: WithErrorUnlessStatusCode(http.StatusOK wrong value from parsed ServiceError: got=%#v expected=%#v", e, expected)
 	}
 }
 

@@ -25,9 +25,10 @@ func TestCreateOpts(t *testing.T) {
 			"a0cf03a5-d921-4877-bb5c-86d26cf818e1",
 			"8c19174f-4220-44f0-824a-cd1eeef10287",
 		},
-		Query:           []interface{}{">=", "$free_ram_mb", "1024"},
-		TargetCell:      "foobar",
-		BuildNearHostIP: "192.168.1.1/24",
+		Query:                []interface{}{">=", "$free_ram_mb", "1024"},
+		TargetCell:           "foobar",
+		BuildNearHostIP:      "192.168.1.1/24",
+		AdditionalProperties: map[string]interface{}{"reservation": "a0cf03a5-d921-4877-bb5c-86d26cf818e1"},
 	}
 
 	ext := schedulerhints.CreateOptsExt{
@@ -57,7 +58,8 @@ func TestCreateOpts(t *testing.T) {
 				],
 				"target_cell": "foobar",
 				"build_near_host_ip": "192.168.1.1",
-				"cidr": "/24"
+				"cidr": "/24",
+				"reservation": "a0cf03a5-d921-4877-bb5c-86d26cf818e1"
 			}
 		}
 	`
@@ -83,9 +85,10 @@ func TestCreateOptsWithComplexQuery(t *testing.T) {
 			"a0cf03a5-d921-4877-bb5c-86d26cf818e1",
 			"8c19174f-4220-44f0-824a-cd1eeef10287",
 		},
-		Query:           []interface{}{"and", []string{">=", "$free_ram_mb", "1024"}, []string{">=", "$free_disk_mb", "204800"}},
-		TargetCell:      "foobar",
-		BuildNearHostIP: "192.168.1.1/24",
+		Query:                []interface{}{"and", []string{">=", "$free_ram_mb", "1024"}, []string{">=", "$free_disk_mb", "204800"}},
+		TargetCell:           "foobar",
+		BuildNearHostIP:      "192.168.1.1/24",
+		AdditionalProperties: map[string]interface{}{"reservation": "a0cf03a5-d921-4877-bb5c-86d26cf818e1"},
 	}
 
 	ext := schedulerhints.CreateOptsExt{
@@ -117,7 +120,8 @@ func TestCreateOptsWithComplexQuery(t *testing.T) {
 				],
 				"target_cell": "foobar",
 				"build_near_host_ip": "192.168.1.1",
-				"cidr": "/24"
+				"cidr": "/24",
+				"reservation": "a0cf03a5-d921-4877-bb5c-86d26cf818e1"
 			}
 		}
 	`

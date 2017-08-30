@@ -27,7 +27,10 @@ import (
 	"google.golang.org/api/google-api-go-generator/internal/disco"
 )
 
-const googleDiscoveryURL = "https://www.googleapis.com/discovery/v1/apis"
+const (
+	googleDiscoveryURL = "https://www.googleapis.com/discovery/v1/apis"
+	generatorVersion   = "20170210"
+)
 
 var (
 	apiToGenerate = flag.String("api", "*", "The API ID to generate, like 'tasks:v1'. A value of '*' means all.")
@@ -49,6 +52,8 @@ var (
 	contextPkg     = flag.String("context_pkg", "golang.org/x/net/context", "Go package path of the 'context' package.")
 	gensupportPkg  = flag.String("gensupport_pkg", "google.golang.org/api/gensupport", "Go package path of the 'api/gensupport' support package.")
 	googleapiPkg   = flag.String("googleapi_pkg", "google.golang.org/api/googleapi", "Go package path of the 'api/googleapi' support package.")
+
+	serviceTypes = []string{"Service", "APIService"}
 )
 
 // API represents an API to generate, as well as its state while it's
@@ -389,10 +394,15 @@ func (a *API) Target() string {
 // (typically "Service").
 func (a *API) ServiceType() string {
 	switch a.Name {
-	case "appengine", "content", "servicemanagement":
+	case "appengine", "content": // retained for historical compatibility.
 		return "APIService"
 	default:
-		return "Service"
+		for _, t := range serviceTypes {
+			if _, ok := a.schemas[t]; !ok {
+				return t
+			}
+		}
+		panic("all service types are used, please consider introducing a new type to serviceTypes.")
 	}
 }
 
@@ -570,6 +580,7 @@ func (a *API) GenerateCode() ([]byte, error) {
 	pn("const basePath = %q", a.apiBaseURL())
 
 	a.generateScopeConstants()
+	a.PopulateSchemas()
 
 	service := a.ServiceType()
 
@@ -603,8 +614,6 @@ func (a *API) GenerateCode() ([]byte, error) {
 	for _, res := range a.doc.Resources {
 		a.generateResource(res)
 	}
-
-	a.PopulateSchemas()
 
 	a.responseTypes = make(map[string]bool)
 	for _, meth := range a.APIMethods() {
@@ -756,11 +765,17 @@ type fieldName struct {
 // This makes it possible to distinguish between a field being unset vs having
 // an empty value.
 var pointerFields = []fieldName{
+	{api: "androidpublisher:v2", schema: "SubscriptionPurchase", field: "CancelReason"},
+	{api: "androidpublisher:v2", schema: "SubscriptionPurchase", field: "PaymentState"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "BoolValue"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "DoubleValue"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "Int64Value"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "StringValue"},
+	{api: "compute:alpha", schema: "Scheduling", field: "AutomaticRestart"},
+	{api: "compute:beta", schema: "MetadataItems", field: "Value"},
+	{api: "compute:beta", schema: "Scheduling", field: "AutomaticRestart"},
 	{api: "compute:v1", schema: "MetadataItems", field: "Value"},
+	{api: "compute:v1", schema: "Scheduling", field: "AutomaticRestart"},
 	{api: "content:v2", schema: "AccountUser", field: "Admin"},
 	{api: "datastore:v1beta2", schema: "Property", field: "BlobKeyValue"},
 	{api: "datastore:v1beta2", schema: "Property", field: "BlobValue"},
@@ -785,6 +800,9 @@ var pointerFields = []fieldName{
 	{api: "servicecontrol:v1", schema: "MetricValue", field: "DoubleValue"},
 	{api: "servicecontrol:v1", schema: "MetricValue", field: "Int64Value"},
 	{api: "servicecontrol:v1", schema: "MetricValue", field: "StringValue"},
+	{api: "sqladmin:v1beta4", schema: "Settings", field: "StorageAutoResize"},
+	{api: "storage:v1", schema: "BucketLifecycleRuleCondition", field: "IsLive"},
+	{api: "storage:v1beta2", schema: "BucketLifecycleRuleCondition", field: "IsLive"},
 	{api: "tasks:v1", schema: "Task", field: "Completed"},
 	{api: "youtube:v3", schema: "ChannelSectionSnippet", field: "Position"},
 }
@@ -1141,6 +1159,11 @@ func (s *Schema) writeSchemaStruct(api *API) {
 			s.api.p("\n")
 		}
 		pname := np.Get(p.GoName())
+		if pname[0] == '@' {
+			// HACK(cbro): ignore JSON-LD special fields until we can figure out
+			// the correct Go representation for them.
+			continue
+		}
 		p.assignedGoName = pname
 		des := p.Description()
 		if des != "" {
@@ -1394,47 +1417,92 @@ func (m *Method) supportsMediaDownload() bool {
 	return m.m.SupportsMediaDownload
 }
 
-func (m *Method) supportsPaging() (callField, respField string, ok bool) {
-	if m.m.HTTPMethod != "GET" {
-		// Probably a POST, like "calendar.acl.watch",
-		// which, despite having a pageToken parameter,
-		// isn't actually a paged method.
-		return "", "", false
-	}
-	matches := m.grepParams(func(p *Param) bool { return p.p.Name == "pageToken" })
-	if len(matches) == 0 {
-		return "", "", false
-	} else {
-		pt := matches[0]
-		if pt.p.Required {
-			// The page token is a required parameter (e.g. because there is
-			// a separate API call to start an iteration), and so the relevant
-			// call factory method takes the page token instead.
-			return "", "", false
-		}
+func (m *Method) supportsPaging() (*pageTokenGenerator, string, bool) {
+	ptg := m.pageTokenGenerator()
+	if ptg == nil {
+		return nil, "", false
 	}
 
 	// Check that the response type has the next page token.
-	// It may appear under different names.
 	s := m.responseType()
 	if s == nil || s.typ.Kind != disco.StructKind {
-		return "", "", false
+		return nil, "", false
 	}
-	props := s.properties()
-
-	opts := [...]string{
-		"nextPageToken",
-		"pageToken",
-	}
-	for _, n := range opts {
-		for _, prop := range props {
-			if prop.p.Name == n && prop.Type().Type == "string" {
-				return "PageToken", prop.GoName(), true
-			}
+	for _, prop := range s.properties() {
+		if isPageTokenName(prop.p.Name) && prop.Type().Type == "string" {
+			return ptg, prop.GoName(), true
 		}
 	}
 
-	return "", "", false
+	return nil, "", false
+}
+
+type pageTokenGenerator struct {
+	isParam     bool   // is the page token a URL parameter?
+	name        string // param or request field name
+	requestName string // empty for URL param
+}
+
+func (p *pageTokenGenerator) genGet() string {
+	if p.isParam {
+		return fmt.Sprintf("c.urlParams_.Get(%q)", p.name)
+	}
+	return fmt.Sprintf("c.%s.%s", p.requestName, p.name)
+}
+
+func (p *pageTokenGenerator) genSet(valueExpr string) string {
+	if p.isParam {
+		return fmt.Sprintf("c.%s(%s)", initialCap(p.name), valueExpr)
+	}
+	return fmt.Sprintf("c.%s.%s = %s", p.requestName, p.name, valueExpr)
+}
+
+func (p *pageTokenGenerator) genDeferBody() string {
+	if p.isParam {
+		return p.genSet(p.genGet())
+	}
+	return fmt.Sprintf("func (pt string) { %s }(%s)", p.genSet("pt"), p.genGet())
+}
+
+// pageTokenGenerator returns a pageTokenGenerator that will generate code to
+// get/set the page token for a subsequent page in the context of the generated
+// Pages method. It returns nil if there is no page token.
+func (m *Method) pageTokenGenerator() *pageTokenGenerator {
+	matches := m.grepParams(func(p *Param) bool { return isPageTokenName(p.p.Name) })
+	switch len(matches) {
+	case 1:
+		if matches[0].p.Required {
+			// The page token is a required parameter (e.g. because there is
+			// a separate API call to start an iteration), and so the relevant
+			// call factory method takes the page token instead.
+			return nil
+		}
+		n := matches[0].p.Name
+		return &pageTokenGenerator{true, n, ""}
+
+	case 0: // No URL parameter, but maybe a request field.
+		if m.m.Request == nil {
+			return nil
+		}
+		rs := m.m.Request
+		if rs.RefSchema != nil {
+			rs = rs.RefSchema
+		}
+		for _, p := range rs.Properties {
+			if isPageTokenName(p.Name) {
+				return &pageTokenGenerator{false, initialCap(p.Name), validGoIdentifer(strings.ToLower(rs.Name))}
+			}
+		}
+		return nil
+
+	default:
+		panicf("too many page token parameters for method %s", m.m.Name)
+		return nil
+	}
+}
+
+func isPageTokenName(s string) bool {
+	return s == "pageToken" || s == "nextPageToken"
 }
 
 func (m *Method) Params() []*Param {
@@ -1901,7 +1969,7 @@ func (meth *Method) generateCode() {
 	pn("// %s\n", string(bs))
 	pn("}")
 
-	if cname, rname, ok := meth.supportsPaging(); ok {
+	if ptg, rname, ok := meth.supportsPaging(); ok {
 		// We can assume retType is non-empty.
 		pn("")
 		pn("// Pages invokes f for each page of results.")
@@ -1909,13 +1977,13 @@ func (meth *Method) generateCode() {
 		pn("// The provided context supersedes any context provided to the Context method.")
 		pn("func (c *%s) Pages(ctx context.Context, f func(%s) error) error {", callName, retType)
 		pn(" c.ctx_ = ctx")
-		pn(` defer c.%s(c.urlParams_.Get(%q)) // reset paging to original point`, cname, "pageToken")
+		pn(` defer %s  // reset paging to original point`, ptg.genDeferBody())
 		pn(" for {")
 		pn("  x, err := c.Do()")
 		pn("  if err != nil { return err }")
 		pn("  if err := f(x); err != nil { return err }")
 		pn(`  if x.%s == "" { return nil }`, rname)
-		pn("  c.%s(x.%s)", cname, rname)
+		pn(ptg.genSet("x." + rname))
 		pn(" }")
 		pn("}")
 	}

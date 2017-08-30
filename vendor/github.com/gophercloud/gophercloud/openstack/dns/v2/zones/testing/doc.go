@@ -1,2 +1,2 @@
-// dns_zones_v2
+// zones unit tests
 package testing

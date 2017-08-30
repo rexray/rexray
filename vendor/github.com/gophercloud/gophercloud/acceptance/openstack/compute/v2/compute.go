@@ -23,6 +23,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/tenantnetworks"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/volumeattach"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 
 	"golang.org/x/crypto/ssh"
@@ -98,8 +99,8 @@ func CreateBootableVolumeServer(t *testing.T, client *gophercloud.ServiceClient,
 	}
 
 	server, err = bootfromvolume.Create(client, bootfromvolume.CreateOptsExt{
-		serverCreateOpts,
-		blockDevices,
+		CreateOptsBuilder: serverCreateOpts,
+		BlockDevice:       blockDevices,
 	}).Extract()
 
 	if err != nil {
@@ -134,6 +135,29 @@ func CreateDefaultRule(t *testing.T, client *gophercloud.ServiceClient) (dsr.Def
 	t.Logf("Created default rule: %s", defaultRule.ID)
 
 	return *defaultRule, nil
+}
+
+// CreateFlavor will create a flavor with a random name.
+// An error will be returned if the flavor could not be created.
+func CreateFlavor(t *testing.T, client *gophercloud.ServiceClient) (*flavors.Flavor, error) {
+	flavorName := tools.RandomString("flavor_", 5)
+	t.Logf("Attempting to create flavor %s", flavorName)
+
+	createOpts := flavors.CreateOpts{
+		Name:  flavorName,
+		RAM:   1,
+		VCPUs: 1,
+		Disk:  gophercloud.IntToPointer(1),
+	}
+
+	flavor, err := flavors.Create(client, createOpts).Extract()
+	if err != nil {
+		return nil, err
+	}
+
+	t.Logf("Successfully created flavor %s", flavor.ID)
+
+	return flavor, nil
 }
 
 // CreateFloatingIP will allocate a floating IP.
@@ -227,8 +251,8 @@ func CreateMultiEphemeralServer(t *testing.T, client *gophercloud.ServiceClient,
 	}
 
 	server, err = bootfromvolume.Create(client, bootfromvolume.CreateOptsExt{
-		serverCreateOpts,
-		blockDevices,
+		CreateOptsBuilder: serverCreateOpts,
+		BlockDevice:       blockDevices,
 	}).Extract()
 
 	if err != nil {
@@ -440,8 +464,8 @@ func CreateServerInServerGroup(t *testing.T, client *gophercloud.ServiceClient, 
 	}
 
 	schedulerHintsOpts := schedulerhints.CreateOptsExt{
-		serverCreateOpts,
-		schedulerhints.SchedulerHints{
+		CreateOptsBuilder: serverCreateOpts,
+		SchedulerHints: schedulerhints.SchedulerHints{
 			Group: serverGroup.ID,
 		},
 	}
@@ -485,8 +509,8 @@ func CreateServerWithPublicKey(t *testing.T, client *gophercloud.ServiceClient, 
 	}
 
 	server, err = servers.Create(client, keypairs.CreateOptsExt{
-		serverCreateOpts,
-		keyPairName,
+		CreateOptsBuilder: serverCreateOpts,
+		KeyName:           keyPairName,
 	}).Extract()
 	if err != nil {
 		return server, err
@@ -529,6 +553,17 @@ func DeleteDefaultRule(t *testing.T, client *gophercloud.ServiceClient, defaultR
 	}
 
 	t.Logf("Deleted default rule: %s", defaultRule.ID)
+}
+
+// DeleteFlavor will delete a flavor. A fatal error will occur if the flavor
+// could not be deleted. This works best when using it as a deferred function.
+func DeleteFlavor(t *testing.T, client *gophercloud.ServiceClient, flavor *flavors.Flavor) {
+	err := flavors.Delete(client, flavor.ID).ExtractErr()
+	if err != nil {
+		t.Fatalf("Unable to delete flavor %s", flavor.ID)
+	}
+
+	t.Logf("Deleted flavor: %s", flavor.ID)
 }
 
 // DeleteFloatingIP will de-allocate a floating IP. A fatal error will occur if

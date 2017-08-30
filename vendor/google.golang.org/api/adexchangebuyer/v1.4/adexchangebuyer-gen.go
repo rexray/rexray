@@ -279,16 +279,17 @@ func (s *Account) MarshalJSON() ([]byte, error) {
 }
 
 type AccountBidderLocation struct {
-	// BidProtocol: The protocol that the bidder endpoint is using. By
-	// default, OpenRTB protocols use JSON, except
-	// PROTOCOL_OPENRTB_PROTOBUF. PROTOCOL_OPENRTB_PROTOBUF uses protobuf
-	// encoding over the latest OpenRTB protocol version, which is 2.4 right
-	// now. Allowed values:
+	// BidProtocol: The protocol that the bidder endpoint is using. OpenRTB
+	// protocols with prefix PROTOCOL_OPENRTB_PROTOBUF use proto buffer,
+	// otherwise use JSON.  Allowed values:
 	// - PROTOCOL_ADX
 	// - PROTOCOL_OPENRTB_2_2
 	// - PROTOCOL_OPENRTB_2_3
 	// - PROTOCOL_OPENRTB_2_4
-	// - PROTOCOL_OPENRTB_PROTOBUF
+	// - PROTOCOL_OPENRTB_2_5
+	// - PROTOCOL_OPENRTB_PROTOBUF_2_3
+	// - PROTOCOL_OPENRTB_PROTOBUF_2_4
+	// - PROTOCOL_OPENRTB_PROTOBUF_2_5
 	BidProtocol string `json:"bidProtocol,omitempty"`
 
 	// MaximumQps: The maximum queries per second the Ad Exchange will send.
@@ -759,7 +760,7 @@ type Creative struct {
 	AdvertiserId googleapi.Int64s `json:"advertiserId,omitempty"`
 
 	// AdvertiserName: The name of the company being advertised in the
-	// creative.
+	// creative. The value provided must exist in the advertisers.txt file.
 	AdvertiserName string `json:"advertiserName,omitempty"`
 
 	// AgencyId: The agency id for this creative.
@@ -771,8 +772,9 @@ type Creative struct {
 	// timestamp).
 	ApiUploadTimestamp string `json:"apiUploadTimestamp,omitempty"`
 
-	// Attribute: All attributes for the ads that may be shown from this
-	// snippet.
+	// Attribute: List of buyer selectable attributes for the ads that may
+	// be shown from this snippet. Each attribute is represented by an
+	// integer as defined in  buyer-declarable-creative-attributes.txt.
 	Attribute []int64 `json:"attribute,omitempty"`
 
 	// BuyerCreativeId: A buyer-specific id identifying the creative in this
@@ -829,27 +831,34 @@ type Creative struct {
 	// ServingRestrictions directly.
 	OpenAuctionStatus string `json:"openAuctionStatus,omitempty"`
 
-	// ProductCategories: Detected product categories, if any. Read-only.
-	// This field should not be set in requests.
+	// ProductCategories: Detected product categories, if any. Each category
+	// is represented by an integer as defined in
+	// ad-product-categories.txt. Read-only. This field should not be set in
+	// requests.
 	ProductCategories []int64 `json:"productCategories,omitempty"`
 
 	// RestrictedCategories: All restricted categories for the ads that may
-	// be shown from this snippet.
+	// be shown from this snippet. Each category is represented by an
+	// integer as defined in the  ad-restricted-categories.txt.
 	RestrictedCategories []int64 `json:"restrictedCategories,omitempty"`
 
-	// SensitiveCategories: Detected sensitive categories, if any.
-	// Read-only. This field should not be set in requests.
+	// SensitiveCategories: Detected sensitive categories, if any. Each
+	// category is represented by an integer as defined in
+	// ad-sensitive-categories.txt. Read-only. This field should not be set
+	// in requests.
 	SensitiveCategories []int64 `json:"sensitiveCategories,omitempty"`
 
 	// ServingRestrictions: The granular status of this ad in specific
 	// contexts. A context here relates to where something ultimately serves
 	// (for example, a physical location, a platform, an HTTPS vs HTTP
 	// request, or the type of auction). Read-only. This field should not be
-	// set in requests.
+	// set in requests. See the examples in the Creatives guide for more
+	// details.
 	ServingRestrictions []*CreativeServingRestrictions `json:"servingRestrictions,omitempty"`
 
-	// VendorType: All vendor types for the ads that may be shown from this
-	// snippet.
+	// VendorType: List of vendor types for the ads that may be shown from
+	// this snippet. Each vendor type is represented by an integer as
+	// defined in vendors.txt.
 	VendorType []int64 `json:"vendorType,omitempty"`
 
 	// Version: The version for this creative. Read-only. This field should
@@ -1004,8 +1013,8 @@ type CreativeFilteringReasonsReasons struct {
 	// exchange.
 	FilteringCount int64 `json:"filteringCount,omitempty,string"`
 
-	// FilteringStatus: The filtering status code. Please refer to the
-	// creative-status-codes.txt file for different statuses.
+	// FilteringStatus: The filtering status code as defined in
+	// creative-status-codes.txt.
 	FilteringStatus int64 `json:"filteringStatus,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "FilteringCount") to
@@ -1104,6 +1113,20 @@ func (s *CreativeNativeAd) MarshalJSON() ([]byte, error) {
 	type noMethod CreativeNativeAd
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *CreativeNativeAd) UnmarshalJSON(data []byte) error {
+	type noMethod CreativeNativeAd
+	var s1 struct {
+		StarRating gensupport.JSONFloat64 `json:"starRating"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.StarRating = float64(s1.StarRating)
+	return nil
 }
 
 // CreativeNativeAdAppIcon: The app icon, for app download ads.
@@ -1248,7 +1271,9 @@ type CreativeServingRestrictionsContexts struct {
 	ContextType string `json:"contextType,omitempty"`
 
 	// GeoCriteriaId: Only set when contextType=LOCATION. Represents the geo
-	// criterias this restriction applies to.
+	// criterias this restriction applies to. Impressions are considered to
+	// match a context if either the user location or publisher location
+	// matches a given geoCriteriaId.
 	GeoCriteriaId []int64 `json:"geoCriteriaId,omitempty"`
 
 	// Platform: Only set when contextType=PLATFORM. Represents the
@@ -1419,19 +1444,24 @@ func (s *CreativesList) MarshalJSON() ([]byte, error) {
 }
 
 type DealServingMetadata struct {
+	// AlcoholAdsAllowed: True if alcohol ads are allowed for this deal
+	// (read-only). This field is only populated when querying for finalized
+	// orders using the method GetFinalizedOrderDeals
+	AlcoholAdsAllowed bool `json:"alcoholAdsAllowed,omitempty"`
+
 	// DealPauseStatus: Tracks which parties (if any) have paused a deal.
 	// (readonly, except via PauseResumeOrderDeals action)
 	DealPauseStatus *DealServingMetadataDealPauseStatus `json:"dealPauseStatus,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "DealPauseStatus") to
-	// unconditionally include in API requests. By default, fields with
+	// ForceSendFields is a list of field names (e.g. "AlcoholAdsAllowed")
+	// to unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
 	// server regardless of whether the field is empty or not. This may be
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "DealPauseStatus") to
+	// NullFields is a list of field names (e.g. "AlcoholAdsAllowed") to
 	// include in API requests with the JSON null value. By default, fields
 	// with empty values are omitted from API requests. However, any field
 	// with an empty value appearing in NullFields will be sent to the
@@ -1602,8 +1632,8 @@ func (s *DealTermsGuaranteedFixedPriceTerms) MarshalJSON() ([]byte, error) {
 type DealTermsGuaranteedFixedPriceTermsBillingInfo struct {
 	// CurrencyConversionTimeMs: The timestamp (in ms since epoch) when the
 	// original reservation price for the deal was first converted to DFP
-	// currency. This is used to convert the contracted price into
-	// advertiser's currency without discrepancy.
+	// currency. This is used to convert the contracted price into buyer's
+	// currency without discrepancy.
 	CurrencyConversionTimeMs int64 `json:"currencyConversionTimeMs,omitempty,string"`
 
 	// DfpLineItemId: The DFP line item id associated with this deal. For
@@ -2231,13 +2261,18 @@ type MarketplaceDeal struct {
 	// (updatable)
 	FlightStartTimeMs int64 `json:"flightStartTimeMs,omitempty,string"`
 
-	// InventoryDescription: Description for the deal terms. (updatable)
+	// InventoryDescription: Description for the deal terms.
+	// (buyer-readonly)
 	InventoryDescription string `json:"inventoryDescription,omitempty"`
 
 	// IsRfpTemplate: Indicates whether the current deal is a RFP template.
 	// RFP template is created by buyer and not based on seller created
 	// products.
 	IsRfpTemplate bool `json:"isRfpTemplate,omitempty"`
+
+	// IsSetupComplete: True, if the buyside inventory setup is complete for
+	// this deal. (readonly, except via OrderSetupCompleted action)
+	IsSetupComplete bool `json:"isSetupComplete,omitempty"`
 
 	// Kind: Identifies what kind of resource this is. Value: the fixed
 	// string "adexchangebuyer#marketplaceDeal".
@@ -2539,6 +2574,48 @@ func (s *PerformanceReport) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+func (s *PerformanceReport) UnmarshalJSON(data []byte) error {
+	type noMethod PerformanceReport
+	var s1 struct {
+		BidRate                 gensupport.JSONFloat64 `json:"bidRate"`
+		BidRequestRate          gensupport.JSONFloat64 `json:"bidRequestRate"`
+		FilteredBidRate         gensupport.JSONFloat64 `json:"filteredBidRate"`
+		InventoryMatchRate      gensupport.JSONFloat64 `json:"inventoryMatchRate"`
+		Latency50thPercentile   gensupport.JSONFloat64 `json:"latency50thPercentile"`
+		Latency85thPercentile   gensupport.JSONFloat64 `json:"latency85thPercentile"`
+		Latency95thPercentile   gensupport.JSONFloat64 `json:"latency95thPercentile"`
+		NoQuotaInRegion         gensupport.JSONFloat64 `json:"noQuotaInRegion"`
+		OutOfQuota              gensupport.JSONFloat64 `json:"outOfQuota"`
+		PixelMatchRequests      gensupport.JSONFloat64 `json:"pixelMatchRequests"`
+		PixelMatchResponses     gensupport.JSONFloat64 `json:"pixelMatchResponses"`
+		QuotaConfiguredLimit    gensupport.JSONFloat64 `json:"quotaConfiguredLimit"`
+		QuotaThrottledLimit     gensupport.JSONFloat64 `json:"quotaThrottledLimit"`
+		SuccessfulRequestRate   gensupport.JSONFloat64 `json:"successfulRequestRate"`
+		UnsuccessfulRequestRate gensupport.JSONFloat64 `json:"unsuccessfulRequestRate"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.BidRate = float64(s1.BidRate)
+	s.BidRequestRate = float64(s1.BidRequestRate)
+	s.FilteredBidRate = float64(s1.FilteredBidRate)
+	s.InventoryMatchRate = float64(s1.InventoryMatchRate)
+	s.Latency50thPercentile = float64(s1.Latency50thPercentile)
+	s.Latency85thPercentile = float64(s1.Latency85thPercentile)
+	s.Latency95thPercentile = float64(s1.Latency95thPercentile)
+	s.NoQuotaInRegion = float64(s1.NoQuotaInRegion)
+	s.OutOfQuota = float64(s1.OutOfQuota)
+	s.PixelMatchRequests = float64(s1.PixelMatchRequests)
+	s.PixelMatchResponses = float64(s1.PixelMatchResponses)
+	s.QuotaConfiguredLimit = float64(s1.QuotaConfiguredLimit)
+	s.QuotaThrottledLimit = float64(s1.QuotaThrottledLimit)
+	s.SuccessfulRequestRate = float64(s1.SuccessfulRequestRate)
+	s.UnsuccessfulRequestRate = float64(s1.UnsuccessfulRequestRate)
+	return nil
+}
+
 // PerformanceReportList: The configuration data for an Ad Exchange
 // performance report list.
 type PerformanceReportList struct {
@@ -2633,6 +2710,13 @@ type PretargetingConfig struct {
 
 	// Languages: Request containing any of these language codes will match.
 	Languages []string `json:"languages,omitempty"`
+
+	// MinimumViewabilityDecile: Requests where the predicted viewability is
+	// below the specified decile will not match. E.g. if the buyer sets
+	// this value to 5, requests from slots where the predicted viewability
+	// is below 50% will not match. If the predicted viewability is unknown
+	// this field will be ignored.
+	MinimumViewabilityDecile int64 `json:"minimumViewabilityDecile,omitempty"`
 
 	// MobileCarriers: Requests containing any of these mobile carrier ids
 	// will match. Values are from mobile-carriers.csv in the downloadable
@@ -2912,16 +2996,33 @@ func (s *Price) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// PricePerBuyer: Used to specify pricing rules for buyers/advertisers.
-// Each PricePerBuyer in an product can become [0,1] deals. To check if
-// there is a PricePerBuyer for a particular buyer or buyer/advertiser
-// pair, we look for the most specific matching rule - we first look for
-// a rule matching the buyer and advertiser, next a rule with the buyer
-// but an empty advertiser list, and otherwise look for a matching rule
-// where no buyer is set.
+func (s *Price) UnmarshalJSON(data []byte) error {
+	type noMethod Price
+	var s1 struct {
+		AmountMicros      gensupport.JSONFloat64 `json:"amountMicros"`
+		ExpectedCpmMicros gensupport.JSONFloat64 `json:"expectedCpmMicros"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.AmountMicros = float64(s1.AmountMicros)
+	s.ExpectedCpmMicros = float64(s1.ExpectedCpmMicros)
+	return nil
+}
+
+// PricePerBuyer: Used to specify pricing rules for buyers. Each
+// PricePerBuyer in a product can become [0,1] deals. To check if there
+// is a PricePerBuyer for a particular buyer we look for the most
+// specific matching rule - we first look for a rule matching the buyer
+// and otherwise look for a matching rule where no buyer is set.
 type PricePerBuyer struct {
 	// AuctionTier: Optional access type for this buyer.
 	AuctionTier string `json:"auctionTier,omitempty"`
+
+	// BilledBuyer: Reference to the buyer that will get billed.
+	BilledBuyer *Buyer `json:"billedBuyer,omitempty"`
 
 	// Buyer: The buyer who will pay this price. If unset, all buyers can
 	// pay this price (if the advertisers match, and there's no more
@@ -2992,12 +3093,24 @@ func (s *PrivateData) MarshalJSON() ([]byte, error) {
 // (seller-readonly) - Only the buyer can set this field. (updatable) -
 // The field is updatable at all times by either buyer or the seller.
 type Product struct {
+	// BilledBuyer: The billed buyer corresponding to the buyer that created
+	// the offer. (readonly, except on create)
+	BilledBuyer *Buyer `json:"billedBuyer,omitempty"`
+
+	// Buyer: The buyer that created the offer if this is a buyer initiated
+	// offer (readonly, except on create)
+	Buyer *Buyer `json:"buyer,omitempty"`
+
 	// CreationTimeMs: Creation time in ms. since epoch (readonly)
 	CreationTimeMs int64 `json:"creationTimeMs,omitempty,string"`
 
 	// CreatorContacts: Optional contact information for the creator of this
 	// product. (buyer-readonly)
 	CreatorContacts []*ContactInformation `json:"creatorContacts,omitempty"`
+
+	// CreatorRole: The role that created the offer. Set to BUYER for buyer
+	// initiated offers.
+	CreatorRole string `json:"creatorRole,omitempty"`
 
 	// DeliveryControl: The set of fields around delivery control that are
 	// interesting for a buyer to see but are non-negotiable. These are set
@@ -3038,6 +3151,12 @@ type Product struct {
 	// LegacyOfferId: Optional legacy offer id if this offer is a preferred
 	// deal offer.
 	LegacyOfferId string `json:"legacyOfferId,omitempty"`
+
+	// MarketplacePublisherProfileId: Marketplace publisher profile Id. This
+	// Id differs from the regular publisher_profile_id in that 1. This is a
+	// new id, the old Id will be deprecated in 2017. 2. This id uniquely
+	// identifies a publisher profile by itself.
+	MarketplacePublisherProfileId string `json:"marketplacePublisherProfileId,omitempty"`
 
 	// Name: The name for this product as set by the seller.
 	// (buyer-readonly)
@@ -3091,7 +3210,7 @@ type Product struct {
 	// server.
 	googleapi.ServerResponse `json:"-"`
 
-	// ForceSendFields is a list of field names (e.g. "CreationTimeMs") to
+	// ForceSendFields is a list of field names (e.g. "BilledBuyer") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -3099,13 +3218,12 @@ type Product struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "CreationTimeMs") to
-	// include in API requests with the JSON null value. By default, fields
-	// with empty values are omitted from API requests. However, any field
-	// with an empty value appearing in NullFields will be sent to the
-	// server as null. It is an error if a field in this list has a
-	// non-empty value. This may be used to include null fields in Patch
-	// requests.
+	// NullFields is a list of field names (e.g. "BilledBuyer") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
 	NullFields []string `json:"-"`
 }
 
@@ -3165,6 +3283,7 @@ type Proposal struct {
 
 	// IsSetupComplete: True, if the buyside inventory setup is complete for
 	// this proposal. (readonly, except via OrderSetupCompleted action)
+	// Deprecated in favor of deal level setup complete flag.
 	IsSetupComplete bool `json:"isSetupComplete,omitempty"`
 
 	// Kind: Identifies what kind of resource this is. Value: the fixed
@@ -3242,7 +3361,8 @@ func (s *Proposal) MarshalJSON() ([]byte, error) {
 }
 
 type PublisherProfileApiProto struct {
-	// AccountId: The account id of the seller.
+	// AccountId: Deprecated: use the seller.account_id. The account id of
+	// the seller.
 	AccountId string `json:"accountId,omitempty"`
 
 	// Audience: Publisher provided info on its audience.
@@ -3486,6 +3606,9 @@ type TargetingValueCreativeSize struct {
 
 	// CreativeSizeType: The Creative size type.
 	CreativeSizeType string `json:"creativeSizeType,omitempty"`
+
+	// NativeTemplate: The native template for native ad.
+	NativeTemplate string `json:"nativeTemplate,omitempty"`
 
 	// Size: For regular or video creative size type, specifies the size of
 	// the creative.
@@ -8437,7 +8560,7 @@ func (c *ProposalsPatchCall) Do(opts ...googleapi.CallOption) (*Proposal, error)
 	//         "propose",
 	//         "proposeAndAccept",
 	//         "unknownAction",
-	//         "updateFinalized"
+	//         "updateNonTerms"
 	//       ],
 	//       "enumDescriptions": [
 	//         "",
@@ -8838,7 +8961,7 @@ func (c *ProposalsUpdateCall) Do(opts ...googleapi.CallOption) (*Proposal, error
 	//         "propose",
 	//         "proposeAndAccept",
 	//         "unknownAction",
-	//         "updateFinalized"
+	//         "updateNonTerms"
 	//       ],
 	//       "enumDescriptions": [
 	//         "",

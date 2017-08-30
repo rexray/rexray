@@ -30,7 +30,7 @@ func NewBodyClose(s string) *Body {
 // Read reads into the passed byte slice and returns the bytes read.
 func (body *Body) Read(b []byte) (n int, err error) {
 	if !body.IsOpen() {
-		return 0, fmt.Errorf("ERROR: Body has been closed\n")
+		return 0, fmt.Errorf("ERROR: Body has been closed")
 	}
 	if len(body.b) == 0 {
 		return 0, io.EOF

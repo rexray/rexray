@@ -1,2 +1,2 @@
-// compute_extensions_schedulerhints_v2
+// schedulerhints unit tests
 package testing

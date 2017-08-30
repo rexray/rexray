@@ -1,2 +1,2 @@
-// compute_extensions_networks_v2
+// networks unit tests
 package testing

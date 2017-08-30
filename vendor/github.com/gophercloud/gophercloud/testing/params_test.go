@@ -144,7 +144,7 @@ func TestBuildRequestBody(t *testing.T) {
 	// AuthOptions wraps a gophercloud AuthOptions in order to adhere to the AuthOptionsBuilder
 	// interface.
 	type AuthOptions struct {
-		PasswordCredentials `json:"passwordCredentials,omitempty" xor:"TokenCredentials"`
+		PasswordCredentials *PasswordCredentials `json:"passwordCredentials,omitempty" xor:"TokenCredentials"`
 
 		// The TenantID and TenantName fields are optional for the Identity V2 API.
 		// Some providers allow you to specify a TenantName instead of the TenantId.
@@ -155,9 +155,9 @@ func TestBuildRequestBody(t *testing.T) {
 
 		// TokenCredentials allows users to authenticate (possibly as another user) with an
 		// authentication token ID.
-		TokenCredentials `json:"token,omitempty" xor:"PasswordCredentials"`
+		TokenCredentials *TokenCredentials `json:"token,omitempty" xor:"PasswordCredentials"`
 
-		OrFields orFields `json:"or_fields,omitempty"`
+		OrFields *orFields `json:"or_fields,omitempty"`
 	}
 
 	var successCases = []struct {
@@ -166,7 +166,7 @@ func TestBuildRequestBody(t *testing.T) {
 	}{
 		{
 			AuthOptions{
-				PasswordCredentials: PasswordCredentials{
+				PasswordCredentials: &PasswordCredentials{
 					Username: "me",
 					Password: "swordfish",
 				},
@@ -182,7 +182,7 @@ func TestBuildRequestBody(t *testing.T) {
 		},
 		{
 			AuthOptions{
-				TokenCredentials: TokenCredentials{
+				TokenCredentials: &TokenCredentials{
 					ID: "1234567",
 				},
 			},
@@ -215,10 +215,10 @@ func TestBuildRequestBody(t *testing.T) {
 		},
 		{
 			AuthOptions{
-				TokenCredentials: TokenCredentials{
+				TokenCredentials: &TokenCredentials{
 					ID: "1234567",
 				},
-				PasswordCredentials: PasswordCredentials{
+				PasswordCredentials: &PasswordCredentials{
 					Username: "me",
 					Password: "swordfish",
 				},
@@ -227,7 +227,7 @@ func TestBuildRequestBody(t *testing.T) {
 		},
 		{
 			AuthOptions{
-				PasswordCredentials: PasswordCredentials{
+				PasswordCredentials: &PasswordCredentials{
 					Password: "swordfish",
 				},
 			},
@@ -235,11 +235,11 @@ func TestBuildRequestBody(t *testing.T) {
 		},
 		{
 			AuthOptions{
-				PasswordCredentials: PasswordCredentials{
+				PasswordCredentials: &PasswordCredentials{
 					Username: "me",
 					Password: "swordfish",
 				},
-				OrFields: orFields{
+				OrFields: &orFields{
 					Filler: 2,
 				},
 			},

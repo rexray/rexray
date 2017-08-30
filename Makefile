@@ -467,35 +467,6 @@ create-gist: $(GIST_FILES)
 ################################################################################
 ##                                   CLEAN                                    ##
 ################################################################################
-GLIDE := ./glide
-GLIDE_VER := 0.12.3
-GLIDE_UNAMES := $(shell uname -s)
-ifeq (Linux,$(GLIDE_UNAMES))
-GLIDE_TGZ := glide-v$(GLIDE_VER)-linux-amd64.tar.gz
-endif
-ifeq (Darwin,$(GLIDE_UNAMES))
-GLIDE_TGZ := glide-v$(GLIDE_VER)-darwin-amd64.tar.gz
-endif
-GLIDE_URL := https://github.com/Masterminds/glide/releases/download/v$(GLIDE_VER)/$(GLIDE_TGZ)
-
-$(GLIDE):
-	curl -sSL $(GLIDE_URL) | tar xz --strip-components 1 */glide
-ifneq (./glide,$(GLIDE))
-glide: $(GLIDE)
-endif
-
-glide-up: | $(GLIDE)
-	$(GLIDE) up
-
-glide-install: | $(GLIDE)
-	$(GLIDE) install
-
-.PHONY: glide-up glide-install
-
-
-################################################################################
-##                                   CLEAN                                    ##
-################################################################################
 clean:
 
 .PHONY: all clean

@@ -1,19 +1,18 @@
 package benchmarks
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/uber-go/zap"
-	gaetest "google.golang.org/appengine/aetest"
-	gae "google.golang.org/appengine/log"
+	//gaetest "google.golang.org/appengine/aetest"
+	//gae "google.golang.org/appengine/log"
 
 	"github.com/codedellemc/gournal"
-	ggae "github.com/codedellemc/gournal/gae"
+	//ggae "github.com/codedellemc/gournal/gae"
 	glogrus "github.com/codedellemc/gournal/logrus"
 	glog "github.com/codedellemc/gournal/stdlib"
 	gzap "github.com/codedellemc/gournal/zap"
@@ -24,7 +23,7 @@ var gaeCtx gournal.Context
 func TestMain(m *testing.M) {
 	gournal.DefaultLevel = gournal.DebugLevel
 
-	var (
+	/*var (
 		err  error
 		done func()
 	)
@@ -32,11 +31,12 @@ func TestMain(m *testing.M) {
 	if gaeCtx, done, err = gaetest.NewContext(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	}
+	}*/
+	gaeCtx = gournal.Background()
 
 	ec := m.Run()
 
-	done()
+	//done()
 	os.Exit(ec)
 }
 
@@ -74,14 +74,14 @@ func BenchmarkNativeZapWithoutFields(b *testing.B) {
 	})
 }
 
-func BenchmarkNativeGAEWithoutFields(b *testing.B) {
+/*func BenchmarkNativeGAEWithoutFields(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			gae.Infof(gaeCtx, "Run Barry, run.")
 		}
 	})
-}
+}*/
 
 func BenchmarkGournalStdLibWithoutFields(b *testing.B) {
 	benchmarkWithoutFields(
@@ -98,9 +98,9 @@ func BenchmarkGournalZapWithoutFields(b *testing.B) {
 		zap.NewJSONEncoder(), zap.Output(os.Stderr)))
 }
 
-func BenchmarkGournalGAEWithoutFields(b *testing.B) {
+/*func BenchmarkGournalGAEWithoutFields(b *testing.B) {
 	benchmarkWithoutFields(b, ggae.New())
-}
+}*/
 
 func BenchmarkGournalStdLibWithFields(b *testing.B) {
 	benchmarkWithFields(
@@ -117,17 +117,18 @@ func BenchmarkGournalZapWithFields(b *testing.B) {
 		zap.NewJSONEncoder(), zap.Output(os.Stderr)))
 }
 
-func BenchmarkGournalGAEWithFields(b *testing.B) {
+/*func BenchmarkGournalGAEWithFields(b *testing.B) {
 	benchmarkWithFields(b, ggae.New())
-}
+}*/
 
 func newContext(a gournal.Appender) gournal.Context {
-	var ctx gournal.Context
+	/*var ctx gournal.Context
 	if a == ggae.New() {
 		ctx = gaeCtx
 	} else {
 		ctx = gournal.Background()
-	}
+	}*/
+	ctx := gournal.Background()
 	ctx = gournal.WithValue(ctx, gournal.LevelKey(), gournal.InfoLevel)
 	ctx = gournal.WithValue(ctx, gournal.AppenderKey(), a)
 	return ctx

@@ -8,7 +8,7 @@ Instead of being Yet Another Go Log library, Gournal actually takes its
 inspiration from the Simple Logging Facade for Java
 ([SLF4J](http://www.slf4j.org/)). Gournal is not attempting to replace anyone's
 favorite logger, rather existing logging frameworks such as
-[Logrus](github.com/Sirupsen/logrus), [Zap](github.com/uber-go/zap), etc. can
+[Logrus](github.com/sirupsen/logrus), [Zap](github.com/uber-go/zap), etc. can
 easily participate as a Gournal Appender.
 
 The following

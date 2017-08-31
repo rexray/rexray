@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gotil"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	//jww "github.com/spf13/jwalterweatherman"
 

@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	gofig "github.com/akutz/gofig/types"
 	goof "github.com/akutz/goof"

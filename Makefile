@@ -363,9 +363,13 @@ ifneq (./dep,$(DEP))
 dep: $(DEP)
 endif
 
-dep-ensure: | $(DEP)
+dep-update: | $(DEP)
 	$(DEP) ensure -v
 
+dep-install: | $(DEP)
+	$(DEP) ensure -v -vendor-only
+
+.PHONY: dep-update dep-install
 
 ################################################################################
 ##                                   GIST                                     ##

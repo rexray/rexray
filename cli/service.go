@@ -11,9 +11,9 @@ import (
 	"sync"
 	"syscall"
 
-	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/codedellemc/rexray/core"
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
@@ -67,7 +67,7 @@ func serviceStartAndWait(
 	}
 
 	var out io.Writer = os.Stdout
-	if !log.IsTerminal() {
+	if !util.IsTerminal(out) {
 		logFile, logFileErr := util.LogFile(ctx, logFileName)
 		failOnError(logFileErr)
 		out = io.MultiWriter(os.Stdout, logFile)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/rexray/libstorage/api/context"

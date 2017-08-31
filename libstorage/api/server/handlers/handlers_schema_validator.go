@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	//log "github.com/Sirupsen/logrus"
+	//log "github.com/sirupsen/logrus"
 
 	"github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/libstorage/api/utils/schema"

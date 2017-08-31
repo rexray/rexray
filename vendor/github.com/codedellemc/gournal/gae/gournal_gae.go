@@ -1,3 +1,5 @@
+// +build none
+
 // Package gae provides a Google App Engine logger that implements the Gournal
 // Appender interface.
 package gae

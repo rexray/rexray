@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	gcontext "github.com/gorilla/context"
 
 	"github.com/codedellemc/rexray/libstorage/api/types"

@@ -375,6 +375,24 @@ func (d *Decimal) ConvertFloat(r RoundingContext, x float64, size int) {
 		d.NaN = true
 		return
 	}
+	// Simple case: decimal notation
+	if r.Increment > 0 {
+		scale := int(r.IncrementScale)
+		mult := 1.0
+		if scale > len(scales) {
+			mult = math.Pow(10, float64(scale))
+		} else {
+			mult = scales[scale]
+		}
+		// We multiply x instead of dividing inc as it gives less rounding
+		// issues.
+		x *= mult
+		x /= float64(r.Increment)
+		x = r.Mode.roundFloat(x)
+		x *= float64(r.Increment)
+		x /= mult
+	}
+
 	abs := x
 	if x < 0 {
 		d.Neg = true
@@ -384,64 +402,64 @@ func (d *Decimal) ConvertFloat(r RoundingContext, x float64, size int) {
 		d.Inf = true
 		return
 	}
-	// Simple case: decimal notation
-	scale := r.scale()
-	prec := r.precision()
-	if scale > 0 || r.Increment > 0 || prec == 0 {
-		if scale > len(scales) {
-			x *= math.Pow(10, float64(scale))
-		} else {
-			x *= scales[scale]
-		}
-		if r.Increment > 0 {
-			inc := float64(r.Increment)
-			x /= float64(inc)
-			x = r.Mode.roundFloat(x)
-			x *= inc
-		} else {
-			x = r.Mode.roundFloat(x)
-		}
-		d.fillIntDigits(uint64(math.Abs(x)))
-		d.Exp = int32(len(d.Digits) - scale)
-		return
-	}
 
-	// Nasty case (for non-decimal notation).
-	// Asides from being inefficient, this result is also wrong as it will
-	// apply ToNearestEven rounding regardless of the user setting.
-	// TODO: expose functionality in strconv so we can avoid this hack.
+	// By default we get the exact decimal representation.
+	verb := byte('g')
+	prec := -1
+	// Determine rounding, if possible. As the strconv API does not return the
+	// rounding accuracy (exact/rounded up|down), we can only round using
+	// ToNearestEven.
 	//   Something like this would work:
 	//   AppendDigits(dst []byte, x float64, base, size, prec int) (digits []byte, exp, accuracy int)
-	// TODO: This only supports the nearest even rounding mode.
-
-	if prec > 0 {
-		prec--
+	if r.Mode == ToNearestEven {
+		// We can't round if limitations are placed on both the fraction and
+		// significant digits.
+		if r.MaxFractionDigits == 0 && r.MaxSignificantDigits > 0 {
+			prec = int(r.MaxSignificantDigits)
+		} else if r.isScientific() {
+			if r.MaxIntegerDigits == 1 && (r.MaxSignificantDigits == 0 ||
+				int(r.MaxFractionDigits+1) == int(r.MaxSignificantDigits)) {
+				verb = 'e'
+				prec = int(r.MaxFractionDigits)
+				prec += int(r.DigitShift)
+			}
+		} else if r.MaxFractionDigits > 0 && r.MaxSignificantDigits == 0 {
+			verb = 'f'
+			prec = int(r.MaxFractionDigits)
+		}
 	}
-	b := strconv.AppendFloat(d.Digits, abs, 'e', prec, size)
+
+	b := strconv.AppendFloat(d.Digits[:0], abs, verb, prec, size)
 	i := 0
 	k := 0
-	// No need to check i < len(b) as we always have an 'e'.
-	for {
+	beforeDot := 1
+	for i < len(b) {
 		if c := b[i]; '0' <= c && c <= '9' {
 			b[k] = c - '0'
 			k++
-		} else if c != '.' {
+			d.Exp += int32(beforeDot)
+		} else if c == '.' {
+			beforeDot = 0
+			d.Exp = int32(k)
+		} else {
 			break
 		}
 		i++
 	}
 	d.Digits = b[:k]
-	i += len("e")
-	pSign := i
-	exp := 0
-	for i++; i < len(b); i++ {
-		exp *= 10
-		exp += int(b[i] - '0')
+	if i != len(b) {
+		i += len("e")
+		pSign := i
+		exp := 0
+		for i++; i < len(b); i++ {
+			exp *= 10
+			exp += int(b[i] - '0')
+		}
+		if b[pSign] == '-' {
+			exp = -exp
+		}
+		d.Exp = int32(exp) + 1
 	}
-	if b[pSign] == '-' {
-		exp = -exp
-	}
-	d.Exp = int32(exp) + 1
 }
 
 func (d *Decimal) fillIntDigits(x uint64) {

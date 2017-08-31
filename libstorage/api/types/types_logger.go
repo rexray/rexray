@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // LogEntry is collected data to be emitted as a log entry.

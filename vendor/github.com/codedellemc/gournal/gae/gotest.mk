@@ -1,1 +1,1 @@
-TEST_GO_./gae := $(GAE_GOA)
+#TEST_GO_./gae := $(GAE_GOA)

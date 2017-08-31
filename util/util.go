@@ -14,11 +14,12 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/codedellemc/rexray/libstorage/api/context"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
@@ -572,4 +573,15 @@ func FindFlagVal(name string, args ...string) (string, []int) {
 	}
 
 	return "", nil
+}
+
+// IsTerminal returns a flag indicating whether or not the provided
+// writer is connected to a terminal device.
+func IsTerminal(w io.Writer) bool {
+	switch v := w.(type) {
+	case *os.File:
+		return terminal.IsTerminal(int(v.Fd()))
+	default:
+		return false
+	}
 }

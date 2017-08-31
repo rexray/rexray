@@ -5,7 +5,6 @@ example
 release/*
 golang-crosscompile/
 .project
-glide.lock
 
 # Created by https://www.gitignore.io
 

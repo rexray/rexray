@@ -3,14 +3,18 @@ package logrus
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/akutz/golf"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -29,7 +33,6 @@ var (
 
 func init() {
 	baseTimestamp = time.Now()
-	isTerminal = log.IsTerminal()
 }
 
 func miniTS() int {
@@ -52,6 +55,23 @@ func miniTS() int {
 // More information at https://github.com/akutz/logrus/blob/master/formatter.go
 type TextFormatter struct {
 	log.TextFormatter
+	sync.Once
+	isTerminal bool
+}
+
+func (f *TextFormatter) init(entry *log.Entry) {
+	if entry.Logger != nil {
+		f.isTerminal = f.checkIfTerminal(entry.Logger.Out)
+	}
+}
+
+func (f *TextFormatter) checkIfTerminal(w io.Writer) bool {
+	switch v := w.(type) {
+	case *os.File:
+		return terminal.IsTerminal(int(v.Fd()))
+	default:
+		return false
+	}
 }
 
 func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
@@ -68,7 +88,9 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 
 	prefixFieldClashes(entry.Data)
 
-	isColorTerminal := isTerminal && (runtime.GOOS != "windows")
+	f.Do(func() { f.init(entry) })
+
+	isColorTerminal := f.isTerminal && (runtime.GOOS != "windows")
 	isColored := (f.ForceColors || isColorTerminal) && !f.DisableColors
 
 	timestampFormat := f.TimestampFormat

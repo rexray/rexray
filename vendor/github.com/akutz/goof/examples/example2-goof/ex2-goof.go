@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/goof"
+	log "github.com/sirupsen/logrus"
 )
 
 func getDividend() int {

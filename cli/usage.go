@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"

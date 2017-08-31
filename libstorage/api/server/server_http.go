@@ -11,7 +11,7 @@ import (
 	"os"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 	"github.com/gorilla/mux"

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"unicode"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
+	log "github.com/sirupsen/logrus"
 )
 
 type configReg struct {

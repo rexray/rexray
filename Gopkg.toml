@@ -13,15 +13,15 @@ required = [
 
 [[constraint]]
   name = "github.com/akutz/gofig"
-  version = "0.1.8"
+  version = "0.1.9"
 
 [[constraint]]
   name = "github.com/akutz/golf"
-  version = "0.1.2"
+  version = "0.1.3"
 
 [[constraint]]
   name = "github.com/akutz/goof"
-  version = "0.1.1"
+  version = "0.1.2"
 
 [[constraint]]
   name = "github.com/akutz/gotil"
@@ -29,22 +29,31 @@ required = [
 
 [[constraint]]
   name = "github.com/codedellemc/gournal"
-  version = "0.3.0"
+  version = "0.3.1"
 
 [[constraint]]
   name = "github.com/SermoDigital/jose"
   version = "1.1.0"
 
-[[constraint]]
-  name = "github.com/Sirupsen/logrus"
+[[override]]
+  name = "github.com/sirupsen/logrus"
   source = "https://github.com/akutz/logrus"
-  revision = "5f376aa629ac60c3215cc368e674bd996093a01a"
+  revision = "d842de504ca841f97533764c59d3166afd70ddb9"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
   branch = "master"
 [[constraint]]
   name = "github.com/spf13/pflag"
+  branch = "master"
+
+
+################################################################################
+##                              Golang/X                                      ##
+################################################################################
+
+[[constraint]]
+  name = "golang.org/x/crypto/ssh/terminal"
   branch = "master"
 
 
@@ -90,35 +99,18 @@ required = [
 ### Isilon
 [[constraint]]
   name = "github.com/codedellemc/goisilon"
-  version = "1.5.0"
+  revision = "301d518bb39637b839382deb686811dcf257b8c8"
 
 ### ScaleIO
 [[constraint]]
   name = "github.com/codedellemc/goscaleio"
-  revision = "485da3636bfcc8e70f74fe7bdc7cb25e5a6e4c4a"
+  revision = "d9df9f1ff56d951b0d5dfc30c374533ac56a4068"
 
 ### VirtualBox
 [[constraint]]
   name = "github.com/appropriate/go-virtualboxclient"
   revision = "e0978ab2ed407095400a69d5933958dd260058cd"
   source = "https://github.com/clintonskitson/go-virtualboxclient"
-
-
-################################################################################
-##                                 Testing                                    ##
-################################################################################
-
-[[constraint]]
-  name = "github.com/onsi/ginkgo"
-  version = "1.4.0"
-
-[[constraint]]
-  name = "github.com/onsi/gomega"
-  version = "1.2.0"
-
-[[constraint]]
-  name = "github.com/stretchr/testify"
-  branch = "master"
 
 
 ################################################################################
@@ -139,3 +131,20 @@ required = [
   name = "gopkg.in/yaml.v2"
   source = "https://github.com/akutz/yaml.git"
   revision = "bc35f417f8a7664a73d46c9def2933417c03019f"
+
+
+################################################################################
+##                                 Testing                                    ##
+################################################################################
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  branch = "master"

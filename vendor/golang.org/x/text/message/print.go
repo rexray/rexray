@@ -284,7 +284,7 @@ func (p *printer) initDecimal(minFrac, maxFrac int) {
 	f.MinIntegerDigits = 1
 	f.MaxIntegerDigits = 0
 	f.MinFractionDigits = uint8(minFrac)
-	f.MaxFractionDigits = uint16(maxFrac)
+	f.MaxFractionDigits = int16(maxFrac)
 	p.setFlags(f)
 	f.PadRune = 0
 	if p.fmt.widPresent {
@@ -313,7 +313,7 @@ func (p *printer) initScientific(minFrac, maxFrac int) {
 	} else {
 		f.SetPrecision(maxFrac + 1)
 		f.MinFractionDigits = uint8(minFrac)
-		f.MaxFractionDigits = uint16(maxFrac)
+		f.MaxFractionDigits = int16(maxFrac)
 	}
 	f.MinExponentDigits = 2
 	p.setFlags(f)

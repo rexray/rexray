@@ -245,7 +245,7 @@ func TestConvert(t *testing.T) {
 	scale2.SetScale(2)
 	scale2away := RoundingContext{Mode: AwayFromZero}
 	scale2away.SetScale(2)
-	inc0_05 := RoundingContext{Increment: 5}
+	inc0_05 := RoundingContext{Increment: 5, IncrementScale: 2}
 	inc0_05.SetScale(2)
 	inc50 := RoundingContext{Increment: 50}
 	prec3 := RoundingContext{}
@@ -265,16 +265,15 @@ func TestConvert(t *testing.T) {
 		{uint32(234), scale2, "234"},
 		{uint64(234), scale2, "234"},
 		{uint(234), scale2, "234"},
-		{-0.001, scale2, "-0"},
+		{-0.001, scale2, "-0.00"}, // not normalized
 		{-1e9, scale2, "-1000000000.00"},
-		{0.234, scale2, "0.23"},
-		{0.234, scale2away, "0.24"},
+		{0.234, scale2away, "0.234"}, // rounding postponed as not ToNearestEven
 		{0.1234, prec3, "0.123"},
 		{1234.0, prec3, "1230"},
 		{1.2345e10, prec3, "12300000000"},
 
 		{0.03, inc0_05, "0.05"},
-		{0.025, inc0_05, "0"},
+		{0.025, inc0_05, "0.00"}, // not normalized
 		{0.075, inc0_05, "0.10"},
 		{325, inc50, "300"},
 		{375, inc50, "400"},

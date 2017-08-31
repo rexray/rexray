@@ -11,7 +11,7 @@ import (
 	"text/tabwriter"
 	gtemplate "text/template"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/codedellemc/rexray/cli/template"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"

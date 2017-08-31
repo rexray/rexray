@@ -8,7 +8,7 @@ import:
   - package: github.com/akutz/gotil
     version: v0.1.0
   - package: github.com/akutz/goof
-    version: v0.1.0
+    version: v0.1.2
 
 
 ################################################################################

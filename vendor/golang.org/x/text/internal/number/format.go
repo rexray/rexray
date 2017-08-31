@@ -56,12 +56,16 @@ func (f *Formatter) InitDecimal(t language.Tag) {
 // given language.
 func (f *Formatter) InitScientific(t language.Tag) {
 	f.init(t, tagToScientific)
+	f.Pattern.MinFractionDigits = 0
+	f.Pattern.MaxFractionDigits = -1
 }
 
 // InitEngineering initializes a Formatter using the default Pattern for the
 // given language.
 func (f *Formatter) InitEngineering(t language.Tag) {
 	f.init(t, tagToScientific)
+	f.Pattern.MinFractionDigits = 0
+	f.Pattern.MaxFractionDigits = -1
 	f.Pattern.MaxIntegerDigits = 3
 	f.Pattern.MinIntegerDigits = 1
 }
@@ -303,13 +307,6 @@ func scientificVisibleDigits(r RoundingContext, d *Decimal) Digits {
 	if numInt == 0 {
 		numInt = 1
 	}
-	maxSig := int(r.MaxFractionDigits) + numInt
-	minSig := int(r.MinFractionDigits) + numInt
-
-	if maxSig > 0 {
-		// TODO: really round to zero?
-		n.round(ToZero, maxSig)
-	}
 
 	// If a maximum number of integers is specified, the minimum must be 1
 	// and the exponent is grouped by this number (e.g. for engineering)
@@ -326,10 +323,14 @@ func scientificVisibleDigits(r RoundingContext, d *Decimal) Digits {
 		numInt += d
 	}
 
+	if maxSig := int(r.MaxFractionDigits); maxSig >= 0 {
+		n.round(r.Mode, maxSig+numInt)
+	}
+
 	n.Comma = uint8(numInt)
 	n.End = int32(len(n.Digits))
-	if n.End < int32(minSig) {
-		n.End = int32(minSig)
+	if minSig := int32(r.MinFractionDigits) + int32(numInt); n.End < minSig {
+		n.End = minSig
 	}
 	return n
 }

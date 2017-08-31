@@ -16,7 +16,8 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+
 	sioTLS "github.com/codedellemc/goscaleio/tls"
 	types "github.com/codedellemc/goscaleio/types/v1"
 )

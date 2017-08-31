@@ -26,28 +26,22 @@
   version = "1.1"
 
 [[projects]]
-  name = "github.com/Sirupsen/logrus"
-  packages = ["."]
-  revision = "5f376aa629ac60c3215cc368e674bd996093a01a"
-  source = "https://github.com/akutz/logrus"
-
-[[projects]]
   name = "github.com/akutz/gofig"
   packages = [".","types"]
-  revision = "65fa82bc59644020b3ad6be479c0954fc82bd0fc"
-  version = "v0.1.8"
+  revision = "624e27bb99f9093d70f57d61ad4c472d09aacb18"
+  version = "v0.1.9"
 
 [[projects]]
   name = "github.com/akutz/golf"
   packages = [".","logrus"]
-  revision = "296de562c59e98534dc2d7b49f6ba310e3edb69d"
-  version = "v0.1.2"
+  revision = "8b7106fd98bcc77f397917bcc8944229e9e4ec66"
+  version = "v0.1.3"
 
 [[projects]]
   name = "github.com/akutz/goof"
   packages = ["."]
-  revision = "72efb1916248a881f8d39e20b9709696c5eda708"
-  version = "v0.1.1"
+  revision = "2321ba37c3513692d6f799d91fa66f28d11c7d7a"
+  version = "v0.1.2"
 
 [[projects]]
   name = "github.com/akutz/gotil"
@@ -70,8 +64,8 @@
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
   packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restjson","private/protocol/restxml","private/protocol/xml/xmlutil","service/ec2","service/efs","service/s3","service/sts"]
-  revision = "5b4d64c21c9af31b5c870528001cd2e3ef37bfe0"
-  version = "v1.10.34"
+  revision = "cb88a2c7ab16092bcf11a0aadeffce64b99274a2"
+  version = "v1.10.35"
 
 [[projects]]
   branch = "master"
@@ -88,19 +82,18 @@
 [[projects]]
   name = "github.com/codedellemc/goisilon"
   packages = [".","api","api/json","api/v1","api/v2"]
-  revision = "2ea94fb4dd4f34507c9d67d8d2e35dcc0edb5f89"
-  version = "v1.5.0"
+  revision = "301d518bb39637b839382deb686811dcf257b8c8"
 
 [[projects]]
   name = "github.com/codedellemc/goscaleio"
   packages = [".","tls","types/v1"]
-  revision = "485da3636bfcc8e70f74fe7bdc7cb25e5a6e4c4a"
+  revision = "d9df9f1ff56d951b0d5dfc30c374533ac56a4068"
 
 [[projects]]
   name = "github.com/codedellemc/gournal"
   packages = [".","logrus"]
-  revision = "4293aaf7e91602963a5777caef4b346e1cf21936"
-  version = "v0.3.0"
+  revision = "914f22d81ae2255c67ce7dd7f4c1dcb75c9c619a"
+  version = "v0.3.1"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -136,7 +129,7 @@
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "ab9f9a6dab164b7d1246e0e688b0ab7b94d8553e"
+  revision = "83cd65fc365ace80eb6b6ecfc45203e43edfbc70"
 
 [[projects]]
   branch = "master"
@@ -240,6 +233,12 @@
   source = "https://github.com/codenrhoden/go-vhd"
 
 [[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "d842de504ca841f97533764c59d3166afd70ddb9"
+  source = "https://github.com/akutz/logrus"
+
+[[projects]]
   branch = "master"
   name = "github.com/spf13/afero"
   packages = [".","mem"]
@@ -290,7 +289,13 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["pkcs12","pkcs12/internal/rc2"]
+  packages = ["pkcs12","pkcs12/internal/rc2","ssh/terminal"]
+  revision = "81e90905daefcd6fd217b62423c0908922eadb30"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto/ssh/terminal"
+  packages = ["."]
   revision = "81e90905daefcd6fd217b62423c0908922eadb30"
 
 [[projects]]
@@ -308,20 +313,20 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = ["unix","windows"]
   revision = "bb24a47a89eac6c1227fbcb2ae37a8b9ed323366"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/triegen","internal/ucd","internal/utf8internal","language","runes","transform","unicode/cldr","unicode/norm"]
-  revision = "18c65dde6afd36dbc39197ca72008895b8dfbfb6"
+  revision = "e113a52b01bdd1744681b6ce70c2e3d26b58d389"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/api"
   packages = ["compute/v0.beta","gensupport","googleapi","googleapi/internal/uritemplates"]
-  revision = "731876f62a065986f71ad71bb35692c3c7b42bcc"
+  revision = "4c6d21ebe7d908cb32717e14783f80ffee6cdcb0"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -338,6 +343,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "48c37f9c12cdff37f0079b0db205d5d23c762769070d73cda0f566b49c920877"
+  inputs-digest = "5efdc68858fbc619b7667ac6e2045c4d00abb1e32686ea59bb58ec04a97680fc"
   solver-name = "gps-cdcl"
   solver-version = 1

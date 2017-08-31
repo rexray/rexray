@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // Level is a log level.

@@ -162,8 +162,8 @@ $(GAE_DEV): $(GAE_SDZ)
 	cd $(?D) && unzip -q $(?F) && cd - && touch $@
 
 GO_DEPS += $(GAE_DEV)
-./gae/gae.test: | $(GAE_DEV) $(GAE_GOA)
-./tests/gournal.test: | $(GAE_DEV) $(GAE_GOA)
+#./gae/gae.test: | $(GAE_DEV) $(GAE_GOA)
+#./tests/gournal.test: | $(GAE_DEV) $(GAE_GOA)
 
 
 ################################################################################
@@ -564,7 +564,8 @@ benchmark: ./benchmarks/benchmarks.test
 # make the benchmark coverage file order-dependent upon the GAE coverage file.
 # otherwise parallel make builds aren't happy when two GAE dev servers try to
 # spin up at the same time
-./benchmarks/benchmarks.test.out: | ./gae/gae.test.out
+./benchmarks/benchmarks.test.out:
+# | ./gae/gae.test.out
 
 ################################################################################
 ##                                 EXAMPLES                                   ##

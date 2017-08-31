@@ -1,7 +1,7 @@
 package types
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 )
 

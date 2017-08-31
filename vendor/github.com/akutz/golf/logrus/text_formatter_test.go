@@ -5,11 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func newTextFormatter() *TextFormatter {
-	return &TextFormatter{log.TextFormatter{DisableColors: true}}
+	return &TextFormatter{
+		TextFormatter: log.TextFormatter{DisableColors: true},
+	}
 }
 
 func TestLogrusWithTextFormatter(t *testing.T) {

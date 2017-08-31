@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 

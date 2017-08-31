@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	glog "github.com/akutz/golf/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -16,7 +16,6 @@ import (
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
 
-	"github.com/codedellemc/rexray/cli/term"
 	"github.com/codedellemc/rexray/util"
 )
 
@@ -352,7 +351,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 	}
 
 	if permErr := c.checkCmdPermRequirements(cmd); permErr != nil {
-		if term.IsTerminal() {
+		if util.IsTerminal(os.Stderr) {
 			printColorizedError(permErr)
 		} else {
 			printNonColorizedError(permErr)
@@ -384,7 +383,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		}
 
 		if err != nil {
-			if term.IsTerminal() {
+			if util.IsTerminal(os.Stderr) {
 				printColorizedError(err)
 			} else {
 				printNonColorizedError(err)

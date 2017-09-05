@@ -71,6 +71,14 @@ const (
 	// Encrypted flag set to true.
 	KmsKeyID = "kmsKeyID"
 
+	// ConfigUseLargeDeviceRange defines if Rex-RAY should use device mapping
+	// recommended by AWS (default), or a larger device ange that is
+	// supported but will not work on all instance types
+	ConfigUseLargeDeviceRange = Name + ".useLargeDeviceRange"
+
+	// defaultUseLargeDeviceRange is the default value for LargeDeviceSupport
+	defaultUseLargeDeviceRange = false
+
 	// ConfigStatusMaxAttempts is the key for the maximum number of times
 	// a volume status will be queried when waiting for an action to finish
 	ConfigStatusMaxAttempts = Name + ".statusMaxAttempts"
@@ -93,6 +101,8 @@ func init() {
 	r.Key(gofig.Int, "", DefaultMaxRetries, "", Name+"."+MaxRetries)
 	r.Key(gofig.String, "", "", "Tag prefix for EBS naming", Name+"."+Tag)
 	r.Key(gofig.String, "", "", "", Name+"."+KmsKeyID)
+	r.Key(gofig.Bool, "", defaultUseLargeDeviceRange,
+		"Use Larger Device Range", ConfigUseLargeDeviceRange)
 	r.Key(gofig.Int, "", defaultStatusMaxAttempts, "Max Status Attempts",
 		ConfigStatusMaxAttempts)
 	r.Key(gofig.String, "", defaultStatusInitDelay, "Status Initial Delay",

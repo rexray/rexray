@@ -47,6 +47,7 @@ type driver struct {
 	maxRetries    *int
 	accessKey     string
 	kmsKeyID      string
+	deviceRange   *ebsUtils.DeviceRange
 	maxAttempts   int
 	statusDelay   int64
 	statusTimeout time.Duration
@@ -101,7 +102,11 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 		return err
 	}
 
-	log.Info("storage driver initialized")
+	useLargeDeviceRange := d.config.GetBool(ebs.ConfigUseLargeDeviceRange)
+	d.deviceRange = ebsUtils.GetDeviceRange(useLargeDeviceRange)
+
+	log.Info("storage driver initialized, using large device range: ",
+		useLargeDeviceRange)
 	return nil
 }
 
@@ -233,9 +238,8 @@ func (d *driver) mustAvailabilityZone(ctx types.Context) *string {
 
 // NextDeviceInfo returns the information about the driver's next available
 // device workflow.
-func (d *driver) NextDeviceInfo(
-	ctx types.Context) (*types.NextDeviceInfo, error) {
-	return ebsUtils.NextDeviceInfo, nil
+func (d *driver) NextDeviceInfo(ctx types.Context) (*types.NextDeviceInfo, error) {
+	return d.deviceRange.NextDeviceInfo, nil
 }
 
 // Type returns the type of storage the driver provides.
@@ -952,7 +956,7 @@ func (d *driver) toTypesVolume(
 					// "/dev/sda" to "/dev/xvda"
 					deviceName = strings.Replace(
 						*attachment.Device, "sd",
-						ebsUtils.NextDeviceInfo.Prefix, 1)
+						d.deviceRange.NextDeviceInfo.Prefix, 1)
 					// Keep device name if it is found in local devices
 					if _, ok := ld.DeviceMap[deviceName]; !ok {
 						deviceName = ""

@@ -12,10 +12,10 @@ import (
 	"strings"
 	"text/template"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/akutz/gotil"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/util"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -324,7 +324,7 @@ After=scini.service
 
 [Service]
 EnvironmentFile={{.EnvFilePath}}
-ExecStart={{.BinFilePath}} start -f
+ExecStart={{.BinFilePath}} start
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 

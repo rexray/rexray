@@ -6,11 +6,12 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
+	log "github.com/sirupsen/logrus"
 
+	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/util"
 )
@@ -230,6 +231,11 @@ func InitializeDefaultModules(
 // InitializeModule initializes a module.
 func InitializeModule(
 	ctx apitypes.Context, modConfig *Config) (*Instance, error) {
+
+	// Inject the context with the libStorage client if not nil.
+	if modConfig.Client != nil {
+		ctx = apictx.WithValue(ctx, apictx.ClientKey, modConfig.Client)
+	}
 
 	modInstancesRwl.Lock()
 	defer modInstancesRwl.Unlock()

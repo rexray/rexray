@@ -35,6 +35,10 @@ func startLibStorageAsService(
 		}
 	}
 
+	if errs == nil {
+		return ctx, nil, nil
+	}
+
 	var (
 		waitErrs = make(chan error, 1)
 		strtErrs = make(chan error, 1)

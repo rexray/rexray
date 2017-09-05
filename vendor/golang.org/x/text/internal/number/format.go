@@ -154,48 +154,47 @@ func decimalVisibleDigits(r RoundingContext, d *Decimal) Digits {
 	}
 	n := Digits{digits: d.normalize().digits}
 
-	if maxSig := int(r.MaxSignificantDigits); maxSig > 0 {
-		// TODO: really round to zero?
-		n.round(ToZero, maxSig)
-	}
-	digits := n.Digits
 	exp := n.Exp
 	exp += int32(r.DigitShift)
 
 	// Cap integer digits. Remove *most-significant* digits.
 	if r.MaxIntegerDigits > 0 {
 		if p := int(exp) - int(r.MaxIntegerDigits); p > 0 {
-			if p > len(digits) {
-				p = len(digits)
+			if p > len(n.Digits) {
+				p = len(n.Digits)
 			}
-			if digits = digits[p:]; len(digits) == 0 {
+			if n.Digits = n.Digits[p:]; len(n.Digits) == 0 {
 				exp = 0
 			} else {
 				exp -= int32(p)
 			}
 			// Strip leading zeros.
-			for len(digits) > 0 && digits[0] == 0 {
-				digits = digits[1:]
+			for len(n.Digits) > 0 && n.Digits[0] == 0 {
+				n.Digits = n.Digits[1:]
 				exp--
 			}
 		}
 	}
 
-	// Rounding usually is done by convert, but we don't rely on it.
-	numFrac := len(digits) - int(exp)
-	if r.MaxSignificantDigits == 0 && int(r.MaxFractionDigits) < numFrac {
-		p := int(exp) + int(r.MaxFractionDigits)
-		if p <= 0 {
-			p = 0
-		} else if p >= len(digits) {
-			p = len(digits)
-		}
-		digits = digits[:p] // TODO: round
+	// Rounding if not already done by Convert.
+	p := len(n.Digits)
+	if maxSig := int(r.MaxSignificantDigits); maxSig > 0 {
+		p = maxSig
 	}
+	if maxFrac := int(r.MaxFractionDigits); maxFrac >= 0 {
+		if cap := int(exp) + maxFrac; cap < p {
+			p = int(exp) + maxFrac
+		}
+		if p < 0 {
+			p = 0
+		}
+	}
+	n.round(r.Mode, p)
 
 	// set End (trailing zeros)
-	n.End = int32(len(digits))
-	if len(digits) == 0 {
+	n.End = int32(len(n.Digits))
+	if n.End == 0 {
+		exp = 0
 		if r.MinFractionDigits > 0 {
 			n.End = int32(r.MinFractionDigits)
 		}
@@ -210,7 +209,6 @@ func decimalVisibleDigits(r RoundingContext, d *Decimal) Digits {
 			n.End = int32(r.MinSignificantDigits)
 		}
 	}
-	n.Digits = digits
 	n.Exp = exp
 	return n
 }
@@ -323,9 +321,14 @@ func scientificVisibleDigits(r RoundingContext, d *Decimal) Digits {
 		numInt += d
 	}
 
-	if maxSig := int(r.MaxFractionDigits); maxSig >= 0 {
-		n.round(r.Mode, maxSig+numInt)
+	p := len(n.Digits)
+	if maxSig := int(r.MaxSignificantDigits); maxSig > 0 {
+		p = maxSig
 	}
+	if maxFrac := int(r.MaxFractionDigits); maxFrac >= 0 && numInt+maxFrac < p {
+		p = numInt + maxFrac
+	}
+	n.round(r.Mode, p)
 
 	n.Comma = uint8(numInt)
 	n.End = int32(len(n.Digits))

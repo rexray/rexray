@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"unicode/utf8"
 
+	"golang.org/x/text/internal/format"
 	"golang.org/x/text/internal/number"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message/catalog"
@@ -605,6 +606,12 @@ func (p *printer) handleMethods(verb rune) (handled bool) {
 		return
 	}
 	// Is it a Formatter?
+	if formatter, ok := p.arg.(format.Formatter); ok {
+		handled = true
+		defer p.catchPanic(p.arg, verb)
+		formatter.Format(p, verb)
+		return
+	}
 	if formatter, ok := p.arg.(fmt.Formatter); ok {
 		handled = true
 		defer p.catchPanic(p.arg, verb)

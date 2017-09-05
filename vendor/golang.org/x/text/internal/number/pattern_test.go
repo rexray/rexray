@@ -203,6 +203,7 @@ var testCases = []struct {
 		RoundingContext: RoundingContext{
 			MinSignificantDigits: 1,
 			MaxSignificantDigits: 1,
+			MaxFractionDigits:    -1,
 		},
 	},
 }, {
@@ -213,6 +214,7 @@ var testCases = []struct {
 		RoundingContext: RoundingContext{
 			MinSignificantDigits: 4,
 			MaxSignificantDigits: 4,
+			MaxFractionDigits:    -1,
 		},
 	},
 }, {
@@ -222,6 +224,7 @@ var testCases = []struct {
 		RoundingContext: RoundingContext{
 			MinSignificantDigits: 1,
 			MaxSignificantDigits: 4,
+			MaxFractionDigits:    -1,
 		},
 	},
 }, {

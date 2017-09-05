@@ -1,5 +1,7 @@
 /dep
 /.dep/
+/rexray.linux
+/rexray.darwin
 /glide
 .gist/
 md5sum.txt

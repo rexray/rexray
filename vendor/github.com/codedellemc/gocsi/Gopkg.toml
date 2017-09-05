@@ -1,0 +1,38 @@
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# Refer to https://github.com/toml-lang/toml for detailed TOML docs.
+
+required = [
+  "github.com/golang/protobuf/protoc-gen-go",
+  "github.com/container-storage-interface/spec/lib/go",
+]
+
+[[constraint]]
+  name = "github.com/container-storage-interface/spec"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/golang/protobuf"
+  branch = "master"
+
+[[constraint]]
+  name = "golang.org/x/net"
+  branch = "master"
+
+[[constraint]]
+  name = "google.golang.org/grpc"
+  version = "1.5.2"
+
+
+################################################################################
+##                                 Testing                                    ##
+################################################################################
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.2.0"

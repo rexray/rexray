@@ -411,23 +411,18 @@ func (d *Decimal) ConvertFloat(r RoundingContext, x float64, size int) {
 	// ToNearestEven.
 	//   Something like this would work:
 	//   AppendDigits(dst []byte, x float64, base, size, prec int) (digits []byte, exp, accuracy int)
-	if r.Mode == ToNearestEven {
-		// We can't round if limitations are placed on both the fraction and
-		// significant digits.
-		if r.MaxFractionDigits == 0 && r.MaxSignificantDigits > 0 {
-			prec = int(r.MaxSignificantDigits)
-		} else if r.isScientific() {
-			if r.MaxIntegerDigits == 1 && (r.MaxSignificantDigits == 0 ||
-				int(r.MaxFractionDigits+1) == int(r.MaxSignificantDigits)) {
-				verb = 'e'
-				prec = int(r.MaxFractionDigits)
-				prec += int(r.DigitShift)
-			}
-		} else if r.MaxFractionDigits > 0 && r.MaxSignificantDigits == 0 {
-			verb = 'f'
-			prec = int(r.MaxFractionDigits)
-		}
-	}
+	//
+	// TODO: At this point strconv's rounding is imprecise to the point that it
+	// is not useable for this purpose.
+	// See https://github.com/golang/go/issues/21714
+	// if r.Mode == ToNearestEven {
+	// 	if n := r.RoundSignificantDigits(); n >= 0 {
+	// 		prec = n
+	// 	} else if n = r.RoundFractionDigits(); n >= 0 {
+	// 		prec = n
+	// 		verb = 'f'
+	// 	}
+	// }
 
 	b := strconv.AppendFloat(d.Digits[:0], abs, verb, prec, size)
 	i := 0

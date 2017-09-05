@@ -14,10 +14,10 @@ import (
 	"strconv"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/codedellemc/rexray/cli"
 	"github.com/codedellemc/rexray/core"

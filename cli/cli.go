@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	gofig "github.com/akutz/gofig/types"
@@ -185,6 +186,18 @@ func NewWithArgs(
 
 	if config == nil {
 		config = util.NewConfig(ctx)
+	}
+
+	noLibStorage := false
+	if strings.EqualFold("false", os.Getenv("LIBSTORAGE")) {
+		config.Set("libstorage", "false")
+		noLibStorage = true
+	} else if config.GetString("libstorage") == "false" {
+		os.Setenv("LIBSTORAGE", "false")
+		noLibStorage = true
+	}
+	if noLibStorage {
+		config.Set("csi.driver", "csi-vfs")
 	}
 
 	c := &CLI{

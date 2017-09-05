@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,13 +48,22 @@ rexray:
   modules:
     default-docker:
       type:     docker
-      desc:     The default docker module.
+      desc:     The default Docker module.
       host:     unix://%[1]s
       spec:     %[2]s
       disabled: false
 `
 
 func init() {
+	var disabled bool
+	if v := os.Getenv("DOCKER"); v != "" {
+		if dd, err := strconv.ParseBool(v); err == nil {
+			disabled = !dd
+		}
+	}
+	if disabled {
+		return
+	}
 	agent.RegisterModule(modName, newModule)
 	registry.RegisterConfigReg(
 		"Docker",

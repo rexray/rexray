@@ -78,7 +78,13 @@ func TrapSignals(ctx apitypes.Context) {
 	context.RegisterCustomKey(signalContextKey, context.CustomLoggerKey)
 
 	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc)
+	signal.Notify(
+		sigc,
+		syscall.SIGKILL,
+		syscall.SIGTERM,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGQUIT)
 
 	go func() {
 		for s := range sigc {

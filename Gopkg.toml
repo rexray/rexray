@@ -54,6 +54,18 @@ required = [
 
 [[constraint]]
   name = "golang.org/x/crypto/ssh/terminal"
+
+
+################################################################################
+##                              CSI Dependencies                              ##
+################################################################################
+
+[[override]]
+  name = "github.com/codedellemc/gocsi"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/codedellemc/csi-nfs"
   branch = "master"
 
 

@@ -320,6 +320,10 @@ func ActivateLibStorage(
 	ctx apitypes.Context,
 	config gofig.Config) (apitypes.Context, gofig.Config, <-chan error, error) {
 
+	if !strings.EqualFold("false", config.GetString("libstorage")) {
+		return ctx, config, nil, nil
+	}
+
 	// set the `libstorage.service` property to the value of
 	// `rexray.storageDrivers` if the former is not defined and the
 	// latter is
@@ -375,6 +379,10 @@ var ErrMissingService = goof.New("client must specify service")
 // NewClient returns a new libStorage client.
 func NewClient(
 	ctx apitypes.Context, config gofig.Config) (apitypes.Client, error) {
+
+	if !strings.EqualFold("false", config.GetString("libstorage")) {
+		return nil, nil
+	}
 
 	if v := config.Get(apitypes.ConfigService); v == "" {
 		return nil, ErrMissingService

@@ -64,8 +64,8 @@
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
   packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restjson","private/protocol/restxml","private/protocol/xml/xmlutil","service/ec2","service/efs","service/s3","service/sts"]
-  revision = "cb88a2c7ab16092bcf11a0aadeffce64b99274a2"
-  version = "v1.10.35"
+  revision = "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
+  version = "v1.10.37"
 
 [[projects]]
   branch = "master"
@@ -78,6 +78,35 @@
   name = "github.com/cesanta/validate-json"
   packages = ["schema"]
   revision = "2f16017c76fc2403d143e93cea1e1b9526a01148"
+
+[[projects]]
+  name = "github.com/codedellemc/csi-blockdevices"
+  packages = ["block"]
+  revision = "75415a68da56bbf234398937009dedfc45f4334d"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/codedellemc/csi-nfs"
+  packages = ["nfs","provider","services"]
+  revision = "9358901c50d1432f4e2e0caf579f8c0a38d5535b"
+
+[[projects]]
+  name = "github.com/codedellemc/csi-vfs"
+  packages = ["provider","service"]
+  revision = "f1057e26035aa6e0fa740af0aafba0e2bd5b889a"
+  version = "v0.1.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/codedellemc/gocsi"
+  packages = [".","csi","mount"]
+  revision = "00d5dd1afec2c204bf084a552685888c821ed445"
+
+[[projects]]
+  name = "github.com/codedellemc/goioc"
+  packages = ["."]
+  revision = "900b2641c1787980890665af794d8ff23ffa7afd"
+  version = "v0.1.1"
 
 [[projects]]
   name = "github.com/codedellemc/goisilon"
@@ -128,8 +157,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
-  packages = ["proto"]
-  revision = "83cd65fc365ace80eb6b6ecfc45203e43edfbc70"
+  packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
+  revision = "17ce1425424ab154092bbb43af630bd647f3bb0d"
 
 [[projects]]
   branch = "master"
@@ -242,7 +271,7 @@
   branch = "master"
   name = "github.com/spf13/afero"
   packages = [".","mem"]
-  revision = "36f8810e2e3d7eeac4ac05b57f65690fbfba62a2"
+  revision = "ee1bd8ee15a1306d1f9201acc41ef39cd9f99a1b"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -254,19 +283,19 @@
   branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "2df9a531813370438a4d79bfc33e21f58063ed87"
+  revision = "3c0b56b677e04926dfa835a1b3f11cd4f62f076e"
 
 [[projects]]
   branch = "master"
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
-  revision = "0efa5202c04663c757d84f90f5219c1250baf94f"
+  revision = "12bd96e66386c1960ab0f74ced1362f66f552f7b"
 
 [[projects]]
+  branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
-  version = "v1.0.0"
+  revision = "7aff26db30c1be810f9de5038ec5ef96ac41fd7c"
 
 [[projects]]
   name = "github.com/spf13/viper"
@@ -301,38 +330,50 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp","html","html/atom","html/charset"]
+  packages = ["context","context/ctxhttp","html","html/atom","html/charset","http2","http2/hpack","idna","internal/timeseries","lex/httplex","trace"]
   revision = "66aacef3dd8a676686c7ae3716979581e8b03c47"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","google","internal","jws","jwt"]
-  revision = "9a379c6b3e95a790ffc43293c2a78dee0d7b6e20"
+  revision = "d89af98d7c6bba047c5a2622f36bc14b8766df85"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "bb24a47a89eac6c1227fbcb2ae37a8b9ed323366"
+  revision = "7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
-  packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/triegen","internal/ucd","internal/utf8internal","language","runes","transform","unicode/cldr","unicode/norm"]
-  revision = "e113a52b01bdd1744681b6ce70c2e3d26b58d389"
+  packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/triegen","internal/ucd","internal/utf8internal","language","runes","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  revision = "bd91bbf73e9a4a801adbfb97133c992678533126"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/api"
   packages = ["compute/v0.beta","gensupport","googleapi","googleapi/internal/uritemplates"]
-  revision = "4c6d21ebe7d908cb32717e14783f80ffee6cdcb0"
+  revision = "389ac18434a93e8455f6f546845de20c5858f22f"
 
 [[projects]]
   name = "google.golang.org/appengine"
   packages = [".","internal","internal/app_identity","internal/base","internal/datastore","internal/log","internal/modules","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "google.golang.org/genproto"
+  packages = ["googleapis/rpc/status"]
+  revision = "595979c8a7bf586b2d293fb42246bf91a0b893d9"
+
+[[projects]]
+  name = "google.golang.org/grpc"
+  packages = [".","codes","connectivity","credentials","grpclb/grpc_lb_v1/messages","grpclog","internal","keepalive","metadata","naming","peer","stats","status","tap","transport"]
+  revision = "f92cdcd7dcdc69e81b2d7b338479a19a8723cfa3"
+  version = "v1.6.0"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -343,6 +384,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5efdc68858fbc619b7667ac6e2045c4d00abb1e32686ea59bb58ec04a97680fc"
+  inputs-digest = "902433b2a3b17c7333d01eb9bee49d8270e79ce913fd3016fe5651d116bce758"
   solver-name = "gps-cdcl"
   solver-version = 1

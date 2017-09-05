@@ -117,6 +117,11 @@ func serviceStartAndWait(
 			panic(err)
 		}
 
+		if errs == nil {
+			wg.Done()
+			continue
+		}
+
 		// Update the outer context with the context returned from
 		// the service start function. This is important as a start
 		// function may have injected some data into the context used

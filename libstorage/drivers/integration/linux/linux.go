@@ -23,6 +23,8 @@ const (
 	defaultVolumeSize int64 = 16
 )
 
+var ctxExactMountKey = interface{}("exactmount")
+
 type driver struct {
 	config gofig.Config
 }
@@ -273,6 +275,11 @@ func (d *driver) Mount(
 		return "", nil, goof.New("no device name returned")
 	}
 
+	mountPath, err := d.getVolumeMountPath(vol.Name)
+	if err != nil {
+		return "", nil, err
+	}
+
 	mounts, err := client.OS().Mounts(
 		ctx, ma.DeviceName, "", opts.Opts)
 	if err != nil {
@@ -280,6 +287,16 @@ func (d *driver) Mount(
 	}
 
 	if len(mounts) > 0 {
+		if _, ok := ctx.Value(ctxExactMountKey).(interface{}); ok {
+			for _, m := range mounts {
+				if m.MountPoint == mountPath {
+					ctx.Debug("returning existing mount")
+					return d.volumeMountPath(
+						m.MountPoint), vol, nil
+				}
+			}
+			return "", nil, goof.New("device is already mounted")
+		}
 		return d.volumeMountPath(mounts[0].MountPoint), vol, nil
 	}
 
@@ -293,11 +310,6 @@ func (d *driver) Mount(
 			NewFSType:   opts.NewFSType,
 			OverwriteFS: opts.OverwriteFS,
 		}); err != nil {
-		return "", nil, err
-	}
-
-	mountPath, err := d.getVolumeMountPath(vol.Name)
-	if err != nil {
 		return "", nil, err
 	}
 

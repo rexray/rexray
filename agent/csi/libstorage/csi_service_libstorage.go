@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	log "github.com/sirupsen/logrus"
 	xctx "golang.org/x/net/context"
 
 	gofig "github.com/akutz/gofig/types"
@@ -25,6 +26,10 @@ func init() {
 	goioc.Register("libstorage", func() interface{} { return &driver{} })
 }
 
+// ctxConfigKey is an interface-wrapped key used to access a possible
+// config object in the context given to the provider's Serve function
+var ctxConfigKey = interface{}("csi.config")
+
 type driver struct {
 	ctx      apitypes.Context
 	client   apitypes.Client
@@ -40,6 +45,12 @@ func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 
 	d.ctx = apictx.New(ctx)
 	d.client = apictx.MustClient(d.ctx)
+
+	// Check for a gofig.Config in the context.
+	if config, ok := d.ctx.Value(ctxConfigKey).(gofig.Config); ok {
+		log.Info("init csi libstorage bridge w ctx.config")
+		d.config = config
+	}
 
 	// Cache the name of the libStorage service for which this bridge
 	// is configured.

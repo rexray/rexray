@@ -228,6 +228,10 @@ func InitializeDefaultModules(
 	return nil
 }
 
+// ctxConfigKey is an interface-wrapped key used to access a possible
+// config object in the context given to the provider's Serve function
+var ctxConfigKey = interface{}("csi.config")
+
 // InitializeModule initializes a module.
 func InitializeModule(
 	ctx apitypes.Context, modConfig *Config) (*Instance, error) {
@@ -258,6 +262,12 @@ func InitializeModule(
 	if v := modConfig.Config.GetString(apitypes.ConfigService); v != "" {
 		ctx = ctx.WithValue(apictx.ServiceKey, v)
 		ctx.WithField("serviceName", v).Info("set mod service name")
+	}
+
+	// inject the module's context with the gofig.Config if this is
+	// a CSI module
+	if typeName == "csi" {
+		ctx = ctx.WithValue(ctxConfigKey, modConfig.Config)
 	}
 
 	mod, initErr := mt.InitFunc(ctx, modConfig)

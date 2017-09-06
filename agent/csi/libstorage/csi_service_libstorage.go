@@ -37,12 +37,13 @@ type driver struct {
 }
 
 func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
+
 	d.ctx = apictx.New(ctx)
 	d.client = apictx.MustClient(d.ctx)
 
 	// Cache the name of the libStorage service for which this bridge
 	// is configured.
-	svcName, ok := apictx.ServiceName(ctx)
+	svcName, ok := apictx.ServiceName(d.ctx)
 	if !ok {
 		return errMissingServiceName
 	}

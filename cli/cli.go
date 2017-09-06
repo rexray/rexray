@@ -190,11 +190,13 @@ func NewWithArgs(
 
 	noLibStorage := false
 	if strings.EqualFold("false", os.Getenv("LIBSTORAGE")) {
-		config.Set("libstorage", "false")
+		config.Set("libstorage.disabled", true)
 		noLibStorage = true
-	} else if config.GetString("libstorage") == "false" {
+		ctx.Info("libstorage disabled by env var")
+	} else if config.GetBool("libstorage.disabled") {
 		os.Setenv("LIBSTORAGE", "false")
 		noLibStorage = true
+		ctx.Info("libstorage disabled by config")
 	}
 	if noLibStorage {
 		config.Set("csi.driver", "csi-vfs")

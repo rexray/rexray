@@ -254,6 +254,12 @@ func InitializeModule(
 		return nil, goof.WithFields(lf, "unknown module type")
 	}
 
+	// inject the module's context with the service name
+	if v := modConfig.Config.GetString(apitypes.ConfigService); v != "" {
+		ctx = ctx.WithValue(apictx.ServiceKey, v)
+		ctx.WithField("serviceName", v).Info("set mod service name")
+	}
+
 	mod, initErr := mt.InitFunc(ctx, modConfig)
 	if initErr != nil {
 		return nil, initErr

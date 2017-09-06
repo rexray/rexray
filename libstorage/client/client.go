@@ -1,8 +1,8 @@
 package client
 
 import (
-	log "github.com/sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
+	log "github.com/sirupsen/logrus"
 	gocontext "golang.org/x/net/context"
 
 	"github.com/codedellemc/rexray/libstorage/api/context"
@@ -75,9 +75,9 @@ func New(goCtx gocontext.Context, config gofig.Config) (types.Client, error) {
 	context.SetLogLevel(c.ctx, logConfig.Level)
 	c.ctx.WithFields(logFields).Info("configured logging")
 
-	if config.IsSet(types.ConfigService) {
-		c.ctx = c.ctx.WithValue(
-			context.ServiceKey, config.GetString(types.ConfigService))
+	if v := config.GetString(types.ConfigService); v != "" {
+		c.ctx = c.ctx.WithValue(context.ServiceKey, v)
+		c.ctx.WithField("serviceName", v).Info("set client service name")
 	}
 
 	storDriverName := config.GetString(types.ConfigStorageDriver)

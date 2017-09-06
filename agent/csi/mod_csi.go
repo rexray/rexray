@@ -113,7 +113,7 @@ func newModule(
 	}
 
 	// Create a gRPC server used to advertise the CSI service.
-	m.gs = newGrpcServer(m.ctx)
+	m.gs = newGrpcServer(ctx)
 	csi.RegisterControllerServer(m.gs, m.cs)
 	csi.RegisterIdentityServer(m.gs, m.cs)
 	csi.RegisterNodeServer(m.gs, m.cs)

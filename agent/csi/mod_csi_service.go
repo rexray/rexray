@@ -7,6 +7,7 @@ import (
 	xctx "golang.org/x/net/context"
 	"google.golang.org/grpc"
 
+	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/goioc"
 )
@@ -87,7 +88,10 @@ func (s *csiService) dial(
 		ctx,
 		s.serviceName,
 		grpc.WithInsecure(),
-		grpc.WithDialer(s.conn.DialGrpc))
+		grpc.WithDialer(s.conn.DialGrpc),
+		grpc.WithUnaryInterceptor(gocsi.ChainUnaryClient(
+			gocsi.ClientCheckReponseError,
+			gocsi.ClientResponseValidator)))
 }
 
 func (s *csiService) dialController(

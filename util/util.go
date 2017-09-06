@@ -320,7 +320,7 @@ func ActivateLibStorage(
 	ctx apitypes.Context,
 	config gofig.Config) (apitypes.Context, gofig.Config, <-chan error, error) {
 
-	if !strings.EqualFold("false", config.GetString("libstorage")) {
+	if config.GetBool("libstorage.disabled") {
 		return ctx, config, nil, nil
 	}
 
@@ -380,7 +380,7 @@ var ErrMissingService = goof.New("client must specify service")
 func NewClient(
 	ctx apitypes.Context, config gofig.Config) (apitypes.Client, error) {
 
-	if !strings.EqualFold("false", config.GetString("libstorage")) {
+	if config.GetBool("libstorage.disabled") {
 		return nil, nil
 	}
 

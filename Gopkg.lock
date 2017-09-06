@@ -64,8 +64,8 @@
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
   packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restjson","private/protocol/restxml","private/protocol/xml/xmlutil","service/ec2","service/efs","service/s3","service/sts"]
-  revision = "2dd0010a66ff968eb03c2507cfb5deab080c5d93"
-  version = "v1.10.37"
+  revision = "960dd6034cbdac0e9716bfa66d91de88b286889f"
+  version = "v1.10.38"
 
 [[projects]]
   branch = "master"
@@ -80,27 +80,22 @@
   revision = "2f16017c76fc2403d143e93cea1e1b9526a01148"
 
 [[projects]]
-  name = "github.com/codedellemc/csi-blockdevices"
-  packages = ["block"]
-  revision = "75415a68da56bbf234398937009dedfc45f4334d"
-
-[[projects]]
   branch = "master"
   name = "github.com/codedellemc/csi-nfs"
   packages = ["nfs","provider","services"]
-  revision = "9358901c50d1432f4e2e0caf579f8c0a38d5535b"
+  revision = "32ae09ae44241977ba9f30bb2ae81bf8d8b2aa1c"
 
 [[projects]]
+  branch = "master"
   name = "github.com/codedellemc/csi-vfs"
   packages = ["provider","service"]
-  revision = "f1057e26035aa6e0fa740af0aafba0e2bd5b889a"
-  version = "v0.1.1"
+  revision = "4d59072bc3a2da04966ec42785e878c0aa60e5ff"
 
 [[projects]]
   branch = "master"
   name = "github.com/codedellemc/gocsi"
   packages = [".","csi","mount"]
-  revision = "00d5dd1afec2c204bf084a552685888c821ed445"
+  revision = "7372d525aa9eba1ebe5ec1b9533e127f2e7bfa96"
 
 [[projects]]
   name = "github.com/codedellemc/goioc"
@@ -283,7 +278,7 @@
   branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "3c0b56b677e04926dfa835a1b3f11cd4f62f076e"
+  revision = "b78744579491c1ceeaaa3b40205e56b0591b93a3"
 
 [[projects]]
   branch = "master"
@@ -343,7 +338,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce"
+  revision = "9aade4d3a3b7e6d876cd3823ad20ec45fc035402"
 
 [[projects]]
   branch = "master"
@@ -355,7 +350,7 @@
   branch = "master"
   name = "google.golang.org/api"
   packages = ["compute/v0.beta","gensupport","googleapi","googleapi/internal/uritemplates"]
-  revision = "389ac18434a93e8455f6f546845de20c5858f22f"
+  revision = "38eaa396bab4275c0aedee767d0d674ef2b50994"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -384,6 +379,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "902433b2a3b17c7333d01eb9bee49d8270e79ce913fd3016fe5651d116bce758"
+  inputs-digest = "7092af0e60e35d3ddaf8cae7f9406490eabbe840812d79f360bf679a0fed3936"
   solver-name = "gps-cdcl"
   solver-version = 1

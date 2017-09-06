@@ -28,42 +28,42 @@ const (
 	//
 	// If no value is specified and `bindfs` is required, ex.
 	// darwin, then `bindfs` is looked up via the path.
-	BindFSEnvVar = "CSI_VFS_BINDFS"
+	BindFSEnvVar = "X_CSI_VFS_BINDFS"
 
 	// DataDirEnvVar is the name of the environment variable
 	// used to obtain the path to the VFS plug-in's data directory.
 	//
 	// If not specified, the directory defaults to `$HOME/.csi-vfs`.
-	DataDirEnvVar = "CSI_VFS_DATA"
+	DataDirEnvVar = "X_CSI_VFS_DATA"
 
 	// DevDirEnvVar is the name of the environment variable
 	// used to obtain the path to the VFS plug-in's `dev` directory.
 	//
-	// If not specified, the directory defaults to `$CSI_VFS_DATA/dev`.
-	DevDirEnvVar = "CSI_VFS_DEV"
+	// If not specified, the directory defaults to `$X_CSI_VFS_DATA/dev`.
+	DevDirEnvVar = "X_CSI_VFS_DEV"
 
 	// MntDirEnvVar is the name of the environment variable
 	// used to obtain the path to the VFS plug-in's `mnt` directory.
 	//
-	// If not specified, the directory defaults to `$CSI_VFS_DATA/mnt`.
-	MntDirEnvVar = "CSI_VFS_MNT"
+	// If not specified, the directory defaults to `$X_CSI_VFS_DATA/mnt`.
+	MntDirEnvVar = "X_CSI_VFS_MNT"
 
 	// VolDirEnvVar is the name of the environment variable
 	// used to obtain the path to the VFS plug-in's `vol` directory.
 	//
-	// If not specified, the directory defaults to `$CSI_VFS_DATA/vol`.
-	VolDirEnvVar = "CSI_VFS_VOL"
+	// If not specified, the directory defaults to `$X_CSI_VFS_DATA/vol`.
+	VolDirEnvVar = "X_CSI_VFS_VOL"
 
 	// VolGlobEnvVar is the name of the environment variable
 	// used to obtain the glob pattern used to list the files inside
-	// the $CSI_VFS_VOL directory. Matching files are considered
+	// the $X_CSI_VFS_VOL directory. Matching files are considered
 	// volumes.
 	//
 	// If not specified, the glob pattern defaults to `*`.
 	//
 	// Valid patterns are documented at
 	// https://golang.org/pkg/path/filepath/#Match.
-	VolGlobEnvVar = "CSI_VFS_VOL_GLOB"
+	VolGlobEnvVar = "X_CSI_VFS_VOL_GLOB"
 )
 
 var (
@@ -101,60 +101,8 @@ type service struct {
 // New returns a new Service using the specified path for the
 // plug-in's root data directory.
 func New(data, dev, mnt, vol, volGlob, bindfs string) Service {
-	if data == "" {
-		data = os.Getenv(DataDirEnvVar)
-	}
-	if data == "" {
-		if v := os.Getenv("HOME"); v != "" {
-			data = path.Join(v, ".csi-vfs")
-		} else if v := os.Getenv("USER_PROFILE"); v != "" {
-			data = path.Join(v, ".csi-vfs")
-		}
-	}
-	os.MkdirAll(data, 0755)
-	resolveSymlink(&data)
 
-	if dev == "" {
-		dev = os.Getenv(DevDirEnvVar)
-	}
-	if dev == "" {
-		dev = path.Join(data, "dev")
-	}
-	os.MkdirAll(dev, 0755)
-	resolveSymlink(&dev)
-
-	if mnt == "" {
-		mnt = os.Getenv(MntDirEnvVar)
-	}
-	if mnt == "" {
-		mnt = path.Join(data, "mnt")
-	}
-	os.MkdirAll(mnt, 0755)
-	resolveSymlink(&mnt)
-
-	if vol == "" {
-		vol = os.Getenv(VolDirEnvVar)
-	}
-	if vol == "" {
-		vol = path.Join(data, "vol")
-	}
-	os.MkdirAll(vol, 0755)
-	resolveSymlink(&vol)
-
-	if volGlob == "" {
-		volGlob = os.Getenv(VolGlobEnvVar)
-	}
-	if volGlob == "" {
-		volGlob = "*"
-	}
-	volGlob = path.Join(dev, volGlob)
-
-	if bindfs == "" {
-		bindfs = os.Getenv(BindFSEnvVar)
-	}
-	if bindfs == "" {
-		bindfs = "bindfs"
-	}
+	InitConfig(&data, &dev, &mnt, &vol, &volGlob, &bindfs)
 
 	log.WithFields(map[string]interface{}{
 		"data":    data,
@@ -219,7 +167,7 @@ func (s *service) DeleteVolume(
 	}
 
 	// If the volume does not exist then return an error.
-	if !fileExists(volPath) {
+	if !FileExists(volPath) {
 		return gocsi.ErrDeleteVolume(
 			csi.Error_DeleteVolumeError_VOLUME_DOES_NOT_EXIST,
 			volPath), nil
@@ -253,7 +201,7 @@ func (s *service) ControllerPublishVolume(
 			""), nil
 	}
 
-	if !fileExists(volPath) {
+	if !FileExists(volPath) {
 		return gocsi.ErrControllerPublishVolume(
 			csi.Error_ControllerPublishVolumeError_VOLUME_DOES_NOT_EXIST,
 			volPath), nil
@@ -264,7 +212,7 @@ func (s *service) ControllerPublishVolume(
 
 	// If the private mount directory for the device does not exist then
 	// create it.
-	if !fileExists(devPath) {
+	if !FileExists(devPath) {
 		if err := os.MkdirAll(devPath, 0755); err != nil {
 			log.WithField("path", devPath).WithError(err).Error(
 				"create device dir failed")
@@ -324,7 +272,7 @@ func (s *service) ControllerUnpublishVolume(
 			""), nil
 	}
 
-	if !fileExists(volPath) {
+	if !FileExists(volPath) {
 		return gocsi.ErrControllerUnpublishVolume(
 			csi.Error_ControllerUnpublishVolumeError_VOLUME_DOES_NOT_EXIST,
 			volPath), nil
@@ -355,7 +303,7 @@ func (s *service) ControllerUnpublishVolume(
 	}
 
 	// If the device path exists then remove it.
-	if fileExists(devPath) {
+	if FileExists(devPath) {
 		if err := os.RemoveAll(devPath); err != nil {
 			log.WithField("path", devPath).WithError(err).Error(
 				"failed to remove device dir")
@@ -384,7 +332,7 @@ func (s *service) ValidateVolumeCapabilities(
 			"invalid volume id"), nil
 	}
 
-	if !fileExists(volPath) {
+	if !FileExists(volPath) {
 		return gocsi.ErrValidateVolumeCapabilities(
 			csi.Error_ValidateVolumeCapabilitiesError_VOLUME_DOES_NOT_EXIST,
 			volPath), nil
@@ -543,7 +491,7 @@ func (s *service) NodePublishVolume(
 			""), nil
 	}
 
-	if !fileExists(volPath) {
+	if !FileExists(volPath) {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_VOLUME_DOES_NOT_EXIST,
 			volPath), nil
@@ -555,7 +503,7 @@ func (s *service) NodePublishVolume(
 	tgtPath := req.TargetPath
 	resolveSymlink(&tgtPath)
 
-	if !fileExists(devPath) {
+	if !FileExists(devPath) {
 		log.WithField("path", devPath).Error(
 			"must call ControllerPublishVolume first")
 		return gocsi.ErrNodePublishVolume(
@@ -565,7 +513,7 @@ func (s *service) NodePublishVolume(
 
 	// If the private mount directory for the device does not exist then
 	// create it.
-	if !fileExists(mntPath) {
+	if !FileExists(mntPath) {
 		if err := os.MkdirAll(mntPath, 0755); err != nil {
 			log.WithField("path", mntPath).WithError(err).Error(
 				"create private mount dir failed")
@@ -657,7 +605,7 @@ func (s *service) NodeUnpublishVolume(
 			""), nil
 	}
 
-	if !fileExists(volPath) {
+	if !FileExists(volPath) {
 		return gocsi.ErrNodeUnpublishVolume(
 			csi.Error_NodeUnpublishVolumeError_VOLUME_DOES_NOT_EXIST,
 			volPath), nil
@@ -709,7 +657,7 @@ func (s *service) NodeUnpublishVolume(
 	}).Info("volume mount info")
 
 	// If the target path exists then remove it.
-	if fileExists(tgtPath) {
+	if FileExists(tgtPath) {
 		if err := os.RemoveAll(tgtPath); err != nil {
 			log.WithField("path", tgtPath).WithError(err).Error(
 				"failed to remove target path")
@@ -812,7 +760,9 @@ func (s *service) NodeGetCapabilities(
 	}, nil
 }
 
-func fileExists(filePath string) bool {
+// FileExists returns a flag indicating whether or not a file
+// path exists.
+func FileExists(filePath string) bool {
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
 		return true
 	}
@@ -826,4 +776,68 @@ func resolveSymlink(symPath *string) error {
 	}
 	*symPath = realPath
 	return nil
+}
+
+// InitConfig initializes several CSI-VFS configuration properties.
+func InitConfig(
+	data, dev, mnt, vol, volGlob, bindfs *string) {
+
+	if *data == "" {
+		*data = os.Getenv(DataDirEnvVar)
+	}
+	if *data == "" {
+		if v := os.Getenv("HOME"); v != "" {
+			*data = path.Join(v, ".csi-vfs")
+		} else if v := os.Getenv("USER_PROFILE"); v != "" {
+			*data = path.Join(v, ".csi-vfs")
+		}
+	}
+	os.MkdirAll(*data, 0755)
+	resolveSymlink(data)
+
+	if *dev == "" {
+		*dev = os.Getenv(DevDirEnvVar)
+	}
+	if *dev == "" {
+		*dev = path.Join(*data, "dev")
+	}
+	os.MkdirAll(*dev, 0755)
+	resolveSymlink(dev)
+
+	if *mnt == "" {
+		*mnt = os.Getenv(MntDirEnvVar)
+	}
+	if *mnt == "" {
+		*mnt = path.Join(*data, "mnt")
+	}
+	os.MkdirAll(*mnt, 0755)
+	resolveSymlink(mnt)
+
+	if *vol == "" {
+		*vol = os.Getenv(VolDirEnvVar)
+	}
+	if *vol == "" {
+		*vol = path.Join(*data, "vol")
+	}
+	os.MkdirAll(*vol, 0755)
+	resolveSymlink(vol)
+
+	if volGlob != nil {
+		if *volGlob == "" {
+			*volGlob = os.Getenv(VolGlobEnvVar)
+		}
+		if *volGlob == "" {
+			*volGlob = "*"
+		}
+		*volGlob = path.Join(*dev, *volGlob)
+	}
+
+	if bindfs != nil {
+		if *bindfs == "" {
+			*bindfs = os.Getenv(BindFSEnvVar)
+		}
+		if *bindfs == "" {
+			*bindfs = "bindfs"
+		}
+	}
 }

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/codedellemc/csi-blockdevices/block"
+	"github.com/codedellemc/gocsi/mount"
 )
 
 var (
@@ -25,12 +25,12 @@ func TestMountUnmount(t *testing.T) {
 	}
 	defer os.Remove(mntPath)
 
-	err = block.Mount(nfsHost+":"+nfsPath, mntPath, "nfs", []string{})
+	err = mount.Mount(nfsHost+":"+nfsPath, mntPath, "nfs", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = block.Unmount(mntPath)
+	err = mount.Unmount(mntPath)
 	if err != nil {
 		t.Fatal(err)
 	}

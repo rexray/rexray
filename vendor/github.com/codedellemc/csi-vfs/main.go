@@ -42,7 +42,7 @@ func main() {
 		}
 	}
 
-	sp := provider.New(newGrpcInterceptorChain())
+	sp := provider.New(nil, newGrpcInterceptors())
 	ctx := context.Background()
 
 	trapSignals(func() {
@@ -61,15 +61,16 @@ func main() {
 	}
 }
 
-func newGrpcInterceptorChain() grpc.ServerOption {
+func newGrpcInterceptors() []grpc.UnaryServerInterceptor {
 	lout := newLogger(log.Infof)
 	lerr := newLogger(log.Errorf)
-	return grpc.UnaryInterceptor(gocsi.ChainUnaryServer(
+	return []grpc.UnaryServerInterceptor{
 		gocsi.ServerRequestIDInjector,
 		gocsi.NewServerRequestLogger(lout, lerr),
 		gocsi.NewServerResponseLogger(lout, lerr),
 		gocsi.NewServerRequestVersionValidator(service.SupportedVersions),
-		gocsi.ServerRequestValidator))
+		gocsi.ServerRequestValidator,
+	}
 }
 
 type serviceProvider interface {

@@ -2,14 +2,10 @@
 
 
 [[projects]]
-  name = "github.com/codedellemc/csi-blockdevices"
-  packages = ["block"]
-  revision = "75415a68da56bbf234398937009dedfc45f4334d"
-
-[[projects]]
+  branch = "master"
   name = "github.com/codedellemc/gocsi"
-  packages = [".","csi"]
-  revision = "996f4bd357b3f628be6cfc8a5ffcf67f9345b0a1"
+  packages = [".","csi","mount"]
+  revision = "00d5dd1afec2c204bf084a552685888c821ed445"
 
 [[projects]]
   name = "github.com/codedellemc/goioc"
@@ -68,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "20f04ae1a42c878f1beaf0ce403d728b994a96008ebc05f8892d7e7a82c2170f"
+  inputs-digest = "ecbd39b3b2293d05c1d1bf174406d3d2482210973a1e1e1bf0ef7e1eab77b75d"
   solver-name = "gps-cdcl"
   solver-version = 1

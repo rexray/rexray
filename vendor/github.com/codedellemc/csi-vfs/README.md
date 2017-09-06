@@ -49,8 +49,8 @@ directories can be configured with the following environment variables:
 
 | Name | Default | Description |
 |------|---------|-------------|
-| `CSI_VFS_DATA` | `$HOME/.csi-vfs` | The root data directory |
-| `CSI_VFS_VOL` | `$CSI_VFS_DATA/vol` | Where volumes (directories) are created |
-| `CSI_VFS_VOL_GLOB` | `*` | The pattern used to match volumes in `$CSI_VFS_VOL` |
-| `CSI_VFS_DEV` | `$CSI_VFS_DATA/dev` | A directory from `$CSI_VFS_VOL` is bind mounted to an eponymous directory in this location when `ControllerPublishVolume` is called |
-| `CSI_VFS_MNT` | `$CSI_VFS_DATA/mnt` | A directory from `$CSI_VFS_DEV` is bind mounted to an eponymous directory in this location when `NodePublishVolume` is called |
+| `X_CSI_VFS_DATA` | `$HOME/.csi-vfs` | The root data directory |
+| `X_CSI_VFS_VOL` | `$X_CSI_VFS_DATA/vol` | Where volumes (directories) are created |
+| `X_CSI_VFS_VOL_GLOB` | `*` | The pattern used to match volumes in `$X_CSI_VFS_VOL` |
+| `X_CSI_VFS_DEV` | `$X_CSI_VFS_DATA/dev` | A directory from `$X_CSI_VFS_VOL` is bind mounted to an eponymous directory in this location when `ControllerPublishVolume` is called |
+| `X_CSI_VFS_MNT` | `$X_CSI_VFS_DATA/mnt` | A directory from `$X_CSI_VFS_DEV` is bind mounted to an eponymous directory in this location when `NodePublishVolume` is called |

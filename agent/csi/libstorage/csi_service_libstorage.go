@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 
 	"google.golang.org/grpc"
 
@@ -31,17 +32,21 @@ func init() {
 var ctxConfigKey = interface{}("csi.config")
 
 type driver struct {
-	ctx      apitypes.Context
-	client   apitypes.Client
-	config   gofig.Config
-	server   *grpc.Server
-	svcName  string
-	storType apitypes.StorageType
-	iid      *apitypes.InstanceID
-	nodeID   *csi.NodeID
+	ctx          apitypes.Context
+	client       apitypes.Client
+	config       gofig.Config
+	server       *grpc.Server
+	svcName      string
+	storType     apitypes.StorageType
+	iid          *apitypes.InstanceID
+	nodeID       *csi.NodeID
+	attTokens    map[string]string
+	attTokensRWL sync.RWMutex
 }
 
 func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
+
+	d.attTokens = map[string]string{}
 
 	d.ctx = apictx.New(ctx)
 	d.client = apictx.MustClient(d.ctx)
@@ -77,7 +82,10 @@ func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 	// Cache the node ID.
 	d.nodeID = toNodeID(d.iid)
 
-	d.server = grpc.NewServer()
+	// Create a gRPC server with an idempotent interceptor.
+	d.server = grpc.NewServer(
+		grpc.UnaryInterceptor(gocsi.NewIdempotentInterceptor(d)))
+
 	csi.RegisterControllerServer(d.server, d)
 	csi.RegisterIdentityServer(d.server, d)
 	csi.RegisterNodeServer(d.server, d)

@@ -4,13 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math/rand"
 	"os"
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	"github.com/codedellemc/rexray/libstorage/api/types"
@@ -20,8 +23,9 @@ import (
 
 // driver is the storage executor for the ec2 storage driver.
 type driver struct {
-	name   string
-	config gofig.Config
+	name        string
+	config      gofig.Config
+	deviceRange *ebsUtils.DeviceRange
 }
 
 func init() {
@@ -42,6 +46,10 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	// ensure backwards compatibility with ebs and ec2 in config
 	ebs.BackCompat(config)
 	d.config = config
+	// initialize device range config
+	useLargeDeviceRange := d.config.GetBool(ebs.ConfigUseLargeDeviceRange)
+	log.Debug("executor using large device range: ", useLargeDeviceRange)
+	d.deviceRange = ebsUtils.GetDeviceRange(useLargeDeviceRange)
 	return nil
 }
 
@@ -72,12 +80,12 @@ var errNoAvaiDevice = goof.New("no available device")
 func (d *driver) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
-	// All possible device paths on Linux EC2 instances are /dev/xvd[f-p]
-	letters := []string{
-		"f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
 
 	// Find which letters are used for local devices
 	localDeviceNames := make(map[string]bool)
+
+	// Get device range
+	ns := d.deviceRange
 
 	localDevices, err := d.LocalDevices(
 		ctx, &types.LocalDevicesOpts{Opts: opts})
@@ -88,8 +96,8 @@ func (d *driver) NextDevice(
 
 	for localDevice := range localDeviceMapping {
 		re, _ := regexp.Compile(`^/dev/` +
-			ebsUtils.NextDeviceInfo.Prefix +
-			`(` + ebsUtils.NextDeviceInfo.Pattern + `)`)
+			ns.NextDeviceInfo.Prefix +
+			`(` + ns.NextDeviceInfo.Pattern + `)`)
 		res := re.FindStringSubmatch(localDevice)
 		if len(res) > 0 {
 			localDeviceNames[res[1]] = true
@@ -104,28 +112,37 @@ func (d *driver) NextDevice(
 
 	for _, ephemeralDevice := range ephemeralDevices {
 		re, _ := regexp.Compile(`^` +
-			ebsUtils.NextDeviceInfo.Prefix +
-			`(` + ebsUtils.NextDeviceInfo.Pattern + `)`)
+			ns.NextDeviceInfo.Prefix +
+			`(` + ns.NextDeviceInfo.Pattern + `)`)
 		res := re.FindStringSubmatch(ephemeralDevice)
 		if len(res) > 0 {
 			localDeviceNames[res[1]] = true
 		}
 	}
 
-	// Find next available letter for device path
-	for _, letter := range letters {
-		if localDeviceNames[letter] {
-			continue
+	// Find next available letter for device path.
+	// Device namespace is iterated in random order
+	// to mitigate ghost device issues.
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	parentLength := len(ns.ParentLetters)
+	for _, pIndex := range r.Perm(parentLength) {
+		parentSuffix := ""
+		if parentLength > 1 {
+			parentSuffix = ns.ParentLetters[pIndex]
 		}
-		return fmt.Sprintf(
-			"/dev/%s%s", ebsUtils.NextDeviceInfo.Prefix, letter), nil
+		for _, cIndex := range r.Perm(len(ns.ChildLetters)) {
+			suffix := parentSuffix + ns.ChildLetters[cIndex]
+			if localDeviceNames[suffix] {
+				continue
+			}
+			return fmt.Sprintf(
+				"/dev/%s%s", ns.NextDeviceInfo.Prefix, suffix), nil
+		}
 	}
 	return "", errNoAvaiDevice
 }
 
 const procPartitions = "/proc/partitions"
-
-var xvdRX = regexp.MustCompile(`^xvd[a-z]$`)
 
 // Retrieve device paths currently attached and/or mounted
 func (d *driver) LocalDevices(
@@ -139,6 +156,7 @@ func (d *driver) LocalDevices(
 	defer f.Close()
 
 	devMap := map[string]string{}
+	ns := d.deviceRange
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -147,7 +165,7 @@ func (d *driver) LocalDevices(
 			continue
 		}
 		devName := fields[3]
-		if !xvdRX.MatchString(devName) {
+		if !ns.DeviceRE.MatchString(devName) {
 			continue
 		}
 		devPath := path.Join("/dev/", devName)
@@ -194,7 +212,7 @@ func (d *driver) getEphemeralDevices(
 		deviceNameStr := strings.Replace(
 			string(name),
 			"sd",
-			ebsUtils.NextDeviceInfo.Prefix, 1)
+			d.deviceRange.NextDeviceInfo.Prefix, 1)
 
 		deviceNames = append(deviceNames, deviceNameStr)
 	}

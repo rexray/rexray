@@ -6,9 +6,9 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/codedellemc/csi-blockdevices/block"
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
+	"github.com/codedellemc/gocsi/mount"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/codedellemc/csi-nfs/nfs"
@@ -82,7 +82,7 @@ func (s *StoragePlugin) NodeUnpublishVolume(
 	src := host + ":" + export
 
 	// check to see if volume is really mounted at target
-	mnts, err := block.GetDevMounts(src)
+	mnts, err := mount.GetDevMounts(src)
 	if err != nil {
 		return gocsi.ErrNodeUnpublishVolume(
 			csi.Error_NodeUnpublishVolumeError_UNMOUNT_ERROR,
@@ -94,12 +94,12 @@ func (s *StoragePlugin) NodeUnpublishVolume(
 		// or private mount
 		var (
 			idx       int
-			m         block.MountPoint
+			m         *mount.Info
 			unmounted = false
 		)
 		for idx, m = range mnts {
 			if m.Path == target {
-				if err := block.Unmount(target); err != nil {
+				if err := mount.Unmount(target); err != nil {
 					return gocsi.ErrNodeUnpublishVolume(
 						csi.Error_NodeUnpublishVolumeError_UNMOUNT_ERROR,
 						err.Error()), nil
@@ -116,7 +116,7 @@ func (s *StoragePlugin) NodeUnpublishVolume(
 	// remove private mount if we can
 	privTgt := s.getPrivateMountPoint(src)
 	if len(mnts) == 1 && mnts[0].Path == privTgt {
-		if err := block.Unmount(privTgt); err != nil {
+		if err := mount.Unmount(privTgt); err != nil {
 			return gocsi.ErrNodeUnpublishVolume(
 				csi.Error_NodeUnpublishVolumeError_UNMOUNT_ERROR,
 				err.Error()), nil
@@ -213,7 +213,7 @@ func (s *StoragePlugin) handleMount(
 	}
 
 	// Check if device is already mounted
-	mnts, err := block.GetDevMounts(src)
+	mnts, err := mount.GetDevMounts(src)
 	if err != nil {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
@@ -259,7 +259,7 @@ func (s *StoragePlugin) handleMount(
 			mf = append(mf, "ro")
 		}
 
-		if err := block.Mount(src, privTgt, "nfs", mf); err != nil {
+		if err := mount.Mount(src, privTgt, "nfs", mf...); err != nil {
 			return gocsi.ErrNodePublishVolume(
 				csi.Error_NodePublishVolumeError_MOUNT_ERROR,
 				err.Error()), nil
@@ -326,7 +326,7 @@ func (s *StoragePlugin) handleMount(
 		mf = append(mf, "ro")
 	}
 	mf = append(mf, "bind")
-	if err := block.Mount(privTgt, target, "", mf); err != nil {
+	if err := mount.Mount(privTgt, target, "", mf...); err != nil {
 		//if err := SafeUnmnt(privTgt); err != nil {
 		//	log.WithFields(f).WithError(err).Error(
 		//		"Unable to umount from private dir")

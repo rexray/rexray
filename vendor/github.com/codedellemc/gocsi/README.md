@@ -26,6 +26,7 @@ server interceptors:
 |                           | `ServerResponseLogger` | Logs responses |
 |                           | `ServerRequestVersionValidator` | Validates request versions |
 |                           | `ServerRequestValidator` | Validates requests |
+|                           | `IdempotentInterceptor` | Provides serial access and idempotency for volume-related CSI RPCs |
 
 Examples illustrating the above interceptors and invoking the CSI RPCs
 may be found in the GoCSI test suite, the CSI client, and the CSI mock

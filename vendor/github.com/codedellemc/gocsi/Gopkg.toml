@@ -24,6 +24,10 @@ required = [
   name = "google.golang.org/grpc"
   version = "1.5.2"
 
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  branch = "master"
+
 
 ################################################################################
 ##                                 Testing                                    ##

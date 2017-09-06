@@ -3,6 +3,8 @@ package csi
 import (
 	"context"
 	"net"
+	"sync"
+	"time"
 
 	xctx "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -44,6 +46,10 @@ type csiService struct {
 	serviceType string
 	sp          ServiceProvider
 	conn        PipeConn
+
+	volNameLocks map[string]MutexWithTryLock
+	volIDLocks   map[*csi.VolumeID]MutexWithTryLock
+	volAccessRWL sync.RWMutex
 }
 
 func newService(
@@ -52,14 +58,111 @@ func newService(
 
 	if sp, ok := goioc.New(serviceType).(ServiceProvider); ok {
 		return &csiService{
-			serviceName: serviceName,
-			serviceType: serviceType,
-			sp:          sp,
-			conn:        NewPipeConn(serviceName),
+			serviceName:  serviceName,
+			serviceType:  serviceType,
+			sp:           sp,
+			conn:         NewPipeConn(serviceName),
+			volNameLocks: map[string]MutexWithTryLock{},
+			volIDLocks:   map[*csi.VolumeID]MutexWithTryLock{},
 		}
 	}
 
 	return nil
+}
+
+func (s *csiService) lockVolWithName(name string) MutexWithTryLock {
+	s.volAccessRWL.Lock()
+	defer s.volAccessRWL.Unlock()
+
+	lock := s.volNameLocks[name]
+	if lock == nil {
+		lock = NewMutexWithTryLock()
+		s.volNameLocks[name] = lock
+	}
+	return lock
+}
+
+func (s *csiService) lockVolWithID(id *csi.VolumeID) MutexWithTryLock {
+	s.volAccessRWL.Lock()
+	defer s.volAccessRWL.Unlock()
+
+	var lock MutexWithTryLock
+	for k, v := range s.volIDLocks {
+		if compVolumeIDs(id, k) {
+			id = k
+			lock = v
+			break
+		}
+	}
+	if lock == nil {
+		lock = NewMutexWithTryLock()
+		s.volIDLocks[id] = lock
+	}
+
+	return lock
+}
+
+func (s *csiService) syncVolLocks(name string, id *csi.VolumeID) {
+
+	s.volAccessRWL.Lock()
+	defer s.volAccessRWL.Unlock()
+
+	var (
+		idLock   MutexWithTryLock
+		nameLock MutexWithTryLock
+	)
+
+	if name != "" {
+		nameLock = s.volNameLocks[name]
+	}
+
+	if id != nil {
+		for k, v := range s.volIDLocks {
+			if compVolumeIDs(id, k) {
+				id = k
+				idLock = v
+				break
+			}
+		}
+	}
+
+	// Sync the locks. Make the default case such that the
+	// name lock is replaced with the ID lock.
+	if nameLock == nil && idLock == nil {
+		lock := NewMutexWithTryLock()
+		s.volNameLocks[name] = lock
+		s.volIDLocks[id] = lock
+	} else if nameLock != nil && idLock == nil {
+		s.volIDLocks[id] = nameLock
+	} else {
+		s.volNameLocks[name] = idLock
+	}
+}
+
+func compVolumeIDs(a, b *csi.VolumeID) bool {
+	if a == nil || b == nil {
+		return false
+	}
+
+	if len(a.Values) == 0 && len(b.Values) == 0 {
+		return false
+	}
+
+	if len(a.Values) != len(b.Values) {
+		return false
+	}
+
+	for ak, av := range a.Values {
+		bv, ok := b.Values[ak]
+		if !ok {
+			return false
+		}
+		if av != bv {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (s *csiService) Serve(
@@ -133,17 +236,44 @@ func (s *csiService) CreateVolume(
 	req *csi.CreateVolumeRequest) (
 	*csi.CreateVolumeResponse, error) {
 
+	lock := s.lockVolWithName(req.Name)
+	if !lock.TryLock(tryLockNow) {
+		return gocsi.ErrCreateVolume(
+				csi.Error_CreateVolumeError_OPERATION_PENDING_FOR_VOLUME,
+				""),
+			nil
+	}
+	defer lock.Unlock()
+
+	time.Sleep(time.Duration(50) * time.Millisecond)
+
 	c, err := s.dialController(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.CreateVolume(ctx, req)
+
+	rep, err := c.CreateVolume(ctx, req)
+	if err != nil || (rep != nil && rep.GetError() != nil) {
+		return rep, err
+	}
+
+	s.syncVolLocks(req.Name, rep.GetResult().VolumeInfo.Id)
+	return rep, err
 }
 
 func (s *csiService) DeleteVolume(
 	ctx xctx.Context,
 	req *csi.DeleteVolumeRequest) (
 	*csi.DeleteVolumeResponse, error) {
+
+	lock := s.lockVolWithID(req.VolumeId)
+	if !lock.TryLock(tryLockNow) {
+		return gocsi.ErrDeleteVolume(
+				csi.Error_DeleteVolumeError_OPERATION_PENDING_FOR_VOLUME,
+				""),
+			nil
+	}
+	defer lock.Unlock()
 
 	c, err := s.dialController(ctx)
 	if err != nil {
@@ -157,6 +287,15 @@ func (s *csiService) ControllerPublishVolume(
 	req *csi.ControllerPublishVolumeRequest) (
 	*csi.ControllerPublishVolumeResponse, error) {
 
+	lock := s.lockVolWithID(req.VolumeId)
+	if !lock.TryLock(tryLockNow) {
+		return gocsi.ErrControllerPublishVolume(
+				csi.Error_ControllerPublishVolumeError_OPERATION_PENDING_FOR_VOLUME,
+				""),
+			nil
+	}
+	defer lock.Unlock()
+
 	c, err := s.dialController(ctx)
 	if err != nil {
 		return nil, err
@@ -168,6 +307,15 @@ func (s *csiService) ControllerUnpublishVolume(
 	ctx xctx.Context,
 	req *csi.ControllerUnpublishVolumeRequest) (
 	*csi.ControllerUnpublishVolumeResponse, error) {
+
+	lock := s.lockVolWithID(req.VolumeId)
+	if !lock.TryLock(tryLockNow) {
+		return gocsi.ErrControllerUnpublishVolume(
+				csi.Error_ControllerUnpublishVolumeError_OPERATION_PENDING_FOR_VOLUME,
+				""),
+			nil
+	}
+	defer lock.Unlock()
 
 	c, err := s.dialController(ctx)
 	if err != nil {
@@ -261,6 +409,15 @@ func (s *csiService) NodePublishVolume(
 	req *csi.NodePublishVolumeRequest) (
 	*csi.NodePublishVolumeResponse, error) {
 
+	lock := s.lockVolWithID(req.VolumeId)
+	if !lock.TryLock(tryLockNow) {
+		return gocsi.ErrNodePublishVolume(
+				csi.Error_NodePublishVolumeError_OPERATION_PENDING_FOR_VOLUME,
+				""),
+			nil
+	}
+	defer lock.Unlock()
+
 	c, err := s.dialNode(ctx)
 	if err != nil {
 		return nil, err
@@ -272,6 +429,15 @@ func (s *csiService) NodeUnpublishVolume(
 	ctx xctx.Context,
 	req *csi.NodeUnpublishVolumeRequest) (
 	*csi.NodeUnpublishVolumeResponse, error) {
+
+	lock := s.lockVolWithID(req.VolumeId)
+	if !lock.TryLock(tryLockNow) {
+		return gocsi.ErrNodeUnpublishVolume(
+				csi.Error_NodeUnpublishVolumeError_OPERATION_PENDING_FOR_VOLUME,
+				""),
+			nil
+	}
+	defer lock.Unlock()
 
 	c, err := s.dialNode(ctx)
 	if err != nil {

@@ -31,6 +31,9 @@ const (
 	// HostName is a key constant.
 	HostName = "hostName"
 
+	// Endpoint is a key constant.
+	Endpoint = "endpoint"
+
 	// AccessKey is a key constant.
 	AccessKey = "accessKey"
 
@@ -76,6 +79,9 @@ const (
 
 	// ConfigS3FSHostName is a config key
 	ConfigS3FSHostName = ConfigS3FS + "." + HostName
+
+	//ConfigS3FSEndpoint is a config key.
+	ConfigS3FSEndpoint = ConfigS3FS + "." + Endpoint
 
 	// ConfigS3FSTag is a config key.
 	ConfigS3FSTag = ConfigS3FS + "." + Tag
@@ -124,5 +130,10 @@ func init() {
 		false,
 		"A flag that disables the use of S3's path style for bucket endpoints",
 		ConfigS3FSDisablePathStyle)
+	r.Key(gofig.String,
+		"",
+		"",
+		`Optional "s3fs" endpoint.`,
+		ConfigS3FSEndpoint)
 	gofigCore.Register(r)
 }

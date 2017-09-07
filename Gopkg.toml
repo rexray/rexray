@@ -65,6 +65,10 @@ required = [
   branch = "master"
 
 [[constraint]]
+  name = "github.com/codedellemc/csi-blockdevices"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/codedellemc/csi-nfs"
   branch = "master"
 

@@ -3,7 +3,7 @@ package libstorage
 import (
 	"errors"
 	"fmt"
-	"path"
+	"os"
 
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/gocsi/mount"
@@ -17,6 +17,7 @@ var (
 	errMissingIDKeyPath   = errors.New("missing id key path")
 	errMissingTokenKey    = errors.New("missing token key")
 	errUnableToGetLocDevs = errors.New("unable to get local devices")
+	errMissingTargetPath  = errors.New("target path not created")
 )
 
 const resNotFound = "resource not found"
@@ -117,15 +118,27 @@ func (d *driver) IsControllerPublished(
 		return nil, nil
 	}
 
-	d.attTokensRWL.RLock()
-	defer d.attTokensRWL.RUnlock()
+	d.pubInfoRWL.RLock()
+	defer d.pubInfoRWL.RUnlock()
 
-	return &csi.PublishVolumeInfo{
+	pvi := &csi.PublishVolumeInfo{
 		Values: map[string]string{
-			"token":     d.attTokens[idVal],
 			"encrypted": fmt.Sprintf("%v", vol.Encrypted),
 		},
-	}, nil
+	}
+
+	if d.pubInfo[idVal] == nil {
+		// We don't have cached PublishVolumeInfo details, so we don't
+		// know what the state is, and cannot return an idempotent response
+		// This is where "Andrew was right" and it would be useful to know
+		// the full CSI method name. If we are doing a publish, we would
+		// return false, if it we are doing an unpublish, we would return
+		// we would return true to defer to the bridge
+		pvi.Values["token"] = ""
+	} else {
+		pvi.Values["token"] = d.pubInfo[idVal].attToken
+	}
+	return pvi, nil
 }
 
 // IsNodePublished should return a flag indicating whether or
@@ -136,11 +149,14 @@ func (d *driver) IsNodePublished(
 	pubInfo *csi.PublishVolumeInfo,
 	targetPath string) (bool, error) {
 
-	var (
-		devPath      string
-		volMountPath string
-		rootPath     = d.config.GetString(apitypes.ConfigIgVolOpsMountRootPath)
-	)
+	var devPath string
+
+	st, err := os.Stat(targetPath)
+	if os.IsNotExist(err) {
+		return false, errMissingTargetPath
+	}
+
+	volTypeIsMount := st.IsDir()
 
 	if pubInfo != nil {
 		token, ok := pubInfo.Values["token"]
@@ -153,8 +169,8 @@ func (d *driver) IsNodePublished(
 			Opts:     apiutils.NewStore(),
 			ScanType: apitypes.DeviceScanQuick,
 		}
-		devs, err := d.client.Executor().LocalDevices(d.ctx, opts)
-		if err != nil {
+		devs, lderr := d.client.Executor().LocalDevices(d.ctx, opts)
+		if lderr != nil {
 			return false, errUnableToGetLocDevs
 		}
 
@@ -165,23 +181,22 @@ func (d *driver) IsNodePublished(
 			return false, nil
 		}
 	} else {
-		// pubInfo is nil, so this is likely checking an Unpublish request
-		// all we have is the ID, so we will have to make a libStorage
-		// inspect call to get the underlying device
+		// pubInfo is nil, all we have is the ID, so we will have to
+		// make a libStorage inspect call to get the underlying device
 
 		idVal, ok := id.Values["id"]
 		if !ok {
 			return false, errMissingIDKeyPath
 		}
 
-		// Request only volumes attached to this instance.
+		// Request dev map if volume attached to this instance.
 		opts := &apitypes.VolumeInspectOpts{
 			Attachments: apitypes.VolAttReqWithDevMapForInstance,
 			Opts:        apiutils.NewStore(),
 		}
 
-		vol, err := d.client.Storage().VolumeInspect(d.ctx, idVal, opts)
-		if err != nil {
+		vol, vierr := d.client.Storage().VolumeInspect(d.ctx, idVal, opts)
+		if vierr != nil {
 			return false, err
 		}
 
@@ -209,26 +224,17 @@ func (d *driver) IsNodePublished(
 
 	// Scan the mount table and get the path to which the device of
 	// the attached volume is mounted.
-	for _, mi := range minfo {
-		if mi.Device == devPath {
-			volMountPath = mi.Path
-			break
+	if volTypeIsMount {
+		for _, mi := range minfo {
+			if mi.Device == devPath && mi.Path == targetPath {
+				return true, nil
+			}
 		}
-	}
-
-	if volMountPath == "" {
-		// Device hasn't been mounted anywhere yet, but we know
-		// it is already attached.
-		return false, nil
-	}
-	// This adds the root path (/data by default)
-	volMountPath = path.Join(volMountPath, rootPath)
-
-	// Scan the mount table info and if an entry's device matches
-	// the volume attachment's device, then it's mounted.
-	for _, mi := range minfo {
-		if mi.Source == volMountPath && mi.Path == targetPath {
-			return true, nil
+	} else {
+		for _, mi := range minfo {
+			if mi.Device == "devtmpfs" && mi.Path == targetPath {
+				return true, nil
+			}
 		}
 	}
 

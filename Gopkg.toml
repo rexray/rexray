@@ -65,13 +65,16 @@ required = [
   branch = "master"
 
 [[constraint]]
+  name = "github.com/codedellemc/csi-blockdevices"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/codedellemc/csi-nfs"
   branch = "master"
 
 [[constraint]]
   name = "github.com/codedellemc/csi-vfs"
   branch = "master"
-
 
 ################################################################################
 ##                         Storage Driver Dependencies                        ##

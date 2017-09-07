@@ -12,6 +12,7 @@ import (
 	_ "github.com/codedellemc/rexray/agent/csi/libstorage"
 
 	// Load vendored CSI plug-ins
+	_ "github.com/codedellemc/csi-blockdevices/provider"
 	_ "github.com/codedellemc/csi-nfs/provider"
 	_ "github.com/codedellemc/csi-vfs/provider"
 )

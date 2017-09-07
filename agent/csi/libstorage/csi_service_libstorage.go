@@ -2,25 +2,35 @@ package libstorage
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"google.golang.org/grpc"
 
-	log "github.com/sirupsen/logrus"
 	xctx "golang.org/x/net/context"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
+	"github.com/codedellemc/gocsi/mount"
 	"github.com/codedellemc/goioc"
 
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
+)
+
+const (
+	// WFDTimeout is the number of seconds to set the timeout to when
+	// calling WaitForDevice
+	WFDTimeout = 10
 )
 
 func init() {
@@ -30,6 +40,8 @@ func init() {
 // ctxConfigKey is an interface-wrapped key used to access a possible
 // config object in the context given to the provider's Serve function
 var ctxConfigKey = interface{}("csi.config")
+
+var ctxExactMountKey = interface{}("exactmount")
 
 type driver struct {
 	ctx          apitypes.Context
@@ -53,7 +65,7 @@ func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 
 	// Check for a gofig.Config in the context.
 	if config, ok := d.ctx.Value(ctxConfigKey).(gofig.Config); ok {
-		log.Info("init csi libstorage bridge w ctx.config")
+		d.ctx.Info("init csi libstorage bridge w ctx.config")
 		d.config = config
 	}
 
@@ -204,6 +216,13 @@ func (d *driver) ControllerPublishVolume(
 	req *csi.ControllerPublishVolumeRequest) (
 	*csi.ControllerPublishVolumeResponse, error) {
 
+	volumeID, ok := req.VolumeId.Values["id"]
+	if !ok {
+		return gocsi.ErrControllerPublishVolume(
+			csi.Error_ControllerPublishVolumeError_INVALID_VOLUME_ID,
+			`missing "id" field`), nil
+	}
+
 	// Make sure the requested volume capability is supported for
 	// the cached storage type.
 	if !isVolCapSupported(d.storType, req.VolumeCapability) {
@@ -212,17 +231,35 @@ func (d *driver) ControllerPublishVolume(
 			"invalid volume capability request"), nil
 	}
 
-	iid, err := toInstanceID(req.NodeId)
+	_, err := toInstanceID(req.NodeId)
 	if err != nil {
 		return gocsi.ErrControllerPublishVolume(
 			csi.Error_ControllerPublishVolumeError_INVALID_NODE_ID,
 			err.Error()), nil
 	}
-	_ = iid
 
-	//d.client.Storage().VolumeAttach(d.ctx, volumeID, opts)
+	opts := &apitypes.VolumeAttachOpts{Opts: apiutils.NewStore()}
+	vol, token, err := d.client.Storage().VolumeAttach(d.ctx, volumeID, opts)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	d.attTokensRWL.Lock()
+	defer d.attTokensRWL.Unlock()
+	d.attTokens[volumeID] = token
+
+	return &csi.ControllerPublishVolumeResponse{
+		Reply: &csi.ControllerPublishVolumeResponse_Result_{
+			Result: &csi.ControllerPublishVolumeResponse_Result{
+				PublishVolumeInfo: &csi.PublishVolumeInfo{
+					Values: map[string]string{
+						"token":     token,
+						"encrypted": fmt.Sprintf("%v", vol.Encrypted),
+					},
+				},
+			},
+		},
+	}, nil
 }
 
 func (d *driver) ControllerUnpublishVolume(
@@ -230,7 +267,32 @@ func (d *driver) ControllerUnpublishVolume(
 	req *csi.ControllerUnpublishVolumeRequest) (
 	*csi.ControllerUnpublishVolumeResponse, error) {
 
-	return nil, nil
+	volumeID, ok := req.VolumeId.Values["id"]
+	if !ok {
+		return gocsi.ErrControllerUnpublishVolume(
+			csi.Error_ControllerUnpublishVolumeError_INVALID_VOLUME_ID,
+			`missing "id" field`), nil
+	}
+
+	_, err := toInstanceID(req.NodeId)
+	if err != nil {
+		return gocsi.ErrControllerUnpublishVolume(
+			csi.Error_ControllerUnpublishVolumeError_INVALID_NODE_ID,
+			err.Error()), nil
+	}
+
+	opts := &apitypes.VolumeDetachOpts{Opts: apiutils.NewStore()}
+
+	_, err = d.client.Storage().VolumeDetach(d.ctx, volumeID, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &csi.ControllerUnpublishVolumeResponse{
+		Reply: &csi.ControllerUnpublishVolumeResponse_Result_{
+			Result: &csi.ControllerUnpublishVolumeResponse_Result{},
+		},
+	}, nil
 }
 
 func (d *driver) ValidateVolumeCapabilities(
@@ -373,6 +435,15 @@ func (d *driver) NodePublishVolume(
 	req *csi.NodePublishVolumeRequest) (
 	*csi.NodePublishVolumeResponse, error) {
 
+	volumeID, ok := req.VolumeId.Values["id"]
+	if !ok {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_INVALID_VOLUME_ID,
+			`missing "id" field`), nil
+	}
+	target := req.GetTargetPath()
+	vi := req.GetPublishVolumeInfo()
+
 	// Make sure the requested volume capability is supported for
 	// the cached storage type.
 	if !isVolCapSupported(d.storType, req.VolumeCapability) {
@@ -381,7 +452,46 @@ func (d *driver) NodePublishVolume(
 			"invalid volume capability request"), nil
 	}
 
-	return nil, nil
+	token, ok := vi.Values["token"]
+	if !ok {
+		return gocsi.ErrNodePublishVolume(
+				csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+				"missing device token from publish volume info"),
+			nil
+	}
+
+	opts := &apitypes.WaitForDeviceOpts{
+		Token:   token,
+		Timeout: WFDTimeout * time.Second,
+		LocalDevicesOpts: apitypes.LocalDevicesOpts{
+			Opts:     apiutils.NewStore(),
+			ScanType: apitypes.DeviceScanQuick,
+		},
+	}
+	found, devs, err := d.client.Executor().WaitForDevice(d.ctx, opts)
+	if err != nil || !found {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			"device not found"), nil
+	}
+	dev, ok := devs.DeviceMap[token]
+	if !ok {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			"device not found"), nil
+	}
+
+	if mv := req.VolumeCapability.GetMount(); mv != nil {
+		return d.handleMountVolume(
+			volumeID, target, mv, mv.MountFlags, dev, req.Readonly)
+	}
+	if bv := req.VolumeCapability.GetBlock(); bv != nil {
+		return d.handleBlockVolume(target, dev)
+	}
+
+	return gocsi.ErrNodePublishVolume(
+		csi.Error_NodePublishVolumeError_UNSUPPORTED_VOLUME_TYPE,
+		"No supported volume type received"), nil
 }
 
 func (d *driver) NodeUnpublishVolume(
@@ -389,7 +499,84 @@ func (d *driver) NodeUnpublishVolume(
 	req *csi.NodeUnpublishVolumeRequest) (
 	*csi.NodeUnpublishVolumeResponse, error) {
 
-	return nil, nil
+	volumeID, ok := req.VolumeId.Values["id"]
+	if !ok {
+		return gocsi.ErrNodeUnpublishVolume(
+			csi.Error_NodeUnpublishVolumeError_INVALID_VOLUME_ID,
+			`missing "id" field`), nil
+	}
+
+	target := req.GetTargetPath()
+
+	opts := &apitypes.VolumeInspectOpts{Opts: apiutils.NewStore()}
+	opts.Attachments = apitypes.VolAttReqWithDevMapOnlyVolsAttachedToInstance
+	vol, err := d.client.Storage().VolumeInspect(d.ctx, volumeID, opts)
+	if err != nil {
+		if err.Error() == "resource not found" {
+			// Volume is not attached
+			return &csi.NodeUnpublishVolumeResponse{
+				Reply: &csi.NodeUnpublishVolumeResponse_Result_{
+					Result: &csi.NodeUnpublishVolumeResponse_Result{},
+				},
+			}, nil
+		}
+		return nil, err
+	}
+	if vol == nil {
+		return &csi.NodeUnpublishVolumeResponse{
+			Reply: &csi.NodeUnpublishVolumeResponse_Result_{
+				Result: &csi.NodeUnpublishVolumeResponse_Result{},
+			},
+		}, nil
+	}
+	dev := vol.Attachments[0].DeviceName
+	mntPath := d.config.GetString(apitypes.ConfigIgVolOpsMountPath)
+	privTgt := path.Join(mntPath, vol.Name)
+
+	mnts, err := mount.GetMounts()
+	if err != nil {
+		return gocsi.ErrNodeUnpublishVolume(
+			csi.Error_NodeUnpublishVolumeError_UNMOUNT_ERROR,
+			err.Error()), nil
+	}
+
+	mt := false
+	mp := false
+	bt := false
+	for _, m := range mnts {
+		if m.Device == dev {
+			if m.Path == privTgt {
+				mp = true
+			} else if m.Path == target {
+				mt = true
+			}
+		}
+		if m.Device == "devtmpfs" && m.Path == target {
+			bt = true
+		}
+	}
+
+	if mt || bt {
+		if err := mount.Unmount(target); err != nil {
+			return gocsi.ErrNodeUnpublishVolume(
+				csi.Error_NodeUnpublishVolumeError_UNMOUNT_ERROR,
+				err.Error()), nil
+		}
+	}
+
+	if mp {
+		if err := d.unmountPrivMount(dev, privTgt); err != nil {
+			return gocsi.ErrNodeUnpublishVolume(
+				csi.Error_NodeUnpublishVolumeError_UNMOUNT_ERROR,
+				err.Error()), nil
+		}
+	}
+
+	return &csi.NodeUnpublishVolumeResponse{
+		Reply: &csi.NodeUnpublishVolumeResponse_Result_{
+			Result: &csi.NodeUnpublishVolumeResponse_Result{},
+		},
+	}, nil
 }
 
 func (d *driver) GetNodeID(
@@ -452,4 +639,128 @@ func (d *driver) NodeGetCapabilities(
 			},
 		},
 	}, nil
+}
+
+func (d *driver) unmountPrivMount(
+	device string,
+	target string) error {
+
+	d.ctx.WithField("path", target).Debug(
+		"checking if private mount can be unmounted")
+
+	mnts, err := mount.GetDevMounts(device)
+	if err != nil {
+		return err
+	}
+
+	// remove private mount if we can
+	if len(mnts) == 1 && mnts[0].Path == target {
+		if err := mount.Unmount(target); err != nil {
+			return err
+		}
+		os.Remove(target)
+	}
+	return nil
+}
+
+func (d *driver) handleMountVolume(
+	volumeID string,
+	target string,
+	mv *csi.VolumeCapability_MountVolume,
+	mf []string,
+	dev string,
+	ro bool) (*csi.NodePublishVolumeResponse, error) {
+
+	// Format and mount and device via integration driver
+	opts := &apitypes.VolumeMountOpts{Opts: apiutils.NewStore()}
+	fs := mv.GetFsType()
+	if fs == "" {
+		fs = d.config.GetString(apitypes.ConfigIgVolOpsCreateDefaultFsType)
+	}
+	opts.NewFSType = fs
+
+	mctx := d.ctx.WithValue(ctxExactMountKey, true)
+
+	mnt, _, err := d.client.Integration().Mount(
+		mctx, volumeID, "", opts)
+	if err != nil {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			err.Error()), nil
+	}
+
+	mnts, err := mount.GetDevMounts(dev)
+	if err != nil {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			"could not reliably determine existing mount status"), nil
+	}
+
+	// Private mount in place, now bind mount to target path
+	// If mounts already existed for this device, check if mount to
+	// target path was already there
+	if len(mnts) > 0 {
+		for _, m := range mnts {
+			if m.Path == target {
+				// volume already published to target
+				// if mount options look good, do nothing
+				rwo := "rw"
+				if ro {
+					rwo = "ro"
+				}
+				if !contains(m.Opts, rwo) {
+					return gocsi.ErrNodePublishVolume(
+						csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+						"volume previously published with different options"), nil
+
+				}
+				// Existing mount satisfied requested
+				return &csi.NodePublishVolumeResponse{
+					Reply: &csi.NodePublishVolumeResponse_Result_{
+						Result: &csi.NodePublishVolumeResponse_Result{},
+					},
+				}, nil
+			}
+		}
+
+	}
+	// bind mount to target
+	if ro {
+		mf = append(mf, "ro")
+	}
+	if err := mount.BindMount(mnt, target, mf...); err != nil {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			err.Error()), nil
+	}
+	return &csi.NodePublishVolumeResponse{
+		Reply: &csi.NodePublishVolumeResponse_Result_{
+			Result: &csi.NodePublishVolumeResponse_Result{},
+		},
+	}, nil
+}
+
+func (d *driver) handleBlockVolume(
+	target string,
+	dev string) (*csi.NodePublishVolumeResponse, error) {
+
+	if err := mount.BindMount(dev, target, ""); err != nil {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			err.Error()), nil
+	}
+	return &csi.NodePublishVolumeResponse{
+		Reply: &csi.NodePublishVolumeResponse_Result_{
+			Result: &csi.NodePublishVolumeResponse_Result{},
+		},
+	}, nil
+}
+
+func contains(list []string, item string) bool {
+	for _, x := range list {
+		if x == item {
+			return true
+		}
+	}
+	return false
 }

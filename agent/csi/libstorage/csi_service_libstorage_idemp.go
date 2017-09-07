@@ -118,7 +118,9 @@ func (d *driver) IsControllerPublished(
 // IsNodePublished should return a flag indicating whether or
 // not the volume exists and is published on the current host.
 func (d *driver) IsNodePublished(
-	id *csi.VolumeID, targetPath string) (bool, error) {
+	id *csi.VolumeID,
+	pubInfo *csi.PublishVolumeInfo,
+	targetPath string) (bool, error) {
 
 	idVal, ok := id.Values["id"]
 	if !ok {
@@ -127,7 +129,7 @@ func (d *driver) IsNodePublished(
 
 	// Request only volumes attached to this instance.
 	opts := &apitypes.VolumeInspectOpts{
-		Attachments: apitypes.VolAttReqForInstance,
+		Attachments: apitypes.VolAttReqWithDevMapForInstance,
 		Opts:        apiutils.NewStore(),
 	}
 
@@ -155,10 +157,29 @@ func (d *driver) IsNodePublished(
 		return false, err
 	}
 
+	// Scan the mount table and get the path to which the device of
+	// the attached volume is mounted.
+	var (
+		volMountPath string
+		devPath      = vol.Attachments[0].DeviceName
+	)
+	for _, mi := range minfo {
+		if mi.Device == devPath {
+			volMountPath = mi.Path
+			break
+		}
+	}
+
+	if volMountPath == "" {
+		return false, fmt.Errorf(
+			"unable to find attached device for volume: id=%s, dev=%s",
+			idVal, devPath)
+	}
+
 	// Scan the mount table info and if an entry's device matches
 	// the volume attachment's device, then it's mounted.
 	for _, mi := range minfo {
-		if mi.Device == vol.Attachments[0].DeviceName {
+		if mi.Source == volMountPath && mi.Path == targetPath {
 			return true, nil
 		}
 	}

@@ -230,7 +230,9 @@ func (s *service) ControllerPublishVolume(
 	}
 	mounted := false
 	for _, i := range minfo {
-		if i.Device == volPath && i.Path == devPath {
+		// If bindfs is not used then the device path will not match
+		// the volume path, otherwise test both the source and target.
+		if i.Source == volPath && i.Path == devPath {
 			mounted = true
 			break
 		}
@@ -293,7 +295,7 @@ func (s *service) ControllerUnpublishVolume(
 		// If there is a device that matches the volPath value and
 		// a path that matches the devPath value then unmount it as
 		// it is the subject of this request.
-		if i.Device == volPath && i.Path == devPath {
+		if i.Source == volPath && i.Path == devPath {
 			if err := mount.Unmount(devPath); err != nil {
 				log.WithField("path", devPath).WithError(err).Error(
 					"failed to unmount device dir")
@@ -469,7 +471,7 @@ func (s *service) GetPluginInfo(
 		Reply: &csi.GetPluginInfoResponse_Result_{
 			Result: &csi.GetPluginInfoResponse_Result{
 				Name:          Name,
-				VendorVersion: gocsi.SprintfVersion(req.Version),
+				VendorVersion: "0.1.3",
 			},
 		},
 	}, nil
@@ -532,10 +534,10 @@ func (s *service) NodePublishVolume(
 	isPrivMounted := false
 	isTgtMounted := false
 	for _, i := range minfo {
-		if i.Device == devPath && i.Path == mntPath {
+		if i.Source == devPath && i.Path == mntPath {
 			isPrivMounted = true
 		}
-		if i.Device == mntPath && i.Path == tgtPath {
+		if i.Source == mntPath && i.Path == tgtPath {
 			isTgtMounted = true
 		}
 	}
@@ -633,14 +635,14 @@ func (s *service) NodeUnpublishVolume(
 		// If there is a device that matches the mntPath value then
 		// increment the number of times this volume is mounted on
 		// this node.
-		if i.Device == mntPath {
+		if i.Source == mntPath {
 			mountCount++
 		}
 
 		// If there is a device that matches the mntPath value and
 		// a path that matches the tgtPath value then unmount it as
 		// it is the subject of this request.
-		if i.Device == mntPath && i.Path == tgtPath {
+		if i.Source == mntPath && i.Path == tgtPath {
 			if err := mount.Unmount(tgtPath); err != nil {
 				log.WithField("path", tgtPath).WithError(err).Error(
 					"failed to unmount target path")

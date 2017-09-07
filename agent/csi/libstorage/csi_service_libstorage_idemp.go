@@ -3,6 +3,7 @@ package libstorage
 import (
 	"errors"
 	"fmt"
+	"path"
 
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/gocsi/mount"
@@ -12,6 +13,8 @@ import (
 )
 
 var errMissingIDKeyPath = errors.New("missing id key path")
+var errMissingTokenKey = errors.New("missing token key")
+var errUnableToGetLocDevs = errors.New("unable to get local devices")
 
 const resNotFound = "resource not found"
 
@@ -122,33 +125,69 @@ func (d *driver) IsNodePublished(
 	pubInfo *csi.PublishVolumeInfo,
 	targetPath string) (bool, error) {
 
-	idVal, ok := id.Values["id"]
-	if !ok {
-		return false, errMissingIDKeyPath
-	}
+	var (
+		devPath      string
+		volMountPath string
+		rootPath     = d.config.GetString(apitypes.ConfigIgVolOpsMountRootPath)
+	)
 
-	// Request only volumes attached to this instance.
-	opts := &apitypes.VolumeInspectOpts{
-		Attachments: apitypes.VolAttReqWithDevMapForInstance,
-		Opts:        apiutils.NewStore(),
-	}
+	if pubInfo != nil {
+		token, ok := pubInfo.Values["token"]
+		if !ok {
+			return false, errMissingTokenKey
+		}
 
-	vol, err := d.client.Storage().VolumeInspect(d.ctx, idVal, opts)
-	if err != nil {
-		return false, err
-	}
+		// Get device from local devices
+		opts := &apitypes.LocalDevicesOpts{
+			Opts:     apiutils.NewStore(),
+			ScanType: apitypes.DeviceScanQuick,
+		}
+		devs, err := d.client.Executor().LocalDevices(d.ctx, opts)
+		if err != nil {
+			return false, errUnableToGetLocDevs
+		}
 
-	// If the volume is not attached to this node then do not
-	// indicate an error; just return false to indicate
-	// the volume is not attached to this node.
-	if vol.AttachmentState != apitypes.VolumeAttached {
-		return false, nil
-	}
+		devPath, ok = devs.DeviceMap[token]
+		if !ok {
+			// device not in device map yet. That may not be an error, as
+			// it may not have shown up yet. Defer to lower-level publish
+			return false, nil
+		}
+	} else {
+		// pubInfo is nil, so this is likely checking an Unpublish request
+		// all we have is the ID, so we will have to make a libStorage
+		// inspect call to get the underlying device
 
-	// If the volume has no attachments then it's not possible to
-	// determine the node publication status.
-	if len(vol.Attachments) == 0 {
-		return false, nil
+		idVal, ok := id.Values["id"]
+		if !ok {
+			return false, errMissingIDKeyPath
+		}
+
+		// Request only volumes attached to this instance.
+		opts := &apitypes.VolumeInspectOpts{
+			Attachments: apitypes.VolAttReqWithDevMapForInstance,
+			Opts:        apiutils.NewStore(),
+		}
+
+		vol, err := d.client.Storage().VolumeInspect(d.ctx, idVal, opts)
+		if err != nil {
+			return false, err
+		}
+
+		// If the volume is not attached to this node then do not
+		// indicate an error; just return false to indicate
+		// the volume is not attached to this node.
+		if vol.AttachmentState != apitypes.VolumeAttached {
+			return false, nil
+		}
+
+		// If the volume has no attachments then it's not possible to
+		// determine the node publication status.
+		if len(vol.Attachments) == 0 {
+			return false, nil
+		}
+
+		devPath = vol.Attachments[0].DeviceName
 	}
 
 	// Get the local mount table.
@@ -159,10 +198,6 @@ func (d *driver) IsNodePublished(
 
 	// Scan the mount table and get the path to which the device of
 	// the attached volume is mounted.
-	var (
-		volMountPath string
-		devPath      = vol.Attachments[0].DeviceName
-	)
 	for _, mi := range minfo {
 		if mi.Device == devPath {
 			volMountPath = mi.Path
@@ -175,6 +210,8 @@ func (d *driver) IsNodePublished(
 		// it is already attached.
 		return false, nil
 	}
+	// This adds the root path (/data by default)
+	volMountPath = path.Join(volMountPath, rootPath)
 
 	// Scan the mount table info and if an entry's device matches
 	// the volume attachment's device, then it's mounted.

@@ -43,3 +43,19 @@ func (t *testRunner) itClientSvcSpecCreateVolume() {
 	t.Θ(t.client.Storage().VolumeCreate(t.ctx, t.volName, t.volCreateOpts()))
 	t.Ε(t.client.Storage().VolumeRemove(t.ctx, t.volID, t.volRemoveOpts()))
 }
+
+func (t *testRunner) itPreservesLocalDevicesEmptyVals() {
+	ld, err := t.client.Executor().LocalDevices(t.ctx, t.locDevOpts())
+	Ω(err).ShouldNot(HaveOccurred())
+	Ω(ld).ShouldNot(BeNil())
+	Ω(ld.DeviceMap).ShouldNot(BeNil())
+	Ω(ld.DeviceMap).ShouldNot(HaveLen(0))
+	preserved := false
+	for _, v := range ld.DeviceMap {
+		if v == "" {
+			preserved = true
+			break
+		}
+	}
+	Ω(preserved).Should(BeTrue())
+}

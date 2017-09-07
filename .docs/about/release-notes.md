@@ -28,6 +28,26 @@ Use `rexray version` to determine the currently installed version of REX-Ray:
     Commit: 182a626937677a081b89651598ee2eac839308e7
     Formed: Wed, 15 Jun 2016 16:27:36 CDT
 
+## Version 0.10.0 (2017/09/11)
+Hi, REX here. Look, I know it's been a while since the last release. Three
+whole months. I'm not going to apologize either. I'm an anthropomorphic dog
+who chases bugs instead of bones for a living. That's pretty impressive in
+and of itself!
+
+However, it's been worth the wait. This is a major release, with features
+that include:
+
+* Support for the Container Storage Interface (CSI) specification ([`8dbb732`](https://github.com/container-storage-interface/spec/commit/8dbb73222cdb63ce583e5c0abeafdf96748bf4f5))
+* Support for local block devices
+* Support for native network file system (NFS) storage
+* Raw device access for all existing, block-based storage platforms
+* and more!
+
+The full list of changes, as usual, is below. If anything is missing,
+again, I'm a d-o-g. You try typing without opposable thumbs.
+
+_A full list of the new features anf fixes will be added in RC2_
+
 ## Version 0.9.2 (2017/06/28)
 This is a minor release that introduces a Docker managed plug-in for Ceph RBD,
 and fixes a regression with the S3FS Docker plug-in.

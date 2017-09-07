@@ -68,6 +68,9 @@ func (sr *suiteRunner) Describe() {
 					t.beforeEachClientServiceSpec()
 				})
 
+				It("preserves local devices with empty values", func() {
+					t.itPreservesLocalDevicesEmptyVals()
+				})
 				It("list volumes", func() {
 					t.itClientSvcSpecListVolumes()
 				})

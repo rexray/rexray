@@ -77,6 +77,8 @@ func (c *CLI) initServiceCmds() {
 }
 
 func (c *CLI) initServiceFlags() {
+	c.serviceStartCmd.Flags().BoolVarP(&c.nopid, "foreground", "f", false,
+		"Deprecated. The service is always run in the foreground now.")
 	c.serviceStartCmd.Flags().BoolVarP(&c.nopid, "nopid", "", false,
 		"Disable PID file checking")
 	c.serviceStartCmd.Flags().BoolVarP(&c.force, "force", "", false,

@@ -76,6 +76,10 @@ func (t *testRunner) volDetOpts() *types.VolumeDetachOpts {
 	return &types.VolumeDetachOpts{Opts: t.store}
 }
 
+func (t *testRunner) locDevOpts() *types.LocalDevicesOpts {
+	return &types.LocalDevicesOpts{Opts: t.store}
+}
+
 func (t *testRunner) Α(vol *types.Volume, tok string, err error) {
 	t.Θ(vol, err)
 	Ω(tok).Should(Equal(t.expectedNextDev))

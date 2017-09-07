@@ -257,7 +257,7 @@ func (i *vfsIdemProvider) IsControllerPublished(
 	}
 
 	for _, mi := range minfo {
-		if mi.Device == volPath && mi.Path == devPath {
+		if mi.Source == volPath && mi.Path == devPath {
 			return &csi.PublishVolumeInfo{
 				Values: map[string]string{
 					"path": devPath,
@@ -270,7 +270,9 @@ func (i *vfsIdemProvider) IsControllerPublished(
 }
 
 func (i *vfsIdemProvider) IsNodePublished(
-	id *csi.VolumeID, targetPath string) (bool, error) {
+	id *csi.VolumeID,
+	pubInfo *csi.PublishVolumeInfo,
+	targetPath string) (bool, error) {
 
 	volPath, ok := id.Values["path"]
 	if !ok {
@@ -285,7 +287,7 @@ func (i *vfsIdemProvider) IsNodePublished(
 	}
 
 	for _, mi := range minfo {
-		if mi.Device == mntPath && mi.Path == targetPath {
+		if mi.Source == mntPath && mi.Path == targetPath {
 			return true, nil
 		}
 	}

@@ -1,6 +1,8 @@
 package mount
 
-import "errors"
+import (
+	"errors"
+)
 
 // Most of this file is based on k8s.io/pkg/util/mount
 
@@ -10,12 +12,36 @@ var ErrNotImplemented = errors.New("not implemented")
 
 // Info is information about a single mount point.
 type Info struct {
+	// Device is the device on which the filesystem is mounted.
 	Device string
-	Path   string
-	Type   string
-	Opts   []string
-	Freq   int
-	Pass   int
+
+	// Path is the filesystem path to which the device is mounted.
+	Path string
+
+	// Source may be set to one of two values:
+	//
+	//   1. If this is a bind mount created with "bindfs" then Source
+	//      is set to the filesystem path bind mounted to Path.
+	//
+	//   2. If this is any other type of mount then Source is set to
+	//      a concatenation of the mount source and the root of
+	//      the mount within the file system (fields 10 & 4 from
+	//      the section on /proc/<pid>/mountinfo at
+	//      https://www.kernel.org/doc/Documentation/filesystems/proc.txt).
+	//
+	// It is not possible to diffentiate a native bind mount from a
+	// non-bind mount after the native bind mount has been created.
+	// Therefore, while the Source field will be set to the filesystem
+	// path bind mounted to Path for native bind mounts, the value of
+	// the Source field can in no way be used to determine *if* a mount
+	// is a bind mount.
+	Source string
+
+	// Type is the filesystem type.
+	Type string
+
+	// Opts are the mount options used to create this mount point.
+	Opts []string
 }
 
 // GetDiskFormat uses 'lsblk' to see if the given disk is unformatted.
@@ -57,7 +83,19 @@ func Unmount(target string) error {
 	return unmount(target)
 }
 
-// GetMounts returns a slice of all the mounted filesystems
+// GetMounts returns a slice of all the mounted filesystems.
+//
+// * Linux hosts use mount_namespaces to obtain mount information.
+//
+//   Support for mount_namespaces was introduced to the Linux kernel
+//   in 2.2.26 (http://man7.org/linux/man-pages/man5/proc.5.html) on
+//   2004/02/04.
+//
+//   The kernel documents the contents of "/proc/<pid>/mountinfo" at
+//   https://www.kernel.org/doc/Documentation/filesystems/proc.txt.
+//
+// * Darwin hosts parse the output of the "mount" command to obtain
+//   mount information.
 func GetMounts() ([]*Info, error) {
 	return getMounts()
 }

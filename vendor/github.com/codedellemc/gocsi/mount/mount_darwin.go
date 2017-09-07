@@ -46,10 +46,18 @@ func getMounts() ([]*Info, error) {
 		if len(m) != 4 {
 			continue
 		}
-		if m[3] == "" {
-			return nil, fmt.Errorf("invalid mount options: %s", m[1])
+		device := m[1]
+		if !strings.HasPrefix(device, "/") {
+			continue
 		}
-		options := strings.Split(m[3], ",")
+		var (
+			path    = m[2]
+			source  = device
+			options = strings.Split(m[3], ",")
+		)
+		if len(options) == 0 {
+			return nil, fmt.Errorf("invalid mount options: %s", device)
+		}
 		for i, v := range options {
 			options[i] = strings.TrimSpace(v)
 		}
@@ -60,8 +68,9 @@ func getMounts() ([]*Info, error) {
 			options = nil
 		}
 		mps = append(mps, &Info{
-			Device: m[1],
-			Path:   m[2],
+			Device: device,
+			Path:   path,
+			Source: source,
 			Type:   fsType,
 			Opts:   options,
 		})

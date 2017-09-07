@@ -30,7 +30,10 @@ type IdempotencyProvider interface {
 
 	// IsNodePublished should return a flag indicating whether or
 	// not the volume exists and is published on the current host.
-	IsNodePublished(id *csi.VolumeID, targetPath string) (bool, error)
+	IsNodePublished(
+		id *csi.VolumeID,
+		pubVolInfo *csi.PublishVolumeInfo,
+		targetPath string) (bool, error)
 }
 
 // NewIdempotentInterceptor returns a new server-side, gRPC interceptor
@@ -275,7 +278,8 @@ func (i *idempotencyInterceptor) nodePublishVolume(
 	}
 	defer lock.Unlock()
 
-	ok, err := i.p.IsNodePublished(req.VolumeId, req.TargetPath)
+	ok, err := i.p.IsNodePublished(
+		req.VolumeId, req.PublishVolumeInfo, req.TargetPath)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +319,7 @@ func (i *idempotencyInterceptor) nodeUnpublishVolume(
 	}
 	defer lock.Unlock()
 
-	ok, err := i.p.IsNodePublished(req.VolumeId, req.TargetPath)
+	ok, err := i.p.IsNodePublished(req.VolumeId, nil, req.TargetPath)
 	if err != nil {
 		return nil, err
 	}

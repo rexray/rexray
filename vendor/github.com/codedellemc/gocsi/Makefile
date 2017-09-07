@@ -189,6 +189,11 @@ $(GOCSI_A): $(CSI_GOSRC) *.go
 	@go install .
 	go build -o "$@" .
 
+MOUNT_A := mount.a
+$(MOUNT_A): mount/*.go
+	@go install ./mount
+	go build -o "$@" ./mount
+
 
 ########################################################################
 ##                               TEST                                 ##
@@ -217,7 +222,7 @@ test: | $(GINKGO)
 ##                               BUILD                                ##
 ########################################################################
 
-build: $(GOCSI_A)
+build: $(GOCSI_A) $(MOUNT_A)
 	$(MAKE) -C csc $@
 	$(MAKE) -C mock $@
 

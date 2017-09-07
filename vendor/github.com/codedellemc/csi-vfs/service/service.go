@@ -471,7 +471,7 @@ func (s *service) GetPluginInfo(
 		Reply: &csi.GetPluginInfoResponse_Result_{
 			Result: &csi.GetPluginInfoResponse_Result{
 				Name:          Name,
-				VendorVersion: "0.1.3",
+				VendorVersion: "0.1.4",
 			},
 		},
 	}, nil

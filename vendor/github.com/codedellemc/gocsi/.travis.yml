@@ -45,14 +45,22 @@ jobs:
       # Verify GoCSI builds without errors
       - stage:   build
         env:     PROG=gocsi.a
+        install: skip
+        script:  make $PROG
+
+      - stage:   build
+        env:     PROG=mount.a
+        install: skip
         script:  make $PROG
 
       - stage:   build
         env:     PROG=csc
+        install: skip
         script:  make -C $PROG
 
       - stage:   build
         env:     PROG=mock
+        install: skip
         script:  make -C $PROG
 
       # Test GoCSI using the Mock CSI plug-in.
@@ -62,3 +70,8 @@ jobs:
           - make -C mock
         script:
           - GOCSI_MOCK=$(pwd)/mock/mock make test
+
+      # Test the mount package.
+      - stage:   test
+        install: skip
+        script:  go test -v ./mount

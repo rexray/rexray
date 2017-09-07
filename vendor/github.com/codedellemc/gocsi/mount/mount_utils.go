@@ -6,6 +6,7 @@ import (
 	"hash/fnv"
 	"io"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -88,7 +89,7 @@ func readProcMountsFrom(
 		// Skip any lines where the source does not start with a leading
 		// slash. This means this is not a mount on a "real" device.
 		source := fields[7]
-		if !strings.HasPrefix(source, "/") {
+		if !(strings.HasPrefix(source, "/") || source == "devtmpfs") {
 			continue
 		}
 
@@ -132,4 +133,16 @@ func readProcMountsFrom(
 		mountPoints = append(mountPoints, mp)
 	}
 	return mountPoints, hash.Sum32(), nil
+}
+
+// EvalSymlinks evaluates the provided path and updates it to remove
+// any symlinks in its structure, replacing them with the actual path
+// components.
+func EvalSymlinks(symPath *string) error {
+	realPath, err := filepath.EvalSymlinks(*symPath)
+	if err != nil {
+		return err
+	}
+	*symPath = realPath
+	return nil
 }

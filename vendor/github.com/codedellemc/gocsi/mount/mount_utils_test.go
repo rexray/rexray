@@ -12,14 +12,18 @@ func TestReadProcMountsFrom(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("len(mounts)=%d", len(mis))
-	success := false
+	success1 := false
+	success2 := false
 	for _, mi := range mis {
 		t.Logf("%+v", mi)
 		if mi.Path == "/home/akutz/2" && mi.Source == "/home/akutz/1" {
-			success = true
+			success1 = true
+		}
+		if mi.Path == "/home/akutz/travis-is-right" && mi.Source == "/dev/sda1" {
+			success2 = true
 		}
 	}
-	if !success {
+	if !(success1 && success2) {
 		t.FailNow()
 	}
 }
@@ -58,4 +62,5 @@ const procMountInfoData = `17 60 0:16 / /sys rw,nosuid,nodev,noexec,relatime sha
 116 38 0:36 / /proc/sys/fs/binfmt_misc rw,relatime shared:66 - binfmt_misc binfmt_misc rw
 113 17 0:37 / /sys/fs/fuse/connections rw,relatime shared:65 - fusectl fusectl rw
 119 74 253:2 /akutz/1 /home/akutz/2 rw,relatime shared:29 - xfs /dev/mapper/cl-home rw,seclabel,attr2,inode64,noquota
+119 74 0:5 /sda1 /home/akutz/travis-is-right rw,nosuid shared:2 - devtmpfs devtmpfs rw,seclabel,size=1930460k,nr_inodes=482615,mode=755
 `

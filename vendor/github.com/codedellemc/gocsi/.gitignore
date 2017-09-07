@@ -6,8 +6,9 @@
 # The ginkgo test binary
 /ginkgo
 
-# The archive built from this package.
+# The archives built from this package and the package "mount".
 /gocsi.a
+/mount.a
 
 # A temporary build dir
 .build/

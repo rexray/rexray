@@ -37,6 +37,14 @@
         },
         {
           "Description": "",
+          "Name": "DOBS_CONVERTUNDERSCORES",
+          "Settable": [
+            "value"
+          ],
+          "Value": "false"
+        },
+        {
+          "Description": "",
           "Name": "DOBS_REGION",
           "Settable": [
             "value"

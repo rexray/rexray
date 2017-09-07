@@ -305,6 +305,11 @@ $ docker plugin install rexray/dobs \
 The DOBS plug-in requires that your DigitalOcean droplet is running in a region that
 supports block storage.
 
+**NOTE:** DigitalOcean volumes cannot be created if their name contains an underscore.
+Docker will automatically append prefixes with underscores to your volume names when
+they are created as part of a compose file, so if you're creating volumes with this plugin
+using compose (or stack deploy), be sure to set `DOBS_CONVERTUNDERSCORES` to `true`.
+
 #### Privileges
 The DOBS plug-in requires the following privileges:
 
@@ -321,6 +326,7 @@ plug-in:
 
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
+`DOBS_CONVERTUNDERSCORES` | Set to `true` if the plugin will create volumes at DigitalOcean via e.g. a `docker-compose.yml` file | `false` |  
 `DOBS_REGION` | The region where volumes should be created | | ✓
 `DOBS_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `100ms` |
 `DOBS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |

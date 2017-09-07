@@ -171,9 +171,9 @@ func (d *driver) IsNodePublished(
 	}
 
 	if volMountPath == "" {
-		return false, fmt.Errorf(
-			"unable to find attached device for volume: id=%s, dev=%s",
-			idVal, devPath)
+		// Device hasn't been mounted anywhere yet, but we know
+		// it is already attached.
+		return false, nil
 	}
 
 	// Scan the mount table info and if an entry's device matches

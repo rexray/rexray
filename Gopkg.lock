@@ -95,7 +95,7 @@
   branch = "master"
   name = "github.com/codedellemc/csi-vfs"
   packages = ["provider","service"]
-  revision = "2c4efcbbceaa5e0c7acf95a041fbe90c0c06a914"
+  revision = "b7b20d0ab19ba5335f9231fdc219e7a106cf8d39"
 
 [[projects]]
   branch = "master"

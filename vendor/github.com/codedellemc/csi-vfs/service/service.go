@@ -831,7 +831,7 @@ func InitConfig(
 		if *volGlob == "" {
 			*volGlob = "*"
 		}
-		*volGlob = path.Join(*dev, *volGlob)
+		*volGlob = path.Join(*vol, *volGlob)
 	}
 
 	if bindfs != nil {

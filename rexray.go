@@ -12,6 +12,7 @@ import (
 	"runtime/pprof"
 	"runtime/trace"
 	"strconv"
+	"strings"
 	"sync"
 
 	gofigCore "github.com/akutz/gofig"
@@ -190,29 +191,31 @@ func main() {
 	}
 }
 
-func updateLogLevel(config gofig.Config) log.Level {
-	if config != nil {
-		if ll := config.GetString("rexray.loglevel"); ll != "" {
-			if lvl, err := log.ParseLevel(ll); err == nil {
-				if lvl == log.DebugLevel {
-					enableDebugMode()
-				} else {
-					setLogLevels(lvl)
-				}
-				return lvl
-			}
-		}
-		if ll := config.GetString(apitypes.ConfigLogLevel); ll != "" {
-			if lvl, err := log.ParseLevel(ll); err == nil {
-				if lvl == log.DebugLevel {
-					enableDebugMode()
-				} else {
-					setLogLevels(lvl)
-				}
-				return lvl
-			}
-		}
+const (
+	configRR   = "rexray"
+	configRRLL = configRR + ".loglevel"
+)
+
+func setConfigLogLevel(config gofig.Config, k1, k2 string, level string) {
+	v, ok := config.Get(k1).(map[string]interface{})
+	if ok {
+		v[strings.Replace(k2, k1+".", "", 1)] = level
+	} else {
+		config.Set(k2, level)
 	}
+}
+
+func updateLogLevel(config gofig.Config) (level log.Level) {
+	defer func() {
+		if config == nil {
+			return
+		}
+		szl := level.String()
+		setConfigLogLevel(
+			config, configRR, configRRLL, szl)
+		setConfigLogLevel(
+			config, apitypes.ConfigLogging, apitypes.ConfigLogLevel, szl)
+	}()
 
 	if ok, _ := strconv.ParseBool(os.Getenv("REXRAY_DEBUG")); ok {
 		enableDebugMode()
@@ -243,6 +246,29 @@ func updateLogLevel(config gofig.Config) log.Level {
 				setLogLevels(lvl)
 			}
 			return lvl
+		}
+	}
+
+	if config != nil {
+		if ll := config.GetString(configRRLL); ll != "" {
+			if lvl, err := log.ParseLevel(ll); err == nil {
+				if lvl == log.DebugLevel {
+					enableDebugMode()
+				} else {
+					setLogLevels(lvl)
+				}
+				return lvl
+			}
+		}
+		if ll := config.GetString(apitypes.ConfigLogLevel); ll != "" {
+			if lvl, err := log.ParseLevel(ll); err == nil {
+				if lvl == log.DebugLevel {
+					enableDebugMode()
+				} else {
+					setLogLevels(lvl)
+				}
+				return lvl
+			}
 		}
 	}
 

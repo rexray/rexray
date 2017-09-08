@@ -7,12 +7,14 @@ import (
 	"net"
 	"path"
 	"sync"
+	"time"
 
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/gocsi/mount"
 	"github.com/codedellemc/goioc"
 	log "github.com/sirupsen/logrus"
+	xctx "golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	"github.com/codedellemc/csi-vfs/service"
@@ -82,14 +84,16 @@ type config interface {
 var ctxConfigKey = interface{}("csi.config")
 
 func (p *provider) newGrpcServer(
-	idemp gocsi.IdempotencyProvider) *grpc.Server {
+	idemp gocsi.IdempotencyProvider,
+	timeout time.Duration) *grpc.Server {
 
 	var interceptors []grpc.UnaryServerInterceptor
 	if len(p.interceptors) > 0 {
 		interceptors = append(interceptors, p.interceptors...)
 	}
 	interceptors = append(
-		interceptors, gocsi.NewIdempotentInterceptor(idemp))
+		interceptors,
+		gocsi.NewIdempotentInterceptor(idemp, timeout))
 
 	iopt := gocsi.ChainUnaryServer(interceptors...)
 
@@ -112,12 +116,13 @@ func (p *provider) newGrpcServer(
 func (p *provider) Serve(ctx context.Context, li net.Listener) error {
 
 	var (
-		bindfs  string
-		dataDir string
-		devDir  string
-		mntDir  string
-		volDir  string
-		volGlob string
+		bindfs    string
+		dataDir   string
+		devDir    string
+		mntDir    string
+		volDir    string
+		volGlob   string
+		szTimeout string
 	)
 
 	if c, ok := ctx.Value(ctxConfigKey).(config); ok {
@@ -127,7 +132,10 @@ func (p *provider) Serve(ctx context.Context, li net.Listener) error {
 		mntDir = c.GetString("csi.vfs.mnt")
 		volDir = c.GetString("csi.vfs.vol")
 		volGlob = c.GetString("csi.vfs.volGlob")
+		szTimeout = c.GetString("csi.vfs.timeout")
 	}
+
+	timeout, _ := time.ParseDuration(szTimeout)
 
 	if err := func() error {
 		p.Lock()
@@ -140,7 +148,7 @@ func (p *provider) Serve(ctx context.Context, li net.Listener) error {
 		}
 
 		idemp := newIdempotentProvider(dataDir, devDir, mntDir, volDir)
-		p.server = p.newGrpcServer(idemp)
+		p.server = p.newGrpcServer(idemp, timeout)
 		return nil
 	}(); err != nil {
 		return errServerStarted
@@ -221,7 +229,10 @@ type vfsIdemProvider struct {
 	vol  string
 }
 
-func (i *vfsIdemProvider) GetVolumeName(id *csi.VolumeID) (string, error) {
+func (i *vfsIdemProvider) GetVolumeName(
+	ctx xctx.Context,
+	id *csi.VolumeID) (string, error) {
+
 	volPath, ok := id.Values["path"]
 	if !ok {
 		return "", errMissingIDKeyPath
@@ -229,7 +240,10 @@ func (i *vfsIdemProvider) GetVolumeName(id *csi.VolumeID) (string, error) {
 	return path.Base(volPath), nil
 }
 
-func (i *vfsIdemProvider) GetVolumeInfo(name string) (*csi.VolumeInfo, error) {
+func (i *vfsIdemProvider) GetVolumeInfo(
+	ctx xctx.Context,
+	name string) (*csi.VolumeInfo, error) {
+
 	volPath := path.Join(i.vol, name)
 	if !service.FileExists(volPath) {
 		return nil, nil
@@ -242,6 +256,7 @@ func (i *vfsIdemProvider) GetVolumeInfo(name string) (*csi.VolumeInfo, error) {
 }
 
 func (i *vfsIdemProvider) IsControllerPublished(
+	ctx xctx.Context,
 	id *csi.VolumeID) (*csi.PublishVolumeInfo, error) {
 
 	volPath, ok := id.Values["path"]
@@ -270,6 +285,7 @@ func (i *vfsIdemProvider) IsControllerPublished(
 }
 
 func (i *vfsIdemProvider) IsNodePublished(
+	ctx xctx.Context,
 	id *csi.VolumeID,
 	pubInfo *csi.PublishVolumeInfo,
 	targetPath string) (bool, error) {

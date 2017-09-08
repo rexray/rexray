@@ -15,8 +15,6 @@ type MutexWithTryLock interface {
 	TryLock(timeout time.Duration) bool
 }
 
-var tryLockNow = time.Duration(0)
-
 type mutex struct {
 	c chan int
 }

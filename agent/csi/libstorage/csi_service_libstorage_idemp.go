@@ -7,14 +7,17 @@ import (
 
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/gocsi/mount"
+	xctx "golang.org/x/net/context"
 
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
 )
 
-var errMissingIDKeyPath = errors.New("missing id key path")
-var errMissingTokenKey = errors.New("missing token key")
-var errUnableToGetLocDevs = errors.New("unable to get local devices")
+var (
+	errMissingIDKeyPath   = errors.New("missing id key path")
+	errMissingTokenKey    = errors.New("missing token key")
+	errUnableToGetLocDevs = errors.New("unable to get local devices")
+)
 
 const resNotFound = "resource not found"
 
@@ -25,7 +28,10 @@ func isNotFoundErr(err error) bool {
 // GetVolumeName should return the name of the volume specified
 // by the provided volume ID. If the volume does not exist then
 // an empty string should be returned.
-func (d *driver) GetVolumeName(id *csi.VolumeID) (string, error) {
+func (d *driver) GetVolumeName(
+	ctx xctx.Context,
+	id *csi.VolumeID) (string, error) {
+
 	idVal, ok := id.Values["id"]
 	if !ok {
 		return "", errMissingIDKeyPath
@@ -53,7 +59,10 @@ func (d *driver) GetVolumeName(id *csi.VolumeID) (string, error) {
 // GetVolumeInfo should return information about the volume
 // specified by the provided volume name. If the volume does not
 // exist then a nil value should be returned.
-func (d *driver) GetVolumeInfo(name string) (*csi.VolumeInfo, error) {
+func (d *driver) GetVolumeInfo(
+	ctx xctx.Context,
+	name string) (*csi.VolumeInfo, error) {
+
 	td, ok := d.client.Storage().(apitypes.StorageDriverVolInspectByName)
 	if !ok {
 		return nil, fmt.Errorf(
@@ -82,6 +91,7 @@ func (d *driver) GetVolumeInfo(name string) (*csi.VolumeInfo, error) {
 // IsControllerPublished should return publication info about
 // the volume specified by the provided volume name or ID.
 func (d *driver) IsControllerPublished(
+	ctx xctx.Context,
 	id *csi.VolumeID) (*csi.PublishVolumeInfo, error) {
 
 	idVal, ok := id.Values["id"]
@@ -121,6 +131,7 @@ func (d *driver) IsControllerPublished(
 // IsNodePublished should return a flag indicating whether or
 // not the volume exists and is published on the current host.
 func (d *driver) IsNodePublished(
+	ctx xctx.Context,
 	id *csi.VolumeID,
 	pubInfo *csi.PublishVolumeInfo,
 	targetPath string) (bool, error) {

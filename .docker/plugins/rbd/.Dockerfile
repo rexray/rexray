@@ -7,7 +7,7 @@ RUN rpm -Uvh http://download.ceph.com/rpm-${CEPH_VERSION}/el7/noarch/ceph-releas
 RUN yum install -y epel-release && yum clean all
 RUN yum install -y ceph-common e2fsprogs xfsprogs iproute && yum clean all
 
-RUN mkdir -p /etc/rexray /run/docker/plugins /var/lib/libstorage/volumes
+RUN mkdir -p /etc/rexray /run/docker/plugins /var/lib/rexray/volumes
 ADD rexray /usr/bin/rexray
 ADD rexray.yml /etc/rexray/rexray.yml
 

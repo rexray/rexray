@@ -26,10 +26,6 @@ func init() {
 	log.SetFormatter(&glog.TextFormatter{TextFormatter: log.TextFormatter{}})
 }
 
-type helpFlagPanic struct{}
-type printedErrorPanic struct{}
-type subCommandPanic struct{}
-
 // CLI is the REX-Ray command line interface.
 type CLI struct {
 	l                  *log.Logger
@@ -242,46 +238,11 @@ func ExecuteWithArgs(
 
 // Execute executes the CLI.
 func (c *CLI) Execute() {
-
 	defer func() {
 		if c.activateLibStorage {
 			util.WaitUntilLibStorageStopped(c.ctx, c.rsErrs)
 		}
 	}()
-
-	/*defer func() {
-		r := recover()
-		switch r := r.(type) {
-		case nil:
-			return
-		case int:
-			log.Debugf("exiting with error code %d", r)
-			os.Exit(r)
-		case error:
-			log.Panic(r)
-		default:
-			log.Debugf("exiting with default error code 1, r=%v", r)
-			os.Exit(1)
-		}
-	}()*/
-
-	c.execute()
-}
-
-func (c *CLI) execute() {
-	/*defer func() {
-		r := recover()
-		if r != nil {
-			switch r.(type) {
-			case helpFlagPanic, subCommandPanic:
-			// Do nothing
-			case printedErrorPanic:
-				os.Exit(1)
-			default:
-				panic(r)
-			}
-		}
-	}()*/
 	c.c.Execute()
 }
 
@@ -360,9 +321,8 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 		c.config.Set(apitypes.ConfigService, v)
 	}
 
-	if isHelpFlag(cmd) {
+	if isHelpFlags(cmd) {
 		cmd.Help()
-		panic(&helpFlagPanic{})
 	}
 
 	if permErr := c.checkCmdPermRequirements(cmd); permErr != nil {
@@ -374,7 +334,6 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 		fmt.Println()
 		cmd.Help()
-		panic(&printedErrorPanic{})
 	}
 
 	c.ctx.WithField("val", os.Args).Debug("os.args")
@@ -405,7 +364,6 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 			}
 			fmt.Println()
 			cmd.Help()
-			panic(&printedErrorPanic{})
 		}
 	}
 }

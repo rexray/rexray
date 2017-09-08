@@ -33,15 +33,16 @@ const (
 	WFDTimeout = 10
 )
 
+var (
+	// ctxConfigKey is an interface-wrapped key used to access a possible
+	// config object in the context given to the provider's Serve function
+	ctxConfigKey     = interface{}("csi.config")
+	ctxExactMountKey = interface{}("exactmount")
+)
+
 func init() {
 	goioc.Register("libstorage", func() interface{} { return &driver{} })
 }
-
-// ctxConfigKey is an interface-wrapped key used to access a possible
-// config object in the context given to the provider's Serve function
-var ctxConfigKey = interface{}("csi.config")
-
-var ctxExactMountKey = interface{}("exactmount")
 
 type driver struct {
 	ctx          apitypes.Context
@@ -94,9 +95,12 @@ func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 	// Cache the node ID.
 	d.nodeID = toNodeID(d.iid)
 
+	szTimeout := d.config.GetString("csi.libstorage.timeout")
+	timeout, _ := time.ParseDuration(szTimeout)
+
 	// Create a gRPC server with an idempotent interceptor.
 	d.server = grpc.NewServer(
-		grpc.UnaryInterceptor(gocsi.NewIdempotentInterceptor(d)))
+		grpc.UnaryInterceptor(gocsi.NewIdempotentInterceptor(d, timeout)))
 
 	csi.RegisterControllerServer(d.server, d)
 	csi.RegisterIdentityServer(d.server, d)

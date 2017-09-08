@@ -71,7 +71,12 @@ jobs:
         script:
           - GOCSI_MOCK=$(pwd)/mock/mock make test
 
-      # Test the mount package.
+      # Test the mount package. This job requires a VM (sudo: required)
+      # because of the tests performing mount operations.
       - stage:   test
+        sudo:    required
         install: skip
-        script:  go test -v ./mount
+        script:
+          - go test -c -o mount.test ./mount
+          - mkdir -p /tmp/gocsi && cp mount.test /tmp/gocsi
+          - sudo /tmp/gocsi/mount.test -test.v

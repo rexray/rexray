@@ -2,6 +2,7 @@ package libstorage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"net"
@@ -38,28 +39,34 @@ var (
 	// config object in the context given to the provider's Serve function
 	ctxConfigKey     = interface{}("csi.config")
 	ctxExactMountKey = interface{}("exactmount")
+	errDirNeeded     = errors.New("target path needs to be a directory")
+	errFileNeeded    = errors.New("target path needs to be a file")
 )
+
+type pubInfoCache struct {
+	attToken string
+}
 
 func init() {
 	goioc.Register("libstorage", func() interface{} { return &driver{} })
 }
 
 type driver struct {
-	ctx          apitypes.Context
-	client       apitypes.Client
-	config       gofig.Config
-	server       *grpc.Server
-	svcName      string
-	storType     apitypes.StorageType
-	iid          *apitypes.InstanceID
-	nodeID       *csi.NodeID
-	attTokens    map[string]string
-	attTokensRWL sync.RWMutex
+	ctx        apitypes.Context
+	client     apitypes.Client
+	config     gofig.Config
+	server     *grpc.Server
+	svcName    string
+	storType   apitypes.StorageType
+	iid        *apitypes.InstanceID
+	nodeID     *csi.NodeID
+	pubInfo    map[string]*pubInfoCache
+	pubInfoRWL sync.RWMutex
 }
 
 func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 
-	d.attTokens = map[string]string{}
+	d.pubInfo = map[string]*pubInfoCache{}
 
 	d.ctx = apictx.New(ctx)
 	d.client = apictx.MustClient(d.ctx)
@@ -248,9 +255,9 @@ func (d *driver) ControllerPublishVolume(
 		return nil, err
 	}
 
-	d.attTokensRWL.Lock()
-	defer d.attTokensRWL.Unlock()
-	d.attTokens[volumeID] = token
+	d.pubInfoRWL.Lock()
+	defer d.pubInfoRWL.Unlock()
+	d.pubInfo[volumeID] = &pubInfoCache{attToken: token}
 
 	return &csi.ControllerPublishVolumeResponse{
 		Reply: &csi.ControllerPublishVolumeResponse_Result_{
@@ -291,6 +298,10 @@ func (d *driver) ControllerUnpublishVolume(
 	if err != nil {
 		return nil, err
 	}
+
+	d.pubInfoRWL.Lock()
+	defer d.pubInfoRWL.Unlock()
+	delete(d.pubInfo, volumeID)
 
 	return &csi.ControllerUnpublishVolumeResponse{
 		Reply: &csi.ControllerUnpublishVolumeResponse_Result_{
@@ -448,6 +459,11 @@ func (d *driver) NodePublishVolume(
 	target := req.GetTargetPath()
 	vi := req.GetPublishVolumeInfo()
 
+	st, err := os.Stat(target)
+	if os.IsNotExist(err) {
+		return nil, errMissingTargetPath
+	}
+
 	// Make sure the requested volume capability is supported for
 	// the cached storage type.
 	if !isVolCapSupported(d.storType, req.VolumeCapability) {
@@ -486,10 +502,16 @@ func (d *driver) NodePublishVolume(
 	}
 
 	if mv := req.VolumeCapability.GetMount(); mv != nil {
+		if !st.IsDir() {
+			return nil, errDirNeeded
+		}
 		return d.handleMountVolume(
 			volumeID, target, mv, mv.MountFlags, dev, req.Readonly)
 	}
 	if bv := req.VolumeCapability.GetBlock(); bv != nil {
+		if st.IsDir() {
+			return nil, errFileNeeded
+		}
 		return d.handleBlockVolume(target, dev)
 	}
 
@@ -747,6 +769,37 @@ func (d *driver) handleMountVolume(
 func (d *driver) handleBlockVolume(
 	target string,
 	dev string) (*csi.NodePublishVolumeResponse, error) {
+
+	f := map[string]interface{}{
+		"target": target,
+		"device": dev,
+	}
+
+	// Check if device is already mounted
+	mnts, err := mount.GetDevMounts(dev)
+	if err != nil {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			"could not reliably determine existing mount status"), nil
+	}
+
+	if len(mnts) > 0 {
+		// Our devices is mounted *somewhere* If we find it mounted to
+		// our target path, return success for the existing mount
+		// Other mounts are ignored, and left for the sysadmin and
+		// clustered filesystems to handleBlockVolume
+		for _, m := range mnts {
+			if m.Path == target {
+				// Existing mount satisfies request
+				d.ctx.WithFields(f).Debug("mount already in place")
+				return &csi.NodePublishVolumeResponse{
+					Reply: &csi.NodePublishVolumeResponse_Result_{
+						Result: &csi.NodePublishVolumeResponse_Result{},
+					},
+				}, nil
+			}
+		}
+	}
 
 	if err := mount.BindMount(dev, target, ""); err != nil {
 		return gocsi.ErrNodePublishVolume(

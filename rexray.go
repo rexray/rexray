@@ -35,6 +35,13 @@ import (
 )
 
 func main() {
+	// If X_CSI_NATIVE is set to a truthy value then disable libStorage.
+	if v := os.Getenv("X_CSI_NATIVE"); v != "" {
+		if ok, _ := strconv.ParseBool(v); ok {
+			os.Setenv("LIBSTORAGE", "false")
+		}
+	}
+
 	// Brand libStorage's path structure with "rexray"
 	if v := os.Getenv("LIBSTORAGE_APPTOKEN"); v == "" {
 		os.Setenv("LIBSTORAGE_APPTOKEN", "rexray")

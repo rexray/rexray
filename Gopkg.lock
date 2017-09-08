@@ -20,6 +20,12 @@
   version = "v7.2.5"
 
 [[projects]]
+  name = "github.com/Microsoft/go-winio"
+  packages = ["."]
+  revision = "78439966b38d69bf38227fbf57ac8a6fee70f69a"
+  version = "v0.4.5"
+
+[[projects]]
   name = "github.com/SermoDigital/jose"
   packages = [".","crypto","jws","jwt"]
   revision = "f6df55f235c24f236d11dbcf665249a59ac2021f"
@@ -126,6 +132,12 @@
   version = "v0.3.1"
 
 [[projects]]
+  name = "github.com/coreos/go-systemd"
+  packages = ["activation"]
+  revision = "d2196463941895ee908e13531a23a39feb9e1243"
+  version = "v15"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -142,6 +154,18 @@
   packages = [".","context"]
   revision = "4fa9e9d999007b447089056a1c581b5594f0f851"
   version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/docker/go-connections"
+  packages = ["sockets"]
+  revision = "3ede32e2033de7505e6500d6c868c2b9ed9f169d"
+  version = "v0.3.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/docker/go-plugins-helpers"
+  packages = ["sdk","volume"]
+  revision = "a9ef19c479cb60e751efa55f7f2b265776af1abf"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -269,6 +293,12 @@
   source = "https://github.com/akutz/logrus"
 
 [[projects]]
+  name = "github.com/soheilhy/cmux"
+  packages = ["."]
+  revision = "bb79a83465015a27a175925ebd155e660f55e9f1"
+  version = "v0.1.3"
+
+[[projects]]
   branch = "master"
   name = "github.com/spf13/afero"
   packages = [".","mem"]
@@ -331,7 +361,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp","html","html/atom","html/charset","http2","http2/hpack","idna","internal/timeseries","lex/httplex","trace"]
+  packages = ["context","context/ctxhttp","html","html/atom","html/charset","http2","http2/hpack","idna","internal/timeseries","lex/httplex","proxy","trace"]
   revision = "66aacef3dd8a676686c7ae3716979581e8b03c47"
 
 [[projects]]
@@ -385,6 +415,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6736fdeb19828f490b66cc75bc181f0836398bcbba74321e8a747fc1661cc922"
+  inputs-digest = "3083441ec826409ea53b2203130311bd957373a166029680a1704a30c3f05548"
   solver-name = "gps-cdcl"
   solver-version = 1

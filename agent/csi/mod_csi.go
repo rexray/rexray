@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -15,12 +16,15 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
+	dvol "github.com/docker/go-plugins-helpers/volume"
+	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
 
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
 
 	"github.com/codedellemc/rexray/agent"
+	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
@@ -73,8 +77,10 @@ func init() {
 					"configuring default CSI module")
 				r.SetYAML(fmt.Sprintf(configFormat, v))
 			}
-			r.Key(gofig.String, "", "libstorage", "", "csi.driver")
-			r.Key(gofig.String, "", "", "", "csi.goplugins")
+			r.Key(gofig.String, "", "libstorage", "",
+				"csi.driver", "csiDriver", "X_CSI_DRIVER")
+			r.Key(gofig.String, "", "", "",
+				"csi.goplugins", "csiGoPlugins", "X_CSI_GO_PLUGINS")
 		})
 }
 
@@ -147,18 +153,42 @@ func doLoadGoPluginsFuncOnce(
 	return
 }
 
+const protoUnix = "unix"
+
 func (m *mod) Start() error {
 
-	doLoadGoPluginsFuncOnce(m.ctx, m.config)
+	ctx := m.ctx
 
-	proto, addr, err := gotil.ParseAddress(m.Address())
-	if err != nil {
-		return err
+	doLoadGoPluginsFuncOnce(ctx, m.config)
+
+	var (
+		addr          string
+		proto         string
+		isMultiplexed bool
+	)
+
+	// If multiplexing Docker+CSI then the path to the sock file is
+	// determined using the same logic as the Docker module.
+	if isMultiplexed = strings.EqualFold(
+		m.Address(), "rexray.sock"); isMultiplexed {
+
+		proto = protoUnix
+		addr = path.Join(
+			apictx.MustPathConfig(ctx).Home,
+			"/run/docker/plugins/rexray.sock")
+		ctx.WithField("sockFile", addr).Info("multiplexed csi+docker endpoint")
+	} else {
+
+		var err error
+		if proto, addr, err = gotil.ParseAddress(m.Address()); err != nil {
+			return err
+		}
+		ctx.WithField("sockFile", addr).Info("csi endpoint")
 	}
 
 	// ensure the sock file directory is created & remove
 	// any stale sock files with the same path
-	if proto == "unix" {
+	if proto == protoUnix {
 		os.MkdirAll(filepath.Dir(addr), 0755)
 		os.RemoveAll(addr)
 	}
@@ -169,17 +199,89 @@ func (m *mod) Start() error {
 		return err
 	}
 
+	var (
+		tcpm  cmux.CMux
+		httpl net.Listener
+		grpcl net.Listener
+		http2 net.Listener
+	)
+
+	// If multiplexing Docker+CSI then create the multiplexer and the routers.
+	if isMultiplexed {
+		// Create a cmux object.
+		tcpm = cmux.New(l)
+
+		// Declare the match for different services required.
+		httpl = tcpm.Match(cmux.HTTP1Fast())
+		grpcl = tcpm.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings(
+			"content-type", "application/grpc"))
+		http2 = tcpm.Match(cmux.HTTP2())
+	}
+
 	go func() {
 		go func() {
-			if err := m.cs.Serve(m.ctx, nil); err != nil {
+			if err := m.cs.Serve(ctx, nil); err != nil {
 				panic(err)
 			}
 		}()
-		err := m.gs.Serve(l)
-		if proto == "unix" {
+
+		// Alias the listener to use.
+		ll := l
+
+		// If multiplexing Docker+CSI then use the multiplexed router.
+		if isMultiplexed {
+			ll = grpcl
+		}
+
+		err := m.gs.Serve(ll)
+
+		// If not multiplexing Docker+CSI and it's a UNIX protocol
+		// then remove the sock file.
+		if !isMultiplexed && proto == protoUnix {
 			os.RemoveAll(addr)
 		}
-		if err != grpc.ErrServerStopped {
+
+		if err != nil && err != grpc.ErrServerStopped {
+			// If not multiplexing Docker+CSI then panic on error,
+			// otherwise leave that to the multiplexer.
+			if !isMultiplexed {
+				panic(err)
+			} else {
+				ctx.WithError(err).Warn(
+					"failed to start csi grpc server")
+			}
+		}
+	}()
+
+	// If not multiplexing Docker+CSI then nothing below is required.
+	if !isMultiplexed {
+		return nil
+	}
+
+	go func() {
+		dh := dvol.NewHandler(&dockerVolDriver{cs: m.cs, ctx: ctx})
+		go func() {
+			if err := dh.Serve(httpl); err != nil {
+				ctx.WithError(err).Warn(
+					"failed to start http1 docker->csi proxy")
+			}
+		}()
+		go func() {
+			if err := dh.Serve(http2); err != nil {
+				ctx.WithError(err).Warn(
+					"failed to start http2 docker->csi proxy")
+			}
+		}()
+	}()
+
+	go func() {
+		// Start cmux serving.
+		err := tcpm.Serve()
+		if proto == protoUnix {
+			os.RemoveAll(addr)
+		}
+		if err != nil && !strings.Contains(err.Error(),
+			"use of closed network connection") {
 			panic(err)
 		}
 	}()

@@ -198,7 +198,7 @@ func NewWithArgs(
 		noLibStorage = true
 		ctx.Info("libstorage disabled by config")
 	}
-	if noLibStorage {
+	if noLibStorage && config.Get("csi.driver") == "libstorage" {
 		config.Set("csi.driver", "csi-vfs")
 	}
 

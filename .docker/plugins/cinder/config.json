@@ -130,8 +130,32 @@
             "value"
           ],
           "Value": ""
+        },
+        {
+          "Description": "The sock file used by the CO to communicate with CSI.",
+          "Name": "CSI_ENDPOINT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "The name of the CSI plug-in used by the CSI module.",
+          "Name": "X_CSI_DRIVER",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "A flag that disables the CSI to libStorage bridge.",
+          "Name": "X_CSI_NATIVE",
+          "Settable": [
+            "value"
+          ],
+          "Value": "false"
         }
-		],
+      ],
       "Interface": {
         "Socket": "rexray.sock",
         "Types": [

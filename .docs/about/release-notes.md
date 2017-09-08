@@ -10,23 +10,17 @@ To upgrade REX-Ray to the latest version, use `curl install`:
 
 Use `rexray version` to determine the currently installed version of REX-Ray:
 
-    $ rexray version
-    REX-Ray
-    -------
-    Binary: /Users/akutz/Projects/go/bin/rexray
-    SemVer: 0.4.0
-    OsArch: Linux-x86_64
-    Branch: v0.4.0
-    Commit: c83f0237e60792cfe89c4255d7149b5670965539
-    Formed: Mon, 20 Jun 2016 20:56:48 CDT
-
-    libStorage
-    ----------
-    SemVer: 0.1.3
-    OsArch: Linux-x86_64
-    Branch: v0.1.3
-    Commit: 182a626937677a081b89651598ee2eac839308e7
-    Formed: Wed, 15 Jun 2016 16:27:36 CDT
+```bash
+$ rexray version
+REX-Ray
+-------
+Binary: /usr/bin/rexray
+Flavor: client+agent+controller
+SemVer: 0.10.0-rc2
+OsArch: Linux-x86_64
+Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
+Formed: Thu, 07 Sep 2017 17:49:48 CDT
+```
 
 ## Version 0.10.0 (2017/09/11)
 Hi, REX here. Look, I know it's been a while since the last release. Three
@@ -34,19 +28,32 @@ whole months. I'm not going to apologize either. I'm an anthropomorphic dog
 who chases bugs instead of bones for a living. That's pretty impressive in
 and of itself!
 
-However, it's been worth the wait. This is a major release, with features
+However, it's been worth the wait. This is a major release, with changes
 that include:
 
-* Support for the Container Storage Interface (CSI) specification ([`8dbb732`](https://github.com/container-storage-interface/spec/commit/8dbb73222cdb63ce583e5c0abeafdf96748bf4f5))
-* Support for local block devices
-* Support for native network file system (NFS) storage
-* Raw device access for all existing, block-based storage platforms
-* and more!
+### New Features
+* Support for the Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) specification ([`8dbb732`](https://github.com/container-storage-interface/spec/commit/8dbb73222cdb63ce583e5c0abeafdf96748bf4f5)) ([\#878](https://github.com/codedellemc/rexray/issues/878))
+* The [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) plug-in provides local block device support ([\#961](https://github.com/codedellemc/rexray/issues/961))
+* The [CSI-NFS](https://github.com/codedellemc/csi-nfs) plug-in provides NFS support ([\#962](https://github.com/codedellemc/rexray/issues/962))
+* The [CSI-VFS](https://github.com/codedellemc/csi-vfs) plug-in provides virtual filesystem (VFS) support ([\#878](https://github.com/codedellemc/rexray/issues/878))
+* Raw device support for all existing, block-based storage platforms ([\#998](https://github.com/codedellemc/rexray/issues/998))
 
-The full list of changes, as usual, is below. If anything is missing,
-again, I'm a d-o-g. You try typing without opposable thumbs.
+### Enhancements
+* All existing, managed Docker plug-ins now support CSI ([\#1012](https://github.com/codedellemc/rexray/issues/1012))
+* S3FS supports custom endpoints ([\#986](https://github.com/codedellemc/rexray/issues/986))
+* EBS supports large-device range option ([\#996](https://github.com/codedellemc/rexray/issues/996))
+* Support for DigitalOcean environment variables with underscores ([\#1004](https://github.com/codedellemc/rexray/issues/1004))
+* Use Golang dependency management tool [`dep`](https://github.com/golang/dep) ([\#993](https://github.com/codedellemc/rexray/issues/993))
+* Merged libStorage into REX-Ray ([\#932](https://github.com/codedellemc/rexray/issues/932))
+* Simplified build process ([\#937](https://github.com/codedellemc/rexray/issues/937))
+* Versioned `vendor` directory ([\#930](https://github.com/codedellemc/rexray/issues/930))
+* REX-Ray now built with Go 1.8.3 ([\#918](https://github.com/codedellemc/rexray/issues/918))
 
-_A full list of the new features anf fixes will be added in RC2_
+### Bug Fixes
+* Fixed required permissions for S3FS Docker plug-in ([\#893](https://github.com/codedellemc/rexray/issues/893))
+* Fixed Cinder support ([\#935](https://github.com/codedellemc/rexray/issues/935))
+* Fixed volume mount path retrieval in FlexREX `DetachVolume` ([\#914](https://github.com/codedellemc/rexray/issues/914))
+* Sirupsen to sirupsen ([\#995](https://github.com/codedellemc/rexray/issues/995))
 
 ## Version 0.9.2 (2017/06/28)
 This is a minor release that introduces a Docker managed plug-in for Ceph RBD,

@@ -12,7 +12,7 @@ RUN ln -s /lib/libuuid.so.1 /usr/glibc-compat/lib/
 RUN ln -s /usr/lib/libaio.so.1 /usr/glibc-compat/lib/
 RUN ln -s /usr/lib/libnuma.so.1 /usr/glibc-compat/lib/
 
-RUN mkdir -p /etc/rexray /run/docker/plugins /var/lib/libstorage/volumes
+RUN mkdir -p /etc/rexray /run/docker/plugins /var/lib/rexray/volumes
 ADD rexray /usr/bin/rexray
 ADD rexray.yml /etc/rexray/rexray.yml
 

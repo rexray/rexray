@@ -4,7 +4,7 @@ RUN apk update
 RUN apk add ca-certificates nfs-utils
 
 RUN mkdir -p /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
-RUN mkdir -p /etc/rexray /run/docker/plugins /var/lib/libstorage/volumes
+RUN mkdir -p /etc/rexray /run/docker/plugins /var/lib/rexray/volumes
 ADD rexray /usr/bin/rexray
 ADD rexray.yml /etc/rexray/rexray.yml
 

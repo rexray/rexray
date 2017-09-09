@@ -42,6 +42,30 @@
             "value"
           ],
           "Value": "false"
+        },
+        {
+          "Description": "The name of the CSI plug-in used by the CSI module.",
+          "Name": "X_CSI_DRIVER",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "A flag that disables the CSI to libStorage bridge.",
+          "Name": "X_CSI_NATIVE",
+          "Settable": [
+            "value" 
+          ],
+          "Value": "false"
+        },
+        {
+          "Description": "", 
+          "Name": "CSI_ENDPOINT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
         }
       ],
       "Interface": {
@@ -67,30 +91,6 @@
           "Destination": "/etc/ceph",
           "Type": "bind",
           "Options": ["rbind"]
-        },
-        {
-          "Description": "",
-          "Name": "CSI_ENDPOINT",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "The name of the CSI plug-in used by the CSI module.",
-          "Name": "X_CSI_DRIVER",
-          "Settable": [
-            "value"
-          ],
-          "Value": ""
-        },
-        {
-          "Description": "A flag that disables the CSI to libStorage bridge.",
-          "Name": "X_CSI_NATIVE",
-          "Settable": [
-            "value"
-          ],
-          "Value": "false"
         }
       ],
       "Network": {

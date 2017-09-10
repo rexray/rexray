@@ -60,6 +60,13 @@ func init() {
 func startMockServer(
 	ctx context.Context) (*grpc.ClientConn, func(), error) {
 
+	return startMockServerWithOptions(ctx, false)
+}
+
+func startMockServerWithOptions(
+	ctx context.Context,
+	impliedSockFile bool) (*grpc.ClientConn, func(), error) {
+
 	// If CSI_ENDPOINT was defined then use the external server.
 	if csiEndpoint != "" {
 		fmt.Fprintf(GinkgoWriter, "created csi client: %s\n", csiEndpoint)
@@ -72,8 +79,13 @@ func startMockServer(
 
 	f, _ := ioutil.TempFile("", "")
 	sockFile := f.Name()
-	os.RemoveAll(sockFile)
-	endpoint := fmt.Sprintf("unix://%s", sockFile)
+	Ω(f.Close()).ShouldNot(HaveOccurred())
+	Ω(os.RemoveAll(sockFile)).ShouldNot(HaveOccurred())
+	endpoint := sockFile
+	if !impliedSockFile {
+		endpoint = fmt.Sprintf("unix://%s", endpoint)
+	}
+	fmt.Fprintf(GinkgoWriter, "determined csi endpoint: %s\n", endpoint)
 
 	cmd := exec.Command(mockBinPath)
 	cmd.Env = os.Environ()
@@ -109,7 +121,7 @@ func startMockServer(
 				chServed <- true
 			}
 			if debug {
-				os.Stdout.Write([]byte(l))
+				fmt.Fprintf(os.Stdout, l)
 			}
 		}
 		close(chServed)
@@ -132,9 +144,10 @@ func startMockServer(
 
 	client, err := newGrpcClient(ctx, endpoint)
 	if err != nil {
+		fmt.Fprintf(GinkgoWriter, "error creating csi client: %v", err)
 		return nil, nil, cmd.Wait()
 	}
-	fmt.Fprintf(GinkgoWriter, "created csi client: %s\n", csiEndpoint)
+	fmt.Fprintf(GinkgoWriter, "created csi client: %s\n", endpoint)
 
 	stopMock := func() {
 		Ω(cmd.Process.Signal(os.Interrupt)).ShouldNot(HaveOccurred())

@@ -81,10 +81,6 @@ var ErrEmptyServices = errors.New("services list is empty")
 // variable CSI_ENDPOINT is not set.
 var ErrMissingCSIEndpoint = errors.New("missing CSI_ENDPOINT")
 
-// ErrInvalidCSIEndpoint occurs when the value for the environment
-// variable CSI_ENDPOINT is an invalid network address.
-var ErrInvalidCSIEndpoint = errors.New("invalid CSI_ENDPOINT")
-
 // ErrNilVolumeInfo occurs when a gRPC call returns a nil VolumeInfo.
 var ErrNilVolumeInfo = errors.New("volumeInfo is nil")
 

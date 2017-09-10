@@ -51,32 +51,34 @@ rexray:
       desc:     The default Docker module.
       host:     unix://%[1]s
       spec:     %[2]s
-      disabled: false
+      disabled: %[3]v
 `
 
 func init() {
-	var disabled bool
-	// If CSI_ENDPOINT is set to just "rexray.sock" then that means
-	// the Docker module is disabled. This logic is only true for
-	// the environment variable, not the config property.
-	if v := os.Getenv("CSI_ENDPOINT"); v == "rexray.sock" {
-		disabled = true
-	} else if v := os.Getenv("DOCKER"); v != "" {
-		if dd, err := strconv.ParseBool(v); err == nil {
-			disabled = !dd
-		}
-	}
-	if disabled {
-		return
-	}
+
 	agent.RegisterModule(modName, newModule)
 	registry.RegisterConfigReg(
 		"Docker",
 		func(ctx apitypes.Context, r gofig.ConfigRegistration) {
+			var (
+				disabled bool
+				sockFile = getSockFile(ctx)
+			)
+			// If CSI_ENDPOINT is set to just "rexray.sock" then that means
+			// the Docker module is disabled. This logic is only true for
+			// the environment variable, not the config property.
+			if v := os.Getenv("CSI_ENDPOINT"); v == sockFile {
+				disabled = true
+			} else if v := os.Getenv("DOCKER"); v != "" {
+				if dd, err := strconv.ParseBool(v); err == nil {
+					disabled = !dd
+				}
+			}
 			r.SetYAML(fmt.Sprintf(
 				configFormat,
 				getSockFile(ctx),
-				getSpecFile(ctx)))
+				getSpecFile(ctx),
+				disabled))
 		})
 }
 

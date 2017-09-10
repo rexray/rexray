@@ -29,7 +29,7 @@ var _ = Describe("Controller", func() {
 	)
 	BeforeEach(func() {
 		ctx = context.Background()
-		gclient, stopMock, err = startMockServer(ctx)
+		gclient, stopMock, err = startMockServerWithOptions(ctx, true)
 		Ω(err).ShouldNot(HaveOccurred())
 		client = csi.NewControllerClient(gclient)
 

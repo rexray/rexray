@@ -2,10 +2,10 @@
 
 
 [[projects]]
-  branch = "master"
   name = "github.com/codedellemc/gocsi"
   packages = [".","csi","mount"]
-  revision = "2b8566b562bf21b9d375a46677fe9850ff44c356"
+  revision = "835dc5f9f0b7afe404762172e0b8543c9ed4cb20"
+  version = "v0.1.0"
 
 [[projects]]
   name = "github.com/codedellemc/goioc"

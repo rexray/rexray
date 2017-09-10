@@ -16,7 +16,7 @@ runs in the foreground, logging activity to `STDOUT` and errors to
 or the process is sent a `kill` signal.
 
 ```bash
-$ CSI_ENDPOINT=unix:///tmp/csi.sock mock/mock
+$ CSI_ENDPOINT=/tmp/csi.sock mock/mock
 INFO  2017/08/22 16:22:15 main.go:154: mock.Serve: /tmp/csi.sock
 INFO  2017/08/22 16:22:18 main.go:133: /csi.Controller/CreateVolume: REQ 0001: Version=minor:1 , Name=Test Volume, CapacityRange=required_bytes:10740000000 limit_bytes:107400000000 , VolumeCapabilities=[mount:<fs_type:"ext4" mount_flags:"-o noexec" > ], Parameters=map[tag:gold]
 INFO  2017/08/22 16:22:18 main.go:133: /csi.Controller/CreateVolume: REP 0001: Reply=&{volume_info:<capacity_bytes:107400000000 id:<values:<key:"id" value:"4" > values:<key:"name" value:"Test Volume" > > metadata:<> > }

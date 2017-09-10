@@ -70,6 +70,7 @@ func Start(
 	go func() {
 		ctx.Info("agent context cancellation - waiting")
 		<-ctx.Done()
+		StopModules(ctx)
 		util.WaitUntilLibStorageStopped(ctx, lsErrs)
 		ctx.Info("agent context cancellation - received")
 		close(agentErrs)
@@ -211,11 +212,12 @@ func InitializeDefaultModules(
 
 	for _, mc := range modConfigs {
 
-		ctx.WithField("name", mc.Name).Debug(
-			"creating libStorage client for module instance")
-
-		if mc.Client, err = util.NewClient(ctx, mc.Config); err != nil {
-			return err
+		if !mc.Config.GetBool("libstorage.disabled") {
+			ctx.WithField("name", mc.Name).Debug(
+				"creating libStorage client for module instance")
+			if mc.Client, err = util.NewClient(ctx, mc.Config); err != nil {
+				return err
+			}
 		}
 
 		if mod, err = InitializeModule(ctx, mc); err != nil {
@@ -318,6 +320,20 @@ func StartDefaultModules(ctx apitypes.Context, config gofig.Config) error {
 		}
 	}
 
+	return nil
+}
+
+// StopModules stops the modules.
+func StopModules(ctx apitypes.Context) error {
+	modInstancesRwl.RLock()
+	defer modInstancesRwl.RUnlock()
+	for _, m := range modInstances {
+		if m.Inst != nil {
+			if err := m.Inst.Stop(); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

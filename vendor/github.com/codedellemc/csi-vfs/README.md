@@ -19,13 +19,11 @@ The resulting binary will be installed to `$GOPATH/bin/csi-vfs`.
 
 ## Starting the Plug-in
 Before starting the plug-in please set the environment variable
-`CSI_ENDPOINT` to a valid Go network address. such as `unix:///tmp/csi.sock`
-or `tcp://127.0.0.1.8080`. After doing so the plug-in can be launched
-with a simple command:
+`CSI_ENDPOINT` to a valid Go network address such as `csi.sock`:
 
 ```bash
-$ csi-vfs
-INFO[0000] serving                                       address="unix:///tmp/csi.sock" service=csi-vfs
+$ CSI_ENDPOINT=csi.sock csi-vfs
+INFO[0000] serving                                       address="unix://csi.sock" service=csi-vfs
 ```
 
 The server can be shutdown by using `Ctrl-C` or sending the process

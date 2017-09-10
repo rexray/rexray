@@ -98,16 +98,16 @@
   revision = "32ae09ae44241977ba9f30bb2ae81bf8d8b2aa1c"
 
 [[projects]]
-  branch = "master"
   name = "github.com/codedellemc/csi-vfs"
   packages = ["provider","service"]
-  revision = "b7b20d0ab19ba5335f9231fdc219e7a106cf8d39"
+  revision = "6f36db700b21b45f9bdb1d1800443804086b680f"
+  version = "v0.1.5"
 
 [[projects]]
-  branch = "master"
   name = "github.com/codedellemc/gocsi"
   packages = [".","csi","mount"]
-  revision = "2b8566b562bf21b9d375a46677fe9850ff44c356"
+  revision = "835dc5f9f0b7afe404762172e0b8543c9ed4cb20"
+  version = "v0.1.0"
 
 [[projects]]
   name = "github.com/codedellemc/goioc"

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -15,7 +16,6 @@ import (
 	"sync"
 
 	gofig "github.com/akutz/gofig/types"
-	"github.com/akutz/gotil"
 	dvol "github.com/docker/go-plugins-helpers/volume"
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
@@ -48,6 +48,7 @@ type mod struct {
 	desc   string
 	gs     *grpc.Server
 	cs     *csiService
+	lis    net.Listener
 }
 
 var (
@@ -161,28 +162,28 @@ func (m *mod) Start() error {
 
 	doLoadGoPluginsFuncOnce(ctx, m.config)
 
-	var (
-		addr          string
-		proto         string
-		isMultiplexed bool
-	)
+	// Get the path to the sock file used by the default
+	// Docker module for comparison.
+	dockerSockFile := path.Join(
+		apictx.MustPathConfig(ctx).Home,
+		"/run/docker/plugins/rexray.sock")
 
-	// If multiplexing Docker+CSI then the path to the sock file is
-	// determined using the same logic as the Docker module.
-	if isMultiplexed = strings.EqualFold(
-		m.Address(), "rexray.sock"); isMultiplexed {
+	// Use the GoCSI package to parse the address since its parsing
+	// function will handle an implied UNIX sock file by virtue of a
+	// vanilla file path.
+	proto, addr, err := gocsi.ParseProtoAddr(m.Address())
+	if err != nil {
+		return err
+	}
 
-		proto = protoUnix
-		addr = path.Join(
-			apictx.MustPathConfig(ctx).Home,
-			"/run/docker/plugins/rexray.sock")
+	// Check to see if the provided address is the same as that of
+	// the default docker module's address. If so then multiplex
+	// both Docker *and* CSI connections.
+	isMultiplexed := proto == protoUnix && addr == dockerSockFile
+
+	if isMultiplexed {
 		ctx.WithField("sockFile", addr).Info("multiplexed csi+docker endpoint")
 	} else {
-
-		var err error
-		if proto, addr, err = gotil.ParseAddress(m.Address()); err != nil {
-			return err
-		}
 		ctx.WithField("sockFile", addr).Info("csi endpoint")
 	}
 
@@ -198,6 +199,7 @@ func (m *mod) Start() error {
 	if err != nil {
 		return err
 	}
+	m.lis = l
 
 	var (
 		tcpm  cmux.CMux
@@ -221,7 +223,9 @@ func (m *mod) Start() error {
 	go func() {
 		go func() {
 			if err := m.cs.Serve(ctx, nil); err != nil {
-				panic(err)
+				if err.Error() != http.ErrServerClosed.Error() {
+					panic(err)
+				}
 			}
 		}()
 
@@ -234,18 +238,14 @@ func (m *mod) Start() error {
 		}
 
 		err := m.gs.Serve(ll)
-
-		// If not multiplexing Docker+CSI and it's a UNIX protocol
-		// then remove the sock file.
-		if !isMultiplexed && proto == protoUnix {
-			os.RemoveAll(addr)
-		}
-
 		if err != nil && err != grpc.ErrServerStopped {
 			// If not multiplexing Docker+CSI then panic on error,
 			// otherwise leave that to the multiplexer.
 			if !isMultiplexed {
-				panic(err)
+				if !strings.Contains(err.Error(),
+					"use of closed network connection") {
+					panic(err)
+				}
 			} else {
 				ctx.WithError(err).Warn(
 					"failed to start csi grpc server")
@@ -277,9 +277,6 @@ func (m *mod) Start() error {
 	go func() {
 		// Start cmux serving.
 		err := tcpm.Serve()
-		if proto == protoUnix {
-			os.RemoveAll(addr)
-		}
 		if err != nil && !strings.Contains(err.Error(),
 			"use of closed network connection") {
 			panic(err)
@@ -292,6 +289,12 @@ func (m *mod) Start() error {
 func (m *mod) Stop() error {
 	m.gs.GracefulStop()
 	m.cs.GracefulStop(m.ctx)
+	if m.lis != nil {
+		addr := m.lis.Addr()
+		if addr.Network() == protoUnix {
+			os.RemoveAll(addr.String())
+		}
+	}
 	return nil
 }
 

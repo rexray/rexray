@@ -10,15 +10,13 @@ with the most common use cases, exploring recommended guidelines, and
 finally, delving into the details of more advanced settings.
 
 ## Quick Configuration
-Utilize the
-[REX-Ray Configuration Generator](http://rexrayconfig.codedellemc.com/)
-to dynamically create a configuration file. The final configuration will be
-generated based upon the inputs for the supported storage platform.
+Upon installing REX-Ray create a configuration file by hand or using
+the [REX-Ray Configuration Generator](http://rexrayconfig.codedellemc.com/)
+and then start REX-Ray as a service:
 
-After installing REX-Ray, create a configuration file on the host at
-`/etc/rexray/config.yml` and copy the contents from the [REX-Ray Configuration Generator](http://rexrayconfig.codedellemc.com/) into the file.
-
-Start REX-Ray as a Service with `$ rexray start`
+```bash
+$ rexray start -c rexray.yml
+```
 
 ## Basic Configuration
 This section outlines the two most common configuration scenarios encountered
@@ -302,12 +300,12 @@ communications.
 #### Server Certificates
 When REX-Ray is installed a self-signed certificate and private key are
 generated for use by the libStorage controller and saved as
-`/etc/libstorage/tls/libstorage.crt` and ` /etc/libstorage/tls/libstorage.key`.
+`/etc/rexray/tls/rexray.crt` and ` /etc/rexray/tls/rexray.key`.
 
 #### Peer Verification
 Clients can use the fingerprint of the controller's certificate to validate
 the peer connection, similar to the way SSH works. In fact, peer fingerprints
-are stored in the file `$HOME/.libstorage/known_hosts` that has the same format
+are stored in the file `$HOME/.rexray/known_hosts` that has the same format
 as the SSH file `$HOME/.ssh/known_hosts`.
 
 When a REX-Ray client is executed it may now prompt a user to verify a
@@ -319,7 +317,7 @@ Rejecting connection to unknown host 127.0.0.1.
 sha fingerprint presented: sha256:6389ca7c87f308e7/73c4.
 Do you want to save host to known_hosts file? (yes/no): yes
 
-Permanently added host 127.0.0.1 to known_hosts file $HOME/.libstorage/known_hosts
+Permanently added host 127.0.0.1 to known_hosts file $HOME/.rexray/known_hosts
 It is safe to retry your last rexray command.
 ```
 
@@ -635,59 +633,47 @@ libstorage:
   host: tcp://REXRAY_SERVER:7979
 ```
 
-### Advanced TLS Config
-Please refer to the libStorage
-[TLS documentation](http://libstorage.readthedocs.io/en/stable/user-guide/config/#tls-configuration)
-for more information on how to configure REX-Ray and TLS.
-
-### libStorage Configuration
-REX-Ray embeds both the libStorage client as well as the libStorage server. For
-information on configuring the following, please refer to the
-[libStorage documentation](http://libstorage.readthedocs.io/en/stable):
-
- - [Volume options](http://libstorage.readthedocs.io/en/stable/user-guide/config/#volume-configuration)
-   such as preemption, disabling operations, etc.
- - Fine-tuning [logging](http://libstorage.readthedocs.io/en/stable/user-guide/config/#logging-configuration)
- - [Configuring](http://libstorage.readthedocs.io/en/stable/user-guide/config/#driver-configuration)
-   OS, integration, and storage drivers
-
 ### Data Directories
 The first time REX-Ray is executed it will create several directories if
 they do not already exist:
 
 * `/etc/rexray`
+* `/etc/rexray/tls`
+* `/var/lib/rexray`
 * `/var/log/rexray`
 * `/var/run/rexray`
-* `/var/lib/rexray`
 
 The above directories will contain configuration files, logs, PID files, and
-mounted volumes. However, the location of these directories can also be
-influenced with the environment variable `REXRAY_HOME`.
+mounted volumes.
 
-`REXRAY_HOME` can be used to define a custom home directory for REX-Ray.
-This directory is irrespective of the actual REX-Ray binary. Instead, the
-directory specified in `REXRAY_HOME` is the root directory where the REX-Ray
-binary expects all of the program's data directories to be located.
+The location of these directories can be influenced in two ways. The first way
+is via the environment variable `REXRAY_HOME`. When `REXRAY_HOME` is
+defined, the normal, final token of the above paths is removed. Thus when
+`REXRAY_HOME` is defined as `/opt/rexray` the above directory paths would be:
 
-For example, the following command sets a custom value for `REXRAY_HOME` and
-then gets a volume list:
+* `/opt/rexray/etc`
+* `/opt/rexray/etc/tls`
+* `/opt/rexray/var/lib`
+* `/opt/rexray/var/log`
+* `/opt/rexray/var/run`
 
-```
-env REXRAY_HOME=/tmp/rexray rexray volume
-```
+It's also possible to override any one of the above directory paths manually
+using the following environment variables:
 
-The above command would produce a list of volumes and create the following
-directories in the process:
+* `REXRAY_HOME_ETC`
+* `REXRAY_HOME_ETC_TLS`
+* `REXRAY_HOME_LIB`
+* `REXRAY_HOME_LOG`
+* `REXRAY_HOME_RUN`
 
-* `/tmp/rexray/etc/rexray`
-* `/tmp/rexray/var/log/rexray`
-* `/tmp/rexray/var/run/rexray`
-* `/tmp/rexray/var/lib/rexray`
+Thus if `REXRAY_HOME` was set to `/opt/rexray` and
+`REXRAY_HOME_ETC` was set to `/etc/rexray` the above paths would be:
 
-The entire configuration section will refer to the global configuration file as
-a file located inside of `/etc/rexray`, but it should be noted that if
-`REXRAY_HOME` is set the location of the global configuration file can be
-changed.
+* `/etc/rexray`
+* `/etc/rexray/tls`
+* `/opt/rexray/var/lib`
+* `/opt/rexray/var/log`
+* `/opt/rexray/var/run`
 
 ### Configuration Methods
 There are three ways to configure REX-Ray:
@@ -765,53 +751,3 @@ Property Name | Environment Variable | CLI Flag
 `rexray.logLevel`    | `REXRAY_LOGLEVEL`    | `--logLevel`
 `libstorage.service`   | `LIBSTORAGE_SERVICE`   | `--libstorageService`
 `virtualbox.volumePath`    | `VIRTUALBOX_VOLUMEPATH`   | `--virtualboxVolumePath`
-
-### Logging Configuration
-The REX-Ray log file is, by default, stored at `/var/log/rexray/rexray.log`.
-
-#### Log Levels
-The REX-Ray log level determines the level of verbosity emitted by the
-internal logger. The default level is `warn`, but there are three other levels
-as well:
-
- Log Level | Description
------------|-------------
-`error`    | Log only errors
-`warn`     | Log errors and anything out of place
-`info`     | Log errors, warnings, and workflow messages
-`debug`    | Log everything
-
-For example, the following two commands may look slightly different, but they
-are functionally the same, both printing a list of volumes using the `debug`
-log level:
-
-*Use the `debug` log level - Example 1*
-```bash
-rexray volume -l debug ls
-```
-
-*Use the `debug` log level - Example 2*
-```bash
-env REXRAY_LOGLEVEL=debug rexray volume ls
-```
-
-#### Verbose mode
-To enable the most verbose logging, use the following configuration snippet:
-```yaml
-rexray:
-  logLevel:        debug
-libstorage:
-  logging:
-    level:         debug
-    httpRequests:  true
-    httpResponses: true
-```
-
-The following command line example is the equivalent to the above configuration
-example:
-```bash
-$ REXRAY_DEBUG=true \
-  LIBSTORAGE_LOGGING_HTTPREQUESTS=true \
-  LIBSTORAGE_LOGGING_HTTPRESPONSES=true \
-  rexray ...
-```

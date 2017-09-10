@@ -39,6 +39,8 @@ that include:
 * Raw device support for all existing, block-based storage platforms ([\#998](https://github.com/codedellemc/rexray/issues/998))
 
 ### Enhancements
+* Support for `go get github.com/codedellemc/rexray` ([\#991](https://github.com/codedellemc/rexray/issues/991))
+* Custom config file via the CLI's `-c|--config` flag ([\#991](https://github.com/codedellemc/rexray/issues/991))
 * All existing, managed Docker plug-ins now support CSI ([\#1012](https://github.com/codedellemc/rexray/issues/1012))
 * S3FS supports custom endpoints ([\#986](https://github.com/codedellemc/rexray/issues/986))
 * EBS supports large-device range option ([\#996](https://github.com/codedellemc/rexray/issues/996))

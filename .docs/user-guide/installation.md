@@ -72,21 +72,21 @@ should be where REX-Ray is moved, but this path is not required.
 with SystemD or SystemV for proper initialization.
 
 ### Build and install from source
-It is also easy to build REX-Ray from source using Docker:
+It is also easy to build REX-Ray from source:
 
-```
-$ git clone https://github.com/codedellemc/rexray && make -C rexray
+```bash
+$ go get github.com/codedellemc/rexray
 ```
 
-For building REX-Ray without Docker or to review the various build options
-please see the [Build Reference](/dev-guide/build-reference.md).
+For more information on how to build REX-Ray please see the
+[Build Reference](/dev-guide/build-reference.md).
 
 ### Uninstall
 Depending on how it was installed, REX-Ray can be installed one of a few ways:
 
 #### RPM
 If REX-Ray was installed on a system that uses the RPM package management
-system, such as Redhat, CentOS, the following command can be used to uninstall
+system, such as RedHat, CentOS, the following command can be used to uninstall
 REX-Ray:
 
 ```sh

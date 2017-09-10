@@ -19,6 +19,8 @@ pages:
     - Installation: user-guide/installation.md
     - Configuration: user-guide/config.md
     - Storage Providers: user-guide/storage-providers.md
+    - CSI: user-guide/csi.md
+    - libStorage: user-guide/libstorage.md
     - Schedulers: user-guide/schedulers.md
     - Docker Plug-ins: user-guide/docker-plugins.md
     - Applications: user-guide/applications.md

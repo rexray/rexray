@@ -9,3 +9,17 @@ a.headerlink:hover {
     opacity:            1.00;
     text-decoration:    none;
 }
+
+table.table-striped {
+    border: 1px solid #dfe2e5;
+}
+
+table.table-striped thead tr th {
+    border-bottom: 0;
+    border: 1px solid #dfe2e5;
+}
+
+table.table-striped td {
+    border-top: 0;
+    border: 1px solid #dfe2e5;
+}

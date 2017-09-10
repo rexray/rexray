@@ -13,7 +13,7 @@ Frameworks](http://mesos.apache.org/) like
 [Marathon](https://mesosphere.github.io/marathon/) to automatically orchestrate
 storage tasks between hosts in a cluster.
 
-Built on top of the [libStorage](http://libstorage.readthedocs.io/en/stable)
+Built on top of the [libStorage](./user-guide/libstorage.md)
 framework, REX-Ray's simplified architecture consists of a single binary and
 runs as a stateless service on every host using a configuration file to
 orchestrate multiple storage platforms.
@@ -42,9 +42,9 @@ will satisfy the majority of use cases for REX-Ray.
 For more advanced and manual options, such as using multiple storage platforms,
 and sample configurations of all supported storage platforms, refer to the
 libStorage Storage Providers
-[documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/).
+[documentation](./user-guide/storage-providers.md).
 Additionally, look at [core properties](./user-guide/config.md#configuration-properties)
-and [logging](./user-guide/config.md#logging-configuration).
+and [logging](./user-guide/config.md#logging).
 
 #### Example
 Here is a simple example for using Oracle VirtualBox:
@@ -57,7 +57,7 @@ virtualbox:
 ```
 
 Refer to the VirtualBox
-[documentation](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#virtualbox)
+[documentation](./user-guide/storage-providers.md#virtualbox)
 for additional configuration options.
 
 Start the VirtualBox SOAP API service using:
@@ -122,31 +122,37 @@ is compatible.
 #### Storage Provider Support
 The following storage providers and platforms are supported by REX-Ray.
 
-Provider              | Storage Platform(s)
-----------------------|--------------------
-Amazon EC2 | [EBS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-ebs), [EFS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-efs), [S3FS](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#aws-s3fs)
-Ceph | [RBD](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#ceph-rbd)
-Dell EMC | [ScaleIO](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-scaleio), [Isilon](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#dell-emc-isilon)
-DigitalOcean | [Block Storage](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#do-block-storage)
-FittedCloud | [EBS Optimizer](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers/#ebs-optimizer)
-Google | [GCE Persistent Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#gce-persistent-disk)
-Microsoft | [Azure Unmanaged Disk](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#azure-ud)
-OpenStack | [Cinder](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#cinder)
-VirtualBox | [Virtual Media](http://libstorage.readthedocs.io/en/stable/user-guide/storage-providers#virtualbox)
+| Provider              | Storage Platform  | <center>[Docker](https://docs.docker.com/engine/extend/plugins_volume/)</center> | <center>[CSI](https://github.com/container-storage-interface/spec)</center> | <center>Containerized</center> |
+|-----------------------|----------------------|:---:|:---:|:---:|
+| Amazon EC2 | [EBS](./user-guide/storage-providers.md#aws-ebs) | ✓ | ✓ | ✓  |
+| | [EFS](./user-guide/storage-providers.md#aws-efs) | ✓ | ✓ | ✓ |
+| | [S3FS](./user-guide/storage-providers.md#aws-s3fs) | ✓ | ✓ | ✓ |
+| Ceph | [RBD](./user-guide/storage-providers.md#ceph-rbd) | ✓ | ✓ | ✓ |
+| Local | [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) | | ✓ | ✓ |
+| | [CSI-NFS](https://github.com/codedellemc/csi-nfs) | | ✓ | ✓ |
+| | [CSI-VFS](https://github.com/codedellemc/csi-vfs) | | ✓ | ✓ |
+| Dell EMC | [Isilon](./user-guide/storage-providers.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
+| | [ScaleIO](./user-guide/storage-providers.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
+| DigitalOcean | [Block Storage](./user-guide/storage-providers.md#do-block-storage) | ✓ | ✓ | ✓ |
+| FittedCloud | [EBS Optimizer](./user-guide/storage-providers.md/#ebs-optimizer) | ✓ | | |
+| Google | [GCE Persistent Disk](./user-guide/storage-providers.md#gce-persistent-disk) | ✓ | ✓ | ✓ |
+| Microsoft | [Azure Unmanaged Disk](./user-guide/storage-providers.md#azure-ud) | ✓ | | |
+| OpenStack | [Cinder](./user-guide/storage-providers.md#cinder) | ✓ | ✓ | ✓ |
+| VirtualBox | [Virtual Media](./user-guide/storage-providers.md#virtualbox) | ✓ | | |
 
 #### Operating System Support
 The following operating systems (OS) are supported by REX-Ray:
 
-OS             | Command Line | Service
----------------|--------------|-----------
-Ubuntu 12+     | Yes          | Yes
-Debian 6+      | Yes          | Yes
-RedHat         | Yes          | Yes
-CentOS 6+      | Yes          | Yes
-CoreOS         | Yes          | Yes
-TinyLinux (boot2docker)| Yes          | Yes
-OS X Yosemite+ | Yes          | No
-Windows        | No           | No
+| OS             | <center>Command Line</center> | <center>Service</center> |
+|---------------|:---:|:---:|
+| Ubuntu 12+     | ✓          | ✓ |
+| Debian 6+      | ✓          | ✓ |
+| RedHat         | ✓          | ✓ |
+| CentOS 6+      | ✓          | ✓ |
+| CoreOS         | ✓          | ✓ |
+| TinyLinux (boot2docker)| ✓  | ✓ |
+| OS X Yosemite+ | ✓          |  |
+| Windows        |            |  |
 
 #### Container Runtime Support
 REX-Ray currently supports the following container platforms:

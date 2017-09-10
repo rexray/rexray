@@ -378,7 +378,7 @@ func (s *service) ListVolumes(
 				VolumeInfo: &csi.VolumeInfo{
 					Id: &csi.VolumeID{
 						Values: map[string]string{
-							"path": path.Join(s.vol, fname),
+							"path": fname,
 						},
 					},
 				},

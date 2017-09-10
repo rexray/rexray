@@ -100,8 +100,8 @@
 [[projects]]
   name = "github.com/codedellemc/csi-vfs"
   packages = ["provider","service"]
-  revision = "6f36db700b21b45f9bdb1d1800443804086b680f"
-  version = "v0.1.5"
+  revision = "bc9d02205db8c12686bd5e0b0d83134ce09b0249"
+  version = "v0.1.6"
 
 [[projects]]
   name = "github.com/codedellemc/gocsi"

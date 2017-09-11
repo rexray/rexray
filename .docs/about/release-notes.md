@@ -57,6 +57,17 @@ that include:
 * Fixed volume mount path retrieval in FlexREX `DetachVolume` ([\#914](https://github.com/codedellemc/rexray/issues/914))
 * Sirupsen to sirupsen ([\#995](https://github.com/codedellemc/rexray/issues/995))
 
+### Thank You
+| Name | Blame |
+|------|-------|
+| [Matt Glaser](https://github.com/oppodeldoc) | <p>I must underscore</p><p>How Matt [converted](https://github.com/codedellemc/rexray/pull/1004) a bug</p><p>Into a closed fix.</p> |
+| [Ville Törhönen](https://github.com/vtorhonen) | <p>A man too large cried</p><p>Bemoaned a [device](https://github.com/codedellemc/rexray/pull/996) too small</p><p>He made it larger.</p> |
+| [Dustin Hendel](https://github.com/dahendel) | <p>Stand swiftly, stand now</p><p>Forget set [destinations](https://github.com/codedellemc/rexray/pull/986)</p><p>Go where you now wish</p> |
+| [Mathieu Velten](https://github.com/MatMaul) | <p>A burning ember</p><p>A spark [shouts](https://github.com/codedellemc/rexray/pull/935) into the flame</p><p>Fire dancing skyward</p> |
+| [Chris Duchesne](https://github.com/cduchesne) | <p>Silent, still, careful</p><p>Works into the night's embrace</p><p>Yes, reliable</p> |
+| [Travis Rhoden](https://github.com/codenrhoden) | <p>The other to blame</p><p>Committed, will hash it out</p><p>All credit to you</p> |
+| [Clint Kitson](https://github.com/clintkitson) | <p>Return home, cannot</p><p>He who travels for us all</p><p>He speaks, we listen</p> |
+
 ## Version 0.9.2 (2017/06/28)
 This is a minor release that introduces a Docker managed plug-in for Ceph RBD,
 and fixes a regression with the S3FS Docker plug-in.

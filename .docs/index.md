@@ -134,11 +134,11 @@ The following storage providers and platforms are supported by REX-Ray.
 | Dell EMC | [Isilon](./user-guide/storage-providers.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](./user-guide/storage-providers.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
 | DigitalOcean | [Block Storage](./user-guide/storage-providers.md#do-block-storage) | ✓ | ✓ | ✓ |
-| FittedCloud | [EBS Optimizer](./user-guide/storage-providers.md/#ebs-optimizer) | ✓ | | |
+| FittedCloud | [EBS Optimizer](./user-guide/storage-providers.md/#ebs-optimizer) | ✓ | ✓ | |
 | Google | [GCE Persistent Disk](./user-guide/storage-providers.md#gce-persistent-disk) | ✓ | ✓ | ✓ |
-| Microsoft | [Azure Unmanaged Disk](./user-guide/storage-providers.md#azure-ud) | ✓ | | |
+| Microsoft | [Azure Unmanaged Disk](./user-guide/storage-providers.md#azure-ud) | ✓ | ✓ | |
 | OpenStack | [Cinder](./user-guide/storage-providers.md#cinder) | ✓ | ✓ | ✓ |
-| VirtualBox | [Virtual Media](./user-guide/storage-providers.md#virtualbox) | ✓ | | |
+| VirtualBox | [Virtual Media](./user-guide/storage-providers.md#virtualbox) | ✓ | ✓ | |
 
 #### Operating System Support
 The following operating systems (OS) are supported by REX-Ray:

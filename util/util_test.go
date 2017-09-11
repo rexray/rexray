@@ -175,4 +175,37 @@ func TestFindFlagArgs(t *testing.T) {
 			t.Fatalf("invalid indices: %v", indices)
 		}
 	}
+
+	{
+		val, indices := util.FindFlagVal(
+			"-l", "rexray", "-l")
+		if val != "" {
+			t.Fatalf("val != '': %s", val)
+		}
+		if len(indices) != 1 && indices[0] != 1 {
+			t.Fatalf("invalid indices: %v", indices)
+		}
+	}
+
+	{
+		val, indices := util.FindFlagVal(
+			"--logLevel", "rexray", "--logLevel")
+		if val != "" {
+			t.Fatalf("val != '': %s", val)
+		}
+		if len(indices) != 1 && indices[0] != 1 {
+			t.Fatalf("invalid indices: %v", indices)
+		}
+	}
+
+	{
+		val, indices := util.FindFlagVal(
+			"--logLevel", "rexray", "--logLevel=")
+		if val != "" {
+			t.Fatalf("val != '': %s", val)
+		}
+		if len(indices) != 1 && indices[0] != 1 {
+			t.Fatalf("invalid indices: %v", indices)
+		}
+	}
 }

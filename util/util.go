@@ -558,7 +558,7 @@ func parseSafeHost(ctx apitypes.Context, h string) string {
 func FindFlagVal(name string, args ...string) (string, []int) {
 	var format string
 	if strings.HasPrefix(name, "--") {
-		format = `(?i)^%s(?:=(.+))?$`
+		format = `(?i)^%s(?:=(.*))?$`
 	} else {
 		format = `(?i)^%s$`
 	}
@@ -569,12 +569,16 @@ func FindFlagVal(name string, args ...string) (string, []int) {
 		case 0:
 			continue
 		case 1:
-			if i+1 <= len(args) {
+			if i+1 < len(args) {
 				return args[i+1], []int{i, i + 1}
 			}
+			return "", []int{i}
 		case 2:
 			if m[1] == "" {
-				return args[i+1], []int{i, i + 1}
+				if i+1 < len(args) {
+					return args[i+1], []int{i, i + 1}
+				}
+				return "", []int{i}
 			}
 			return m[1], []int{i}
 		}

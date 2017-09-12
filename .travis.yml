@@ -8,7 +8,46 @@ env:
 jobs:
   include:
 
-    # the first stage builds all of the tests, executes the framework
+    # the first stage builds all of the binaries possible, searching
+    # for any build errors that could possibly occur. this prevents
+    # the subsequent stages from wasting time enqueued for available vms
+    - &build-stage
+      stage:          build
+      language:       go
+      go:             1.8.3
+      go_import_path: github.com/codedellemc/rexray
+      env:            PROG=rexray
+      before_script:
+        - git fetch --unshallow --tags
+      script:
+        - make
+        - md5sum $PROG
+        - ls -al $PROG
+        - ./$PROG version
+
+    - <<: *build-stage
+      env: PROG=rexray-agent       TYPE=agent
+    - <<: *build-stage
+      env: PROG=rexray-controller  TYPE=controller
+
+    - <<: *build-stage
+      env: DRIVER=dobs
+    - <<: *build-stage
+      env: DRIVER=ebs
+    - <<: *build-stage
+      env: DRIVER=efs
+    - <<: *build-stage
+      env: DRIVER=gcepd
+    - <<: *build-stage
+      env: DRIVER=isilon
+    - <<: *build-stage
+      env: DRIVER=rbd
+    - <<: *build-stage
+      env: DRIVER=s3fs
+    - <<: *build-stage
+      env: DRIVER=scaleio
+
+    # the second stage builds all of the tests, executes the framework
     # tests using the vfs driver, and uploads the resulting coverage
     # results to codecov.io
     - stage:          test
@@ -22,7 +61,7 @@ jobs:
         - make test
         - make cover
 
-    # the second stage is responsible for producing the rexray stand-alone,
+    # the third stage is responsible for producing the rexray stand-alone,
     # agent, client, and controller binaries as well as packaging the
     # binaries and uploading them to bintray
     - &deploy-stage

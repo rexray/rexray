@@ -123,6 +123,7 @@ func (c *CLI) installScripts(
 
 	sia := []*scriptInfo{}
 	for _, v := range args {
+		ctx.WithField("scriptName", v).Debug("getting script asset")
 		// is it an embedded script?
 		ai, err := scripts.AssetInfo(v)
 		if err == nil {

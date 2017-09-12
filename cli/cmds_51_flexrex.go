@@ -10,6 +10,8 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/codedellemc/rexray/util"
 	"github.com/spf13/cobra"
+
+	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 )
 
 func init() {
@@ -33,8 +35,14 @@ func (c *CLI) initFlexRexCmds() {
 		Use:   "install",
 		Short: "Install the FlexVol REX-Ray plug-in",
 		Run: func(cmd *cobra.Command, args []string) {
+
+			scriptPath := path.Join(
+				apictx.MustPathConfig(c.ctx).Home, c.scriptPath)
+			c.ctx.WithField("scriptPath", scriptPath).Debug(
+				"scripts dir path set")
+
 			if c.force {
-				os.RemoveAll(c.scriptPath)
+				os.RemoveAll(scriptPath)
 			}
 			fp := util.ScriptFilePath(c.ctx, "flexrex")
 			if !gotil.FileExists(fp) {
@@ -42,16 +50,16 @@ func (c *CLI) initFlexRexCmds() {
 					c.ctx.Fatal(err)
 				}
 			}
-			err := os.MkdirAll(path.Dir(c.scriptPath), os.FileMode(0755))
+			err := os.MkdirAll(path.Dir(scriptPath), os.FileMode(0755))
 			if err != nil {
 				c.ctx.Fatal(err)
 			}
 			c.mustMarshalOutput(&scriptInfo{
 				Name:      "flexrex",
-				Path:      c.scriptPath,
+				Path:      scriptPath,
 				Installed: true,
 				Modified:  false,
-			}, os.Symlink(fp, c.scriptPath))
+			}, os.Symlink(fp, scriptPath))
 		},
 	}
 	c.flexRexCmd.AddCommand(c.flexRexInstallCmd)
@@ -60,9 +68,13 @@ func (c *CLI) initFlexRexCmds() {
 		Use:   "uninstall",
 		Short: "Uninstall the FlexVol REX-Ray plug-in",
 		Run: func(cmd *cobra.Command, args []string) {
+			scriptPath := path.Join(
+				apictx.MustPathConfig(c.ctx).Home, c.scriptPath)
+			c.ctx.WithField("scriptPath", scriptPath).Debug(
+				"scripts dir path set")
 			c.mustMarshalOutput(
-				[]string{c.scriptPath},
-				os.RemoveAll(c.scriptPath))
+				[]string{scriptPath},
+				os.RemoveAll(scriptPath))
 		},
 	}
 	c.flexRexCmd.AddCommand(c.flexRexUninstallCmd)

@@ -15,7 +15,9 @@ import (
 	"github.com/codedellemc/rexray/util"
 )
 
-func installSelfCert(ctx apitypes.Context, config gofig.Config) {
+func installSelfCert(
+	ctx apitypes.Context,
+	config gofig.Config) error {
 
 	certPath := config.GetString(apitypes.ConfigTLSCertFile)
 	keyPath := config.GetString(apitypes.ConfigTLSKeyFile)
@@ -25,7 +27,7 @@ func installSelfCert(ctx apitypes.Context, config gofig.Config) {
 			"certFile": certPath,
 			"keyFile":  keyPath,
 		}).Debug("not creating certs; files already exist")
-		return
+		return nil
 	}
 
 	pathConfig := context.MustPathConfig(ctx)
@@ -37,12 +39,12 @@ func installSelfCert(ctx apitypes.Context, config gofig.Config) {
 			"certFile": certPath,
 			"keyFile":  keyPath,
 		}).Debug("not creating certs; files already exist")
-		return
+		return nil
 	}
 
 	host, err := os.Hostname()
 	if err != nil {
-		ctx.Fatalf("failed to get hostname for cert")
+		return fmt.Errorf("get hostname for cert failed: %v", err)
 	}
 
 	ctx.WithFields(map[string]interface{}{
@@ -51,10 +53,11 @@ func installSelfCert(ctx apitypes.Context, config gofig.Config) {
 		"keyFile":  keyPath,
 	}).Debug("creating certs")
 
-	fmt.Println("Generating server self-signed certificate...")
+	fmt.Println("generating self-signed certificate...")
 	if err := util.CreateSelfCert(ctx, certPath, keyPath, host); err != nil {
-		ctx.WithError(err).Fatal("cert generation failed")
+		return fmt.Errorf("cert generation failed: %v", err)
 	}
 
-	fmt.Printf("Created cert file %s, key %s\n\n", certPath, keyPath)
+	fmt.Printf("  %s\n  %s\n", certPath, keyPath)
+	return nil
 }

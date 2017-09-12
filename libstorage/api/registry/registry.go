@@ -3,11 +3,11 @@
 package registry
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
 	gofig "github.com/akutz/gofig/types"
-	"github.com/akutz/goof"
 
 	"github.com/codedellemc/rexray/libstorage/api/types"
 )
@@ -94,7 +94,7 @@ func NewStorageExecutor(name string) (types.StorageExecutor, error) {
 	}()
 
 	if !ok {
-		return nil, goof.WithField("executor", name, "invalid executor name")
+		return nil, fmt.Errorf("invalid executor name: %s", name)
 	}
 
 	return ctor(), nil
@@ -114,7 +114,7 @@ func NewStorageDriver(name string) (types.StorageDriver, error) {
 	}()
 
 	if !ok {
-		return nil, goof.WithField("driver", name, "invalid driver name")
+		return nil, fmt.Errorf("invalid driver name: %s", name)
 	}
 
 	return ctor(), nil
@@ -134,7 +134,7 @@ func NewOSDriver(name string) (types.OSDriver, error) {
 	}()
 
 	if !ok {
-		return nil, goof.WithField("driver", name, "invalid driver name")
+		return nil, fmt.Errorf("invalid driver name: %s", name)
 	}
 
 	return NewOSDriverManager(ctor()), nil
@@ -154,7 +154,7 @@ func NewIntegrationDriver(name string) (types.IntegrationDriver, error) {
 	}()
 
 	if !ok {
-		return nil, goof.WithField("driver", name, "invalid driver name")
+		return nil, fmt.Errorf("invalid driver name: %s", name)
 	}
 
 	return NewIntegrationDriverManager(ctor()), nil

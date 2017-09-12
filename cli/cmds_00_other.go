@@ -49,7 +49,10 @@ func (c *CLI) initOtherCmds() {
 		Short: "Install REX-Ray",
 		Run: func(cmd *cobra.Command, args []string) {
 			if installFunc != nil {
-				installSelfCert(c.ctx, c.config)
+				if err := installSelfCert(c.ctx, c.config); err != nil {
+					fmt.Fprintf(os.Stderr, "install failed: %v\n", err)
+					os.Exit(1)
+				}
 				installFunc(c.ctx)
 			}
 		},

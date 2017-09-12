@@ -7,4 +7,6 @@ import (
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
-func installSelfCert(ctx apitypes.Context, config gofig.Config) {}
+func installSelfCert(ctx apitypes.Context, config gofig.Config) error {
+	return nil
+}

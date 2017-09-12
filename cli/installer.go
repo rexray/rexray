@@ -33,7 +33,8 @@ const (
 
 func install(ctx apitypes.Context) {
 	checkOpPerms("installed")
-	if runtime.GOOS == "linux" {
+	switch runtime.GOOS {
+	case "linux":
 		switch getInitSystemType() {
 		case SystemD:
 			installSystemD(ctx)
@@ -189,16 +190,21 @@ func getInitSystemType() int {
 }
 
 func installSystemD(ctx apitypes.Context) {
-	createUnitFile(ctx)
-	createEnvFile(ctx)
+	if err := createUnitFile(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "error: install failed: %v\n", err)
+		os.Exit(1)
+	}
+	if err := createEnvFile(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "error: install failed: %v\n", err)
+		os.Exit(1)
+	}
 
 	cmd := exec.Command("systemctl", "enable", "-q", util.UnitFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatalf("installation error %v", err)
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: install failed: %v\n", err)
+		os.Exit(1)
 	}
 
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
@@ -217,22 +223,25 @@ func uninstallSystemD() {
 	cmd := exec.Command("systemctl", "disable", "-q", util.UnitFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatalf("uninstallation error %v", err)
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: uninstall failed: %v\n", err)
+		os.Exit(1)
 	}
 
 	os.Remove(util.UnitFilePath)
 }
 
 func installUpdateRcd() {
-	createInitFile()
+	if err := createInitFile(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: install failed: %v\n", err)
+		os.Exit(1)
+	}
 	cmd := exec.Command("update-rc.d", util.InitFileName, "defaults")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("installation error %v", err)
+		fmt.Fprintf(os.Stderr, "error: install failed: %v\n", err)
+		os.Exit(1)
 	}
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
 	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
@@ -247,17 +256,22 @@ func uninstallUpdateRcd() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("uninstallation error %v", err)
+		fmt.Fprintf(os.Stderr, "error: uninstall failed: %v\n", err)
+		os.Exit(1)
 	}
 }
 
 func installChkConfig() {
-	createInitFile()
+	if err := createInitFile(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: install failed: %v\n", err)
+		os.Exit(1)
+	}
 	cmd := exec.Command("chkconfig", util.InitFileName, "on")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("installation error %v", err)
+		fmt.Fprintf(os.Stderr, "error: install failed: %v\n", err)
+		os.Exit(1)
 	}
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
 	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
@@ -271,24 +285,27 @@ func uninstallChkConfig() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("uninstallation error %v", err)
+		fmt.Fprintf(os.Stderr, "error: uninstall failed: %v\n", err)
+		os.Exit(1)
 	}
 	os.Remove(util.InitFilePath)
 }
 
-func createEnvFile(ctx apitypes.Context) {
-	f, err := os.OpenFile(util.EnvFilePath(ctx), os.O_CREATE|os.O_WRONLY, 0644)
+func createEnvFile(ctx apitypes.Context) error {
+	envFilePath := util.EnvFilePath(ctx)
+	f, err := os.OpenFile(envFilePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("open env file failed: %s: %v", envFilePath, err)
 	}
 	defer f.Close()
 	if util.IsPrefixed(ctx) {
 		f.WriteString("REXRAY_HOME=")
 		f.WriteString(util.GetPrefix(ctx))
 	}
+	return nil
 }
 
-func createUnitFile(ctx apitypes.Context) {
+func createUnitFile(ctx apitypes.Context) error {
 	data := struct {
 		BinFileName string
 		BinFilePath string
@@ -300,20 +317,25 @@ func createUnitFile(ctx apitypes.Context) {
 	}
 	tmpl, err := template.New("UnitFile").Parse(unitFileTemplate)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("create unit file template failed: %v", err)
 	}
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, data)
-	if err != nil {
-		panic(err)
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return fmt.Errorf("exec unit file template failed: %v", err)
 	}
 	text := buf.String()
 	f, err := os.OpenFile(util.UnitFilePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf(
+			"create unit file failed: %s: %v", util.UnitFilePath, err)
 	}
 	defer f.Close()
-	f.WriteString(text)
+	if _, err := f.WriteString(text); err != nil {
+		return fmt.Errorf(
+			"write unit file failed: %s: %v", util.UnitFilePath, err)
+	}
+
+	return nil
 }
 
 const unitFileTemplate = `[Unit]
@@ -332,7 +354,7 @@ KillMode=process
 WantedBy=docker.service
 `
 
-func createInitFile() {
+func createInitFile() error {
 	data := struct {
 		BinFileName string
 		BinFilePath string
@@ -342,25 +364,35 @@ func createInitFile() {
 	}
 	tmpl, err := template.New("InitScript").Parse(initScriptTemplate)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("create init file template failed: %v", err)
 	}
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, data)
-	if err != nil {
-		panic(err)
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return fmt.Errorf("exec unit file template failed: %v", err)
 	}
 	text := buf.String()
 	// wrapped in a function to defer the close to ensure file is written to
 	// disk before subsequent chmod below
-	func() {
+	if err := func() error {
 		f, err := os.OpenFile(util.InitFilePath, os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf(
+				"create init file failed: %s: %v", util.InitFilePath, err)
 		}
 		defer f.Close()
-		f.WriteString(text)
-	}()
-	os.Chmod(util.InitFilePath, 0755)
+		if _, err := f.WriteString(text); err != nil {
+			return fmt.Errorf(
+				"write init file failed: %s: %v", util.InitFilePath, err)
+		}
+		return nil
+	}(); err != nil {
+		return err
+	}
+	if err := os.Chmod(util.InitFilePath, 0755); err != nil {
+		return fmt.Errorf(
+			"chmod init file failed: %s: %v", util.InitFilePath, err)
+	}
+	return nil
 }
 
 const initScriptTemplate = `### BEGIN INIT INFO

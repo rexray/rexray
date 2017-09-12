@@ -298,16 +298,6 @@ const (
 )
 
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
-
-	/*if c.cfgFile != "" && gotil.FileExists(c.cfgFile) {
-		util.ValidateConfig(c.cfgFile)
-		if err := c.config.ReadConfigFile(c.cfgFile); err != nil {
-			panic(err)
-		}
-		os.Setenv("REXRAY_CONFIG_FILE", c.cfgFile)
-		cmd.Flags().Parse(os.Args[1:])
-	}*/
-
 	c.updateLogLevel()
 
 	// Disable patch caching for the CLI

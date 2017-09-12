@@ -90,9 +90,15 @@ func TrapSignals(ctx apitypes.Context) {
 		for s := range sigc {
 
 			ctx := ctx.WithValue(signalContextKey, s.String())
-			if ok, graceful := IsExitSignal(s); ok && !graceful {
-				ctx.Error("received signal; aborting")
-				os.Exit(1)
+			isExitSignal, isGraceful := IsExitSignal(s)
+
+			if isExitSignal {
+				if isGraceful {
+					ctx.Info("received signal; shutting down")
+				} else {
+					ctx.Error("received signal; aborting")
+					os.Exit(1)
+				}
 			}
 
 			func() {
@@ -107,8 +113,7 @@ func TrapSignals(ctx apitypes.Context) {
 				}
 			}()
 
-			if ok, graceful := IsExitSignal(s); ok && graceful {
-				ctx.Error("received signal; shutting down")
+			if isExitSignal {
 				os.Exit(0)
 			}
 		}

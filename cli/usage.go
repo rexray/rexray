@@ -1,13 +1,14 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	rx "regexp"
 	"strings"
 	"text/template"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -19,17 +20,21 @@ func (c *CLI) initUsageTemplates() {
 
 	var ut string
 	utPath := path.Join(gotil.HomeDir(), util.DotDirName, "usage.template")
-	log.WithField("path", utPath).Debug("usage template path")
+	c.ctx.WithField("path", utPath).Debug("usage template path")
 
 	if gotil.FileExists(utPath) {
 		dat, err := ioutil.ReadFile(utPath)
 		if err != nil {
-			panic(err)
+			fmt.Fprintf(
+				os.Stderr,
+				"error: read custom usage template: %s: %v\n",
+				utPath, err)
+			os.Exit(1)
 		}
-		log.WithField("source", utPath).Debug("loaded usage template")
+		c.ctx.WithField("source", utPath).Debug("loaded usage template")
 		ut = string(dat)
 	} else {
-		log.WithField("source", "UsageTemplate").Debug("loaded usage template")
+		c.ctx.WithField("source", "UsageTemplate").Debug("loaded usage template")
 		ut = usageTemplate
 	}
 
@@ -118,17 +123,19 @@ func (c *CLI) additionalFlags() *flag.FlagSet {
 }
 
 func isHelpFlag(cmd *cobra.Command) bool {
-	v, e := cmd.Flags().GetBool("help")
-	if e != nil {
-		panic(e)
+	v, err := cmd.Flags().GetBool("help")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: get help flag: %v\n", err)
+		os.Exit(1)
 	}
 	return v
 }
 
 func isVerboseFlag(cmd *cobra.Command) bool {
-	v, e := cmd.Flags().GetBool("verbose")
-	if e != nil {
-		panic(e)
+	v, err := cmd.Flags().GetBool("verbose")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: get verbose flag: %v\n", err)
+		os.Exit(1)
 	}
 	return v
 }

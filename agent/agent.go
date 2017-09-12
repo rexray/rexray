@@ -54,13 +54,11 @@ func Start(
 	}
 
 	if err := InitializeDefaultModules(ctx, config); err != nil {
-		ctx.WithError(err).Error("default module(s) failed to initialize")
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("agent: mod init failed: %v", err)
 	}
 
 	if err := StartDefaultModules(ctx, config); err != nil {
-		ctx.WithError(err).Error("default module(s) failed to start")
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("agent: mod start failed: %v", err)
 	}
 
 	ctx.Info("agent successfully initialized, waiting on stop signal")

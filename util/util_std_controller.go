@@ -126,8 +126,7 @@ func activateLibStorage(
 	ctx.Debug("starting embedded libStorage server")
 
 	if server, serverErrChan, err = apiserver.Serve(ctx, config); err != nil {
-		ctx.WithError(err).Error("error starting libStorage server")
-		return ctx, config, nil, err
+		return ctx, config, nil, fmt.Errorf("libstorage: %v", err)
 	}
 
 	if host == "" {

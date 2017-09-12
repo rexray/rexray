@@ -4,10 +4,12 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -37,39 +39,64 @@ func serviceStart(
 	config gofig.Config,
 	nopid bool) {
 
-	var cancel context.CancelFunc
+	var (
+		exit            sync.Once
+		wg              sync.WaitGroup
+		serviceStartErr error
+		cancel          context.CancelFunc
+	)
+
+	wg.Add(1)
+	defer wg.Done()
+
 	ctx, cancel = apictx.WithCancel(ctx)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	onExit := func() {
+		if serviceStartErr == nil {
+			return
+		}
+		fmt.Fprintf(
+			os.Stderr,
+			"error: %v\n",
+			serviceStartErr)
+		os.Exit(1)
+	}
+	defer exit.Do(onExit)
 
 	core.RegisterSignalHandler(func(ctx apitypes.Context, s os.Signal) {
 		if ok, _ := core.IsExitSignal(s); ok {
 			ctx.Info("received exit signal")
 			cancel()
 			wg.Wait()
+			exit.Do(onExit)
 		}
 	})
 
-	serviceStartAndWait(ctx, config, nopid)
-	wg.Done()
+	if err := serviceStartAndWait(ctx, config, nopid); err != nil {
+		serviceStartErr = fmt.Errorf("service startup failed: %v", err)
+	}
 }
 
 func serviceStartAndWait(
 	ctx apitypes.Context,
 	config gofig.Config,
-	nopid bool) {
+	nopid bool) error {
 
 	checkOpPerms("started")
 
 	if !nopid {
-		handleStalePIDFile(ctx)
+		if err := handleStalePIDFile(ctx); err != nil {
+			return err
+		}
 	}
 
 	var out io.Writer = os.Stdout
 	if !util.IsTerminal(out) {
-		logFile, logFileErr := util.LogFile(ctx, logFileName)
-		failOnError(logFileErr)
+		logFile, err := util.LogFile(ctx, logFileName)
+		if err != nil {
+			return fmt.Errorf(
+				"create log file failed: %s: %v", logFileName, err)
+		}
 		out = io.MultiWriter(os.Stdout, logFile)
 	}
 	log.SetOutput(out)
@@ -82,24 +109,16 @@ func serviceStartAndWait(
 			Level:     log.StandardLogger().Level,
 		})
 
-	fmt.Fprintf(out, "%s\n", rexRayLogoASCII)
-	util.PrintVersion(out)
-	fmt.Fprintln(out)
-
 	pidFile := util.PidFilePath(ctx)
 
 	if !nopid {
 		if err := util.WritePidFile(ctx, -1); err != nil {
 			if os.IsPermission(err) {
-				ctx.WithError(err).Errorf(
-					"user does not have write permissions for %s",
-					pidFile)
-			} else {
-				ctx.WithError(err).Errorf(
-					"error writing PID file at %s",
-					pidFile)
+				return fmt.Errorf(
+					"write access denied to pid file: %s", pidFile)
 			}
-			os.Exit(1)
+			return fmt.Errorf(
+				"write pid file failed: %s: %v", pidFile, err)
 		}
 		ctx.WithFields(map[string]interface{}{
 			"path": pidFile,
@@ -107,20 +126,31 @@ func serviceStartAndWait(
 		}).Info("created pid file")
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(startFuncs))
+	var (
+		wg              sync.WaitGroup
+		cancel          context.CancelFunc
+		serviceStartErr error
+	)
+
+	// Create a context that can be cancelled.
+	ctx, cancel = apictx.WithCancel(ctx)
 
 	// Start the registered services via their start functions.
 	for _, f := range startFuncs {
 		fctx, errs, err := f(ctx, config)
+
+		// If the service failed to start then jump out of this loop
 		if err != nil {
-			panic(err)
+			serviceStartErr = err
+			break
 		}
 
+		// Skip this service if it did not return an error channel.
 		if errs == nil {
-			wg.Done()
 			continue
 		}
+
+		wg.Add(1)
 
 		// Update the outer context with the context returned from
 		// the service start function. This is important as a start
@@ -133,16 +163,27 @@ func serviceStartAndWait(
 		go func(errs <-chan error) {
 			for err := range errs {
 				if err != nil {
-					panic(err)
+					ctx.WithError(err).Error("service failure detected")
 				}
 			}
 			wg.Done()
 		}(errs)
 	}
 
+	// If any service startup errors occurred then make sure any
+	// services that *were* started receive a cancel signal.
+	//
+	// If no errors occurred then it's safe to print the logo and version.
+	if serviceStartErr != nil {
+		cancel()
+	} else {
+		fmt.Fprintf(out, "%s\n", rexRayLogoASCII)
+		util.PrintVersion(out)
+		fmt.Fprintln(out)
+	}
+
 	// Wait until this context has been cancelled.
 	<-ctx.Done()
-	ctx.Info("cancelled; shutting down services")
 
 	// Wait until all the service start functions have returned.
 	wg.Wait()
@@ -152,33 +193,42 @@ func serviceStartAndWait(
 		os.RemoveAll(pidFile)
 		ctx.WithField("path", pidFile).Info("removed pid file")
 	}
+
+	return serviceStartErr
 }
 
-func serviceStop(ctx apitypes.Context) {
+var errAlreadyStopped = errors.New("already stopped")
+
+func serviceStop(ctx apitypes.Context) error {
 	if useSystemDForSCMCmds {
 		stopViaSystemD()
-		return
+		return nil
 	}
 
 	checkOpPerms("stopped")
 
 	if !gotil.FileExists(util.PidFilePath(ctx)) {
-		fmt.Println("REX-Ray is already stopped")
-		panic(1)
+		return errAlreadyStopped
 	}
 
-	fmt.Print("Shutting down REX-Ray...")
+	pid, err := util.ReadPidFile(ctx)
+	if err != nil {
+		return fmt.Errorf(
+			"read pid file failed: %s: %v",
+			util.PidFilePath(ctx),
+			err)
+	}
 
-	pid, pidErr := util.ReadPidFile(ctx)
-	failOnError(pidErr)
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("find process for pid failed: %d: %v", pid, err)
+	}
 
-	proc, procErr := os.FindProcess(pid)
-	failOnError(procErr)
+	if err := proc.Signal(os.Interrupt); err != nil {
+		return fmt.Errorf("kill process failed: %d: %v", pid, err)
+	}
 
-	killErr := proc.Signal(os.Interrupt)
-	failOnError(killErr)
-
-	fmt.Println("SUCCESS!")
+	return nil
 }
 
 func serviceRestart(
@@ -209,7 +259,7 @@ func serviceStatus(ctx apitypes.Context) {
 	pid, pidErr := util.ReadPidFile(ctx)
 	if pidErr != nil {
 		fmt.Printf("Error reading REX-Ray PID file at %s\n", pidFile)
-		panic(1)
+		os.Exit(1)
 	}
 
 	rrproc, err := findProcess(pid)
@@ -217,7 +267,7 @@ func serviceStatus(ctx apitypes.Context) {
 	if err != nil || rrproc == nil {
 		if err := os.RemoveAll(pidFile); err != nil {
 			fmt.Println("Error removing stale REX-Ray PID file")
-			panic(1)
+			os.Exit(1)
 		}
 		fmt.Println("REX-Ray is stopped")
 		return
@@ -237,52 +287,51 @@ func statusViaSystemD() {
 }
 
 func execSystemDCmd(cmdType string) {
-	cmd := exec.Command("systemctl", cmdType, "-l", util.BinFileName)
+	cmdAndArgs := []string{"systemctl", cmdType, "-l", util.BinFileName}
+	cmd := exec.Command(cmdAndArgs[0], cmdAndArgs[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
+		exitCode := 1
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				panic(status.ExitStatus())
+				exitCode = status.ExitStatus()
 			}
 		}
+		fmt.Fprintf(
+			os.Stderr,
+			"error: systemd cmd failed: %s: %v\n",
+			strings.Join(cmdAndArgs, " "),
+			err)
+		os.Exit(exitCode)
 	}
 }
 
-func handleStalePIDFile(ctx apitypes.Context) {
+func handleStalePIDFile(ctx apitypes.Context) error {
 	pidFile := util.PidFilePath(ctx)
 	if !gotil.FileExists(pidFile) {
-		return
+		return nil
 	}
 
 	pid, err := util.ReadPidFile(ctx)
 	if err != nil {
-		fmt.Printf("Error reading REX-Ray PID file at %s\n", pidFile)
-		panic(1)
+		return fmt.Errorf("read pid file failed: %s: %v", pidFile, err)
 	}
 
 	proc, err := findProcess(pid)
 	if err != nil {
-		fmt.Printf("Error finding process for PID %d", pid)
-		panic(1)
+		return fmt.Errorf("find process for pid failed: %d: %v", pid, err)
 	}
 
 	if proc != nil {
-		fmt.Printf("REX-Ray already running at PID %d\n", pid)
-		panic(1)
+		return fmt.Errorf("already running at pid %d", pid)
 	}
 
 	if err := os.RemoveAll(pidFile); err != nil {
-		fmt.Println("Error removing REX-Ray PID file")
-		panic(1)
+		return fmt.Errorf("remove pid file failed: %s: %v", pidFile, err)
 	}
-}
 
-func failOnError(err error) {
-	if err != nil {
-		fmt.Printf("FAILED!\n  %v\n", err)
-		panic(err)
-	}
+	return nil
 }
 
 const rexRayLogoASCII = `

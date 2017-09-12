@@ -20,12 +20,12 @@ PWD := $(shell pwd)
 
 # if GO_VERSION is not defined then parse it from the .travis.yml file
 ifeq (,$(strip $(GO_VERSION)))
-GO_VERSION := $(shell grep "go:" .travis.yml | awk '{print $$2}')
+GO_VERSION := $(shell grep "go:" .travis.yml | head -n 1 | awk '{print $$2}')
 endif
 
 # if GO_IMPORT_PATH is not defined then parse it from the .travis.yml file
 ifeq (,$(strip $(GO_IMPORT_PATH)))
-GO_IMPORT_PATH := $(shell grep "go_import_path:" .travis.yml | awk '{print $$2}')
+GO_IMPORT_PATH := $(shell grep "go_import_path:" .travis.yml | head -n 1 | awk '{print $$2}')
 endif
 # the import path less the github.com/ at the front
 GO_IMPORT_PATH_SLUG := $(subst github.com/,,$(GO_IMPORT_PATH))

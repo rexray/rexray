@@ -22,6 +22,26 @@ Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
 Formed: Thu, 07 Sep 2017 17:49:48 CDT
 ```
 
+## Version 0.10.2 (2017/09/12)
+REX types warily, a deadline to meet
+With his dev box that sure ain't slow
+Ain't no sound but the sound of his keys
+The PR is ready to go.
+
+Are you ready? Hey, are you ready for this?
+Are you hanging on the edge of your seat?
+From Travis-CI the binaries rip
+REX's builds can't be beat, yeah
+
+Another bug bites the dust!
+
+### Enhancements
+* Improved CLI error handling ([\#1027](https://github.com/codedellemc/rexray/issues/1027))
+* Earlier detection of compilation errors for release variants ([\#1028](https://github.com/codedellemc/rexray/issues/1028))
+
+### Bug Fixes
+* Fixes broken script installs ([\#1025](https://github.com/codedellemc/rexray/issues/1025))
+
 ## Version 0.10.1 (2017/09/11)
 This is a small update to the previous release in order to correct a
 minor bug and include a documentation change.

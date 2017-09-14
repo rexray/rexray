@@ -37,6 +37,14 @@
         },
         {
           "Description": "",
+          "Name": "GCEPD_CONVERTUNDERSCORES",
+          "Settable": [
+            "value"
+          ],
+          "Value": "false"
+        },
+        {
+          "Description": "",
           "Name": "GCEPD_DEFAULTDISKTYPE",
           "Settable": [
             "value"

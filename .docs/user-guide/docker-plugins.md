@@ -348,6 +348,11 @@ $ docker plugin install rexray/gcepd \
 The GCEPD plug-in requires that GCE compute instance has Read/Write Cloud API
 access to the Compute Engine and Storage services.
 
+**NOTE:** GCE persistent disks cannot be created if their name contains an underscore.
+Docker will automatically append prefixes with underscores to your volume names when
+they are created as part of a compose file, so if you're creating volumes with this plugin
+using compose (or stack deploy), be sure to set `GCEPD_CONVERTUNDERSCORES` to `true`.
+
 #### Privileges
 The GCEPD plug-in requires the following privileges:
 
@@ -364,6 +369,7 @@ plug-in:
 
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
+`GCEPD_CONVERTUNDERSCORES` | Set to `true` if the plugin will reference persistent disks through a `docker-compose.yml` file | `false` |
 `GCEPD_DEFAULTDISKTYPE` | The default disk type to consume | `pd-ssd` |
 `GCEPD_TAG` | Only use volumes that are tagged with a label | |
 `GCEPD_ZONE` | GCE Availability Zone | |

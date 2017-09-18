@@ -53,6 +53,14 @@
         },
         {
           "Description": "",
+          "Name": "RBD_CEPHARGS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "RBD_DEFAULTPOOL",
           "Settable": [
             "value"

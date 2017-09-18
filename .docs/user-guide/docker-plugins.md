@@ -205,6 +205,7 @@ plug-in:
 
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
+`RBD_CEPHARGS` | Text to set in the `CEPH_ARGS` environment variable | ""
 `RBD_DEFAULTPOOL` | Default Ceph pool for volumes | `rbd`
 
 ## Dell EMC

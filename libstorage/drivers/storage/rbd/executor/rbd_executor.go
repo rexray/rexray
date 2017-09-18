@@ -18,6 +18,12 @@ import (
 	"github.com/codedellemc/rexray/libstorage/drivers/storage/rbd/utils"
 )
 
+var (
+	// ctxConfigKey is an interface-wrapped key used to access a possible
+	// config object in the context
+	ctxConfigKey = interface{}("rbd.config")
+)
+
 type driver struct {
 	config     gofig.Config
 	doModprobe bool
@@ -97,6 +103,10 @@ func (d *driver) LocalDevices(
 func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
+
+	// Inject the config into the context, so that the utils package can use
+	// to pick up any extra Ceph args
+	ctx = ctx.WithValue(ctxConfigKey, d.config)
 
 	return GetInstanceID(ctx, nil, nil)
 }

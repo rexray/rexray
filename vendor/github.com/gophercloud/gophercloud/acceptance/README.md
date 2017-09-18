@@ -43,7 +43,8 @@ to set them manually.
 |`OS_FLAVOR_ID`|The ID of the flavor you want your server to be based on|
 |`OS_FLAVOR_ID_RESIZE`|The ID of the flavor you want your server to be resized to|
 |`OS_POOL_NAME`|The Pool from where to obtain Floating IPs|
-|`OS_NETWORK_NAME`|The network to launch instances on|
+|`OS_NETWORK_NAME`|The internal/private network to launch instances on|
+|`OS_EXTGW_ID`|The external/public network|
 
 #### Shared file systems
 |Name|Description|

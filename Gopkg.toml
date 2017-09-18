@@ -101,7 +101,7 @@ required = [
 ### Cinder
 [[constraint]]
   name = "github.com/gophercloud/gophercloud"
-  revision = "31ccc1afefa5f02925f672d2c1d512cb2e938b7d"
+  revision = "b4c2377fa77951a0e08163f52dc9b3e206355194"
 
 ### DigitalOcean
 [[constraint]]

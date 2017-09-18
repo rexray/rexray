@@ -81,7 +81,7 @@ type CreateOpts struct {
 	DeviceID            string        `json:"device_id,omitempty"`
 	DeviceOwner         string        `json:"device_owner,omitempty"`
 	TenantID            string        `json:"tenant_id,omitempty"`
-	SecurityGroups      []string      `json:"security_groups,omitempty"`
+	SecurityGroups      *[]string     `json:"security_groups,omitempty"`
 	AllowedAddressPairs []AddressPair `json:"allowed_address_pairs,omitempty"`
 }
 
@@ -110,13 +110,13 @@ type UpdateOptsBuilder interface {
 
 // UpdateOpts represents the attributes used when updating an existing port.
 type UpdateOpts struct {
-	Name                string        `json:"name,omitempty"`
-	AdminStateUp        *bool         `json:"admin_state_up,omitempty"`
-	FixedIPs            interface{}   `json:"fixed_ips,omitempty"`
-	DeviceID            string        `json:"device_id,omitempty"`
-	DeviceOwner         string        `json:"device_owner,omitempty"`
-	SecurityGroups      []string      `json:"security_groups"`
-	AllowedAddressPairs []AddressPair `json:"allowed_address_pairs"`
+	Name                string         `json:"name,omitempty"`
+	AdminStateUp        *bool          `json:"admin_state_up,omitempty"`
+	FixedIPs            interface{}    `json:"fixed_ips,omitempty"`
+	DeviceID            string         `json:"device_id,omitempty"`
+	DeviceOwner         string         `json:"device_owner,omitempty"`
+	SecurityGroups      *[]string      `json:"security_groups,omitempty"`
+	AllowedAddressPairs *[]AddressPair `json:"allowed_address_pairs,omitempty"`
 }
 
 // ToPortUpdateMap builds a request body from UpdateOpts.

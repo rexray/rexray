@@ -168,8 +168,7 @@ func HandleUpdate(t *testing.T) {
             	"f0ac4394-7e4a-4409-9701-ba8be283dbc3"
         	],
         	"binding:host_id": "HOST1",
-        	"binding:vnic_type": "normal",
-					"allowed_address_pairs": null
+               "binding:vnic_type": "normal"
 		}
 }
 			`)

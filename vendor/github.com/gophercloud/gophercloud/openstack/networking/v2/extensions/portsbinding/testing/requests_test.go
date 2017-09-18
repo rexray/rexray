@@ -102,7 +102,7 @@ func TestCreate(t *testing.T) {
 			FixedIPs: []ports.IP{
 				{SubnetID: "a0304c3a-4f08-4c43-88af-d796509c97d2", IPAddress: "10.0.0.2"},
 			},
-			SecurityGroups: []string{"foo"},
+			SecurityGroups: &[]string{"foo"},
 		},
 		HostID:   "HOST1",
 		VNICType: "normal",
@@ -145,7 +145,7 @@ func TestUpdate(t *testing.T) {
 			FixedIPs: []ports.IP{
 				{SubnetID: "a0304c3a-4f08-4c43-88af-d796509c97d2", IPAddress: "10.0.0.3"},
 			},
-			SecurityGroups: []string{"f0ac4394-7e4a-4409-9701-ba8be283dbc3"},
+			SecurityGroups: &[]string{"f0ac4394-7e4a-4409-9701-ba8be283dbc3"},
 		},
 		HostID:   "HOST1",
 		VNICType: "normal",

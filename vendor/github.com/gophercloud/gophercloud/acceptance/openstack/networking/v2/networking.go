@@ -64,6 +64,41 @@ func CreatePort(t *testing.T, client *gophercloud.ServiceClient, networkID, subn
 	return newPort, nil
 }
 
+// CreatePortWithNoSecurityGroup will create a port with no security group
+// attached. An error will be returned if the port could not be created.
+func CreatePortWithNoSecurityGroup(t *testing.T, client *gophercloud.ServiceClient, networkID, subnetID string) (*ports.Port, error) {
+	portName := tools.RandomString("TESTACC-", 8)
+	iFalse := false
+
+	t.Logf("Attempting to create port: %s", portName)
+
+	createOpts := ports.CreateOpts{
+		NetworkID:      networkID,
+		Name:           portName,
+		AdminStateUp:   &iFalse,
+		FixedIPs:       []ports.IP{ports.IP{SubnetID: subnetID}},
+		SecurityGroups: &[]string{},
+	}
+
+	port, err := ports.Create(client, createOpts).Extract()
+	if err != nil {
+		return port, err
+	}
+
+	if err := WaitForPortToCreate(client, port.ID, 60); err != nil {
+		return port, err
+	}
+
+	newPort, err := ports.Get(client, port.ID).Extract()
+	if err != nil {
+		return newPort, err
+	}
+
+	t.Logf("Successfully created port: %s", portName)
+
+	return newPort, nil
+}
+
 // CreateSubnet will create a subnet on the specified Network ID. An error
 // will be returned if the subnet could not be created.
 func CreateSubnet(t *testing.T, client *gophercloud.ServiceClient, networkID string) (*subnets.Subnet, error) {

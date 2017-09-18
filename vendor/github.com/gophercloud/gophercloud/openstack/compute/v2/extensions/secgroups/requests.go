@@ -36,12 +36,13 @@ type GroupOpts struct {
 // CreateOpts is the struct responsible for creating a security group.
 type CreateOpts GroupOpts
 
-// CreateOptsBuilder builds the create options into a serializable format.
+// CreateOptsBuilder allows extensions to add additional parameters to the
+// Create request.
 type CreateOptsBuilder interface {
 	ToSecGroupCreateMap() (map[string]interface{}, error)
 }
 
-// ToSecGroupCreateMap builds the create options into a serializable format.
+// ToSecGroupCreateMap builds a request body from CreateOpts.
 func (opts CreateOpts) ToSecGroupCreateMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(opts, "security_group")
 }
@@ -62,12 +63,13 @@ func Create(client *gophercloud.ServiceClient, opts CreateOptsBuilder) (r Create
 // UpdateOpts is the struct responsible for updating an existing security group.
 type UpdateOpts GroupOpts
 
-// UpdateOptsBuilder builds the update options into a serializable format.
+// UpdateOptsBuilder allows extensions to add additional parameters to the
+// Update request.
 type UpdateOptsBuilder interface {
 	ToSecGroupUpdateMap() (map[string]interface{}, error)
 }
 
-// ToSecGroupUpdateMap builds the update options into a serializable format.
+// ToSecGroupUpdateMap builds a request body from UpdateOpts.
 func (opts UpdateOpts) ToSecGroupUpdateMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(opts, "security_group")
 }
@@ -101,31 +103,41 @@ func Delete(client *gophercloud.ServiceClient, id string) (r gophercloud.ErrResu
 // CreateRuleOpts represents the configuration for adding a new rule to an
 // existing security group.
 type CreateRuleOpts struct {
-	// the ID of the group that this rule will be added to.
+	// ID is the ID of the group that this rule will be added to.
 	ParentGroupID string `json:"parent_group_id" required:"true"`
-	// the lower bound of the port range that will be opened.
+
+	// FromPort is the lower bound of the port range that will be opened.
+	// Use -1 to allow all ICMP traffic.
 	FromPort int `json:"from_port"`
-	// the upper bound of the port range that will be opened.
+
+	// ToPort is the upper bound of the port range that will be opened.
+	// Use -1 to allow all ICMP traffic.
 	ToPort int `json:"to_port"`
-	// the protocol type that will be allowed, e.g. TCP.
+
+	// IPProtocol the protocol type that will be allowed, e.g. TCP.
 	IPProtocol string `json:"ip_protocol" required:"true"`
-	// ONLY required if FromGroupID is blank. This represents the IP range that
-	// will be the source of network traffic to your security group. Use
-	// 0.0.0.0/0 to allow all IP addresses.
+
+	// CIDR is the network CIDR to allow traffic from.
+	// This is ONLY required if FromGroupID is blank. This represents the IP
+	// range that will be the source of network traffic to your security group.
+	// Use 0.0.0.0/0 to allow all IP addresses.
 	CIDR string `json:"cidr,omitempty" or:"FromGroupID"`
-	// ONLY required if CIDR is blank. This value represents the ID of a group
-	// that forwards traffic to the parent group. So, instead of accepting
+
+	// FromGroupID represents another security group to allow access.
+	// This is ONLY required if CIDR is blank. This value represents the ID of a
+	// group that forwards traffic to the parent group. So, instead of accepting
 	// network traffic from an entire IP range, you can instead refine the
 	// inbound source by an existing security group.
 	FromGroupID string `json:"group_id,omitempty" or:"CIDR"`
 }
 
-// CreateRuleOptsBuilder builds the create rule options into a serializable format.
+// CreateRuleOptsBuilder allows extensions to add additional parameters to the
+// CreateRule request.
 type CreateRuleOptsBuilder interface {
 	ToRuleCreateMap() (map[string]interface{}, error)
 }
 
-// ToRuleCreateMap builds the create rule options into a serializable format.
+// ToRuleCreateMap builds a request body from CreateRuleOpts.
 func (opts CreateRuleOpts) ToRuleCreateMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(opts, "security_group_rule")
 }

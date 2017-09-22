@@ -132,6 +132,18 @@
   version = "v0.3.1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/coreos/etcd"
+  packages = ["client","pkg/pathutil","pkg/srv","pkg/types","version"]
+  revision = "6515a1dfd0eaa7f9b09a8a7e28ddbd0546ea441d"
+
+[[projects]]
+  name = "github.com/coreos/go-semver"
+  packages = ["semver"]
+  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
+  version = "v0.2.0"
+
+[[projects]]
   name = "github.com/coreos/go-systemd"
   packages = ["activation"]
   revision = "d2196463941895ee908e13531a23a39feb9e1243"
@@ -348,6 +360,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/ugorji/go"
+  packages = ["codec"]
+  revision = "54210f4e076c57f351166f0ed60e67d3fca57a36"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pkcs12","pkcs12/internal/rc2","ssh/terminal"]
   revision = "81e90905daefcd6fd217b62423c0908922eadb30"
@@ -409,6 +427,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "03bb10bb0c80a016401b78a8886e8028bc565cacceee779d9d8728fffd8e6aed"
+  inputs-digest = "752492f53c35f63fb17e2d44cc9bf1c18042c96883553cb5633feea1963fb73a"
   solver-name = "gps-cdcl"
   solver-version = 1

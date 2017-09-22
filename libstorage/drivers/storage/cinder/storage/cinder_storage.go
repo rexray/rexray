@@ -23,6 +23,12 @@ import (
 
 const (
 	minSizeGiB = 1
+	hiddenText = "******"
+)
+
+var (
+	errVolAlreadyAttached = goof.New("volume already attached to a host")
+	errVolAlreadyDetached = goof.New("volume already detached")
 )
 
 type driver struct {
@@ -89,12 +95,12 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	if d.password() == "" {
 		fields["password"] = ""
 	} else {
-		fields["password"] = "******"
+		fields["password"] = hiddenText
 	}
 	if d.tokenID() == "" {
 		fields["tokenId"] = ""
 	} else {
-		fields["tokenId"] = "******"
+		fields["tokenId"] = hiddenText
 	}
 	fields["tenantId"] = d.tenantID()
 	fields["tenantName"] = d.tenantName()
@@ -105,7 +111,7 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	if trustID == "" {
 		fields["trustId"] = ""
 	} else {
-		fields["trustId"] = "******"
+		fields["trustId"] = hiddenText
 	}
 
 	d.provider, err = openstack.NewClient(authOpts.IdentityEndpoint)
@@ -590,14 +596,24 @@ func (d *driver) VolumeAttach(
 		"instanceId": iid.ID,
 	})
 
-	if opts.Force {
-		// check if attached before trying a detach
-		if vol, err := d.VolumeInspect(ctx, volumeID, &types.VolumeInspectOpts{Attachments: types.VolAttReq}); err == nil {
-			if len(vol.Attachments) > 0 {
-				if _, err := d.VolumeDetach(ctx, volumeID, &types.VolumeDetachOpts{}); err != nil {
-					return nil, "", err
-				}
-			}
+	// Get the volume
+	vol, err := d.VolumeInspect(
+		ctx,
+		volumeID,
+		&types.VolumeInspectOpts{Attachments: types.VolAttReq})
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Check if volume is already attached
+	if len(vol.Attachments) > 0 {
+		// Detach already attached volume if forced
+		if !opts.Force {
+			return nil, "", errVolAlreadyAttached
+		}
+		_, err := d.volumeDetach(ctx, vol)
+		if err != nil {
+			return nil, "", goof.WithError("error detaching volume", err)
 		}
 	}
 
@@ -629,45 +645,79 @@ func (d *driver) VolumeDetach(
 	volumeID string,
 	opts *types.VolumeDetachOpts) (*types.Volume, error) {
 
-	iid := context.MustInstanceID(ctx)
-
 	fields := eff(map[string]interface{}{
-		"volumeId":   volumeID,
-		"instanceId": iid.ID,
+		"volumeId": volumeID,
 	})
 
 	if volumeID == "" {
 		return nil, goof.WithFields(fields, "volumeId is required")
 	}
 
-	resp := volumeattach.Delete(d.clientCompute, iid.ID, volumeID)
-	if resp.Err != nil {
-		return nil, goof.WithFieldsE(fields, "error detaching volume", resp.Err)
+	// Get the volume
+	vol, err := d.VolumeInspect(
+		ctx,
+		volumeID,
+		&types.VolumeInspectOpts{Attachments: types.VolAttReq})
+	if err != nil {
+		return nil, err
 	}
 
-	ctx.WithFields(fields).Debug("waiting for volume to detach")
-	volume, err := d.waitVolumeAttachStatus(ctx, volumeID, false, d.attachTimeout())
-	if err == nil {
-		return volume, nil
+	return d.volumeDetach(ctx, vol)
+}
+
+func (d *driver) volumeDetach(
+	ctx types.Context,
+	vol *types.Volume) (*types.Volume, error) {
+
+	fields := map[string]interface{}{
+		"volumeID": vol.ID,
 	}
 
-	if opts.Force && d.clientBlockStoragev2 != nil {
-		resp := volumeactions.Detach(d.clientBlockStoragev2, volumeID, volumeactions.DetachOpts{})
+	var (
+		volume *types.Volume
+		err    error
+	)
 
-		if resp.Err != nil {
-			return nil, goof.WithFieldsE(fields, "error force detaching volume", resp.Err)
+	if len(vol.Attachments) == 0 {
+		return nil, errVolAlreadyDetached
+	}
+
+	for _, att := range vol.Attachments {
+		delResp := volumeattach.Delete(
+			d.clientCompute, att.InstanceID.ID, vol.ID)
+		if delResp.Err != nil {
+			return nil, goof.WithFieldsE(
+				fields, "error detaching volume", delResp.Err)
 		}
 
-		volume, err = d.waitVolumeAttachStatus(ctx, volumeID, false, d.attachTimeout())
+		ctx.WithFields(fields).Debug("waiting for volume to detach")
+		volume, err = d.waitVolumeAttachStatus(ctx, vol.ID, false,
+			d.attachTimeout())
+		if err == nil {
+			continue
+		}
+
+		// If an error occured, try the v2 client if present
+		if d.clientBlockStoragev2 == nil {
+			return nil, goof.WithFieldsE(
+				fields, "error waiting for volume to detach", err)
+		}
+
+		detResp := volumeactions.Detach(
+			d.clientBlockStoragev2, vol.ID, volumeactions.DetachOpts{})
+		if detResp.Err != nil {
+			return nil, goof.WithFieldsE(
+				fields, "error detaching volume", detResp.Err)
+		}
+
+		volume, err = d.waitVolumeAttachStatus(ctx, vol.ID, false,
+			d.attachTimeout())
 		if err != nil {
 			return nil, goof.WithFieldsE(
-				fields, "error waiting for volume to force detach", err)
+				fields, "error waiting for volume to detach", err)
 		}
-
-		return volume, nil
 	}
-
-	return nil, goof.WithFields(fields, "unexpected error when detaching")
+	return volume, nil
 }
 
 func (d *driver) waitVolumeAttachStatus(

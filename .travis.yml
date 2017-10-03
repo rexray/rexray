@@ -126,7 +126,7 @@ jobs:
     - &docker-stage
       stage:          docker
       language:       c
-      env:            DRIVER=cinder
+      env:            DRIVER=azureud
       services:       docker
       sudo:           required
       before_install:
@@ -167,6 +167,8 @@ jobs:
             all_branches: true
             condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
+    - <<: *docker-stage
+      env: DRIVER=cinder
     - <<: *docker-stage
       env: DRIVER=dobs
     - <<: *docker-stage

@@ -56,9 +56,9 @@ type RBDInfo struct {
 }
 
 //GetRadosPools returns a slice containing all the pool names
-func GetRadosPools(ctx types.Context) ([]*string, error) {
+func GetRadosPools(ctx types.Context, username string) ([]*string, error) {
 
-	cmd := exec.Command(radosCmd, "lspools")
+	cmd := exec.Command(radosCmd, "--id", username, "lspools")
 	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
 		return nil, goof.WithError("unable to get pools", err)
@@ -79,9 +79,10 @@ func GetRadosPools(ctx types.Context) ([]*string, error) {
 //GetRBDImages returns a slice of RBD image info
 func GetRBDImages(
 	ctx types.Context,
+	username string,
 	pool *string) ([]*RBDImage, error) {
 
-	cmd := exec.Command(rbdCmd, "ls", "-p", *pool, "-l", formatOpt, jsonArg)
+	cmd := exec.Command(rbdCmd, "--id", username, "ls", "-p", *pool, "-l", formatOpt, jsonArg)
 	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
 		return nil, goof.WithError("unable to get rbd images", err)
@@ -105,13 +106,14 @@ func GetRBDImages(
 //GetRBDInfo gets low-level details about an RBD image
 func GetRBDInfo(
 	ctx types.Context,
+	username string,
 	pool *string,
 	name *string) (*RBDInfo, error) {
 
 	ignoreCode := 2
 
 	cmd := exec.Command(
-		rbdCmd, "info", "-p", *pool, *name, formatOpt, jsonArg)
+		rbdCmd, "--id", username, "info", "-p", *pool, *name, formatOpt, jsonArg)
 	out, status, err := RunCommand(ctx, cmd, ignoreCode)
 	if err != nil {
 		if status == ignoreCode {
@@ -142,10 +144,10 @@ func GetVolumeID(pool, image *string) *string {
 }
 
 //GetMappedRBDs returns a map of RBDs currently mapped to the *local* host
-func GetMappedRBDs(ctx types.Context) (map[string]string, error) {
+func GetMappedRBDs(ctx types.Context, username string) (map[string]string, error) {
 
 	cmd := exec.Command(
-		rbdCmd, "showmapped", formatOpt, jsonArg)
+		rbdCmd, "--id", username, "showmapped", formatOpt, jsonArg)
 	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
 		return nil, goof.WithError("unable to get rbd map", err)
@@ -171,6 +173,7 @@ func GetMappedRBDs(ctx types.Context) (map[string]string, error) {
 //RBDCreate creates a new RBD volume on the cluster
 func RBDCreate(
 	ctx types.Context,
+	username string,
 	pool *string,
 	image *string,
 	sizeGB *int64,
@@ -178,7 +181,7 @@ func RBDCreate(
 	features []*string) error {
 
 	cmd := exec.Command(
-		rbdCmd, "create", poolOpt, *pool,
+		rbdCmd, "--id", username, "create", poolOpt, *pool,
 		"--object-size", *objectSize,
 		"--size", strconv.FormatInt(*sizeGB, 10)+"G",
 	)
@@ -200,10 +203,11 @@ func RBDCreate(
 //RBDRemove deletes the RBD volume on the cluster
 func RBDRemove(
 	ctx types.Context,
+	username string,
 	pool *string,
 	image *string) error {
 
-	cmd := exec.Command(rbdCmd, "rm", poolOpt, *pool, "--no-progress",
+	cmd := exec.Command(rbdCmd, "--id", username, "rm", poolOpt, *pool, "--no-progress",
 		*image,
 	)
 	_, _, err := RunCommand(ctx, cmd)
@@ -216,9 +220,10 @@ func RBDRemove(
 //RBDMap attaches the given RBD image to the *local* host
 func RBDMap(
 	ctx types.Context,
+	username string,
 	pool, image *string) (string, error) {
 
-	cmd := exec.Command(rbdCmd, "map", poolOpt, *pool, *image)
+	cmd := exec.Command(rbdCmd, "--id", username, "map", poolOpt, *pool, *image)
 	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
 		return "", goof.WithError("unable to map rbd", err)
@@ -228,9 +233,9 @@ func RBDMap(
 }
 
 //RBDUnmap detaches the given RBD device from the *local* host
-func RBDUnmap(ctx types.Context, device *string) error {
+func RBDUnmap(ctx types.Context, username string, device *string) error {
 
-	cmd := exec.Command(rbdCmd, "unmap", *device)
+	cmd := exec.Command(rbdCmd, "--id", username, "unmap", *device)
 	_, _, err := RunCommand(ctx, cmd)
 	if err != nil {
 		return goof.WithError("unable to unmap rbd", err)
@@ -242,10 +247,11 @@ func RBDUnmap(ctx types.Context, device *string) error {
 //GetRBDStatus returns a map of RBD status info
 func GetRBDStatus(
 	ctx types.Context,
+	username string,
 	pool, image *string) (map[string]interface{}, error) {
 
 	cmd := exec.Command(
-		rbdCmd, "status", poolOpt, *pool, *image, formatOpt, jsonArg,
+		rbdCmd, "--id", username, "status", poolOpt, *pool, *image, formatOpt, jsonArg,
 	)
 	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
@@ -266,10 +272,11 @@ func GetRBDStatus(
 //RBDHasWatchers returns true if RBD image has watchers
 func RBDHasWatchers(
 	ctx types.Context,
+	username string,
 	pool *string,
 	image *string) (bool, error) {
 
-	m, err := GetRBDStatus(ctx, pool, image)
+	m, err := GetRBDStatus(ctx, username, pool, image)
 	if err != nil {
 		return false, err
 	}

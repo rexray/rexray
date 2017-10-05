@@ -457,7 +457,7 @@ plug-in:
 
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
-`CINDER_AUTHURL` | The keystone authentication API |  | true
+`CINDER_AUTHURL` | The keystone authentication API |  | ✓
 `CINDER_USERID` | OpenStack userId for cinder access | |
 `CINDER_USERNAME` | OpenStack username for cinder access | |
 `CINDER_PASSWORD` | OpenStack user password for cinder access | |

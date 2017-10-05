@@ -28,7 +28,7 @@ idempotent as well. Not only that, but REX-Ray supports native CSI plug-ins!
 | DigitalOcean | [Block Storage](./storage-providers.md#do-block-storage) | ✓ | ✓ | ✓ |
 | FittedCloud | [EBS Optimizer](./storage-providers.md/#ebs-optimizer) | ✓ | ✓ | |
 | Google | [GCE Persistent Disk](./storage-providers.md#gce-persistent-disk) | ✓ | ✓ | ✓ |
-| Microsoft | [Azure Unmanaged Disk](./storage-providers.md#azure-ud) | ✓ | ✓ | |
+| Microsoft | [Azure Unmanaged Disk](./storage-providers.md#azure-ud) | ✓ | ✓ | ✓ |
 | OpenStack | [Cinder](./storage-providers.md#cinder) | ✓ | ✓ | ✓ |
 | VirtualBox | [Virtual Media](./storage-providers.md#virtualbox) | ✓ | ✓ | |
 

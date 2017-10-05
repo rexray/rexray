@@ -37,6 +37,14 @@
         },
         {
           "Description": "",
+          "Name": "HTTP_PROXY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "S3FS_ENDPOINT",
           "Settable": [
             "value"

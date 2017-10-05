@@ -86,6 +86,7 @@ Environment Variable | Description | Default | Required
 `EBS_ACCESSKEY` | The AWS access key | | ✓
 `EBS_SECRETKEY` | The AWS secret key | | ✓
 `EBS_REGION` | The AWS region | `us-east-1` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### Elastic File System
 The EFS plug-in can be installed with the following command:
@@ -125,6 +126,7 @@ Environment Variable | Description | Default | Required
 `EFS_SECURITYGROUPS` | The AWS security groups to bind to | `default` |
 `EFS_TAG` | Only consume volumes with tag (tag\volume_name)| |
 `EFS_DISABLESESSIONCACHE` | new AWS connection is established with every API call | `false` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### Simple Storage Service
 The S3FS plug-in can be installed with the following command:
@@ -156,6 +158,7 @@ Environment Variable | Description | Default | Required
 `S3FS_OPTIONS` | Additional options to pass to S3FS | |
 `S3FS_REGION` | The AWS region | |
 `S3FS_SECRETKEY` | The AWS secret key | | ✓
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## Ceph
 REX-Ray has a plug-in for Ceph RADOS Block Devices (RBD)
@@ -238,6 +241,7 @@ Environment Variable | Description | Default | Required
 `ISILON_NFSHOST` | The host or ip of your isilon nfs server | | ✓
 `ISILON_DATASUBNET` | The subnet for isilon nfs data traffic | | ✓
 `ISILON_QUOTAS` | Wanting to use quotas with isilon? | `false` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### ScaleIO
 The ScaleIO plug-in can be installed with the following command:
@@ -288,6 +292,7 @@ Environment Variable | Description | Default | Required
 `SCALEIO_STORAGEPOOLNAME` | The name of the storage pool to use | | If `SCALEIO_STORAGEPOOLID` is omitted
 `SCALEIO_THINORTHICK` | The provision mode `(Thin|Thick)Provisioned` | |
 `SCALEIO_VERSION` | The version of ScaleIO system | |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## DigitalOcean
 REX-Ray ships with a plug-in for DigitalOcean to support their Block Storage service.
@@ -332,6 +337,7 @@ Environment Variable | Description | Default | Required
 `DOBS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
 `DOBS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
 `DOBS_TOKEN` | Your DigitalOcean access token | | ✓
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## Google
 REX-Ray ships with plug-ins for Google Compute Engine (GCE) as well.
@@ -373,6 +379,7 @@ Environment Variable | Description | Default | Required
 `GCEPD_DEFAULTDISKTYPE` | The default disk type to consume | `pd-ssd` |
 `GCEPD_TAG` | Only use volumes that are tagged with a label | |
 `GCEPD_ZONE` | GCE Availability Zone | |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## Microsoft
 REX-Ray also includes a plug-in for Azure
@@ -422,6 +429,7 @@ Environment Variable | Description | Default | Required
 `AZUREUD_SUBSCRIPTIONID` | UUID of your Azure subscription | | ✓
 `AZUREUD_TENANTID` | Domain or UUID for your active directory account within Azure | | ✓
 `AZUREUD_USEHTTPS` | Boolean value on whether to use HTTPS when communicating with the Azure storage endpoin | `true` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## OpenStack
 REX-Ray ships with plug-ins for OpenStack as well.
@@ -469,6 +477,7 @@ Environment Variable | Description | Default | Required
 `CINDER_DOMAINNAME` | OpenStack domainName to authenticate | |
 `CINDER_REGIONNAME` | OpenStack regionName to authenticate | |
 `CINDER_AVAILABILITYZONENAME` | OpenStack availability zone for volumes | |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 
 ## Examples

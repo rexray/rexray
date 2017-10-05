@@ -45,6 +45,14 @@
         },
         {
           "Description": "",
+          "Name": "HTTP_PROXY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "AZUREUD_CLIENTID",
           "Settable": [
             "value"

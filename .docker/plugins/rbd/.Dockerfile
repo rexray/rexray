@@ -1,6 +1,6 @@
-FROM centos:7.3.1611
+FROM centos:7.4.1708
 
-ENV CEPH_VERSION kraken
+ENV CEPH_VERSION luminous
 
 RUN rpm --import 'https://download.ceph.com/keys/release.asc'
 RUN rpm -Uvh http://download.ceph.com/rpm-${CEPH_VERSION}/el7/noarch/ceph-release-1-1.el7.noarch.rpm

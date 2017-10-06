@@ -405,6 +405,7 @@ cluster.
 #### Requirements
 
 * The `ceph` and `rbd` binary executables must be installed on the host
+* The minimum required version of Ceph *clients* is Infernalis, `v9.2.1`
 * The `rbd` kernel module must be installed
 * A `ceph.conf` file must be present in its default location
   (`/etc/ceph/ceph.conf`)

@@ -77,6 +77,22 @@
         },
         {
           "Description": "",
+          "Name": "EBS_KMSKEYID",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EBS_MAXRETRIES",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "EBS_REGION",
           "Settable": [
             "value"
@@ -86,6 +102,38 @@
         {
           "Description": "",
           "Name": "EBS_SECRETKEY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EBS_STATUSINITIALDELAY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EBS_STATUSMAXATTEMPTS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EBS_STATUSTIMEOUT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EBS_USELARGEDEVICERANGE",
           "Settable": [
             "value"
           ],

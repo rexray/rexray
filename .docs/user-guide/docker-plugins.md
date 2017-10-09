@@ -87,8 +87,14 @@ plug-in:
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `EBS_ACCESSKEY` | The AWS access key | | ✓
-`EBS_SECRETKEY` | The AWS secret key | | ✓
+`EBS_KMSKEYID` | The encryption key for all volumes that are created with a truthy encryption request field | |
+`EBS_MAXRETRIES` | the number of retries that will be made for failed operations by the AWS SDK | 10 |
 `EBS_REGION` | The AWS region | `us-east-1` |
+`EBS_SECRETKEY` | The AWS secret key | | ✓
+`EBS_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `100ms` |
+`EBS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
+`EBS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
+`EBS_USELARGEDEVICERANGE` | Use largest available device range `/dev/xvd[b-c][a-z]` for EBS volumes | false |
 `HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### Elastic File System

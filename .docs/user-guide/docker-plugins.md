@@ -480,6 +480,9 @@ Environment Variable | Description | Default | Required
 `CINDER_DOMAINNAME` | OpenStack domainName to authenticate | |
 `CINDER_REGIONNAME` | OpenStack regionName to authenticate | |
 `CINDER_AVAILABILITYZONENAME` | OpenStack availability zone for volumes | |
+`CINDER_ATTACHTIMEOUT` | Timeout for attaching volumes | `1m` |
+`CINDER_CREATETIMEOUT` | Timeout for creating volumes | `10m` |
+`CINDER_DELETETIMEOUT` | Timeout for creating volumes | `10m` |
 `HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 

@@ -524,6 +524,9 @@ cinder:
   domainName:           corp
   regionName:           USNW
   availabilityZoneName: Gold
+  attachTimeout:        1m
+  createTimeout:        10m
+  deleteTimeout:        10m
 ```
 
 ##### Configuration Notes

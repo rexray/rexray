@@ -85,6 +85,30 @@
         },
         {
           "Description": "",
+          "Name": "GCEPD_STATUSINITIALDELAY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "GCEPD_STATUSMAXATTEMPTS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "GCEPD_STATUSTIMEOUT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "GCEPD_TAG",
           "Settable": [
             "value"

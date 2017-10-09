@@ -389,6 +389,9 @@ Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `GCEPD_CONVERTUNDERSCORES` | Set to `true` if the plugin will reference persistent disks through a `docker-compose.yml` file | `false` |
 `GCEPD_DEFAULTDISKTYPE` | The default disk type to consume | `pd-ssd` |
+`GCEPD_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `100ms` |
+`GCEPD_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
+`GCEPD_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
 `GCEPD_TAG` | Only use volumes that are tagged with a label | |
 `GCEPD_ZONE` | GCE Availability Zone | |
 `HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |

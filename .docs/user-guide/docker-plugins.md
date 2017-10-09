@@ -246,6 +246,7 @@ plug-in:
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `ISILON_ENDPOINT` | The Isilon web interface endpoint | | ✓
+`ISILON_GROUP` | The group to use when creating a volume | group of the user specified in the configuration |
 `ISILON_INSECURE` | Flag for insecure gateway connection | `false` |
 `ISILON_USERNAME` | Isilon user for connection | | ✓
 `ISILON_PASSWORD` | Isilon password | | ✓

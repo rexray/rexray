@@ -69,6 +69,14 @@
         },
         {
           "Description": "",
+          "Name": "ISILON_GROUP",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "ISILON_INSECURE",
           "Settable": [
             "value"

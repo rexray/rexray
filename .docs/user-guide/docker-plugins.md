@@ -292,6 +292,7 @@ Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `REXRAY_FSTYPE` | The type of file system to use | `xfs` |
 `SCALEIO_ENDPOINT` | The ScaleIO gateway endpoint | | ✓
+`SCALEIO_GUID` | The ScaleIO client GUID | |
 `SCALEIO_INSECURE` | Flag for insecure gateway connection | `true` |
 `SCALEIO_USECERTS` | Flag indicating to require certificate validation | `false` |
 `SCALEIO_USERNAME` | ScaleIO user for connection | | ✓

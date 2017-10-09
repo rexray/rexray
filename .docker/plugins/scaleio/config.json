@@ -77,6 +77,14 @@
         },
         {
           "Description": "",
+          "Name": "SCALEIO_GUID",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "SCALEIO_INSECURE",
           "Settable": [
             "value"

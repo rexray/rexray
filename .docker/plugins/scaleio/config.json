@@ -45,6 +45,30 @@
         },
         {
           "Description": "",
+          "Name": "LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_FILEMODE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "SCALEIO_ENDPOINT",
           "Settable": [
             "value"

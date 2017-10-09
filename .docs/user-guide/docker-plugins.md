@@ -46,6 +46,9 @@ Environment Variable | Description | Default Value
 `REXRAY_FSTYPE` | The type of file system to use | `ext4`
 `REXRAY_LOGLEVEL` | The log level | `warn`
 `REXRAY_PREEMPT` | Enable preemption | `false`
+`LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH` | The path within the volume to return to the integrator | `/data`
+`LINUX_VOLUME_ROOTPATH` | A path to auto create within the volume | '/data'
+`LINUX_VOLUME_FILEMODE` | File mode for mounted path | `0700`
 
 ### Building a Plug-in
 Please see the build reference for

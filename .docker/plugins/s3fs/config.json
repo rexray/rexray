@@ -25,7 +25,7 @@
           "Settable": [
             "value"
           ],
-          "Value": "/data"
+          "Value": ""
         },
         {
           "Description": "",
@@ -33,7 +33,15 @@
           "Settable": [
             "value"
           ],
-          "Value": "/data"
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_FILEMODE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
         },
         {
           "Description": "",

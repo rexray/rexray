@@ -77,6 +77,14 @@
         },
         {
           "Description": "",
+          "Name": "S3FS_MAXRETRIES",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "S3FS_OPTIONS",
           "Settable": [
             "value"

@@ -167,6 +167,7 @@ Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `S3FS_ACCESSKEY` | The AWS access key | | ✓
 `S3FS_DISABLEPATHSTYLE` | Disables use of path style for bucket endpoints | `false` |
+`S3FS_MAXRETRIES` | the number of retries that will be made for failed operations by the AWS SDK | 10 |
 `S3FS_OPTIONS` | Additional options to pass to S3FS | |
 `S3FS_REGION` | The AWS region | |
 `S3FS_SECRETKEY` | The AWS secret key | | ✓

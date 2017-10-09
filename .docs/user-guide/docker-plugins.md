@@ -204,8 +204,6 @@ plug-in:
 
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
-`REXRAY_FSTYPE` | The type of file system to use | `ext4`
-`REXRAY_LOGLEVEL` | The log level | `warn`
 `RBD_DEFAULTPOOL` | Default Ceph pool for volumes | `rbd`
 
 ## Dell EMC

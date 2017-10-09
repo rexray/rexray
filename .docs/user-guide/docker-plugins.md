@@ -135,6 +135,9 @@ Environment Variable | Description | Default | Required
 `EFS_SECURITYGROUPS` | The AWS security groups to bind to | `default` |
 `EFS_TAG` | Only consume volumes with tag (tag\volume_name)| |
 `EFS_DISABLESESSIONCACHE` | new AWS connection is established with every API call | `false` |
+`EFS_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `1s` |
+`EFS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `6` |
+`EFS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
 `HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### Simple Storage Service

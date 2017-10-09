@@ -109,6 +109,30 @@
         },
         {
           "Description": "",
+          "Name": "EFS_STATUSINITIALDELAY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_STATUSMAXATTEMPTS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_STATUSTIMEOUT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "CSI_ENDPOINT",
           "Settable": [
             "value"

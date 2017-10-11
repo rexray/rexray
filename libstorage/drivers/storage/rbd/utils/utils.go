@@ -12,9 +12,11 @@ import (
 	"strings"
 	"syscall"
 
+	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
 	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/codedellemc/rexray/libstorage/drivers/storage/rbd"
 )
 
 const (
@@ -25,6 +27,13 @@ const (
 	poolOpt   = "--pool"
 
 	bytesPerGiB = 1024 * 1024 * 1024
+)
+
+var (
+	cephArgsEnv *string
+	// ctxConfigKey is an interface-wrapped key used to access a possible
+	// config object in the context
+	ctxConfigKey = interface{}("rbd.config")
 )
 
 type rbdMappedEntry struct {
@@ -56,7 +65,7 @@ type RBDInfo struct {
 }
 
 //GetRadosPools returns a slice containing all the pool names
-func GetRadosPools(ctx types.Context) ([]*string, error) {
+func GetRadosPools(ctx types.Context) ([]string, error) {
 
 	cmd := exec.Command(radosCmd, "lspools")
 	out, _, err := RunCommand(ctx, cmd)
@@ -73,15 +82,15 @@ func GetRadosPools(ctx types.Context) ([]*string, error) {
 		pools = append(pools, scanner.Text())
 	}
 
-	return ConvStrArrayToPtr(pools), nil
+	return pools, nil
 }
 
 //GetRBDImages returns a slice of RBD image info
 func GetRBDImages(
 	ctx types.Context,
-	pool *string) ([]*RBDImage, error) {
+	pool string) ([]*RBDImage, error) {
 
-	cmd := exec.Command(rbdCmd, "ls", "-p", *pool, "-l", formatOpt, jsonArg)
+	cmd := exec.Command(rbdCmd, "ls", "-p", pool, "-l", formatOpt, jsonArg)
 	out, _, err := RunCommand(ctx, cmd)
 	if err != nil {
 		return nil, goof.WithError("unable to get rbd images", err)
@@ -96,7 +105,7 @@ func GetRBDImages(
 	}
 
 	for _, info := range rbdList {
-		info.Pool = *pool
+		info.Pool = pool
 	}
 
 	return rbdList, nil
@@ -294,15 +303,6 @@ func RBDHasWatchers(
 	}
 }
 
-//ConvStrArrayToPtr converts the slice of strings to a slice of pointers to str
-func ConvStrArrayToPtr(strArr []string) []*string {
-	ptrArr := make([]*string, len(strArr))
-	for i := range strArr {
-		ptrArr[i] = &strArr[i]
-	}
-	return ptrArr
-}
-
 // ParseMonitorAddresses returns a slice of IP address from the given slice of
 // string addresses. Addresses can be IPv4, IPv4:port, [IPv6], or [IPv6]:port
 func ParseMonitorAddresses(addrs []string) ([]net.IP, error) {
@@ -359,7 +359,27 @@ func RunCommand(
 	cmd *exec.Cmd,
 	ignoreCodes ...int) ([]byte, int, error) {
 
-	ctx.WithField("args", cmd.Args).Debug("running command")
+	if cephArgsEnv == nil {
+		ctx.Debug("Checking for cephArgs")
+		// Check for a gofig.Config in the context.
+		if config, ok := ctx.Value(ctxConfigKey).(gofig.Config); ok {
+			cephArgs := config.GetString(rbd.ConfigCephArgs)
+			if cephArgs != "" {
+				cephArgs = fmt.Sprintf(
+					"%s=%s", "CEPH_ARGS", cephArgs)
+				ctx.Infof("CEPH_ARGS set to %v", cephArgs)
+			} else {
+				ctx.Info("cephArgs is empty")
+			}
+			cephArgsEnv = &cephArgs
+		}
+	}
+
+	if cephArgsEnv != nil && *cephArgsEnv != "" {
+		cmd.Env = append(cmd.Env, *cephArgsEnv)
+	}
+	ctx.WithField("args", cmd.Args).WithField("env", cmd.Env).Debug(
+		"running command")
 
 	out, err := cmd.Output()
 	if err == nil {

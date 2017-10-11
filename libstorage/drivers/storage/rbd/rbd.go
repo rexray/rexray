@@ -14,6 +14,9 @@ const (
 
 	// ConfigTestModule is the config key for testing kernel module presence
 	ConfigTestModule = Name + ".testModule"
+
+	// ConfigCephArgs is the config key for the CEPH_ARGS env var
+	ConfigCephArgs = Name + ".cephArgs"
 )
 
 func init() {
@@ -24,5 +27,6 @@ func registerConfig() {
 	r := gofigCore.NewRegistration("RBD")
 	r.Key(gofig.String, "", "rbd", "", ConfigDefaultPool)
 	r.Key(gofig.Bool, "", true, "", ConfigTestModule)
+	r.Key(gofig.String, "", "", "", ConfigCephArgs)
 	gofigCore.Register(r)
 }

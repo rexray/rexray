@@ -313,6 +313,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 	if isHelpFlags(cmd) {
 		cmd.Help()
+		os.Exit(0)
 	}
 
 	if permErr := c.checkCmdPermRequirements(cmd); permErr != nil {
@@ -324,6 +325,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 
 		fmt.Println()
 		cmd.Help()
+		os.Exit(1)
 	}
 
 	c.ctx.WithField("val", os.Args).Debug("os.args")
@@ -354,6 +356,7 @@ func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 			}
 			fmt.Println()
 			cmd.Help()
+			os.Exit(1)
 		}
 	}
 }

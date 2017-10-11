@@ -2,6 +2,7 @@ package storage
 
 import (
 	"regexp"
+	"strings"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
@@ -27,7 +28,9 @@ var (
 )
 
 type driver struct {
-	config gofig.Config
+	config      gofig.Config
+	defaultPool string
+	multiPool   bool
 }
 
 func init() {
@@ -45,6 +48,11 @@ func (d *driver) Name() string {
 // Init initializes the driver.
 func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
+	d.defaultPool = d.config.GetString(rbd.ConfigDefaultPool)
+	cephArgs := d.config.GetString(rbd.ConfigCephArgs)
+	if cephArgs == "" || !strContainsClient(cephArgs) {
+		d.multiPool = true
+	}
 	ctx.Info("storage driver initialized")
 	return nil
 }
@@ -72,13 +80,23 @@ func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
 
-	// Get all Volumes in all pools
-	pools, err := utils.GetRadosPools(ctx)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		pools   []string
+		err     error
+		volumes []*types.Volume
+	)
 
-	var volumes []*types.Volume
+	if d.multiPool {
+		// Get all Volumes in all pools
+		pools, err = utils.GetRadosPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		ctx.WithField("pool", d.defaultPool).Info(
+			"Only using default pool since cephArgs is set")
+		pools = append(pools, d.defaultPool)
+	}
 
 	for _, pool := range pools {
 		images, err := utils.GetRBDImages(ctx, pool)
@@ -139,16 +157,16 @@ func (d *driver) VolumeInspect(
 }
 
 func (d *driver) VolumeInspectByName(
-        ctx types.Context,
-        volumeName string,
-        opts *types.VolumeInspectOpts) (*types.Volume, error) {
+	ctx types.Context,
+	volumeName string,
+	opts *types.VolumeInspectOpts) (*types.Volume, error) {
 
-        // volumeName and volumeID are the same for RBD
-        return d.VolumeInspect(
-                ctx,
-                volumeName,
-                opts,
-        )
+	// volumeName and volumeID are the same for RBD
+	return d.VolumeInspect(
+		ctx,
+		volumeName,
+		opts,
+	)
 
 }
 
@@ -381,10 +399,6 @@ func (d *driver) SnapshotRemove(
 	return types.ErrNotImplemented
 }
 
-func (d *driver) defaultPool() string {
-	return d.config.GetString(rbd.ConfigDefaultPool)
-}
-
 func (d *driver) toTypeVolumes(
 	ctx types.Context,
 	images []*utils.RBDImage,
@@ -476,6 +490,18 @@ func (d *driver) parseVolumeID(name *string) (*string, *string, error) {
 			"Invalid character(s) found in volume name")
 	}
 
-	pool := d.defaultPool()
+	pool := d.defaultPool
 	return &pool, name, nil
+}
+
+// Search str arg for flags that can set a Ceph client id/name
+func strContainsClient(arg string) bool {
+	fields := strings.Split(arg, "")
+	for _, s := range fields {
+		switch s {
+		case "--id", "--user", "-n", "--name":
+			return true
+		}
+	}
+	return false
 }

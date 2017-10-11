@@ -48,6 +48,9 @@ func (r *router) Routes() []types.Route {
 }
 
 func (r *router) initRoutes() {
+
+	svcReqThrottler := handlers.NewServiceRequestThrottler(r.config)
+
 	r.routes = []types.Route{
 		// GET
 
@@ -66,6 +69,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}",
 			r.volumesForService,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(nil, schema.VolumeMapSchema, nil),
@@ -77,6 +81,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeInspect,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(nil, schema.VolumeSchema, nil),
@@ -90,6 +95,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}",
 			r.volumeDetachAllForService,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
@@ -105,6 +111,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}",
 			r.volumeCreate,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
@@ -120,6 +127,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeCopy,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
@@ -135,6 +143,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeSnapshot,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
@@ -150,6 +159,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeAttach,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
@@ -178,6 +188,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeDetach,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 			handlers.NewSchemaValidator(
@@ -193,6 +204,7 @@ func (r *router) initRoutes() {
 			"/volumes/{service}/{volumeID}",
 			r.volumeRemove,
 			handlers.NewServiceValidator(),
+			svcReqThrottler,
 			handlers.NewAuthSvcHandler(),
 			handlers.NewStorageSessionHandler(),
 		),

@@ -47,6 +47,10 @@ required = [
   name = "github.com/spf13/pflag"
   branch = "master"
 
+[[constraint]]
+  name = "github.com/coreos/etcd"
+  branch = "master"
+
 
 ################################################################################
 ##                              Golang/X                                      ##

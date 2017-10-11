@@ -144,11 +144,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// if a service is specified then add it to the context
-	// as gRPC metadata
-	if args.service != "" {
-		ctx = metadata.NewContext(
-			ctx, metadata.Pairs("csi.service", args.service))
+	// If there is metadata then send it.
+	if v := args.grpcMetadata.vals; len(v) > 0 {
+		ctx = metadata.NewContext(ctx, metadata.New(v))
 	}
 
 	// execute the command
@@ -198,8 +196,11 @@ const mapSzOfSzFormat = `{{range $k, $v := .}}` +
 
 // volumeInfoFormat is the default Go template format for
 // emitting a *csi.VolumeInfo
-const volumeInfoFormat = `{{with .GetId}}{{range $k, $v := .GetValues}}` +
-	`{{printf "%s=%s\t" $k $v}}{{end}}{{end}}{{"\n"}}`
+const volumeInfoFormat = `{{with .Id}}{{range $k, $v := .Values}}` +
+	`{{printf "%s=%s\t" $k $v}}{{end}}{{end}}` +
+	`{{if .Metadata}}{{with .Metadata}}{{range $k, $v := .Values}}` +
+	`{{printf "%s=%s\t" $k $v}}{{end}}{{end}}{{end}}` +
+	`{{"\n"}}`
 
 // versionFormat is the default Go template format for emitting a *csi.Version
 const versionFormat = `{{.GetMajor}}.{{.GetMinor}}.{{.GetPatch}}{{"\n"}}`
@@ -269,13 +270,13 @@ Use the -? flag with an RPC for additional help.
 //                               Global Flags                                //
 ///////////////////////////////////////////////////////////////////////////////
 var args struct {
-	service   string
-	endpoint  string
-	format    string
-	help      bool
-	insecure  bool
-	szVersion string
-	version   *csi.Version
+	endpoint     string
+	format       string
+	help         bool
+	insecure     bool
+	szVersion    string
+	version      *csi.Version
+	grpcMetadata mapOfStringArg
 }
 
 func flagsGlobal(
@@ -288,11 +289,10 @@ func flagsGlobal(
 		os.Getenv("CSI_ENDPOINT"),
 		"The endpoint address")
 
-	fs.StringVar(
-		&args.service,
-		"service",
-		"",
-		"The name of the CSD service to use.")
+	fs.Var(
+		&args.grpcMetadata,
+		"md",
+		"Freeform gRPC metadata")
 
 	version := defaultVersion
 	if v := os.Getenv("CSI_VERSION"); v != "" {

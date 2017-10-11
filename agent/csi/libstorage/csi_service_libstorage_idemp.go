@@ -152,8 +152,11 @@ func (d *driver) IsNodePublished(
 	var devPath string
 
 	st, err := os.Stat(targetPath)
-	if os.IsNotExist(err) {
-		return false, errMissingTargetPath
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = errMissingTargetPath
+		}
+		return false, err
 	}
 
 	volTypeIsMount := st.IsDir()
@@ -232,7 +235,7 @@ func (d *driver) IsNodePublished(
 		}
 	} else {
 		for _, mi := range minfo {
-			if mi.Device == "devtmpfs" && mi.Path == targetPath {
+			if mi.Device == devtmpfs && mi.Path == targetPath {
 				return true, nil
 			}
 		}

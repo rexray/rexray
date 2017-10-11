@@ -6,6 +6,7 @@ import (
 
 	xctx "golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
@@ -94,36 +95,6 @@ func (s *csiService) dial(
 			gocsi.ClientResponseValidator)))
 }
 
-func (s *csiService) dialController(
-	ctx xctx.Context) (csi.ControllerClient, error) {
-
-	c, err := s.dial(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return csi.NewControllerClient(c), nil
-}
-
-func (s *csiService) dialIdentity(
-	ctx xctx.Context) (csi.IdentityClient, error) {
-
-	c, err := s.dial(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return csi.NewIdentityClient(c), nil
-}
-
-func (s *csiService) dialNode(
-	ctx xctx.Context) (csi.NodeClient, error) {
-
-	c, err := s.dial(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return csi.NewNodeClient(c), nil
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //                            Controller Service                              //
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,11 +104,16 @@ func (s *csiService) CreateVolume(
 	req *csi.CreateVolumeRequest) (
 	*csi.CreateVolumeResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.CreateVolume(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).CreateVolume(ctx, req)
 }
 
 func (s *csiService) DeleteVolume(
@@ -145,11 +121,16 @@ func (s *csiService) DeleteVolume(
 	req *csi.DeleteVolumeRequest) (
 	*csi.DeleteVolumeResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.DeleteVolume(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).DeleteVolume(ctx, req)
 }
 
 func (s *csiService) ControllerPublishVolume(
@@ -157,11 +138,16 @@ func (s *csiService) ControllerPublishVolume(
 	req *csi.ControllerPublishVolumeRequest) (
 	*csi.ControllerPublishVolumeResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.ControllerPublishVolume(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).ControllerPublishVolume(ctx, req)
 }
 
 func (s *csiService) ControllerUnpublishVolume(
@@ -169,11 +155,16 @@ func (s *csiService) ControllerUnpublishVolume(
 	req *csi.ControllerUnpublishVolumeRequest) (
 	*csi.ControllerUnpublishVolumeResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.ControllerUnpublishVolume(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).ControllerUnpublishVolume(ctx, req)
 }
 
 func (s *csiService) ValidateVolumeCapabilities(
@@ -181,11 +172,16 @@ func (s *csiService) ValidateVolumeCapabilities(
 	req *csi.ValidateVolumeCapabilitiesRequest) (
 	*csi.ValidateVolumeCapabilitiesResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.ValidateVolumeCapabilities(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).ValidateVolumeCapabilities(ctx, req)
 }
 
 func (s *csiService) ListVolumes(
@@ -193,11 +189,16 @@ func (s *csiService) ListVolumes(
 	req *csi.ListVolumesRequest) (
 	*csi.ListVolumesResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.ListVolumes(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).ListVolumes(ctx, req)
 }
 
 func (s *csiService) GetCapacity(
@@ -205,11 +206,16 @@ func (s *csiService) GetCapacity(
 	req *csi.GetCapacityRequest) (
 	*csi.GetCapacityResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.GetCapacity(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).GetCapacity(ctx, req)
 }
 
 func (s *csiService) ControllerGetCapabilities(
@@ -217,11 +223,16 @@ func (s *csiService) ControllerGetCapabilities(
 	req *csi.ControllerGetCapabilitiesRequest) (
 	*csi.ControllerGetCapabilitiesResponse, error) {
 
-	c, err := s.dialController(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.ControllerGetCapabilities(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewControllerClient(c).ControllerGetCapabilities(ctx, req)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,11 +244,16 @@ func (s *csiService) GetSupportedVersions(
 	req *csi.GetSupportedVersionsRequest) (
 	*csi.GetSupportedVersionsResponse, error) {
 
-	c, err := s.dialIdentity(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.GetSupportedVersions(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewIdentityClient(c).GetSupportedVersions(ctx, req)
 }
 
 func (s *csiService) GetPluginInfo(
@@ -245,11 +261,16 @@ func (s *csiService) GetPluginInfo(
 	req *csi.GetPluginInfoRequest) (
 	*csi.GetPluginInfoResponse, error) {
 
-	c, err := s.dialIdentity(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.GetPluginInfo(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewIdentityClient(c).GetPluginInfo(ctx, req)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -261,11 +282,16 @@ func (s *csiService) NodePublishVolume(
 	req *csi.NodePublishVolumeRequest) (
 	*csi.NodePublishVolumeResponse, error) {
 
-	c, err := s.dialNode(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.NodePublishVolume(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewNodeClient(c).NodePublishVolume(ctx, req)
 }
 
 func (s *csiService) NodeUnpublishVolume(
@@ -273,11 +299,16 @@ func (s *csiService) NodeUnpublishVolume(
 	req *csi.NodeUnpublishVolumeRequest) (
 	*csi.NodeUnpublishVolumeResponse, error) {
 
-	c, err := s.dialNode(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.NodeUnpublishVolume(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewNodeClient(c).NodeUnpublishVolume(ctx, req)
 }
 
 func (s *csiService) GetNodeID(
@@ -285,11 +316,16 @@ func (s *csiService) GetNodeID(
 	req *csi.GetNodeIDRequest) (
 	*csi.GetNodeIDResponse, error) {
 
-	c, err := s.dialNode(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.GetNodeID(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewNodeClient(c).GetNodeID(ctx, req)
 }
 
 func (s *csiService) ProbeNode(
@@ -297,11 +333,16 @@ func (s *csiService) ProbeNode(
 	req *csi.ProbeNodeRequest) (
 	*csi.ProbeNodeResponse, error) {
 
-	c, err := s.dialNode(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.ProbeNode(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewNodeClient(c).ProbeNode(ctx, req)
 }
 
 func (s *csiService) NodeGetCapabilities(
@@ -309,9 +350,21 @@ func (s *csiService) NodeGetCapabilities(
 	req *csi.NodeGetCapabilitiesRequest) (
 	*csi.NodeGetCapabilitiesResponse, error) {
 
-	c, err := s.dialNode(ctx)
+	c, err := s.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.NodeGetCapabilities(ctx, req)
+	defer c.Close()
+
+	// Persist the gRPC metadata into the next call.
+	ctx = persistMetadata(ctx)
+
+	return csi.NewNodeClient(c).NodeGetCapabilities(ctx, req)
+}
+
+func persistMetadata(ctx xctx.Context) xctx.Context {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		return metadata.NewOutgoingContext(ctx, md)
+	}
+	return ctx
 }

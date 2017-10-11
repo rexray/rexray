@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"path"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,8 +17,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	xctx "golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
-	"github.com/codedellemc/csi-vfs/service"
+	"github.com/thecodeteam/csi-vfs/service"
 )
 
 var (
@@ -219,7 +221,7 @@ func newIdempotentProvider(
 }
 
 var (
-	errMissingIDKeyPath = errors.New("missing id key path")
+	errMissingID = errors.New("missing id field")
 )
 
 type vfsIdemProvider struct {
@@ -233,38 +235,48 @@ func (i *vfsIdemProvider) GetVolumeName(
 	ctx xctx.Context,
 	id *csi.VolumeID) (string, error) {
 
-	volPath, ok := id.Values["path"]
+	volName, ok := id.Values["id"]
 	if !ok {
-		return "", errMissingIDKeyPath
+		return "", errMissingID
 	}
-	return path.Base(volPath), nil
+	return volName, nil
 }
 
 func (i *vfsIdemProvider) GetVolumeInfo(
 	ctx xctx.Context,
 	name string) (*csi.VolumeInfo, error) {
 
+	// Check to see if mount path information should be returned.
+	var mntDir string
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if v, ok := md[service.GRPCMetadataTargetPaths]; ok && len(v) > 0 {
+			if v, _ := strconv.ParseBool(v[0]); v {
+				mntDir = i.mnt
+			}
+		}
+	}
+
 	volPath := path.Join(i.vol, name)
 	if !service.FileExists(volPath) {
 		return nil, nil
 	}
-	return &csi.VolumeInfo{
-		Id: &csi.VolumeID{
-			Values: map[string]string{"path": volPath},
-		},
-	}, nil
+	volInfo, err := service.GetVolumeInfo(ctx, name, mntDir)
+	if err != nil {
+		return nil, err
+	}
+	return &volInfo, nil
 }
 
 func (i *vfsIdemProvider) IsControllerPublished(
 	ctx xctx.Context,
 	id *csi.VolumeID) (*csi.PublishVolumeInfo, error) {
 
-	volPath, ok := id.Values["path"]
+	volName, ok := id.Values["id"]
 	if !ok {
-		return nil, errMissingIDKeyPath
+		return nil, errMissingID
 	}
 
-	volName := path.Base(volPath)
+	volPath := path.Join(i.vol, volName)
 	devPath := path.Join(i.dev, volName)
 	minfo, err := mount.GetMounts()
 	if err != nil {
@@ -290,11 +302,10 @@ func (i *vfsIdemProvider) IsNodePublished(
 	pubInfo *csi.PublishVolumeInfo,
 	targetPath string) (bool, error) {
 
-	volPath, ok := id.Values["path"]
+	volName, ok := id.Values["id"]
 	if !ok {
-		return false, errMissingIDKeyPath
+		return false, errMissingID
 	}
-	volName := path.Base(volPath)
 	mntPath := path.Join(i.mnt, volName)
 
 	minfo, err := mount.GetMounts()

@@ -98,16 +98,10 @@
   revision = "32ae09ae44241977ba9f30bb2ae81bf8d8b2aa1c"
 
 [[projects]]
-  name = "github.com/codedellemc/csi-vfs"
-  packages = ["provider","service"]
-  revision = "bc9d02205db8c12686bd5e0b0d83134ce09b0249"
-  version = "v0.1.6"
-
-[[projects]]
+  branch = "master"
   name = "github.com/codedellemc/gocsi"
   packages = [".","csi","mount"]
-  revision = "835dc5f9f0b7afe404762172e0b8543c9ed4cb20"
-  version = "v0.1.0"
+  revision = "d07507962de8603e31ce24cbd17b0f15aa1c6a3b"
 
 [[projects]]
   name = "github.com/codedellemc/goioc"
@@ -347,6 +341,12 @@
   revision = "ac974c61c2f990f4115b119354b5e0b47550e888"
 
 [[projects]]
+  name = "github.com/thecodeteam/csi-vfs"
+  packages = ["provider","service"]
+  revision = "db786d3f2dad1376495b5c10e39dc181eb9af084"
+  version = "v0.1.7"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pkcs12","pkcs12/internal/rc2","ssh/terminal"]
@@ -409,6 +409,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "03bb10bb0c80a016401b78a8886e8028bc565cacceee779d9d8728fffd8e6aed"
+  inputs-digest = "fc907d54bf6942c2e5fbf5ba1b3b84cb8feb7dae5964445906eb5aac43cec2c1"
   solver-name = "gps-cdcl"
   solver-version = 1

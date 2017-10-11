@@ -14,8 +14,8 @@ import (
 	"github.com/codedellemc/gocsi"
 	"golang.org/x/net/context"
 
-	"github.com/codedellemc/csi-vfs/provider"
-	"github.com/codedellemc/csi-vfs/service"
+	"github.com/thecodeteam/csi-vfs/provider"
+	"github.com/thecodeteam/csi-vfs/service"
 )
 
 ////////////////////////////////////////////////////////////////////////////////

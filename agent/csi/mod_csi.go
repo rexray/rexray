@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	gofig "github.com/akutz/gofig/types"
 	dvol "github.com/docker/go-plugins-helpers/volume"
@@ -29,10 +30,6 @@ import (
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
 
-const (
-	modName = "csi"
-)
-
 type csiServer interface {
 	csi.ControllerServer
 	csi.IdentityServer
@@ -40,15 +37,17 @@ type csiServer interface {
 }
 
 type mod struct {
-	lsc    apitypes.Client
-	ctx    apitypes.Context
-	config gofig.Config
-	name   string
-	addr   string
-	desc   string
-	gs     *grpc.Server
-	cs     *csiService
-	lis    net.Listener
+	lsc           apitypes.Client
+	ctx           apitypes.Context
+	config        gofig.Config
+	name          string
+	addr          string
+	desc          string
+	gs            *grpc.Server
+	cs            *csiService
+	lis           net.Listener
+	cancel        context.CancelFunc
+	waitForCancel sync.WaitGroup
 }
 
 var (
@@ -58,7 +57,8 @@ var (
 	illegalPath       = regexp.MustCompile(`[^[:alnum:]\~\-\./]`)
 )
 
-const configFormat = `
+const (
+	configFormat = `
 rexray:
   modules:
     default-csi:
@@ -68,20 +68,46 @@ rexray:
       disabled: false
 `
 
+	docker2csiMountPath = "rexray.docker2csi.mount.path"
+)
+
 func init() {
-	agent.RegisterModule(modName, newModule)
+	// Register this module as both "csi" and "docker" since the CSI
+	// module now supports both technologies.
+	agent.RegisterModule("csi", newModule)
+	agent.RegisterModule("docker", newModule)
+
 	registry.RegisterConfigReg(
 		"CSI",
 		func(ctx apitypes.Context, r gofig.ConfigRegistration) {
-			if v := os.Getenv("CSI_ENDPOINT"); v != "" {
-				ctx.WithField("CSI_ENDPOINT", v).Info(
-					"configuring default CSI module")
-				r.SetYAML(fmt.Sprintf(configFormat, v))
+
+			pathConfig := apictx.MustPathConfig(ctx)
+
+			// If CSI_ENDPOINT is not set then use the path to the
+			// Docker plug-ins socket file.
+			csiEndpoint := os.Getenv("CSI_ENDPOINT")
+			if csiEndpoint == "" {
+				csiEndpoint = path.Join(
+					pathConfig.Home,
+					"/run/docker/plugins/rexray.sock")
 			}
+
+			// Register the default CSI module.
+			r.SetYAML(fmt.Sprintf(configFormat, csiEndpoint))
+			ctx.WithField("CSI_ENDPOINT", csiEndpoint).Info(
+				"configured default CSI module")
+
+			// Register the CSI module's configuration properties.
+			r.Key(gofig.String, "", "", "", "csi.endpoint")
 			r.Key(gofig.String, "", "libstorage", "",
 				"csi.driver", "csiDriver", "X_CSI_DRIVER")
 			r.Key(gofig.String, "", "", "",
 				"csi.goplugins", "csiGoPlugins", "X_CSI_GO_PLUGINS")
+			r.Key(gofig.Bool, "", false, "",
+				"csi.nodocker", "csiNoDocker", "X_CSI_NO_DOCKER")
+			r.Key(gofig.String, "",
+				path.Join(pathConfig.Lib, "csi", "volumes"),
+				"", "rexray.csi.mount.path")
 		})
 }
 
@@ -158,15 +184,16 @@ const protoUnix = "unix"
 
 func (m *mod) Start() error {
 
+	// Create the cancellation context for this module.
+	m.ctx, m.cancel = apictx.WithCancel(m.ctx)
 	ctx := m.ctx
 
 	doLoadGoPluginsFuncOnce(ctx, m.config)
 
-	// Get the path to the sock file used by the default
-	// Docker module for comparison.
-	dockerSockFile := path.Join(
-		apictx.MustPathConfig(ctx).Home,
-		"/run/docker/plugins/rexray.sock")
+	// Check to see if the provided address is the same as that of
+	// the default docker module's address. If so then multiplex
+	// both Docker *and* CSI connections.
+	isMultiplexed := !m.config.GetBool("csi.nodocker")
 
 	// Use the GoCSI package to parse the address since its parsing
 	// function will handle an implied UNIX sock file by virtue of a
@@ -175,11 +202,6 @@ func (m *mod) Start() error {
 	if err != nil {
 		return err
 	}
-
-	// Check to see if the provided address is the same as that of
-	// the default docker module's address. If so then multiplex
-	// both Docker *and* CSI connections.
-	isMultiplexed := proto == protoUnix && addr == dockerSockFile
 
 	if isMultiplexed {
 		ctx.WithField("sockFile", addr).Info("multiplexed csi+docker endpoint")
@@ -218,8 +240,22 @@ func (m *mod) Start() error {
 		grpcl = tcpm.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings(
 			"content-type", "application/grpc"))
 		http2 = tcpm.Match(cmux.HTTP2())
+
+		m.waitForCancel.Add(3)
+		go func() {
+			<-ctx.Done()
+
+			httpl.Close()
+			grpcl.Close()
+			http2.Close()
+
+			m.waitForCancel.Done()
+			m.waitForCancel.Done()
+			m.waitForCancel.Done()
+		}()
 	}
 
+	// Start the CSI endpoint
 	go func() {
 		go func() {
 			if err := m.cs.Serve(ctx, nil); err != nil {
@@ -246,7 +282,8 @@ func (m *mod) Start() error {
 					"use of closed network connection") {
 					panic(err)
 				}
-			} else {
+			} else if !strings.Contains(err.Error(),
+				"mux: listener closed") {
 				ctx.WithError(err).Warn(
 					"failed to start csi grpc server")
 			}
@@ -258,22 +295,53 @@ func (m *mod) Start() error {
 		return nil
 	}
 
+	// Add one for the docker cache list call.
+	m.waitForCancel.Add(1)
+
+	// Start the Docker Volume API
 	go func() {
-		dh := dvol.NewHandler(&dockerVolDriver{cs: m.cs, ctx: ctx})
+		bridge := newDockerBridge(ctx, m.config, m.cs)
+
+		// Loop every one second until a successful attempt
+		// at listing the volumes using the bridge. This caches
+		// the volume name-to-ID mappings.
+		go func() {
+			for {
+				if _, err := bridge.List(); err == nil {
+					break
+				}
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(time.Duration(1) * time.Second):
+				}
+			}
+			m.waitForCancel.Done()
+		}()
+
+		dh := dvol.NewHandler(bridge)
 		go func() {
 			if err := dh.Serve(httpl); err != nil {
-				ctx.WithError(err).Warn(
-					"failed to start http1 docker->csi proxy")
+				if !strings.Contains(err.Error(),
+					"mux: listener closed") {
+					ctx.WithError(err).Warn(
+						"failed to start http1 docker->csi proxy")
+				}
 			}
 		}()
 		go func() {
 			if err := dh.Serve(http2); err != nil {
-				ctx.WithError(err).Warn(
-					"failed to start http2 docker->csi proxy")
+				if !strings.Contains(err.Error(),
+					"mux: listener closed") {
+					ctx.WithError(err).Warn(
+						"failed to start http2 docker->csi proxy")
+				}
 			}
 		}()
 	}()
 
+	// Start multiplexing connections to either the CSI endpoint or
+	// Docker Volume API
 	go func() {
 		// Start cmux serving.
 		err := tcpm.Serve()
@@ -287,6 +355,11 @@ func (m *mod) Start() error {
 }
 
 func (m *mod) Stop() error {
+	// Invoke the module's context cancellation function and wait
+	// for its participants to finish their business.
+	m.cancel()
+	m.waitForCancel.Wait()
+
 	m.gs.GracefulStop()
 	m.cs.GracefulStop(m.ctx)
 	if m.lis != nil {

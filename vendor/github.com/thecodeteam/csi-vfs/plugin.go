@@ -5,7 +5,7 @@ package main
 import "C"
 
 import (
-	"github.com/codedellemc/csi-vfs/provider"
+	"github.com/thecodeteam/csi-vfs/provider"
 )
 
 ////////////////////////////////////////////////////////////////////////////////

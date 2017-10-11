@@ -7,8 +7,23 @@ import (
 	"io"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
+
+// BypassSourceFilesystemTypes is a list of the filesystem type regex
+// patterns for which the Source field check is bypassed when returning
+// mount information from GetMounts.
+//
+// Normally when considering mount entries from /proc/self/mountinfo the
+// entry is skipped if its Source field does not have a leading "/"
+// character. Entries are not skipped if they have a filesystem type
+// matches one of the regex patterns in this list.
+var BypassSourceFilesystemTypes = []string{
+	`(?i)^devtmpfs$`,
+	`(?i)^fuse\.`,
+	`(?i)^nfs\d$`,
+}
 
 // procMountsFields is fields per line in procMountsPath as per
 // https://www.kernel.org/doc/Documentation/filesystems/proc.txt
@@ -88,8 +103,24 @@ func readProcMountsFrom(
 
 		// Skip any lines where the source does not start with a leading
 		// slash. This means this is not a mount on a "real" device.
-		source := fields[7]
-		if !(strings.HasPrefix(source, "/") || source == "devtmpfs") {
+		// However, there are exceptions for entries with filesystem
+		// types that match a prefix from BypassSourceFilesystemTypes.
+		var (
+			fsType = fields[6]
+			source = fields[7]
+		)
+		bypassSourceCheck := false
+		for _, patt := range BypassSourceFilesystemTypes {
+			matched, err := regexp.MatchString(patt, fsType)
+			if err != nil {
+				return nil, 0, err
+			}
+			if matched {
+				bypassSourceCheck = true
+				break
+			}
+		}
+		if !bypassSourceCheck && !strings.HasPrefix(source, "/") {
 			continue
 		}
 
@@ -105,7 +136,6 @@ func readProcMountsFrom(
 			root       = fields[3]
 			mountPoint = fields[4]
 			mountOpts  = strings.Split(fields[5], ",")
-			fsType     = fields[6]
 		)
 
 		// If this is the first time a source is encountered in the

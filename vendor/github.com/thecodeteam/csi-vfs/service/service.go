@@ -7,9 +7,12 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
@@ -144,7 +147,7 @@ func (s *service) CreateVolume(
 				VolumeInfo: &csi.VolumeInfo{
 					Id: &csi.VolumeID{
 						Values: map[string]string{
-							"path": volPath,
+							"id": req.Name,
 						},
 					},
 				},
@@ -158,13 +161,16 @@ func (s *service) DeleteVolume(
 	req *csi.DeleteVolumeRequest) (
 	*csi.DeleteVolumeResponse, error) {
 
-	// Get the path to the volume from the volume ID.
-	volPath, ok := req.VolumeId.Values["path"]
+	// Get the name of the volume from the volume ID.
+	volName, ok := req.VolumeId.Values["id"]
 	if !ok {
 		return gocsi.ErrDeleteVolume(
 			csi.Error_DeleteVolumeError_INVALID_VOLUME_ID,
 			""), nil
 	}
+
+	// Get the path of the volume using its name.
+	volPath := path.Join(s.vol, volName)
 
 	// If the volume does not exist then return an error.
 	if !FileExists(volPath) {
@@ -194,12 +200,15 @@ func (s *service) ControllerPublishVolume(
 	req *csi.ControllerPublishVolumeRequest) (
 	*csi.ControllerPublishVolumeResponse, error) {
 
-	volPath, ok := req.VolumeId.Values["path"]
+	volName, ok := req.VolumeId.Values["id"]
 	if !ok {
 		return gocsi.ErrControllerPublishVolume(
 			csi.Error_ControllerPublishVolumeError_INVALID_VOLUME_ID,
 			""), nil
 	}
+
+	// Get the path of the volume using its name.
+	volPath := path.Join(s.vol, volName)
 
 	if !FileExists(volPath) {
 		return gocsi.ErrControllerPublishVolume(
@@ -207,7 +216,6 @@ func (s *service) ControllerPublishVolume(
 			volPath), nil
 	}
 
-	volName := path.Base(volPath)
 	devPath := path.Join(s.dev, volName)
 
 	// If the private mount directory for the device does not exist then
@@ -267,12 +275,15 @@ func (s *service) ControllerUnpublishVolume(
 	req *csi.ControllerUnpublishVolumeRequest) (
 	*csi.ControllerUnpublishVolumeResponse, error) {
 
-	volPath, ok := req.VolumeId.Values["path"]
+	volName, ok := req.VolumeId.Values["id"]
 	if !ok {
 		return gocsi.ErrControllerUnpublishVolume(
 			csi.Error_ControllerUnpublishVolumeError_INVALID_VOLUME_ID,
 			""), nil
 	}
+
+	// Get the path of the volume using its name.
+	volPath := path.Join(s.vol, volName)
 
 	if !FileExists(volPath) {
 		return gocsi.ErrControllerUnpublishVolume(
@@ -280,7 +291,6 @@ func (s *service) ControllerUnpublishVolume(
 			volPath), nil
 	}
 
-	volName := path.Base(volPath)
 	devPath := path.Join(s.dev, volName)
 
 	// Get the node's mount information.
@@ -327,12 +337,15 @@ func (s *service) ValidateVolumeCapabilities(
 	req *csi.ValidateVolumeCapabilitiesRequest) (
 	*csi.ValidateVolumeCapabilitiesResponse, error) {
 
-	volPath, ok := req.VolumeInfo.Id.Values["path"]
+	volName, ok := req.VolumeInfo.Id.Values["id"]
 	if !ok {
 		return gocsi.ErrValidateVolumeCapabilities(
 			csi.Error_ValidateVolumeCapabilitiesError_INVALID_VOLUME_INFO,
 			"invalid volume id"), nil
 	}
+
+	// Get the path of the volume using its name.
+	volPath := path.Join(s.vol, volName)
 
 	if !FileExists(volPath) {
 		return gocsi.ErrValidateVolumeCapabilities(
@@ -362,26 +375,40 @@ func (s *service) ValidateVolumeCapabilities(
 	}, nil
 }
 
+// GRPCMetadataTargetPaths is the key in gRPC metatdata that is set
+// to "true" if a ListVolumes RPC should return VolumeInfo objects
+// with associated mount path information.
+const GRPCMetadataTargetPaths = "rexray.docker2csi.targetpaths"
+
 func (s *service) ListVolumes(
 	ctx context.Context,
 	req *csi.ListVolumesRequest) (
 	*csi.ListVolumesResponse, error) {
+
+	// Check to see if mount path information should be returned.
+	var mntDir string
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if v, ok := md[GRPCMetadataTargetPaths]; ok && len(v) > 0 {
+			if v, _ := strconv.ParseBool(v[0]); v {
+				mntDir = s.mnt
+			}
+		}
+	}
 
 	fileNames, err := filepath.Glob(s.volGlob)
 	if err != nil {
 		return nil, err
 	}
 	entries := []*csi.ListVolumesResponse_Result_Entry{}
-	for _, fname := range fileNames {
+	for _, volPath := range fileNames {
+		volName := path.Base(volPath)
+		volInfo, err := GetVolumeInfo(ctx, volName, mntDir)
+		if err != nil {
+			return nil, err
+		}
 		entries = append(entries,
 			&csi.ListVolumesResponse_Result_Entry{
-				VolumeInfo: &csi.VolumeInfo{
-					Id: &csi.VolumeID{
-						Values: map[string]string{
-							"path": fname,
-						},
-					},
-				},
+				VolumeInfo: &volInfo,
 			})
 	}
 
@@ -486,12 +513,15 @@ func (s *service) NodePublishVolume(
 	req *csi.NodePublishVolumeRequest) (
 	*csi.NodePublishVolumeResponse, error) {
 
-	volPath, ok := req.VolumeId.Values["path"]
+	volName, ok := req.VolumeId.Values["id"]
 	if !ok {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_INVALID_VOLUME_ID,
 			""), nil
 	}
+
+	// Get the path of the volume using its name.
+	volPath := path.Join(s.vol, volName)
 
 	if !FileExists(volPath) {
 		return gocsi.ErrNodePublishVolume(
@@ -499,7 +529,6 @@ func (s *service) NodePublishVolume(
 			volPath), nil
 	}
 
-	volName := path.Base(volPath)
 	devPath := path.Join(s.dev, volName)
 	mntPath := path.Join(s.mnt, volName)
 	tgtPath := req.TargetPath
@@ -600,12 +629,15 @@ func (s *service) NodeUnpublishVolume(
 	req *csi.NodeUnpublishVolumeRequest) (
 	*csi.NodeUnpublishVolumeResponse, error) {
 
-	volPath, ok := req.VolumeId.Values["path"]
+	volName, ok := req.VolumeId.Values["id"]
 	if !ok {
 		return gocsi.ErrNodeUnpublishVolume(
 			csi.Error_NodeUnpublishVolumeError_INVALID_VOLUME_ID,
 			""), nil
 	}
+
+	// Get the path of the volume using its name.
+	volPath := path.Join(s.vol, volName)
 
 	if !FileExists(volPath) {
 		return gocsi.ErrNodeUnpublishVolume(
@@ -613,7 +645,6 @@ func (s *service) NodeUnpublishVolume(
 			volPath), nil
 	}
 
-	volName := path.Base(volPath)
 	mntPath := path.Join(s.mnt, volName)
 	tgtPath := req.TargetPath
 	resolveSymlink(&tgtPath)
@@ -842,4 +873,58 @@ func InitConfig(
 			*bindfs = "bindfs"
 		}
 	}
+}
+
+// GetVolumeMountPaths returns one or more paths where the specified
+// volume is mounted.
+func GetVolumeMountPaths(
+	ctx context.Context, mntDir, volumeID string) ([]string, error) {
+
+	mntPath := path.Join(mntDir, volumeID)
+
+	minfo, err := mount.GetMounts()
+	if err != nil {
+		return nil, err
+	}
+
+	var mountPaths []string
+
+	for _, mi := range minfo {
+		if mi.Source == mntPath {
+			mountPaths = append(mountPaths, mi.Path)
+		}
+	}
+
+	return mountPaths, nil
+}
+
+// GetVolumeInfo returns a csi.VolumeInfo object about the specified
+// volume, possibly including mount information.
+func GetVolumeInfo(
+	ctx context.Context, volumeID, mntDir string) (csi.VolumeInfo, error) {
+
+	vi := csi.VolumeInfo{
+		Id: &csi.VolumeID{
+			Values: map[string]string{"id": volumeID},
+		},
+	}
+
+	if mntDir == "" {
+		return vi, nil
+	}
+
+	mountPaths, err := GetVolumeMountPaths(ctx, mntDir, volumeID)
+	if err != nil {
+		return vi, err
+	}
+
+	if len(mountPaths) > 0 {
+		vi.Metadata = &csi.VolumeMetadata{
+			Values: map[string]string{
+				"targetpaths": strings.Join(mountPaths, ","),
+			},
+		}
+	}
+
+	return vi, err
 }

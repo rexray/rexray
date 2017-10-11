@@ -32,6 +32,8 @@ const (
 	// WFDTimeout is the number of seconds to set the timeout to when
 	// calling WaitForDevice
 	WFDTimeout = 10
+
+	devtmpfs = "devtmpfs"
 )
 
 var (
@@ -49,6 +51,12 @@ type pubInfoCache struct {
 
 func init() {
 	goioc.Register("libstorage", func() interface{} { return &driver{} })
+
+	mount.BypassSourceFilesystemTypes = []string{
+		`(?i)^devtmpfs$`,
+		`(?i)^fuse\.`,
+		`(?i)^nfs(\d)?$`,
+	}
 }
 
 type driver struct {
@@ -62,6 +70,7 @@ type driver struct {
 	nodeID     *csi.NodeID
 	pubInfo    map[string]*pubInfoCache
 	pubInfoRWL sync.RWMutex
+	mntPath    string
 }
 
 func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
@@ -75,6 +84,7 @@ func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 	if config, ok := d.ctx.Value(ctxConfigKey).(gofig.Config); ok {
 		d.ctx.Info("init csi libstorage bridge w ctx.config")
 		d.config = config
+		d.mntPath = d.config.GetString(apitypes.ConfigIgVolOpsMountPath)
 	}
 
 	// Cache the name of the libStorage service for which this bridge
@@ -105,9 +115,18 @@ func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 	szTimeout := d.config.GetString("csi.libstorage.timeout")
 	timeout, _ := time.ParseDuration(szTimeout)
 
+	lout := newLogger(d.ctx.Infof)
+	lerr := newLogger(d.ctx.Errorf)
+
+	interceptors := grpc.UnaryInterceptor(gocsi.ChainUnaryServer(
+		gocsi.ServerRequestIDInjector,
+		gocsi.NewServerRequestLogger(lout, lerr),
+		gocsi.NewServerResponseLogger(lout, lerr),
+		gocsi.NewIdempotentInterceptor(d, timeout),
+	))
+
 	// Create a gRPC server with an idempotent interceptor.
-	d.server = grpc.NewServer(
-		grpc.UnaryInterceptor(gocsi.NewIdempotentInterceptor(d, timeout)))
+	d.server = grpc.NewServer(interceptors)
 
 	csi.RegisterControllerServer(d.server, d)
 	csi.RegisterIdentityServer(d.server, d)
@@ -330,6 +349,8 @@ func (d *driver) ListVolumes(
 	req *csi.ListVolumesRequest) (
 	*csi.ListVolumesResponse, error) {
 
+	// If isMountInfoRequested is true then set the VolumesOpts to
+	// request attachment information for this instance.
 	opts := &apitypes.VolumesOpts{Opts: apiutils.NewStore()}
 
 	// Use the storage driver to list the volumes.
@@ -489,16 +510,21 @@ func (d *driver) NodePublishVolume(
 		},
 	}
 	found, devs, err := d.client.Executor().WaitForDevice(d.ctx, opts)
-	if err != nil || !found {
+	if err != nil {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
-			"device not found"), nil
+			fmt.Sprintf("device not found: %v", err)), nil
+	}
+	if !found {
+		return gocsi.ErrNodePublishVolume(
+			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
+			fmt.Sprintf("device not found: token=%s", token)), nil
 	}
 	dev, ok := devs.DeviceMap[token]
 	if !ok {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
-			"device not found"), nil
+			fmt.Sprintf("device not found: token=%s: missing", token)), nil
 	}
 
 	if mv := req.VolumeCapability.GetMount(); mv != nil {
@@ -577,7 +603,7 @@ func (d *driver) NodeUnpublishVolume(
 				mt = true
 			}
 		}
-		if m.Device == "devtmpfs" && m.Path == target {
+		if m.Device == devtmpfs && m.Path == target {
 			bt = true
 		}
 	}

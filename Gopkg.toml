@@ -73,7 +73,7 @@ required = [
   branch = "master"
 
 [[constraint]]
-  name = "github.com/codedellemc/csi-vfs"
+  name = "github.com/thecodeteam/csi-vfs"
   branch = "master"
 
 

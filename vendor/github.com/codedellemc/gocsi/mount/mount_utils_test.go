@@ -12,20 +12,37 @@ func TestReadProcMountsFrom(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("len(mounts)=%d", len(mis))
-	success1 := false
-	success2 := false
+	success1 := "/home/akutz/2"
+	success2 := "/home/akutz/travis-is-right"
+	success3 := "/home/akutz/red"
+	success4 := "/var/lib/rexray/volumes/s3fsvol01"
 	for _, mi := range mis {
 		t.Logf("%+v", mi)
 		if mi.Path == "/home/akutz/2" && mi.Source == "/home/akutz/1" {
-			success1 = true
+			success1 = ""
 		}
 		if mi.Path == "/home/akutz/travis-is-right" && mi.Source == "/dev/sda1" {
-			success2 = true
+			success2 = ""
+		}
+		if mi.Path == "/home/akutz/red" && mi.Device == "localhost:/home/akutz" {
+			success3 = ""
+		}
+		if mi.Path == "/var/lib/rexray/volumes/s3fsvol01" && mi.Device == "s3fs" {
+			success4 = ""
 		}
 	}
-	if !(success1 && success2) {
-		t.FailNow()
+
+	chk := func(s string) {
+		if s != "" {
+			t.Error(s)
+			t.Fail()
+		}
 	}
+
+	chk(success1)
+	chk(success2)
+	chk(success3)
+	chk(success4)
 }
 
 const procMountInfoData = `17 60 0:16 / /sys rw,nosuid,nodev,noexec,relatime shared:6 - sysfs sysfs rw,seclabel
@@ -63,4 +80,7 @@ const procMountInfoData = `17 60 0:16 / /sys rw,nosuid,nodev,noexec,relatime sha
 113 17 0:37 / /sys/fs/fuse/connections rw,relatime shared:65 - fusectl fusectl rw
 119 74 253:2 /akutz/1 /home/akutz/2 rw,relatime shared:29 - xfs /dev/mapper/cl-home rw,seclabel,attr2,inode64,noquota
 119 74 0:5 /sda1 /home/akutz/travis-is-right rw,nosuid shared:2 - devtmpfs devtmpfs rw,seclabel,size=1930460k,nr_inodes=482615,mode=755
+125 18 0:39 / /proc/fs/nfsd rw,relatime shared:72 - nfsd nfsd rw
+128 74 0:41 / /home/akutz/red rw,relatime shared:74 - nfs4 localhost:/home/akutz rw,vers=4.1,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp6,port=0,timeo=600,retrans=2,sec=sys,clientaddr=::1,local_lock=none,addr=::1
+81 62 0:39 / /var/lib/rexray/volumes/s3fsvol01 rw,nosuid,nodev,relatime shared:31 - fuse.s3fs s3fs rw,user_id=0,group_id=0
 `

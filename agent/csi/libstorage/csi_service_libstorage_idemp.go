@@ -17,6 +17,7 @@ var (
 	errMissingIDKeyPath   = errors.New("missing id key path")
 	errMissingTokenKey    = errors.New("missing token key")
 	errUnableToGetLocDevs = errors.New("unable to get local devices")
+	errLocDevsMissingVol  = errors.New("unable to find attached vol in local devices")
 	errMissingTargetPath  = errors.New("target path not created")
 )
 
@@ -101,12 +102,12 @@ func (d *driver) IsControllerPublished(
 	}
 
 	// Request only volumes that are attached.
-	opts := &apitypes.VolumeInspectOpts{
-		Attachments: apitypes.VolAttReqForInstance,
+	viOpts := &apitypes.VolumeInspectOpts{
+		Attachments: apitypes.VolAttReqWithDevMapForInstance,
 		Opts:        apiutils.NewStore(),
 	}
 
-	vol, err := d.client.Storage().VolumeInspect(d.ctx, idVal, opts)
+	vol, err := d.client.Storage().VolumeInspect(d.ctx, idVal, viOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -118,26 +119,35 @@ func (d *driver) IsControllerPublished(
 		return nil, nil
 	}
 
-	d.pubInfoRWL.RLock()
-	defer d.pubInfoRWL.RUnlock()
-
 	pvi := &csi.PublishVolumeInfo{
 		Values: map[string]string{
 			"encrypted": fmt.Sprintf("%v", vol.Encrypted),
 		},
 	}
 
-	if d.pubInfo[idVal] == nil {
-		// We don't have cached PublishVolumeInfo details, so we don't
-		// know what the state is, and cannot return an idempotent response
-		// This is where "Andrew was right" and it would be useful to know
-		// the full CSI method name. If we are doing a publish, we would
-		// return false, if it we are doing an unpublish, we would return
-		// we would return true to defer to the bridge
-		pvi.Values["token"] = ""
-	} else {
-		pvi.Values["token"] = d.pubInfo[idVal].attToken
+	// We know that the volume is attached, we need to go get it's token
+	// via local devices
+	ldOpts := &apitypes.LocalDevicesOpts{
+		Opts:     apiutils.NewStore(),
+		ScanType: apitypes.DeviceScanQuick,
 	}
+	devs, err := d.client.Executor().LocalDevices(d.ctx, ldOpts)
+	if err != nil {
+		return nil, errUnableToGetLocDevs
+	}
+
+	for k, v := range devs.DeviceMap {
+		if v == vol.Attachments[0].DeviceName {
+			pvi.Values["token"] = k
+			break
+		}
+	}
+
+	if _, ok := pvi.Values["token"]; !ok {
+		// Token was not found via local devices
+		return nil, errLocDevsMissingVol
+	}
+
 	return pvi, nil
 }
 

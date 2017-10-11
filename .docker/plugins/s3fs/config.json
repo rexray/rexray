@@ -21,6 +21,30 @@
         },
         {
           "Description": "",
+          "Name": "LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": "/data"
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": "/data"
+        },
+        {
+          "Description": "",
+          "Name": "S3FS_ENDPOINT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "S3FS_ACCESSKEY",
           "Settable": [
             "value"

@@ -46,6 +46,9 @@ Environment Variable | Description | Default Value
 `REXRAY_FSTYPE` | The type of file system to use | `ext4`
 `REXRAY_LOGLEVEL` | The log level | `warn`
 `REXRAY_PREEMPT` | Enable preemption | `false`
+`LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH` | The path within the volume to return to the integrator | `/data`
+`LINUX_VOLUME_ROOTPATH` | A path to auto create within the volume | '/data'
+`LINUX_VOLUME_FILEMODE` | File mode for mounted path | `0700`
 
 ### Building a Plug-in
 Please see the build reference for
@@ -84,8 +87,15 @@ plug-in:
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `EBS_ACCESSKEY` | The AWS access key | | ✓
-`EBS_SECRETKEY` | The AWS secret key | | ✓
+`EBS_KMSKEYID` | The encryption key for all volumes that are created with a truthy encryption request field | |
+`EBS_MAXRETRIES` | the number of retries that will be made for failed operations by the AWS SDK | 10 |
 `EBS_REGION` | The AWS region | `us-east-1` |
+`EBS_SECRETKEY` | The AWS secret key | | ✓
+`EBS_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `100ms` |
+`EBS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
+`EBS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
+`EBS_USELARGEDEVICERANGE` | Use largest available device range `/dev/xvd[b-c][a-z]` for EBS volumes | false |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### Elastic File System
 The EFS plug-in can be installed with the following command:
@@ -125,6 +135,10 @@ Environment Variable | Description | Default | Required
 `EFS_SECURITYGROUPS` | The AWS security groups to bind to | `default` |
 `EFS_TAG` | Only consume volumes with tag (tag\volume_name)| |
 `EFS_DISABLESESSIONCACHE` | new AWS connection is established with every API call | `false` |
+`EFS_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `1s` |
+`EFS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `6` |
+`EFS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### Simple Storage Service
 The S3FS plug-in can be installed with the following command:
@@ -153,9 +167,11 @@ Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `S3FS_ACCESSKEY` | The AWS access key | | ✓
 `S3FS_DISABLEPATHSTYLE` | Disables use of path style for bucket endpoints | `false` |
+`S3FS_MAXRETRIES` | the number of retries that will be made for failed operations by the AWS SDK | 10 |
 `S3FS_OPTIONS` | Additional options to pass to S3FS | |
 `S3FS_REGION` | The AWS region | |
 `S3FS_SECRETKEY` | The AWS secret key | | ✓
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## Ceph
 REX-Ray has a plug-in for Ceph RADOS Block Devices (RBD)
@@ -189,8 +205,6 @@ plug-in:
 
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
-`REXRAY_FSTYPE` | The type of file system to use | `ext4`
-`REXRAY_LOGLEVEL` | The log level | `warn`
 `RBD_DEFAULTPOOL` | Default Ceph pool for volumes | `rbd`
 
 ## Dell EMC
@@ -231,6 +245,7 @@ plug-in:
 Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `ISILON_ENDPOINT` | The Isilon web interface endpoint | | ✓
+`ISILON_GROUP` | The group to use when creating a volume | group of the user specified in the configuration |
 `ISILON_INSECURE` | Flag for insecure gateway connection | `false` |
 `ISILON_USERNAME` | Isilon user for connection | | ✓
 `ISILON_PASSWORD` | Isilon password | | ✓
@@ -238,6 +253,7 @@ Environment Variable | Description | Default | Required
 `ISILON_NFSHOST` | The host or ip of your isilon nfs server | | ✓
 `ISILON_DATASUBNET` | The subnet for isilon nfs data traffic | | ✓
 `ISILON_QUOTAS` | Wanting to use quotas with isilon? | `false` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ### ScaleIO
 The ScaleIO plug-in can be installed with the following command:
@@ -276,6 +292,7 @@ Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `REXRAY_FSTYPE` | The type of file system to use | `xfs` |
 `SCALEIO_ENDPOINT` | The ScaleIO gateway endpoint | | ✓
+`SCALEIO_GUID` | The ScaleIO client GUID | |
 `SCALEIO_INSECURE` | Flag for insecure gateway connection | `true` |
 `SCALEIO_USECERTS` | Flag indicating to require certificate validation | `false` |
 `SCALEIO_USERNAME` | ScaleIO user for connection | | ✓
@@ -288,6 +305,7 @@ Environment Variable | Description | Default | Required
 `SCALEIO_STORAGEPOOLNAME` | The name of the storage pool to use | | If `SCALEIO_STORAGEPOOLID` is omitted
 `SCALEIO_THINORTHICK` | The provision mode `(Thin|Thick)Provisioned` | |
 `SCALEIO_VERSION` | The version of ScaleIO system | |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## DigitalOcean
 REX-Ray ships with a plug-in for DigitalOcean to support their Block Storage service.
@@ -332,6 +350,7 @@ Environment Variable | Description | Default | Required
 `DOBS_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
 `DOBS_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
 `DOBS_TOKEN` | Your DigitalOcean access token | | ✓
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## Google
 REX-Ray ships with plug-ins for Google Compute Engine (GCE) as well.
@@ -371,8 +390,12 @@ Environment Variable | Description | Default | Required
 ---------------------|-------------|---------|---------
 `GCEPD_CONVERTUNDERSCORES` | Set to `true` if the plugin will reference persistent disks through a `docker-compose.yml` file | `false` |
 `GCEPD_DEFAULTDISKTYPE` | The default disk type to consume | `pd-ssd` |
+`GCEPD_STATUSINITIALDELAY` | Time duration used to wait when polling volume status | `100ms` |
+`GCEPD_STATUSMAXATTEMPTS` | Number of times the status of a volume will be queried before giving up | `10` |
+`GCEPD_STATUSTIMEOUT` | Maximum length of time that polling for volume status can occur | `2m` |
 `GCEPD_TAG` | Only use volumes that are tagged with a label | |
 `GCEPD_ZONE` | GCE Availability Zone | |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## Microsoft
 REX-Ray also includes a plug-in for Azure
@@ -422,6 +445,7 @@ Environment Variable | Description | Default | Required
 `AZUREUD_SUBSCRIPTIONID` | UUID of your Azure subscription | | ✓
 `AZUREUD_TENANTID` | Domain or UUID for your active directory account within Azure | | ✓
 `AZUREUD_USEHTTPS` | Boolean value on whether to use HTTPS when communicating with the Azure storage endpoin | `true` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 ## OpenStack
 REX-Ray ships with plug-ins for OpenStack as well.
@@ -469,6 +493,10 @@ Environment Variable | Description | Default | Required
 `CINDER_DOMAINNAME` | OpenStack domainName to authenticate | |
 `CINDER_REGIONNAME` | OpenStack regionName to authenticate | |
 `CINDER_AVAILABILITYZONENAME` | OpenStack availability zone for volumes | |
+`CINDER_ATTACHTIMEOUT` | Timeout for attaching volumes | `1m` |
+`CINDER_CREATETIMEOUT` | Timeout for creating volumes | `10m` |
+`CINDER_DELETETIMEOUT` | Timeout for creating volumes | `10m` |
+`HTTP_PROXY` | Address of HTTP proxy server to gain access to API endpoint | |
 
 
 ## Examples

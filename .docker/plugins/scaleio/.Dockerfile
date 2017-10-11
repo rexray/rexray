@@ -1,4 +1,4 @@
-FROM alpine:3.5
+FROM alpine:3.6
 
 RUN apk update
 RUN apk add xfsprogs e2fsprogs ca-certificates libaio curl
@@ -19,5 +19,5 @@ ADD rexray.yml /etc/rexray/rexray.yml
 ADD rexray.sh /rexray.sh
 RUN chmod +x /rexray.sh
 
-CMD [ "rexray", "start", "-f", "--nopid" ]
+CMD [ "rexray", "start", "--nopid" ]
 ENTRYPOINT [ "/rexray.sh" ]

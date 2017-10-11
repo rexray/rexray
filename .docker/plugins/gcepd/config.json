@@ -37,6 +37,38 @@
         },
         {
           "Description": "",
+          "Name": "HTTP_PROXY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_FILEMODE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "GCEPD_CONVERTUNDERSCORES",
           "Settable": [
             "value"
@@ -46,6 +78,30 @@
         {
           "Description": "",
           "Name": "GCEPD_DEFAULTDISKTYPE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "GCEPD_STATUSINITIALDELAY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "GCEPD_STATUSMAXATTEMPTS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "GCEPD_STATUSTIMEOUT",
           "Settable": [
             "value"
           ],

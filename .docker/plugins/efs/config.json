@@ -29,6 +29,38 @@
         },
         {
           "Description": "",
+          "Name": "HTTP_PROXY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_FILEMODE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "EFS_ACCESSKEY",
           "Settable": [
             "value"
@@ -70,6 +102,30 @@
         {
           "Description": "",
           "Name": "EFS_DISABLESESSIONCACHE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_STATUSINITIALDELAY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_STATUSMAXATTEMPTS",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "EFS_STATUSTIMEOUT",
           "Settable": [
             "value"
           ],

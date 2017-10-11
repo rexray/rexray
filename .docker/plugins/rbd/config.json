@@ -29,6 +29,30 @@
         },
         {
           "Description": "",
+          "Name": "LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_FILEMODE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "RBD_DEFAULTPOOL",
           "Settable": [
             "value"
@@ -55,12 +79,12 @@
           "Description": "A flag that disables the CSI to libStorage bridge.",
           "Name": "X_CSI_NATIVE",
           "Settable": [
-            "value" 
+            "value"
           ],
           "Value": "false"
         },
         {
-          "Description": "", 
+          "Description": "",
           "Name": "CSI_ENDPOINT",
           "Settable": [
             "value"

@@ -10,7 +10,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"google.golang.org/grpc"
@@ -45,10 +44,6 @@ var (
 	errFileNeeded    = errors.New("target path needs to be a file")
 )
 
-type pubInfoCache struct {
-	attToken string
-}
-
 func init() {
 	goioc.Register("libstorage", func() interface{} { return &driver{} })
 
@@ -60,22 +55,18 @@ func init() {
 }
 
 type driver struct {
-	ctx        apitypes.Context
-	client     apitypes.Client
-	config     gofig.Config
-	server     *grpc.Server
-	svcName    string
-	storType   apitypes.StorageType
-	iid        *apitypes.InstanceID
-	nodeID     *csi.NodeID
-	pubInfo    map[string]*pubInfoCache
-	pubInfoRWL sync.RWMutex
-	mntPath    string
+	ctx      apitypes.Context
+	client   apitypes.Client
+	config   gofig.Config
+	server   *grpc.Server
+	svcName  string
+	storType apitypes.StorageType
+	iid      *apitypes.InstanceID
+	nodeID   *csi.NodeID
+	mntPath  string
 }
 
 func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
-
-	d.pubInfo = map[string]*pubInfoCache{}
 
 	d.ctx = apictx.New(ctx)
 	d.client = apictx.MustClient(d.ctx)
@@ -274,10 +265,6 @@ func (d *driver) ControllerPublishVolume(
 		return nil, err
 	}
 
-	d.pubInfoRWL.Lock()
-	defer d.pubInfoRWL.Unlock()
-	d.pubInfo[volumeID] = &pubInfoCache{attToken: token}
-
 	return &csi.ControllerPublishVolumeResponse{
 		Reply: &csi.ControllerPublishVolumeResponse_Result_{
 			Result: &csi.ControllerPublishVolumeResponse_Result{
@@ -317,10 +304,6 @@ func (d *driver) ControllerUnpublishVolume(
 	if err != nil {
 		return nil, err
 	}
-
-	d.pubInfoRWL.Lock()
-	defer d.pubInfoRWL.Unlock()
-	delete(d.pubInfo, volumeID)
 
 	return &csi.ControllerUnpublishVolumeResponse{
 		Reply: &csi.ControllerUnpublishVolumeResponse_Result_{

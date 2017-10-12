@@ -56,8 +56,7 @@ var (
 	illegalPath       = regexp.MustCompile(`[^[:alnum:]\~\-\./]`)
 )
 
-const (
-	configFormat = `
+const configFormat = `
 rexray:
   modules:
     default-csi:
@@ -67,14 +66,8 @@ rexray:
       disabled: false
 `
 
-	docker2csiMountPath = "rexray.docker2csi.mount.path"
-)
-
 func init() {
-	// Register this module as both "csi" and "docker" since the CSI
-	// module now supports both technologies.
 	agent.RegisterModule("csi", newModule)
-	agent.RegisterModule("docker", newModule)
 
 	registry.RegisterConfigReg(
 		"CSI",
@@ -104,9 +97,6 @@ func init() {
 				"csi.goplugins", "csiGoPlugins", "X_CSI_GO_PLUGINS")
 			r.Key(gofig.Bool, "", false, "",
 				"csi.nodocker", "csiNoDocker", "X_CSI_NO_DOCKER")
-			r.Key(gofig.String, "",
-				path.Join(pathConfig.Lib, "csi", "volumes"),
-				"", "rexray.csi.mount.path")
 		})
 }
 

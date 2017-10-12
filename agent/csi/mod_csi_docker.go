@@ -15,8 +15,27 @@ import (
 	"github.com/codedellemc/gocsi/mount"
 	dvol "github.com/docker/go-plugins-helpers/volume"
 
+	"github.com/codedellemc/rexray/agent"
+	apictx "github.com/codedellemc/rexray/libstorage/api/context"
+	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 )
+
+const dockerMountPath = "rexray.docker.mount.path"
+
+func init() {
+	agent.RegisterModule("docker", newModule)
+
+	registry.RegisterConfigReg(
+		"Docker",
+		func(ctx apitypes.Context, r gofig.ConfigRegistration) {
+
+			r.Key(gofig.String, "",
+				path.Join(
+					apictx.MustPathConfig(ctx).Lib, "docker", "volumes"),
+				"", dockerMountPath)
+		})
+}
 
 type dockerBridge struct {
 	ctx    apitypes.Context
@@ -37,7 +56,7 @@ func newDockerBridge(
 
 	oldMntPath := config.GetString(apitypes.ConfigIgVolOpsMountPath)
 	oldDatName := config.GetString(apitypes.ConfigIgVolOpsMountRootPath)
-	newMntPath := config.GetString("rexray.csi.mount.path")
+	newMntPath := config.GetString(dockerMountPath)
 
 	if err := os.MkdirAll(newMntPath, 0755); err != nil {
 		ctx.WithField("newMntPath", newMntPath).Fatalf(

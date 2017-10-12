@@ -703,7 +703,9 @@ func (d *dockerBridge) Unmount(req *dvol.UnmountRequest) (failed error) {
 }
 
 func (d *dockerBridge) Capabilities() *dvol.CapabilitiesResponse {
-	return &dvol.CapabilitiesResponse{}
+	res := &dvol.CapabilitiesResponse{}
+	res.Capabilities.Scope = "global"
+	return res
 }
 
 func (d *dockerBridge) getTargetPath(volName string) (string, bool, error) {

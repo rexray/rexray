@@ -14,13 +14,7 @@ func (s *StoragePlugin) GetSupportedVersions(
 	return &csi.GetSupportedVersionsResponse{
 		Reply: &csi.GetSupportedVersionsResponse_Result_{
 			Result: &csi.GetSupportedVersionsResponse_Result{
-				SupportedVersions: []*csi.Version{
-					&csi.Version{
-						Major: 0,
-						Minor: 1,
-						Patch: 0,
-					},
-				},
+				SupportedVersions: CSIVersions,
 			},
 		},
 	}, nil

@@ -1,10 +1,13 @@
 package services
 
 import (
+	"strings"
+
 	"golang.org/x/net/context"
 
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
+	"github.com/codedellemc/gocsi/mount"
 )
 
 func (s *StoragePlugin) ControllerGetCapabilities(
@@ -14,7 +17,15 @@ func (s *StoragePlugin) ControllerGetCapabilities(
 	return &csi.ControllerGetCapabilitiesResponse{
 		Reply: &csi.ControllerGetCapabilitiesResponse_Result_{
 			Result: &csi.ControllerGetCapabilitiesResponse_Result{
-				Capabilities: []*csi.ControllerServiceCapability{},
+				Capabilities: []*csi.ControllerServiceCapability{
+					&csi.ControllerServiceCapability{
+						Type: &csi.ControllerServiceCapability_Rpc{
+							Rpc: &csi.ControllerServiceCapability_RPC{
+								Type: csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
+							},
+						},
+					},
+				},
 			},
 		},
 	}, nil
@@ -93,9 +104,51 @@ func (s *StoragePlugin) ListVolumes(
 	ctx context.Context,
 	in *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
 
-	return gocsi.ErrListVolumes(
-		csi.Error_GeneralError_UNDEFINED,
-		"ListVolumes not implemented for NFS"), nil
+	// Return all the volumes we know about (volumes mounted in priv dir)
+	mnts, err := mount.GetMounts()
+	if err != nil {
+		return gocsi.ErrListVolumes(
+			csi.Error_GeneralError_UNDEFINED,
+			"unable to get mounts"), nil
+	}
+
+	entries := []*csi.ListVolumesResponse_Result_Entry{}
+	for _, m := range mnts {
+		if strings.HasPrefix(m.Path, s.privDir) {
+			idf := strings.Split(m.Device, ":")
+			if len(idf) != 2 {
+				continue
+			}
+			host := idf[0]
+			export := idf[1]
+			vi := &csi.VolumeInfo{
+				Id: &csi.VolumeID{
+					Values: map[string]string{
+						"host":   host,
+						"export": export,
+					},
+				},
+				Metadata: &csi.VolumeMetadata{
+					Values: map[string]string{
+						"name": getName(host, export),
+					},
+				},
+			}
+			entries = append(entries,
+				&csi.ListVolumesResponse_Result_Entry{
+					VolumeInfo: vi,
+				},
+			)
+		}
+	}
+
+	return &csi.ListVolumesResponse{
+		Reply: &csi.ListVolumesResponse_Result_{
+			Result: &csi.ListVolumesResponse_Result{
+				Entries: entries,
+			},
+		},
+	}, nil
 }
 
 func (s *StoragePlugin) GetCapacity(

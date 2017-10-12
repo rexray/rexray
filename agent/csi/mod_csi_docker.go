@@ -412,15 +412,11 @@ func (d *dockerBridge) Remove(req *dvol.RemoveRequest) (failed error) {
 			"docker-csi-bridge: Remove: unknown volume: %s", req.Name)
 	}
 
-	// Get the target path(s) to unpublish
-	targetPath, _, _ := d.getTargetPath(req.Name)
-
 	// Make sure the volume is removed from the cache if this function
 	// completes successfully.
 	defer func() {
 		if failed == nil {
 			d.delVolumeInfo(req.Name)
-			os.RemoveAll(targetPath)
 		}
 	}()
 
@@ -432,47 +428,11 @@ func (d *dockerBridge) Remove(req *dvol.RemoveRequest) (failed error) {
 	}
 	defer c.Close()
 
-	// Create a new CSI Node client.
-	nc := csi.NewNodeClient(c)
-
-	// First, unpublish the volume from this Node.
-	if err := gocsi.NodeUnpublishVolume(
-		d.ctx,
-		nc,
-		csiVersion,
-		vol.Id,
-		vol.Metadata,
-		targetPath); err != nil {
-
-		// If there is an error, check to see if it is VOLUME_DOES_NOT_EXIST.
-		// If it is then the function below will return a nil value, otherwise
-		// the original error is returned.
-		return errIsVolDoesNotExist(err)
-	}
-
-	// Next, unpublish the volume at the Controller level. To do that this
-	// Node's ID is required.
-	nodeID, err := gocsi.GetNodeID(d.ctx, nc, csiVersion)
-	if err != nil {
-		return err
-	}
-
-	// Create a new CSI Controller client.
-	cc := csi.NewControllerClient(c)
-
-	// Unpublish the volume at the Controller level.
-	if err := gocsi.ControllerUnpublishVolume(
-		d.ctx, cc, csiVersion, vol.Id, vol.Metadata, nodeID); err != nil {
-
-		// If there is an error, check to see if it is VOLUME_DOES_NOT_EXIST.
-		// If it is then the function below will return a nil value, otherwise
-		// the original error is returned.
-		return errIsVolDoesNotExist(err)
-	}
-
 	// Delete the volume using the Controller.
 	if err := gocsi.DeleteVolume(
-		d.ctx, cc, csiVersion, vol.Id, vol.Metadata); err != nil {
+		d.ctx,
+		csi.NewControllerClient(c),
+		csiVersion, vol.Id, vol.Metadata); err != nil {
 
 		// If there is an error, check to see if it is VOLUME_DOES_NOT_EXIST.
 		// If it is then the function below will return a nil value, otherwise
@@ -502,6 +462,30 @@ func (d *dockerBridge) Path(req *dvol.PathRequest) (*dvol.PathResponse, error) {
 	return &dvol.PathResponse{Mountpoint: targetPath}, nil
 }
 
+var (
+	refCounter  = map[string]int{}
+	refCounterL sync.Mutex
+)
+
+func incRefCountFor(targetPath string) {
+	refCounterL.Lock()
+	defer refCounterL.Unlock()
+
+	refCounter[targetPath] = refCounter[targetPath] + 1
+}
+
+func decRefCountFor(targetPath string) int {
+	refCounterL.Lock()
+	defer refCounterL.Unlock()
+
+	v, ok := refCounter[targetPath]
+	if ok && v > 0 {
+		v--
+		refCounter[targetPath] = v
+	}
+	return v
+}
+
 // Mount the volume with the following steps:
 //
 // * Get volume from cache
@@ -512,7 +496,7 @@ func (d *dockerBridge) Path(req *dvol.PathRequest) (*dvol.PathResponse, error) {
 // * NodePublishVolume
 // * Update cache with volume's new state
 func (d *dockerBridge) Mount(
-	req *dvol.MountRequest) (*dvol.MountResponse, error) {
+	req *dvol.MountRequest) (res *dvol.MountResponse, failed error) {
 
 	// Create a new gRPC, CSI client.
 	c, err := d.cs.dial(d.ctx)
@@ -552,12 +536,22 @@ func (d *dockerBridge) Mount(
 		return nil, err
 	}
 
+	// If this function exits without an error then increment
+	// the ref cache for the target path.
+	defer func() {
+		if failed == nil {
+			incRefCountFor(targetPath)
+		}
+	}()
+
 	// Create the target directory.
 	if !targetPathExists {
-		os.MkdirAll(targetPath, 0755)
-		d.ctx.WithFields(map[string]interface{}{
-			"targetPath": targetPath,
-		}).Debug("docker-csi-bridge: Mount: created target path")
+		if err := os.MkdirAll(targetPath, 0755); err != nil {
+			d.ctx.WithField("targetPath", targetPath).Errorf(
+				"docker-csi-bridge: Mount: create target path failed: %v", err)
+		}
+		d.ctx.WithField("targetPath", targetPath).Debug(
+			"docker-csi-bridge: Mount: created target path")
 	}
 
 	// At this point it's known the volume is not mounted, so proceed
@@ -644,15 +638,6 @@ func (d *dockerBridge) Unmount(req *dvol.UnmountRequest) (failed error) {
 	// Get the target path(s) to unpublish
 	targetPath, _, _ := d.getTargetPath(req.Name)
 
-	// If the function completes successfully, check the volume's
-	// metadata. If it contains the key constant metadataKeyTargetPaths,
-	// then delete it and update the cache.
-	defer func() {
-		if failed == nil {
-			os.RemoveAll(targetPath)
-		}
-	}()
-
 	// Create a new gRPC, CSI client.
 	c, err := d.cs.dial(d.ctx)
 	if err != nil {
@@ -678,6 +663,19 @@ func (d *dockerBridge) Unmount(req *dvol.UnmountRequest) (failed error) {
 		// the original error is returned.
 		return errIsVolDoesNotExist(err)
 	}
+
+	// Only progress further if there are no more Docker containers
+	// using this target path.
+	if v := decRefCountFor(targetPath); v > 0 {
+		return nil
+	}
+
+	// If the function completes successfully the remove the target path.
+	defer func() {
+		if failed == nil {
+			os.RemoveAll(targetPath)
+		}
+	}()
 
 	// Next, unpublish the volume at the Controller level. To do that this
 	// Node's ID is required.

@@ -136,21 +136,23 @@ func (d *dockerBridge) cacheListResult(vols []*csi.VolumeInfo) {
 		if vi.Id == nil {
 			continue
 		}
-		name := getName(*vi)
+		name := d.getName(*vi)
 		if name == "" {
-			d.ctx.Warnf(
-				"docker-csi-bridge: failed to cache id/name: %v", vi.Id.Values)
+			d.ctx.Debugf("docker-csi-bridge: failed to cache id/name: %v", vi)
 			continue
 		}
 		d.byName[name] = *vi
 	}
 }
 
-func getName(vi csi.VolumeInfo) string {
+func (d *dockerBridge) getName(vi csi.VolumeInfo) string {
 	if vi.Metadata != nil {
 		if v := vi.Metadata.Values[mdKeyName]; v != "" {
 			return v
 		}
+	}
+	if strings.EqualFold(d.cs.serviceType, "libstorage") {
+		return ""
 	}
 	return vi.Id.Values[idKeyID]
 }
@@ -356,9 +358,9 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 			continue
 		}
 
-		name := getName(*vi)
+		name := d.getName(*vi)
 		if name == "" {
-			d.ctx.WithField("volume", vi.Id.Values).Warn(
+			d.ctx.WithField("volume", vi).Warn(
 				"docker-csi-bridge: List: skipped volume w missing id and name")
 			continue
 		}

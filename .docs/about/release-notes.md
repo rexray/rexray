@@ -22,6 +22,8 @@ Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
 Formed: Thu, 07 Sep 2017 17:49:48 CDT
 ```
 
+## Version 0.11.0 (2017/11/13)
+
 ## Version 0.10.2 (2017/09/12)
 REX types warily, a deadline to meet
 With his dev box that sure ain't slow

@@ -35,7 +35,7 @@ GO_IMPORT_PATH_SLUG := $(subst github.com/,,$(GO_IMPORT_PATH))
 ##                                BUILD                                       ##
 ################################################################################
 ifneq (,$(strip $(DRIVER)))
-BUILD_TAGS += $(DRIVER)
+BUILD_TAGS += $(subst -,,$(DRIVER))
 endif
 
 ifneq (,$(strip $(TYPE)))

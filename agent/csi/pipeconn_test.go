@@ -147,7 +147,7 @@ func benchmarkNetConnParallel(
 
 			if v := res.Header.Get("r"); v != szrand {
 				b.Fatalf(
-					"error: rand roundtrip failed: exp: %d, act: %d",
+					"error: rand roundtrip failed: exp: %s, act: %s",
 					szrand, v)
 			}
 

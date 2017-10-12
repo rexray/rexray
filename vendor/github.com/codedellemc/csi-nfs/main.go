@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	debugEnvVar = "NFSPLUGIN_DEBUG"
-	nodeEnvVar  = "NFSPLUGIN_NODEONLY"
-	ctlrEnvVar  = "NFSPLUGIN_CONTROLLERONLY"
+	debugEnvVar = "X_CSI_NFS_DEBUG"
+	nodeEnvVar  = "X_CSI_NFS_NODEONLY"
+	ctlrEnvVar  = "X_CSI_NFS_CONTROLLERONLY"
 )
 
 func main() {

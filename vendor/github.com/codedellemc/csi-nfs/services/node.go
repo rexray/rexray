@@ -1,8 +1,10 @@
 package services
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/net/context"
 
@@ -38,8 +40,6 @@ func (s *StoragePlugin) NodePublishVolume(
 			"export key missing from volumeID"), nil
 	}
 
-	src := host + ":" + export
-
 	mv := vc.GetMount()
 	if mv == nil {
 		return gocsi.ErrNodePublishVolume(
@@ -55,7 +55,7 @@ func (s *StoragePlugin) NodePublishVolume(
 			"invalid access mode"), nil
 	}
 
-	return s.handleMount(src, target, mf, ro, am)
+	return s.handleMount(host, export, target, mf, ro, am)
 }
 
 func (s *StoragePlugin) NodeUnpublishVolume(
@@ -79,10 +79,11 @@ func (s *StoragePlugin) NodeUnpublishVolume(
 			"export key missing from volumeID"), nil
 	}
 
-	src := host + ":" + export
+	uri := getUri(host, export)
+	id := getID(host, export)
 
 	// check to see if volume is really mounted at target
-	mnts, err := mount.GetDevMounts(src)
+	mnts, err := mount.GetDevMounts(uri)
 	if err != nil {
 		return gocsi.ErrNodeUnpublishVolume(
 			csi.Error_NodeUnpublishVolumeError_UNMOUNT_ERROR,
@@ -114,7 +115,7 @@ func (s *StoragePlugin) NodeUnpublishVolume(
 	}
 
 	// remove private mount if we can
-	privTgt := s.getPrivateMountPoint(src)
+	privTgt := s.getPrivateMountPoint(id)
 	if len(mnts) == 1 && mnts[0].Path == privTgt {
 		if err := mount.Unmount(privTgt); err != nil {
 			return gocsi.ErrNodeUnpublishVolume(
@@ -190,7 +191,8 @@ func mkdir(path string) (bool, error) {
 }
 
 func (s *StoragePlugin) handleMount(
-	src string,
+	host string,
+	export string,
 	target string,
 	mf []string,
 	ro bool,
@@ -203,17 +205,20 @@ func (s *StoragePlugin) handleMount(
 			"Unable to create private mount dir"), nil
 	}
 
+	uri := getUri(host, export)
+	id := getID(host, export)
+
 	// Path to mount device to
-	privTgt := s.getPrivateMountPoint(src)
+	privTgt := s.getPrivateMountPoint(id)
 
 	f := log.Fields{
-		"volume":       src,
+		"volume":       uri,
 		"target":       target,
 		"privateMount": privTgt,
 	}
 
 	// Check if device is already mounted
-	mnts, err := mount.GetDevMounts(src)
+	mnts, err := mount.GetDevMounts(uri)
 	if err != nil {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_MOUNT_ERROR,
@@ -259,7 +264,7 @@ func (s *StoragePlugin) handleMount(
 			mf = append(mf, "ro")
 		}
 
-		if err := mount.Mount(src, privTgt, "nfs", mf...); err != nil {
+		if err := mount.Mount(uri, privTgt, "nfs", mf...); err != nil {
 			return gocsi.ErrNodePublishVolume(
 				csi.Error_NodePublishVolumeError_MOUNT_ERROR,
 				err.Error()), nil
@@ -355,4 +360,18 @@ func contains(list []string, item string) bool {
 		}
 	}
 	return false
+}
+
+func getUri(host, export string) string {
+	return fmt.Sprintf("%s:%s", host, export)
+}
+
+func getID(host, export string) string {
+	e := strings.Replace(export, "/", "#", -1)
+	return getUri(host, e)
+}
+
+func getName(host, export string) string {
+	e := strings.Replace(export, "/", "-", -1)
+	return fmt.Sprintf("%s%s", host, e)
 }

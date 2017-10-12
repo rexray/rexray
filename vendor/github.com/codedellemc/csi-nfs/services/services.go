@@ -11,7 +11,7 @@ const (
 	SpName    = "csi-nfs"
 	spVersion = "0.1.0"
 
-	mountDirEnvVar = "NFSPLUGIN_MOUNTDIR"
+	mountDirEnvVar = "X_CSI_NFS_MOUNTDIR"
 	defaultDir     = "/dev/csi-nfs-mounts"
 )
 

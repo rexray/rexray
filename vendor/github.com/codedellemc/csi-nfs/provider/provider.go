@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/goioc"
 	log "github.com/sirupsen/logrus"
@@ -17,8 +18,8 @@ import (
 )
 
 const (
-	nodeEnvVar = "NFSPLUGIN_NODEONLY"
-	ctlrEnvVar = "NFSPLUGIN_CONTROLLERONLY"
+	nodeEnvVar = "X_CSI_NFS_NODEONLY"
+	ctlrEnvVar = "X_CSI_NFS_CONTROLLERONLY"
 )
 
 var (
@@ -60,7 +61,13 @@ func (p *provider) Serve(ctx context.Context, li net.Listener) error {
 		if p.server != nil {
 			return errServerStarted
 		}
-		p.server = grpc.NewServer()
+		p.server = grpc.NewServer(
+			grpc.UnaryInterceptor(gocsi.ChainUnaryServer(
+				gocsi.ServerRequestIDInjector,
+				gocsi.NewServerRequestLogger(os.Stdout, os.Stderr),
+				gocsi.NewServerResponseLogger(os.Stdout, os.Stderr),
+				gocsi.NewServerRequestVersionValidator(services.CSIVersions),
+				gocsi.ServerRequestValidator)))
 		return nil
 	}(); err != nil {
 		return errServerStarted
@@ -113,7 +120,7 @@ func (p *provider) Stop(ctx context.Context) {
 	p.Lock()
 	defer p.Unlock()
 	log.WithField("name", services.SpName).Info(".Stop")
-	p.Stop(ctx)
+	p.server.Stop()
 	p.closed = true
 }
 
@@ -128,6 +135,6 @@ func (p *provider) GracefulStop(ctx context.Context) {
 	p.Lock()
 	defer p.Unlock()
 	log.WithField("name", services.SpName).Info(".GracefulStop")
-	p.GracefulStop(ctx)
+	p.server.GracefulStop()
 	p.closed = true
 }

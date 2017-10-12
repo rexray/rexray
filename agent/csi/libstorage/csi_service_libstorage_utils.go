@@ -1,10 +1,8 @@
 package libstorage
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/codedellemc/gocsi/csi"
 
@@ -129,26 +127,4 @@ func isVolCapSupported(
 	// capabilities do not include raw support AND the storage
 	// type is something other than Block.
 	return !(reqCapsIncludeRaw && storType != apitypes.Block)
-}
-
-type logger struct {
-	f func(msg string, args ...interface{})
-	w io.Writer
-}
-
-func newLogger(f func(msg string, args ...interface{})) *logger {
-	l := &logger{f: f}
-	r, w := io.Pipe()
-	l.w = w
-	go func() {
-		scan := bufio.NewScanner(r)
-		for scan.Scan() {
-			f(scan.Text())
-		}
-	}()
-	return l
-}
-
-func (l *logger) Write(data []byte) (int, error) {
-	return l.w.Write(data)
 }

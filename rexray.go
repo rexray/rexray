@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	golog "log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,7 +27,7 @@ import (
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	"github.com/codedellemc/rexray/libstorage/api/utils"
-	"github.com/codedellemc/rexray/util"
+	rrutils "github.com/codedellemc/rexray/util"
 
 	// import the libstorage config package
 	_ "github.com/codedellemc/rexray/libstorage/imports/config"
@@ -60,11 +61,11 @@ func main() {
 
 	// Since flags are not parsed yet, manually check to see if a
 	// -l or --logLevel were provided via the command line's arguments.
-	if v, _ := util.FindFlagVal(
+	if v, _ := rrutils.FindFlagVal(
 		"-l", os.Args...); v != "" {
 		os.Setenv("REXRAY_LOGLEVEL", v)
 		os.Setenv("LIBSTORAGE_LOGGING_LEVEL", v)
-	} else if v, _ := util.FindFlagVal(
+	} else if v, _ := rrutils.FindFlagVal(
 		"--loglevel", os.Args...); v != "" {
 		os.Setenv("REXRAY_LOGLEVEL", v)
 		os.Setenv("LIBSTORAGE_LOGGING_LEVEL", v)
@@ -73,10 +74,10 @@ func main() {
 	// Since flags are not parsed yet, manually check to see if a
 	// -c or --config were provided via the command line's arguments.
 	var configFile string
-	if v, _ := util.FindFlagVal(
+	if v, _ := rrutils.FindFlagVal(
 		"-c", os.Args...); v != "" {
 		configFile = v
-	} else if v, _ := util.FindFlagVal(
+	} else if v, _ := rrutils.FindFlagVal(
 		"--config", os.Args...); v != "" {
 		configFile = v
 	}
@@ -102,7 +103,7 @@ func main() {
 			"error: invalid config file: %s\n", configFile)
 		os.Exit(1)
 	} else {
-		util.ValidateConfig(configFile)
+		rrutils.ValidateConfig(configFile)
 		config = gofigCore.New()
 		if err := config.ReadConfigFile(configFile); err != nil {
 			fmt.Fprintf(os.Stderr,
@@ -115,6 +116,11 @@ func main() {
 	// Update the log level after it's been parsed from every possible
 	// location.
 	context.SetLogLevel(ctx, updateLogLevel(config))
+
+	// Get the context logger and update Go's standard log facility so that
+	// it emits logs using the context logger.
+	golog.SetFlags(0)
+	golog.SetOutput(rrutils.NewWriterFor(ctx.Infof))
 
 	if config != nil {
 		ctx.WithField("path", configFile).Info("loaded custom config")

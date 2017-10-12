@@ -1,11 +1,9 @@
 package csi
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -28,6 +26,7 @@ import (
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	rrutils "github.com/codedellemc/rexray/util"
 )
 
 type csiServer interface {
@@ -155,8 +154,8 @@ func newModule(
 }
 
 func newGrpcServer(ctx apitypes.Context) *grpc.Server {
-	lout := newLogger(ctx.Infof)
-	lerr := newLogger(ctx.Errorf)
+	lout := rrutils.NewWriterFor(ctx.Infof)
+	lerr := rrutils.NewWriterFor(ctx.Errorf)
 	return grpc.NewServer(grpc.UnaryInterceptor(gocsi.ChainUnaryServer(
 		gocsi.ServerRequestIDInjector,
 		gocsi.NewServerRequestLogger(lout, lerr),
@@ -381,26 +380,4 @@ func (m *mod) Description() string {
 
 func (m *mod) Address() string {
 	return m.addr
-}
-
-type logger struct {
-	f func(msg string, args ...interface{})
-	w io.Writer
-}
-
-func newLogger(f func(msg string, args ...interface{})) *logger {
-	l := &logger{f: f}
-	r, w := io.Pipe()
-	l.w = w
-	go func() {
-		scan := bufio.NewScanner(r)
-		for scan.Scan() {
-			f(scan.Text())
-		}
-	}()
-	return l
-}
-
-func (l *logger) Write(data []byte) (int, error) {
-	return l.w.Write(data)
 }

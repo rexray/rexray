@@ -25,6 +25,7 @@ import (
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
 	apiutils "github.com/codedellemc/rexray/libstorage/api/utils"
+	rrutils "github.com/codedellemc/rexray/util"
 )
 
 const (
@@ -106,8 +107,8 @@ func (d *driver) Serve(ctx context.Context, lis net.Listener) error {
 	szTimeout := d.config.GetString("csi.libstorage.timeout")
 	timeout, _ := time.ParseDuration(szTimeout)
 
-	lout := newLogger(d.ctx.Infof)
-	lerr := newLogger(d.ctx.Errorf)
+	lout := rrutils.NewWriterFor(d.ctx.Infof)
+	lerr := rrutils.NewWriterFor(d.ctx.Errorf)
 
 	interceptors := grpc.UnaryInterceptor(gocsi.ChainUnaryServer(
 		gocsi.ServerRequestIDInjector,

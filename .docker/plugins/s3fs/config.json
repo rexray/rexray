@@ -154,7 +154,7 @@
       "Network": {
         "Type": "host"
       },
-      "PropagatedMount": "/var/lib/rexray/volumes",
+      "PropagatedMount": "/var/lib/rexray",
       "User": {},
       "WorkDir": ""
 }

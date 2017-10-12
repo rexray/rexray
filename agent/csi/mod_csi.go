@@ -68,8 +68,6 @@ rexray:
 `
 
 func init() {
-	// Register this module as both "csi" and "docker" since the CSI
-	// module now supports both technologies.
 	agent.RegisterModule("csi", newModule)
 
 	registry.RegisterConfigReg(
@@ -290,16 +288,20 @@ func (m *mod) Start() error {
 	// Add one for the docker cache list call.
 	m.waitForCancel.Add(1)
 
+	// Create the docker bridge.
+	dbridge, err := newDockerBridge(ctx, m.config, m.cs)
+	if err != nil {
+		return err
+	}
+
 	// Start the Docker Volume API
 	go func() {
-		bridge := newDockerBridge(ctx, m.config, m.cs)
-
 		// Loop every one second until a successful attempt
 		// at listing the volumes using the bridge. This caches
 		// the volume name-to-ID mappings.
 		go func() {
 			for {
-				if _, err := bridge.List(); err == nil {
+				if _, err := dbridge.List(); err == nil {
 					break
 				}
 				select {
@@ -311,7 +313,7 @@ func (m *mod) Start() error {
 			m.waitForCancel.Done()
 		}()
 
-		dh := dvol.NewHandler(bridge)
+		dh := dvol.NewHandler(dbridge)
 		go func() {
 			if err := dh.Serve(httpl); err != nil {
 				if !strings.Contains(err.Error(),

@@ -23,6 +23,7 @@ import (
 	"github.com/codedellemc/gocsi/csi"
 
 	"github.com/codedellemc/rexray/agent"
+	"github.com/codedellemc/rexray/core"
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
@@ -67,6 +68,8 @@ rexray:
 `
 
 func init() {
+	// Register this module as both "csi" and "docker" since the CSI
+	// module now supports both technologies.
 	agent.RegisterModule("csi", newModule)
 
 	registry.RegisterConfigReg(
@@ -75,19 +78,19 @@ func init() {
 
 			pathConfig := apictx.MustPathConfig(ctx)
 
-			// If CSI_ENDPOINT is not set then use the path to the
-			// Docker plug-ins socket file.
 			csiEndpoint := os.Getenv("CSI_ENDPOINT")
-			if csiEndpoint == "" {
+			if !core.DockerLegacyMode && csiEndpoint == "" {
 				csiEndpoint = path.Join(
 					pathConfig.Home,
 					"/run/docker/plugins/rexray.sock")
 			}
 
-			// Register the default CSI module.
-			r.SetYAML(fmt.Sprintf(configFormat, csiEndpoint))
-			ctx.WithField("CSI_ENDPOINT", csiEndpoint).Info(
-				"configured default CSI module")
+			if csiEndpoint != "" {
+				// Register the default CSI module.
+				r.SetYAML(fmt.Sprintf(configFormat, csiEndpoint))
+				ctx.WithField("CSI_ENDPOINT", csiEndpoint).Info(
+					"configured default CSI module")
+			}
 
 			// Register the CSI module's configuration properties.
 			r.Key(gofig.String, "", "", "", "csi.endpoint")

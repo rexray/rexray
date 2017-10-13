@@ -16,6 +16,7 @@ import (
 	dvol "github.com/docker/go-plugins-helpers/volume"
 
 	"github.com/codedellemc/rexray/agent"
+	"github.com/codedellemc/rexray/core"
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
@@ -24,12 +25,13 @@ import (
 const dockerMountPath = "rexray.docker.mount.path"
 
 func init() {
-	agent.RegisterModule("docker", newModule)
+	if !core.DockerLegacyMode {
+		agent.RegisterModule("docker", newModule)
+	}
 
 	registry.RegisterConfigReg(
-		"Docker",
+		"Docker Bridge",
 		func(ctx apitypes.Context, r gofig.ConfigRegistration) {
-
 			r.Key(gofig.String, "",
 				path.Join(
 					apictx.MustPathConfig(ctx).Lib, "docker", "volumes"),

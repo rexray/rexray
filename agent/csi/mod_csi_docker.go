@@ -1,6 +1,7 @@
 package csi
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path"
@@ -10,19 +11,23 @@ import (
 	"sync"
 
 	gofig "github.com/akutz/gofig/types"
+	"github.com/akutz/gotil"
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/gocsi/mount"
-	dvol "github.com/docker/go-plugins-helpers/volume"
 
 	"github.com/codedellemc/rexray/agent"
 	"github.com/codedellemc/rexray/core"
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	dvol "github.com/docker/go-plugins-helpers/volume"
 )
 
-const dockerMountPath = "rexray.docker.mount.path"
+const (
+	dockerMountPath = "rexray.docker.mount.path"
+	rrCSINFSVolumes = "rexray.csi.nfs.volumes"
+)
 
 func init() {
 	if !core.DockerLegacyMode {
@@ -32,12 +37,24 @@ func init() {
 	registry.RegisterConfigReg(
 		"Docker Bridge",
 		func(ctx apitypes.Context, r gofig.ConfigRegistration) {
+			pathConfig := apictx.MustPathConfig(ctx)
+			r.Key(gofig.String,
+				"", "", "",
+				rrCSINFSVolumes,
+				"csiNFSVolumes",
+				"X_CSI_NFS_VOLUMES")
+
 			r.Key(gofig.String, "",
-				path.Join(
-					apictx.MustPathConfig(ctx).Lib, "docker", "volumes"),
+				path.Join(pathConfig.Lib, "docker", "volumes"),
 				"", dockerMountPath)
 		})
 }
+
+var (
+	nfsVols     string
+	nfsVolsL    sync.Mutex
+	nfsVolsOnce sync.Once
+)
 
 type dockerBridge struct {
 	ctx    apitypes.Context
@@ -54,25 +71,43 @@ type dockerBridge struct {
 func newDockerBridge(
 	ctx apitypes.Context,
 	config gofig.Config,
-	cs *csiService) *dockerBridge {
+	cs *csiService) (*dockerBridge, error) {
 
 	oldMntPath := config.GetString(apitypes.ConfigIgVolOpsMountPath)
 	oldDatName := config.GetString(apitypes.ConfigIgVolOpsMountRootPath)
 	newMntPath := config.GetString(dockerMountPath)
 
 	if err := os.MkdirAll(newMntPath, 0755); err != nil {
-		ctx.WithField("newMntPath", newMntPath).Fatalf(
+		err := fmt.Errorf(
 			"newDockerBridge: create new mount dir failed: %v", err)
+		ctx.WithField("newMntPath", newMntPath).Error(err)
+		return nil, err
 	}
 
+	// Migrate volumes with data directories from the previous mount
+	// area to the new mount area.
 	if err := bindMountOldDataDirs(
 		ctx, oldMntPath, oldDatName, newMntPath); err != nil {
-
+		err := fmt.Errorf(
+			"newDockerBridge: bindMountOldDataDirs failed: %v", err)
 		ctx.WithFields(map[string]interface{}{
 			"oldMntPath": oldMntPath,
 			"oldDatName": oldDatName,
 			"newMntPath": newMntPath,
-		}).Fatalf("newDockerBridge: bindMountOldDataDirs failed: %v", err)
+		}).Error(err)
+		return nil, err
+	}
+
+	byName := map[string]csi.VolumeInfo{}
+	nfsVolsOnce.Do(func() {
+		nfsVols = path.Join(apictx.MustPathConfig(ctx).Lib, "csi-nfs-vol.map")
+	})
+
+	// Check to see if there are any CSI-NFS volume mappings.
+	if isCSINFS(cs.serviceType) {
+		if err := initNFSVolMap(ctx, config, nfsVols, byName); err != nil {
+			return nil, err
+		}
 	}
 
 	return &dockerBridge{
@@ -81,8 +116,77 @@ func newDockerBridge(
 		cs:      cs,
 		fsType:  config.GetString(apitypes.ConfigIgVolOpsCreateDefaultFsType),
 		mntPath: newMntPath,
-		byName:  map[string]csi.VolumeInfo{},
+		byName:  byName,
+	}, nil
+}
+
+func initNFSVolMap(
+	ctx apitypes.Context,
+	config gofig.Config,
+	nfsVolsFilePath string,
+	byName map[string]csi.VolumeInfo) (failed error) {
+
+	r := strings.NewReplacer("/", "-", `\`, "-")
+
+	splitNameHostExport := func(p string) {
+
+		nameHostExport := strings.SplitN(p, "=", 2)
+		if len(nameHostExport) != 2 {
+			return
+		}
+
+		hostExport := strings.SplitN(nameHostExport[1], ":", 2)
+		if len(hostExport) != 2 {
+			return
+		}
+
+		var (
+			nfsVolName = r.Replace(nameHostExport[0])
+			nfsHost    = hostExport[0]
+			nfsExport  = hostExport[1]
+		)
+
+		byName[nfsVolName] = csi.VolumeInfo{
+			Id: &csi.VolumeID{
+				Values: map[string]string{
+					"host":   nfsHost,
+					"export": nfsExport,
+				},
+			},
+			Metadata: &csi.VolumeMetadata{
+				Values: map[string]string{
+					"name": nfsVolName,
+				},
+			},
+		}
+
+		ctx.WithFields(map[string]interface{}{
+			"nfsHost":    nfsHost,
+			"nfsExport":  nfsExport,
+			"nfsVolName": nfsVolName,
+		}).Debug("getNFSVolMap: cached prepopulated nfs volume")
 	}
+
+	// Check to see if there is a mappings file and use it, otherwise
+	// look at the cofiguration property.
+	if gotil.FileExists(nfsVolsFilePath) {
+		f, err := os.Open(nfsVolsFilePath)
+		if err != nil {
+			return fmt.Errorf("getNFSVolMap: failed to open map file: %v", err)
+		}
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			splitNameHostExport(scanner.Text())
+		}
+	} else {
+		// Check the config property.
+		list := config.GetStringSlice(rrCSINFSVolumes)
+		for _, l := range list {
+			splitNameHostExport(l)
+		}
+	}
+
+	return nil
 }
 
 func bindMountOldDataDirs(
@@ -145,6 +249,14 @@ func bindMountOldDataDirs(
 	return nil
 }
 
+func isCSINFS(serviceType string) bool {
+	return strings.EqualFold(serviceType, "csi-nfs")
+}
+
+func (d *dockerBridge) isCSINFS() bool {
+	return isCSINFS(d.cs.serviceType)
+}
+
 // cacheListResult caches the name-to-id mapping for a list of
 // csi.VolumeInfo objects. This function replaces the existing list
 // as the result of a ListVolumes RPC represents the most up-to-date
@@ -152,7 +264,12 @@ func bindMountOldDataDirs(
 func (d *dockerBridge) cacheListResult(vols []*csi.VolumeInfo) {
 	d.byNameRWL.Lock()
 	defer d.byNameRWL.Unlock()
-	d.byName = map[string]csi.VolumeInfo{}
+
+	// If this is not CSI-NFS then replace the existing volume info objects.
+	if !d.isCSINFS() {
+		d.byName = map[string]csi.VolumeInfo{}
+	}
+
 	for _, vi := range vols {
 		if vi.Id == nil {
 			continue
@@ -294,6 +411,57 @@ func errIsVolAttToNode(err error) error {
 
 func (d *dockerBridge) Create(req *dvol.CreateRequest) error {
 
+	// If the service is CSI-NFS then create is handled differently.
+	if d.isCSINFS() {
+		var (
+			nfsHost    string
+			nfsExport  string
+			nfsVolName = req.Name
+		)
+
+		for k, v := range req.Options {
+			if strings.EqualFold(k, "host") {
+				nfsHost = v
+			} else if strings.EqualFold(k, "export") {
+				nfsExport = v
+			}
+		}
+
+		// Cache the mapping.
+		nfsVolsL.Lock()
+		defer nfsVolsL.Unlock()
+
+		f, err := os.OpenFile(nfsVols, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		_, err = fmt.Fprintf(f, "%s=%s:%s\n", nfsVolName, nfsHost, nfsExport)
+		if err != nil {
+			return err
+		}
+
+		d.byNameRWL.Lock()
+		defer d.byNameRWL.Unlock()
+
+		d.byName[nfsVolName] = csi.VolumeInfo{
+			Id: &csi.VolumeID{
+				Values: map[string]string{
+					"host":   nfsHost,
+					"export": nfsExport,
+				},
+			},
+			Metadata: &csi.VolumeMetadata{
+				Values: map[string]string{
+					"name": nfsVolName,
+				},
+			},
+		}
+
+		return nil
+	}
+
 	// Create a new gRPC, CSI client.
 	c, err := d.cs.dial(d.ctx)
 	if err != nil {
@@ -350,6 +518,23 @@ func (d *dockerBridge) Create(req *dvol.CreateRequest) error {
 
 func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 
+	volMap := map[string]csi.VolumeInfo{}
+
+	// If the service is CSI-NFS then grab volumes from cache, as that's
+	// the only place they will be
+	if d.isCSINFS() {
+		d.byNameRWL.RLock()
+		defer d.byNameRWL.RUnlock()
+
+		for name, vi := range d.byName {
+			d.ctx.WithField("volume", vi.Id.Values).WithField(
+				"name", name).Debug(
+				"docker-csi-bridge: List: found volume from cache")
+			volMap[name] = vi
+		}
+		return d.buildListResponse(volMap)
+	}
+
 	// Create a new gRPC, CSI client.
 	c, err := d.cs.dial(d.ctx)
 	if err != nil {
@@ -361,6 +546,16 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 	// Create a new CSI Controller client.
 	cc := csi.NewControllerClient(c)
 
+	// Check if the CSI plugin supports ListVolumes
+	caps, err := gocsi.ControllerGetCapabilities(d.ctx, cc, csiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	if !controllerListVolsSupported(caps) {
+		return d.buildListResponse(volMap)
+	}
+
 	vols, _, err := gocsi.ListVolumes(d.ctx, cc, csiVersion, 0, "")
 	if err != nil {
 		d.ctx.Errorf("docker-csi-bridge: List: list volumes failed: %v", err)
@@ -371,8 +566,6 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 	// as up-to-date as possible.
 	go d.cacheListResult(vols)
 
-	res := &dvol.ListResponse{}
-	res.Volumes = []*dvol.Volume{}
 	for _, vi := range vols {
 		if vi.Id == nil || len(vi.Id.Values) == 0 {
 			d.ctx.Warn("docker-csi-bridge: List: skipped volume w missing id")
@@ -386,25 +579,50 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 			continue
 		}
 
-		vol := &dvol.Volume{Name: name}
+		if _, ok := volMap[name]; ok {
+			d.ctx.WithField("volume", vi).Warn(
+				"docker-csi-bridge: List: skipped volume already in cache")
+			continue
+		}
+
+		d.ctx.WithField("volume", vi.Id.Values).WithField(
+			"name", name).Debug(
+			"docker-csi-bridge: List: found new volume")
+		volMap[name] = *vi
+	}
+
+	return d.buildListResponse(volMap)
+}
+
+func (d *dockerBridge) buildListResponse(
+	volMap map[string]csi.VolumeInfo) (*dvol.ListResponse, error) {
+
+	res := &dvol.ListResponse{}
+	res.Volumes = make([]*dvol.Volume, len(volMap))
+	i := 0
+
+	for name, vi := range volMap {
+		res.Volumes[i] = &dvol.Volume{Name: name}
+
+		// Add the CSI VolumeInfo metadata to the Docker volume's
+		// Status map.
 		if vi.Metadata != nil && len(vi.Metadata.Values) > 0 {
-			vol.Status = map[string]interface{}{}
+			res.Volumes[i].Status = map[string]interface{}{}
 			for k, v := range vi.Metadata.Values {
-				vol.Status[k] = v
+				res.Volumes[i].Status[k] = v
 			}
 		}
 
+		// Include the volume's target path if it's mounted.
 		targetPath, ok, err := d.getTargetPath(name)
 		if err != nil {
 			return nil, err
 		}
 		if ok {
-			vol.Mountpoint = targetPath
+			res.Volumes[i].Mountpoint = targetPath
 		}
 
-		res.Volumes = append(res.Volumes, vol)
-		d.ctx.WithField("volume", vi.Id.Values).Debug(
-			"docker-csi-bridge: List: found volume")
+		i++
 	}
 
 	return res, nil
@@ -436,13 +654,67 @@ func (d *dockerBridge) Get(req *dvol.GetRequest) (*dvol.GetResponse, error) {
 // Remove the volume with the following steps:
 //
 // * Get volume from cache
-// * Get the target path to unpublish
-// * GetNodeID
-// * NodeUnpublishVolume
-// * ControllerUnpublishVolume
 // * DeleteVolume
 // * Remove volume from cache
 func (d *dockerBridge) Remove(req *dvol.RemoveRequest) (failed error) {
+
+	// If the service is CSI-NFS then remove is handled differently.
+	if d.isCSINFS() {
+
+		// Make sure the volume is removed from the cache if this function
+		// completes successfully.
+		defer func() {
+			if failed == nil {
+				d.delVolumeInfo(req.Name)
+			}
+		}()
+
+		// Remove the volume from the mappings file.
+		nfsVolsL.Lock()
+		defer nfsVolsL.Unlock()
+
+		var lines []string
+
+		if err := func() error {
+			f, err := os.Open(nfsVols)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			scanner := bufio.NewScanner(f)
+			for scanner.Scan() {
+				l := scanner.Text()
+				nameHostExport := strings.SplitN(l, "=", 2)
+				if len(nameHostExport) != 2 {
+					continue
+				}
+				nfsVolName := nameHostExport[0]
+				if strings.EqualFold(req.Name, nfsVolName) {
+					continue
+				}
+				lines = append(lines, l)
+			}
+
+			return nil
+		}(); err != nil {
+			return err
+		}
+
+		f, err := os.Create(nfsVols)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		for _, l := range lines {
+			if _, err := fmt.Fprintln(f, l); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
 
 	vol, ok := d.getVolumeInfo(req.Name)
 	if !ok {
@@ -552,6 +824,11 @@ func (d *dockerBridge) Mount(
 
 	// If the volume is not cached then create it.
 	if !ok {
+		if d.isCSINFS() {
+			return nil, fmt.Errorf(
+				"docker-csi-bridge: Mount: cannot implicitly create NFS volume: %s",
+				req.Name)
+		}
 		newVol, err := gocsi.CreateVolume(
 			d.ctx, cc, csiVersion,
 			req.Name,
@@ -603,24 +880,41 @@ func (d *dockerBridge) Mount(
 	// Create a new CSI Node client.
 	nc := csi.NewNodeClient(c)
 
-	// Next, public the volume at the Controller level. To do that this
-	// Node's ID is required.
-	nodeID, err := gocsi.GetNodeID(d.ctx, nc, csiVersion)
+	// Check if the CSI plugin supports ControllerPublishVolume
+	caps, err := gocsi.ControllerGetCapabilities(d.ctx, cc, csiVersion)
 	if err != nil {
 		return nil, err
 	}
 
+	var (
+		volCap  *csi.VolumeCapability
+		pubInfo *csi.PublishVolumeInfo
+	)
+
 	// Create a new volume capability for publishing the volume
 	// via the Controller and Node.
-	volCap := newVolumeCapability(d.fsType)
+	if d.isCSINFS() {
+		volCap = newVolumeCapability("nfs")
+	} else {
+		volCap = newVolumeCapability(d.fsType)
+	}
 
-	// Publish the volume via the Controller.
-	pubInfo, err := gocsi.ControllerPublishVolume(
-		d.ctx, cc, csiVersion,
-		vol.Id, vol.Metadata, nodeID,
-		volCap, false)
-	if err != nil {
-		return nil, err
+	if controllerPublishSupported(caps) {
+		// Next, publish the volume at the Controller level. To do that this
+		// Node's ID is required.
+		nodeID, err := gocsi.GetNodeID(d.ctx, nc, csiVersion)
+		if err != nil {
+			return nil, err
+		}
+
+		// Publish the volume via the Controller.
+		pubInfo, err = gocsi.ControllerPublishVolume(
+			d.ctx, cc, csiVersion,
+			vol.Id, vol.Metadata, nodeID,
+			volCap, false)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// The target path of the volume is determined based on the
@@ -715,24 +1009,32 @@ func (d *dockerBridge) Unmount(req *dvol.UnmountRequest) (failed error) {
 		}
 	}()
 
-	// Next, unpublish the volume at the Controller level. To do that this
-	// Node's ID is required.
-	nodeID, err := gocsi.GetNodeID(d.ctx, nc, csiVersion)
+	// Create a new CSI Controller client.
+	cc := csi.NewControllerClient(c)
+
+	// Check if the CSI plugin supports ControllerPublishVolume
+	caps, err := gocsi.ControllerGetCapabilities(d.ctx, cc, csiVersion)
 	if err != nil {
 		return err
 	}
 
-	// Create a new CSI Controller client.
-	cc := csi.NewControllerClient(c)
+	// Next, unpublish the volume at the Controller level. To do that this
+	// Node's ID is required.
+	if controllerPublishSupported(caps) {
+		nodeID, err := gocsi.GetNodeID(d.ctx, nc, csiVersion)
+		if err != nil {
+			return err
+		}
 
-	// Unpublish the volume at the Controller level.
-	if err := gocsi.ControllerUnpublishVolume(
-		d.ctx, cc, csiVersion, vol.Id, vol.Metadata, nodeID); err != nil {
+		// Unpublish the volume at the Controller level.
+		if err := gocsi.ControllerUnpublishVolume(
+			d.ctx, cc, csiVersion, vol.Id, vol.Metadata, nodeID); err != nil {
 
-		// If there is an error, check to see if it is VOLUME_DOES_NOT_EXIST.
-		// If it is then the function below will return a nil value, otherwise
-		// the original error is returned.
-		return errIsVolDoesNotExist(err)
+			// If there is an error, check to see if it is VOLUME_DOES_NOT_EXIST.
+			// If it is then the function below will return a nil value, otherwise
+			// the original error is returned.
+			return errIsVolDoesNotExist(err)
+		}
 	}
 
 	return nil
@@ -754,4 +1056,28 @@ func (d *dockerBridge) getTargetPath(volName string) (string, bool, error) {
 		return targetPath, false, err
 	}
 	return targetPath, true, nil
+}
+
+func controllerCapSupported(
+	caps []*csi.ControllerServiceCapability,
+	cap csi.ControllerServiceCapability_RPC_Type) bool {
+
+	for _, c := range caps {
+		if c.GetRpc().GetType() == cap {
+			return true
+		}
+	}
+	return false
+}
+
+func controllerPublishSupported(caps []*csi.ControllerServiceCapability) bool {
+	return controllerCapSupported(
+		caps,
+		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME)
+}
+
+func controllerListVolsSupported(caps []*csi.ControllerServiceCapability) bool {
+	return controllerCapSupported(
+		caps,
+		csi.ControllerServiceCapability_RPC_LIST_VOLUMES)
 }

@@ -40,25 +40,28 @@ INFO[0000] .Serve                                        name=csi-nfs
 Use ctrl-C to exit.
 
 You can enable debug logging (all logging goes to stdout) by setting the
-`NFSPLUGIN_DEBUG` env var. It doesn't matter what value you set it to, just that
+`X_CSI_NFS_DEBUG` env var. It doesn't matter what value you set it to, just that
 it is set. For example:
 
 ```sh
-$ NFSPLUGIN_DEBUG= ./csi-nfs
+$ X_CSI_NFS_DEBUG= ./csi-nfs
 INFO[0000] .Serve                                        name=csi-nfs
 DEBU[0000] Added Controller Service
 DEBU[0000] Added Node Service
 ^CINFO[0002] Shutting down server
 ```
 
-For reference, the availabe env vars are:
+Configuring the plugin
+----------------------
+
+The behavior of CSI-NFS can be modified with the following environment variables
 
 | name | purpose | default |
 | - | - | - |
 | CSI_ENDPOINT | Set path to UNIX domain socket file | n/a |
-| NFSPLUGIN_DEBUG | enable debug logging to stdout | n/a |
-| NFSPLUGIN_NODEONLY | Only run the Node Service (no Controller service) | n/a |
-| NFSPLUGIN_CONTROLLERONLY | Only run the Controller Service (no Node service) | n/a |
+| X_CSI_NFS_DEBUG | enable debug logging to stdout | n/a |
+| X_CSI_NFS_NODEONLY | Only run the Node Service (no Controller service) | n/a |
+| X_CSI_NFS_CONTROLLERONLY | Only run the Controller Service (no Node service) | n/a |
 
 Note that the Identity service is required to always be running, and that the
 default behavior is to also run both the Controller and the Node service
@@ -91,15 +94,11 @@ $ csc gets
 $ csc getp
 csi-nfs	0.1.0
 $ csc cget
-MountVolume
-	fs_type: nfs
-$ csc nget
-MountVolume
-	fs_type: nfs
+LIST_VOLUMES
 $ showmount -e 192.168.75.2
 Exports list on 192.168.75.2:
 	/data                             192.168.75.1
-$ csc mnt -targetPath /tmp/mnt -t nfs -o rw host=192.168.75.2 export=/data
+$ csc mnt -targetPath /tmp/mnt -mode 1 host=192.168.75.2 export=/data
 $ ls -al /tmp/mnt
 total 1
 drwxr-xr-x   2 root  wheel    18 Jul 22 20:25 .

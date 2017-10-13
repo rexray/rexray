@@ -92,10 +92,10 @@
   revision = "54ddd210bd47c8e76a3357cb6b67ded66c194e37"
 
 [[projects]]
-  branch = "master"
   name = "github.com/codedellemc/csi-nfs"
   packages = ["nfs","provider","services"]
-  revision = "32ae09ae44241977ba9f30bb2ae81bf8d8b2aa1c"
+  revision = "d4a80fee1473ad52119b1fad8940bc2939b36a59"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -409,6 +409,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fc907d54bf6942c2e5fbf5ba1b3b84cb8feb7dae5964445906eb5aac43cec2c1"
+  inputs-digest = "15204e7c9fe27089aa33f2f354dcc4d6b2cefe768e662d477fb67b8a7ab93bfd"
   solver-name = "gps-cdcl"
   solver-version = 1

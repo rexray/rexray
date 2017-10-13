@@ -31,6 +31,8 @@ jobs:
       env: PROG=rexray-controller  TYPE=controller
 
     - <<: *build-stage
+      env: DRIVER=csi-nfs
+    - <<: *build-stage
       env: DRIVER=dobs
     - <<: *build-stage
       env: DRIVER=ebs
@@ -169,6 +171,8 @@ jobs:
 
     - <<: *docker-stage
       env: DRIVER=cinder
+    - <<: *docker-stage
+      env: DRIVER=csi-nfs
     - <<: *docker-stage
       env: DRIVER=dobs
     - <<: *docker-stage

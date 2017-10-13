@@ -1,7 +1,7 @@
 # Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
 # for detailed Gopkg.toml documentation.
 
-[[constraint]]
+[[override]]
   name = "github.com/sirupsen/logrus"
   version = "1.0.2"
 

@@ -11,7 +11,7 @@ const (
 	SpName    = "csi-blockdevices"
 	spVersion = "0.1.0"
 
-	blockDirEnvVar = "BDPLUGIN_DEVDIR"
+	blockDirEnvVar = "X_CSI_BD_DEVDIR"
 
 	defaultDevDir = "/dev/disk/csi-blockdevices"
 )

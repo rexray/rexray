@@ -18,6 +18,9 @@ import (
 
 var (
 
+	// DockerLegacyMode is true if Docker legacy mode is enabled.
+	DockerLegacyMode, _ = strconv.ParseBool(os.Getenv("DOCKER_LEGACY"))
+
 	// Arch is the uname OS-Arch string.
 	Arch = fmt.Sprintf(
 		"%s-%s",

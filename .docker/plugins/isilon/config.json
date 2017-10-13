@@ -13,6 +13,14 @@
       "Env": [
         {
           "Description": "",
+          "Name": "DOCKER_LEGACY",
+          "Settable": [
+            "value"
+          ],
+          "Value": "true"
+        },
+        {
+          "Description": "",
           "Name": "REXRAY_LOGLEVEL",
           "Settable": [
             "value"

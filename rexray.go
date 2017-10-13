@@ -122,6 +122,9 @@ func main() {
 	golog.SetFlags(0)
 	golog.SetOutput(rrutils.NewWriterFor(ctx.Infof))
 
+	// Print the status of DockerLegacyMode.
+	ctx.WithField("enabled", core.DockerLegacyMode).Info("DockerLegacyMode")
+
 	if config != nil {
 		ctx.WithField("path", configFile).Info("loaded custom config")
 	}

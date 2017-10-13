@@ -260,7 +260,10 @@ func (d *driver) ControllerPublishVolume(
 			err.Error()), nil
 	}
 
-	opts := &apitypes.VolumeAttachOpts{Opts: apiutils.NewStore()}
+	opts := &apitypes.VolumeAttachOpts{
+		Force: d.config.GetBool(apitypes.ConfigIgVolOpsMountPreempt),
+		Opts:  apiutils.NewStore(),
+	}
 	vol, token, err := d.client.Storage().VolumeAttach(d.ctx, volumeID, opts)
 	if err != nil {
 		return nil, err

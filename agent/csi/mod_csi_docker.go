@@ -372,8 +372,8 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 	go d.cacheListResult(vols)
 
 	res := &dvol.ListResponse{}
-	res.Volumes = make([]*dvol.Volume, len(vols))
-	for i, vi := range vols {
+	res.Volumes = []*dvol.Volume{}
+	for _, vi := range vols {
 		if vi.Id == nil || len(vi.Id.Values) == 0 {
 			d.ctx.Warn("docker-csi-bridge: List: skipped volume w missing id")
 			continue
@@ -386,8 +386,23 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 			continue
 		}
 
-		v := &dvol.Volume{Name: name}
-		res.Volumes[i] = v
+		vol := &dvol.Volume{Name: name}
+		if vi.Metadata != nil && len(vi.Metadata.Values) > 0 {
+			vol.Status = map[string]interface{}{}
+			for k, v := range vi.Metadata.Values {
+				vol.Status[k] = v
+			}
+		}
+
+		targetPath, ok, err := d.getTargetPath(name)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			vol.Mountpoint = targetPath
+		}
+
+		res.Volumes = append(res.Volumes, vol)
 		d.ctx.WithField("volume", vi.Id.Values).Debug(
 			"docker-csi-bridge: List: found volume")
 	}

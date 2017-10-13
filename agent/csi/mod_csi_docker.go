@@ -279,6 +279,11 @@ func (d *dockerBridge) cacheListResult(vols []*csi.VolumeInfo) {
 			d.ctx.Debugf("docker-csi-bridge: failed to cache id/name: %v", vi)
 			continue
 		}
+		if _, ok := d.byName[name]; ok {
+			// volume with same name exists already!
+			d.ctx.Warnf("docker-csi-bridge: volume with name:%s already exists, skipping id/name: %v", name, vi)
+			continue
+		}
 		d.byName[name] = *vi
 	}
 }
@@ -581,13 +586,13 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 
 		if _, ok := volMap[name]; ok {
 			d.ctx.WithField("volume", vi).Warn(
-				"docker-csi-bridge: List: skipped volume already in cache")
+				"docker-csi-bridge: List: skipped volume with duplicate name")
 			continue
 		}
 
-		d.ctx.WithField("volume", vi.Id.Values).WithField(
-			"name", name).Debug(
-			"docker-csi-bridge: List: found new volume")
+		//d.ctx.WithField("volume", vi.Id.Values).WithField(
+		//	"name", name).Debug(
+		//	"docker-csi-bridge: List: found new volume")
 		volMap[name] = *vi
 	}
 

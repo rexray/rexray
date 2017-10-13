@@ -5,7 +5,7 @@
   name = "github.com/codedellemc/gocsi"
   branch = "master"
 
-[[constraint]]
+[[override]]
   name = "github.com/sirupsen/logrus"
   version = "1.0.3"
 

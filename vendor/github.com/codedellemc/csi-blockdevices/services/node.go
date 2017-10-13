@@ -24,14 +24,14 @@ func (s *StoragePlugin) NodePublishVolume(
 	vc := in.GetVolumeCapability()
 	am := vc.GetAccessMode()
 
-	name, ok := idm["name"]
+	id, ok := idm["id"]
 	if !ok {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_INVALID_VOLUME_ID,
-			"name key missing from volumeID"), nil
+			"id key missing from volumeID"), nil
 	}
 
-	dev, err := block.GetDeviceInDir(s.DevDir, name)
+	dev, err := block.GetDeviceInDir(s.DevDir, id)
 	if err != nil {
 		return gocsi.ErrNodePublishVolume(
 			csi.Error_NodePublishVolumeError_VOLUME_DOES_NOT_EXIST,
@@ -74,14 +74,14 @@ func (s *StoragePlugin) NodeUnpublishVolume(
 	idm := in.GetVolumeId().GetValues()
 	target := in.GetTargetPath()
 
-	name, ok := idm["name"]
+	id, ok := idm["id"]
 	if !ok {
 		return gocsi.ErrNodeUnpublishVolume(
 			csi.Error_NodeUnpublishVolumeError_INVALID_VOLUME_ID,
-			"name key missing from volumeID"), nil
+			"id key missing from volumeID"), nil
 	}
 
-	dev, err := block.GetDeviceInDir(s.DevDir, name)
+	dev, err := block.GetDeviceInDir(s.DevDir, id)
 	if err != nil {
 		return gocsi.ErrNodeUnpublishVolume(
 			csi.Error_NodeUnpublishVolumeError_VOLUME_DOES_NOT_EXIST,

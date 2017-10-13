@@ -1,13 +1,25 @@
 package services
 
 import (
+	"strconv"
+	"strings"
+
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/codedellemc/gocsi"
 	"github.com/codedellemc/gocsi/csi"
+	"github.com/codedellemc/gocsi/mount"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/codedellemc/csi-blockdevices/block"
+)
+
+const (
+	// GRPCMetadataTargetPaths is the key in gRPC metatdata that is set
+	// to "true" if a ListVolumes RPC should return VolumeInfo objects
+	// with associated mount path information.
+	GRPCMetadataTargetPaths = "rexray.docker2csi.targetpaths"
 )
 
 func (s *StoragePlugin) ControllerGetCapabilities(
@@ -79,15 +91,15 @@ func (s *StoragePlugin) ValidateVolumeCapabilities(
 		},
 	}
 
-	volID := in.GetVolumeInfo().GetId().GetValues()
-	volName, ok := volID["name"]
+	volIDVals := in.GetVolumeInfo().GetId().GetValues()
+	volID, ok := volIDVals["id"]
 	if !ok {
 		return gocsi.ErrValidateVolumeCapabilities(
 			csi.Error_ValidateVolumeCapabilitiesError_INVALID_VOLUME_INFO,
 			"Invalid volume ID"), nil
 	}
 
-	dev, err := block.GetDeviceInDir(s.DevDir, volName)
+	dev, err := block.GetDeviceInDir(s.DevDir, volID)
 	if err != nil {
 		log.WithError(err).Error("device does not appear to exist")
 		return gocsi.ErrValidateVolumeCapabilities(
@@ -161,7 +173,22 @@ func (s *StoragePlugin) ListVolumes(
 	ctx context.Context,
 	in *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
 
+	// Check to see if mount path information should be returned.
+	var isMountInfoRequested bool
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if v, ok := md[GRPCMetadataTargetPaths]; ok && len(v) > 0 {
+			isMountInfoRequested, _ = strconv.ParseBool(v[0])
+		}
+	}
+
 	vols, err := block.ListDevices(s.DevDir)
+	if err != nil {
+		return gocsi.ErrListVolumes(
+			csi.Error_GeneralError_UNDEFINED,
+			err.Error()), nil
+	}
+
+	mnts, err := mount.GetMounts()
 	if err != nil {
 		return gocsi.ErrListVolumes(
 			csi.Error_GeneralError_UNDEFINED,
@@ -170,16 +197,37 @@ func (s *StoragePlugin) ListVolumes(
 
 	entries := []*csi.ListVolumesResponse_Result_Entry{}
 	for _, v := range vols {
-		entries = append(entries, &csi.ListVolumesResponse_Result_Entry{
-			VolumeInfo: &csi.VolumeInfo{
-				Id: &csi.VolumeID{
-					Values: map[string]string{
-						"name": v.Name,
-					},
+		// Find all places where device is mounted
+		tps := []string{}
+		for _, m := range mnts {
+			if m.Source == v.RealDev && m.Device == "devtmpfs" {
+				tps = append(tps, m.Path)
+				continue
+			}
+			if m.Device == v.RealDev && !strings.HasPrefix(m.Path, s.privDir) {
+				tps = append(tps, m.Path)
+			}
+		}
+		vi := &csi.VolumeInfo{
+			Id: &csi.VolumeID{
+				Values: map[string]string{
+					"id": v.Name,
 				},
-				CapacityBytes: v.Capacity,
 			},
-		})
+			CapacityBytes: v.Capacity,
+		}
+		if isMountInfoRequested {
+			vi.Metadata = &csi.VolumeMetadata{
+				Values: map[string]string{
+					"targetpaths": strings.Join(tps, ","),
+				},
+			}
+		}
+		entries = append(entries,
+			&csi.ListVolumesResponse_Result_Entry{
+				VolumeInfo: vi,
+			},
+		)
 
 	}
 	return &csi.ListVolumesResponse{

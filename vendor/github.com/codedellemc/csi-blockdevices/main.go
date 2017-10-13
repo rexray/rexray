@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	debugEnvVar = "BDPLUGIN_DEBUG"
-	nodeEnvVar  = "BDPLUGIN_NODEONLY"
-	ctlrEnvVar  = "BDPLUGIN_CONTROLLERONLY"
+	debugEnvVar = "X_CSI_BD_DEBUG"
+	nodeEnvVar  = "X_CSI_BD_NODEONLY"
+	ctlrEnvVar  = "X_CSI_BD_CONTROLLERONLY"
 )
 
 func main() {

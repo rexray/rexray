@@ -86,10 +86,10 @@
   revision = "2f16017c76fc2403d143e93cea1e1b9526a01148"
 
 [[projects]]
-  branch = "master"
   name = "github.com/codedellemc/csi-blockdevices"
   packages = ["block","provider","services"]
-  revision = "54ddd210bd47c8e76a3357cb6b67ded66c194e37"
+  revision = "fb53c6c13524f3c41b8e23ffdc278a23bec7128d"
+  version = "v0.1.0"
 
 [[projects]]
   name = "github.com/codedellemc/csi-nfs"
@@ -409,6 +409,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "15204e7c9fe27089aa33f2f354dcc4d6b2cefe768e662d477fb67b8a7ab93bfd"
+  inputs-digest = "02c5fb8514804e2d5c7dd6c37fc99de19e08b5efbe1e5d9c16738fe431680819"
   solver-name = "gps-cdcl"
   solver-version = 1

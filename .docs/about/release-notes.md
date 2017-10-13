@@ -22,7 +22,39 @@ Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
 Formed: Thu, 07 Sep 2017 17:49:48 CDT
 ```
 
-## Version 0.11.0 (2017/11/13)
+## Version 0.11.0 (2017/10/??)
+
+This is a major release that introduces a Docker Volume API to CSI bridge that
+allows Docker to consume CSI plugins. This new Docker behavior is enabled by
+default when running REX-Ray as a service, while the Docker Managed Plugins
+available in the Docker Hub default to using the pre-existing Docker module.
+
+### New Features
+* Introduce a new Docker Volume API to CSI bridge that allows Docker to consume
+  CSI plugins. ([\#1037](https://github.com/codedellemc/rexray/issues/1037))
+* Microsoft Azure Unmanaged Disk Docker Managed Plugin
+  ([\#817](https://github.com/codedellemc/rexray/issues/817))
+
+### Enhancements
+* Upgrade Ceph client in RBD managed plugin to Luminous release
+  ([\#1050](https://github.com/codedellemc/rexray/issues/1050))
+* Enable `S3FS_ENDPOINT` in s3fs managed plugin
+  ([\#1042](https://github.com/codedellemc/rexray/issues/1042))
+* Expand managed plugin configuration options
+  ([\#1056](https://github.com/codedellemc/rexray/issues/1056))
+* Allow custom Ceph cluster name and non-admin user
+  ([\#1035](https://github.com/codedellemc/rexray/issues/1035))
+
+### Bug Fixes
+* Fix issue in CSI-libStorage bridge that would prevent idempotent creates after
+  a restart. ([\#1060](https://github.com/codedellemc/rexray/issues/1060))
+* Fix volume pre-emption in Cinder driver. This bug prevented Cinder from working
+  in Docker Swarm mode ([\#913](https://github.com/codedellemc/rexray/issues/913))
+
+### Thank you
+Name | Blame
+-------|------
+[Harshavardhana](https://github.com/harshavardhana) | IOU
 
 ## Version 0.10.2 (2017/09/12)
 REX types warily, a deadline to meet

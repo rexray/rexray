@@ -188,6 +188,9 @@ func (d *driver) CreateVolume(
 			opts.Type = &v
 		}
 	}
+	if len(req.Parameters) > 0 {
+		opts.Opts = apiutils.NewStoreWithVars(req.Parameters)
+	}
 
 	// Use the integration driver to create the volume.
 	vol, err := d.client.Integration().Create(d.ctx, req.Name, opts)

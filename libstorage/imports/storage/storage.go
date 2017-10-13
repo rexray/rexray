@@ -11,6 +11,7 @@
 // +build !scaleio
 // +build !vbox
 // +build !vfs
+// +build !csinfs
 
 package storage
 

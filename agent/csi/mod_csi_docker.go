@@ -518,7 +518,7 @@ func (d *dockerBridge) Create(req *dvol.CreateRequest) error {
 
 func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 
-	volMap := map[string]struct{}{}
+	volMap := map[string]csi.VolumeInfo{}
 
 	// If the service is CSI-NFS then grab volumes from cache, as that's
 	// the only place they will be
@@ -530,9 +530,9 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 			d.ctx.WithField("volume", vi.Id.Values).WithField(
 				"name", name).Debug(
 				"docker-csi-bridge: List: found volume from cache")
-			volMap[name] = struct{}{}
+			volMap[name] = vi
 		}
-		return buildListresponse(volMap), nil
+		return d.buildListResponse(volMap)
 	}
 
 	// Create a new gRPC, CSI client.
@@ -553,7 +553,7 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 	}
 
 	if !controllerListVolsSupported(caps) {
-		return buildListresponse(volMap), nil
+		return d.buildListResponse(volMap)
 	}
 
 	vols, _, err := gocsi.ListVolumes(d.ctx, cc, csiVersion, 0, "")
@@ -588,21 +588,44 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 		d.ctx.WithField("volume", vi.Id.Values).WithField(
 			"name", name).Debug(
 			"docker-csi-bridge: List: found new volume")
-		volMap[name] = struct{}{}
+		volMap[name] = *vi
 	}
 
-	return buildListresponse(volMap), nil
+	return d.buildListResponse(volMap)
 }
 
-func buildListresponse(volMap map[string]struct{}) *dvol.ListResponse {
+func (d *dockerBridge) buildListResponse(
+	volMap map[string]csi.VolumeInfo) (*dvol.ListResponse, error) {
+
 	res := &dvol.ListResponse{}
-	res.Volumes = make([]*dvol.Volume, 0)
-	for name := range volMap {
-		v := &dvol.Volume{Name: name}
-		res.Volumes = append(res.Volumes, v)
+	res.Volumes = make([]*dvol.Volume, len(volMap))
+	i := 0
+
+	for name, vi := range volMap {
+		res.Volumes[i] = &dvol.Volume{Name: name}
+
+		// Add the CSI VolumeInfo metadata to the Docker volume's
+		// Status map.
+		if vi.Metadata != nil && len(vi.Metadata.Values) > 0 {
+			res.Volumes[i].Status = map[string]interface{}{}
+			for k, v := range vi.Metadata.Values {
+				res.Volumes[i].Status[k] = v
+			}
+		}
+
+		// Include the volume's target path if it's mounted.
+		targetPath, ok, err := d.getTargetPath(name)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			res.Volumes[i].Mountpoint = targetPath
+		}
+
+		i++
 	}
 
-	return res
+	return res, nil
 }
 
 func (d *dockerBridge) Get(req *dvol.GetRequest) (*dvol.GetResponse, error) {

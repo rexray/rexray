@@ -602,31 +602,20 @@ func (d *dockerBridge) List() (*dvol.ListResponse, error) {
 func (d *dockerBridge) buildListResponse(
 	volMap map[string]csi.VolumeInfo) (*dvol.ListResponse, error) {
 
-	res := &dvol.ListResponse{}
-	res.Volumes = make([]*dvol.Volume, len(volMap))
-	i := 0
+	var (
+		i   int
+		res = &dvol.ListResponse{
+			Volumes: make([]*dvol.Volume, len(volMap)),
+		}
+	)
 
 	for name, vi := range volMap {
-		res.Volumes[i] = &dvol.Volume{Name: name}
-
-		// Add the CSI VolumeInfo metadata to the Docker volume's
-		// Status map.
-		if vi.Metadata != nil && len(vi.Metadata.Values) > 0 {
-			res.Volumes[i].Status = map[string]interface{}{}
-			for k, v := range vi.Metadata.Values {
-				res.Volumes[i].Status[k] = v
-			}
-		}
-
-		// Include the volume's target path if it's mounted.
-		targetPath, ok, err := d.getTargetPath(name)
+		vol, err := d.toDockerVolume(name, vi)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"docker-csi-bridge: buildListResponse: %s: %v", name, err)
 		}
-		if ok {
-			res.Volumes[i].Mountpoint = targetPath
-		}
-
+		res.Volumes[i] = vol
 		i++
 	}
 
@@ -635,25 +624,19 @@ func (d *dockerBridge) buildListResponse(
 
 func (d *dockerBridge) Get(req *dvol.GetRequest) (*dvol.GetResponse, error) {
 
-	if _, ok := d.getVolumeInfo(req.Name); !ok {
+	volInfo, ok := d.getVolumeInfo(req.Name)
+	if !ok {
 		return nil, fmt.Errorf(
 			"docker-csi-bridge: Get: unknown volume: %s", req.Name)
 	}
 
-	res := &dvol.GetResponse{
-		Volume: &dvol.Volume{Name: req.Name},
-	}
-
-	targetPath, ok, err := d.getTargetPath(req.Name)
+	vol, err := d.toDockerVolume(req.Name, volInfo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"docker-csi-bridge: Get: %s: %v", req.Name, err)
 	}
 
-	if ok {
-		res.Volume.Mountpoint = targetPath
-	}
-
-	return res, nil
+	return &dvol.GetResponse{Volume: vol}, nil
 }
 
 // Remove the volume with the following steps:
@@ -1085,4 +1068,30 @@ func controllerListVolsSupported(caps []*csi.ControllerServiceCapability) bool {
 	return controllerCapSupported(
 		caps,
 		csi.ControllerServiceCapability_RPC_LIST_VOLUMES)
+}
+
+func (d *dockerBridge) toDockerVolume(
+	name string, volInfo csi.VolumeInfo) (*dvol.Volume, error) {
+
+	vol := &dvol.Volume{Name: name}
+
+	// Add the CSI VolumeInfo metadata to the Docker volume's
+	// Status map.
+	if volInfo.Metadata != nil && len(volInfo.Metadata.Values) > 0 {
+		vol.Status = map[string]interface{}{}
+		for k, v := range volInfo.Metadata.Values {
+			vol.Status[k] = v
+		}
+	}
+
+	// Include the volume's target path if it's mounted.
+	targetPath, ok, err := d.getTargetPath(name)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		vol.Mountpoint = targetPath
+	}
+
+	return vol, nil
 }

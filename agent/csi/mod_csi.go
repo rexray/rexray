@@ -300,6 +300,7 @@ func (m *mod) Start() error {
 		// at listing the volumes using the bridge. This caches
 		// the volume name-to-ID mappings.
 		go func() {
+			defer m.waitForCancel.Done()
 			for {
 				if _, err := dbridge.List(); err == nil {
 					break
@@ -310,7 +311,6 @@ func (m *mod) Start() error {
 				case <-time.After(time.Duration(1) * time.Second):
 				}
 			}
-			m.waitForCancel.Done()
 		}()
 
 		dh := dvol.NewHandler(dbridge)

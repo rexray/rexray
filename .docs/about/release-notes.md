@@ -22,12 +22,13 @@ Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
 Formed: Thu, 07 Sep 2017 17:49:48 CDT
 ```
 
-## Version 0.11.0 (2017/10/??)
-
-This is a major release that introduces a Docker Volume API to CSI bridge that
-allows Docker to consume CSI plugins. This new Docker behavior is enabled by
-default when running REX-Ray as a service, while the Docker Managed Plugins
-available in the Docker Hub default to using the pre-existing Docker module.
+## Version 0.11.0 (2017/10/16)
+This is a major release that introduces the Docker Volume API to CSI
+southbound adapter -- a bridge that enables the consumption of CSI plug-ins
+by Docker. This new Docker to CSI bridge is enabled by default when running
+REX-Ray as a service, while the
+[Docker Managed Plugins](https://hub.docker.com/r/rexray/) default to
+the existing Docker Volume API endpoint.
 
 ### New Features
 * Introduce a new Docker Volume API to CSI bridge that allows Docker to consume
@@ -36,6 +37,9 @@ available in the Docker Hub default to using the pre-existing Docker module.
   ([\#817](https://github.com/codedellemc/rexray/issues/817))
 
 ### Enhancements
+* Documentation improvements
+  ([\#1075](https://github.com/codedellemc/rexray/issues/1075),
+  [\#1077](https://github.com/codedellemc/rexray/issues/1077))
 * Upgrade Ceph client in RBD managed plugin to Luminous release
   ([\#1050](https://github.com/codedellemc/rexray/issues/1050))
 * Enable `S3FS_ENDPOINT` in s3fs managed plugin
@@ -52,9 +56,10 @@ available in the Docker Hub default to using the pre-existing Docker module.
   in Docker Swarm mode ([\#913](https://github.com/codedellemc/rexray/issues/913))
 
 ### Thank you
-Name | Blame
--------|------
-[Harshavardhana](https://github.com/harshavardhana) | IOU
+| Name | Blame |
+|-------|------|
+| [Harshavardhana](https://github.com/harshavardhana) | A lot of people are unaware, but Harshavardhana is a world famous cruciverbalist. Each week he designs a new, daily-dose of word related pain for the truly cross-fit. And still Harshavardhana was able to come up with a four-letter acronym that describes a different kind of way to use a bucket -- "S3FS". Thank you Harshavardhana! |
+
 
 ## Version 0.10.2 (2017/09/12)
 REX types warily, a deadline to meet

@@ -22,7 +22,7 @@ idempotent as well. Not only that, but REX-Ray supports native CSI plug-ins!
 | Ceph | [RBD](../storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ | ✓ |
 | Local | [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) | | ✓ | ✓ |
 | | [CSI-NFS](https://github.com/codedellemc/csi-nfs) | ✓ | ✓ | ✓ |
-| | [CSI-VFS](https://github.com/codedellemc/csi-vfs) | | ✓ | ✓ |
+| | [CSI-VFS](https://github.com/codedellemc/csi-vfs) | ✓ | ✓ | ✓ |
 | Dell EMC | [Isilon](../storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](../storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
 | DigitalOcean | [Block Storage](../storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ | ✓ |

@@ -12,6 +12,7 @@
 // +build !vbox
 // +build !vfs
 // +build !csinfs
+// +build !csivfs
 
 package storage
 

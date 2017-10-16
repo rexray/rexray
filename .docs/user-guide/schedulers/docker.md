@@ -254,7 +254,8 @@ The following table lists the available REX-Ray managed Docker plug-ins:
 | | [EFS](./docker/plug-ins/aws.md#aws-efs) |
 | | [S3FS](./docker/plug-ins/aws.md#aws-s3fs) |
 | Ceph | [RBD](./docker/plug-ins/ceph.md#ceph-rbd) |
-| Local | [CSI-NFS](./docker/plug-ins/csi-nfs.md) |
+| Local | [CSI-NFS](./docker/plug-ins/local.md#csi-nfs) |
+| | [CSI-VFS](./docker/plug-ins/local.md#csi-vfs) |
 | Dell EMC | [Isilon](./docker/plug-ins/dellemc.md#dell-emc-isilon) |
 | | [ScaleIO](./docker/plug-ins/dellemc.md#dell-emc-scaleio) |
 | DigitalOcean | [Block Storage](./docker/plug-ins/digitalocean.md#do-block-storage) |

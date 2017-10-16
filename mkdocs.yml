@@ -8,14 +8,15 @@ site_favicon: favicon.png
 extra_css:
   - css/thecodeteam.css
   - css/thecodeteam-font.css
+  - css/anchor.css
   - css/hX.css
   - css/first-of-type.css
   - css/hide-rtd-footer.css
   - css/dropdown.css
+extra_javascript:
+  - js/anchor.js
 markdown_extensions:
   - admonition
-  - toc:
-      permalink: true
 pages:
   - Home: index.md
   - User Guide:

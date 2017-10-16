@@ -37,6 +37,8 @@ jobs:
     - <<: *build-stage
       env: DRIVER=csi-nfs
     - <<: *build-stage
+      env: DRIVER=csi-vfs
+    - <<: *build-stage
       env: DRIVER=dobs
     - <<: *build-stage
       env: DRIVER=ebs
@@ -177,6 +179,8 @@ jobs:
       env: DRIVER=cinder
     - <<: *docker-stage
       env: DRIVER=csi-nfs
+    - <<: *docker-stage
+      env: DRIVER=csi-vfs
     - <<: *docker-stage
       env: DRIVER=dobs
     - <<: *docker-stage

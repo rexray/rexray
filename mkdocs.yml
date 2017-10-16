@@ -44,10 +44,10 @@ pages:
             - Getting Started: user-guide/schedulers/docker/plug-ins.md
             - Amazon Web Services (AWS): user-guide/schedulers/docker/plug-ins/aws.md
             - Ceph: user-guide/schedulers/docker/plug-ins/ceph.md
-            - CSI-NFS: user-guide/schedulers/docker/plug-ins/csi-nfs.md
             - Dell EMC: user-guide/schedulers/docker/plug-ins/dellemc.md
             - DigitalOcean: user-guide/schedulers/docker/plug-ins/digitalocean.md
             - Google: user-guide/schedulers/docker/plug-ins/google.md
+            - Local: user-guide/schedulers/docker/plug-ins/local.md
             - Microsoft: user-guide/schedulers/docker/plug-ins/microsoft.md
             - OpenStack: user-guide/schedulers/docker/plug-ins/openstack.md
         - Kubernetes: user-guide/schedulers/kubernetes.md

@@ -1,0 +1,112 @@
+{
+      "Args": {
+        "Description": "",
+        "Name": "",
+        "Settable": null,
+        "Value": null
+      },
+      "Description": "REX-Ray for CSI-VFS",
+      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugins/csi-vfs",
+      "Entrypoint": [
+        "/rexray.sh", "rexray", "start", "--nopid"
+      ],
+      "Env": [
+        {
+          "Description": "",
+          "Name": "REXRAY_LOGLEVEL",
+          "Settable": [
+            "value"
+          ],
+          "Value": "warn"
+        },
+        {
+          "Description": "",
+          "Name": "LIBSTORAGE_SERVER_TASKS_EXETIMEOUT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LIBSTORAGE_INTEGRATION_VOLUME_OPERATIONS_MOUNT_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_ROOTPATH",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "LINUX_VOLUME_FILEMODE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "HTTP_PROXY",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "The sock file used by the CO to communicate with CSI.",
+          "Name": "CSI_ENDPOINT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "The name of the CSI plug-in used by the CSI module.",
+          "Name": "X_CSI_DRIVER",
+          "Settable": [
+            "value"
+          ],
+          "Value": "csi-vfs"
+        },
+        {
+          "Description": "A flag that disables the CSI to libStorage bridge.",
+          "Name": "X_CSI_NATIVE",
+          "Settable": [
+            "value"
+          ],
+          "Value": "true"
+        }
+      ],
+      "Interface": {
+        "Socket": "rexray.sock",
+        "Types": [
+          "docker.volumedriver/1.0"
+        ]
+      },
+      "Linux": {
+        "AllowAllDevices": true,
+        "Capabilities": ["CAP_SYS_ADMIN"],
+        "Devices": null
+      },
+      "Mounts": [
+        {
+          "Source": "/dev",
+          "Destination": "/dev",
+          "Type": "bind",
+          "Options": ["rbind"]
+        }
+      ],
+      "Network": {
+        "Type": "host"
+      },
+      "PropagatedMount": "/var/lib/rexray",
+      "User": {},
+      "WorkDir": ""
+}

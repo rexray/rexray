@@ -1,0 +1,21 @@
+.svg-anchor {
+    float: left;
+    padding-right: 4px;
+    margin-left: -20px;
+    line-height: 1;
+
+    opacity: 0;
+    /*
+    -webkit-transition: opacity 0.2s ease-in-out 0.1s;
+    -moz-transition: opacity 0.2s ease-in-out 0.1s;
+    -ms-transition: opacity 0.2s ease-in-out 0.1s;
+    */
+}
+
+h2:hover .svg-anchor,
+h3:hover .svg-anchor,
+h4:hover .svg-anchor,
+h5:hover .svg-anchor,
+h6:hover .svg-anchor {
+  opacity: 1;
+}

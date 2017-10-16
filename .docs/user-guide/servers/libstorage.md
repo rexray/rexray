@@ -983,18 +983,23 @@ the Linux OS.
 Storage drivers enable libStorage to communicate with direct-attached or
 remote storage systems. Currently the following storage drivers are supported:
 
- Driver | Driver Name
---------|------------
-[Dell EMC Isilon](./storage-providers#dell-emc-isilon) | isilon
-[Dell EMC ScaleIO](./storage-providers.md#dell-emc-scaleio) | scaleio
-[VirtualBox](./storage-providers.md#virtualbox) | virtualbox
-[AWS EBS](./storage-providers.md#aws-ebs) | ebs, ec2
-[AWS EFS](./storage-providers.md#aws-efs) | efs
-[AWS S3FS](./storage-providers.md#aws-s3fs) | s3fs
-[Ceph RBD](./storage-providers.md#ceph-rbd) | rbd
-[GCE PD](./storage-providers.md#gce-persistent-disk) | gcepd
-[Azure UD](./storage-providers.md#azure-ud) | azureud
-[OpenStack Cinder](./storage-providers.md#cinder) | cinder
+ | Provider              | Storage Platform  | <center>[Docker](https://docs.docker.com/engine/extend/plugins_volume/)</center> | <center>[CSI](https://github.com/container-storage-interface/spec)</center> | <center>Containerized</center> |
+ |-----------------------|----------------------|:---:|:---:|:---:|
+ | Amazon EC2 | [EBS](./../storage-providers/aws.md#aws-ebs) | ✓ | ✓ | ✓  |
+ | | [EFS](./../storage-providers/aws.md#aws-efs) | ✓ | ✓ | ✓ |
+ | | [S3FS](./../storage-providers/aws.md#aws-s3fs) | ✓ | ✓ | ✓ |
+ | Ceph | [RBD](./../storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ | ✓ |
+ | Local | [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) | | ✓ | ✓ |
+ | | [CSI-NFS](https://github.com/codedellemc/csi-nfs) | | ✓ | ✓ |
+ | | [CSI-VFS](https://github.com/codedellemc/csi-vfs) | | ✓ | ✓ |
+ | Dell EMC | [Isilon](./../storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
+ | | [ScaleIO](./../storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
+ | DigitalOcean | [Block Storage](./../storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ | ✓ |
+ | FittedCloud | [EBS Optimizer](./../storage-providers/fittedcloud.md#ebs-optimizer) | ✓ | ✓ | |
+ | Google | [GCE Persistent Disk](./../storage-providers/google.md#gce-persistent-disk) | ✓ | ✓ | ✓ |
+ | Microsoft | [Azure Unmanaged Disk](./../storage-providers/microsoft.md#azure-ud) | ✓ | ✓ | |
+ | OpenStack | [Cinder](./../storage-providers/openstack.md#cinder) | ✓ | ✓ | ✓ |
+ | VirtualBox | [Virtual Media](./../storage-providers/virtualbox.md#virtualbox) | ✓ | ✓ | |
 
 The `libstorage.server.libstorage.storage.driver` property can be used to
 activate a storage drivers. That is not a typo; the `libstorage` key is repeated

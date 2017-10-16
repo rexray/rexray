@@ -13,7 +13,7 @@ Frameworks](http://mesos.apache.org/) like
 [Marathon](https://mesosphere.github.io/marathon/) to automatically orchestrate
 storage tasks between hosts in a cluster.
 
-Built on top of the [libStorage](./user-guide/libstorage.md)
+Built on top of the [libStorage](./user-guide/servers/libstorage.md)
 framework, REX-Ray's simplified architecture consists of a single binary and
 runs as a stateless service on every host using a configuration file to
 orchestrate multiple storage platforms.
@@ -129,7 +129,7 @@ The following storage providers and platforms are supported by REX-Ray.
 | | [S3FS](./user-guide/storage-providers.md#aws-s3fs) | ✓ | ✓ | ✓ |
 | Ceph | [RBD](./user-guide/storage-providers.md#ceph-rbd) | ✓ | ✓ | ✓ |
 | Local | [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) | | ✓ | ✓ |
-| | [CSI-NFS](https://github.com/codedellemc/csi-nfs) | | ✓ | ✓ |
+| | [CSI-NFS](https://github.com/codedellemc/csi-nfs) | ✓ | ✓ | ✓ |
 | | [CSI-VFS](https://github.com/codedellemc/csi-vfs) | | ✓ | ✓ |
 | Dell EMC | [Isilon](./user-guide/storage-providers.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](./user-guide/storage-providers.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
@@ -159,9 +159,9 @@ REX-Ray currently supports the following container platforms:
 
 Platform            | Use
 ------------------|-------------------------
-Docker            | [Volume Driver Plugin](./user-guide/schedulers.md#docker)
-Mesos             | [Volume Driver Isolator module](./user-guide/schedulers.md#mesos)
-Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers.md#mesos)
+Docker            | [Volume Driver Plugin](./user-guide/schedulers/dockermd)
+Mesos             | [Volume Driver Isolator module](./user-guide/schedulers/mesos.md)
+Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers/mesos.md)
 
 #### Container Orchestration Support
 REX-Ray currently supports the following container orchestrators:

@@ -22,11 +22,11 @@
 
 .icon-codedellemc-logo:before {
     content: "e";
-    vertical-align: middle;
+    vertical-align: left;
 }
 
 .icon-codedellemc-logo:after {
-    content: " {code} by Dell EMC";
+    content: " {code}";
 }
 
 .icon-rexray-logo:before {

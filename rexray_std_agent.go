@@ -6,7 +6,6 @@ package main
 import (
 	// Load the agent's modules
 	_ "github.com/codedellemc/rexray/agent/csi"
-	_ "github.com/codedellemc/rexray/agent/docker"
 
 	// Load the in-tree CSI plug-ins
 	_ "github.com/codedellemc/rexray/agent/csi/libstorage"

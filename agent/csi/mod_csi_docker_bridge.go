@@ -16,8 +16,6 @@ import (
 	"github.com/codedellemc/gocsi/csi"
 	"github.com/codedellemc/gocsi/mount"
 
-	"github.com/codedellemc/rexray/agent"
-	"github.com/codedellemc/rexray/core"
 	apictx "github.com/codedellemc/rexray/libstorage/api/context"
 	"github.com/codedellemc/rexray/libstorage/api/registry"
 	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
@@ -30,10 +28,6 @@ const (
 )
 
 func init() {
-	if !core.DockerLegacyMode {
-		agent.RegisterModule("docker", newModule)
-	}
-
 	registry.RegisterConfigReg(
 		"Docker Bridge",
 		func(ctx apitypes.Context, r gofig.ConfigRegistration) {
@@ -110,14 +104,17 @@ func newDockerBridge(
 		}
 	}
 
-	return &dockerBridge{
+	endpoint := &dockerBridge{
 		ctx:     ctx,
 		config:  config,
 		cs:      cs,
 		fsType:  config.GetString(apitypes.ConfigIgVolOpsCreateDefaultFsType),
 		mntPath: newMntPath,
 		byName:  byName,
-	}, nil
+	}
+
+	ctx.Info("docker-csi-bridge: created Docker bridge endpoint")
+	return endpoint, nil
 }
 
 func initNFSVolMap(

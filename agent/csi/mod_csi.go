@@ -50,12 +50,7 @@ type mod struct {
 	waitForCancel sync.WaitGroup
 }
 
-var (
-	loadGoPluginsFunc func(context.Context, ...string) error
-	separators        = regexp.MustCompile(`[ &_=+:]`)
-	dashes            = regexp.MustCompile(`[\-]+`)
-	illegalPath       = regexp.MustCompile(`[^[:alnum:]\~\-\./]`)
-)
+var loadGoPluginsFunc func(context.Context, ...string) error
 
 const configFormat = `
 rexray:
@@ -69,6 +64,7 @@ rexray:
 
 func init() {
 	agent.RegisterModule("csi", newModule)
+	agent.RegisterModule("docker", newModule)
 
 	registry.RegisterConfigReg(
 		"CSI",
@@ -77,7 +73,7 @@ func init() {
 			pathConfig := apictx.MustPathConfig(ctx)
 
 			csiEndpoint := os.Getenv("CSI_ENDPOINT")
-			if !core.DockerLegacyMode && csiEndpoint == "" {
+			if csiEndpoint == "" {
 				csiEndpoint = path.Join(
 					pathConfig.Home,
 					"/run/docker/plugins/rexray.sock")
@@ -285,41 +281,121 @@ func (m *mod) Start() error {
 		return nil
 	}
 
-	// Add one for the docker cache list call.
-	m.waitForCancel.Add(1)
+	// Determine the type of Docker driver to create: bridge or legacy.
+	var (
+		dockerVolDriver       dvol.Driver
+		warmDockerBridgeCache func()
+		useDockerBridge       = !core.DockerLegacyMode
+	)
 
-	// Create the docker bridge.
-	dbridge, err := newDockerBridge(ctx, m.config, m.cs)
-	if err != nil {
-		return err
+	// If bridge mode is enabled then check if it should be disabled for
+	// the following libStorage storage platforms:
+	//
+	// * EFS
+	// * Isilon
+	// * S3FS
+	if useDockerBridge {
+
+		// If the CSI service type is libStorage then check if legacy
+		// mode is required.
+		if strings.EqualFold(m.cs.serviceType, "libstorage") {
+			svcName, ok := apictx.ServiceName(ctx)
+			if !ok {
+				return errors.New("missing service name")
+			}
+			svcInfo, err := m.lsc.API().ServiceInspect(ctx, svcName)
+			if err != nil {
+				err = fmt.Errorf(
+					"mod-csi: docker mode: "+
+						"libStorage.ServiceInspect: %s: failed: %v",
+					svcName, err)
+				ctx.Error(err)
+				return err
+			}
+
+			ctx.Infof("mod-csi: docker mode: service=%s", svcName)
+
+			if svcInfo.Driver == nil {
+				err = fmt.Errorf(
+					"mod-csi: docker mode: service: %s: nil driver", svcName)
+				ctx.Error(err)
+				return err
+			}
+
+			ctx.Debugf("mod-csi: docker mode: driver=%s", svcInfo.Driver.Name)
+
+			// If the libStorage driver is EFS, Isilon, or S3FS then
+			// Docker Bridge mode is not supported.
+			if ok, _ := regexp.MatchString(
+				svcInfo.Driver.Name, `(?i)^efs|isilon|s3fs$`); ok {
+				useDockerBridge = false
+			}
+		}
+	}
+
+	// Create a Docker driver either with the Docker Bridge or the
+	// Docker Legacy driver.
+	{
+		var err error
+		if useDockerBridge {
+			ctx.Info("mod-csi: docker mode: bridge")
+
+			dockerVolDriver, err = newDockerBridge(ctx, m.config, m.cs)
+			if err != nil {
+				return err
+			}
+
+			// Add one for the docker cache list call.
+			m.waitForCancel.Add(1)
+
+			// Define the function used to warm the Docker Bridge's
+			// volume cache.
+			warmDockerBridgeCache = func() {
+				defer m.waitForCancel.Done()
+
+				// Loop every one second until a successful attempt
+				// at listing the volumes using the bridge. This caches
+				// the volume name-to-ID mappings.
+				for {
+					if _, err := dockerVolDriver.List(); err == nil {
+						ctx.Info("mod-csi: docker bridge: warmed cache")
+						break
+					}
+					select {
+					case <-ctx.Done():
+						return
+					case <-time.After(time.Duration(1) * time.Second):
+					}
+				}
+			}
+		} else {
+			ctx.Info("mod-csi: docker mode: legacy")
+
+			dockerVolDriver, err = newDockerLegacy(ctx, m.config, m.lsc)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	// Start the Docker Volume API
 	go func() {
-		// Loop every one second until a successful attempt
-		// at listing the volumes using the bridge. This caches
-		// the volume name-to-ID mappings.
-		go func() {
-			defer m.waitForCancel.Done()
-			for {
-				if _, err := dbridge.List(); err == nil {
-					break
-				}
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(time.Duration(1) * time.Second):
-				}
-			}
-		}()
 
-		dh := dvol.NewHandler(dbridge)
+		var warnMsgDType string
+		if useDockerBridge {
+			go warmDockerBridgeCache()
+			warnMsgDType = "bridge"
+		} else {
+			warnMsgDType = "legacy"
+		}
+
+		dh := dvol.NewHandler(dockerVolDriver)
 		go func() {
 			if err := dh.Serve(httpl); err != nil {
 				if !strings.Contains(err.Error(),
 					"mux: listener closed") {
-					ctx.WithError(err).Warn(
-						"failed to start http1 docker->csi proxy")
+					ctx.Warnf("mod-csi: failed to start http1 %s: %v",
+						warnMsgDType, err)
 				}
 			}
 		}()
@@ -327,8 +403,8 @@ func (m *mod) Start() error {
 			if err := dh.Serve(http2); err != nil {
 				if !strings.Contains(err.Error(),
 					"mux: listener closed") {
-					ctx.WithError(err).Warn(
-						"failed to start http2 docker->csi proxy")
+					ctx.Warnf("mod-csi: failed to start http2 %s: %v",
+						warnMsgDType, err)
 				}
 			}
 		}()

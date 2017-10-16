@@ -6,32 +6,63 @@ site_dir: .site
 theme_dir: .docs-themes/yeti
 site_favicon: favicon.png
 extra_css:
-    - css/codedellemc.css
-    - css/codedellemc-font.css
-    - css/hX.css
+  - css/codedellemc.css
+  - css/codedellemc-font.css
+  - css/hX.css
+  - css/branding.css
+  - css/first-of-type.css
+  - css/hide-rtd-footer.css
+  - css/dropdown.css
 markdown_extensions:
-    - admonition
-    - toc:
-        permalink: true
+  - admonition
+  - toc:
+      permalink: true
 pages:
-- Home: index.md
-- User Guide:
-    - Installation: user-guide/installation.md
-    - Configuration: user-guide/config.md
-    - Storage Providers: user-guide/storage-providers.md
-    - CSI: user-guide/csi.md
-    - libStorage: user-guide/libstorage.md
-    - Schedulers: user-guide/schedulers.md
-    - Docker Plug-ins: user-guide/docker-plugins.md
-    - Applications: user-guide/applications.md
-    - Demo: user-guide/demo.md
-    - Troubleshooting: user-guide/troubleshooting.md
-    - Usage: user-guide/usage.md
-- Developers Guide:
-    - Project Guidelines: dev-guide/project-guidelines.md
-    - Build Reference: dev-guide/build-reference.md
-    - Release Process: dev-guide/release-process.md
-- About:
-    - Contributing: about/contributing.md
-    - License: about/license.md
-    - Release Notes: about/release-notes.md
+  - Home: index.md
+  - User Guide:
+      - Installation: user-guide/installation.md
+      - Configuration: user-guide/config.md
+      - Storage Providers:
+        - Overview: user-guide/storage-providers.md
+        - Amazon Web Services (AWS): user-guide/storage-providers/aws.md
+        - Ceph: user-guide/storage-providers/ceph.md
+        - Dell EMC: user-guide/storage-providers/dellemc.md
+        - DigitalOcean: user-guide/storage-providers/digitalocean.md
+        - FittedCloud: user-guide/storage-providers/fittedcloud.md
+        - Google: user-guide/storage-providers/google.md
+        - Microsoft: user-guide/storage-providers/microsoft.md
+        - OpenStack: user-guide/storage-providers/openstack.md
+        - VirtualBox: user-guide/storage-providers/virtualbox.md
+      - Servers:
+        - CSI: user-guide/servers/csi.md
+        - libStorage: user-guide/servers/libstorage.md
+      - Schedulers:
+        - Overview: user-guide/schedulers.md
+        - Docker:
+          - Getting Started: user-guide/schedulers/docker.md
+          - Plug-ins:
+            - Getting Started: user-guide/schedulers/docker/plug-ins.md
+            - Amazon Web Services (AWS): user-guide/schedulers/docker/plug-ins/aws.md
+            - Ceph: user-guide/schedulers/docker/plug-ins/ceph.md
+            - CSI-NFS: user-guide/schedulers/docker/plug-ins/csi-nfs.md
+            - Dell EMC: user-guide/schedulers/docker/plug-ins/dellemc.md
+            - DigitalOcean: user-guide/schedulers/docker/plug-ins/digitalocean.md
+            - Google: user-guide/schedulers/docker/plug-ins/google.md
+            - Microsoft: user-guide/schedulers/docker/plug-ins/microsoft.md
+            - OpenStack: user-guide/schedulers/docker/plug-ins/openstack.md
+        - Kubernetes: user-guide/schedulers/kubernetes.md
+        - Mesos: user-guide/schedulers/mesos.md
+      - Examples:
+        - Apps: user-guide/examples/apps.md
+        - Demo: user-guide/examples/demo.md
+      - Help:
+        - Troubleshooting: user-guide/help/troubleshooting.md
+        - Usage: user-guide/help/usage.md
+  - Developers Guide:
+      - Project Guidelines: dev-guide/project-guidelines.md
+      - Build Reference: dev-guide/build-reference.md
+      - Release Process: dev-guide/release-process.md
+  - About:
+      - Contributing: about/contributing.md
+      - License: about/license.md
+      - Release Notes: about/release-notes.md

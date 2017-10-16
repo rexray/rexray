@@ -1,0 +1,19 @@
+div.col-md-9 h1:first-of-type {
+    text-align: center;
+    font-size: 60px;
+    font-weight: 300;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, .25);
+}
+
+div.col-md-9 > p:first-of-type {
+    text-align: center;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, .15);
+}
+
+div.col-md-9 p.admonition-title:first-of-type {
+    text-align: left;
+}
+
+div.col-md-9 h1:first-of-type .headerlink {
+    display: none;
+}

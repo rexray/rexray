@@ -1,6 +1,11 @@
 package storage
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	gofig "github.com/akutz/gofig/types"
@@ -114,9 +119,17 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 		fields["trustId"] = hiddenText
 	}
 
+	fields["caCert"] = d.caCert()
+	fields["insecure"] = d.insecure()
+
 	d.provider, err = openstack.NewClient(authOpts.IdentityEndpoint)
 	if err != nil {
 		return goof.WithFieldsE(fields, "error creating Keystone client", err)
+	}
+
+	d.provider.HTTPClient, err = openstackHTTPClient(d.caCert(), d.insecure())
+	if err != nil {
+		return goof.WithFieldsE(fields, "error overriding Gophercloud HTTP client", err)
 	}
 
 	if trustID != "" {
@@ -150,6 +163,28 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	context.WithFields(fields).Info("storage driver initialized")
 
 	return nil
+}
+
+func openstackHTTPClient(caCert string, insecure bool) (http.Client, error) {
+	if caCert == "" {
+		return http.Client{}, nil
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertContent, err := ioutil.ReadFile(caCert)
+	if err != nil {
+		return http.Client{}, errors.New("Can't read certificate file")
+	}
+	caCertPool.AppendCertsFromPEM(caCertContent)
+
+	tlsConfig := &tls.Config{
+		RootCAs:            caCertPool,
+		InsecureSkipVerify: insecure,
+	}
+	tlsConfig.BuildNameToCertificate()
+	transport := &http.Transport{TLSClientConfig: tlsConfig}
+
+	return http.Client{Transport: transport}, nil
 }
 
 // InstanceInspect returns an instance.
@@ -850,4 +885,12 @@ func (d *driver) snapshotTimeout() time.Duration {
 		val = 10 * time.Minute
 	}
 	return val
+}
+
+func (d *driver) caCert() string {
+	return d.config.GetString(cinder.ConfigCACert)
+}
+
+func (d *driver) insecure() bool {
+	return d.config.GetBool(cinder.ConfigInsecure)
 }

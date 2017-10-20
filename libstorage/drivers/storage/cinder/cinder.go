@@ -57,6 +57,12 @@ const (
 
 	// ConfigSnapshotTimeout is the config key for the snapshot timeout
 	ConfigSnapshotTimeout = Name + ".snapshotTimeout"
+
+	// ConfigCACert is the config key for custom CA certificate (usually for self signed use case)
+	ConfigCACert = Name + ".CACert"
+
+	// ConfigInsecure is the config ky to disable TLS verification of the server identity
+	ConfigInsecure = Name + ".insecure"
 )
 
 func init() {
@@ -77,5 +83,7 @@ func init() {
 	r.Key(gofig.String, "", "10m", "", ConfigDeleteTimeout)
 	r.Key(gofig.String, "", "10m", "", ConfigCreateTimeout)
 	r.Key(gofig.String, "", "10m", "", ConfigSnapshotTimeout)
+	r.Key(gofig.String, "", "", "", ConfigCACert)
+	r.Key(gofig.Bool, "", false, "", ConfigInsecure)
 	gofigCore.Register(r)
 }

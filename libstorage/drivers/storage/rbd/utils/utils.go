@@ -424,3 +424,15 @@ func RunCommand(
 	}
 	return nil, exitStatus, goof.Newe(err)
 }
+
+//StrContainsClient search str arg for flags that can set a Ceph client id/name
+func StrContainsClient(arg string) bool {
+	fields := strings.Split(arg, " ")
+	for _, s := range fields {
+		switch s {
+		case "--id", "--user", "-n", "--name":
+			return true
+		}
+	}
+	return false
+}

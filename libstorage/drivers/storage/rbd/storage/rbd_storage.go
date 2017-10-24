@@ -2,7 +2,6 @@ package storage
 
 import (
 	"regexp"
-	"strings"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
@@ -50,7 +49,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 	d.defaultPool = d.config.GetString(rbd.ConfigDefaultPool)
 	cephArgs := d.config.GetString(rbd.ConfigCephArgs)
-	if cephArgs == "" || !strContainsClient(cephArgs) {
+	if cephArgs == "" || !utils.StrContainsClient(cephArgs) {
 		d.multiPool = true
 	}
 	ctx.Info("storage driver initialized")
@@ -492,16 +491,4 @@ func (d *driver) parseVolumeID(name *string) (*string, *string, error) {
 
 	pool := d.defaultPool
 	return &pool, name, nil
-}
-
-// Search str arg for flags that can set a Ceph client id/name
-func strContainsClient(arg string) bool {
-	fields := strings.Split(arg, "")
-	for _, s := range fields {
-		switch s {
-		case "--id", "--user", "-n", "--name":
-			return true
-		}
-	}
-	return false
 }

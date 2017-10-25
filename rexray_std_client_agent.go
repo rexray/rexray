@@ -4,5 +4,5 @@ package main
 
 import (
 	// load the libstorage packages
-	_ "github.com/codedellemc/rexray/libstorage/imports/executors"
+	_ "github.com/thecodeteam/rexray/libstorage/imports/executors"
 )

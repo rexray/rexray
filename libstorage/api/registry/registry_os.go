@@ -4,7 +4,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 type odm struct {

@@ -6,7 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 // queryParamsHandler is an HTTP filter for injecting the store with query

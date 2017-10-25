@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/codedellemc/rexray/util"
+	"github.com/thecodeteam/rexray/util"
 )
 
 func (c *CLI) initUsageTemplates() {

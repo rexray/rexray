@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/drivers/storage/dobs"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/drivers/storage/dobs"
 )
 
 const (

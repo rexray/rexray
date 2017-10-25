@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/util"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/util"
 )
 
 var (

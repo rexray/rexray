@@ -16,7 +16,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/akutz/gotil"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 var (

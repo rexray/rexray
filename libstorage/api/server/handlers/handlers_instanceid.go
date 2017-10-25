@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 // instanceIDHandler is a global HTTP filter for grokking the InstanceIDs
@@ -47,7 +47,7 @@ func (h *instanceIDHandler) Handle(
 
 	// this function has been updated to account for
 	// https://github.com/codedellemc/libstorage/pull/420 and
-	// https://github.com/codedellemc/rexray/issues/685.
+	// https://github.com/thecodeteam/rexray/issues/685.
 	//
 	// this handler now inspects each instance ID header and stores the
 	// unmarshaled object in one of two maps -- a map keyed by the

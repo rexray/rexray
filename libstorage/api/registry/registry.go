@@ -9,7 +9,7 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 var (

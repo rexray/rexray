@@ -15,7 +15,7 @@ jobs:
       stage:          build
       language:       go
       go:             1.9.1
-      go_import_path: github.com/codedellemc/rexray
+      go_import_path: github.com/thecodeteam/rexray
       env:            PROG=rexray
       before_script:
         - git fetch --unshallow --tags
@@ -59,7 +59,7 @@ jobs:
     - stage:          test
       language:       go
       go:             1.9.1
-      go_import_path: github.com/codedellemc/rexray
+      go_import_path: github.com/thecodeteam/rexray
       before_script:
         - git fetch --unshallow --tags
         - go run core/semver/semver.go -f json
@@ -107,17 +107,17 @@ jobs:
           skip_cleanup:   true
           on:
             all_branches: true
-            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'thecodeteam/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
         - <<: *deploy-to-bintray
           file:           bintray-staged.json
           on:
             all_branches: true
-            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'thecodeteam/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
         - <<: *deploy-to-bintray
           file:           bintray-stable.json
           on:
             all_branches: true
-            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'thecodeteam/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
     - <<: *deploy-stage
       env: PROG=rexray-agent      TYPE=agent
@@ -159,19 +159,19 @@ jobs:
           skip_cleanup: true
           on:
             all_branches: true
-            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
+            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ ^$ && ($TRAVIS_REPO_SLUG = 'thecodeteam/rexray' || $IGNORE_REPO_SLUG_CONDITION = true) && ($TRAVIS_BRANCH = master || $IGNORE_BRANCH_CONDITION = true)
 
         - <<: *deploy-docker
           script: ./make.sh push-docker-plugin staged
           on:
             all_branches: true
-            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ -rc[[:digit:]]+$ && ($TRAVIS_REPO_SLUG = 'thecodeteam/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
         - <<: *deploy-docker
           script: ./make.sh push-docker-plugin stable
           on:
             all_branches: true
-            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'codedellemc/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+            condition: $DEPLOY_DOCKER != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'thecodeteam/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
 
     - <<: *docker-stage
       env: DRIVER=cinder

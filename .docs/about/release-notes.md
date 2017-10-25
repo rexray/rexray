@@ -32,28 +32,28 @@ the existing Docker Volume API endpoint.
 
 ### New Features
 * Introduce a new Docker Volume API to CSI bridge that allows Docker to consume
-  CSI plugins. ([\#1037](https://github.com/codedellemc/rexray/issues/1037))
+  CSI plugins. ([\#1037](https://github.com/thecodeteam/rexray/issues/1037))
 * Microsoft Azure Unmanaged Disk Docker Managed Plugin
-  ([\#817](https://github.com/codedellemc/rexray/issues/817))
+  ([\#817](https://github.com/thecodeteam/rexray/issues/817))
 
 ### Enhancements
 * Documentation improvements
-  ([\#1075](https://github.com/codedellemc/rexray/issues/1075),
-  [\#1077](https://github.com/codedellemc/rexray/issues/1077))
+  ([\#1075](https://github.com/thecodeteam/rexray/issues/1075),
+  [\#1077](https://github.com/thecodeteam/rexray/issues/1077))
 * Upgrade Ceph client in RBD managed plugin to Luminous release
-  ([\#1050](https://github.com/codedellemc/rexray/issues/1050))
+  ([\#1050](https://github.com/thecodeteam/rexray/issues/1050))
 * Enable `S3FS_ENDPOINT` in s3fs managed plugin
-  ([\#1042](https://github.com/codedellemc/rexray/issues/1042))
+  ([\#1042](https://github.com/thecodeteam/rexray/issues/1042))
 * Expand managed plugin configuration options
-  ([\#1056](https://github.com/codedellemc/rexray/issues/1056))
+  ([\#1056](https://github.com/thecodeteam/rexray/issues/1056))
 * Allow custom Ceph cluster name and non-admin user
-  ([\#1035](https://github.com/codedellemc/rexray/issues/1035))
+  ([\#1035](https://github.com/thecodeteam/rexray/issues/1035))
 
 ### Bug Fixes
 * Fix issue in CSI-libStorage bridge that would prevent idempotent creates after
-  a restart. ([\#1060](https://github.com/codedellemc/rexray/issues/1060))
+  a restart. ([\#1060](https://github.com/thecodeteam/rexray/issues/1060))
 * Fix volume pre-emption in Cinder driver. This bug prevented Cinder from working
-  in Docker Swarm mode ([\#913](https://github.com/codedellemc/rexray/issues/913))
+  in Docker Swarm mode ([\#913](https://github.com/thecodeteam/rexray/issues/913))
 
 ### Thank you
 | Name | Blame |
@@ -75,19 +75,19 @@ REX's builds can't be beat, yeah
 Another bug bites the dust!
 
 ### Enhancements
-* Improved CLI error handling ([\#1027](https://github.com/codedellemc/rexray/issues/1027))
-* Earlier detection of compilation errors for release variants ([\#1028](https://github.com/codedellemc/rexray/issues/1028))
+* Improved CLI error handling ([\#1027](https://github.com/thecodeteam/rexray/issues/1027))
+* Earlier detection of compilation errors for release variants ([\#1028](https://github.com/thecodeteam/rexray/issues/1028))
 
 ### Bug Fixes
-* Fixes broken script installs ([\#1025](https://github.com/codedellemc/rexray/issues/1025))
+* Fixes broken script installs ([\#1025](https://github.com/thecodeteam/rexray/issues/1025))
 
 ## Version 0.10.1 (2017/09/11)
 This is a small update to the previous release in order to correct a
 minor bug and include a documentation change.
 
 ### Bug Fixes
-* Fixes panic when there is no value for some CLI flags ([\#1021](https://github.com/codedellemc/rexray/issues/1021))
-* Updates CSI column in supported platform table ([`beec3d1`](https://github.com/codedellemc/rexray/commit/beec3d1138ad1cd0bb67d155ae8d4de1666d86d6))
+* Fixes panic when there is no value for some CLI flags ([\#1021](https://github.com/thecodeteam/rexray/issues/1021))
+* Updates CSI column in supported platform table ([`beec3d1`](https://github.com/thecodeteam/rexray/commit/beec3d1138ad1cd0bb67d155ae8d4de1666d86d6))
 
 ## Version 0.10.0 (2017/09/11)
 Hi, REX here. Look, I know it's been a while since the last release. Three
@@ -99,38 +99,38 @@ However, it's been worth the wait. This is a major release, with changes
 that include:
 
 ### New Features
-* Support for the Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) specification ([`8dbb732`](https://github.com/container-storage-interface/spec/commit/8dbb73222cdb63ce583e5c0abeafdf96748bf4f5)) ([\#878](https://github.com/codedellemc/rexray/issues/878))
-* The [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) plug-in provides local block device support ([\#961](https://github.com/codedellemc/rexray/issues/961))
-* The [CSI-NFS](https://github.com/codedellemc/csi-nfs) plug-in provides NFS support ([\#962](https://github.com/codedellemc/rexray/issues/962))
-* The [CSI-VFS](https://github.com/codedellemc/csi-vfs) plug-in provides virtual filesystem (VFS) support ([\#878](https://github.com/codedellemc/rexray/issues/878))
-* Raw device support for all existing, block-based storage platforms ([\#998](https://github.com/codedellemc/rexray/issues/998))
+* Support for the Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) specification ([`8dbb732`](https://github.com/container-storage-interface/spec/commit/8dbb73222cdb63ce583e5c0abeafdf96748bf4f5)) ([\#878](https://github.com/thecodeteam/rexray/issues/878))
+* The [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) plug-in provides local block device support ([\#961](https://github.com/thecodeteam/rexray/issues/961))
+* The [CSI-NFS](https://github.com/codedellemc/csi-nfs) plug-in provides NFS support ([\#962](https://github.com/thecodeteam/rexray/issues/962))
+* The [CSI-VFS](https://github.com/codedellemc/csi-vfs) plug-in provides virtual filesystem (VFS) support ([\#878](https://github.com/thecodeteam/rexray/issues/878))
+* Raw device support for all existing, block-based storage platforms ([\#998](https://github.com/thecodeteam/rexray/issues/998))
 
 ### Enhancements
-* Support for `go get github.com/codedellemc/rexray` ([\#991](https://github.com/codedellemc/rexray/issues/991))
-* Custom config file via the CLI's `-c|--config` flag ([\#991](https://github.com/codedellemc/rexray/issues/991))
-* All existing, managed Docker plug-ins now support CSI ([\#1012](https://github.com/codedellemc/rexray/issues/1012))
-* S3FS supports custom endpoints ([\#986](https://github.com/codedellemc/rexray/issues/986))
-* EBS supports large-device range option ([\#996](https://github.com/codedellemc/rexray/issues/996))
-* Support for DigitalOcean environment variables with underscores ([\#1004](https://github.com/codedellemc/rexray/issues/1004))
-* Use Golang dependency management tool [`dep`](https://github.com/golang/dep) ([\#993](https://github.com/codedellemc/rexray/issues/993))
-* Merged libStorage into REX-Ray ([\#932](https://github.com/codedellemc/rexray/issues/932))
-* Simplified build process ([\#937](https://github.com/codedellemc/rexray/issues/937))
-* Versioned `vendor` directory ([\#930](https://github.com/codedellemc/rexray/issues/930))
-* REX-Ray now built with Go 1.8.3 ([\#918](https://github.com/codedellemc/rexray/issues/918))
+* Support for `go get github.com/thecodeteam/rexray` ([\#991](https://github.com/thecodeteam/rexray/issues/991))
+* Custom config file via the CLI's `-c|--config` flag ([\#991](https://github.com/thecodeteam/rexray/issues/991))
+* All existing, managed Docker plug-ins now support CSI ([\#1012](https://github.com/thecodeteam/rexray/issues/1012))
+* S3FS supports custom endpoints ([\#986](https://github.com/thecodeteam/rexray/issues/986))
+* EBS supports large-device range option ([\#996](https://github.com/thecodeteam/rexray/issues/996))
+* Support for DigitalOcean environment variables with underscores ([\#1004](https://github.com/thecodeteam/rexray/issues/1004))
+* Use Golang dependency management tool [`dep`](https://github.com/golang/dep) ([\#993](https://github.com/thecodeteam/rexray/issues/993))
+* Merged libStorage into REX-Ray ([\#932](https://github.com/thecodeteam/rexray/issues/932))
+* Simplified build process ([\#937](https://github.com/thecodeteam/rexray/issues/937))
+* Versioned `vendor` directory ([\#930](https://github.com/thecodeteam/rexray/issues/930))
+* REX-Ray now built with Go 1.8.3 ([\#918](https://github.com/thecodeteam/rexray/issues/918))
 
 ### Bug Fixes
-* Fixed required permissions for S3FS Docker plug-in ([\#893](https://github.com/codedellemc/rexray/issues/893))
-* Fixed Cinder support ([\#935](https://github.com/codedellemc/rexray/issues/935))
-* Fixed volume mount path retrieval in FlexREX `DetachVolume` ([\#914](https://github.com/codedellemc/rexray/issues/914))
-* Sirupsen to sirupsen ([\#995](https://github.com/codedellemc/rexray/issues/995))
+* Fixed required permissions for S3FS Docker plug-in ([\#893](https://github.com/thecodeteam/rexray/issues/893))
+* Fixed Cinder support ([\#935](https://github.com/thecodeteam/rexray/issues/935))
+* Fixed volume mount path retrieval in FlexREX `DetachVolume` ([\#914](https://github.com/thecodeteam/rexray/issues/914))
+* Sirupsen to sirupsen ([\#995](https://github.com/thecodeteam/rexray/issues/995))
 
 ### Thank You
 | Name | Blame |
 |------|-------|
-| [Matt Glaser](https://github.com/oppodeldoc) | <p>I must underscore,</p><p>How Matt [converted](https://github.com/codedellemc/rexray/pull/1004) a bug,</p><p>Into a closed fix.</p> |
-| [Ville Törhönen](https://github.com/vtorhonen) | <p>A man too large cried,</p><p>Bemoaned a [device](https://github.com/codedellemc/rexray/pull/996) too small,</p><p>He made it larger.</p> |
-| [Dustin Hendel](https://github.com/dahendel) | <p>Stand swiftly, stand now,</p><p>Forget set [destinations](https://github.com/codedellemc/rexray/pull/986),</p><p>Go where you now wish.</p> |
-| [Mathieu Velten](https://github.com/MatMaul) | <p>A burning ember,</p><p>A spark [shouts](https://github.com/codedellemc/rexray/pull/935) into the flame,</p><p>Fire dancing skyward.</p> |
+| [Matt Glaser](https://github.com/oppodeldoc) | <p>I must underscore,</p><p>How Matt [converted](https://github.com/thecodeteam/rexray/pull/1004) a bug,</p><p>Into a closed fix.</p> |
+| [Ville Törhönen](https://github.com/vtorhonen) | <p>A man too large cried,</p><p>Bemoaned a [device](https://github.com/thecodeteam/rexray/pull/996) too small,</p><p>He made it larger.</p> |
+| [Dustin Hendel](https://github.com/dahendel) | <p>Stand swiftly, stand now,</p><p>Forget set [destinations](https://github.com/thecodeteam/rexray/pull/986),</p><p>Go where you now wish.</p> |
+| [Mathieu Velten](https://github.com/MatMaul) | <p>A burning ember,</p><p>A spark [shouts](https://github.com/thecodeteam/rexray/pull/935) into the flame,</p><p>Fire dancing skyward.</p> |
 | [Chris Duchesne](https://github.com/cduchesne) | <p>Silent, still, careful,</p><p>Works into the night's embrace,</p><p>Yes, reliable.</p> |
 | [Travis Rhoden](https://github.com/codenrhoden) | <p>The other to blame,</p><p>Committed, will hash it out,</p><p>All credit to you.</p> |
 | [Clint Kitson](https://github.com/clintkitson) | <p>Return home, cannot,</p><p>He who travels for us all,</p><p>He speaks, we listen.</p> |
@@ -140,15 +140,15 @@ This is a minor release that introduces a Docker managed plug-in for Ceph RBD,
 and fixes a regression with the S3FS Docker plug-in.
 
 ### New Features
-* Ceph RBD Docker managed plug-in ([#898](https://github.com/codedellemc/rexray/pull/898))
+* Ceph RBD Docker managed plug-in ([#898](https://github.com/thecodeteam/rexray/pull/898))
 
 ### Bug Fixes
-* Fix S3FS Docker plug-in permissions issue ([#891](https://github.com/codedellemc/rexray/issues/891))
+* Fix S3FS Docker plug-in permissions issue ([#891](https://github.com/thecodeteam/rexray/issues/891))
 
 ### Enhancements
 * [libStorage 0.6.2](https://github.com/codedellemc/libstorage/releases/tag/v0.6.2)
-* REX-Ray documentation has a new look, and is now searchable ([#889](https://github.com/codedellemc/rexray/pull/889))
-* Be more verbose on CLI about embedded errors from libStorage ([#899](https://github.com/codedellemc/rexray/pull/899))
+* REX-Ray documentation has a new look, and is now searchable ([#889](https://github.com/thecodeteam/rexray/pull/889))
+* Be more verbose on CLI about embedded errors from libStorage ([#899](https://github.com/thecodeteam/rexray/pull/899))
 
 ## Version 0.9.1 (2017/06/09)
 This release is primarily a bug-fix release, and also introduces two new Docker
@@ -156,19 +156,19 @@ managed plug-ins: Digital Ocean (dobs) and OpenStack Cinder (cinder). This
 release includes libStorage 0.6.1
 
 ### New Features
-* OpenStack Cinder Docker plugin ([#853](https://github.com/codedellemc/rexray/issues/853))
-* Digital Ocean Docker plugin ([#816](https://github.com/codedellemc/rexray/issues/816))
+* OpenStack Cinder Docker plugin ([#853](https://github.com/thecodeteam/rexray/issues/853))
+* Digital Ocean Docker plugin ([#816](https://github.com/thecodeteam/rexray/issues/816))
 
 ### Bug Fixes
-* Fix handling of white space in Ceph config file for monitor hosts ([#811](https://github.com/codedellemc/rexray/issues/811))
+* Fix handling of white space in Ceph config file for monitor hosts ([#811](https://github.com/thecodeteam/rexray/issues/811))
 * Fix volume create for Isilon storage ([#556](https://github.com/codedellemc/libstorage/issues/556))
 
 ### Enhancements
-* No longer require `libstorage.host` config option when `host` is defined in a module ([#827](https://github.com/codedellemc/rexray/issues/827))
-* Add additional env var options to S3FS Docker plugin ([#809](https://github.com/codedellemc/rexray/issues/809))
-* Documentation updates around TLS and REX-Ray configuration ([#888](https://github.com/codedellemc/rexray/pull/888), [#831](https://github.com/codedellemc/rexray/pull/831))
-* Build with Go 1.8.1 ([#844](https://github.com/codedellemc/rexray/pull/844))
-* ARM build support ([#865](https://github.com/codedellemc/rexray/pull/865))
+* No longer require `libstorage.host` config option when `host` is defined in a module ([#827](https://github.com/thecodeteam/rexray/issues/827))
+* Add additional env var options to S3FS Docker plugin ([#809](https://github.com/thecodeteam/rexray/issues/809))
+* Documentation updates around TLS and REX-Ray configuration ([#888](https://github.com/thecodeteam/rexray/pull/888), [#831](https://github.com/thecodeteam/rexray/pull/831))
+* Build with Go 1.8.1 ([#844](https://github.com/thecodeteam/rexray/pull/844))
+* ARM build support ([#865](https://github.com/thecodeteam/rexray/pull/865))
 
 ### Thank You
   Name | Blame  
@@ -219,7 +219,7 @@ support for TLS.
 * Document `Volume.AttachmentState` ([#483](https://github.com/codedellemc/libstorage/issues/483))
 
 ### Enhancements
-* Update organization text ([#774](https://github.com/codedellemc/rexray/issues/774))
+* Update organization text ([#774](https://github.com/thecodeteam/rexray/issues/774))
 
 ## Version 0.8.1 (2017/02/24)
 This is a minor release that reintroduces support for Go1.6 via
@@ -238,16 +238,16 @@ storage platforms!
 * DigitalOcean support ([#392](https://github.com/codedellemc/libstorage/issues/392))
 * Microsoft Azure unmanaged disk support ([#421](https://github.com/codedellemc/libstorage/issues/421))
 * FittedCloud support ([#408](https://github.com/codedellemc/libstorage/issues/408))
-* Docker Volume Plug-in for EBS ([#720](https://github.com/codedellemc/rexray/issues/720))
-* Docker Volume Plug-in for EFS ([#729](https://github.com/codedellemc/rexray/issues/729))
-* Docker Volume Plug-in for Isilon ([#727](https://github.com/codedellemc/rexray/issues/727))
-* Docker Volume Plug-in for S3FS ([#724](https://github.com/codedellemc/rexray/issues/724))
-* Docker Volume Plug-in for ScaleIO ([#725](https://github.com/codedellemc/rexray/issues/725))
-* REX-Ray on Alpine Linux support ([#724](https://github.com/codedellemc/rexray/issues/724))
+* Docker Volume Plug-in for EBS ([#720](https://github.com/thecodeteam/rexray/issues/720))
+* Docker Volume Plug-in for EFS ([#729](https://github.com/thecodeteam/rexray/issues/729))
+* Docker Volume Plug-in for Isilon ([#727](https://github.com/thecodeteam/rexray/issues/727))
+* Docker Volume Plug-in for S3FS ([#724](https://github.com/thecodeteam/rexray/issues/724))
+* Docker Volume Plug-in for ScaleIO ([#725](https://github.com/thecodeteam/rexray/issues/725))
+* REX-Ray on Alpine Linux support ([#724](https://github.com/thecodeteam/rexray/issues/724))
 * Storage-platform specific mount/unmount support ([#399](https://github.com/codedellemc/libstorage/issues/399))
 * The ScaleIO tool `drv_cfg` is now an optional client-side dependency instead of required ([#414](https://github.com/codedellemc/libstorage/issues/414))
 * Multi-cluster support for ScaleIO ([#420](https://github.com/codedellemc/libstorage/issues/420))
-* Forced volume remove support ([#717](https://github.com/codedellemc/rexray/issues/717))
+* Forced volume remove support ([#717](https://github.com/thecodeteam/rexray/issues/717))
 
 ### Bug Fixes
 * Preemption fix ([#413](https://github.com/codedellemc/libstorage/issues/413))
@@ -279,20 +279,20 @@ storage platform.
 * Ceph/RBD storage platform ([#347](https://github.com/codedellemc/libstorage/pull/347))
 
 ### Bug Fixes
-* Prevent unnecessary removal of directory by FlexREX ([#699](https://github.com/codedellemc/rexray/pull/699))
-* Update `volume attach` to check for `--force` flag ([#696](https://github.com/codedellemc/rexray/pull/696))
-* Fix installer to correctly parse new Bintray HTML ([#687](https://github.com/codedellemc/rexray/pull/687))
+* Prevent unnecessary removal of directory by FlexREX ([#699](https://github.com/thecodeteam/rexray/pull/699))
+* Update `volume attach` to check for `--force` flag ([#696](https://github.com/thecodeteam/rexray/pull/696))
+* Fix installer to correctly parse new Bintray HTML ([#687](https://github.com/thecodeteam/rexray/pull/687))
 
 ## Version 0.6.4 (2017/01/05)
 This release includes the new script manager and FlexVol REX-Ray plug-in.
 
 ### Enhancements
 * [libStorage 0.3.8](https://github.com/codedellemc/libstorage/releases/tag/v0.3.8)
-* Script manager ([#669](https://github.com/codedellemc/rexray/pull/669))
-* FlexVol plug-in for Kubernetes ([#641](https://github.com/codedellemc/rexray/pull/641))
+* Script manager ([#669](https://github.com/thecodeteam/rexray/pull/669))
+* FlexVol plug-in for Kubernetes ([#641](https://github.com/thecodeteam/rexray/pull/641))
 
 ### Bug Fixes
-* Panic on `$ rexray-client volume mount` ([#673](https://github.com/codedellemc/rexray/pull/673))
+* Panic on `$ rexray-client volume mount` ([#673](https://github.com/thecodeteam/rexray/pull/673))
 
 ## Version 0.6.3 (2016/12/07)
 This release includes the ability to specify a custom encryption key when
@@ -300,11 +300,11 @@ creating volumes and makes the `volume attach` command idempotent.
 
 ### Enhancements
 * [libStorage 0.3.5](https://github.com/codedellemc/libstorage/releases/tag/v0.3.5)
-* Support for creating encrypted volumes ([#649](https://github.com/codedellemc/rexray/pull/649), [#652](https://github.com/codedellemc/rexray/pull/652))
-* Idempotent volume attach command ([#651](https://github.com/codedellemc/rexray/pull/651))
+* Support for creating encrypted volumes ([#649](https://github.com/thecodeteam/rexray/pull/649), [#652](https://github.com/thecodeteam/rexray/pull/652))
+* Idempotent volume attach command ([#651](https://github.com/thecodeteam/rexray/pull/651))
 
 ### Bug Fixes
-* Fix volume status for detach op ([#654](https://github.com/codedellemc/rexray/pull/654))
+* Fix volume status for detach op ([#654](https://github.com/thecodeteam/rexray/pull/654))
 
 ## Version 0.6.2 (2016/12/05)
 While a patch release, this new version includes some much-requested features
@@ -312,11 +312,11 @@ and updates.
 
 ### Enhancements
 * [libStorage 0.3.4](https://github.com/codedellemc/libstorage/pull/351)
-* Auto-detect running service ([#642](https://github.com/codedellemc/rexray/pull/642))
-* Prettier error messages ([#645](https://github.com/codedellemc/rexray/pull/645))
+* Auto-detect running service ([#642](https://github.com/thecodeteam/rexray/pull/642))
+* Prettier error messages ([#645](https://github.com/thecodeteam/rexray/pull/645))
 
 ### Bug Fixes
-* Graceful exit with SystemD ([#644](https://github.com/codedellemc/rexray/pull/644))
+* Graceful exit with SystemD ([#644](https://github.com/thecodeteam/rexray/pull/644))
 
 ## Version 0.6.1 (2016/12/01)
 This release includes some minor fixes as well as a new and improved version of
@@ -324,13 +324,13 @@ the `volume ls` command.
 
 ### Enhancements
 * [libStorage 0.3.3](https://github.com/codedellemc/libstorage/pull/348)
-* Enhanced `volume ls` command ([#634](https://github.com/codedellemc/rexray/pull/634))
+* Enhanced `volume ls` command ([#634](https://github.com/thecodeteam/rexray/pull/634))
 
 ### Bug Fixes
-* EFS Mounting Issues ([#609](https://github.com/codedellemc/rexray/pull/609))
-* VirtualBox Attach Issues ([#610](https://github.com/codedellemc/rexray/pull/610))
-* Installer upgrade fix ([#637](https://github.com/codedellemc/rexray/pull/637))
-* Build deployment fix ([#638](https://github.com/codedellemc/rexray/pull/638))
+* EFS Mounting Issues ([#609](https://github.com/thecodeteam/rexray/pull/609))
+* VirtualBox Attach Issues ([#610](https://github.com/thecodeteam/rexray/pull/610))
+* Installer upgrade fix ([#637](https://github.com/thecodeteam/rexray/pull/637))
+* Build deployment fix ([#638](https://github.com/thecodeteam/rexray/pull/638))
 
 ## Version 0.6.0 (2016/10/20)
 This release reintroduces the Elastic Block Storage (EBS) driver, formerly known
@@ -339,19 +339,19 @@ supported.
 
 ### Enhancements
 * libStorage 0.3.0 ([#docs](http://libstorage.readthedocs.io/en/v0.3.0))
-* Amazon Elastic Block Storage (EBS) Support ([#522](https://github.com/codedellemc/rexray/issues/522))
-* New CLI Output ([#579](https://github.com/codedellemc/rexray/issues/579), [#603](https://github.com/codedellemc/rexray/issues/603), [#606](https://github.com/codedellemc/rexray/issues/606))
-* Support for ScaleIO 2.0.1 ([#599](https://github.com/codedellemc/rexray/issues/599))
+* Amazon Elastic Block Storage (EBS) Support ([#522](https://github.com/thecodeteam/rexray/issues/522))
+* New CLI Output ([#579](https://github.com/thecodeteam/rexray/issues/579), [#603](https://github.com/thecodeteam/rexray/issues/603), [#606](https://github.com/thecodeteam/rexray/issues/606))
+* Support for ScaleIO 2.0.1 ([#599](https://github.com/thecodeteam/rexray/issues/599))
 
 ### Bug Fixes
-* Handle phantom mounts for EBS (formerly EC2) ([#410](https://github.com/codedellemc/rexray/issues/410))
+* Handle phantom mounts for EBS (formerly EC2) ([#410](https://github.com/thecodeteam/rexray/issues/410))
 
 ## Version 0.5.1 (2016/09/14)
 This is a minor release, but includes a few important patches.
 
 ### Enhancements
 * libStorage 0.2.1 ([#docs](http://libstorage.readthedocs.io/en/v0.2.1))
-* ScaleIO 2.0.0.2 Support ([#555](https://github.com/codedellemc/rexray/issues/555))
+* ScaleIO 2.0.0.2 Support ([#555](https://github.com/thecodeteam/rexray/issues/555))
 
 ### Bug Fixes
 * EFS Volume / Tag Creation Bug ([#261](https://github.com/codedellemc/libstorage/issues/261))
@@ -363,11 +363,11 @@ concert with the [guidelines](http://semver.org) set forth by semantic
 versioning.
 
 ### New Features
-* Amazon Elastic File System (EFS) Support ([#525](https://github.com/codedellemc/rexray/issues/525))
+* Amazon Elastic File System (EFS) Support ([#525](https://github.com/thecodeteam/rexray/issues/525))
 
 ### Enhancements
-* Support for Go 1.7 ([#541](https://github.com/codedellemc/rexray/issues/541))
-* Enhanced Isilon Support ([#520](https://github.com/codedellemc/rexray/issues/520), [#521](https://github.com/codedellemc/rexray/issues/521))
+* Support for Go 1.7 ([#541](https://github.com/thecodeteam/rexray/issues/541))
+* Enhanced Isilon Support ([#520](https://github.com/thecodeteam/rexray/issues/520), [#521](https://github.com/thecodeteam/rexray/issues/521))
 
 ### Thank You
   Name | Blame  
@@ -384,22 +384,22 @@ footprint has been reduced from the magnitude of phenomenal cosmic powers to
 the size of an itty bitty living space!
 
 ### Enhancements
-* libStorage 0.1.5 ([#TBA](https://github.com/codedellemc/rexray/issues/TBA))
-* Improved volume path caching ([#500](https://github.com/codedellemc/rexray/issues/500))
+* libStorage 0.1.5 ([#TBA](https://github.com/thecodeteam/rexray/issues/TBA))
+* Improved volume path caching ([#500](https://github.com/thecodeteam/rexray/issues/500))
 
 ## Version 0.4.1 (2016/07/08)
 Although a minor release, 0.4.1 provides some meaningful and useful enhancements
 and fixes, further strengthening the foundation of the REX-Ray platform.
 
 ### Enhancements
-* Improved build process ([#474](https://github.com/codedellemc/rexray/issues/474), [#492](https://github.com/codedellemc/rexray/issues/492))
-* [libStorage](http://libstorage.readthedocs.io) 0.1.4 ([#493](https://github.com/codedellemc/rexray/issues/493))
-* Removed Docker spec file ([#486](https://github.com/codedellemc/rexray/issues/486))
-* Improved REX-Ray 0.3.3 Config Backwards Compatibility ([#481](https://github.com/codedellemc/rexray/issues/481))
-* Improved install script ([#439](https://github.com/codedellemc/rexray/issues/439), [#495](https://github.com/codedellemc/rexray/issues/495))
+* Improved build process ([#474](https://github.com/thecodeteam/rexray/issues/474), [#492](https://github.com/thecodeteam/rexray/issues/492))
+* [libStorage](http://libstorage.readthedocs.io) 0.1.4 ([#493](https://github.com/thecodeteam/rexray/issues/493))
+* Removed Docker spec file ([#486](https://github.com/thecodeteam/rexray/issues/486))
+* Improved REX-Ray 0.3.3 Config Backwards Compatibility ([#481](https://github.com/thecodeteam/rexray/issues/481))
+* Improved install script ([#439](https://github.com/thecodeteam/rexray/issues/439), [#495](https://github.com/thecodeteam/rexray/issues/495))
 
 ### Bug Fixes
-* Fixed input validation bug when creating volume sans name ([#478](https://github.com/codedellemc/rexray/issues/478))
+* Fixed input validation bug when creating volume sans name ([#478](https://github.com/thecodeteam/rexray/issues/478))
 
 ## Version 0.4.0 (2016/06/20)
 REX-Ray 0.4.0 introduces centralized configuration and control along with
@@ -421,18 +421,18 @@ REX-Ray will be reintroduced over the course of several, incremental updates,
 beginning with 0.4.1.
 
 ### New Features
-* Distributed architecture ([#399](https://github.com/codedellemc/rexray/issues/399), [#401](https://github.com/codedellemc/rexray/issues/401), [#411](https://github.com/codedellemc/rexray/issues/411), [#417](https://github.com/codedellemc/rexray/issues/417), [#418](https://github.com/codedellemc/rexray/issues/418), [#419](https://github.com/codedellemc/rexray/issues/419), [#420](https://github.com/codedellemc/rexray/issues/420), [#423](https://github.com/codedellemc/rexray/issues/423))
-* Volume locking mechanism ([#171](https://github.com/codedellemc/rexray/issues/171))
-* Volume creation with initial data ([#169](https://github.com/codedellemc/rexray/issues/169))
+* Distributed architecture ([#399](https://github.com/thecodeteam/rexray/issues/399), [#401](https://github.com/thecodeteam/rexray/issues/401), [#411](https://github.com/thecodeteam/rexray/issues/411), [#417](https://github.com/thecodeteam/rexray/issues/417), [#418](https://github.com/thecodeteam/rexray/issues/418), [#419](https://github.com/thecodeteam/rexray/issues/419), [#420](https://github.com/thecodeteam/rexray/issues/420), [#423](https://github.com/thecodeteam/rexray/issues/423))
+* Volume locking mechanism ([#171](https://github.com/thecodeteam/rexray/issues/171))
+* Volume creation with initial data ([#169](https://github.com/thecodeteam/rexray/issues/169))
 
 ### Enhancements
-* Improved storage driver logging ([#396](https://github.com/codedellemc/rexray/issues/396))
-* Docker mount path ([#403](https://github.com/codedellemc/rexray/issues/403))
+* Improved storage driver logging ([#396](https://github.com/thecodeteam/rexray/issues/396))
+* Docker mount path ([#403](https://github.com/thecodeteam/rexray/issues/403))
 
 ### Bug Fixes
-* Fixed issue with install script ([#409](https://github.com/codedellemc/rexray/issues/409))
-* Fixed volume ls filter ([#400](https://github.com/codedellemc/rexray/issues/400))
-* Fixed panic during access attempt of offline REX-Ray daemon ([#148](https://github.com/codedellemc/rexray/issues/148))
+* Fixed issue with install script ([#409](https://github.com/thecodeteam/rexray/issues/409))
+* Fixed volume ls filter ([#400](https://github.com/thecodeteam/rexray/issues/400))
+* Fixed panic during access attempt of offline REX-Ray daemon ([#148](https://github.com/thecodeteam/rexray/issues/148))
 
 ### Thank You
 Yes, the author is so lazy as to blatantly
@@ -461,19 +461,19 @@ Josh Bernstein | The shadowy figure behind the curtain...
 ## Version 0.3.3 (2016/04/21)
 
 ### New Features
-* ScaleIO v2 support ([#355](https://github.com/codedellemc/rexray/issues/355))
-* EC2 Tags added to Volumes & Snapshots ([#314](https://github.com/codedellemc/rexray/issues/314))
+* ScaleIO v2 support ([#355](https://github.com/thecodeteam/rexray/issues/355))
+* EC2 Tags added to Volumes & Snapshots ([#314](https://github.com/thecodeteam/rexray/issues/314))
 
 ### Enhancements
-* Use of official Amazon EC2 SDK ([#359](https://github.com/codedellemc/rexray/issues/359))
-* Added a disable feature for create/remove volume ([#366](https://github.com/codedellemc/rexray/issues/366))
-* Added ScaleIO troubleshooting information ([#367](https://github.com/codedellemc/rexray/issues/367))
+* Use of official Amazon EC2 SDK ([#359](https://github.com/thecodeteam/rexray/issues/359))
+* Added a disable feature for create/remove volume ([#366](https://github.com/thecodeteam/rexray/issues/366))
+* Added ScaleIO troubleshooting information ([#367](https://github.com/thecodeteam/rexray/issues/367))
 
 ### Bug Fixes
-* Fixes URLs for documentation when viewed via Github ([#337](https://github.com/codedellemc/rexray/issues/337))
-* Fixes logging bug on Ubuntu 14.04 ([#377](https://github.com/codedellemc/rexray/issues/377))
-* Fixes module start timeout error ([#376](https://github.com/codedellemc/rexray/issues/376))
-* Fixes ScaleIO authentication loop bug ([#375](https://github.com/codedellemc/rexray/issues/375))
+* Fixes URLs for documentation when viewed via Github ([#337](https://github.com/thecodeteam/rexray/issues/337))
+* Fixes logging bug on Ubuntu 14.04 ([#377](https://github.com/thecodeteam/rexray/issues/377))
+* Fixes module start timeout error ([#376](https://github.com/thecodeteam/rexray/issues/376))
+* Fixes ScaleIO authentication loop bug ([#375](https://github.com/thecodeteam/rexray/issues/375))
 
 ### Thank You
 * [Philipp Franke](https://github.com/philippfranke)
@@ -484,33 +484,33 @@ Josh Bernstein | The shadowy figure behind the curtain...
 ## Version 0.3.2 (2016-03-04)
 
 ### New Features
-* Support for Docker 1.10 and Volume Plugin Interface 1.2 ([#273](https://github.com/codedellemc/rexray/issues/273))
-* Stale PID File Prevents Service Start ([#258](https://github.com/codedellemc/rexray/issues/258))
-* Module/Personality Support ([#275](https://github.com/codedellemc/rexray/issues/275))
-* Isilon Preemption ([#231](https://github.com/codedellemc/rexray/issues/231))
-* Isilon Snapshots ([#260](https://github.com/codedellemc/rexray/issues/260))
-* boot2Docker Support ([#263](https://github.com/codedellemc/rexray/issues/263))
-* ScaleIO Dynamic Storage Pool Support ([#267](https://github.com/codedellemc/rexray/issues/267))
+* Support for Docker 1.10 and Volume Plugin Interface 1.2 ([#273](https://github.com/thecodeteam/rexray/issues/273))
+* Stale PID File Prevents Service Start ([#258](https://github.com/thecodeteam/rexray/issues/258))
+* Module/Personality Support ([#275](https://github.com/thecodeteam/rexray/issues/275))
+* Isilon Preemption ([#231](https://github.com/thecodeteam/rexray/issues/231))
+* Isilon Snapshots ([#260](https://github.com/thecodeteam/rexray/issues/260))
+* boot2Docker Support ([#263](https://github.com/thecodeteam/rexray/issues/263))
+* ScaleIO Dynamic Storage Pool Support ([#267](https://github.com/thecodeteam/rexray/issues/267))
 
 ### Enhancements
-* Improved installation documentation ([#331](https://github.com/codedellemc/rexray/issues/331))
-* ScaleIO volume name limitation ([#304](https://github.com/codedellemc/rexray/issues/304))
-* Docker cache volumes for path operations ([#306](https://github.com/codedellemc/rexray/issues/306))
-* Config file validation ([#312](https://github.com/codedellemc/rexray/pull/312))
-* Better logging ([#296](https://github.com/codedellemc/rexray/pull/296))
-* Documentation Updates ([#285](https://github.com/codedellemc/rexray/issues/285))
+* Improved installation documentation ([#331](https://github.com/thecodeteam/rexray/issues/331))
+* ScaleIO volume name limitation ([#304](https://github.com/thecodeteam/rexray/issues/304))
+* Docker cache volumes for path operations ([#306](https://github.com/thecodeteam/rexray/issues/306))
+* Config file validation ([#312](https://github.com/thecodeteam/rexray/pull/312))
+* Better logging ([#296](https://github.com/thecodeteam/rexray/pull/296))
+* Documentation Updates ([#285](https://github.com/thecodeteam/rexray/issues/285))
 
 ### Bug Fixes
-* Fixes issue with daemon process getting cleaned as part of SystemD Cgroup ([#327](https://github.com/codedellemc/rexray/issues/327))
-* Fixes regression in 0.3.2 RC3/RC4 resulting in no log file ([#319](https://github.com/codedellemc/rexray/issues/319))
-* Fixes no volumes returned on empty list ([#322](https://github.com/codedellemc/rexray/issues/322))
-* Fixes "Unsupported FS" when mounting/unmounting with EC2 ([#321](https://github.com/codedellemc/rexray/issues/321))
-* ScaleIO re-authentication issue ([#303](https://github.com/codedellemc/rexray/issues/303))
-* Docker XtremIO create volume issue ([#307](https://github.com/codedellemc/rexray/issues/307))
-* Service status is reported correctly ([#310](https://github.com/codedellemc/rexray/pull/310))
+* Fixes issue with daemon process getting cleaned as part of SystemD Cgroup ([#327](https://github.com/thecodeteam/rexray/issues/327))
+* Fixes regression in 0.3.2 RC3/RC4 resulting in no log file ([#319](https://github.com/thecodeteam/rexray/issues/319))
+* Fixes no volumes returned on empty list ([#322](https://github.com/thecodeteam/rexray/issues/322))
+* Fixes "Unsupported FS" when mounting/unmounting with EC2 ([#321](https://github.com/thecodeteam/rexray/issues/321))
+* ScaleIO re-authentication issue ([#303](https://github.com/thecodeteam/rexray/issues/303))
+* Docker XtremIO create volume issue ([#307](https://github.com/thecodeteam/rexray/issues/307))
+* Service status is reported correctly ([#310](https://github.com/thecodeteam/rexray/pull/310))
 
 ### Updates
-* <del>Go 1.6 ([#308](https://github.com/codedellemc/rexray/pull/308))</del>
+* <del>Go 1.6 ([#308](https://github.com/thecodeteam/rexray/pull/308))</del>
 
 ### Thank You
 * Dan Forrest
@@ -521,16 +521,16 @@ Josh Bernstein | The shadowy figure behind the curtain...
 ## Version 0.3.1 (2015-12-30)
 
 ### New Features
-* Support for VirtualBox ([#209](https://github.com/codedellemc/rexray/issues/209))
-* Added Developer's Guide ([#226](https://github.com/codedellemc/rexray/issues/226))
+* Support for VirtualBox ([#209](https://github.com/thecodeteam/rexray/issues/209))
+* Added Developer's Guide ([#226](https://github.com/thecodeteam/rexray/issues/226))
 
 ### Enhancements
-* Mount/Unmount Accounting ([#212](https://github.com/codedellemc/rexray/issues/212))
-* Support for Sub-Path Volume Mounts / Permissions ([#215](https://github.com/codedellemc/rexray/issues/215))
+* Mount/Unmount Accounting ([#212](https://github.com/thecodeteam/rexray/issues/212))
+* Support for Sub-Path Volume Mounts / Permissions ([#215](https://github.com/thecodeteam/rexray/issues/215))
 
 ### Milestone Issues
 This release also includes many other small enhancements and bug fixes. For a
-complete list click [here](https://github.com/codedellemc/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.1).
+complete list click [here](https://github.com/thecodeteam/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.1).
 
 ### Downloads
 Click [here](https://dl.bintray.com/emccode/rexray/stable/0.3.1/) for the 0.3.1
@@ -539,17 +539,17 @@ binaries.
 ## Version 0.3.0 (2015-12-08)
 
 ### New Features
-* Pre-Emption support ([#190](https://github.com/codedellemc/rexray/issues/190))
-* Support for VMAX ([#197](https://github.com/codedellemc/rexray/issues/197))
-* Support for Isilon ([#198](https://github.com/codedellemc/rexray/issues/198))
-* Support for Google Compute Engine (GCE) ([#194](https://github.com/codedellemc/rexray/issues/194))
+* Pre-Emption support ([#190](https://github.com/thecodeteam/rexray/issues/190))
+* Support for VMAX ([#197](https://github.com/thecodeteam/rexray/issues/197))
+* Support for Isilon ([#198](https://github.com/thecodeteam/rexray/issues/198))
+* Support for Google Compute Engine (GCE) ([#194](https://github.com/thecodeteam/rexray/issues/194))
 
 ### Enhancements
-* Added driver example configurations ([#201](https://github.com/codedellemc/rexray/issues/201))
-* New configuration file format ([#188](https://github.com/codedellemc/rexray/issues/188))
+* Added driver example configurations ([#201](https://github.com/thecodeteam/rexray/issues/201))
+* New configuration file format ([#188](https://github.com/thecodeteam/rexray/issues/188))
 
 ### Tweaks
-* Chopped flags `--rexrayLogLevel` becomes `logLevel` ([#196](https://github.com/codedellemc/rexray/issues/196))
+* Chopped flags `--rexrayLogLevel` becomes `logLevel` ([#196](https://github.com/thecodeteam/rexray/issues/196))
 
 ### Pre-Emption Support
 Pre-Emption is an important feature when using persistent volumes and container
@@ -560,7 +560,7 @@ this feature can be used to enable any host to pre-empt from another.
 
 ### Milestone Issues
 This release also includes many other small enhancements and bug fixes. For a
-complete list click [here](https://github.com/codedellemc/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.0).
+complete list click [here](https://github.com/thecodeteam/rexray/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.3.0).
 
 ### Downloads
 Click [here](https://dl.bintray.com/emccode/rexray/stable/0.3.0/) for the 0.3.0
@@ -571,19 +571,19 @@ REX-Ray release 0.2.1 includes OpenStack support, vastly improved documentation,
 and continued foundation changes for future features.
 
 ### New Features
-* Support for OpenStack ([#111](https://github.com/codedellemc/rexray/issues/111))
-* Create volume from volume using existing settings ([#129](https://github.com/codedellemc/rexray/issues/129))
+* Support for OpenStack ([#111](https://github.com/thecodeteam/rexray/issues/111))
+* Create volume from volume using existing settings ([#129](https://github.com/thecodeteam/rexray/issues/129))
 
 ### Enhancements
 * A+ [GoReport Card](http://goreportcard.com/report/emccode/rexray)
 * A+ [Code Coverage](https://coveralls.io/github/emccode/rexray?branch=master)
-* [GoDoc Support](https://godoc.org/github.com/codedellemc/rexray)
-* Ability to load REX-Ray as an independent storage platform ([#127](https://github.com/codedellemc/rexray/issues/127))
-* New documentation at http://rexray.readthedocs.org ([#145](https://github.com/codedellemc/rexray/issues/145))
+* [GoDoc Support](https://godoc.org/github.com/thecodeteam/rexray)
+* Ability to load REX-Ray as an independent storage platform ([#127](https://github.com/thecodeteam/rexray/issues/127))
+* New documentation at http://rexray.readthedocs.org ([#145](https://github.com/thecodeteam/rexray/issues/145))
 * More foundation updates
 
 ### Tweaks
-* Command aliases for `get` and `delete` - `ls` and `rm` ([#107](https://github.com/codedellemc/rexray/issues/107))
+* Command aliases for `get` and `delete` - `ls` and `rm` ([#107](https://github.com/thecodeteam/rexray/issues/107))
 
 ## Version 0.2.0 (2015-09-30)
 
@@ -646,7 +646,7 @@ contents:
 
 The REX-Ray service is not started immediately upon installation. The install
 command completes by informing the users that they should visit the
-[REX-Ray website](http://github.com/codedellemc/rexray) for information on how to
+[REX-Ray website](http://github.com/thecodeteam/rexray) for information on how to
 configure REX-Ray's storage drivers. The text to the users also explains how
 to start the REX-Ray service once it's configured using the service command
 particular to the Linux distribution.

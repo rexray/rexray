@@ -174,6 +174,6 @@ Marathon          | Docker, Mesos Containerizer
 
 ### GitHub and Slack
 If a little extra help is needed, please don't hesitate to use [GitHub
-issues](https://github.com/codedellemc/rexray/issues) or join the active
+issues](https://github.com/thecodeteam/rexray/issues) or join the active
 conversation on the [{code} by Dell EMC Community Slack
 Team](http://community.codedellemc.com/) in the #project-rexray channel

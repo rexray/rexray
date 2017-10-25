@@ -24,12 +24,12 @@ import (
 
 	"golang.org/x/crypto/pkcs12"
 
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	apiUtils "github.com/codedellemc/rexray/libstorage/api/utils"
-	"github.com/codedellemc/rexray/libstorage/drivers/storage/azureud"
-	"github.com/codedellemc/rexray/libstorage/drivers/storage/azureud/utils"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	apiUtils "github.com/thecodeteam/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/drivers/storage/azureud"
+	"github.com/thecodeteam/rexray/libstorage/drivers/storage/azureud/utils"
 )
 
 const (

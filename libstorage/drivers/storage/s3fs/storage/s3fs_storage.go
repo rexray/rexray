@@ -14,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	awss3 "github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	apiUtils "github.com/codedellemc/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	apiUtils "github.com/thecodeteam/rexray/libstorage/api/utils"
 
-	"github.com/codedellemc/rexray/libstorage/drivers/storage/s3fs"
-	s3fsUtils "github.com/codedellemc/rexray/libstorage/drivers/storage/s3fs/utils"
+	"github.com/thecodeteam/rexray/libstorage/drivers/storage/s3fs"
+	s3fsUtils "github.com/thecodeteam/rexray/libstorage/drivers/storage/s3fs/utils"
 )
 
 type driver struct {

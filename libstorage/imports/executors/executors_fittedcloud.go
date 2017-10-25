@@ -4,5 +4,5 @@ package executors
 
 import (
 	// load the packages
-	_ "github.com/codedellemc/rexray/libstorage/drivers/storage/fittedcloud/executor"
+	_ "github.com/thecodeteam/rexray/libstorage/drivers/storage/fittedcloud/executor"
 )

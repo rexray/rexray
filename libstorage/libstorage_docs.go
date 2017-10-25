@@ -9,7 +9,7 @@ The Past
 The libStorage project and its architecture represents a culmination of
 experience gained from the project authors' building of
 several (http://bit.ly/1HIAet6) different storage (http://bit.ly/1Ya9Uft)
-orchestration tools (https://github.com/codedellemc/rexray). While created using
+orchestration tools (https://github.com/thecodeteam/rexray). While created using
 different languages and targeting disparate storage platforms, all the tools
 were architecturally aligned and embedded functionality directly inside the
 tools and affected storage platforms.

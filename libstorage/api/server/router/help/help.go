@@ -3,9 +3,9 @@ package help
 import (
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	"github.com/codedellemc/rexray/libstorage/api/server/httputils"
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	"github.com/thecodeteam/rexray/libstorage/api/server/httputils"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 func init() {

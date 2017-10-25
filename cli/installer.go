@@ -13,8 +13,8 @@ import (
 	"text/template"
 
 	"github.com/akutz/gotil"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/util"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -208,7 +208,7 @@ func installSystemD(ctx apitypes.Context) {
 	}
 
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
+	fmt.Print("http://github.com/thecodeteam/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
 	fmt.Print("started with the command 'sudo systemctl start rexray'.\n\n")
 }
@@ -244,7 +244,7 @@ func installUpdateRcd() {
 		os.Exit(1)
 	}
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
+	fmt.Print("http://github.com/thecodeteam/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
 	fmt.Print("started with the command ")
 	fmt.Printf("'sudo %s start'.\n\n", util.InitFilePath)
@@ -274,7 +274,7 @@ func installChkConfig() {
 		os.Exit(1)
 	}
 	fmt.Print("REX-Ray is now installed. Before starting it please check ")
-	fmt.Print("http://github.com/codedellemc/rexray for instructions on how to ")
+	fmt.Print("http://github.com/thecodeteam/rexray for instructions on how to ")
 	fmt.Print("configure it.\n\n Once configured the REX-Ray service can be ")
 	fmt.Print("started with the command ")
 	fmt.Printf("'sudo %s start'.\n\n", util.InitFilePath)

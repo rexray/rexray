@@ -12,11 +12,11 @@ import (
 	"github.com/akutz/gofig"
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils"
-	"github.com/codedellemc/rexray/libstorage/client"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/client"
 )
 
 func toCVolume(v *types.Volume) (*C.volume, error) {

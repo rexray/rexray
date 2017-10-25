@@ -8,13 +8,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/server/httputils"
-	"github.com/codedellemc/rexray/libstorage/api/server/services"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils"
-	"github.com/codedellemc/rexray/libstorage/api/utils/filters"
-	"github.com/codedellemc/rexray/libstorage/api/utils/schema"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/server/httputils"
+	"github.com/thecodeteam/rexray/libstorage/api/server/services"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/api/utils/filters"
+	"github.com/thecodeteam/rexray/libstorage/api/utils/schema"
 )
 
 func (r *router) volumes(

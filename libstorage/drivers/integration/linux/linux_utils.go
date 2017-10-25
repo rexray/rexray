@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/akutz/goof"
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils"
 )
 
 func (d *driver) getVolumeMountPath(volumeName string) (string, error) {

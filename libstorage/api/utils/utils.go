@@ -10,8 +10,8 @@ import (
 	// load the golf package
 	_ "github.com/akutz/golf"
 
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 // GetTypePkgPathAndName gets ths type and package path of the provided

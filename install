@@ -84,10 +84,24 @@ install() {
 
     ARCH=$(uname -m)
 
-    if [ "$ARCH" != "x86_64" ]; then
-        echo "$PROG is 64-bit only and not supported on $ARCH platforms"
-        exit 1
+    if echo $ARCH | grep -iq armv7; then
+      ARCH=ARMv7
+    elif echo $ARCH | grep -iq armv; then
+      ARCH=ARMv8
     fi
+
+    case $ARCH in
+    ARMv7)
+      ;;
+    ARMv8)
+      ;;
+    x86_64)
+      ;;
+    *)
+      echo "$PROG is not supported on $ARCH platforms"
+      exit 1
+      ;;
+    esac
 
     if [ "$VERSION" = "latest" ]; then
         VURL=https://api.bintray.com/packages/emccode/$REPO/$PKG/versions/_latest

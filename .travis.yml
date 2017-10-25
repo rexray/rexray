@@ -20,10 +20,16 @@ jobs:
       before_script:
         - git fetch --unshallow --tags
       script:
+        - export GOARCH=${XGOARCH:-amd64}
         - make
         - md5sum $PROG
         - ls -al $PROG
-        - ./$PROG version
+        - if [ "$GOARCH" = "amd64" ]; then ./$PROG version; else file $PROG; fi
+
+    - <<: *build-stage
+      env: PROG=rexray XGOARCH=arm
+    - <<: *build-stage
+      env: PROG=rexray XGOARCH=arm64
 
     - <<: *build-stage
       env: PROG=rexray-agent       TYPE=agent
@@ -86,13 +92,14 @@ jobs:
       before_script:
         - git fetch --unshallow --tags
       script:
+        - export GOARCH=${XGOARCH:-amd64}
         - make
         - md5sum $PROG
         - ls -al $PROG
-        - ./$PROG version
+        - if [ "$GOARCH" = "amd64" ]; then ./$PROG version; else file $PROG; fi
         - make tgz
-        - make rpm
-        - make deb
+        - if [ "$GOARCH" = "amd64" ]; then make rpm; fi
+        - if [ "$GOARCH" = "amd64" ]; then make deb; fi
         - make bintray
       after_success:
         - make create-gist
@@ -118,6 +125,11 @@ jobs:
           on:
             all_branches: true
             condition:    $DEPLOY_BINTRAY != 0 && $TRAVIS_TAG =~ ^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]$ && ($TRAVIS_REPO_SLUG = 'thecodeteam/rexray' || $IGNORE_REPO_SLUG_CONDITION = true)
+
+    - <<: *deploy-stage
+      env: PROG=rexray XGOARCH=arm
+    - <<: *deploy-stage
+      env: PROG=rexray XGOARCH=arm64
 
     - <<: *deploy-stage
       env: PROG=rexray-agent      TYPE=agent

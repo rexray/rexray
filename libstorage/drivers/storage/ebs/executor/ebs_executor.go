@@ -15,10 +15,10 @@ import (
 	"github.com/akutz/goof"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/drivers/storage/ebs"
-	ebsUtils "github.com/codedellemc/rexray/libstorage/drivers/storage/ebs/utils"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/drivers/storage/ebs"
+	ebsUtils "github.com/thecodeteam/rexray/libstorage/drivers/storage/ebs/utils"
 )
 
 // driver is the storage executor for the ec2 storage driver.

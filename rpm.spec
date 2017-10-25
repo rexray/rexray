@@ -7,8 +7,8 @@ Version: %{v_semver}
 Release: 1
 License: Apache License
 Group: Applications/Storage
-#Source: https://github.com/codedellemc/rexray/archive/master.zip
-URL: https://github.com/codedellemc/rexray
+#Source: https://github.com/thecodeteam/rexray/archive/master.zip
+URL: https://github.com/thecodeteam/rexray
 Vendor: {code} by Dell EMC
 Packager: Andrew Kutz <sakutz@gmail.com>
 BuildArch: %{v_arch}

@@ -6,8 +6,8 @@ package cli
 import (
 	gofig "github.com/akutz/gofig/types"
 
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/util"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/util"
 )
 
 func init() {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/codedellemc/rexray/libstorage/api/server/httputils"
-	"github.com/codedellemc/rexray/libstorage/api/server/services"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/api/server/httputils"
+	"github.com/thecodeteam/rexray/libstorage/api/server/services"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils"
 )
 
 func (r *router) tasks(

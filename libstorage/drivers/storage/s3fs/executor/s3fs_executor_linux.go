@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 func getMountedBuckets(

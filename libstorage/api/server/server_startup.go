@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codedellemc/rexray/core"
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/server/services"
+	"github.com/thecodeteam/rexray/core"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/server/services"
 )
 
 var (

@@ -5,11 +5,11 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	"github.com/codedellemc/rexray/libstorage/api/server/handlers"
-	"github.com/codedellemc/rexray/libstorage/api/server/httputils"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils/schema"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	"github.com/thecodeteam/rexray/libstorage/api/server/handlers"
+	"github.com/thecodeteam/rexray/libstorage/api/server/httputils"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils/schema"
 )
 
 // OnVolume is a handler to which an external provider can attach that is

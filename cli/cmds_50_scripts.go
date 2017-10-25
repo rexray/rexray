@@ -19,9 +19,9 @@ import (
 	"github.com/akutz/gotil"
 	"github.com/spf13/cobra"
 
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/scripts"
-	"github.com/codedellemc/rexray/util"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/scripts"
+	"github.com/thecodeteam/rexray/util"
 )
 
 func init() {

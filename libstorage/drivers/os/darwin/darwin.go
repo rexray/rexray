@@ -8,8 +8,8 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 const driverName = "darwin"

@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 var (

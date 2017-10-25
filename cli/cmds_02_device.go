@@ -5,7 +5,7 @@ package cli
 
 import (
 	log "github.com/sirupsen/logrus"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
 	"github.com/spf13/cobra"
 )
 

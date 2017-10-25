@@ -7,8 +7,8 @@ package util
 import (
 	gofig "github.com/akutz/gofig/types"
 
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-	apiclient "github.com/codedellemc/rexray/libstorage/client"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	apiclient "github.com/thecodeteam/rexray/libstorage/client"
 )
 
 func newClient(

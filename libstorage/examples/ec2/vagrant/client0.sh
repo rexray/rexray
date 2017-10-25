@@ -4,7 +4,7 @@ dir=/tmp/rexray
 src=/go/src
 nme=build-rexray
 img=golang:1.7.1
-pkg=github.com/codedellemc/rexray
+pkg=github.com/thecodeteam/rexray
 srcpkg=$src/$pkg
 cmd="/sbin/init -D"
 

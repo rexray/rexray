@@ -10,7 +10,7 @@ import (
 	"path"
 
 	"github.com/akutz/goof"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
 )
 
 const (

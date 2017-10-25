@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 
 	"github.com/akutz/gotil"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils"
 )
 
 func (d *driver) getSnapPath(snapshotID string) string {

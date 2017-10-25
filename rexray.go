@@ -21,16 +21,16 @@ import (
 	"github.com/akutz/gotil"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/codedellemc/rexray/cli"
-	"github.com/codedellemc/rexray/core"
-	"github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/registry"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils"
-	rrutils "github.com/codedellemc/rexray/util"
+	"github.com/thecodeteam/rexray/cli"
+	"github.com/thecodeteam/rexray/core"
+	"github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/registry"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils"
+	rrutils "github.com/thecodeteam/rexray/util"
 
 	// import the libstorage config package
-	_ "github.com/codedellemc/rexray/libstorage/imports/config"
+	_ "github.com/thecodeteam/rexray/libstorage/imports/config"
 
 	// load the profiler
 	_ "net/http/pprof"

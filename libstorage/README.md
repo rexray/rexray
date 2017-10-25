@@ -12,7 +12,7 @@ experience gained from the project authors' building of
 [several](https://www.emc.com/cloud-virtualization/virtual-storage-integrator.htm)
 different
 [storage](https://www.emc.com/storage/storage-analytics.htm)
-orchestration [tools](https://github.com/codedellemc/rexray). While created using
+orchestration [tools](https://github.com/thecodeteam/rexray). While created using
 different languages and targeting disparate storage platforms, all the tools
 were architecturally aligned and embedded functionality directly inside the
 tools and affected storage platforms.
@@ -56,7 +56,7 @@ still able to provide volume management for container runtimes.
 In a centralized architecture, `libStorage` is hosted as a service, acting as a
 go-between for container runtimes and backend storage platforms.
 
-The `libStorage` endpoint is advertised by a tool like [REX-Ray](https://github.com/codedellemc/rexray), run from anywhere, and is
+The `libStorage` endpoint is advertised by a tool like [REX-Ray](https://github.com/thecodeteam/rexray), run from anywhere, and is
 responsible for all control plane operations to the storage platform along with
 maintaining escalated credentials for these platforms. All client based
 processes within the operating system are still embedded in the container

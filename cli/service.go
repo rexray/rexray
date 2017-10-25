@@ -17,10 +17,10 @@ import (
 	"github.com/akutz/gotil"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/codedellemc/rexray/core"
-	apictx "github.com/codedellemc/rexray/libstorage/api/context"
-	apitypes "github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/util"
+	"github.com/thecodeteam/rexray/core"
+	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
+	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/util"
 )
 
 type startFunc func(

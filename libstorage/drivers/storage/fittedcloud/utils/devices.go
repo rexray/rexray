@@ -11,9 +11,9 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/codedellemc/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
 
-	"github.com/codedellemc/rexray/libstorage/drivers/storage/fittedcloud"
+	"github.com/thecodeteam/rexray/libstorage/drivers/storage/fittedcloud"
 )
 
 var errNoAvaiDevice = goof.New("no available device")

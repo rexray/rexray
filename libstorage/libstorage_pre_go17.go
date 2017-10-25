@@ -7,11 +7,11 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	apictx "github.com/codedellemc/rexray/libstorage/api/context"
-	"github.com/codedellemc/rexray/libstorage/api/server"
-	"github.com/codedellemc/rexray/libstorage/api/types"
-	"github.com/codedellemc/rexray/libstorage/api/utils"
-	"github.com/codedellemc/rexray/libstorage/client"
+	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
+	"github.com/thecodeteam/rexray/libstorage/api/server"
+	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/thecodeteam/rexray/libstorage/api/utils"
+	"github.com/thecodeteam/rexray/libstorage/client"
 )
 
 // New starts an embedded libStorage server and returns both the server

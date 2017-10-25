@@ -5,7 +5,7 @@ Release early, release often
 ---
 ## Version 0.6.3 (2017/07/22)
 This is the last public, tagged release of libStorage. The project will be
-absorbed into [REX-Ray](https://github.com/codedellemc/rexray).
+absorbed into [REX-Ray](https://github.com/thecodeteam/rexray).
 
 ## Version 0.6.2 (2017/06/28)
 This is a minor release that improves volume lookup response for GCEPD

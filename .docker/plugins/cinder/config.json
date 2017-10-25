@@ -6,7 +6,7 @@
         "Value": null
       },
       "Description": "REX-Ray for Cinder Persistent Disks",
-      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugins/cinder",
+      "Documentation": "https://github.com/thecodeteam/rexray/.docker/plugins/cinder",
       "Entrypoint": [
         "/rexray.sh", "rexray", "start", "-f", "--nopid"
       ],

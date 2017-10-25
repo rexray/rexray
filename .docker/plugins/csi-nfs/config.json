@@ -6,7 +6,7 @@
         "Value": null
       },
       "Description": "REX-Ray for CSI-NFS",
-      "Documentation": "https://github.com/codedellemc/rexray/.docker/plugins/csi-nfs",
+      "Documentation": "https://github.com/thecodeteam/rexray/.docker/plugins/csi-nfs",
       "Entrypoint": [
         "/rexray.sh", "rexray", "start", "--nopid"
       ],

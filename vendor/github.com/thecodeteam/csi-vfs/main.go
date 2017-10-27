@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
-	"github.com/codedellemc/gocsi"
+	"github.com/thecodeteam/gocsi"
 	"golang.org/x/net/context"
 
 	"github.com/thecodeteam/csi-vfs/provider"

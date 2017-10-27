@@ -28,8 +28,8 @@ required = [
   version = "0.1.0"
 
 [[constraint]]
-  name = "github.com/codedellemc/gournal"
-  version = "0.3.1"
+  name = "github.com/thecodeteam/gournal"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/SermoDigital/jose"
@@ -61,16 +61,16 @@ required = [
 ################################################################################
 
 [[override]]
-  name = "github.com/codedellemc/gocsi"
+  name = "github.com/thecodeteam/gocsi"
   branch = "master"
 
 [[constraint]]
-  name = "github.com/codedellemc/csi-blockdevices"
-  version = "0.1.0"
+  name = "github.com/thecodeteam/csi-blockdevices"
+  branch = "master"
 
 [[constraint]]
-  name = "github.com/codedellemc/csi-nfs"
-  version = "0.1.0"
+  name = "github.com/thecodeteam/csi-nfs"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/thecodeteam/csi-vfs"
@@ -118,13 +118,13 @@ required = [
 
 ### Isilon
 [[constraint]]
-  name = "github.com/codedellemc/goisilon"
-  revision = "301d518bb39637b839382deb686811dcf257b8c8"
+  name = "github.com/thecodeteam/goisilon"
+  branch = "master"
 
 ### ScaleIO
 [[constraint]]
-  name = "github.com/codedellemc/goscaleio"
-  revision = "d9df9f1ff56d951b0d5dfc30c374533ac56a4068"
+  name = "github.com/thecodeteam/goscaleio"
+  branch = "support/tls-sio-gw-2.0.0.2"
 
 ### VirtualBox
 [[constraint]]

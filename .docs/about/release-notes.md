@@ -100,9 +100,9 @@ that include:
 
 ### New Features
 * Support for the Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) specification ([`8dbb732`](https://github.com/container-storage-interface/spec/commit/8dbb73222cdb63ce583e5c0abeafdf96748bf4f5)) ([\#878](https://github.com/thecodeteam/rexray/issues/878))
-* The [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) plug-in provides local block device support ([\#961](https://github.com/thecodeteam/rexray/issues/961))
-* The [CSI-NFS](https://github.com/codedellemc/csi-nfs) plug-in provides NFS support ([\#962](https://github.com/thecodeteam/rexray/issues/962))
-* The [CSI-VFS](https://github.com/codedellemc/csi-vfs) plug-in provides virtual filesystem (VFS) support ([\#878](https://github.com/thecodeteam/rexray/issues/878))
+* The [CSI-BlockDevices](https://github.com/thecodeteam/csi-blockdevices) plug-in provides local block device support ([\#961](https://github.com/thecodeteam/rexray/issues/961))
+* The [CSI-NFS](https://github.com/thecodeteam/csi-nfs) plug-in provides NFS support ([\#962](https://github.com/thecodeteam/rexray/issues/962))
+* The [CSI-VFS](https://github.com/thecodeteam/csi-vfs) plug-in provides virtual filesystem (VFS) support ([\#878](https://github.com/thecodeteam/rexray/issues/878))
 * Raw device support for all existing, block-based storage platforms ([\#998](https://github.com/thecodeteam/rexray/issues/998))
 
 ### Enhancements
@@ -146,7 +146,7 @@ and fixes a regression with the S3FS Docker plug-in.
 * Fix S3FS Docker plug-in permissions issue ([#891](https://github.com/thecodeteam/rexray/issues/891))
 
 ### Enhancements
-* [libStorage 0.6.2](https://github.com/codedellemc/libstorage/releases/tag/v0.6.2)
+* [libStorage 0.6.2](https://github.com/thecodeteam/libstorage/releases/tag/v0.6.2)
 * REX-Ray documentation has a new look, and is now searchable ([#889](https://github.com/thecodeteam/rexray/pull/889))
 * Be more verbose on CLI about embedded errors from libStorage ([#899](https://github.com/thecodeteam/rexray/pull/899))
 
@@ -161,7 +161,7 @@ release includes libStorage 0.6.1
 
 ### Bug Fixes
 * Fix handling of white space in Ceph config file for monitor hosts ([#811](https://github.com/thecodeteam/rexray/issues/811))
-* Fix volume create for Isilon storage ([#556](https://github.com/codedellemc/libstorage/issues/556))
+* Fix volume create for Isilon storage ([#556](https://github.com/thecodeteam/libstorage/issues/556))
 
 ### Enhancements
 * No longer require `libstorage.host` config option when `host` is defined in a module ([#827](https://github.com/thecodeteam/rexray/issues/827))
@@ -182,22 +182,22 @@ libStorage client/server communications, and service-scoped
 authentication!
 
 ### New Features
-* Client Token Authentication ([#475](https://github.com/codedellemc/libstorage/issues/475))
-* Cinder storage driver ([#182](https://github.com/codedellemc/libstorage/issues/182))
-* Allow customization of default paths ([#509](https://github.com/codedellemc/libstorage/pull/509))
-* TLS Known Hosts support ([#510](https://github.com/codedellemc/libstorage/pull/510))
+* Client Token Authentication ([#475](https://github.com/thecodeteam/libstorage/issues/475))
+* Cinder storage driver ([#182](https://github.com/thecodeteam/libstorage/issues/182))
+* Allow customization of default paths ([#509](https://github.com/thecodeteam/libstorage/pull/509))
+* TLS Known Hosts support ([#510](https://github.com/thecodeteam/libstorage/pull/510))
 
 ### Bug Fixes
-* Return HTTP status 400 instead of 500 when attachment mask requires InstanceID or LocalDevices header and it is missing ([#352](https://github.com/codedellemc/libstorage/issues/352))
-* Make sure all drivers return error if VolumeInspect doesn't find volume ([#396](https://github.com/codedellemc/libstorage/issues/396))
-* Ensure all drivers reject size 0 volume creation ([#459](https://github.com/codedellemc/libstorage/issues/459))
-* Prevent possible endless loops in drivers when underlying API does not respond ([#480](https://github.com/codedellemc/libstorage/issues/480))
-* Standardize log levels across libStorage client and server ([#521](https://github.com/codedellemc/libstorage/pull/521))
+* Return HTTP status 400 instead of 500 when attachment mask requires InstanceID or LocalDevices header and it is missing ([#352](https://github.com/thecodeteam/libstorage/issues/352))
+* Make sure all drivers return error if VolumeInspect doesn't find volume ([#396](https://github.com/thecodeteam/libstorage/issues/396))
+* Ensure all drivers reject size 0 volume creation ([#459](https://github.com/thecodeteam/libstorage/issues/459))
+* Prevent possible endless loops in drivers when underlying API does not respond ([#480](https://github.com/thecodeteam/libstorage/issues/480))
+* Standardize log levels across libStorage client and server ([#521](https://github.com/thecodeteam/libstorage/pull/521))
 
 ### Enhancements
-* Digital Ocean Block Storage driver now supports client/server topology ([#432](https://github.com/codedellemc/libstorage/issues/432))
-* Improve error reporting ([#504](https://github.com/codedellemc/libstorage/pull/504), [#128](https://github.com/codedellemc/libstorage/issues/128))
-* Improve driver config examples ([#531](https://github.com/codedellemc/libstorage/issues/531))
+* Digital Ocean Block Storage driver now supports client/server topology ([#432](https://github.com/thecodeteam/libstorage/issues/432))
+* Improve error reporting ([#504](https://github.com/thecodeteam/libstorage/pull/504), [#128](https://github.com/thecodeteam/libstorage/issues/128))
+* Improve driver config examples ([#531](https://github.com/thecodeteam/libstorage/issues/531))
 
 ### Thank You
   Name | Blame  
@@ -210,13 +210,13 @@ This is a minor release with some bug fixes, enhancements, and simplified
 support for TLS.
 
 ### New Features
-* TLS Support ([#447](https://github.com/codedellemc/libstorage/issues/447))
+* TLS Support ([#447](https://github.com/thecodeteam/libstorage/issues/447))
 
 ### Bug Fixes
-* Handle varying `rbd` output format ([#451](https://github.com/codedellemc/libstorage/issues/451))
-* Fix ScaleIO missing `/dev/disk/by-id` ([#466](https://github.com/codedellemc/libstorage/issues/466))
-* Fix Linux integration driver's encryption omission ([#481](https://github.com/codedellemc/libstorage/issues/481))
-* Document `Volume.AttachmentState` ([#483](https://github.com/codedellemc/libstorage/issues/483))
+* Handle varying `rbd` output format ([#451](https://github.com/thecodeteam/libstorage/issues/451))
+* Fix ScaleIO missing `/dev/disk/by-id` ([#466](https://github.com/thecodeteam/libstorage/issues/466))
+* Fix Linux integration driver's encryption omission ([#481](https://github.com/thecodeteam/libstorage/issues/481))
+* Document `Volume.AttachmentState` ([#483](https://github.com/thecodeteam/libstorage/issues/483))
 
 ### Enhancements
 * Update organization text ([#774](https://github.com/thecodeteam/rexray/issues/774))
@@ -226,35 +226,35 @@ This is a minor release that reintroduces support for Go1.6 via
 libStorage 0.5.1.
 
 ### Bug Fixes
-* Go1.6 support ([#444](https://github.com/codedellemc/libstorage/issues/444))
+* Go1.6 support ([#444](https://github.com/thecodeteam/libstorage/issues/444))
 
 ## Version 0.8.0 (2017/02/24)
 This is one of the largest releases in a while, including support for five new
 storage platforms!
 
 ### New Features
-* Amazon Simple Storage Service FUSE (S3FS) support ([#397](https://github.com/codedellemc/libstorage/issues/397), [#409](https://github.com/codedellemc/libstorage/issues/409))
-* Google Compute Engine Persistent Disk (GCEPD) support ([#394](https://github.com/codedellemc/libstorage/issues/394), [#416](https://github.com/codedellemc/libstorage/issues/416))
-* DigitalOcean support ([#392](https://github.com/codedellemc/libstorage/issues/392))
-* Microsoft Azure unmanaged disk support ([#421](https://github.com/codedellemc/libstorage/issues/421))
-* FittedCloud support ([#408](https://github.com/codedellemc/libstorage/issues/408))
+* Amazon Simple Storage Service FUSE (S3FS) support ([#397](https://github.com/thecodeteam/libstorage/issues/397), [#409](https://github.com/thecodeteam/libstorage/issues/409))
+* Google Compute Engine Persistent Disk (GCEPD) support ([#394](https://github.com/thecodeteam/libstorage/issues/394), [#416](https://github.com/thecodeteam/libstorage/issues/416))
+* DigitalOcean support ([#392](https://github.com/thecodeteam/libstorage/issues/392))
+* Microsoft Azure unmanaged disk support ([#421](https://github.com/thecodeteam/libstorage/issues/421))
+* FittedCloud support ([#408](https://github.com/thecodeteam/libstorage/issues/408))
 * Docker Volume Plug-in for EBS ([#720](https://github.com/thecodeteam/rexray/issues/720))
 * Docker Volume Plug-in for EFS ([#729](https://github.com/thecodeteam/rexray/issues/729))
 * Docker Volume Plug-in for Isilon ([#727](https://github.com/thecodeteam/rexray/issues/727))
 * Docker Volume Plug-in for S3FS ([#724](https://github.com/thecodeteam/rexray/issues/724))
 * Docker Volume Plug-in for ScaleIO ([#725](https://github.com/thecodeteam/rexray/issues/725))
 * REX-Ray on Alpine Linux support ([#724](https://github.com/thecodeteam/rexray/issues/724))
-* Storage-platform specific mount/unmount support ([#399](https://github.com/codedellemc/libstorage/issues/399))
-* The ScaleIO tool `drv_cfg` is now an optional client-side dependency instead of required ([#414](https://github.com/codedellemc/libstorage/issues/414))
-* Multi-cluster support for ScaleIO ([#420](https://github.com/codedellemc/libstorage/issues/420))
+* Storage-platform specific mount/unmount support ([#399](https://github.com/thecodeteam/libstorage/issues/399))
+* The ScaleIO tool `drv_cfg` is now an optional client-side dependency instead of required ([#414](https://github.com/thecodeteam/libstorage/issues/414))
+* Multi-cluster support for ScaleIO ([#420](https://github.com/thecodeteam/libstorage/issues/420))
 * Forced volume remove support ([#717](https://github.com/thecodeteam/rexray/issues/717))
 
 ### Bug Fixes
-* Preemption fix ([#413](https://github.com/codedellemc/libstorage/issues/413))
-* Ceph RBD monitored IP fix ([#412](https://github.com/codedellemc/libstorage/issues/412), [#424](https://github.com/codedellemc/libstorage/issues/424))
-* Ceph RBD dashes in names fix ([#425](https://github.com/codedellemc/libstorage/issues/425))
-* Fix for `lsx-OS wait` argument count ([#401](https://github.com/codedellemc/libstorage/issues/401))
-* Build fixes ([#403](https://github.com/codedellemc/libstorage/issues/403))
+* Preemption fix ([#413](https://github.com/thecodeteam/libstorage/issues/413))
+* Ceph RBD monitored IP fix ([#412](https://github.com/thecodeteam/libstorage/issues/412), [#424](https://github.com/thecodeteam/libstorage/issues/424))
+* Ceph RBD dashes in names fix ([#425](https://github.com/thecodeteam/libstorage/issues/425))
+* Fix for `lsx-OS wait` argument count ([#401](https://github.com/thecodeteam/libstorage/issues/401))
+* Build fixes ([#403](https://github.com/thecodeteam/libstorage/issues/403))
 
 ### Thank You
   Name | Blame  
@@ -275,8 +275,8 @@ This feature release includes support for libStorage 0.4.0 and the Ceph RBD
 storage platform.
 
 ### Enhancements
-* [libStorage 0.4.0](https://github.com/codedellemc/libstorage/releases/tag/v0.4.0)
-* Ceph/RBD storage platform ([#347](https://github.com/codedellemc/libstorage/pull/347))
+* [libStorage 0.4.0](https://github.com/thecodeteam/libstorage/releases/tag/v0.4.0)
+* Ceph/RBD storage platform ([#347](https://github.com/thecodeteam/libstorage/pull/347))
 
 ### Bug Fixes
 * Prevent unnecessary removal of directory by FlexREX ([#699](https://github.com/thecodeteam/rexray/pull/699))
@@ -287,7 +287,7 @@ storage platform.
 This release includes the new script manager and FlexVol REX-Ray plug-in.
 
 ### Enhancements
-* [libStorage 0.3.8](https://github.com/codedellemc/libstorage/releases/tag/v0.3.8)
+* [libStorage 0.3.8](https://github.com/thecodeteam/libstorage/releases/tag/v0.3.8)
 * Script manager ([#669](https://github.com/thecodeteam/rexray/pull/669))
 * FlexVol plug-in for Kubernetes ([#641](https://github.com/thecodeteam/rexray/pull/641))
 
@@ -299,7 +299,7 @@ This release includes the ability to specify a custom encryption key when
 creating volumes and makes the `volume attach` command idempotent.
 
 ### Enhancements
-* [libStorage 0.3.5](https://github.com/codedellemc/libstorage/releases/tag/v0.3.5)
+* [libStorage 0.3.5](https://github.com/thecodeteam/libstorage/releases/tag/v0.3.5)
 * Support for creating encrypted volumes ([#649](https://github.com/thecodeteam/rexray/pull/649), [#652](https://github.com/thecodeteam/rexray/pull/652))
 * Idempotent volume attach command ([#651](https://github.com/thecodeteam/rexray/pull/651))
 
@@ -311,7 +311,7 @@ While a patch release, this new version includes some much-requested features
 and updates.
 
 ### Enhancements
-* [libStorage 0.3.4](https://github.com/codedellemc/libstorage/pull/351)
+* [libStorage 0.3.4](https://github.com/thecodeteam/libstorage/pull/351)
 * Auto-detect running service ([#642](https://github.com/thecodeteam/rexray/pull/642))
 * Prettier error messages ([#645](https://github.com/thecodeteam/rexray/pull/645))
 
@@ -323,7 +323,7 @@ This release includes some minor fixes as well as a new and improved version of
 the `volume ls` command.
 
 ### Enhancements
-* [libStorage 0.3.3](https://github.com/codedellemc/libstorage/pull/348)
+* [libStorage 0.3.3](https://github.com/thecodeteam/libstorage/pull/348)
 * Enhanced `volume ls` command ([#634](https://github.com/thecodeteam/rexray/pull/634))
 
 ### Bug Fixes
@@ -354,7 +354,7 @@ This is a minor release, but includes a few important patches.
 * ScaleIO 2.0.0.2 Support ([#555](https://github.com/thecodeteam/rexray/issues/555))
 
 ### Bug Fixes
-* EFS Volume / Tag Creation Bug ([#261](https://github.com/codedellemc/libstorage/issues/261))
+* EFS Volume / Tag Creation Bug ([#261](https://github.com/thecodeteam/libstorage/issues/261))
 
 ## Version 0.5.0 (2016/09/07)
 Beginning with this release, REX-Ray's versions will increment the MINOR
@@ -408,7 +408,7 @@ a new client/server architecture -- features made possible by
 required to configure storage drivers or store privileged information on all
 systems running the REX-Ray client. The new client delegates storage-platform
 related operations to a remote, libStorage-compatible server such as REX-Ray
-or [Poly](https://github.com/codedellemc/polly).
+or [Poly](https://github.com/thecodeteam/polly).
 
 Please note that the initial release of REX-Ray 0.4 includes support for only
 the following storage platforms:

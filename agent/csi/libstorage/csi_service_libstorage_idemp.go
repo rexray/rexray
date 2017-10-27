@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codedellemc/gocsi/csi"
-	"github.com/codedellemc/gocsi/mount"
+	"github.com/thecodeteam/gocsi/csi"
+	"github.com/thecodeteam/gocsi/mount"
 	xctx "golang.org/x/net/context"
 
 	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"

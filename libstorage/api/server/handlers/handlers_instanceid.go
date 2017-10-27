@@ -46,7 +46,7 @@ func (h *instanceIDHandler) Handle(
 	ctx.WithField(types.InstanceIDHeader, headers).Debug("http header")
 
 	// this function has been updated to account for
-	// https://github.com/codedellemc/libstorage/pull/420 and
+	// https://github.com/thecodeteam/libstorage/pull/420 and
 	// https://github.com/thecodeteam/rexray/issues/685.
 	//
 	// this handler now inspects each instance ID header and stores the

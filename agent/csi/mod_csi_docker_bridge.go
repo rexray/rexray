@@ -12,9 +12,9 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
-	"github.com/codedellemc/gocsi"
-	"github.com/codedellemc/gocsi/csi"
-	"github.com/codedellemc/gocsi/mount"
+	"github.com/thecodeteam/gocsi"
+	"github.com/thecodeteam/gocsi/csi"
+	"github.com/thecodeteam/gocsi/mount"
 
 	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
 	"github.com/thecodeteam/rexray/libstorage/api/registry"

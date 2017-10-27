@@ -3,7 +3,7 @@ package schema
 const (
 	// JSONSchema is the libStorage API JSON schema
 	JSONSchema = `{
-    "id": "https://github.com/codedellemc/libstorage",
+    "id": "https://github.com/thecodeteam/libstorage",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "libStorage JSON Schema",
     "definitions": {

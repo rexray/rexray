@@ -8,8 +8,8 @@ import (
 	gofig "github.com/akutz/gofig/types"
 
 	"github.com/akutz/goof"
-	sio "github.com/codedellemc/goscaleio"
-	siotypes "github.com/codedellemc/goscaleio/types/v1"
+	sio "github.com/thecodeteam/goscaleio"
+	siotypes "github.com/thecodeteam/goscaleio/types/v1"
 
 	"github.com/thecodeteam/rexray/libstorage/api/context"
 	"github.com/thecodeteam/rexray/libstorage/api/registry"

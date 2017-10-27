@@ -29,9 +29,9 @@ The following storage providers and platforms are supported by REX-Ray.
 | | [EFS](.docs/user-guide/storage-providers/aws.md#aws-efs) | ✓ | ✓ | ✓ |
 | | [S3FS](.docs/user-guide/storage-providers/aws.md#aws-s3fs) | ✓ | ✓ | ✓ |
 | Ceph | [RBD](.docs/user-guide/storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ | ✓ |
-| Local | [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) | | ✓ | ✓ |
-| | [CSI-NFS](https://github.com/codedellemc/csi-nfs) | ✓ | ✓ | ✓ |
-| | [CSI-VFS](https://github.com/codedellemc/csi-vfs) | | ✓ | ✓ |
+| Local | [CSI-BlockDevices](https://github.com/thecodeteam/csi-blockdevices) | | ✓ | ✓ |
+| | [CSI-NFS](https://github.com/thecodeteam/csi-nfs) | ✓ | ✓ | ✓ |
+| | [CSI-VFS](https://github.com/thecodeteam/csi-vfs) | | ✓ | ✓ |
 | Dell EMC | [Isilon](.docs/user-guide/storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](.docs/user-guide/storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
 | DigitalOcean | [Block Storage](.docs/user-guide/storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ | ✓ |

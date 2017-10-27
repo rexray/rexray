@@ -5,7 +5,11 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/codedellemc/gocsi"
+  name = "github.com/thecodeteam/goioc"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/thecodeteam/gocsi"
 
 [[constraint]]
   branch = "master"

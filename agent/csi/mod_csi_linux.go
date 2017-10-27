@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/codedellemc/goioc"
+	"github.com/thecodeteam/goioc"
 )
 
 var loadGoPluginsOnce sync.Once

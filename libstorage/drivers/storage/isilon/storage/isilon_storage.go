@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
-	isi "github.com/codedellemc/goisilon"
+	isi "github.com/thecodeteam/goisilon"
 
 	"github.com/thecodeteam/rexray/libstorage/api/context"
 	"github.com/thecodeteam/rexray/libstorage/api/registry"

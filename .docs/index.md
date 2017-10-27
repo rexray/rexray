@@ -128,9 +128,9 @@ The following storage providers and platforms are supported by REX-Ray.
 | | [EFS](./user-guide/storage-providers.md#aws-efs) | ✓ | ✓ | ✓ |
 | | [S3FS](./user-guide/storage-providers.md#aws-s3fs) | ✓ | ✓ | ✓ |
 | Ceph | [RBD](./user-guide/storage-providers.md#ceph-rbd) | ✓ | ✓ | ✓ |
-| Local | [CSI-BlockDevices](https://github.com/codedellemc/csi-blockdevices) | | ✓ | ✓ |
-| | [CSI-NFS](https://github.com/codedellemc/csi-nfs) | ✓ | ✓ | ✓ |
-| | [CSI-VFS](https://github.com/codedellemc/csi-vfs) | | ✓ | ✓ |
+| Local | [CSI-BlockDevices](https://github.com/thecodeteam/csi-blockdevices) | | ✓ | ✓ |
+| | [CSI-NFS](https://github.com/thecodeteam/csi-nfs) | ✓ | ✓ | ✓ |
+| | [CSI-VFS](https://github.com/thecodeteam/csi-vfs) | | ✓ | ✓ |
 | Dell EMC | [Isilon](./user-guide/storage-providers.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](./user-guide/storage-providers.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
 | DigitalOcean | [Block Storage](./user-guide/storage-providers.md#do-block-storage) | ✓ | ✓ | ✓ |

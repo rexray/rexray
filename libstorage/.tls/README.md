@@ -4,7 +4,7 @@ libstorage:
   tls:
     serverName: libstorage-server
     clientCertRequired: true
-    trustedCertsFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-ca.crt
+    trustedCertsFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-ca.crt
   service: vfs
   logging:
     httpRequests: true
@@ -12,13 +12,13 @@ libstorage:
   client:
     libstorage:
       tls:
-        certFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-client.crt
-        keyFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-client.key
+        certFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-client.crt
+        keyFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-client.key
   server:
     libstorage:
       tls:
-        certFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-server.crt
-        keyFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-server.key
+        certFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-server.crt
+        keyFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-server.key
     services:
       vfs:
         libstorage:
@@ -39,7 +39,7 @@ rexray:
         tls:
           serverName: libstorage-server
           clientCertRequired: true
-          trustedCertsFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-ca.crt
+          trustedCertsFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-ca.crt
         service: vfs
         logging:
           httpRequests: true
@@ -47,13 +47,13 @@ rexray:
         client:
           libstorage:
             tls:
-              certFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-client.crt
-              keyFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-client.key
+              certFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-client.crt
+              keyFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-client.key
         server:
           libstorage:
             tls:
-              certFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-server.crt
-              keyFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-server.key
+              certFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-server.crt
+              keyFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-server.key
           services:
             vfs:
               libstorage:
@@ -73,7 +73,7 @@ libstorage:
   tls:
     serverName: libstorage-server
     clientCertRequired: true
-    trustedCertsFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-ca.crt
+    trustedCertsFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-ca.crt
   service: vfs
   logging:
     httpRequests: true
@@ -81,14 +81,14 @@ libstorage:
   client:
     libstorage:
       tls:
-        certFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-client.crt
-        keyFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-client.key
+        certFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-client.crt
+        keyFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-client.key
   server:
     libstorage:
       tls:
         disabled: true
-        certFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-server.crt
-        keyFile: /Users/akutz/Projects/go/src/github.com/codedellemc/libstorage/.tls/libstorage-server.key
+        certFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-server.crt
+        keyFile: /Users/akutz/Projects/go/src/github.com/thecodeteam/rexray/libstorage/.tls/libstorage-server.key
     services:
       vfs:
         libstorage:

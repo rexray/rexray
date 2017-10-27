@@ -23,7 +23,7 @@ func GetGitHubBlob(
 	user, repo, commit, name string) (io.ReadCloser, error) {
 
 	if user == "" {
-		user = "codedellemc"
+		user = "thecodeteam"
 	}
 	if repo == "" {
 		repo = "rexray"

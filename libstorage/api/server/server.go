@@ -15,8 +15,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	gofig "github.com/akutz/gofig/types"
-	"github.com/codedellemc/gournal"
-	glogrus "github.com/codedellemc/gournal/logrus"
+	"github.com/thecodeteam/gournal"
+	glogrus "github.com/thecodeteam/gournal/logrus"
 
 	"github.com/thecodeteam/rexray/libstorage/api/context"
 	"github.com/thecodeteam/rexray/libstorage/api/registry"

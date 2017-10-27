@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	jsonSchemaID = "https://github.com/codedellemc/libstorage"
+	jsonSchemaID = "https://github.com/thecodeteam/libstorage"
 )
 
 var (

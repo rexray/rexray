@@ -17,10 +17,10 @@ import (
 	xctx "golang.org/x/net/context"
 
 	gofig "github.com/akutz/gofig/types"
-	"github.com/codedellemc/gocsi"
-	"github.com/codedellemc/gocsi/csi"
-	"github.com/codedellemc/gocsi/mount"
-	"github.com/codedellemc/goioc"
+	"github.com/thecodeteam/gocsi"
+	"github.com/thecodeteam/gocsi/csi"
+	"github.com/thecodeteam/gocsi/mount"
+	"github.com/thecodeteam/goioc"
 
 	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
 	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"

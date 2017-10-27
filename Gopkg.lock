@@ -86,46 +86,6 @@
   revision = "2f16017c76fc2403d143e93cea1e1b9526a01148"
 
 [[projects]]
-  name = "github.com/codedellemc/csi-blockdevices"
-  packages = ["block","provider","services"]
-  revision = "fb53c6c13524f3c41b8e23ffdc278a23bec7128d"
-  version = "v0.1.0"
-
-[[projects]]
-  name = "github.com/codedellemc/csi-nfs"
-  packages = ["nfs","provider","services"]
-  revision = "d4a80fee1473ad52119b1fad8940bc2939b36a59"
-  version = "v0.1.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/codedellemc/gocsi"
-  packages = [".","csi","mount"]
-  revision = "d07507962de8603e31ce24cbd17b0f15aa1c6a3b"
-
-[[projects]]
-  name = "github.com/codedellemc/goioc"
-  packages = ["."]
-  revision = "900b2641c1787980890665af794d8ff23ffa7afd"
-  version = "v0.1.1"
-
-[[projects]]
-  name = "github.com/codedellemc/goisilon"
-  packages = [".","api","api/json","api/v1","api/v2"]
-  revision = "301d518bb39637b839382deb686811dcf257b8c8"
-
-[[projects]]
-  name = "github.com/codedellemc/goscaleio"
-  packages = [".","tls","types/v1"]
-  revision = "d9df9f1ff56d951b0d5dfc30c374533ac56a4068"
-
-[[projects]]
-  name = "github.com/codedellemc/gournal"
-  packages = [".","logrus"]
-  revision = "914f22d81ae2255c67ce7dd7f4c1dcb75c9c619a"
-  version = "v0.3.1"
-
-[[projects]]
   name = "github.com/coreos/go-systemd"
   packages = ["activation"]
   revision = "d2196463941895ee908e13531a23a39feb9e1243"
@@ -341,10 +301,52 @@
   revision = "ac974c61c2f990f4115b119354b5e0b47550e888"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/thecodeteam/csi-blockdevices"
+  packages = ["block","provider","services"]
+  revision = "70757e2170eb0919d1771ca06ee20fd1dcf3a367"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/thecodeteam/csi-nfs"
+  packages = ["nfs","provider","services"]
+  revision = "d2e5dceda9b159f121112f6d4dbc49b196fe9d09"
+
+[[projects]]
   name = "github.com/thecodeteam/csi-vfs"
   packages = ["provider","service"]
-  revision = "db786d3f2dad1376495b5c10e39dc181eb9af084"
-  version = "v0.1.7"
+  revision = "c26ae3536e8028f818f6a92dcef3567ed96d324e"
+  version = "v0.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/thecodeteam/gocsi"
+  packages = [".","csi","mount"]
+  revision = "83f15105815b4bdc0d4f52796a458d2ce9e588fe"
+
+[[projects]]
+  name = "github.com/thecodeteam/goioc"
+  packages = ["."]
+  revision = "bcc5c533363c5bb3eb0651a1413889ec71822200"
+  version = "v0.2.0"
+
+[[projects]]
+  name = "github.com/thecodeteam/goisilon"
+  packages = [".","api","api/json","api/v1","api/v2"]
+  revision = "a98f0e15458bfaf5f4d57071b94af71c1eacf75d"
+  version = "v1.6.0"
+
+[[projects]]
+  branch = "support/tls-sio-gw-2.0.0.2"
+  name = "github.com/thecodeteam/goscaleio"
+  packages = [".","tls","types/v1"]
+  revision = "35ca2e98889acebca32ca3c8f0b434d88968070e"
+
+[[projects]]
+  name = "github.com/thecodeteam/gournal"
+  packages = [".","logrus"]
+  revision = "5feb849964a5225f14ae24a90abdb4d0929021de"
+  version = "v0.4.0"
 
 [[projects]]
   branch = "master"
@@ -409,6 +411,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "02c5fb8514804e2d5c7dd6c37fc99de19e08b5efbe1e5d9c16738fe431680819"
+  inputs-digest = "2f0a84e8d7e14b8438e1a6e4fce6b0aefb2dd69f655e35dc8857904c3a8563e5"
   solver-name = "gps-cdcl"
   solver-version = 1

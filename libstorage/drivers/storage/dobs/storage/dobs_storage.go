@@ -127,19 +127,41 @@ func (d *driver) InstanceInspect(
 func (d *driver) Volumes(
 	ctx types.Context,
 	opts *types.VolumesOpts) ([]*types.Volume, error) {
+	region := d.mustRegion(ctx)
+	if region == nil || *region == "" {
+		return nil, goof.New("No region provided or configured")
+	}
 
-	doVolumes, _, err := d.client.Storage.ListVolumes(ctx, nil)
-	if err != nil {
-		return nil, err
+	listOpts := &godo.ListVolumeParams{
+		ListOptions: &godo.ListOptions{PerPage: 200},
+		Region:      *region,
 	}
 
 	var volumes []*types.Volume
-	for _, vol := range doVolumes {
-		volume, err := d.toTypesVolume(ctx, &vol, opts.Attachments)
+	for {
+		doVolumes, resp, err := d.client.Storage.ListVolumes(ctx, listOpts)
 		if err != nil {
-			return nil, goof.New("error converting to types.Volume")
+			return nil, err
 		}
-		volumes = append(volumes, volume)
+
+		for _, vol := range doVolumes {
+			volume, err := d.toTypesVolume(ctx, &vol, opts.Attachments)
+			if err != nil {
+				return nil, goof.New("error converting to types.Volume")
+			}
+			volumes = append(volumes, volume)
+		}
+
+		if resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			return nil, err
+		}
+
+		listOpts.ListOptions.Page = page + 1
 	}
 
 	return volumes, nil
@@ -166,7 +188,6 @@ func (d *driver) VolumeInspectByName(
 	ctx types.Context,
 	volumeName string,
 	opts *types.VolumeInspectOpts) (*types.Volume, error) {
-
 	region := d.mustRegion(ctx)
 	if region == nil || *region == "" {
 		return nil, goof.New("No region provided or configured")

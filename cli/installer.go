@@ -13,9 +13,10 @@ import (
 	"text/template"
 
 	"github.com/akutz/gotil"
+	log "github.com/sirupsen/logrus"
+
 	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
 	"github.com/thecodeteam/rexray/util"
-	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -324,7 +325,8 @@ func createUnitFile(ctx apitypes.Context) error {
 		return fmt.Errorf("exec unit file template failed: %v", err)
 	}
 	text := buf.String()
-	f, err := os.OpenFile(util.UnitFilePath, os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(util.UnitFilePath,
+		os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf(
 			"create unit file failed: %s: %v", util.UnitFilePath, err)
@@ -374,7 +376,8 @@ func createInitFile() error {
 	// wrapped in a function to defer the close to ensure file is written to
 	// disk before subsequent chmod below
 	if err := func() error {
-		f, err := os.OpenFile(util.InitFilePath, os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(util.InitFilePath,
+			os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 		if err != nil {
 			return fmt.Errorf(
 				"create init file failed: %s: %v", util.InitFilePath, err)

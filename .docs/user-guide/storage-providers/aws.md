@@ -352,7 +352,7 @@ client-side REX-Ray configuration file.
 The client must also have access to the AWS credentials used for mounting and
 unmounting S3 buckets. These credentials can be stored in the client-side
 REX-Ray configuration file or via
-[any means avaialble](https://github.com/s3fs-fuse/s3fs-fuse/wiki/Fuse-Over-Amazon)
+[any means available](https://github.com/s3fs-fuse/s3fs-fuse/wiki/Fuse-Over-Amazon)
 to the `s3fs` command.
 
 

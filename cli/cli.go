@@ -289,6 +289,10 @@ func (c *CLI) updateLogLevel() {
 }
 
 func (c *CLI) preRunActivateLibStorage(cmd *cobra.Command, args []string) {
+	// Disable patch caching for the CLI
+	c.config = c.config.Scope(configRexrayCLI)
+	c.config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, false)
+
 	c.activateLibStorage = true
 	c.preRun(cmd, args)
 }
@@ -299,10 +303,6 @@ const (
 
 func (c *CLI) preRun(cmd *cobra.Command, args []string) {
 	c.updateLogLevel()
-
-	// Disable patch caching for the CLI
-	c.config = c.config.Scope(configRexrayCLI)
-	c.config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, false)
 
 	if v := c.rrHost(); v != "" {
 		c.config.Set(apitypes.ConfigHost, v)

@@ -26,6 +26,10 @@ a.headerlink:hover {
     text-decoration:    none;
 }
 
+table {
+    font-size: 16px;
+}
+
 table.table-striped {
     border: 1px solid #dfe2e5;
 }
@@ -38,4 +42,19 @@ table.table-striped thead tr th {
 table.table-striped td {
     border-top: 0;
     border: 1px solid #dfe2e5;
+}
+
+body {
+    font-size: 16px;
+    color: rgba(0, 0, 0, .8);
+}
+
+.container .col-md-9 {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.container .col-md-9 li {
+    margin-bottom: .5em;
+    margin-left: 1.25em
 }

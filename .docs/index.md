@@ -129,53 +129,54 @@ is compatible.
 #### Storage Provider Support
 The following storage providers and platforms are supported by REX-Ray.
 
-| Provider              | Storage Platform  | <center>[Docker](https://docs.docker.com/engine/extend/plugins_volume/)</center> | <center>Containerized</center> |
-|-----------------------|----------------------|:---:|:---:|
-| Amazon EC2 | [EBS](./user-guide/storage-providers/aws.md#aws-ebs) | ✓ | ✓ |
-| | [EFS](./user-guide/storage-providers/aws.md#aws-efs) | ✓ | ✓ |
-| | [S3FS](./user-guide/storage-providers/aws.md#aws-s3fs) | ✓ | ✓ |
-| Ceph | [RBD](./user-guide/storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ |
-| Dell EMC | [Isilon](./user-guide/storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ |
-| | [ScaleIO](./user-guide/storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ |
-| DigitalOcean | [Block Storage](./user-guide/storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ |
-| FittedCloud | [EBS Optimizer](./user-guide/storage-providers/fittedcloud.md#ebs-optimizer) | ✓ | |
-| Google | [GCE Persistent Disk](./user-guide/storage-providers/google.md#gce-persistent-disk) | ✓ | ✓ |
-| Microsoft | [Azure Unmanaged Disk](./user-guide/storage-providers/microsoft.md#azure-ud) | ✓ | ✓ |
-| OpenStack | [Cinder](./user-guide/storage-providers/openstack.md#cinder) | ✓ | ✓ |
-| VirtualBox | [Virtual Media](./user-guide/storage-providers/virtualbox.md#virtualbox) | ✓ | |
+| Provider        | Storage Platform                                                             | Docker | Containerized |
+|:----------------|:-----------------------------------------------------------------------------|:------:|:-------------:|
+| Amazon EC2      | [EBS](./user-guide/storage-providers.md#aws-ebs)                             |    ✓   |       ✓       |
+|                 | [EFS](./user-guide/storage-providers.md#aws-efs)                             |    ✓   |       ✓       |
+|                 | [S3FS](./user-guide/storage-providers.md#aws-s3fs)                           |    ✓   |       ✓       |
+| Ceph            | [RBD](./user-guide/storage-providers.md#ceph-rbd)                            |    ✓   |       ✓       |
+| Dell EMC        | [Isilon](./user-guide/storage-providers.md#dell-emc-isilon)                  |    ✓   |       ✓       |
+|                 | [ScaleIO](./user-guide/storage-providers.md#dell-emc-scaleio)                |    ✓   |       ✓       |
+| DigitalOcean    | [Block Storage](./user-guide/storage-providers.md#do-block-storage)          |    ✓   |       ✓       |
+| FittedCloud     | [EBS Optimizer](./user-guide/storage-providers.md/#ebs-optimizer)            |    ✓   |               |
+| Google          | [GCE Persistent Disk](./user-guide/storage-providers.md#gce-persistent-disk) |    ✓   |       ✓       |
+| Microsoft Azure | [Azure Unmanaged Disk](./user-guide/storage-providers.md#azure-ud)           |    ✓   |       ✓       |
+| OpenStack       | [Cinder](./user-guide/storage-providers.md#cinder)                           |    ✓   |       ✓       |
+| VirtualBox      | [Virtual Media](./user-guide/storage-providers.md#virtualbox)                |    ✓   |               |
 
+**Docker**: [https://github.com/container-storage-interface/spec](https://github.com/container-storage-interface/spec)
 
 #### Operating System Support
 The following operating systems (OS) are supported by REX-Ray:
 
-| OS             | <center>Command Line</center> | <center>Service</center> |
-|---------------|:---:|:---:|
-| Ubuntu 12+     | ✓          | ✓ |
-| Debian 6+      | ✓          | ✓ |
-| RedHat         | ✓          | ✓ |
-| CentOS 6+      | ✓          | ✓ |
-| CoreOS         | ✓          | ✓ |
-| TinyLinux (boot2docker)| ✓  | ✓ |
-| OS X Yosemite+ | ✓          |  |
-| Windows        |            |  |
+| OS                      | Command Line | Service |
+|:------------------------|:------------:|:-------:|
+| Ubuntu 12+              |       ✓      |    ✓    |
+| Debian 6+               |       ✓      |    ✓    |
+| RedHat                  |       ✓      |    ✓    |
+| CentOS 6+               |       ✓      |    ✓    |
+| CoreOS                  |       ✓      |    ✓    |
+| TinyLinux (boot2docker) |       ✓      |    ✓    |
+| OS X Yosemite+          |       ✓      |         |
+| Windows                 |              |         |
 
 #### Container Runtime Support
 REX-Ray currently supports the following container platforms:
 
-Platform            | Use
-------------------|-------------------------
-Docker            | [Volume Driver Plugin](./user-guide/schedulers/docker.md)
-Mesos             | [Volume Driver Isolator module](./user-guide/schedulers/mesos.md)
-Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers/mesos.md)
+| Platform       | Use                                                               |
+|:---------------|:------------------------------------------------------------------|
+| Docker         | [Volume Driver Plugin](./user-guide/schedulers/dockermd)          |
+| Mesos          | [Volume Driver Isolator module](./user-guide/schedulers/mesos.md) |
+| Mesos + Docker | [Volume Driver Plugin](./user-guide/schedulers/mesos.md)          |
 
 #### Container Orchestration Support
 REX-Ray currently supports the following container orchestrators:
 
-Orchestrator      | Container Runtime
-------------------|-------------------------
-Docker Swarm      | Docker
-Kubernetes        | Docker
-Marathon          | Docker, Mesos Containerizer
+| Orchestrator | Container Runtime           |
+|:-------------|:----------------------------|
+| Docker Swarm | Docker                      |
+| Kubernetes   | Docker                      |
+| Marathon     | Docker, Mesos Containerizer |
 
 ### GitHub and Slack
 If a little extra help is needed, please don't hesitate to use [GitHub

@@ -143,7 +143,7 @@ func (d *driver) IsControllerPublished(
 		}
 	}
 
-	if _, ok := pvi.Values["token"]; !ok {
+	if _, ok := pvi.Values["token"]; ok {
 		// Token was not found via local devices
 		return nil, errLocDevsMissingVol
 	}

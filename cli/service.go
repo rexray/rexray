@@ -279,7 +279,7 @@ func serviceStatus(ctx apitypes.Context) {
 
 func stopViaSystemD() {
 	execSystemDCmd("stop")
-	statusViaSystemD()
+	//statusViaSystemD()
 }
 
 func statusViaSystemD() {

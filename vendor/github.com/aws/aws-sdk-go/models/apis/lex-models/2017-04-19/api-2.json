@@ -371,6 +371,22 @@
         {"shape":"BadRequestException"}
       ]
     },
+    "GetExport":{
+      "name":"GetExport",
+      "http":{
+        "method":"GET",
+        "requestUri":"/exports/",
+        "responseCode":200
+      },
+      "input":{"shape":"GetExportRequest"},
+      "output":{"shape":"GetExportResponse"},
+      "errors":[
+        {"shape":"NotFoundException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"InternalFailureException"},
+        {"shape":"BadRequestException"}
+      ]
+    },
     "GetIntent":{
       "name":"GetIntent",
       "http":{
@@ -556,13 +572,13 @@
       "type":"string",
       "max":100,
       "min":1,
-      "pattern":"^[a-zA-Z]+((_[a-zA-Z]+)*|([a-zA-Z]+_)*|_)"
+      "pattern":"^([A-Za-z]_?)+$"
     },
     "AliasNameOrListAll":{
       "type":"string",
       "max":100,
       "min":1,
-      "pattern":"^(-|^[a-zA-Z]+((_[a-zA-Z]+)*|([a-zA-Z]+_)*))$"
+      "pattern":"^(-|^([A-Za-z]_?)+$)$"
     },
     "BadRequestException":{
       "type":"structure",
@@ -598,7 +614,9 @@
         "botName":{"shape":"BotName"},
         "createdDate":{"shape":"Timestamp"},
         "type":{"shape":"ChannelType"},
-        "botConfiguration":{"shape":"ChannelConfigurationMap"}
+        "botConfiguration":{"shape":"ChannelConfigurationMap"},
+        "status":{"shape":"ChannelStatus"},
+        "failureReason":{"shape":"String"}
       }
     },
     "BotChannelAssociationList":{
@@ -609,7 +627,7 @@
       "type":"string",
       "max":100,
       "min":1,
-      "pattern":"^[a-zA-Z]+((_[a-zA-Z]+)*|([a-zA-Z]+_)*|_)"
+      "pattern":"^([A-Za-z]_?)+$"
     },
     "BotMetadata":{
       "type":"structure",
@@ -630,7 +648,7 @@
       "type":"string",
       "max":50,
       "min":2,
-      "pattern":"^[a-zA-Z]+((_[a-zA-Z]+)*|([a-zA-Z]+_)*|_)"
+      "pattern":"^([A-Za-z]_?)+$"
     },
     "BotVersions":{
       "type":"list",
@@ -679,6 +697,14 @@
       "max":10,
       "min":1,
       "sensitive":true
+    },
+    "ChannelStatus":{
+      "type":"string",
+      "enum":[
+        "IN_PROGRESS",
+        "CREATED",
+        "FAILED"
+      ]
     },
     "ChannelType":{
       "type":"string",
@@ -813,7 +839,7 @@
       "type":"string",
       "max":100,
       "min":1,
-      "pattern":"^([a-zA-Z]|AMAZON.)+((_[a-zA-Z]+)*|([a-zA-Z]+_)*|_)"
+      "pattern":"^((AMAZON\\.)_?|[A-Za-z]_?)+"
     },
     "DeleteBotAliasRequest":{
       "type":"structure",
@@ -987,6 +1013,18 @@
       "max":10000,
       "min":1
     },
+    "ExportStatus":{
+      "type":"string",
+      "enum":[
+        "IN_PROGRESS",
+        "READY",
+        "FAILED"
+      ]
+    },
+    "ExportType":{
+      "type":"string",
+      "enum":["ALEXA_SKILLS_KIT"]
+    },
     "FollowUpPrompt":{
       "type":"structure",
       "required":[
@@ -1111,7 +1149,9 @@
         "botName":{"shape":"BotName"},
         "createdDate":{"shape":"Timestamp"},
         "type":{"shape":"ChannelType"},
-        "botConfiguration":{"shape":"ChannelConfigurationMap"}
+        "botConfiguration":{"shape":"ChannelConfigurationMap"},
+        "status":{"shape":"ChannelStatus"},
+        "failureReason":{"shape":"String"}
       }
     },
     "GetBotChannelAssociationsRequest":{
@@ -1330,6 +1370,49 @@
       "members":{
         "slotTypes":{"shape":"BuiltinSlotTypeMetadataList"},
         "nextToken":{"shape":"NextToken"}
+      }
+    },
+    "GetExportRequest":{
+      "type":"structure",
+      "required":[
+        "name",
+        "version",
+        "resourceType",
+        "exportType"
+      ],
+      "members":{
+        "name":{
+          "shape":"Name",
+          "location":"querystring",
+          "locationName":"name"
+        },
+        "version":{
+          "shape":"NumericalVersion",
+          "location":"querystring",
+          "locationName":"version"
+        },
+        "resourceType":{
+          "shape":"ResourceType",
+          "location":"querystring",
+          "locationName":"resourceType"
+        },
+        "exportType":{
+          "shape":"ExportType",
+          "location":"querystring",
+          "locationName":"exportType"
+        }
+      }
+    },
+    "GetExportResponse":{
+      "type":"structure",
+      "members":{
+        "name":{"shape":"Name"},
+        "version":{"shape":"NumericalVersion"},
+        "resourceType":{"shape":"ResourceType"},
+        "exportType":{"shape":"ExportType"},
+        "exportStatus":{"shape":"ExportStatus"},
+        "failureReason":{"shape":"String"},
+        "url":{"shape":"String"}
       }
     },
     "GetIntentRequest":{
@@ -1558,9 +1641,7 @@
     },
     "IntentList":{
       "type":"list",
-      "member":{"shape":"Intent"},
-      "max":100,
-      "min":1
+      "member":{"shape":"Intent"}
     },
     "IntentMetadata":{
       "type":"structure",
@@ -1580,7 +1661,7 @@
       "type":"string",
       "max":100,
       "min":1,
-      "pattern":"^[a-zA-Z]+((_[a-zA-Z]+)*|([a-zA-Z]+_)*|_)"
+      "pattern":"^([A-Za-z]_?)+$"
     },
     "IntentUtteranceList":{
       "type":"list",
@@ -1664,7 +1745,7 @@
       "type":"string",
       "max":64,
       "min":1,
-      "pattern":"[a-zA-Z]+"
+      "pattern":"[a-zA-Z_]+"
     },
     "NextToken":{"type":"string"},
     "NotFoundException":{
@@ -1893,6 +1974,10 @@
         "version":{"shape":"Version"}
       }
     },
+    "ResourceType":{
+      "type":"string",
+      "enum":["BOT"]
+    },
     "ResponseCard":{
       "type":"string",
       "max":50000,
@@ -1938,7 +2023,7 @@
       "type":"string",
       "max":100,
       "min":1,
-      "pattern":"^[a-zA-Z]+(((_|.)[a-zA-Z]+)*|([a-zA-Z]+(_|.))*|(_|.))"
+      "pattern":"^([A-Za-z](-|_|.)?)+$"
     },
     "SlotTypeMetadata":{
       "type":"structure",
@@ -1958,7 +2043,7 @@
       "type":"string",
       "max":100,
       "min":1,
-      "pattern":"^[a-zA-Z]+((_[a-zA-Z]+)*|([a-zA-Z]+_)*|_)"
+      "pattern":"^([A-Za-z]_?)+$"
     },
     "SlotUtteranceList":{
       "type":"list",

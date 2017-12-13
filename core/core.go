@@ -166,5 +166,5 @@ var goarchToUname = map[string]string{
 	"mipsle":   "MIPS32LE",
 	"ppc64":    "PPC64",
 	"ppc64le":  "PPC64LE",
-	"s390x":    "S390X",
+	"s390x":    "s390x",
 }

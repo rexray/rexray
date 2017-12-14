@@ -29,7 +29,6 @@ import (
 	"github.com/thecodeteam/rexray/libstorage/api/types"
 	apiUtils "github.com/thecodeteam/rexray/libstorage/api/utils"
 	"github.com/thecodeteam/rexray/libstorage/drivers/storage/azureud"
-	"github.com/thecodeteam/rexray/libstorage/drivers/storage/azureud/utils"
 )
 
 const (
@@ -285,7 +284,7 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 // available device workflow.
 func (d *driver) NextDeviceInfo(
 	ctx types.Context) (*types.NextDeviceInfo, error) {
-	return utils.NextDeviceInfo, nil
+	return nil, nil
 }
 
 // Type returns the type of storage the driver provides.
@@ -427,14 +426,9 @@ func (d *driver) VolumeAttach(
 
 	vmName := context.MustInstanceID(ctx).ID
 
-	if opts.NextDevice == nil || *opts.NextDevice == "" {
-		return nil, "", errMissingNextDevice
-	}
-
 	fields := map[string]interface{}{
-		"vmName":     vmName,
-		"volumeID":   volumeID,
-		"nextDevice": *opts.NextDevice,
+		"vmName":   vmName,
+		"volumeID": volumeID,
 	}
 
 	volume, err := d.getVolume(ctx, volumeID,
@@ -468,7 +462,7 @@ func (d *driver) VolumeAttach(
 			"VM could not be obtained", err)
 	}
 
-	err = d.attachDisk(ctx, volumeID, volume.Size, vm)
+	lun, err := d.attachDisk(ctx, volumeID, volume.Size, vm)
 	if err != nil {
 		return nil, "", goof.WithFieldsE(fields,
 			"failed to attach volume", err)
@@ -481,7 +475,7 @@ func (d *driver) VolumeAttach(
 			"failed to get just created/attached volume", err)
 	}
 
-	return volume, *opts.NextDevice, nil
+	return volume, lun, nil
 }
 
 var errVolAlreadyDetached = goof.New("volume already detached")
@@ -714,6 +708,10 @@ func (d *driver) toTypesVolume(
 	return volumes, nil
 }
 
+func getLunStr(lun int32) string {
+	return strconv.FormatInt(int64(lun), 10)
+}
+
 func getDevice(
 	ctx types.Context,
 	vmDisks []armCompute.DataDisk,
@@ -723,11 +721,11 @@ func getDevice(
 	for _, disk := range vmDisks {
 		name := strings.TrimSuffix(*disk.Name, vhdExtension)
 		if name == *bName {
-			strLun := strconv.Itoa(int(*disk.Lun))
+			strLun := getLunStr(*disk.Lun)
 			ctx.Debugf("Found matching disk %v on LUN %v on "+
 				"instance, looking up dev from %v",
 				name, strLun, devMap)
-			for dev, lun := range devMap {
+			for lun, dev := range devMap {
 				if lun == strLun {
 					return dev
 				}
@@ -852,11 +850,11 @@ func (d *driver) attachDisk(
 	ctx types.Context,
 	volumeName string,
 	size int64,
-	vm *armCompute.VirtualMachine) error {
+	vm *armCompute.VirtualMachine) (string, error) {
 
 	lun, err := d.getNextDiskLun(vm)
 	if err != nil {
-		return goof.WithError(
+		return "", goof.WithError(
 			"Could not find find an empty Lun to attach disk to.",
 			err)
 	}
@@ -895,10 +893,10 @@ func (d *driver) attachDisk(
 			ctx.Info("failed to acquire disk lease, try detach")
 			_, _ = d.VolumeDetach(ctx, volumeName, nil)
 		}
-		return goof.WithError("failed to attach volume to VM", err)
+		return "", goof.WithError("failed to attach volume to VM", err)
 	}
 
-	return nil
+	return getLunStr(lun), nil
 }
 
 func (d *driver) detachDisk(

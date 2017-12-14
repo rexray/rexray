@@ -62,7 +62,7 @@ required = [
 
 [[override]]
   name = "github.com/thecodeteam/gocsi"
-  branch = "master"
+  revision = "83f15105815b4bdc0d4f52796a458d2ce9e588fe"
 
 [[constraint]]
   name = "github.com/thecodeteam/csi-blockdevices"
@@ -74,7 +74,7 @@ required = [
 
 [[constraint]]
   name = "github.com/thecodeteam/csi-vfs"
-  branch = "master"
+  version = "0.2.0"
 
 
 ################################################################################

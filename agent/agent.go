@@ -33,7 +33,6 @@ func Start(
 
 	// Enable path caching for the modules.
 	config = config.Scope(configRexrayAgent)
-	config.Set(apitypes.ConfigIgVolOpsPathCacheEnabled, true)
 
 	// Activate libStorage if necessary.
 	var (

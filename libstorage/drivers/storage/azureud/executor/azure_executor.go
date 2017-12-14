@@ -3,7 +3,6 @@ package executor
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -65,46 +64,12 @@ func (d *driver) InstanceID(
 	return utils.InstanceID(ctx)
 }
 
-var errNoAvaiDevice = goof.New("no available device")
-var nextDevRe = regexp.MustCompile("^/dev/" +
-	utils.NextDeviceInfo.Prefix +
-	"(" + utils.NextDeviceInfo.Pattern + ")")
-var availLetters = []string{
-	"c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
-	"o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"}
-
 // NextDevice returns the next available device.
 func (d *driver) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
-	// All possible device paths on Linux instances are /dev/sd[c-z]
 
-	// Find which letters are used for local devices
-	localDeviceNames := make(map[string]bool)
-
-	localDevices, err := d.LocalDevices(
-		ctx, &types.LocalDevicesOpts{Opts: opts})
-	if err != nil {
-		return "", goof.WithError("error getting local devices", err)
-	}
-	localDeviceMapping := localDevices.DeviceMap
-
-	for localDevice := range localDeviceMapping {
-		res := nextDevRe.FindStringSubmatch(localDevice)
-		if len(res) > 0 {
-			localDeviceNames[res[1]] = true
-		}
-	}
-
-	// Find next available letter for device path
-	for _, letter := range availLetters {
-		if localDeviceNames[letter] {
-			continue
-		}
-		return fmt.Sprintf(
-			"/dev/%s%s", utils.NextDeviceInfo.Prefix, letter), nil
-	}
-	return "", errNoAvaiDevice
+	return "", types.ErrNotImplemented
 }
 
 var (
@@ -139,7 +104,7 @@ func (d *driver) LocalDevices(
 		}
 
 		lun := matches[1]
-		devMap[device] = lun
+		devMap[lun] = device
 	}
 
 	ld := &types.LocalDevices{Driver: d.Name()}

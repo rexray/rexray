@@ -85,6 +85,14 @@
         },
         {
           "Description": "",
+          "Name": "EBS_ENDPOINT",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "EBS_KMSKEYID",
           "Settable": [
             "value"

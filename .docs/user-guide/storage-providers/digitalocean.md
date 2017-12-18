@@ -57,7 +57,7 @@ dobs:
 
 !!! note
     The DigitalOcean service currently only supports block storage volumes in
-    specific regions. Make sure to use a [suuported region](https://www.digitalocean.com/community/tutorials/how-to-use-block-storage-on-digitalocean#what-is-digitalocean-block-storage).
+    specific regions. Make sure to use a [supported region](https://www.digitalocean.com/community/tutorials/how-to-use-block-storage-on-digitalocean#what-is-digitalocean-block-storage).
 
     The standard environment variable for the DigitalOcean access token is
     `DIGITALOCEAN_ACCESS_TOKEN`. However, the environment variable mapped to

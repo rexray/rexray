@@ -1,14 +1,12 @@
-FROM alpine:3.6
+FROM centos:7.4.1708
 
-RUN apk update
-RUN apk add xfsprogs e2fsprogs ca-certificates nfs-utils
+RUN yum install -y nfs-utils && yum clean all && rm -rf /var/cache/yum
 
-RUN mkdir -p /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 RUN mkdir -p /etc/rexray /run/docker/plugins /var/lib/rexray/volumes
 ADD rexray /usr/bin/rexray
 ADD rexray.yml /etc/rexray/rexray.yml
 
-ADD rexray.sh /rexray.sh
+ADD .rexray.sh /rexray.sh
 RUN chmod +x /rexray.sh
 
 CMD [ "rexray", "start", "--nopid" ]

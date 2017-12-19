@@ -136,11 +136,11 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		region   = d.mustRegion(ctx)
 	)
 
-	if region != nil {
+	if d.endpoint != nil {
+		endpoint = d.endpoint
+	} else {
 		szEndpint := fmt.Sprintf("ec2.%s.amazonaws.com", *region)
 		endpoint = &szEndpint
-	} else {
-		endpoint = d.endpoint
 	}
 
 	writeHkey(hkey, region)

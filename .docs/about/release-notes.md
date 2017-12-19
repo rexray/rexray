@@ -22,6 +22,34 @@ Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
 Formed: Thu, 07 Sep 2017 17:49:48 CDT
 ```
 
+## Version 0.11.1 (2017/12/19)
+This is a minor release that addresses a few bugs.
+
+### Enhancements
+
+* Upgrade AWS GoSDK to v1.12.46
+  ([\#1128](https://github.com/thecodeteam/rexray/pull/1128))
+* Add support for automatic volume paging on Digital Ocean when large number of
+  volumes are present ([\#1131](https://github.com/thecodeteam/rexray/pull/1131))
+* Support setting of `EBS_ENDPOINT` in EBS Docker Managed plugin
+  ([\#1132](https://github.com/thecodeteam/rexray/pull/1132))
+* Use CentOS as base OS for `csi-nfs` Docker managed plugin and add example
+  documentation ([\#1114](https://github.com/thecodeteam/rexray/issues/1114))
+
+### Bug Fixes
+* Fix issue in Ceph RBD driver that improperly parsed the contents of the
+  cephArgs config value. ([\#1098](https://github.com/thecodeteam/rexray/pull/1098))
+* Correct the machine hardware name for s390x
+  ([\#1111](https://github.com/thecodeteam/rexray/pull/1111))
+* Correct the RPM package so that installed package can be removed and upgraded
+  without issue. ([\#1088](https://github.com/thecodeteam/rexray/issues/1088))
+* Fix issue that made disabling path caching have no effect
+  ([\#1110](https://github.com/thecodeteam/rexray/pull/1110))
+* Fix issue that could prevent volume attach/detach operations on Micorsoft
+  Azure from working properly ([\#1122](https://github.com/thecodeteam/rexray/issues/1122))
+* Fix issue where setting `EBS_ENDPOINT` had no effect
+  ([\#1118](https://github.com/thecodeteam/rexray/issues/1118))
+
 ## Version 0.11.0 (2017/10/16)
 This is a major release that introduces the Docker Volume API to CSI
 southbound adapter -- a bridge that enables the consumption of CSI plug-ins

@@ -86,7 +86,7 @@ the driver name.
 
 ### Troubleshooting
 * For help creating App Registrations, the steps in
-  [this guide](https://www.terraform.io/docs/providers/azurerm/index.html#creating-credentials)
+  [this guide](https://www.terraform.io/docs/providers/azurerm/authenticating_via_service_principal.html#creating-a-service-principal)
   cover creating a new Registration using the Azure portal and CLI.
 * After creating your app registration, you must go into the
   `Required Permissions` tab and grant access to "Windows Azure Service

@@ -1,9 +1,9 @@
 package godo
 
 import (
+	"context"
 	"fmt"
-
-	"github.com/digitalocean/godo/context"
+	"net/http"
 )
 
 const snapshotBasePath = "v2/snapshots"
@@ -82,7 +82,7 @@ func (s *SnapshotsServiceOp) Get(ctx context.Context, snapshotID string) (*Snaps
 func (s *SnapshotsServiceOp) Delete(ctx context.Context, snapshotID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", snapshotBasePath, snapshotID)
 
-	req, err := s.client.NewRequest(ctx, "DELETE", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (s *SnapshotsServiceOp) Delete(ctx context.Context, snapshotID string) (*Re
 func (s *SnapshotsServiceOp) get(ctx context.Context, ID string) (*Snapshot, *Response, error) {
 	path := fmt.Sprintf("%s/%s", snapshotBasePath, ID)
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -122,7 +122,7 @@ func (s *SnapshotsServiceOp) list(ctx context.Context, opt *ListOptions, listOpt
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}

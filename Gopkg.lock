@@ -169,12 +169,9 @@
 
 [[projects]]
   name = "github.com/digitalocean/godo"
-  packages = [
-    ".",
-    "context"
-  ]
-  revision = "4fa9e9d999007b447089056a1c581b5594f0f851"
-  version = "v1.1.0"
+  packages = ["."]
+  revision = "970b46ffe46bacda668dd58a8a1aba9d775b8895"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -645,6 +642,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "900e50172c505781bfed67991919eccea483d78173f8e5c74404a5f6d05858bb"
+  inputs-digest = "318b3eaf6d9d27db67e0aa615ca36eec575bd1e8e691b9aafc39baba02f5ffcc"
   solver-name = "gps-cdcl"
   solver-version = 1

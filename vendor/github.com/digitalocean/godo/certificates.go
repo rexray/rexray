@@ -1,9 +1,9 @@
 package godo
 
 import (
+	"context"
+	"net/http"
 	"path"
-
-	"github.com/digitalocean/godo/context"
 )
 
 const certificatesBasePath = "/v2/certificates"
@@ -19,19 +19,24 @@ type CertificatesService interface {
 
 // Certificate represents a DigitalOcean certificate configuration.
 type Certificate struct {
-	ID              string `json:"id,omitempty"`
-	Name            string `json:"name,omitempty"`
-	NotAfter        string `json:"not_after,omitempty"`
-	SHA1Fingerprint string `json:"sha1_fingerprint,omitempty"`
-	Created         string `json:"created_at,omitempty"`
+	ID              string   `json:"id,omitempty"`
+	Name            string   `json:"name,omitempty"`
+	DNSNames        []string `json:"dns_names,omitempty"`
+	NotAfter        string   `json:"not_after,omitempty"`
+	SHA1Fingerprint string   `json:"sha1_fingerprint,omitempty"`
+	Created         string   `json:"created_at,omitempty"`
+	State           string   `json:"state,omitempty"`
+	Type            string   `json:"type,omitempty"`
 }
 
 // CertificateRequest represents configuration for a new certificate.
 type CertificateRequest struct {
-	Name             string `json:"name,omitempty"`
-	PrivateKey       string `json:"private_key,omitempty"`
-	LeafCertificate  string `json:"leaf_certificate,omitempty"`
-	CertificateChain string `json:"certificate_chain,omitempty"`
+	Name             string   `json:"name,omitempty"`
+	DNSNames         []string `json:"dns_names,omitempty"`
+	PrivateKey       string   `json:"private_key,omitempty"`
+	LeafCertificate  string   `json:"leaf_certificate,omitempty"`
+	CertificateChain string   `json:"certificate_chain,omitempty"`
+	Type             string   `json:"type,omitempty"`
 }
 
 type certificateRoot struct {
@@ -54,7 +59,7 @@ var _ CertificatesService = &CertificatesServiceOp{}
 func (c *CertificatesServiceOp) Get(ctx context.Context, cID string) (*Certificate, *Response, error) {
 	urlStr := path.Join(certificatesBasePath, cID)
 
-	req, err := c.client.NewRequest(ctx, "GET", urlStr, nil)
+	req, err := c.client.NewRequest(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,7 +80,7 @@ func (c *CertificatesServiceOp) List(ctx context.Context, opt *ListOptions) ([]C
 		return nil, nil, err
 	}
 
-	req, err := c.client.NewRequest(ctx, "GET", urlStr, nil)
+	req, err := c.client.NewRequest(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -94,7 +99,7 @@ func (c *CertificatesServiceOp) List(ctx context.Context, opt *ListOptions) ([]C
 
 // Create a new certificate with provided configuration.
 func (c *CertificatesServiceOp) Create(ctx context.Context, cr *CertificateRequest) (*Certificate, *Response, error) {
-	req, err := c.client.NewRequest(ctx, "POST", certificatesBasePath, cr)
+	req, err := c.client.NewRequest(ctx, http.MethodPost, certificatesBasePath, cr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,7 +117,7 @@ func (c *CertificatesServiceOp) Create(ctx context.Context, cr *CertificateReque
 func (c *CertificatesServiceOp) Delete(ctx context.Context, cID string) (*Response, error) {
 	urlStr := path.Join(certificatesBasePath, cID)
 
-	req, err := c.client.NewRequest(ctx, "DELETE", urlStr, nil)
+	req, err := c.client.NewRequest(ctx, http.MethodDelete, urlStr, nil)
 	if err != nil {
 		return nil, err
 	}

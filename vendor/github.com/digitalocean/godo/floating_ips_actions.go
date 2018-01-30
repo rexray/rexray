@@ -1,9 +1,9 @@
 package godo
 
 import (
+	"context"
 	"fmt"
-
-	"github.com/digitalocean/godo/context"
+	"net/http"
 )
 
 // FloatingIPActionsService is an interface for interfacing with the
@@ -57,7 +57,7 @@ func (s *FloatingIPActionsServiceOp) List(ctx context.Context, ip string, opt *L
 func (s *FloatingIPActionsServiceOp) doAction(ctx context.Context, ip string, request *ActionRequest) (*Action, *Response, error) {
 	path := floatingIPActionPath(ip)
 
-	req, err := s.client.NewRequest(ctx, "POST", path, request)
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, request)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -72,7 +72,7 @@ func (s *FloatingIPActionsServiceOp) doAction(ctx context.Context, ip string, re
 }
 
 func (s *FloatingIPActionsServiceOp) get(ctx context.Context, path string) (*Action, *Response, error) {
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -87,7 +87,7 @@ func (s *FloatingIPActionsServiceOp) get(ctx context.Context, path string) (*Act
 }
 
 func (s *FloatingIPActionsServiceOp) list(ctx context.Context, path string) ([]Action, *Response, error) {
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}

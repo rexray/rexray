@@ -100,7 +100,7 @@ func (d *driver) Volumes(
 	for _, pool := range pools {
 		images, err := utils.GetRBDImages(ctx, pool)
 		if err != nil {
-			return nil, err
+			continue
 		}
 
 		vols, err := d.toTypeVolumes(

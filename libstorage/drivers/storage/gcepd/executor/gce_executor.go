@@ -7,10 +7,10 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/drivers/storage/gcepd"
-	gceUtils "github.com/thecodeteam/rexray/libstorage/drivers/storage/gcepd/utils"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/drivers/storage/gcepd"
+	gceUtils "github.com/rexray/rexray/libstorage/drivers/storage/gcepd/utils"
 )
 
 const (

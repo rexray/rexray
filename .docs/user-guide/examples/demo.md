@@ -25,10 +25,10 @@ $ cd $(mktemp -d)
 ```
 
 Inside the newly created, temporary directory, download the REX-Ray
-[Vagrantfile](https://github.com/emccode/rexray/master/Vagrantfile):
+[Vagrantfile](https://github.com/rexray/rexray/master/Vagrantfile):
 
 ```sh
-$ curl -fsSLO https://raw.githubusercontent.com/emccode/rexray/master/Vagrantfile
+$ curl -fsSLO https://raw.githubusercontent.com/rexray/rexray/master/Vagrantfile
 ```
 
 Now it is time to bring the REX-Ray environment online:

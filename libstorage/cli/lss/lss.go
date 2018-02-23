@@ -14,17 +14,17 @@ import (
 	"github.com/akutz/gotil"
 	flag "github.com/spf13/pflag"
 
-	"github.com/thecodeteam/rexray/core"
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/server"
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/api/utils"
-	apiconfig "github.com/thecodeteam/rexray/libstorage/api/utils/config"
+	"github.com/rexray/rexray/core"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/server"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/utils"
+	apiconfig "github.com/rexray/rexray/libstorage/api/utils/config"
 
 	// load the drivers
-	_ "github.com/thecodeteam/rexray/libstorage/imports/config"
-	_ "github.com/thecodeteam/rexray/libstorage/imports/storage"
+	_ "github.com/rexray/rexray/libstorage/imports/config"
+	_ "github.com/rexray/rexray/libstorage/imports/storage"
 )
 
 var (

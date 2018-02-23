@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/akutz/goof"
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
 )
 
 // GetHTTP retrieves a URL.

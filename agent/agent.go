@@ -11,9 +11,9 @@ import (
 	"github.com/akutz/goof"
 	log "github.com/sirupsen/logrus"
 
-	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/util"
+	apictx "github.com/rexray/rexray/libstorage/api/context"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/util"
 )
 
 func init() {

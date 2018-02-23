@@ -28,8 +28,8 @@ required = [
   version = "0.1.0"
 
 [[constraint]]
-  name = "github.com/thecodeteam/gournal"
-  branch = "master"
+  name = "github.com/akutz/gournal"
+  version = "0.5.0"
 
 [[constraint]]
   name = "github.com/SermoDigital/jose"
@@ -112,14 +112,11 @@ required = [
 [[constraint]]
   name = "google.golang.org/api"
   branch = "master"
-[[constraint]]
-  name = "google.golang.org/appengine"
-  branch = "master"
 
 ### Isilon
 [[constraint]]
   name = "github.com/thecodeteam/goisilon"
-  branch = "master"
+  version = "1.7.0"
 
 ### ScaleIO
 [[constraint]]

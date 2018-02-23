@@ -23,7 +23,7 @@ The following command will install the latest version of REX-Ray to
 `/usr/bin/rexray` on Linux systems:
 
 ```sh
-$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
+$ curl -sSL https://rexray.io/install | sh
 ```
 
 Depending on the Linux distribution REX-Ray will be registered as
@@ -128,9 +128,9 @@ The following storage providers and platforms are supported by REX-Ray.
 | | [EFS](./user-guide/storage-providers.md#aws-efs) | ✓ | ✓ | ✓ |
 | | [S3FS](./user-guide/storage-providers.md#aws-s3fs) | ✓ | ✓ | ✓ |
 | Ceph | [RBD](./user-guide/storage-providers.md#ceph-rbd) | ✓ | ✓ | ✓ |
-| Local | [CSI-BlockDevices](https://github.com/thecodeteam/csi-blockdevices) | | ✓ | ✓ |
-| | [CSI-NFS](https://github.com/thecodeteam/csi-nfs) | ✓ | ✓ | ✓ |
-| | [CSI-VFS](https://github.com/thecodeteam/csi-vfs) | | ✓ | ✓ |
+| Local | [CSI-BlockDevices](https://github.com/rexray/csi-blockdevices) | | ✓ | ✓ |
+| | [CSI-NFS](https://github.com/rexray/csi-nfs) | ✓ | ✓ | ✓ |
+| | [CSI-VFS](https://github.com/rexray/csi-vfs) | | ✓ | ✓ |
 | Dell EMC | [Isilon](./user-guide/storage-providers.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](./user-guide/storage-providers.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
 | DigitalOcean | [Block Storage](./user-guide/storage-providers.md#do-block-storage) | ✓ | ✓ | ✓ |
@@ -174,6 +174,6 @@ Marathon          | Docker, Mesos Containerizer
 
 ### GitHub and Slack
 If a little extra help is needed, please don't hesitate to use [GitHub
-issues](https://github.com/thecodeteam/rexray/issues) or join the active
+issues](https://github.com/rexray/rexray/issues) or join the active
 conversation on the [{code} by Dell EMC Community Slack
 Team](http://community.codedellemc.com/) in the #project-rexray channel

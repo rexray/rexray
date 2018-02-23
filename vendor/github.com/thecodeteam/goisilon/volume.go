@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/thecodeteam/gournal"
+	log "github.com/akutz/gournal"
 
 	apiv1 "github.com/thecodeteam/goisilon/api/v1"
 	apiv2 "github.com/thecodeteam/goisilon/api/v2"

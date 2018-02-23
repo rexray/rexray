@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	apiclient "github.com/thecodeteam/rexray/libstorage/client"
+	"github.com/rexray/rexray/libstorage/api/context"
+	apiclient "github.com/rexray/rexray/libstorage/client"
 )
 
 func (t *testRunner) justBeforeEachClientSpec() {

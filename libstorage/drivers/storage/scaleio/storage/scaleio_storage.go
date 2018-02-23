@@ -4,18 +4,18 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/akutz/goof"
 	sio "github.com/thecodeteam/goscaleio"
 	siotypes "github.com/thecodeteam/goscaleio/types/v1"
 
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	apiUtils "github.com/thecodeteam/rexray/libstorage/api/utils"
-	"github.com/thecodeteam/rexray/libstorage/drivers/storage/scaleio"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/types"
+	apiUtils "github.com/rexray/rexray/libstorage/api/utils"
+	"github.com/rexray/rexray/libstorage/drivers/storage/scaleio"
 )
 
 const (

@@ -1,0 +1,49 @@
+@charset "UTF-8";
+
+@font-face {
+  font-family: "rexray";
+  src:url("../fonts/rexray.eot");
+  src:url("../fonts/rexray.eot?#iefix") format("embedded-opentype"),
+    url("../fonts/rexray.woff") format("woff"),
+    url("../fonts/rexray.ttf") format("truetype"),
+    url("../fonts/rexray.svg#rexray") format("svg");
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+[data-icon]:before {
+  font-family: "rexray" !important;
+  content: attr(data-icon);
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[class^="icon-"]:before,
+[class*=" icon-"]:before {
+  font-family: "rexray" !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-rexray:before {
+  content: "\63";
+}
+.icon-rexray-logo:before {
+  content: "\6c";
+}
+.icon-rexray:before {
+  content: "\72";
+}

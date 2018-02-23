@@ -86,7 +86,7 @@ applicable. If there is ever a question of whether or not a test is applicable
 then the answer is likely yes.
 
 This project uses
-[Coveralls](https://coveralls.io/github/emccode/rexray) for code coverage, and
+[Coveralls](https://coveralls.io/github/rexray/rexray) for code coverage, and
 all pull requests are processed just as a build from `master`. If a pull request
 decreases the project's code coverage, the pull request will be declined until
 such time that testing is added or enhanced to compensate.
@@ -97,15 +97,15 @@ following:
 
 ```sh
 $ .build/test.sh
-ok  	github.com/thecodeteam/rexray/rexray/cli	0.039s	coverage: 33.6% of statements
-ok  	github.com/thecodeteam/rexray/test	0.080s	coverage: 94.0% of statements in github.com/thecodeteam/rexray, github.com/thecodeteam/rexray/core
+ok  	github.com/rexray/rexray/rexray/cli	0.039s	coverage: 33.6% of statements
+ok  	github.com/rexray/rexray/test	0.080s	coverage: 94.0% of statements in github.com/rexray/rexray, github.com/rexray/rexray/core
 ...
-ok  	github.com/thecodeteam/rexray/util	0.024s	coverage: 100.0% of statements
+ok  	github.com/rexray/rexray/util	0.024s	coverage: 100.0% of statements
 [0]akutz@pax:rexray$
 ```
 
 The file `test.sh` in the `.build` directory is the same script executed during
-the project's [automated build system](travis-ci.org/emccode/rexray). The only
+the project's [automated build system](travis-ci.org/rexray/rexray). The only
 difference is when executed locally the results are not submitted to Coveralls.
 Still, using the `test.sh` file one can easily determine if a package's coverage
 has decreased and if additional testing is necessary.

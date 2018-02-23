@@ -8,8 +8,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	log "github.com/thecodeteam/gournal"
-	glogrus "github.com/thecodeteam/gournal/logrus"
+	log "github.com/akutz/gournal"
+	glogrus "github.com/akutz/gournal/logrus"
 )
 
 var (

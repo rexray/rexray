@@ -3,7 +3,7 @@ package cli
 import (
 	"regexp"
 
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
 )
 
 type lsVolumesResult struct {

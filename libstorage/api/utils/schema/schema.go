@@ -9,11 +9,11 @@ import (
 	"github.com/cesanta/ucl"
 	"github.com/cesanta/validate-json/schema"
 
-	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/types"
 )
 
 const (
-	jsonSchemaID = "https://github.com/thecodeteam/libstorage"
+	jsonSchemaID = "https://github.com/rexray/libstorage"
 )
 
 var (

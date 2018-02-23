@@ -22,10 +22,10 @@ import (
 	"github.com/thecodeteam/gocsi/mount"
 	"github.com/thecodeteam/goioc"
 
-	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
-	apiutils "github.com/thecodeteam/rexray/libstorage/api/utils"
-	rrutils "github.com/thecodeteam/rexray/util"
+	apictx "github.com/rexray/rexray/libstorage/api/context"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
+	apiutils "github.com/rexray/rexray/libstorage/api/utils"
+	rrutils "github.com/rexray/rexray/util"
 )
 
 const (

@@ -22,12 +22,12 @@ import (
 	"github.com/thecodeteam/gocsi"
 	"github.com/thecodeteam/gocsi/csi"
 
-	"github.com/thecodeteam/rexray/agent"
-	"github.com/thecodeteam/rexray/core"
-	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
-	rrutils "github.com/thecodeteam/rexray/util"
+	"github.com/rexray/rexray/agent"
+	"github.com/rexray/rexray/core"
+	apictx "github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
+	rrutils "github.com/rexray/rexray/util"
 )
 
 type csiServer interface {

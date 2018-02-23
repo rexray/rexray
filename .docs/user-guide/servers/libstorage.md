@@ -749,7 +749,7 @@ encoded token string.
 
 ### Embedded Configuration
 If libStorage is embedded into another application, such as
-[`REX-Ray`](https://github.com/thecodeteam/rexray), then that application may
+[`REX-Ray`](https://github.com/rexray/rexray), then that application may
 manage its own configuration and supply the embedded libStorage instance
 directly with a configuration object. In this scenario, the libStorage
 configuration files are ignored in deference to the embedding application.
@@ -989,9 +989,9 @@ remote storage systems. Currently the following storage drivers are supported:
  | | [EFS](./../storage-providers/aws.md#aws-efs) | ✓ | ✓ | ✓ |
  | | [S3FS](./../storage-providers/aws.md#aws-s3fs) | ✓ | ✓ | ✓ |
  | Ceph | [RBD](./../storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ | ✓ |
- | Local | [CSI-BlockDevices](https://github.com/thecodeteam/csi-blockdevices) | | ✓ | ✓ |
- | | [CSI-NFS](https://github.com/thecodeteam/csi-nfs) | | ✓ | ✓ |
- | | [CSI-VFS](https://github.com/thecodeteam/csi-vfs) | | ✓ | ✓ |
+ | Local | [CSI-BlockDevices](https://github.com/rexray/csi-blockdevices) | | ✓ | ✓ |
+ | | [CSI-NFS](https://github.com/rexray/csi-nfs) | | ✓ | ✓ |
+ | | [CSI-VFS](https://github.com/rexray/csi-vfs) | | ✓ | ✓ |
  | Dell EMC | [Isilon](./../storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
  | | [ScaleIO](./../storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
  | DigitalOcean | [Block Storage](./../storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ | ✓ |

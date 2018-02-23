@@ -10,9 +10,9 @@ Connecting storage and platforms...
 | | [EFS](./storage-providers/aws.md#aws-efs) | ✓ | ✓ | ✓ |
 | | [S3FS](./storage-providers/aws.md#aws-s3fs) | ✓ | ✓ | ✓ |
 | Ceph | [RBD](./storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ | ✓ |
-| Local | [CSI-BlockDevices](https://github.com/thecodeteam/csi-blockdevices) | | ✓ | ✓ |
-| | [CSI-NFS](https://github.com/thecodeteam/csi-nfs) | ✓ | ✓ | ✓ |
-| | [CSI-VFS](https://github.com/thecodeteam/csi-vfs) | | ✓ | ✓ |
+| Local | [CSI-BlockDevices](https://github.com/rexray/csi-blockdevices) | | ✓ | ✓ |
+| | [CSI-NFS](https://github.com/rexray/csi-nfs) | ✓ | ✓ | ✓ |
+| | [CSI-VFS](https://github.com/rexray/csi-vfs) | | ✓ | ✓ |
 | Dell EMC | [Isilon](./storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](./storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
 | DigitalOcean | [Block Storage](./storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ | ✓ |

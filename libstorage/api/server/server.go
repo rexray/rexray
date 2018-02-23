@@ -15,23 +15,23 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	gofig "github.com/akutz/gofig/types"
-	"github.com/thecodeteam/gournal"
-	glogrus "github.com/thecodeteam/gournal/logrus"
+	"github.com/akutz/gournal"
+	glogrus "github.com/akutz/gournal/logrus"
 
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/server/services"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/api/utils"
-	apicnfg "github.com/thecodeteam/rexray/libstorage/api/utils/config"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/server/services"
+	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/utils"
+	apicnfg "github.com/rexray/rexray/libstorage/api/utils/config"
 
 	// import and load the routers
-	_ "github.com/thecodeteam/rexray/libstorage/api/server/router/help"
-	_ "github.com/thecodeteam/rexray/libstorage/api/server/router/root"
-	_ "github.com/thecodeteam/rexray/libstorage/api/server/router/service"
-	_ "github.com/thecodeteam/rexray/libstorage/api/server/router/snapshot"
-	_ "github.com/thecodeteam/rexray/libstorage/api/server/router/tasks"
-	_ "github.com/thecodeteam/rexray/libstorage/api/server/router/volume"
+	_ "github.com/rexray/rexray/libstorage/api/server/router/help"
+	_ "github.com/rexray/rexray/libstorage/api/server/router/root"
+	_ "github.com/rexray/rexray/libstorage/api/server/router/service"
+	_ "github.com/rexray/rexray/libstorage/api/server/router/snapshot"
+	_ "github.com/rexray/rexray/libstorage/api/server/router/tasks"
+	_ "github.com/rexray/rexray/libstorage/api/server/router/volume"
 )
 
 var (

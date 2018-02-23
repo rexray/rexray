@@ -3,7 +3,7 @@
 
 package cli
 
-import "github.com/thecodeteam/rexray/agent"
+import "github.com/rexray/rexray/agent"
 
 func init() {
 	startFuncs = append(startFuncs, agent.Start)

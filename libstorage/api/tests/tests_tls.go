@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	apiclient "github.com/thecodeteam/rexray/libstorage/client"
+	apiclient "github.com/rexray/rexray/libstorage/client"
 )
 
 func (t *testRunner) copyTLSCertKeyCacerts() {

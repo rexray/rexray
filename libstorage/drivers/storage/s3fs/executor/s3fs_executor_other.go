@@ -2,7 +2,7 @@
 
 package executor
 
-import "github.com/thecodeteam/rexray/libstorage/api/types"
+import "github.com/rexray/rexray/libstorage/api/types"
 
 func getMountedBuckets(
 	ctx types.Context,

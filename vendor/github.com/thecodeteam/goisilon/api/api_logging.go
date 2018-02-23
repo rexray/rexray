@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	log "github.com/thecodeteam/gournal"
+	log "github.com/akutz/gournal"
 )
 
 func isBinOctetBody(h http.Header) bool {

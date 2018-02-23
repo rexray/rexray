@@ -7,11 +7,11 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	apictx "github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/server"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/api/utils"
-	"github.com/thecodeteam/rexray/libstorage/client"
+	apictx "github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/server"
+	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/utils"
+	"github.com/rexray/rexray/libstorage/client"
 )
 
 // New starts an embedded libStorage server and returns both the server
@@ -27,7 +27,7 @@ func New(
 	ctx := apictx.New(goCtx)
 
 	if _, ok := apictx.PathConfig(ctx); !ok {
-		pathConfig := utils.NewPathConfig(ctx, "", "")
+		pathConfig := utils.NewPathConfig()
 		ctx = ctx.WithValue(apictx.PathConfigKey, pathConfig)
 	}
 

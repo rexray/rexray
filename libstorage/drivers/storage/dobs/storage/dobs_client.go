@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/thecodeteam/rexray/core"
+	"github.com/rexray/rexray/core"
 	"github.com/digitalocean/godo"
 	"golang.org/x/oauth2"
 )

@@ -34,7 +34,7 @@ and install it to `/usr/bin/rexray` or `/opt/bin/rexray`. On Linux systems
 REX-Ray will also be registered as either a SystemD or SystemV service.
 
 ```bash
-$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable
+$ curl -sSL https://rexray.io/install | sh -s -- stable
 ```
 
 ### Install a specific version
@@ -42,15 +42,15 @@ The following command will emit a list of the available REX-Ray packages:
 The curl command can also be used to install a specific version of REX-Ray:
 
 ```bash
-$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list unstable
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list staged
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- list stable
+$ curl -sSL https://rexray.io/install | sh -s -- list
+curl -sSL https://rexray.io/install | sh -s -- list unstable
+curl -sSL https://rexray.io/install | sh -s -- list staged
+curl -sSL https://rexray.io/install | sh -s -- list stable
 ```
 
 To install the stable `0.9.1` release, use the following command:
 ```bash
-$ curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.9.1
+$ curl -sSL https://rexray.io/install | sh -s -- stable 0.9.1
 ```
 
 ### Install a pre-built binary
@@ -62,9 +62,9 @@ the various release types.
 
     Version  | Description
     ---------|------------
-    [Unstable](https://dl.bintray.com/emccode/rexray/unstable/latest/) | The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.
-    [Staged](https://dl.bintray.com/emccode/rexray/staged/latest/) | The most up-to-date, release candidate REX-Ray binaries.
-    [Stable](https://dl.bintray.com/emccode/rexray/stable/latest/) | The most up-to-date, stable REX-Ray binaries.
+    [Unstable](https://dl.bintray.com/rexray/rexray/unstable/latest/) | The most up-to-date, bleeding-edge, and often unstable REX-Ray binaries.
+    [Staged](https://dl.bintray.com/rexray/rexray/staged/latest/) | The most up-to-date, release candidate REX-Ray binaries.
+    [Stable](https://dl.bintray.com/rexray/rexray/stable/latest/) | The most up-to-date, stable REX-Ray binaries.
 
 2. Uncompress and move the binary to the proper location. Preferably `/usr/bin`
 should be where REX-Ray is moved, but this path is not required.
@@ -75,7 +75,7 @@ with SystemD or SystemV for proper initialization.
 It is also easy to build REX-Ray from source:
 
 ```bash
-$ go get github.com/thecodeteam/rexray
+$ go get github.com/rexray/rexray
 ```
 
 For more information on how to build REX-Ray please see the
@@ -121,13 +121,13 @@ configuration management and orchestration tools.
 
 ### Ansible
 With Ansible, installing the latest REX-Ray binaries can be accomplished by
-including the `emccode.rexray` role from Ansible Galaxy.  The role accepts
+including the `rexray.rexray` role from Ansible Galaxy.  The role accepts
 all the necessary variables to properly fill out your `config.yml` file.
 
 Install the role from Galaxy:
 
 ```sh
-$ ansible-galaxy install emccode.rexray
+$ ansible-galaxy install rexray.rexray
 ```
 
 Example playbook for installing REX-Ray on GCE Docker hosts:
@@ -135,7 +135,7 @@ Example playbook for installing REX-Ray on GCE Docker hosts:
 ```yaml
 - hosts: gce_docker_hosts
   roles:
-  - { role: emccode.rexray,
+  - { role: rexray.rexray,
       rexray_service: true,
       rexray_storage_drivers: [gce],
       rexray_gce_keyfile: "/opt/gce_keyfile" }
@@ -181,7 +181,7 @@ data via the AWS GUI, it would not sustain scalable automation.
         "/usr/sbin/usermod -G docker ubuntu\n",
 
         "# Install the latest REX-ray\n",
-        "/usr/bin/curl -ssL -o /tmp/install-rexray.sh https://dl.bintray.com/emccode/rexray/install\n",
+        "/usr/bin/curl -ssL -o /tmp/install-rexray.sh https://rexray.io/install\n",
         "chmod +x /tmp/install-rexray.sh\n",
         "/tmp/install-rexray.sh\n",
         "chgrp docker /etc/rexray/config.yml\n",
@@ -201,7 +201,7 @@ drivers.
 1. SSH into the Docker machine and install REX-Ray.
 
         $ docker-machine ssh testing1 \
-        "curl -sSL https://dl.bintray.com/emccode/rexray/install | sh"
+        "curl -sSL https://rexray.io/install | sh"
 
 2. Install the udev extras package. This step is only required for versions of
    boot2docker older than 1.10.
@@ -248,7 +248,7 @@ resources:
             chmod +x /tmp/install-docker.sh
             /tmp/install-docker.sh
             /usr/sbin/usermod -G docker ubuntu
-            /usr/bin/curl -ssL -o /tmp/install-rexray.sh https://dl.bintray.com/emccode/rexray/install
+            /usr/bin/curl -ssL -o /tmp/install-rexray.sh https://rexray.io/install
             chmod +x /tmp/install-rexray.sh
             /tmp/install-rexray.sh
             chgrp docker /etc/rexray/config.yml

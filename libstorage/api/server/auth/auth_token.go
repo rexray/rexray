@@ -9,8 +9,8 @@ import (
 	jcrypto "github.com/SermoDigital/jose/crypto"
 	"github.com/SermoDigital/jose/jws"
 
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/types"
 )
 
 var rxBearer = regexp.MustCompile(`Bearer (.+)`)

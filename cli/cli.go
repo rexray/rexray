@@ -13,11 +13,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
-	apiutils "github.com/thecodeteam/rexray/libstorage/api/utils"
+	"github.com/rexray/rexray/libstorage/api/context"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
+	apiutils "github.com/rexray/rexray/libstorage/api/utils"
 
-	"github.com/thecodeteam/rexray/util"
+	"github.com/rexray/rexray/util"
 )
 
 var initCmdFuncs []func(*CLI)
@@ -397,7 +397,7 @@ func printColorizedError(err error) {
 		"  - Debug output by using the flag \x1b[%dm-l debug\x1b[0m\n",
 		lightBlue)
 	fmt.Fprintf(stderr, "  - The REX-ray website at \x1b[%dm%s\x1b[0m\n",
-		blueBg, "https://github.com/thecodeteam/rexray")
+		blueBg, "https://github.com/rexray/rexray")
 	fmt.Fprintf(stderr, "  - The on%[1]sine he%[1]sp be%[1]sow\n", l)
 }
 
@@ -410,7 +410,7 @@ func printNonColorizedError(err error) {
 	fmt.Fprintf(stderr, "  - Debug output by using the flag \"-l debug\"\n")
 	fmt.Fprintf(
 		stderr,
-		"  - The REX-ray website at https://github.com/thecodeteam/rexray\n")
+		"  - The REX-ray website at https://github.com/rexray/rexray\n")
 	fmt.Fprintf(stderr, "  - The online help below\n")
 }
 

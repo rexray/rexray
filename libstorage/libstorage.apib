@@ -267,7 +267,7 @@ Gets information about all of the configured services.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceInfoMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceInfoMap" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -282,7 +282,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -297,7 +297,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 # Service Inspector [/services/{service}?{instance}]
 
@@ -329,7 +329,7 @@ Gets information about the service with the specified name.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceInfo" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceInfo" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -344,7 +344,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -359,7 +359,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -374,7 +374,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 # Group Volumes
 A collection of resources and actions related to libStorage Volumes.
@@ -425,7 +425,7 @@ Gets a list of Volume resources for all configured services.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceVolumeMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceVolumeMap" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -440,7 +440,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -455,7 +455,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Get with Attachments [GET /volumes?{attachments}]
 Gets a list of Volume resources and their attached resources for all configured
@@ -561,7 +561,7 @@ services.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceVolumeMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceVolumeMap" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -576,7 +576,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -591,7 +591,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Detach All [POST /volumes?{detach}]
 Detaches all volumes for all services.
@@ -607,14 +607,14 @@ Detaches all volumes for all services.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volumeDetachAllRequest" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volumeDetachAllRequest" }
 
 + Response 200 (application/json)
 A list of the detached volumes.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceVolumeMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceVolumeMap" }
 
 + Response 400 (application/json)
 Invalid request
@@ -629,7 +629,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -644,7 +644,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -659,7 +659,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 # Volumes by Service Collection [/volumes/{service}]
 
@@ -699,7 +699,7 @@ Gets a list of Volume objects for a single Service resource.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volumeMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volumeMap" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -714,7 +714,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -729,7 +729,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Get with Attachments [GET /volumes/{service}?{attachments}]
 Gets a list of Volume resources and their attached resources for a single
@@ -817,7 +817,7 @@ service.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceVolumeMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceVolumeMap" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -832,7 +832,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -847,7 +847,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Create [POST]
 Create a new volume.
@@ -878,7 +878,7 @@ Create a new volume.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volumeCreateRequest" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volumeCreateRequest" }
 
 + Response 200 (application/json)
 The newly created volume object.
@@ -903,7 +903,7 @@ The newly created volume object.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volume" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volume" }
 
 + Response 400 (application/json)
 Invalid request
@@ -918,7 +918,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -933,7 +933,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -948,7 +948,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -963,7 +963,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Detach All [POST /volumes/{service}?{detach}]
 Detaches all volumes for all services.
@@ -983,14 +983,14 @@ Detaches all volumes for all services.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volumeDetachAllRequest" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volumeDetachAllRequest" }
 
 + Response 200 (application/json)
 A list of the detached volumes.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceVolumeMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceVolumeMap" }
 
 + Response 400 (application/json)
 Invalid request
@@ -1005,7 +1005,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1020,7 +1020,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1035,7 +1035,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Volume Inspector [/volumes/{service}/{volumeID}?{attachments}]
 A single Volume object. A central part of the libStorage
@@ -1118,7 +1118,7 @@ specify the `attachments` query parameter to request their retrieval.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volume" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volume" }
 
 + Response 400 (application/json)
 Invalid request
@@ -1133,7 +1133,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1148,7 +1148,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1163,7 +1163,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1178,7 +1178,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ### Copy [POST /volumes/{service}/{volumeID}?{copy}]
 Copies the volume.
@@ -1207,7 +1207,7 @@ Copies the volume.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volumeCopyRequest" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volumeCopyRequest" }
 
 + Response 200 (application/json)
 
@@ -1227,7 +1227,7 @@ Copies the volume.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volume" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volume" }
 
 + Response 400 (application/json)
 Invalid request
@@ -1242,7 +1242,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1257,7 +1257,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1272,7 +1272,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1287,7 +1287,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ### Snapshot [POST /volumes/{service}/{volumeID}?{snapshot}]
 Takes a snapshot of the volume.
@@ -1340,7 +1340,7 @@ Takes a snapshot of the volume.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/snapshot" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/snapshot" }
 
 + Response 400 (application/json)
 Invalid request
@@ -1355,7 +1355,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1370,7 +1370,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1385,7 +1385,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1400,7 +1400,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ### Attach [POST /volumes/{service}/{volumeID}?{attach}]
 Attaches the volume to an instance.
@@ -1454,7 +1454,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1469,7 +1469,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1484,7 +1484,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1499,7 +1499,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 
 ### Detach [POST /volumes/{service}/{volumeID}?{detach}]
@@ -1530,7 +1530,7 @@ The volume that was just detached.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volume" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volume" }
 
 + Response 400 (application/json)
 Invalid request
@@ -1545,7 +1545,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1560,7 +1560,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1575,7 +1575,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1590,7 +1590,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Remove [DELETE /volumes/{service}/{volumeID}?{force}]
 Removes the volume.
@@ -1615,7 +1615,7 @@ Removes the volume.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/volumeRemoveRequest" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/volumeRemoveRequest" }
 
 + Response 205
 Reset the view of the modified resource
@@ -1635,7 +1635,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1650,7 +1650,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1665,7 +1665,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1680,7 +1680,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 # Group Snapshots
 A collection of resources and actions related to libStorage Snapshots.
@@ -1740,7 +1740,7 @@ Gets a list of Snapshot resources for all configured services.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/serviceSnapshotMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/serviceSnapshotMap" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1755,7 +1755,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1770,7 +1770,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 # Snapshots by Service Collection [/snapshots/{service}]
 A collection of Snapshot resources that belong to Volumes for a specifc service.
@@ -1817,7 +1817,7 @@ Gets a list of Snapshot objects for a single Service resource.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/snapshotMap" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/snapshotMap" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1832,7 +1832,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1847,7 +1847,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1862,7 +1862,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Create [POST]
 Please note, that the Snapshot Collection resource is not used for the creation
@@ -1884,7 +1884,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1899,7 +1899,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -1914,7 +1914,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -1929,7 +1929,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 # Snapshot Inspector [/snapshots/{service}/{snapshotID}]
 A single Snapshot object. A central part of the libStorage API, a Snapshot
@@ -1967,7 +1967,7 @@ Retrieves a single snapshot.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/snapshot" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/snapshot" }
 
 + Response 400 (application/json)
 Invalid request
@@ -1982,7 +1982,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -1997,7 +1997,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -2012,7 +2012,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -2027,7 +2027,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ### Copy [POST /snapshots/{service}/{snapshotID}?{copy}]
 Copies the snapshot.
@@ -2057,7 +2057,7 @@ Copies the snapshot.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/snapshotCopyRequest" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/snapshotCopyRequest" }
 
 + Response 200 (application/json)
 
@@ -2080,7 +2080,7 @@ Copies the snapshot.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/snapshot" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/snapshot" }
 
 + Response 400 (application/json)
 Invalid request
@@ -2095,7 +2095,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -2110,7 +2110,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -2125,7 +2125,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -2140,7 +2140,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 ## Remove [DELETE]
 Removes the snapshot.
@@ -2149,7 +2149,7 @@ Removes the snapshot.
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/snapshotRemoveRequest" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/snapshotRemoveRequest" }
 
 + Response 205
 Reset the view of the modified resource
@@ -2169,7 +2169,7 @@ Invalid request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/invalidRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/invalidRequestError" }
 
 + Response 401 (application/json)
 Unauthorized request
@@ -2184,7 +2184,7 @@ Unauthorized request
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/unauthorizedRequestError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/unauthorizedRequestError" }
 
 + Response 404 (application/json)
 The specified resource was not found
@@ -2199,7 +2199,7 @@ The specified resource was not found
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/resourceNotFoundError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/resourceNotFoundError" }
 
 + Response 500 (application/json)
 Internal server error
@@ -2214,7 +2214,7 @@ Internal server error
 
     + Schema
 
-            { "$ref": "https://raw.githubusercontent.com/thecodeteam/libstorage/master/libstorage.json#/definitions/internalServerError" }
+            { "$ref": "https://raw.githubusercontent.com/rexray/rexray/master/libstorage/libstorage.json#/definitions/internalServerError" }
 
 # Data Structures
 

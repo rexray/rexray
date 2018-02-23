@@ -2,6 +2,15 @@
 
 
 [[projects]]
+  name = "github.com/akutz/gournal"
+  packages = [
+    ".",
+    "logrus"
+  ]
+  revision = "f6e56fa29076290418175a5105fd0223c66ad1bc"
+  version = "v0.5.0"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -26,12 +35,6 @@
   version = "v1.1.4"
 
 [[projects]]
-  name = "github.com/thecodeteam/gournal"
-  packages = [".","logrus"]
-  revision = "5feb849964a5225f14ae24a90abdb4d0929021de"
-  version = "v0.4.0"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
@@ -40,12 +43,15 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "164713f0dfcec4e80be8b53e1f0811f5f0d84578"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ce19ec1eb0f777e210021b856618aa60fb57704ca11e15d7ed1ba3e2f7027a00"
+  inputs-digest = "d3e814d89985e157fb2190558ab3935889188c156c1d2391ba745eabbce63aba"
   solver-name = "gps-cdcl"
   solver-version = 1

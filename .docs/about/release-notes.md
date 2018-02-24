@@ -22,6 +22,10 @@ Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
 Formed: Thu, 07 Sep 2017 17:49:48 CDT
 ```
 
+## Version 0.11.2 (2018/02/24)
+This is a minor release that updates the build process to reflect the
+new location of binary artifacts.
+
 ## Version 0.11.1 (2017/12/19)
 This is a minor release that addresses a few bugs.
 

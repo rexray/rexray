@@ -1,5 +1,12 @@
 # REX-Ray [![GoDoc](https://godoc.org/github.com/rexray/rexray?status.svg)](http://godoc.org/github.com/rexray/rexray) [![Build Status](http://travis-ci.org/rexray/rexray.svg?branch=master)](https://travis-ci.org/rexray/rexray) [![Go Report Card](http://goreportcard.com/badge/rexray/rexray)](http://goreportcard.com/report/rexray/rexray) [![codecov.io](https://codecov.io/github/rexray/rexray/coverage.svg?branch=master)](https://codecov.io/github/rexray/rexray?branch=master) [ ![Download](http://api.bintray.com/packages/rexray/rexray/stable/images/download.svg) ](https://dl.bintray.com/rexray/rexray/stable/latest/)
 
+---
+
+![info](https://cdn.rawgit.com/akutz/741a53ec8cd1348753556e8bd4d2836a/raw/399cb9e5b39436d119d77a893dd991db0a7b6f9f/info-circle.svg "info-circle") **Note:** _All hosted `unstable` and `staged` binaries older than `0.11.2-rc1` have
+been pruned due to quota restrictions._
+
+---
+
 REX-Ray provides a vendor agnostic storage orchestration engine.  The primary
 design goal is to provide persistent storage for `Docker`, `Kubernetes`, and `Mesos`.
 

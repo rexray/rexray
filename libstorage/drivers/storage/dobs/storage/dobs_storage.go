@@ -11,12 +11,12 @@ import (
 
 	"github.com/digitalocean/godo"
 
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	apiUtils "github.com/thecodeteam/rexray/libstorage/api/utils"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/types"
+	apiUtils "github.com/rexray/rexray/libstorage/api/utils"
 
-	do "github.com/thecodeteam/rexray/libstorage/drivers/storage/dobs"
+	do "github.com/rexray/rexray/libstorage/drivers/storage/dobs"
 )
 
 const (

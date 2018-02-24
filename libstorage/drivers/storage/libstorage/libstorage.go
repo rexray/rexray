@@ -1,8 +1,8 @@
 package libstorage
 
 import (
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/types"
 )
 
 const (

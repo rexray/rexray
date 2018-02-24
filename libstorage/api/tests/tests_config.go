@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	apiserver "github.com/thecodeteam/rexray/libstorage/api/server"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
+	apiserver "github.com/rexray/rexray/libstorage/api/server"
+	"github.com/rexray/rexray/libstorage/api/types"
 )
 
 var (
@@ -30,7 +30,7 @@ var (
 
 	tlsPath = path.Join(
 		os.Getenv("GOPATH"),
-		"/src/github.com/thecodeteam/rexray/libstorage/.tls")
+		"/src/github.com/rexray/rexray/libstorage/.tls")
 
 	suiteServerCrt    = path.Join(tlsPath, "libstorage-server.crt")
 	suiteServerKey    = path.Join(tlsPath, "libstorage-server.key")

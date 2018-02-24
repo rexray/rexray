@@ -115,7 +115,7 @@ func main() {
 	ver.SemVer = ver.String()
 	ver.SemVerRPM = ver.RPM()
 	ver.BuildDate = ver.Timestamp().Format("Mon, 02 Jan 2006 15:04:05 MST")
-	ver.ReleaseDate = ver.Timestamp().Format("06-01-02")
+	ver.ReleaseDate = ver.Timestamp().Format("2006-01-02")
 
 	switch format {
 	case "env":

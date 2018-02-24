@@ -20,9 +20,9 @@ idempotent as well. Not only that, but REX-Ray supports native CSI plug-ins!
 | | [EFS](../storage-providers/aws.md#aws-efs) | ✓ | ✓ | ✓ |
 | | [S3FS](../storage-providers/aws.md#aws-s3fs) | ✓ | ✓ | ✓ |
 | Ceph | [RBD](../storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ | ✓ |
-| Local | [CSI-BlockDevices](https://github.com/thecodeteam/csi-blockdevices) | | ✓ | ✓ |
-| | [CSI-NFS](https://github.com/thecodeteam/csi-nfs) | ✓ | ✓ | ✓ |
-| | [CSI-VFS](https://github.com/thecodeteam/csi-vfs) | | ✓ | ✓ |
+| Local | [CSI-BlockDevices](https://github.com/rexray/csi-blockdevices) | | ✓ | ✓ |
+| | [CSI-NFS](https://github.com/rexray/csi-nfs) | ✓ | ✓ | ✓ |
+| | [CSI-VFS](https://github.com/rexray/csi-vfs) | | ✓ | ✓ |
 | Dell EMC | [Isilon](../storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
 | | [ScaleIO](../storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
 | DigitalOcean | [Block Storage](../storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ | ✓ |
@@ -93,7 +93,7 @@ value.
 A CSI client does not care whether or not REX-Ray's CSI server is
 operating in bridge or native mode. However, for the purposes of the
 examples below, native mode will be used in order to leverage the
-[CSI-VFS](https://github.com/thecodeteam/csi-vfs) plug-in as it's
+[CSI-VFS](https://github.com/rexray/csi-vfs) plug-in as it's
 portable and works on Linux and Darwin.
 
 First, export the `CSI_ENDPOINT` location for both the server and
@@ -104,7 +104,7 @@ $ export CSI_ENDPOINT=csi.sock
 ```
 
 Next, start a REX-Ray CSI server in native mode (the default CSI plug-in
-in native mode is [CSI-VFS](https://github.com/thecodeteam/csi-vfs)):
+in native mode is [CSI-VFS](https://github.com/rexray/csi-vfs)):
 
 ```bash
 $ X_CSI_DRIVER=csi-vfs \
@@ -119,10 +119,10 @@ $ X_CSI_DRIVER=csi-vfs \
 
 Now that a CSI server is running, it's time to access it. To do that a
 CSI client is needed, such as
-[`csc`](https://github.com/thecodeteam/gocsi/tree/master/csc):
+[`csc`](https://github.com/rexray/gocsi/tree/master/csc):
 
 ```bash
-$ go get github.com/thecodeteam/gocsi/csc
+$ go get github.com/rexray/gocsi/csc
 ```
 
 Once installed, the `csc` program can be used to create a volume:

@@ -1,13 +1,13 @@
 site_name: REX-Ray
-site_url: https://github.com/thecodeteam/rexray
-repo_url: https://github.com/thecodeteam/rexray.git
+site_url: https://github.com/rexray/rexray
+repo_url: https://github.com/rexray/rexray.git
 docs_dir: .docs
 site_dir: .site
 theme_dir: .docs-themes/yeti
 site_favicon: favicon.png
 extra_css:
-  - css/thecodeteam.css
-  - css/thecodeteam-font.css
+  - css/rexray.css
+  - css/rexray-font.css
   - css/anchor.css
   - css/hX.css
   - css/first-of-type.css

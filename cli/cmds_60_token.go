@@ -11,7 +11,7 @@ import (
 	jcrypto "github.com/SermoDigital/jose/crypto"
 	"github.com/SermoDigital/jose/jws"
 	"github.com/akutz/gotil"
-	"github.com/thecodeteam/rexray/util"
+	"github.com/rexray/rexray/util"
 	"github.com/spf13/cobra"
 )
 

@@ -5,10 +5,10 @@ package main
 
 import (
 	// Load the agent's modules
-	_ "github.com/thecodeteam/rexray/agent/csi"
+	_ "github.com/rexray/rexray/agent/csi"
 
 	// Load the in-tree CSI plug-ins
-	_ "github.com/thecodeteam/rexray/agent/csi/libstorage"
+	_ "github.com/rexray/rexray/agent/csi/libstorage"
 
 	// Load vendored CSI plug-ins
 	_ "github.com/thecodeteam/csi-blockdevices/provider"

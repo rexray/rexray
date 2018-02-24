@@ -12,10 +12,10 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 
-	apiclient "github.com/thecodeteam/rexray/libstorage/api/client"
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/api/utils"
+	apiclient "github.com/rexray/rexray/libstorage/api/client"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/utils"
 )
 
 var (

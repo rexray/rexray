@@ -9,8 +9,8 @@ import (
 	"github.com/thecodeteam/gocsi/mount"
 	xctx "golang.org/x/net/context"
 
-	apitypes "github.com/thecodeteam/rexray/libstorage/api/types"
-	apiutils "github.com/thecodeteam/rexray/libstorage/api/utils"
+	apitypes "github.com/rexray/rexray/libstorage/api/types"
+	apiutils "github.com/rexray/rexray/libstorage/api/utils"
 )
 
 var (

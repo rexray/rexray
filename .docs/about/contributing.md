@@ -30,7 +30,7 @@ have encountered is fixed in the git master. It is **strongly** recommended
 that you do this within a virtual environment.
 
 ```bash
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- unstable
+curl -sSL https://rexray.io/install | sh -s -- unstable
 ```
 
 ## Installing for Development

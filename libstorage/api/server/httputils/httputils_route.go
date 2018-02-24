@@ -1,7 +1,7 @@
 package httputils
 
 import (
-	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/types"
 )
 
 // route defines an individual API route.

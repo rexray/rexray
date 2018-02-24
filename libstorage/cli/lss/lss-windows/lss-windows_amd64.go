@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/thecodeteam/rexray/libstorage/cli/lss"
+	"github.com/rexray/rexray/libstorage/cli/lss"
 )
 
 func main() {

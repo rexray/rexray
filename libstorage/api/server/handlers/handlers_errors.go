@@ -7,9 +7,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/akutz/goof"
 
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/server/httputils"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/server/httputils"
+	"github.com/rexray/rexray/libstorage/api/types"
 )
 
 // errorHandler is a global HTTP filter for handlling errors

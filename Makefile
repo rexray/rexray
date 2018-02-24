@@ -161,7 +161,7 @@ clean: clean-deb
 ################################################################################
 BINTRAY_FILES := $(foreach r,unstable staged stable,bintray-$r.json)
 ifeq (,$(strip $(BINTRAY_SUBJ)))
-BINTRAY_SUBJ := emccode
+BINTRAY_SUBJ := rexray
 endif
 
 define BINTRAY_GENERATED_JSON

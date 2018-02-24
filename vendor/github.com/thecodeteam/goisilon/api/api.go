@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/thecodeteam/gournal"
+	log "github.com/akutz/gournal"
 
 	"github.com/thecodeteam/goisilon/api/json"
 )

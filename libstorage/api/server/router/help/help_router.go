@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/thecodeteam/rexray/core"
-	"github.com/thecodeteam/rexray/libstorage/api/context"
-	"github.com/thecodeteam/rexray/libstorage/api/server/httputils"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/api/utils"
+	"github.com/rexray/rexray/core"
+	"github.com/rexray/rexray/libstorage/api/context"
+	"github.com/rexray/rexray/libstorage/api/server/httputils"
+	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/utils"
 )
 
 func (r *router) helpInspect(

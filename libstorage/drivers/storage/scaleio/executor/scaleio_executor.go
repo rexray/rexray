@@ -12,9 +12,9 @@ import (
 	"github.com/akutz/goof"
 	"github.com/akutz/gotil"
 
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/drivers/storage/scaleio"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/drivers/storage/scaleio"
 )
 
 // driver is the storage executor for the VFS storage driver.

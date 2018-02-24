@@ -3,9 +3,9 @@ package tasks
 import (
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/thecodeteam/rexray/libstorage/api/registry"
-	"github.com/thecodeteam/rexray/libstorage/api/server/httputils"
-	"github.com/thecodeteam/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/api/registry"
+	"github.com/rexray/rexray/libstorage/api/server/httputils"
+	"github.com/rexray/rexray/libstorage/api/types"
 )
 
 func init() {

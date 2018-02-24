@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thecodeteam/rexray/libstorage/api/types"
-	"github.com/thecodeteam/rexray/libstorage/drivers/storage/efs"
+	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/rexray/rexray/libstorage/drivers/storage/efs"
 )
 
 const (

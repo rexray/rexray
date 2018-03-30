@@ -44,52 +44,65 @@ PROG=rexray
 # command "list" as the first argument after the "-s" flag.
 ##
 
-REPO=$PROG
-BIN_NAME=$PROG
+REPO="${PROG}"
+BIN_NAME="${PROG}"
 
-BINTRAY_URL=https://dl.bintray.com/rexray
-URL=$BINTRAY_URL/$REPO
+BINTRAY_URL="https://dl.bintray.com/rexray"
+URL="${BINTRAY_URL}/${REPO}"
 
 SCRIPT_URL=https://rexray.io/install
-SCRIPT_CMD="curl -sSL $SCRIPT_URL | sh -s"
+SCRIPT_CMD="curl -sSL ${SCRIPT_URL} | sh -s"
 
-if [ "$INSECURE" = "1" ]; then
+if [ "${INSECURE}" = "1" ]; then
     INSECURE=-k
 fi
 
+log() {
+    if [ "${VERBOSE}" = "1" ]; then
+        echo "${@}"
+    fi
+}
+
 sudo() {
-    if [ "$(id -u)" -eq "0" ]; then $@; else $SUDO $@; fi
+    if [ "$(id -u)" -eq "0" ]; then "${@}"; else "${SUDO}" "${@}"; fi
 }
 
 is_coreos() {
     grep DISTRIB_ID /etc/lsb-release 2> /dev/null | grep CoreOS 2> /dev/null
 }
 
+is_amazon_linux() {
+    log "Checking if is Amazon Linux"
+    grep 'Amazon Linux' /etc/system-release
+}
+
 list() {
-    if [ -z "$PKG" ]; then
-        echo "$SCRIPT_CMD -- list unstable"
-        echo "$SCRIPT_CMD -- list staged"
-        echo "$SCRIPT_CMD -- list stable"
+    if [ -z "${PKG}" ]; then
+        echo "${SCRIPT_CMD} -- list unstable"
+        echo "${SCRIPT_CMD} -- list staged"
+        echo "${SCRIPT_CMD} -- list stable"
     else
-        for v in $(curl $INSECURE -sSL "$URL/$PKG/" | \
+        for v in $(curl ${INSECURE} -sSL "${URL}/${PKG}/" | \
             grep -o '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\(-[^+/]\+\)\{0,1\}\(\+[[:digit:]]\+\)\{0,1\}' | \
             sort -uV); do
-            echo "$SCRIPT_CMD -- $PKG $v"
+            echo "${SCRIPT_CMD} -- ${PKG} ${v}"
         done
     fi
 }
 
 install() {
 
+    log "Starting installation"
+
     ARCH=$(uname -m)
 
-    if echo $ARCH | grep -iq armv7; then
+    if echo "${ARCH}" | grep -iq armv7; then
       ARCH=ARMv7
-    elif echo $ARCH | grep -iq armv; then
+    elif echo "${ARCH}" | grep -iq armv; then
       ARCH=ARMv8
     fi
 
-    case $ARCH in
+    case "${ARCH}" in
     ARMv7)
       ;;
     ARMv8)
@@ -97,117 +110,164 @@ install() {
     x86_64)
       ;;
     *)
-      echo "$PROG is not supported on $ARCH platforms"
+      echo "${PROG} is not supported on ${ARCH} platforms"
       exit 1
       ;;
     esac
 
-    if [ "$VERSION" = "latest" ]; then
-        VERSION=$(curl $INSECURE -sSL $URL/$PKG/ | \
+
+    if [ "${VERSION}" = "latest" ]; then
+        VERSION=$(curl ${INSECURE} -sSL "${URL}/${PKG}/" | \
             grep -o '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\(-[^+/]\+\)\{0,1\}\(\+[[:digit:]]\+\)\{0,1\}' | \
             sort -uV | \
             tail -n 1)
     fi
 
     OS=$(uname -s)
-    URL=$URL/$PKG/$VERSION
+    URL="${URL}/${PKG}/${VERSION}"
     SUDO=$(which sudo)
     BIN_DIR=/usr/bin
-    BIN_FILE=$BIN_DIR/$BIN_NAME
-    IS_COREOS=$(is_coreos)
+    BIN_FILE="${BIN_DIR}/${BIN_NAME}"
+    IS_COREOS="$(is_coreos)"
+    IS_AMAZON_LINUX="$(is_amazon_linux)"
+
+    log "Resolved parameters : "
+    log "ARCH: ${ARCH}"
+    log "VERSION: ${VERSION}"
+    log "OS: ${OS}"
+    log "URL: ${URL}"
+    log "SUDO: ${SUDO}"
+    log "BIN_DIR: ${BIN_DIR}"
+    log "BIN_FILE: ${BIN_FILE}"
+    log "IS_COREOS: ${IS_COREOS}"
+    log "IS_AMAZON_LINUX: ${IS_AMAZON_LINUX}"
 
     # how to detect the linux distro was taken from http://bit.ly/1JkNwWx
-    if [ -e "/etc/redhat-release" -o -e "/etc/redhat-version" ]; then
+    if [ -e "/etc/redhat-release" -o -e "/etc/redhat-version" -o -n "${IS_AMAZON_LINUX}" ]; then
+        log "Detected distribution : RedHat family"
 
-        FVERSION=$(echo $VERSION | tr '-' '+')
-        FILE_NAME=$BIN_NAME-$FVERSION-1.$ARCH.rpm
-        URL=$URL/$FILE_NAME
+        FVERSION=$(echo "${VERSION}" | tr '-' '+')
+        FILE_NAME="${BIN_NAME}-${FVERSION}-1.${ARCH}.rpm"
+        URL="${URL}/${FILE_NAME}"
 
-        curl $INSECURE -o $FILE_NAME -sSL $URL
-        if [ "$?" -ne "0" ]; then exit $?; fi
+        log "FVERSION=${FVERSION}"
+        log "FILE_NAME=${FILE_NAME}"
+        log "URL=${URL}"
 
-        sudo rpm -U --quiet $FILE_NAME > /dev/null
-        if [ "$?" -ne "0" ]; then ec=$?; rm -f $FILE_NAME; exit $ec; fi
+        log "Downloading ${FILE_NAME} from ${URL}"
+        curl ${INSECURE} -o "${FILE_NAME}" -sSL "${URL}"
+        if [ "${?}" -ne "0" ]; then exit "${?}"; fi
 
-        rm -f $FILE_NAME
+        log "Installing ${FILE_NAME}"
+        sudo rpm -U --quiet "${FILE_NAME}" > /dev/null
+        if [ "${?}" -ne "0" ]; then ec="${?}"; rm -f "${FILE_NAME}"; exit "${ec}"; fi
 
-    elif [ "$ARCH" = "x86_64" -a -z "$IS_COREOS" ] && \
+        log "Removing ${FILE_NAME}"
+        rm -f "${FILE_NAME}"
+
+    elif [ "${ARCH}" = "x86_64" -a -z "${IS_COREOS}" ] && \
          [ -e "/etc/debian-release" -o \
            -e "/etc/debian-version" -o \
            -e "/etc/lsb-release" ]; then
 
+        log "Detected distribution : Debian family"
+
         ARCH=amd64
 
-        FVERSION=$(echo $VERSION | tr '-' '+')
-        FILE_NAME=${BIN_NAME}_${FVERSION}-1_${ARCH}.deb
-        URL=$URL/$FILE_NAME
+        FVERSION=$(echo ${VERSION} | tr '-' '+')
+        FILE_NAME="${BIN_NAME}_${FVERSION}-1_${ARCH}.deb"
+        URL="${URL}/${FILE_NAME}"
 
-        curl $INSECURE -o $FILE_NAME -sSL $URL
+        log "FVERSION ${FVERSION}"
+        log "FILE_NAME ${FILE_NAME}"
+        log "URL ${URL}"
+
+        log "Downloading ${FILE_NAME} from ${URL}"
+        curl ${INSECURE} -o "${FILE_NAME}" -sSL "${URL}"
         if [ "$?" -ne "0" ]; then exit $?; fi
 
-        sudo dpkg -i $FILE_NAME
-        if [ "$?" -ne "0" ]; then ec=$?; rm -f $FILE_NAME; exit $ec; fi
+        log "Installing ${FILE_NAME}"
+        sudo dpkg -i "${FILE_NAME}"
+        if [ "${?}" -ne "0" ]; then ec="${?}"; rm -f "${FILE_NAME}"; exit "${ec}"; fi
 
-        rm -f $FILE_NAME
+        log "Cleaning up ${FILE_NAME}"
+        rm -f "${FILE_NAME}"
 
     else
-        if [ -n "$IS_COREOS" ]; then
+        log "Detected distribution : Other (unknown yet)"
+        if [ -n "${IS_COREOS}" ]; then
+            log "Distribution is not coreos, using /opt/bin as installation folder"
             BIN_DIR=/opt/bin
-            BIN_FILE=$BIN_DIR/$BIN_NAME
-        elif [ "$OS" = "Darwin" ]; then
+            BIN_FILE="${BIN_DIR}/${BIN_NAME}"
+        elif [ "${OS}" = "Darwin" ]; then
+            log "Detected Darwin based distribution, using /usr/local/bin installation folder"
             BIN_DIR=/usr/local/bin
-            BIN_FILE=$BIN_DIR/$BIN_NAME
+            BIN_FILE="${BIN_DIR}/${BIN_NAME}"
         fi
 
-        if [ -z "$FILE_NAME" ]; then
-            FILE_NAME=$BIN_NAME-$OS-$ARCH-$VERSION.tar.gz
-            URL=$URL/$FILE_NAME
+        if [ -z "${FILE_NAME}" ]; then
+            FILE_NAME="${BIN_NAME}-${OS}-${ARCH}-${VERSION}.tar.gz"
+            URL="${URL}/${FILE_NAME}"
         fi
 
-        sudo mkdir -p $BIN_DIR
-        if [ "$?" -ne "0" ]; then exit $?; fi
+        log "Creating BIN_DIR: ${BIN_DIR}"
+        sudo mkdir -p "${BIN_DIR}"
+        if [ "${?}" -ne "0" ]; then exit "${?}"; fi
 
-        curl $INSECURE -o $FILE_NAME -sSL $URL
-        if [ "$?" -ne "0" ]; then exit $?; fi
+        log "Downloading FILE: ${FILE_NAME} from URL: ${URL}"
+        curl ${INSECURE} -o "${FILE_NAME}" -sSL "${URL}"
+        if [ "${?}" -ne "0" ]; then exit "${?}"; fi
 
-        sudo tar xzf $FILE_NAME -C $BIN_DIR
-        if [ "$?" -ne "0" ]; then ec=$?; rm -f $FILE_NAME; exit $ec; fi
+        log "Extracting ${FILE} into ${BIN_DIR}"
+        sudo tar xzf "${FILE_NAME}" -C "${BIN_DIR}"
+        if [ "${?}" -ne "0" ]; then ec="${?}"; rm -f "${FILE_NAME}"; exit "${ec}"; fi
 
-        rm -f $FILE_NAME
+        log "Removing archive ${FILE_NAME}"
+        rm -f "${FILE_NAME}"
 
-        if [ ! -e "$BIN_FILE" ]; then
-            echo "$BIN_FILE does not exist!"
+        if [ ! -e "${BIN_FILE}" ]; then
+            echo "${BIN_FILE} does not exist!"
             exit 1
         fi
 
-        sudo chmod 0755 $BIN_FILE && \
-            sudo chown 0 $BIN_FILE && \
-            sudo chgrp 0 $BIN_FILE
-        if [ "$?" -ne "0" ]; then exit $?; fi
+        log "Setting permissions on BIN_FILE: ${BIN_FILE}"
+        sudo chmod 0755 "${BIN_FILE}" && \
+            sudo chown 0 "${BIN_FILE}" && \
+            sudo chgrp 0 "${BIN_FILE}"
+        if [ "${?}" -ne "0" ]; then exit ${?}; fi
 
-        sudo $BIN_FILE install
-        if [ "$?" -ne "0" ]; then exit $?; fi
+        log "Launching installation of ${BIN_FILE}"
+        sudo ${BIN_FILE} install
+        if [ "${?}" -ne "0" ]; then exit "${?}"; fi
     fi
 
-    echo
-    echo "$PROG has been installed to $BIN_FILE"
-    echo
-    $BIN_FILE version
-    echo
+    log
+    log "${PROG} has been installed to ${BIN_FILE}"
+    log
+    ${BIN_FILE} version
+    log
 }
 
-CMD=$1
-if [ "$CMD" = "list" ] || [ "$CMD" = "install" ]; then
+CMD="${1}"
+if [ "${CMD}" = "list" ] || [ "${CMD}" = "install" ]; then
     shift
 fi
 
-if [ "$CMD" = "list" ]; then
-    PKG=$1
-    VERSION=$2
+if [ "${CMD}" = "list" ]; then
+    PKG="${1}"
+    VERSION="${2}"
     list
 else
-    PKG=${1:-stable}
-    VERSION=${2:-latest}
-    FILE_NAME=$3
+    PKG="${1:-stable}"
+    VERSION="${2:-latest}"
+    FILE_NAME="${3}"
+
+    log "Got params"
+    log "PKG: ${PKG}"
+    log "VERSION: ${VERSION}"
+    log "FILE_NAME: ${FILE_NAME}"
+    log
+    log "Launching installation..."
+
     install
 fi

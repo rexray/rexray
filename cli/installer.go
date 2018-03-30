@@ -398,7 +398,8 @@ func createInitFile() error {
 	return nil
 }
 
-const initScriptTemplate = `### BEGIN INIT INFO
+const initScriptTemplate = `#!/bin/bash
+### BEGIN INIT INFO
 # Provides:          {{.BinFileName}}
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
@@ -409,27 +410,49 @@ const initScriptTemplate = `### BEGIN INIT INFO
 # Short-Description: Start daemon at boot time
 # Description:       Enable service provided by daemon.
 ### END INIT INFO
+function ttyout() {
+  if [ -w /dev/tty ]; then
+    "${@}" > /dev/tty
+  else
+    "${@}"
+  fi
+}
 
-case "$1" in
+mkdir /var/log/rexray 2>/dev/null
+
+# Redirect all output
+exec &>> /var/log/rexray/initscript.log
+
+echo "Executing \"${1}\" for rexray init script" >> /var/log/messages
+
+case "${1}" in
   start)
-    {{.BinFilePath}} start
+    {{.BinFilePath}} start &
+    ttyout echo "REX-Ray started. See /var/log/rexray/* for all output"
     ;;
   stop)
     {{.BinFilePath}} stop
+    ec="${?}"
+    ttyout echo "REX-Ray stopped"
+    exit "${ec}"
     ;;
   status)
-    {{.BinFilePath}} status
+    ttyout {{.BinFilePath}} status
     ;;
   restart)
-    {{.BinFilePath}} restart
+    {{.BinFilePath}} restart &
+    ttyout echo "REX-Ray restarted"
     ;;
   reload)
-    {{.BinFilePath}} reload
+    {{.BinFilePath}} reload &
+    ttyout echo "REX-Ray reloaded"
     ;;
   force-reload)
-    {{.BinFilePath}} force-reload
+    {{.BinFilePath}} force-reload &
+    ttyout echo "REX-Ray force-reloaded"
     ;;
   *)
     echo "Usage: $0 {start|stop|status|restart|reload|force-reload}"
+    exit 2
 esac
 `

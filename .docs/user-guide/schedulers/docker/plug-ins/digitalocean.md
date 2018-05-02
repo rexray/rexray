@@ -5,9 +5,9 @@ Block Storage
 ---
 
 <a name="digitalocean-block-storage"></a>
-<a name="dobs"></a
+<a name="dobs"></a>
 
-## DO Block Storage>
+## DO Block Storage
 The DOBS plug-in can be installed with the following command:
 
 ```bash

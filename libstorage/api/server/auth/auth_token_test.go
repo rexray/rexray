@@ -12,8 +12,8 @@ import (
 const (
 	jwtAlg       = "HS256"
 	jwtKey       = "key"
-	jwtAkutz     = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2ODg1NTAsImlhdCI6MTQ5MTIzODk1MCwibmJmIjoxNDkxMjM4OTUwLCJzdWIiOiJha3V0eiJ9.3eAA7AQZUGrwA42H64qKbu8QF_AHpSsJSMR0FALnKj8`
-	jwtCduchesne = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjI2OTM1ODQsImlhdCI6MTQ5MTI0Mzk4NCwibmJmIjoxNDkxMjQzOTg0LCJzdWIiOiJjZHVjaGVzbmUifQ.AUOrtC41LQB5FO1NsBE357o_Zsx-lhZ-3I7v_UMsTh4`
+	jwtAkutz     = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjMzMDgyMTkyMDk1LCJpYXQiOjE0OTEyMzg5NTAsIm5iZiI6MTQ5MTIzODk1MCwic3ViIjoiYWt1dHoifQ.DfMArIDErbr6aU2n01UgGz6vGXsAqUJ3UOmtr0SaQzA`
+	jwtCduchesne = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjMzMDgyMTkyMDk1LCJpYXQiOjE0OTEyNDM5ODQsIm5iZiI6MTQ5MTI0Mzk4NCwic3ViIjoiY2R1Y2hlc25lIn0.CKPVnD2eFb9RasLg-i2QZyjt0kgVNYpzpML086LWFDw`
 )
 
 func TestValidateAuthToken_ValidTokSigKey(t *testing.T) {

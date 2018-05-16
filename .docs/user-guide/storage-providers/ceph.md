@@ -14,10 +14,12 @@ cluster.
 ### Requirements
 
 * The `ceph` and `rbd` binary executables must be installed on the host
+* The minimum required version of Ceph *clients* is Infernalis, `v9.2.1`
 * The `rbd` kernel module must be installed
-* A `ceph.conf` file must be present in its default location
-  (`/etc/ceph/ceph.conf`)
-* The ceph `admin` key must be present in `/etc/ceph/`
+* A `<clustername>.conf` file must be present in its default location
+  (`/etc/ceph/`). By default, this is `/etc/ceph/ceph.conf`.
+* The specified user (`admin` by default) must have a keyring present in
+  `/etc/ceph/`.
 
 ### Configuration
 The following is an example with all possible fields configured. For a running
@@ -27,6 +29,7 @@ example see the [Examples](#ceph-rbd-examples) section.
 rbd:
   defaultPool: rbd
   testModule: true
+  cephArgs: --cluster testcluster
 ```
 
 #### Configuration Notes
@@ -38,6 +41,11 @@ rbd:
   indicates whether the libStorage client should test if the `rbd` kernel module
   is loaded, with the side-effect of loading it if is not already loaded. This
   setting should be disabled when the driver is executing inside of a container.
+* The `cephArgs` parameter is optional, and defaults to an empty string. When
+  not empty, the value of `cepArgs` will be exported as the `CEPH_ARGS`
+  environment variable when making calls to the `rados` and `rbd` binaries. The
+  most common use of `cephArgs` is to set `--cluster` for an alternative cluster
+  name, or to set `--id` to use a different CephX user than `admin`.
 
 ### Runtime behavior
 
@@ -51,6 +59,11 @@ for the use of multiple pools by the driver. During a volume create, if the
 volume ID is given as `<pool>.<name>`, a volume named *name* will be created in
 the *pool* storage pool. If no pool is referenced, the `defaultPool` will be
 used.
+
+!!! note
+    When the `rbd.cephArgs` config option is set and contains any of the flags
+    `--id`, `--user`, `-n` or `--name`, support for multiple pools is
+    disabled and only the pool defined by `rbd.defaultPool` will be used.
 
 Both *pool* and *name* may only contain alphanumeric characters, underscores,
 and dashes.
@@ -69,7 +82,9 @@ driver name.
 ### Troubleshooting
 
 * Make sure that `ceph` and `rbd` commands work without extra parameters for
-  ID, key, and monitors. All configuration must come from `ceph.conf`.
+  monitors. All monitor addresses must come from `<clustername>.conf`. Be sure
+  to set/export `CEPH_ARGS` as appropriate based on whether `rbd.cephArgs` is
+  set.
 * Check status of the ceph cluster with `ceph -s` command.
 
 <a name="ceph-rbd-examples"></a>
@@ -89,13 +104,17 @@ libstorage:
         driver: rbd
         rbd:
           defaultPool: rbd
+          cephArgs: --id myuser
 ```
 
 ### Caveats
 * Snapshot and copy functionality is not yet implemented
 * libStorage Server must be running on each host to mount/attach RBD volumes
-* There is not yet options for using non-admin cephx keys or changing RBD create
-  features
+* There is not yet options for changing RBD create features
+* When using `rbd.cephArgs`, the specified user/ID must already be defined and
+  its keyring in place at `/etc/ceph/<clustername>.client.<id>.keyring`, and
+  any given cluster flag must have a config file at
+  `/etc/ceph/<clustername>.conf`.
 * Volume pre-emption is not supported. Ceph does not provide a method to
   forcefully detach a volume from a remote host -- only a host can attach and
   detach volumes from itself.

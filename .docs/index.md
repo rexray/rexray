@@ -159,7 +159,7 @@ REX-Ray currently supports the following container platforms:
 
 Platform            | Use
 ------------------|-------------------------
-Docker            | [Volume Driver Plugin](./user-guide/schedulers/dockermd)
+Docker            | [Volume Driver Plugin](./user-guide/schedulers/docker.md)
 Mesos             | [Volume Driver Isolator module](./user-guide/schedulers/mesos.md)
 Mesos + Docker    | [Volume Driver Plugin](./user-guide/schedulers/mesos.md)
 

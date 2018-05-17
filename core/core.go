@@ -19,7 +19,7 @@ import (
 var (
 
 	// DockerLegacyMode is true if Docker legacy mode is enabled.
-	DockerLegacyMode, _ = strconv.ParseBool(os.Getenv("DOCKER_LEGACY"))
+	DockerLegacyMode bool
 
 	// Arch is the uname OS-Arch string.
 	Arch = fmt.Sprintf(
@@ -49,6 +49,14 @@ var (
 	// to a truthy value.
 	Debug, _ = strconv.ParseBool(os.Getenv("REXRAY_DEBUG"))
 )
+
+func init() {
+	if v, ok := os.LookupEnv("DOCKER_LEGACY"); ok {
+		DockerLegacyMode, _ = strconv.ParseBool(v)
+	} else {
+		DockerLegacyMode = true
+	}
+}
 
 // SignalHandlerFunc is a function that can be registered with
 // `core.RegisterSignalHandler` to receive a callback when the process receives

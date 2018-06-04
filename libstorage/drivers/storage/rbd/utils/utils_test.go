@@ -2,6 +2,7 @@ package utils
 
 import (
 	"net"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -117,5 +118,25 @@ func TestArgsClient(t *testing.T) {
 					tt.args, b, tt.present)
 			}
 		})
+	}
+}
+
+func TestRBDMapParser(t *testing.T) {
+	oldCephJSON := []byte("{\"0\":{\"pool\":\"luminpool\",\"name\":\"fooimg\",\"snap\":\"-\",\"device\":\"/dev/rbd0\"},\"1\":{\"pool\":\"luminpool\",\"name\":\"barimg\",\"snap\":\"-\",\"device\":\"/dev/rbd1\"}}")
+	v13CephJSON := []byte("[{\"id\":\"0\",\"pool\":\"luminpool\",\"name\":\"fooimg\",\"snap\":\"-\",\"device\":\"/dev/rbd0\"},{\"id\":\"1\",\"pool\":\"luminpool\",\"name\":\"barimg\",\"snap\":\"-\",\"device\":\"/dev/rbd1\"}]")
+
+	oldval, olderr := parseMappedRBDs(oldCephJSON)
+	v13val, v13err := parseMappedRBDs(v13CephJSON)
+
+	if olderr != nil {
+		t.Error("Parsing Ceph output from version < 13 failed")
+	}
+
+	if v13err != nil {
+		t.Error("Parsing Ceph output from version >= 13 failed")
+	}
+
+	if !reflect.DeepEqual(oldval, v13val) {
+		t.Errorf("Parser failed to yield identical output for \n%s and \n%s", oldval, v13val)
 	}
 }

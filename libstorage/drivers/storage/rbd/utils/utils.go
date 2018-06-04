@@ -36,7 +36,15 @@ var (
 	ctxConfigKey = interface{}("rbd.config")
 )
 
+type preMimicRbdMappedEntry struct {
+	Device string `json:"device"`
+	Name   string `json:"name"`
+	Pool   string `json:"pool"`
+	Snap   string `json:"snap"`
+}
+
 type rbdMappedEntry struct {
+	ID     string `json:"id"`
 	Device string `json:"device"`
 	Name   string `json:"name"`
 	Pool   string `json:"pool"`
@@ -161,12 +169,10 @@ func GetMappedRBDs(ctx types.Context) (map[string]string, error) {
 	}
 
 	devMap := map[string]string{}
-	rbdMap := map[string]*rbdMappedEntry{}
+	rbdMap, parseErr := parseMappedRBDs(out)
 
-	err = json.Unmarshal(out, &rbdMap)
-	if err != nil {
-		return nil, goof.WithError(
-			"unable to parse rbd showmapped", err)
+	if parseErr != nil {
+		return nil, parseErr
 	}
 
 	for _, mapped := range rbdMap {
@@ -175,6 +181,33 @@ func GetMappedRBDs(ctx types.Context) (map[string]string, error) {
 	}
 
 	return devMap, nil
+}
+
+//parseMappedRBDs is a two-stage parse because Ceph v13 changed JSON format
+func parseMappedRBDs(output []byte) ([]*rbdMappedEntry, error) {
+	rbdMap := []*rbdMappedEntry{}
+	rbdMapPreMimic := map[string]*preMimicRbdMappedEntry{}
+
+	err := json.Unmarshal(output, &rbdMapPreMimic)
+	if err != nil {
+
+		err2 := json.Unmarshal(output, &rbdMap)
+		if err2 != nil {
+			return nil, goof.WithError(
+				"unable to parse rbd showmapped", err2)
+		}
+
+	} else {
+		for index, entry := range rbdMapPreMimic {
+			rbdMap = append(rbdMap, &rbdMappedEntry{
+				ID: index, 
+				Device: entry.Device, 
+				Name: entry.Name, 
+				Pool: entry.Pool, 
+				Snap: entry.Snap})
+		}
+	}
+	return rbdMap, nil
 }
 
 //RBDCreate creates a new RBD volume on the cluster

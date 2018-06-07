@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"hash"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -103,7 +104,8 @@ func (d *driver) Init(context types.Context, config gofig.Config) error {
 	}
 
 	useLargeDeviceRange := d.config.GetBool(ebs.ConfigUseLargeDeviceRange)
-	d.deviceRange = ebsUtils.GetDeviceRange(useLargeDeviceRange)
+	d.deviceRange = ebsUtils.GetDeviceRange(
+		useLargeDeviceRange, d.InstanceType(context))
 
 	log.Info("storage driver initialized, using large device range: ",
 		useLargeDeviceRange)
@@ -214,6 +216,15 @@ func mustSession(ctx types.Context) *awsec2.EC2 {
 
 func mustInstanceIDID(ctx types.Context) *string {
 	return &context.MustInstanceID(ctx).ID
+}
+
+func (d *driver) InstanceType(ctx types.Context) string {
+	if iid, ok := context.InstanceID(ctx); ok {
+		if v, ok := iid.Fields["instanceType"]; ok && v != "" {
+			return v
+		}
+	}
+	return "default"
 }
 
 func (d *driver) mustRegion(ctx types.Context) *string {
@@ -959,7 +970,20 @@ func (d *driver) toTypesVolume(
 						d.deviceRange.NextDeviceInfo.Prefix, 1)
 					// Keep device name if it is found in local devices
 					if _, ok := ld.DeviceMap[deviceName]; !ok {
-						deviceName = ""
+						device, err := filepath.EvalSymlinks(deviceName)
+						if err != nil {
+							log.Error(err)
+							deviceName = ""
+						} else {
+							log.Info(fmt.Sprintf("nvme: %s => %s", deviceName, device))
+							if _, ok2 := ld.DeviceMap[device]; !ok2 {
+								deviceName = ""
+							} else {
+								log.Debug("Detected NVME deviceName: ", deviceName)
+							}
+						}
+					} else {
+						log.Debug("Detected deviceName: ", deviceName)
 					}
 				}
 				attachmentSD := &types.VolumeAttachment{

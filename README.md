@@ -37,23 +37,20 @@ control plane for multiple storage platforms/
 ### Storage Provider Support
 The following storage providers and platforms are supported by REX-Ray.
 
-| Provider              | Storage Platform  | <center>[Docker](https://docs.docker.com/engine/extend/plugins_volume/)</center> | <center>[CSI](https://github.com/container-storage-interface/spec)</center> | <center>Containerized</center> |
-|-----------------------|----------------------|:---:|:---:|:---:|
-| Amazon EC2 | [EBS](.docs/user-guide/storage-providers/aws.md#aws-ebs) | ✓ | ✓ | ✓  |
-| | [EFS](.docs/user-guide/storage-providers/aws.md#aws-efs) | ✓ | ✓ | ✓ |
-| | [S3FS](.docs/user-guide/storage-providers/aws.md#aws-s3fs) | ✓ | ✓ | ✓ |
-| Ceph | [RBD](.docs/user-guide/storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ | ✓ |
-| Local | [CSI-BlockDevices](https://github.com/rexray/csi-blockdevices) | | ✓ | ✓ |
-| | [CSI-NFS](https://github.com/rexray/csi-nfs) | ✓ | ✓ | ✓ |
-| | [CSI-VFS](https://github.com/rexray/csi-vfs) | | ✓ | ✓ |
-| Dell EMC | [Isilon](.docs/user-guide/storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ | ✓ |
-| | [ScaleIO](.docs/user-guide/storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ | ✓ |
-| DigitalOcean | [Block Storage](.docs/user-guide/storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ | ✓ |
-| FittedCloud | [EBS Optimizer](.docs/user-guide/storage-providers/fittedcloud.md#ebs-optimizer) | ✓ | ✓ | |
-| Google | [GCE Persistent Disk](.docs/user-guide/storage-providers/google.md#gce-persistent-disk) | ✓ | ✓ | ✓ |
-| Microsoft | [Azure Unmanaged Disk](.docs/user-guide/storage-providers/microsoft.md#azure-ud) | ✓ | ✓ | ✓ |
-| OpenStack | [Cinder](.docs/user-guide/storage-providers/openstack.md#cinder) | ✓ | ✓ | ✓ |
-| VirtualBox | [Virtual Media](.docs/user-guide/storage-providers/virtualbox.md#virtualbox) | ✓ | ✓ | |
+| Provider              | Storage Platform  | <center>[Docker](https://docs.docker.com/engine/extend/plugins_volume/)</center> | <center>Containerized</center> |
+|-----------------------|----------------------|:---:|:---:|
+| Amazon EC2 | [EBS](.docs/user-guide/storage-providers/aws.md#aws-ebs) | ✓ | ✓ |
+| | [EFS](.docs/user-guide/storage-providers/aws.md#aws-efs) | ✓ | ✓ |
+| | [S3FS](.docs/user-guide/storage-providers/aws.md#aws-s3fs) | ✓ | ✓ |
+| Ceph | [RBD](.docs/user-guide/storage-providers/ceph.md#ceph-rbd) | ✓ | ✓ |
+| Dell EMC | [Isilon](.docs/user-guide/storage-providers/dellemc.md#dell-emc-isilon) | ✓ | ✓ |
+| | [ScaleIO](.docs/user-guide/storage-providers/dellemc.md#dell-emc-scaleio) | ✓ | ✓ |
+| DigitalOcean | [Block Storage](.docs/user-guide/storage-providers/digitalocean.md#do-block-storage) | ✓ | ✓ |
+| FittedCloud | [EBS Optimizer](.docs/user-guide/storage-providers/fittedcloud.md#ebs-optimizer) | ✓ | |
+| Google | [GCE Persistent Disk](.docs/user-guide/storage-providers/google.md#gce-persistent-disk) | ✓ | ✓ |
+| Microsoft | [Azure Unmanaged Disk](.docs/user-guide/storage-providers/microsoft.md#azure-ud) | ✓ | ✓ |
+| OpenStack | [Cinder](.docs/user-guide/storage-providers/openstack.md#cinder) | ✓ | ✓ |
+| VirtualBox | [Virtual Media](.docs/user-guide/storage-providers/virtualbox.md#virtualbox) | ✓ | |
 
 ### Operating System Support
 The following operating systems are supported by REX-Ray:

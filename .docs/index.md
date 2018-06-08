@@ -3,6 +3,13 @@
 Openly serious about storage
 
 ---
+The long-term goal of the REX-Ray project is to enable collaboration between
+organizations focused on creating enterprise-grade storage plugins for the
+Container Storage Interface (CSI). As a rapidly changing specification, CSI
+support within REX-Ray will be planned when CSI reaches version 1.0, currently
+projected for a late 2018 release. In the interim, there remains active
+engagement with the project to support the community.
+
 REX-Ray is an open source, storage management solution designed to support
 container runtimes such as Docker and Mesos. REX-Ray enables stateful
 applications, such as databases, to persist and maintain its data after the life

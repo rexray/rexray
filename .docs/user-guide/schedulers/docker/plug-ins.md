@@ -10,7 +10,6 @@ Plug it in, plug it in...
 | | [EFS](./plug-ins/aws.md#aws-efs) |
 | | [S3FS](./plug-ins/aws.md#aws-s3fs) |
 | Ceph | [RBD](./plug-ins/ceph.md#ceph-rbd) |
-| Local | [CSI-NFS](./plug-ins/csi-nfs.md) |
 | Dell EMC | [Isilon](./plug-ins/dellemc.md#dell-emc-isilon) |
 | | [ScaleIO](./plug-ins/dellemc.md#dell-emc-scaleio) |
 | DigitalOcean | [Block Storage](./plug-ins/digitalocean.md#do-block-storage) |

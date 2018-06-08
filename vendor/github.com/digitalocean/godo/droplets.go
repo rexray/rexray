@@ -1,11 +1,11 @@
 package godo
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/digitalocean/godo/context"
+	"net/http"
 )
 
 const dropletBasePath = "v2/droplets"
@@ -275,7 +275,7 @@ func (n NetworkV6) String() string {
 
 // Performs a list request given a path.
 func (s *DropletsServiceOp) list(ctx context.Context, path string) ([]Droplet, *Response, error) {
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -322,7 +322,7 @@ func (s *DropletsServiceOp) Get(ctx context.Context, dropletID int) (*Droplet, *
 
 	path := fmt.Sprintf("%s/%d", dropletBasePath, dropletID)
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -344,7 +344,7 @@ func (s *DropletsServiceOp) Create(ctx context.Context, createRequest *DropletCr
 
 	path := dropletBasePath
 
-	req, err := s.client.NewRequest(ctx, "POST", path, createRequest)
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, createRequest)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -369,7 +369,7 @@ func (s *DropletsServiceOp) CreateMultiple(ctx context.Context, createRequest *D
 
 	path := dropletBasePath
 
-	req, err := s.client.NewRequest(ctx, "POST", path, createRequest)
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, createRequest)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -388,7 +388,7 @@ func (s *DropletsServiceOp) CreateMultiple(ctx context.Context, createRequest *D
 
 // Performs a delete request given a path
 func (s *DropletsServiceOp) delete(ctx context.Context, path string) (*Response, error) {
-	req, err := s.client.NewRequest(ctx, "DELETE", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +432,7 @@ func (s *DropletsServiceOp) Kernels(ctx context.Context, dropletID int, opt *Lis
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -458,7 +458,7 @@ func (s *DropletsServiceOp) Actions(ctx context.Context, dropletID int, opt *Lis
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -487,7 +487,7 @@ func (s *DropletsServiceOp) Backups(ctx context.Context, dropletID int, opt *Lis
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -516,7 +516,7 @@ func (s *DropletsServiceOp) Snapshots(ctx context.Context, dropletID int, opt *L
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -541,7 +541,7 @@ func (s *DropletsServiceOp) Neighbors(ctx context.Context, dropletID int) ([]Dro
 
 	path := fmt.Sprintf("%s/%d/neighbors", dropletBasePath, dropletID)
 
-	req, err := s.client.NewRequest(ctx, "GET", path, nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}

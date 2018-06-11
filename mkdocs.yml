@@ -34,7 +34,6 @@ pages:
         - OpenStack: user-guide/storage-providers/openstack.md
         - VirtualBox: user-guide/storage-providers/virtualbox.md
       - Servers:
-        - CSI: user-guide/servers/csi.md
         - libStorage: user-guide/servers/libstorage.md
       - Schedulers:
         - Overview: user-guide/schedulers.md
@@ -44,7 +43,6 @@ pages:
             - Getting Started: user-guide/schedulers/docker/plug-ins.md
             - Amazon Web Services (AWS): user-guide/schedulers/docker/plug-ins/aws.md
             - Ceph: user-guide/schedulers/docker/plug-ins/ceph.md
-            - CSI-NFS: user-guide/schedulers/docker/plug-ins/csi-nfs.md
             - Dell EMC: user-guide/schedulers/docker/plug-ins/dellemc.md
             - DigitalOcean: user-guide/schedulers/docker/plug-ins/digitalocean.md
             - Google: user-guide/schedulers/docker/plug-ins/google.md

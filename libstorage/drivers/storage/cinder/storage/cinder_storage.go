@@ -7,6 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"fmt"
+	"path/filepath"
+	"os"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
@@ -301,7 +304,7 @@ func translateVolumeV1(
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID:   attachment["volume_id"].(string),
 				InstanceID: &types.InstanceID{ID: attachment["server_id"].(string), Driver: cinder.Name},
-				DeviceName: attachment["device"].(string),
+				DeviceName: resolveDeviceName(attachment["volume_id"].(string), attachment["device"].(string)),
 				Status:     "",
 			}
 			attachments = append(attachments, libstorageAttachment)
@@ -330,7 +333,7 @@ func translateVolume(
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID:   attachment.VolumeID,
 				InstanceID: &types.InstanceID{ID: attachment.ServerID, Driver: cinder.Name},
-				DeviceName: attachment.Device,
+				DeviceName: resolveDeviceName(attachment.VolumeID, attachment.Device),
 				Status:     "",
 			}
 			attachments = append(attachments, libstorageAttachment)
@@ -672,7 +675,26 @@ func (d *driver) VolumeAttach(
 			fields, "error waiting for volume to attach", err)
 	}
 
-	return volume, volumeAttach.Device, nil
+	return volume, resolveDeviceName(volumeID, volumeAttach.Device), nil
+}
+
+func getDeviceLink(
+	volumeID string) string {
+
+	return fmt.Sprintf("/dev/disk/by-id/virtio-%s", volumeID[:20])
+}
+
+func resolveDeviceName(
+	volumeID string,
+	deviceName string) string {
+
+	attachedDeviceLink := getDeviceLink(volumeID)
+	attachedDeviceName, err := filepath.EvalSymlinks(attachedDeviceLink)
+	if err != nil {
+		return deviceName
+	}
+
+	return attachedDeviceName
 }
 
 func (d *driver) VolumeDetach(
@@ -766,6 +788,9 @@ func (d *driver) waitVolumeAttachStatus(
 	if volumeID == "" {
 		return nil, goof.WithFields(fields, "volumeId is required")
 	}
+
+	attachedDeviceLink := getDeviceLink(volumeID)
+
 	begin := time.Now()
 	for time.Now().Sub(begin) < timeout {
 		volume, err := d.VolumeInspect(
@@ -776,7 +801,7 @@ func (d *driver) waitVolumeAttachStatus(
 		}
 
 		if attachmentNeeded {
-			if len(volume.Attachments) > 0 {
+			if _, err := os.Stat(attachedDeviceLink); len(volume.Attachments) > 0 && err == nil {
 				return volume, nil
 			}
 		} else {

@@ -15,6 +15,7 @@ import (
 	"github.com/akutz/goof"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/rexray/rexray/libstorage/api/context"
 	"github.com/rexray/rexray/libstorage/api/registry"
 	"github.com/rexray/rexray/libstorage/api/types"
 	"github.com/rexray/rexray/libstorage/drivers/storage/ebs"
@@ -49,7 +50,8 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	// initialize device range config
 	useLargeDeviceRange := d.config.GetBool(ebs.ConfigUseLargeDeviceRange)
 	log.Debug("executor using large device range: ", useLargeDeviceRange)
-	d.deviceRange = ebsUtils.GetDeviceRange(useLargeDeviceRange)
+	d.deviceRange = ebsUtils.GetDeviceRange(
+		useLargeDeviceRange, d.InstanceType(ctx))
 	return nil
 }
 
@@ -72,6 +74,15 @@ func (d *driver) InstanceID(
 	ctx types.Context,
 	opts types.Store) (*types.InstanceID, error) {
 	return ebsUtils.InstanceID(ctx, d.Name())
+}
+
+func (d *driver) InstanceType(ctx types.Context) string {
+	if iid, ok := context.InstanceID(ctx); ok {
+		if v, ok := iid.Fields["instanceType"]; ok && v != "" {
+			return v
+		}
+	}
+	return "default"
 }
 
 var errNoAvaiDevice = goof.New("no available device")
@@ -170,6 +181,7 @@ func (d *driver) LocalDevices(
 		}
 		devPath := path.Join("/dev/", devName)
 		devMap[devPath] = devPath
+		log.Debug("LocalDevice: ", devPath)
 	}
 
 	ld := &types.LocalDevices{Driver: d.Name()}

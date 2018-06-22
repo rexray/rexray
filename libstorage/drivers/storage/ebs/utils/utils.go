@@ -44,6 +44,7 @@ type instanceIdentityDoc struct {
 	InstanceID       string `json:"instanceId,omitempty"`
 	Region           string `json:"region,omitempty"`
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	InstanceType     string `json:"instanceType,omitempty"`
 }
 
 // InstanceID returns the instance ID for the local host.
@@ -74,6 +75,7 @@ func InstanceID(
 		Fields: map[string]string{
 			ebs.InstanceIDFieldRegion:           iid.Region,
 			ebs.InstanceIDFieldAvailabilityZone: iid.AvailabilityZone,
+			"instanceType":                      iid.InstanceType,
 		},
 	}, nil
 }

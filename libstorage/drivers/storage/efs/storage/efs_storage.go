@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsefs "github.com/aws/aws-sdk-go/service/efs"
+    awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 
 	"github.com/rexray/rexray/libstorage/api/context"
 	"github.com/rexray/rexray/libstorage/api/registry"
@@ -37,6 +38,8 @@ type driver struct {
 	region              *string
 	endpoint            *string
 	endpointFormat      string
+	ec2Endpoint         *string
+	ec2EndpointFormat   string
 	maxRetries          *int
 	tag                 string
 	accessKey           string
@@ -88,6 +91,14 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	}
 	d.endpointFormat = d.getEndpointFormat()
 	fields["endpointFormat"] = d.endpointFormat
+
+	if v := d.getEC2Endpoint(); v != "" {
+		d.ec2Endpoint = &v
+		fields["ec2Endpoint"] = v
+	}
+	d.ec2EndpointFormat = d.getEC2EndpointFormat()
+	fields["ec2EndpointFormat"] = d.ec2EndpointFormat
+
 	maxRetries := d.getMaxRetries()
 	d.maxRetries = &maxRetries
 	fields["maxRetries"] = maxRetries
@@ -118,7 +129,7 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 const cacheKeyC = "cacheKey"
 
 var (
-	sessions  = map[string]*awsefs.EFS{}
+	sessions  = map[string]*connections{}
 	sessionsL = &sync.Mutex{}
 )
 
@@ -134,23 +145,21 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	defer sessionsL.Unlock()
 
 	var (
-		endpoint *string
-		ckey     string
-		hkey     = md5.New()
-		akey     = d.accessKey
-		region   = d.mustRegion(ctx)
+		endpoint    *string
+		ec2Endpoint *string
+		ckey        string
+		hkey        = md5.New()
+		akey        = d.accessKey
+		region      = d.mustRegion(ctx)
 	)
 
-	if region != nil && d.endpointFormat != "" {
-		szEndpoint := fmt.Sprintf(d.endpointFormat, *region)
-		endpoint = &szEndpoint
-	} else {
-		endpoint = d.endpoint
-	}
+	endpoint = ensureEndpoint(d.endpoint, d.endpointFormat, d.region)
+	ec2Endpoint = ensureEndpoint(d.ec2Endpoint, d.ec2EndpointFormat, d.region)
 
 	if !d.disableSessionCache {
 		writeHkey(hkey, region)
 		writeHkey(hkey, endpoint)
+		writeHkey(hkey, ec2Endpoint)
 		writeHkey(hkey, &akey)
 		ckey = fmt.Sprintf("%x", hkey.Sum(nil))
 
@@ -183,7 +192,10 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 	}
 
 	ctx.WithFields(fields).Debug("efs service connection attempt")
-	sess := session.New()
+	sess, err := session.NewSession()
+	if err != nil {
+		return nil, err
+	}
 
 	var (
 		awsLogger   = &awsLogger{ctx: ctx}
@@ -200,9 +212,8 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		}
 	}
 
-	svc := awsefs.New(sess, &aws.Config{
+	awsConfig := &aws.Config{
 		Region:     region,
-		Endpoint:   endpoint,
 		MaxRetries: d.maxRetries,
 		Credentials: credentials.NewChainCredentials(
 			[]credentials.Provider{
@@ -221,16 +232,26 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 		),
 		Logger:   awsLogger,
 		LogLevel: aws.LogLevel(awsLogLevel),
-	})
+	}
+
+	connections := &connections{
+		efssvc: awsefs.New(sess, awsConfig.WithEndpoint(*endpoint)),
+		ec2svc: awsec2.New(sess, awsConfig.WithEndpoint(*ec2Endpoint)),
+	}
 
 	ctx.WithFields(fields).Info("efs service connection created")
 
 	if !d.disableSessionCache {
-		sessions[ckey] = svc
+		sessions[ckey] = connections
 		ctx.WithFields(fields).Info("efs service connection cached")
 	}
 
-	return svc, nil
+	return connections, nil
+}
+
+type connections struct {
+	efssvc   *awsefs.EFS
+	ec2svc   *awsec2.EC2
 }
 
 type awsLogger struct {
@@ -248,7 +269,11 @@ func (a *awsLogger) Log(args ...interface{}) {
 }
 
 func mustSession(ctx types.Context) *awsefs.EFS {
-	return context.MustSession(ctx).(*awsefs.EFS)
+	return context.MustSession(ctx).(*connections).efssvc
+}
+
+func mustSessionEC2(ctx types.Context) *awsec2.EC2 {
+	return context.MustSession(ctx).(*connections).ec2svc
 }
 
 func mustInstanceIDID(ctx types.Context) *string {
@@ -695,7 +720,7 @@ func (d *driver) VolumeAttach(
 
 		request := &awsefs.CreateMountTargetInput{
 			FileSystemId:   aws.String(vol.ID),
-			SubnetId:       aws.String(iid.ID),
+			SubnetId:       aws.String(iid.Fields[efs.InstanceIDFieldSubnetID]),
 			SecurityGroups: aws.StringSlice(secGrpIDs),
 		}
 		// TODO(mhrabovcin): Should we block here until MountTarget is in
@@ -858,12 +883,27 @@ func (d *driver) getVolumeAttachments(
 		}
 	}
 
+	iid := context.MustInstanceID(ctx)
+
 	var atts []*types.VolumeAttachment
 	for _, mountTarget := range resp.MountTargets {
 		var (
 			dev    string
 			status string
 		)
+
+		mtavzone, err := getAvailabilityZone(ctx, mountTarget)
+		if err != nil {
+			return nil, err
+		}
+
+		// The mount target must live in the same availability zone as the instance
+		// to be reachable by the instance. All mount targets in other availability zones
+		// are ignored.
+		if mtavzone != iid.Fields[efs.InstanceIDFieldAvailabilityZone] {
+			continue
+		}
+
 		if ldOK {
 			// TODO(kasisnu): Check lifecycle state and build the path better
 			dev = *mountTarget.IpAddress + ":" + "/"
@@ -877,10 +917,7 @@ func (d *driver) getVolumeAttachments(
 		}
 		attachmentSD := &types.VolumeAttachment{
 			VolumeID: *mountTarget.FileSystemId,
-			InstanceID: &types.InstanceID{
-				ID:     *mountTarget.SubnetId,
-				Driver: d.Name(),
-			},
+			InstanceID: iid,
 			DeviceName: dev,
 			Status:     status,
 		}
@@ -888,6 +925,45 @@ func (d *driver) getVolumeAttachments(
 	}
 
 	return atts, nil
+}
+
+func getAvailabilityZone(
+	ctx types.Context,
+	mountTarget *awsefs.MountTargetDescription) (string, error) {
+
+	// It is not possible to request the availability zone of a mount target directly through
+	// the aws efs api. A workaround is to request the availability zone of the subnet of the
+	// mount target as a mount target always lives in 1 availability zone and has 1 subnet.
+
+	input := &awsec2.DescribeSubnetsInput{
+		Filters:    []*awsec2.Filter{{Name: aws.String("subnet-id"), Values: []*string{aws.String(*mountTarget.SubnetId)}}},
+		SubnetIds:  []*string{mountTarget.SubnetId},
+	}
+
+	result, err := mustSessionEC2(ctx).DescribeSubnets(input)
+	if err != nil {
+		ctx.WithField("subnetId", *mountTarget.SubnetId).
+			WithField("mountTargetId", *mountTarget.MountTargetId).
+			Debugln("Failed to get availability zone of mount target using subnetid")
+		return "", err
+	}
+	if len(result.Subnets) != 1 {
+		return "", goof.WithFields(map[string]interface{}{
+			"subnetId": *mountTarget.SubnetId,
+			"mountTargetId": *mountTarget.MountTargetId,
+		},
+		"mounttarget's subnet details could not be found. No results")
+	}
+	return *result.Subnets[0].AvailabilityZone, nil
+}
+
+func ensureEndpoint(endpoint *string, endpointFormat string, region *string) *string {
+	if region != nil && endpointFormat != "" {
+		p := fmt.Sprintf(endpointFormat, *region)
+		return &p
+	} else {
+		return endpoint
+	}
 }
 
 // Retrieve config arguments
@@ -909,6 +985,14 @@ func (d *driver) getEndpoint() string {
 
 func (d *driver) getEndpointFormat() string {
 	return d.config.GetString(efs.ConfigEFSEndpointFormat)
+}
+
+func (d *driver) getEC2Endpoint() string {
+	return d.config.GetString(efs.ConfigEC2Endpoint)
+}
+
+func (d *driver) getEC2EndpointFormat() string {
+	return d.config.GetString(efs.ConfigEC2EndpointFormat)
 }
 
 func (d *driver) getMaxRetries() int {

@@ -89,6 +89,7 @@ func InstanceID(ctx types.Context) (*types.InstanceID, error) {
 	iidFields := map[string]string{
 		efs.InstanceIDFieldRegion:           iid.Region,
 		efs.InstanceIDFieldAvailabilityZone: iid.AvailabilityZone,
+		efs.InstanceIDFieldSubnetID:         subnetID,
 	}
 
 	if len(secGroups) > 0 {
@@ -97,7 +98,7 @@ func InstanceID(ctx types.Context) (*types.InstanceID, error) {
 	}
 
 	return &types.InstanceID{
-		ID:     subnetID,
+		ID:     iid.InstanceID,
 		Driver: efs.Name,
 		Fields: iidFields,
 	}, nil

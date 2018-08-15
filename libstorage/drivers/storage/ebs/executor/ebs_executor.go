@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path"
 	"regexp"
 	"strings"
@@ -165,11 +166,34 @@ func (d *driver) LocalDevices(
 			continue
 		}
 		devName := fields[3]
+
+		devPath := path.Join("/dev/", devName)
+		devAlias := devPath
+
+		// NVMe support
+		if strings.Contains(devName, "nvme") {
+			// find the EBS device name that we *think* we will mount the device as (nvme ignore this)
+			if out, err := exec.Command("/usr/sbin/nvme", "id-ctrl", "--raw-binary", devPath).Output(); err == nil {
+				// read the binary output slice and trim it
+				dev := strings.TrimSpace(string(out[3072:3104]))
+				// if the result contains a /dev/ then we got a match
+				if strings.Contains(dev, "/dev/") {
+					log.Debugf("Found symlink for '%s' -> '%s'", devName, dev)
+					// if the alias / udev path exist, its a match
+					if _, err := os.Stat(dev); !os.IsNotExist(err) {
+						devName = strings.TrimLeft(dev, "/dev/")
+						devPath = dev
+					}
+				}
+			}
+		}
+
 		if !ns.DeviceRE.MatchString(devName) {
+			log.Warnf("Device '%s' do not match '%s'", devName, ns.DeviceRE)
 			continue
 		}
-		devPath := path.Join("/dev/", devName)
-		devMap[devPath] = devPath
+
+		devMap[devPath] = devAlias
 	}
 
 	ld := &types.LocalDevices{Driver: d.Name()}

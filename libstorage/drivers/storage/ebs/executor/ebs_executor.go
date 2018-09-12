@@ -14,7 +14,6 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/rexray/rexray/libstorage/api/registry"
 	"github.com/rexray/rexray/libstorage/api/types"
@@ -27,6 +26,7 @@ type driver struct {
 	name        string
 	config      gofig.Config
 	deviceRange *ebsUtils.DeviceRange
+	nvmeBinPath string
 }
 
 func init() {
@@ -49,8 +49,10 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 	d.config = config
 	// initialize device range config
 	useLargeDeviceRange := d.config.GetBool(ebs.ConfigUseLargeDeviceRange)
-	log.Debug("executor using large device range: ", useLargeDeviceRange)
+	ctx.WithValue("deviceRange", useLargeDeviceRange).Debug(
+		"executor using large device range")
 	d.deviceRange = ebsUtils.GetDeviceRange(useLargeDeviceRange)
+	d.nvmeBinPath = d.config.GetString(ebs.ConfigNvmeBinPath)
 	return nil
 }
 
@@ -145,6 +147,19 @@ func (d *driver) NextDevice(
 
 const procPartitions = "/proc/partitions"
 
+// fileExists returns a flag indicating whether or not a file
+// path exists.
+func fileExists(filePath string) (bool, error) {
+	_, err := os.Stat(filePath)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
 // Retrieve device paths currently attached and/or mounted
 func (d *driver) LocalDevices(
 	ctx types.Context,
@@ -172,15 +187,30 @@ func (d *driver) LocalDevices(
 
 		// NVMe support
 		if strings.Contains(devName, "nvme") {
-			// find the EBS device name that we *think* we will mount the device as (nvme ignore this)
-			if out, err := exec.Command("/usr/sbin/nvme", "id-ctrl", "--raw-binary", devPath).Output(); err == nil {
+			// find the EBS device name that we *think* we will mount
+			// the device as (nvme ignore this)
+			if out, err := exec.Command(
+				d.nvmeBinPath,
+				"id-ctrl",
+				"--raw-binary", devPath).Output(); err == nil {
+
 				// read the binary output slice and trim it
 				dev := strings.TrimSpace(string(out[3072:3104]))
+
 				// if the result contains a /dev/ then we got a match
 				if strings.Contains(dev, "/dev/") {
-					log.Debugf("Found symlink for '%s' -> '%s'", devName, dev)
+					ctx.WithFields(map[string]interface{}{
+						"deviceName": devName,
+						"device":     dev,
+					}).Debug("found symlink")
 					// if the alias / udev path exist, its a match
-					if _, err := os.Stat(dev); !os.IsNotExist(err) {
+					if ok, err := fileExists(dev); !ok {
+						if err != nil {
+							ctx.WithField("devicePath", dev).WithError(err).Error(
+								"error checking if device exists")
+							return nil, err
+						}
+					} else {
 						devName = strings.TrimLeft(dev, "/dev/")
 						devPath = dev
 					}
@@ -189,7 +219,10 @@ func (d *driver) LocalDevices(
 		}
 
 		if !ns.DeviceRE.MatchString(devName) {
-			log.Warnf("Device '%s' do not match '%s'", devName, ns.DeviceRE)
+			ctx.WithFields(map[string]interface{}{
+				"deviceName": devName,
+				"deviceRX":   ns.DeviceRE,
+			}).Warn("device does not match")
 			continue
 		}
 

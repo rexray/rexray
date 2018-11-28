@@ -396,7 +396,7 @@ using `s3fs` as the driver name.
 ### Troubleshooting
 - Make sure that AWS credentials (user or role) has following AWS permissions on
   `libStorage` server instance that will be making calls to AWS API:
-    - `s3:*`,
+    - `s3:*`
 
 <a name="aws-s3fs-examples"></a>
 

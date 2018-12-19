@@ -90,6 +90,10 @@ const (
 	// ConfigStatusTimeout is the key for the time duration for a timeout
 	// on how long to wait for a desired volume status to appears
 	ConfigStatusTimeout = Name + ".statusTimeout"
+
+	// ConfigNvmeBinPath is the key for the path to the nvme binary used by
+	// the executor on nvme-enabled instances.
+	ConfigNvmeBinPath = Name + ".nvmeBinPath"
 )
 
 func init() {
@@ -109,6 +113,8 @@ func init() {
 		ConfigStatusInitDelay)
 	r.Key(gofig.String, "", defaultStatusTimeout, "Status Timeout",
 		ConfigStatusTimeout)
+	r.Key(gofig.String, "", "/usr/sbin/nvme",
+		"Path to the nvme program", ConfigNvmeBinPath)
 
 	r.Key(gofig.String, "", "", "", NameEC2+"."+AccessKey)
 	r.Key(gofig.String, "", "", "", NameEC2+"."+SecretKey)

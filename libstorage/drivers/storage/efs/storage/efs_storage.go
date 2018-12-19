@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -18,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
+	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 	awsefs "github.com/aws/aws-sdk-go/service/efs"
-    awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 
 	"github.com/rexray/rexray/libstorage/api/context"
 	"github.com/rexray/rexray/libstorage/api/registry"
@@ -250,8 +250,8 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 }
 
 type connections struct {
-	efssvc   *awsefs.EFS
-	ec2svc   *awsec2.EC2
+	efssvc *awsefs.EFS
+	ec2svc *awsec2.EC2
 }
 
 type awsLogger struct {
@@ -916,7 +916,7 @@ func (d *driver) getVolumeAttachments(
 			status = "Exported"
 		}
 		attachmentSD := &types.VolumeAttachment{
-			VolumeID: *mountTarget.FileSystemId,
+			VolumeID:   *mountTarget.FileSystemId,
 			InstanceID: iid,
 			DeviceName: dev,
 			Status:     status,
@@ -936,8 +936,8 @@ func getAvailabilityZone(
 	// mount target as a mount target always lives in 1 availability zone and has 1 subnet.
 
 	input := &awsec2.DescribeSubnetsInput{
-		Filters:    []*awsec2.Filter{{Name: aws.String("subnet-id"), Values: []*string{aws.String(*mountTarget.SubnetId)}}},
-		SubnetIds:  []*string{mountTarget.SubnetId},
+		Filters:   []*awsec2.Filter{{Name: aws.String("subnet-id"), Values: []*string{aws.String(*mountTarget.SubnetId)}}},
+		SubnetIds: []*string{mountTarget.SubnetId},
 	}
 
 	result, err := mustSessionEC2(ctx).DescribeSubnets(input)
@@ -949,10 +949,10 @@ func getAvailabilityZone(
 	}
 	if len(result.Subnets) != 1 {
 		return "", goof.WithFields(map[string]interface{}{
-			"subnetId": *mountTarget.SubnetId,
+			"subnetId":      *mountTarget.SubnetId,
 			"mountTargetId": *mountTarget.MountTargetId,
 		},
-		"mounttarget's subnet details could not be found. No results")
+			"mounttarget's subnet details could not be found. No results")
 	}
 	return *result.Subnets[0].AvailabilityZone, nil
 }
@@ -961,9 +961,9 @@ func ensureEndpoint(endpoint *string, endpointFormat string, region *string) *st
 	if region != nil && endpointFormat != "" {
 		p := fmt.Sprintf(endpointFormat, *region)
 		return &p
-	} else {
-		return endpoint
 	}
+
+	return endpoint
 }
 
 // Retrieve config arguments

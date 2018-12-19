@@ -59,10 +59,10 @@ const (
 	// EndpointFormat is a key constant.
 	EndpointFormat = "endpointFormat"
 
-	// Endpoint is a key constant.
+	// EC2Endpoint is a key constant.
 	EC2Endpoint = "ec2endpoint"
 
-	// EndpointFormat is a key constant.
+	// EC2EndpointFormat is a key constant.
 	EC2EndpointFormat = "ec2endpointFormat"
 
 	// MaxRetries is a key constant.

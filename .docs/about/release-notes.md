@@ -21,6 +21,12 @@ OsArch: Linux-x86_64
 Commit: 5b1c7431012f28f72d36d6788e204d7e78811168
 Formed: Thu, 07 Sep 2017 17:49:48 CDT
 ```
+## Version 0.11.4 (2019/01/15)
+This is a minor release that includes support for AWS NVMe storage.
+
+### Enhancements
+* Support AWS NVMe storage
+  ([\#1252](https://github.com/rexray/rexray/pull/1252), [\#1104](https://github.com/rexray/rexray/pull/1104))
 
 ## Version 0.11.3 (2018/06/12)
 This is a minor release that improves support for Ceph, Cinder, and Digital

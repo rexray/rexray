@@ -81,6 +81,8 @@ all volumes that are created with a truthy encryption request field.
   See
   [AWS documentation on device naming](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html)
   for more information.
+- `nvmeBinPath` specifies the path to the `nvme` tool that's used with
+  instances with nvme storage.
 
 For information on the equivalent environment variable and CLI flag names
 please see the section on how non top-level configuration properties are
@@ -146,6 +148,31 @@ libstorage:
           accessKey:      XXXXXXXXXX
           secretKey:      XXXXXXXXXX
           region:         us-east-1
+```
+
+### NVMe Support
+Support for NVMe requires a `udev` rule to alias the NVMe device to the path
+REX-Ray expects as a mount point. A similar udev rule is built into the Amazon 
+Linux AMI already, and trivial to add to other linux distributions.
+
+The following is an example of the `udev` rule that must be in place:
+
+```shell
+# /etc/udev/rules.d/999-aws-ebs-nvme.rules
+# ebs nvme devices
+KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTRS{model}=="Amazon Elastic Block Store", PROGRAM="/usr/local/bin/ebs-nvme-mapping /dev/%k", SYMLINK+="%c"
+```
+
+This script is a helper for creating the required device aliases required by
+REX-Ray to support NVMe:
+
+```shell
+#!/bin/bash
+#/usr/local/bin/ebs-nvme-mapping
+vol=$(/usr/sbin/nvme id-ctrl --raw-binary "${1}" | \
+      cut -c3073-3104 | tr -s ' ' | sed 's/ $//g')
+vol=${vol#/dev/}
+[ -n "${vol}" ] && echo "${vol/xvd/sd} ${vol/sd/xvd}"
 ```
 
 <a name="aws-efs"></a>

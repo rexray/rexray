@@ -147,19 +147,6 @@ func (d *driver) NextDevice(
 
 const procPartitions = "/proc/partitions"
 
-// fileExists returns a flag indicating whether or not a file
-// path exists.
-func fileExists(filePath string) (bool, error) {
-	_, err := os.Stat(filePath)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
-}
-
 // Retrieve device paths currently attached and/or mounted
 func (d *driver) LocalDevices(
 	ctx types.Context,
@@ -194,39 +181,42 @@ func (d *driver) LocalDevices(
 				"id-ctrl",
 				"--raw-binary", devPath).Output(); err == nil {
 
-				// read the binary output slice and trim it
-				dev := strings.TrimSpace(string(out[3072:3104]))
+				// Read the binary output slice and trim it.
+				// Take the result as the EBS alias of the device. (can include /dev/)
+				devAlias = strings.TrimSpace(string(out[3072:3104]))
 
-				// if the result contains a /dev/ then we got a match
-				if strings.Contains(dev, "/dev/") {
-					ctx.WithFields(map[string]interface{}{
-						"deviceName": devName,
-						"device":     dev,
-					}).Debug("found symlink")
-					// if the alias / udev path exist, its a match
-					if ok, err := fileExists(dev); !ok {
-						if err != nil {
-							ctx.WithField("devicePath", dev).WithError(err).Error(
-								"error checking if device exists")
-							return nil, err
-						}
-					} else {
-						devName = strings.TrimLeft(dev, "/dev/")
-						devPath = dev
-					}
-				}
+				// Set the name of the device to its alias with /dev/ trimmed.
+				// This identifier is used to apply the regex match.
+				devName = strings.TrimPrefix(devAlias, "/dev/")
+
+				ctx.WithFields(map[string]interface{}{
+					"ebsDeviceName":  devName,
+					"ebsDevicePath":  devPath,
+					"ebsDeviceAlias": devAlias,
+				}).Debug("id-ctrl")
+			} else {
+				ctx.WithFields(map[string]interface{}{
+					"nvmeBinPath": d.nvmeBinPath,
+					"error":       err,
+				}).Warn("error executing nvme-cli")
 			}
 		}
 
 		if !ns.DeviceRE.MatchString(devName) {
 			ctx.WithFields(map[string]interface{}{
-				"deviceName": devName,
-				"deviceRX":   ns.DeviceRE,
-			}).Warn("device does not match")
-			continue
-		}
+				"deviceName":  devName,
+				"deviceAlias": devAlias,
+				"deviceRX":    ns.DeviceRE,
+			}).Info("device does not match")
+		} else {
+			// Map the device's alias to the correct path.
+			devMap[devPath] = devAlias
 
-		devMap[devPath] = devAlias
+			ctx.WithFields(map[string]interface{}{
+				"devicePath":  devPath,
+				"deviceAlias": devAlias,
+			}).Info("added device mapping")
+		}
 	}
 
 	ld := &types.LocalDevices{Driver: d.Name()}

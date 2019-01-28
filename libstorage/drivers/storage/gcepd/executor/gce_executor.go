@@ -15,7 +15,7 @@ import (
 
 const (
 	diskIDPath = "/dev/disk/by-id"
-	diskPrefix = "google-"
+	diskPrefix = "Google_PersistentDisk_"
 )
 
 // driver is the storage executor for the storage driver.

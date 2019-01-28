@@ -130,7 +130,15 @@
             "value"
           ],
           "Value": "false"
-        }
+        },
+        {
+          "Description": "",
+          "Name": "S3FS_CONVERTUNDERSCORES",
+          "Settable": [
+            "value"
+          ],
+          "Value": "false"
+        }            
       ],
       "Interface": {
         "Socket": "rexray.sock",

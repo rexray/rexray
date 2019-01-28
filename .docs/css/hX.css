@@ -1,6 +1,7 @@
 h2 {
-    padding-top: 55px;
-    margin-top: -40px;
+    margin-top: 2em;
+    font-size: 1.8em;
+    font-weight: bold;
 }
 
 h2:not(:first-of-type)::after {
@@ -10,8 +11,8 @@ h2:not(:first-of-type)::after {
 }
 
 h3 {
-    padding-top: 50px;
-    margin-top: -40px;
+    margin-top: 1.8em;
+    font-size: 1.6em;
 }
 h3::after{
     content: " ";
@@ -20,8 +21,8 @@ h3::after{
 }
 
 h4 {
-    padding-top: 45px;
-    margin-top: -40px;
+    margin-top: 1.5em;
+    font-size: 1.4em;
 }
 h4::after {
     content: " ";

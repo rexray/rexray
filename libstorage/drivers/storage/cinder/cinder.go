@@ -61,8 +61,11 @@ const (
 	// ConfigCACert is the config key for custom CA certificate (usually for self signed use case)
 	ConfigCACert = Name + ".CACert"
 
-	// ConfigInsecure is the config ky to disable TLS verification of the server identity
+	// ConfigInsecure is the config key to disable TLS verification of the server identity
 	ConfigInsecure = Name + ".insecure"
+
+	// ConfigDevicePattern is the config key to specify de the device name pattern
+	ConfigDevicePattern = Name + ".devicePattern" 
 )
 
 func init() {
@@ -85,5 +88,6 @@ func init() {
 	r.Key(gofig.String, "", "10m", "", ConfigSnapshotTimeout)
 	r.Key(gofig.String, "", "", "", ConfigCACert)
 	r.Key(gofig.Bool, "", false, "", ConfigInsecure)
+	r.Key(gofig.String, "", "", "", ConfigDevicePattern)
 	gofigCore.Register(r)
 }

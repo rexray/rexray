@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"strings"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
@@ -327,10 +328,14 @@ func translateVolume(
 	var attachments []*types.VolumeAttachment
 	if includeAttachments.Requested() {
 		for _, attachment := range volume.Attachments {
+			deviceName:= strings.Replace(
+				string(attachment.Device),
+				"/dev/sd",
+				"/dev/xvd", 1)
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID:   attachment.VolumeID,
 				InstanceID: &types.InstanceID{ID: attachment.ServerID, Driver: cinder.Name},
-				DeviceName: attachment.Device,
+				DeviceName: deviceName,
 				Status:     "",
 			}
 			attachments = append(attachments, libstorageAttachment)
@@ -894,3 +899,5 @@ func (d *driver) caCert() string {
 func (d *driver) insecure() bool {
 	return d.config.GetBool(cinder.ConfigInsecure)
 }
+
+

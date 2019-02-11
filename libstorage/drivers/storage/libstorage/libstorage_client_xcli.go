@@ -280,7 +280,9 @@ func (c *client) WaitForDevice(
 					return false, nil, err
 				}
 				for k := range ld.DeviceMap {
-					if strings.ToLower(k) == opts.Token {
+					// change the name of the device maped by the system to match the one that Cinder use
+					// usually the device /dev/xvdb will be reported as /dev/sdb
+					if strings.Replace(strings.ToLower(k),"/dev/xvd","/dev/sd",1) == opts.Token {
 						return true, ld, nil
 					}
 				}

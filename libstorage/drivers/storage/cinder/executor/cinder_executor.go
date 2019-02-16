@@ -214,7 +214,9 @@ func (d *driver) LocalDevices(
 		fields := strings.Fields(line)
 		if len(fields) >= 4 {
 			devicePath := "/dev/" + fields[3]
-			devicesMap[devicePath] = ""
+			devicesMap[devicePath] = strings.Replace(devicePath,
+				d.config.GetString(cinder.ConfigHostPattern),
+				d.config.GetString(cinder.ConfigDevicePattern),1)
 		}
 	}
 

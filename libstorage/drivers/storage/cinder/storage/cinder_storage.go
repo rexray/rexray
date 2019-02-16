@@ -231,7 +231,7 @@ func (d *driver) Volumes(
 
 		var volumesRet []*types.Volume
 		for _, volumeOS := range volumesOS {
-			volumesRet = append(volumesRet, translateVolume(
+			volumesRet = append(volumesRet, translateVolume(d,
 				&volumeOS, opts.Attachments))
 		}
 
@@ -279,7 +279,7 @@ func (d *driver) VolumeInspect(
 				goof.WithFieldsE(fields, "error getting volume", err)
 		}
 
-		return translateVolume(volume, opts.Attachments), nil
+		return translateVolume(d,volume, opts.Attachments), nil
 	}
 
 	volume, err := volumesv1.Get(d.clientBlockStorage, volumeID).Extract()
@@ -322,6 +322,7 @@ func translateVolumeV1(
 }
 
 func translateVolume(
+	driver *driver,
 	volume *volumes.Volume,
 	includeAttachments types.VolumeAttachmentsTypes) *types.Volume {
 
@@ -330,8 +331,9 @@ func translateVolume(
 		for _, attachment := range volume.Attachments {
 			deviceName:= strings.Replace(
 				string(attachment.Device),
-				"/dev/sd",
-				"/dev/xvd", 1)
+				driver.config.GetString(cinder.ConfigDevicePattern),
+				driver.config.GetString(cinder.ConfigHostPattern),
+				1)
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID:   attachment.VolumeID,
 				InstanceID: &types.InstanceID{ID: attachment.ServerID, Driver: cinder.Name},
@@ -566,7 +568,7 @@ func (d *driver) createVolume(
 					"error waiting for volume creation to complete", err)
 		}
 
-		return translateVolume(volume, types.VolumeAttachmentsRequested), nil
+		return translateVolume(d,volume, types.VolumeAttachmentsRequested), nil
 	}
 
 	volume, err := volumesv1.Create(d.clientBlockStorage, options).Extract()

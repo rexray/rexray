@@ -64,8 +64,11 @@ const (
 	// ConfigInsecure is the config key to disable TLS verification of the server identity
 	ConfigInsecure = Name + ".insecure"
 
-	// ConfigDevicePattern is the config key to specify de the device name pattern
+	// ConfigDevicePattern is the config key to specify the device name pattern returned by Cinder
 	ConfigDevicePattern = Name + ".devicePattern" 
+	
+	// ConfigHostPattern is the config key to specify de the device name pattern used by the host
+	ConfigHostPattern = Name + ".hostPattern" 
 )
 
 func init() {
@@ -89,5 +92,6 @@ func init() {
 	r.Key(gofig.String, "", "", "", ConfigCACert)
 	r.Key(gofig.Bool, "", false, "", ConfigInsecure)
 	r.Key(gofig.String, "", "", "", ConfigDevicePattern)
+	r.Key(gofig.String, "", "", "", ConfigHostPattern)
 	gofigCore.Register(r)
 }

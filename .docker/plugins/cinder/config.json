@@ -196,6 +196,22 @@
           "Value": ""
         },
         {
+          "Description": "",
+          "Name": "CINDER_DEVICEPATTERN",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
+          "Name": "CINDER_HOSTPATTERN",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
           "Description": "The sock file used by the CO to communicate with CSI.",
           "Name": "CSI_ENDPOINT",
           "Settable": [

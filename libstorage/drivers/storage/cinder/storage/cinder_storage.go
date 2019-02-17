@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-	"strings"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
@@ -38,6 +37,7 @@ var (
 )
 
 type driver struct {
+	cinder.Driver
 	provider             *gophercloud.ProviderClient
 	clientCompute        *gophercloud.ServiceClient
 	clientBlockStorage   *gophercloud.ServiceClient
@@ -231,7 +231,7 @@ func (d *driver) Volumes(
 
 		var volumesRet []*types.Volume
 		for _, volumeOS := range volumesOS {
-			volumesRet = append(volumesRet, translateVolume(d,
+			volumesRet = append(volumesRet, translateVolume(d,ctx,
 				&volumeOS, opts.Attachments))
 		}
 
@@ -279,7 +279,7 @@ func (d *driver) VolumeInspect(
 				goof.WithFieldsE(fields, "error getting volume", err)
 		}
 
-		return translateVolume(d,volume, opts.Attachments), nil
+		return translateVolume(d,ctx,volume, opts.Attachments), nil
 	}
 
 	volume, err := volumesv1.Get(d.clientBlockStorage, volumeID).Extract()
@@ -322,18 +322,15 @@ func translateVolumeV1(
 }
 
 func translateVolume(
-	driver *driver,
+	d *driver,
+	ctx types.Context,
 	volume *volumes.Volume,
 	includeAttachments types.VolumeAttachmentsTypes) *types.Volume {
 
 	var attachments []*types.VolumeAttachment
 	if includeAttachments.Requested() {
 		for _, attachment := range volume.Attachments {
-			deviceName:= strings.Replace(
-				string(attachment.Device),
-				driver.config.GetString(cinder.ConfigDevicePattern),
-				driver.config.GetString(cinder.ConfigHostPattern),
-				1)
+			deviceName:= d.ResolveDeviceName(ctx,attachment.Device,attachment.VolumeID)
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID:   attachment.VolumeID,
 				InstanceID: &types.InstanceID{ID: attachment.ServerID, Driver: cinder.Name},
@@ -568,7 +565,7 @@ func (d *driver) createVolume(
 					"error waiting for volume creation to complete", err)
 		}
 
-		return translateVolume(d,volume, types.VolumeAttachmentsRequested), nil
+		return translateVolume(d,ctx,volume, types.VolumeAttachmentsRequested), nil
 	}
 
 	volume, err := volumesv1.Create(d.clientBlockStorage, options).Extract()
@@ -665,7 +662,7 @@ func (d *driver) VolumeAttach(
 	if opts.NextDevice != nil {
 		options.Device = *opts.NextDevice
 	}
-
+	
 	volumeAttach, err := volumeattach.Create(d.clientCompute, iid.ID, options).Extract()
 	if err != nil {
 		return nil, "", goof.WithFieldsE(
@@ -678,8 +675,15 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.WithFieldsE(
 			fields, "error waiting for volume to attach", err)
 	}
-
-	return volume, volumeAttach.Device, nil
+	
+	deviceName:= d.ResolveDeviceName(ctx,string(volumeAttach.Device),volumeID)
+	
+		ctx.WithFields(map[string]interface{}{
+			"hostDevice": options.Device ,
+			"reportedDevice": volumeAttach.Device,
+			"fixedDevice": deviceName,
+		}).Debug("attached to host device")	
+	return volume, deviceName, nil
 }
 
 func (d *driver) VolumeDetach(

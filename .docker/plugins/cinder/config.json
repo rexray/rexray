@@ -197,6 +197,14 @@
         },
         {
           "Description": "",
+          "Name": "CINDER_MAPPINGTYPE",
+          "Settable": [
+            "value"
+          ],
+          "Value": ""
+        },
+        {
+          "Description": "",
           "Name": "CINDER_DEVICEPATTERN",
           "Settable": [
             "value"

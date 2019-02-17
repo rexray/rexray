@@ -18,13 +18,39 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"fmt"
+	"path"
 	"time"
 )
 
+
 type driver struct {
+	cinder.Driver
 	config   gofig.Config
 	osDriver types.OSDriver
+	deviceRange *DeviceRange
 }
+
+// DeviceRange is the naming convention used for volume like for EBS
+type DeviceRange struct {
+	ChildLetters   []string
+	NextDeviceInfo *types.NextDeviceInfo
+	DeviceRE       *regexp.Regexp
+}
+
+var (
+	commonDeviceRange = &DeviceRange{
+		ChildLetters: []string{
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"},
+		NextDeviceInfo: &types.NextDeviceInfo{
+			Prefix:  "xvd",
+			Pattern: "[a-z]",
+			Ignore:  false,
+		},
+		DeviceRE: regexp.MustCompile(`^xvd[a-z]$`),
+	}
+)
 
 func init() {
 	registry.RegisterStorageExecutor(cinder.Name, newDriver)
@@ -45,6 +71,10 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
+	if strings.ToLower(config.GetString(cinder.ConfigMappingType))=="ebs"{
+		d.deviceRange=commonDeviceRange
+	}
+	
 	return nil
 }
 
@@ -192,6 +222,43 @@ func getInstanceIDWithDMIDecode() (string, error) {
 func (d *driver) NextDevice(
 	ctx types.Context,
 	opts types.Store) (string, error) {
+
+	if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))!="ebs"{
+		return "", types.ErrNotImplemented
+	}
+
+	// Find which letters are used for local devices
+	localDeviceNames := make(map[string]bool)
+
+	// Get device range
+	ns := d.deviceRange
+
+	localDevices, err := d.LocalDevices(
+		ctx, &types.LocalDevicesOpts{Opts: opts})
+	if err != nil {
+		return "", goof.WithError("error getting local devices", err)
+	}
+	localDeviceMapping := localDevices.DeviceMap
+
+	for localDevice := range localDeviceMapping {
+		re, _ := regexp.Compile(`^/dev/` +
+			ns.NextDeviceInfo.Prefix +
+			`(` + ns.NextDeviceInfo.Pattern + `)`)
+		res := re.FindStringSubmatch(localDevice)
+		if len(res) > 0 {
+			localDeviceNames[res[1]] = true
+		}
+	}
+
+	for _, suffix := range ns.ChildLetters {
+		if localDeviceNames[suffix] {
+			continue
+		}
+		return fmt.Sprintf(
+			"/dev/%s%s", ns.NextDeviceInfo.Prefix, suffix), nil
+	}
+	
+
 	return "", types.ErrNotImplemented
 }
 
@@ -199,7 +266,10 @@ func (d *driver) LocalDevices(
 	ctx types.Context,
 	opts *types.LocalDevicesOpts) (*types.LocalDevices, error) {
 	devicesMap := make(map[string]string)
-
+	
+	
+	ns := d.deviceRange
+	
 	file := "/proc/partitions"
 	contentBytes, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -211,12 +281,20 @@ func (d *driver) LocalDevices(
 
 	lines := strings.Split(content, "\n")
 	for _, line := range lines[2:] {
+	
 		fields := strings.Fields(line)
 		if len(fields) >= 4 {
-			devicePath := "/dev/" + fields[3]
-			devicesMap[devicePath] = strings.Replace(devicePath,
-				d.config.GetString(cinder.ConfigHostPattern),
-				d.config.GetString(cinder.ConfigDevicePattern),1)
+			devName := fields[3]
+
+			devPath := path.Join("/dev/", devName)
+			devAlias := devPath
+
+			if ns!=nil && !ns.DeviceRE.MatchString(devName) {
+				continue
+			}
+	
+			devicesMap[devPath] = devAlias
+
 		}
 	}
 
@@ -224,4 +302,23 @@ func (d *driver) LocalDevices(
 		Driver:    cinder.Name,
 		DeviceMap: devicesMap,
 	}, nil
+}
+
+func (d *driver) ResolveDeviceName(ctx types.Context, device string, volumeID string) string{
+	if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))=="ebs" {
+	return strings.Replace(
+		string(device),
+		d.config.GetString(cinder.ConfigDevicePattern),
+		d.config.GetString(cinder.ConfigHostPattern),
+		1)
+	} else if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))=="virtio"{
+		attachedDeviceLink := fmt.Sprintf("/dev/disk/by-id/virtio-%s", volumeID[:20])
+	    attachedDeviceName, err := filepath.EvalSymlinks(attachedDeviceLink)
+		if err != nil {
+			return device
+		}
+		return attachedDeviceName
+	} 
+	return ""
+	
 }

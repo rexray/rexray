@@ -3,6 +3,9 @@ package cinder
 import (
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
+	
+	"github.com/rexray/rexray/libstorage/api/types"
+
 )
 
 const (
@@ -69,6 +72,9 @@ const (
 	
 	// ConfigHostPattern is the config key to specify de the device name pattern used by the host
 	ConfigHostPattern = Name + ".hostPattern" 
+
+	// ConfigMappingType is the device mapping type: ebs or virtio 
+	ConfigMappingType = Name + ".mappingType"
 )
 
 func init() {
@@ -91,7 +97,17 @@ func init() {
 	r.Key(gofig.String, "", "10m", "", ConfigSnapshotTimeout)
 	r.Key(gofig.String, "", "", "", ConfigCACert)
 	r.Key(gofig.Bool, "", false, "", ConfigInsecure)
-	r.Key(gofig.String, "", "", "", ConfigDevicePattern)
-	r.Key(gofig.String, "", "", "", ConfigHostPattern)
+	r.Key(gofig.String, "", "", "", ConfigMappingType)
+	r.Key(gofig.String, "", "/dev/sd", "", ConfigDevicePattern)
+	r.Key(gofig.String, "", "/dev/xvd", "", ConfigHostPattern)
 	gofigCore.Register(r)
 }
+
+
+// Driver extend driver type so it possible to resolve the correct device name attached to an host
+type Driver interface{
+	ResolveDeviceName(ctx types.Context, device string, volumeID string) string
+}
+
+
+

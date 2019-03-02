@@ -3,9 +3,6 @@ package cinder
 import (
 	gofigCore "github.com/akutz/gofig"
 	gofig "github.com/akutz/gofig/types"
-	
-	"github.com/rexray/rexray/libstorage/api/types"
-
 )
 
 const (
@@ -104,10 +101,6 @@ func init() {
 }
 
 
-// Driver extend driver type so it possible to resolve the correct device name attached to an host
-type Driver interface{
-	ResolveDeviceName(ctx types.Context, device string, volumeID string) string
-}
 
 
 

@@ -40,7 +40,6 @@ var (
 )
 
 type driver struct {
-	cinder.Driver
 	provider             *gophercloud.ProviderClient
 	clientCompute        *gophercloud.ServiceClient
 	clientBlockStorage   *gophercloud.ServiceClient
@@ -333,7 +332,7 @@ func translateVolume(
 	var attachments []*types.VolumeAttachment
 	if includeAttachments.Requested() {
 		for _, attachment := range volume.Attachments {
-			deviceName:= d.ResolveDeviceName(ctx,attachment.Device,attachment.VolumeID)
+			deviceName:= ResolveDeviceName(d, ctx, attachment.Device, attachment.VolumeID)
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID:   attachment.VolumeID,
 				InstanceID: &types.InstanceID{ID: attachment.ServerID, Driver: cinder.Name},
@@ -679,7 +678,7 @@ func (d *driver) VolumeAttach(
 			fields, "error waiting for volume to attach", err)
 	}
 	
-	deviceName:= d.ResolveDeviceName(ctx,string(volumeAttach.Device),volumeID)
+	deviceName:= ResolveDeviceName(d, ctx,string(volumeAttach.Device),volumeID)
 	
 		ctx.WithFields(map[string]interface{}{
 			"hostDevice": options.Device ,
@@ -909,11 +908,13 @@ func (d *driver) insecure() bool {
 	return d.config.GetBool(cinder.ConfigInsecure)
 }
 
-
-func (d *driver) ResolveDeviceName(ctx types.Context, device string, volumeID string) string{
+// ResolveDeviceName resolve device name based on mapping type
+func ResolveDeviceName(d *driver, ctx types.Context, device string, volumeID string) string{
+	
+	resolvedName := device
 	if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))=="ebs" {
-	return strings.Replace(
-		string(device),
+		resolvedName = strings.Replace(
+		device,
 		d.config.GetString(cinder.ConfigDevicePattern),
 		d.config.GetString(cinder.ConfigHostPattern),
 		1)
@@ -923,8 +924,13 @@ func (d *driver) ResolveDeviceName(ctx types.Context, device string, volumeID st
 		if err != nil {
 			return device
 		}
-		return attachedDeviceName
+		resolvedName = attachedDeviceName
 	} 
-	return ""
+	ctx.WithFields(map[string]interface{}{
+		"device": device,
+		"volumeID": volumeID,
+		"resolvedName": resolvedName,
+	}).Debug("Resolved device name");
+	return resolvedName
 	
 }

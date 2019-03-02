@@ -25,7 +25,6 @@ import (
 
 
 type driver struct {
-	cinder.Driver
 	config   gofig.Config
 	osDriver types.OSDriver
 	deviceRange *DeviceRange
@@ -304,21 +303,3 @@ func (d *driver) LocalDevices(
 	}, nil
 }
 
-func (d *driver) ResolveDeviceName(ctx types.Context, device string, volumeID string) string{
-	if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))=="ebs" {
-	return strings.Replace(
-		string(device),
-		d.config.GetString(cinder.ConfigDevicePattern),
-		d.config.GetString(cinder.ConfigHostPattern),
-		1)
-	} else if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))=="virtio"{
-		attachedDeviceLink := fmt.Sprintf("/dev/disk/by-id/virtio-%s", volumeID[:20])
-	    attachedDeviceName, err := filepath.EvalSymlinks(attachedDeviceLink)
-		if err != nil {
-			return device
-		}
-		return attachedDeviceName
-	} 
-	return ""
-	
-}

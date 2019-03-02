@@ -61,8 +61,17 @@ const (
 	// ConfigCACert is the config key for custom CA certificate (usually for self signed use case)
 	ConfigCACert = Name + ".CACert"
 
-	// ConfigInsecure is the config ky to disable TLS verification of the server identity
+	// ConfigInsecure is the config key to disable TLS verification of the server identity
 	ConfigInsecure = Name + ".insecure"
+
+	// ConfigDevicePattern is the config key to specify the device name pattern returned by Cinder
+	ConfigDevicePattern = Name + ".devicePattern" 
+	
+	// ConfigHostPattern is the config key to specify de the device name pattern used by the host
+	ConfigHostPattern = Name + ".hostPattern" 
+
+	// ConfigMappingType is the device mapping type: ebs or virtio 
+	ConfigMappingType = Name + ".mappingType"
 )
 
 func init() {
@@ -85,5 +94,14 @@ func init() {
 	r.Key(gofig.String, "", "10m", "", ConfigSnapshotTimeout)
 	r.Key(gofig.String, "", "", "", ConfigCACert)
 	r.Key(gofig.Bool, "", false, "", ConfigInsecure)
+	r.Key(gofig.String, "", "", "", ConfigMappingType)
+	r.Key(gofig.String, "", "/dev/sd", "", ConfigDevicePattern)
+	r.Key(gofig.String, "", "/dev/xvd", "", ConfigHostPattern)
 	gofigCore.Register(r)
 }
+
+
+
+
+
+

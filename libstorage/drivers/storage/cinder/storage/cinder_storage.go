@@ -7,6 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"strings"
+	"fmt"
+	"path/filepath"
 
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/goof"
@@ -230,7 +233,7 @@ func (d *driver) Volumes(
 
 		var volumesRet []*types.Volume
 		for _, volumeOS := range volumesOS {
-			volumesRet = append(volumesRet, translateVolume(
+			volumesRet = append(volumesRet, translateVolume(d,ctx,
 				&volumeOS, opts.Attachments))
 		}
 
@@ -278,7 +281,7 @@ func (d *driver) VolumeInspect(
 				goof.WithFieldsE(fields, "error getting volume", err)
 		}
 
-		return translateVolume(volume, opts.Attachments), nil
+		return translateVolume(d,ctx,volume, opts.Attachments), nil
 	}
 
 	volume, err := volumesv1.Get(d.clientBlockStorage, volumeID).Extract()
@@ -321,16 +324,19 @@ func translateVolumeV1(
 }
 
 func translateVolume(
+	d *driver,
+	ctx types.Context,
 	volume *volumes.Volume,
 	includeAttachments types.VolumeAttachmentsTypes) *types.Volume {
 
 	var attachments []*types.VolumeAttachment
 	if includeAttachments.Requested() {
 		for _, attachment := range volume.Attachments {
+			deviceName:= ResolveDeviceName(d, ctx, attachment.Device, attachment.VolumeID)
 			libstorageAttachment := &types.VolumeAttachment{
 				VolumeID:   attachment.VolumeID,
 				InstanceID: &types.InstanceID{ID: attachment.ServerID, Driver: cinder.Name},
-				DeviceName: attachment.Device,
+				DeviceName: deviceName,
 				Status:     "",
 			}
 			attachments = append(attachments, libstorageAttachment)
@@ -561,7 +567,7 @@ func (d *driver) createVolume(
 					"error waiting for volume creation to complete", err)
 		}
 
-		return translateVolume(volume, types.VolumeAttachmentsRequested), nil
+		return translateVolume(d,ctx,volume, types.VolumeAttachmentsRequested), nil
 	}
 
 	volume, err := volumesv1.Create(d.clientBlockStorage, options).Extract()
@@ -658,7 +664,7 @@ func (d *driver) VolumeAttach(
 	if opts.NextDevice != nil {
 		options.Device = *opts.NextDevice
 	}
-
+	
 	volumeAttach, err := volumeattach.Create(d.clientCompute, iid.ID, options).Extract()
 	if err != nil {
 		return nil, "", goof.WithFieldsE(
@@ -671,8 +677,15 @@ func (d *driver) VolumeAttach(
 		return nil, "", goof.WithFieldsE(
 			fields, "error waiting for volume to attach", err)
 	}
-
-	return volume, volumeAttach.Device, nil
+	
+	deviceName:= ResolveDeviceName(d, ctx,string(volumeAttach.Device),volumeID)
+	
+		ctx.WithFields(map[string]interface{}{
+			"hostDevice": options.Device ,
+			"reportedDevice": volumeAttach.Device,
+			"fixedDevice": deviceName,
+		}).Debug("attached to host device")	
+	return volume, deviceName, nil
 }
 
 func (d *driver) VolumeDetach(
@@ -893,4 +906,31 @@ func (d *driver) caCert() string {
 
 func (d *driver) insecure() bool {
 	return d.config.GetBool(cinder.ConfigInsecure)
+}
+
+// ResolveDeviceName resolve device name based on mapping type
+func ResolveDeviceName(d *driver, ctx types.Context, device string, volumeID string) string{
+	
+	resolvedName := device
+	if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))=="ebs" {
+		resolvedName = strings.Replace(
+		device,
+		d.config.GetString(cinder.ConfigDevicePattern),
+		d.config.GetString(cinder.ConfigHostPattern),
+		1)
+	} else if strings.ToLower(d.config.GetString(cinder.ConfigMappingType))=="virtio"{
+		attachedDeviceLink := fmt.Sprintf("/dev/disk/by-id/virtio-%s", volumeID[:20])
+	    attachedDeviceName, err := filepath.EvalSymlinks(attachedDeviceLink)
+		if err != nil {
+			return device
+		}
+		resolvedName = attachedDeviceName
+	} 
+	ctx.WithFields(map[string]interface{}{
+		"device": device,
+		"volumeID": volumeID,
+		"resolvedName": resolvedName,
+	}).Debug("Resolved device name");
+	return resolvedName
+	
 }

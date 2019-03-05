@@ -196,6 +196,6 @@ func (d *driver) Init(ctx types.Context, config gofig.Config) error {
 		return err
 	}
 
-	d.ctx.Info("successefully dialed libStorage server")
+	d.ctx.Info("successfully dialed libStorage server")
 	return nil
 }

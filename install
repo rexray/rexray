@@ -167,7 +167,12 @@ install() {
         sudo mkdir -p $BIN_DIR
         if [ "$?" -ne "0" ]; then exit $?; fi
 
-        curl $INSECURE -o $FILE_NAME -sSL $URL
+        status=$(curl $INSECURE -o $FILE_NAME -fsSL $URL 2> /dev/null)
+        if [ "$?" -eq "22" ]; then 
+            echo "Unable to download the package. Please make sure your platform is supported."
+            exit $status; 
+		fi
+		
         if [ "$?" -ne "0" ]; then exit $?; fi
 
         sudo tar xzf $FILE_NAME -C $BIN_DIR

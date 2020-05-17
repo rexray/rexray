@@ -165,3 +165,7 @@ required = [
 [[constraint]]
   name = "github.com/stretchr/testify"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/fishy/rowlock"
+  version = "0.2.1"

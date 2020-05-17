@@ -261,7 +261,7 @@ DOCKER_PLUGIN_DOCKERFILE := .docker/plugins/Dockerfile
 endif
 DOCKER_PLUGIN_DOCKERFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/Dockerfile
 $(DOCKER_PLUGIN_DOCKERFILE_TGT): $(DOCKER_PLUGIN_DOCKERFILE)
-	cp -f $? $@
+	cp -f $^ $@
 
 DOCKER_PLUGIN_ENTRYPOINT := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.sh
 ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_ENTRYPOINT))))
@@ -269,23 +269,23 @@ DOCKER_PLUGIN_ENTRYPOINT := .docker/plugins/rexray.sh
 endif
 DOCKER_PLUGIN_ENTRYPOINT_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).sh
 $(DOCKER_PLUGIN_ENTRYPOINT_TGT): $(DOCKER_PLUGIN_ENTRYPOINT)
-	cp -f $? $@
+	cp -f $^ $@
 
 DOCKER_PLUGIN_CONFIGFILE := $(DOCKER_PLUGIN_BUILD_PATH)/.rexray.yml
 DOCKER_PLUGIN_CONFIGFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG).yml
 ifeq (,$(strip $(wildcard $(DOCKER_PLUGIN_CONFIGFILE))))
 DOCKER_PLUGIN_CONFIGFILE := .docker/plugins/rexray.yml
 $(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
-	sed -e 's/$${DRIVER}/$(DRIVER)/g' $? > $@
+	sed -e 's/$${DRIVER}/$(DRIVER)/g' $^ > $@
 else
 $(DOCKER_PLUGIN_CONFIGFILE_TGT): $(DOCKER_PLUGIN_CONFIGFILE)
-	cp -f $? $@
+	cp -f $^ $@
 endif
 
 DOCKER_PLUGIN_REXRAYFILE := $(PROG)
 DOCKER_PLUGIN_REXRAYFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG)
 $(DOCKER_PLUGIN_REXRAYFILE_TGT): $(DOCKER_PLUGIN_REXRAYFILE)
-	cp -f $? $@
+	cp -f $^ $@
 
 DOCKER_PLUGIN_CONFIGJSON_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/config.json
 
@@ -380,7 +380,7 @@ GIST_FILES := $(BINTRAY_FILES) semver.env
 ifneq (,$(strip $(DRIVER)))
 GIST_DRIVER := .docker/plugins/$(DRIVER)
 ifneq (,$(wildcard $(GIST_DRIVER)))
-GIST_FILES += $(shell find "$(GIST_DRIVER)" -d 1 -type f \
+GIST_FILES += $(shell sudo find "$(GIST_DRIVER)" -d 1 -type f \
 	-not -name "rexray" \
 	-not -name ".gitignore" \
 	-not -name "README.md")

@@ -516,10 +516,10 @@ func (d *driver) waitForAction(
 			if err != nil {
 				if resp.StatusCode == 404 {
 					ctx.WithField("actionID", action.ID).Warn(
-                        err.Error()
-                    )
+						err.Error()
+					)
 				} else {
-                    return nil, err
+					return nil, err
 				}
 			} else {
 				if action.Status == godo.ActionCompleted {

@@ -1,3 +1,5 @@
+```This project is no longer maintained```
+
 # REX-Ray [![GoDoc](https://godoc.org/github.com/rexray/rexray?status.svg)](http://godoc.org/github.com/rexray/rexray) [![Build Status](http://travis-ci.org/rexray/rexray.svg?branch=master)](https://travis-ci.org/rexray/rexray) [![Go Report Card](http://goreportcard.com/badge/rexray/rexray)](http://goreportcard.com/report/rexray/rexray) [![codecov.io](https://codecov.io/github/rexray/rexray/coverage.svg?branch=master)](https://codecov.io/github/rexray/rexray?branch=master) [ ![Download](http://api.bintray.com/packages/rexray/rexray/stable/images/download.svg) ](https://dl.bintray.com/rexray/rexray/stable/latest/)
 
 ---

@@ -28,6 +28,5 @@ import (
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/rbd/storage"
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/s3fs/storage"
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/scaleio/storage"
-	_ "github.com/rexray/rexray/libstorage/drivers/storage/vbox/storage"
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/vfs/storage"
 )

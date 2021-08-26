@@ -27,6 +27,5 @@ import (
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/rbd/executor"
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/s3fs/executor"
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/scaleio/executor"
-	_ "github.com/rexray/rexray/libstorage/drivers/storage/vbox/executor"
 	_ "github.com/rexray/rexray/libstorage/drivers/storage/vfs/executor"
 )

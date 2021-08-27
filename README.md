@@ -3,7 +3,7 @@
 ---
 
 ![info](https://cdn.rawgit.com/akutz/741a53ec8cd1348753556e8bd4d2836a/raw/399cb9e5b39436d119d77a893dd991db0a7b6f9f/info-circle.svg "info-circle") **Note:* This is a unofficial fork of the unmaintained rexray. 
-But we will care issues and PR's so good us possible.
+But we will care issues and PR's so good as possible.
 
 ---
 

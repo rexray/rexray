@@ -1,11 +1,12 @@
-# REX-Ray [![GoDoc](https://godoc.org/github.com/rexray/rexray?status.svg)](http://godoc.org/github.com/rexray/rexray) [![Build Status](http://travis-ci.org/rexray/rexray.svg?branch=master)](https://travis-ci.org/rexray/rexray) [![Go Report Card](http://goreportcard.com/badge/rexray/rexray)](http://goreportcard.com/report/rexray/rexray) [![codecov.io](https://codecov.io/github/rexray/rexray/coverage.svg?branch=master)](https://codecov.io/github/rexray/rexray?branch=master) [ ![Download](http://api.bintray.com/packages/rexray/rexray/stable/images/download.svg) ](https://dl.bintray.com/rexray/rexray/stable/latest/)
+# REX-Ray [![GoDoc](https://godoc.org/github.com/AVENTER-UG/rexray?status.svg)](http://godoc.org/github.com/AVENTER-UG/rexray) 
 
 ---
 
-![info](https://cdn.rawgit.com/akutz/741a53ec8cd1348753556e8bd4d2836a/raw/399cb9e5b39436d119d77a893dd991db0a7b6f9f/info-circle.svg "info-circle") **Note:** _All hosted `unstable` and `staged` binaries older than `0.11.2-rc1` have
-been pruned due to quota restrictions._
+![info](https://cdn.rawgit.com/akutz/741a53ec8cd1348753556e8bd4d2836a/raw/399cb9e5b39436d119d77a893dd991db0a7b6f9f/info-circle.svg "info-circle") **Note:* This is a unofficial fork of the unmaintained rexray. 
+But we will care issues and PR's so good us possible.
 
 ---
+
 
 The long-term goal of the REX-Ray project is to enable collaboration between
 organizations  focused on creating enterprise-grade storage plugins for the
@@ -20,11 +21,8 @@ design goal is to provide persistent storage for `Docker`, `Kubernetes`, and `Me
 It is additionally available as a Go package, CLI tool, and Linux service which
 enables it to be used for additional use cases.
 
-## Documentation [![Docs](https://readthedocs.org/projects/rexray/badge/?version=stable)](http://rexray.readthedocs.org/en/stable/)
-You will find complete documentation for REX-Ray at [rexray.readthedocs.org](http://rexray.readthedocs.org/en/stable/), including
-[licensing](http://rexray.readthedocs.org/en/stable/about/license/) and
-[support](http://rexray.readthedocs.org/en/stable/#getting-help) information.
-Documentation provided at RTD is based on the latest stable build.  The `/.docs`
+## Documentation [![Docs](https://aventer-ug.github.io/rexray/)](https://aventer-ug.github.io/rexray/)
+Documentation is based on the latest stable build.  The `/.docs`
 directory in this repo will refer to the latest or specific commit.
 
 ## Architecture
@@ -50,7 +48,6 @@ The following storage providers and platforms are supported by REX-Ray.
 | Google | [GCE Persistent Disk](.docs/user-guide/storage-providers/google.md#gce-persistent-disk) | ✓ | ✓ |
 | Microsoft | [Azure Unmanaged Disk](.docs/user-guide/storage-providers/microsoft.md#azure-ud) | ✓ | ✓ |
 | OpenStack | [Cinder](.docs/user-guide/storage-providers/openstack.md#cinder) | ✓ | ✓ |
-| VirtualBox | [Virtual Media](.docs/user-guide/storage-providers/virtualbox.md#virtualbox) | ✓ | |
 
 ### Operating System Support
 The following operating systems are supported by REX-Ray:
@@ -67,11 +64,16 @@ The following operating systems are supported by REX-Ray:
 | Windows        |            |  |
 
 ## Installation
-The following command will install the REX-Ray client-server tool.  If using
-`CentOS`, `Debian`, `RHEL`, or `Ubuntu` the necessary service manager is used
-to bootstrap the process on startup
 
-`curl -sSL https://rexray.io/install | sh -`
+We only deliver prebuild version for CentOS 7. You can add our rpm repository: 
+
+```bash
+[aventer-rel]
+name=AVENTER stable repository $releasever
+baseurl=http://rpm.aventer.biz/CentOS/$releasever/$basearch/
+enabled=1
+gpgkey=https://www.aventer.biz/CentOS/support_aventer.asc
+```
 
 ## Runtime - CLI
 REX-Ray can be run as an interactive CLI to perform volume management

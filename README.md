@@ -1,4 +1,6 @@
-# REX-Ray [![GoDoc](https://godoc.org/github.com/AVENTER-UG/rexray?status.svg)](http://godoc.org/github.com/AVENTER-UG/rexray) 
+# REX-Ray 
+[![Chat](https://img.shields.io/static/v1?label=Chat&message=Support&color=brightgreen)](https://matrix.to/#/#mesos:matrix.aventer.biz?via=matrix.aventer.biz)
+[![GoDoc](https://godoc.org/github.com/AVENTER-UG/rexray?status.svg)](http://godoc.org/github.com/AVENTER-UG/rexray) 
 
 ---
 

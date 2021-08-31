@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // OnRequest is a handler to which an external provider can attach that is

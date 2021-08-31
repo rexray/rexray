@@ -180,7 +180,7 @@ REX-Ray currently supports the following container orchestrators:
 
 ### GitHub and Slack
 If a little extra help is needed, please don't hesitate to use [GitHub
-issues](https://github.com/rexray/rexray/issues) or join the active
+issues](https://github.com/AVENTER-UG/rexray/issues) or join the active
 conversation on the [{code} Community Slack
 Team](https://thecodeteam.com/community/) in the
 [#project-rexray](https://codecommunity.slack.com/channels/project-rexray)

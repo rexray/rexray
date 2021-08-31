@@ -25,7 +25,7 @@ have encountered is fixed in the git master. It is **strongly** recommended
 that you do this within a virtual environment.
 
 ```bash
-go get github.com/rexray/rexray
+go get github.com/AVENTER-UG/rexray
 ```
 
 ## Installing for Development
@@ -33,7 +33,7 @@ First you'll need to fork and clone the repository. Once you have a local
 copy, run the following command.
 
 ```bash
-go get github.com/rexray/rexray
+go get github.com/AVENTER-UG/rexray
 ```
 
 This will install REX-Ray into your `GOPATH` and you'll be able to make changes

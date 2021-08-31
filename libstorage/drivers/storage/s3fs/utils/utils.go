@@ -5,8 +5,8 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/rexray/rexray/libstorage/api/types"
-	"github.com/rexray/rexray/libstorage/drivers/storage/s3fs"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/drivers/storage/s3fs"
 )
 
 // InstanceID returns the instance ID for the local host.

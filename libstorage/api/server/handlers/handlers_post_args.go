@@ -8,8 +8,8 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/rexray/rexray/libstorage/api/types"
-	"github.com/rexray/rexray/libstorage/api/utils"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/utils"
 )
 
 // postArgsHandler is an HTTP filter for injecting the store with the POST

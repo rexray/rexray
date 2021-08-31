@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 func TestVolumeObject(t *testing.T) {

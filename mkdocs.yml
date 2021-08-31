@@ -1,6 +1,6 @@
 site_name: REX-Ray
-site_url: https://github.com/rexray/rexray
-repo_url: https://github.com/rexray/rexray.git
+site_url: https://github.com/AVENTER-UG/rexray
+repo_url: https://github.com/AVENTER-UG/rexray.git
 docs_dir: .docs
 site_dir: .site
 theme_dir: .docs-themes/yeti

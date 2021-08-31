@@ -23,7 +23,7 @@ Storage volumes for EC2 instances.
     
 !!! note
     Due to issues with device naming, it is currently not possible to run the rexray/ebs 
-    plugin on 5th generation (C5 and M5) instances in AWS. See [here](https://github.com/rexray/rexray/issues/1104)
+    plugin on 5th generation (C5 and M5) instances in AWS. See [here](https://github.com/AVENTER-UG/rexray/issues/1104)
     for more information.
 
 The EBS driver is made possible by the

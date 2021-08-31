@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rexray/rexray/libstorage/api/types"
-	"github.com/rexray/rexray/libstorage/api/utils"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/utils"
 )
 
 var errServerFingerprint = errors.New("invalid server fingerprint")

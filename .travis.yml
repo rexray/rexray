@@ -15,7 +15,7 @@ jobs:
       stage:          build
       language:       go
       go:             1.9.1
-      go_import_path: github.com/rexray/rexray
+      go_import_path: github.com/AVENTER-UG/rexray
       env:            PROG=rexray
       before_script:
         - git fetch --unshallow --tags
@@ -65,7 +65,7 @@ jobs:
     - stage:          test
       language:       go
       go:             1.9.1
-      go_import_path: github.com/rexray/rexray
+      go_import_path: github.com/AVENTER-UG/rexray
       before_script:
         - git fetch --unshallow --tags
         - go run core/semver/semver.go -f json

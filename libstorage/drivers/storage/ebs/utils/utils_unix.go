@@ -5,7 +5,7 @@ package utils
 import (
 	"regexp"
 
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // DeviceRange holds slices for device namespace iteration

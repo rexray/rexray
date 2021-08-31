@@ -1,0 +1,14 @@
+[Unit]
+Description=rexray
+Wants=scini.service
+Before=docker.service
+After=scini.service
+
+[Service]
+EnvironmentFile=/etc/rexray/rexray.env
+ExecStart=/usr/bin/rexray start -s s3fs
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+
+[Install]
+WantedBy=docker.service

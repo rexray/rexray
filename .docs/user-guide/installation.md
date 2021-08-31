@@ -75,7 +75,7 @@ with SystemD or SystemV for proper initialization.
 It is also easy to build REX-Ray from source:
 
 ```bash
-$ go get github.com/rexray/rexray
+$ go get github.com/AVENTER-UG/rexray
 ```
 
 For more information on how to build REX-Ray please see the

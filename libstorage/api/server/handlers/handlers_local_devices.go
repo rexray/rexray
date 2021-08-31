@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rexray/rexray/libstorage/api/context"
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/context"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // localDevicesHandler is a global HTTP filter for grokking the local devices

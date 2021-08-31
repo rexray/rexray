@@ -97,10 +97,10 @@ following:
 
 ```sh
 $ .build/test.sh
-ok  	github.com/rexray/rexray/rexray/cli	0.039s	coverage: 33.6% of statements
-ok  	github.com/rexray/rexray/test	0.080s	coverage: 94.0% of statements in github.com/rexray/rexray, github.com/rexray/rexray/core
+ok  	github.com/AVENTER-UG/rexray/rexray/cli	0.039s	coverage: 33.6% of statements
+ok  	github.com/AVENTER-UG/rexray/test	0.080s	coverage: 94.0% of statements in github.com/AVENTER-UG/rexray, github.com/AVENTER-UG/rexray/core
 ...
-ok  	github.com/rexray/rexray/util	0.024s	coverage: 100.0% of statements
+ok  	github.com/AVENTER-UG/rexray/util	0.024s	coverage: 100.0% of statements
 [0]akutz@pax:rexray$
 ```
 

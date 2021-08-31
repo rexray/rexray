@@ -25,7 +25,7 @@ $ cd $(mktemp -d)
 ```
 
 Inside the newly created, temporary directory, download the REX-Ray
-[Vagrantfile](https://github.com/rexray/rexray/master/Vagrantfile):
+[Vagrantfile](https://github.com/AVENTER-UG/rexray/master/Vagrantfile):
 
 ```sh
 $ curl -fsSLO https://raw.githubusercontent.com/rexray/rexray/master/Vagrantfile

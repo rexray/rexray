@@ -10,9 +10,9 @@ import (
 	gofig "github.com/akutz/gofig/types"
 	"github.com/akutz/gotil"
 
-	"github.com/rexray/rexray/libstorage/api/context"
-	apitypes "github.com/rexray/rexray/libstorage/api/types"
-	"github.com/rexray/rexray/util"
+	"github.com/AVENTER-UG/rexray/libstorage/api/context"
+	apitypes "github.com/AVENTER-UG/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/util"
 )
 
 func installSelfCert(

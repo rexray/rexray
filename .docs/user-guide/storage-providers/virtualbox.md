@@ -45,7 +45,7 @@ VirtualBox 5.0.10+ must be used.
     MAC addresses or the MAC address of the host.
 
     The REX-Ray `Vagrantfile` has
-    [a section](https://github.com/rexray/rexray/blob/master/Vagrantfile#L166-L179)
+    [a section](https://github.com/AVENTER-UG/rexray/blob/master/Vagrantfile#L166-L179)
     that automatically configures these options.
 
 ## Configuration

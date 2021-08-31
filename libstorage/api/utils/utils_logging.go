@@ -4,7 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	gofig "github.com/akutz/gofig/types"
 
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // LoggingConfig is the logging configuration.

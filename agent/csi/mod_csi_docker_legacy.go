@@ -5,8 +5,8 @@ import (
 
 	gofig "github.com/akutz/gofig/types"
 
-	apitypes "github.com/rexray/rexray/libstorage/api/types"
-	apiutils "github.com/rexray/rexray/libstorage/api/utils"
+	apitypes "github.com/AVENTER-UG/rexray/libstorage/api/types"
+	apiutils "github.com/AVENTER-UG/rexray/libstorage/api/utils"
 	dvol "github.com/docker/go-plugins-helpers/volume"
 )
 

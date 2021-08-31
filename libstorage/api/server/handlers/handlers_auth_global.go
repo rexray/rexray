@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/rexray/rexray/libstorage/api/context"
-	"github.com/rexray/rexray/libstorage/api/server/auth"
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/context"
+	"github.com/AVENTER-UG/rexray/libstorage/api/server/auth"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // authGlobalHandler is an HTTP filter for validating the JWT.

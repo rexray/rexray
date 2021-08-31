@@ -1,9 +1,9 @@
 package server
 
 import (
-	"github.com/rexray/rexray/libstorage/api/server/handlers"
-	"github.com/rexray/rexray/libstorage/api/server/services"
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/server/handlers"
+	"github.com/AVENTER-UG/rexray/libstorage/api/server/services"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 func (s *server) initGlobalMiddleware() {

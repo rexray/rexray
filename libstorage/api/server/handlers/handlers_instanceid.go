@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rexray/rexray/libstorage/api/context"
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/context"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // instanceIDHandler is a global HTTP filter for grokking the InstanceIDs
@@ -46,8 +46,8 @@ func (h *instanceIDHandler) Handle(
 	ctx.WithField(types.InstanceIDHeader, headers).Debug("http header")
 
 	// this function has been updated to account for
-	// https://github.com/rexray/libstorage/pull/420 and
-	// https://github.com/rexray/rexray/issues/685.
+	// https://github.com/AVENTER-UG/libstorage/pull/420 and
+	// https://github.com/AVENTER-UG/rexray/issues/685.
 	//
 	// this handler now inspects each instance ID header and stores the
 	// unmarshaled object in one of two maps -- a map keyed by the

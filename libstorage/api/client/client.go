@@ -3,7 +3,7 @@ package client
 import (
 	"net/http"
 
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // Client is the libStorage API client.

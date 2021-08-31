@@ -9,7 +9,7 @@ The following one-line command is the quickest, simplest, and most
 deterministic approach to building REX-Ray:
 
 ```bash
-$ go get github.com/rexray/rexray
+$ go get github.com/AVENTER-UG/rexray
 ```
 
 The above command will download the REX-Ray sources and build the
@@ -21,16 +21,16 @@ produces a binary without the correct semantic version. To create
 the version information use `go generate`:
 
 ```bash
-$ go generate github.com/rexray/rexray
+$ go generate github.com/AVENTER-UG/rexray
 ```
 
 To download and build REX-Ray in one line with the correct version
 information please use the following command:
 
 ```bash
-$ go get -d github.com/rexray/rexray && \
-  go generate github.com/rexray/rexray && \
-  go install github.com/rexray/rexray
+$ go get -d github.com/AVENTER-UG/rexray && \
+  go generate github.com/AVENTER-UG/rexray && \
+  go install github.com/AVENTER-UG/rexray
 ```
 
 ### Build Tags
@@ -73,7 +73,7 @@ Travis-CI. Simply clone the REX-Ray repository (or fork) and checkout
 the desired reference. Then use the following command to build REX-Ray:
 
 ```bash
-$ SRC=github.com/rexray/rexray && \
+$ SRC=github.com/AVENTER-UG/rexray && \
   docker run -it \
   -e SRC -e GOOS -e GOARCH \
   -v "$(pwd)":/go/src/$SRC golang:1.8.3 \

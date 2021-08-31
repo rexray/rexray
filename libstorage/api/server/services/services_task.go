@@ -11,9 +11,9 @@ import (
 
 	"github.com/akutz/goof"
 
-	"github.com/rexray/rexray/libstorage/api/context"
-	"github.com/rexray/rexray/libstorage/api/types"
-	"github.com/rexray/rexray/libstorage/api/utils/schema"
+	"github.com/AVENTER-UG/rexray/libstorage/api/context"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/utils/schema"
 )
 
 type task struct {

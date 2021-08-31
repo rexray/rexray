@@ -1,6 +1,6 @@
 package libstorage
 
-import "github.com/rexray/rexray/libstorage/api/types"
+import "github.com/AVENTER-UG/rexray/libstorage/api/types"
 
 type lss struct {
 	types.Store

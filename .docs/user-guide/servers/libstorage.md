@@ -749,7 +749,7 @@ encoded token string.
 
 ### Embedded Configuration
 If libStorage is embedded into another application, such as
-[`REX-Ray`](https://github.com/rexray/rexray), then that application may
+[`REX-Ray`](https://github.com/AVENTER-UG/rexray), then that application may
 manage its own configuration and supply the embedded libStorage instance
 directly with a configuration object. In this scenario, the libStorage
 configuration files are ignored in deference to the embedding application.

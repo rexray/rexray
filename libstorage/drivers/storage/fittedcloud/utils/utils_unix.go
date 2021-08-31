@@ -3,7 +3,7 @@
 package utils
 
 import (
-	"github.com/rexray/rexray/libstorage/api/types"
+	"github.com/AVENTER-UG/rexray/libstorage/api/types"
 )
 
 // NextDeviceInfo is the NextDeviceInfo object for EBS.

@@ -1,8 +1,0 @@
----
-  sudo: required
-  services:
-    - docker
-  notifications:
-    email: false
-  script:
-    - make test

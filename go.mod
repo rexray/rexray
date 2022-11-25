@@ -8,20 +8,16 @@ require (
 	github.com/Azure/go-autorest v7.2.5+incompatible
 	github.com/Microsoft/go-winio v0.4.5
 	github.com/SermoDigital/jose v0.9.2-0.20161205224733-f6df55f235c2
-	github.com/jteeuwen/go-bindata v0.0.0-00010101000000-000000000000
 	github.com/akutz/gofig v0.1.9
 	github.com/akutz/golf v0.1.3
 	github.com/akutz/goof v0.1.2
 	github.com/akutz/gotil v0.1.0
 	github.com/akutz/gournal v0.5.0
-	github.com/sirupsen/logrus v0.0.0-00010101000000-000000000000
-	gopkg.in/yaml.v2 v2.0.0-00010101000000-000000000000
+	github.com/appropriate/go-virtualboxclient v0.0.0-00010101000000-000000000000
 	github.com/asaskevich/govalidator v0.0.0-20170425121227-4918b99a7cb9
-	github.com/aws/aws-sdk-go v1.12.46
+	github.com/aws/aws-sdk-go v1.27.2
 	github.com/cesanta/ucl v0.0.0-20150604132806-97c016fce90e
 	github.com/cesanta/validate-json v0.0.0-20150603122804-2f16017c76fc
-	github.com/appropriate/go-virtualboxclient v0.0.0-00010101000000-000000000000
-	github.com/rubiojr/go-vhd v0.0.0-00010101000000-000000000000
 	github.com/coreos/go-systemd v0.0.0-20170731111925-d21964639418
 	github.com/davecgh/go-spew v1.1.0
 	github.com/dgrijalva/jwt-go v3.0.0+incompatible
@@ -37,7 +33,8 @@ require (
 	github.com/gorilla/mux v1.4.0
 	github.com/hashicorp/hcl v0.0.0-20170825171336-8f6b1344a92f
 	github.com/inconshreveable/mousetrap v1.0.0
-	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
+	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
+	github.com/jteeuwen/go-bindata v0.0.0-00010101000000-000000000000
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/magiconair/properties v1.7.3
 	github.com/mitchellh/mapstructure v0.0.0-20170523030023-d0303fe80992
@@ -46,6 +43,8 @@ require (
 	github.com/pelletier/go-buffruneio v0.2.0
 	github.com/pelletier/go-toml v1.0.0
 	github.com/pmezard/go-difflib v1.0.0
+	github.com/rubiojr/go-vhd v0.0.0-00010101000000-000000000000
+	github.com/sirupsen/logrus v0.0.0-00010101000000-000000000000
 	github.com/soheilhy/cmux v0.1.3
 	github.com/spf13/afero v0.0.0-20170901052352-ee1bd8ee15a1
 	github.com/spf13/cast v1.1.0
@@ -71,6 +70,7 @@ require (
 	google.golang.org/appengine v1.0.0
 	google.golang.org/genproto v0.0.0-20170904050139-595979c8a7bf
 	google.golang.org/grpc v1.6.0
+	gopkg.in/yaml.v2 v2.0.0-00010101000000-000000000000
 )
 
 replace github.com/jteeuwen/go-bindata => github.com/akutz/go-bindata v3.0.8-0.20160412065030-1dd44b25b79c+incompatible

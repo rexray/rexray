@@ -34,8 +34,9 @@ github.com/appropriate/go-virtualboxclient/vboxwebsrv
 github.com/appropriate/go-virtualboxclient/virtualboxclient
 # github.com/asaskevich/govalidator v0.0.0-20170425121227-4918b99a7cb9
 github.com/asaskevich/govalidator
-# github.com/aws/aws-sdk-go v1.12.46
+# github.com/aws/aws-sdk-go v1.27.2
 github.com/aws/aws-sdk-go/aws
+github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
 github.com/aws/aws-sdk-go/aws/awsutil
 github.com/aws/aws-sdk-go/aws/client
@@ -44,16 +45,27 @@ github.com/aws/aws-sdk-go/aws/corehandlers
 github.com/aws/aws-sdk-go/aws/credentials
 github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
 github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
+github.com/aws/aws-sdk-go/aws/credentials/processcreds
 github.com/aws/aws-sdk-go/aws/credentials/stscreds
+github.com/aws/aws-sdk-go/aws/csm
 github.com/aws/aws-sdk-go/aws/defaults
 github.com/aws/aws-sdk-go/aws/ec2metadata
 github.com/aws/aws-sdk-go/aws/endpoints
 github.com/aws/aws-sdk-go/aws/request
 github.com/aws/aws-sdk-go/aws/session
 github.com/aws/aws-sdk-go/aws/signer/v4
+github.com/aws/aws-sdk-go/internal/ini
+github.com/aws/aws-sdk-go/internal/s3err
+github.com/aws/aws-sdk-go/internal/sdkio
+github.com/aws/aws-sdk-go/internal/sdkmath
+github.com/aws/aws-sdk-go/internal/sdkrand
+github.com/aws/aws-sdk-go/internal/sdkuri
 github.com/aws/aws-sdk-go/internal/shareddefaults
+github.com/aws/aws-sdk-go/internal/strings
 github.com/aws/aws-sdk-go/private/protocol
 github.com/aws/aws-sdk-go/private/protocol/ec2query
+github.com/aws/aws-sdk-go/private/protocol/eventstream
+github.com/aws/aws-sdk-go/private/protocol/eventstream/eventstreamapi
 github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
 github.com/aws/aws-sdk-go/private/protocol/jsonrpc
 github.com/aws/aws-sdk-go/private/protocol/query
@@ -65,7 +77,9 @@ github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/service/ec2
 github.com/aws/aws-sdk-go/service/efs
 github.com/aws/aws-sdk-go/service/s3
+github.com/aws/aws-sdk-go/service/s3/internal/arn
 github.com/aws/aws-sdk-go/service/sts
+github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/cesanta/ucl v0.0.0-20150604132806-97c016fce90e
 github.com/cesanta/ucl
 # github.com/cesanta/validate-json v0.0.0-20150603122804-2f16017c76fc
@@ -85,8 +99,6 @@ github.com/docker/go-plugins-helpers/sdk
 github.com/docker/go-plugins-helpers/volume
 # github.com/fsnotify/fsnotify v1.4.2
 github.com/fsnotify/fsnotify
-# github.com/go-ini/ini v1.28.2
-github.com/go-ini/ini
 # github.com/golang/protobuf v0.0.0-20170902000452-17ce1425424a
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
@@ -125,7 +137,7 @@ github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
+# github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
 # github.com/jteeuwen/go-bindata v0.0.0-00010101000000-000000000000 => github.com/akutz/go-bindata v3.0.8-0.20160412065030-1dd44b25b79c+incompatible
 github.com/jteeuwen/go-bindata

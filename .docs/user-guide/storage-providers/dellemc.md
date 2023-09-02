@@ -120,7 +120,7 @@ you can set the RBAC rights on the Isilon console:
 ```bash
  create RBAC group
 isi auth roles create --name libstorage_roles
- asign privileges to role
+ assign privileges to role
 isi auth roles modify libstorage_roles --add-priv  ISI_PRIV_NS_IFS_ACCESS
 isi auth roles modify libstorage_roles --add-priv  ISI_PRIV_LOGIN_PAPI   
 isi auth roles modify libstorage_roles --add-priv  ISI_PRIV_NFS       
